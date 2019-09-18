@@ -157,16 +157,20 @@ class Client(object):
         self.stream = None
         return stream
 
-    def get_stations(self, network=None, station=None, cache=True):
+    def get_info(self, network=None, station=None, location=None, channel=None,
+                 level='station', cache=True):
         """
-        Request available stations from the seedlink server.
+        Request available stations information from the seedlink server.
 
-        Supports ``fnmatch`` wildcards, e.g. ``*`` and ``?`` in ``network`` and
-        ``station``.
+        Supports ``fnmatch`` wildcards, e.g. ``*`` and ``?``, in ``network``,
+        ``station``, ``location`` and ``channel``.
 
         >>> client = Client('rtserver.ipgp.fr')
-        >>> netsta = client.get_stations(station="FDF")
-        >>> print(netsta)
+        >>> info = client.get_info(station="FDF")
+        >>> print(info)
+        [('G', 'FDF')]
+        >>> netsta = client.get_info(station="FDF", level='channel')
+        >>> print(info)
         [('G', 'FDF')]
 
         Available station information is cached after the first request to the
@@ -175,24 +179,60 @@ class Client(object):
         concern programs running in background for a very long time).
 
         :type network: str
-        :param network: Network code. No wildcards supported by ObsPy.
+        :param network: Network code. Supports ``fnmatch`` wildcards, e.g.
+            ``*`` and ``?``.
         :type station: str
-        :param station: Station code. No wildcards supported by ObsPy.
+        :param station: Station code. Supports ``fnmatch`` wildcards, e.g.
+            ``*`` and ``?``.
+        :type location: str
+        :param location: Location code. Supports ``fnmatch`` wildcards, e.g.
+            ``*`` and ``?``.
+        :type channel: str
+        :param channel: Channel code. Supports ``fnmatch`` wildcards, e.g.
+            ``*`` and ``?``.
         :type cache: bool
         :param cache: Subsequent function calls are cached, use ``cache=False``
             to force fetching station metadata again from the server.
         :rtype: list
-        :returns: list of 2-tuples with network/station code combinations for
-            which data is served by the server.
+        :returns: list of 2-tuples (or 4-tuples with ``level='channel'``) with
+            network/station (network/station/location/channel) code
+            combinations for which data is served by the server.
         """
-        if cache and self._station_cache is not None:
-            stations = [(net, sta) for net, sta in self._station_cache
-                        if fnmatch.fnmatch(net, network or '*') and
-                        fnmatch.fnmatch(sta, station or '*')]
-            return sorted(stations)
+        if level not in ('station', 'channel'):
+            msg = "Invalid option for 'level': '%s'" % str(level)
+            raise ValueError(msg)
+        if level == 'station' and \
+                any(x is not None for x in (location, channel)):
+            msg = ("location and channel options are ignored in get_info() if "
+                   "level='station'.")
+            warnings.warn(msg)
+        # deteremine if we have a usable cache and check if it is at least the
+        # requested level of detail
+        if cache and self._station_cache is not None \
+                and level in ('station', self._station_cache_level):
+            if level == 'station':
+                if self._station_cache_level == 'station':
+                    info = [(net, sta) for net, sta in self._station_cache
+                            if fnmatch.fnmatch(net, network or '*') and
+                            fnmatch.fnmatch(sta, station or '*')]
+                    return sorted(info)
+                else:
+                    info = [(net, sta) for net, sta, loc, cha
+                            in self._station_cache
+                            if fnmatch.fnmatch(net, network or '*') and
+                            fnmatch.fnmatch(sta, station or '*')]
+                    return sorted(set(info))
+            info = [(net, sta, loc, cha) for net, sta, loc, cha in
+                    self._station_cache if
+                    fnmatch.fnmatch(net, network or '*') and
+                    fnmatch.fnmatch(sta, station or '*')]
+            return sorted(info)
 
         self._init_client()
-        self._slclient.infolevel = "STATIONS"
+        if level == 'station':
+            self._slclient.infolevel = "STATIONS"
+        elif level == 'channel':
+            self._slclient.infolevel = "STREAMS"
         self._slclient.verbose = 1
         self._connect()
         self._slclient.initialize()
@@ -204,9 +244,25 @@ class Client(object):
         for tag in xml.xpath('./station'):
             net = tag.attrib['network']
             sta = tag.attrib['name']
-            station_cache.add((net, sta))
+            item = (net, sta)
+            if level == 'channel':
+                subtags = tag.xpath('./stream')
+                for subtag in subtags:
+                    loc = subtag.attrib['location']
+                    cha = subtag.attrib['seedname']
+                    station_cache.add(item + (loc, cha))
+                # If no data is in ring buffer (e.g. station outage?) then it
+                # seems the seedlink server replies with no subtags for the
+                # channels
+                if not subtags:
+                    station_cache.add(item + (None, None))
+            else:
+                station_cache.add(item)
+        # change results to an Inventory object
         self._station_cache = station_cache
-        return self.get_stations(network=network, station=station, cache=True)
+        self._station_cache_level = level
+        return self.get_info(network=network, station=station, cache=True,
+                             level=level)
 
     def _packet_handler(self, count, slpack):
         """
