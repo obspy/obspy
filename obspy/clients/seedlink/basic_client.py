@@ -129,8 +129,23 @@ class Client(object):
         else:
             loccha = channel
         seedlink_id = "%s_%s:%s" % (network, station, loccha)
+        return self._multiselect_request(seedlink_id, starttime, endtime)
+
+    def _multiselect_request(self, multiselect, starttime, endtime):
+        """
+        Make a multiselect request to underlying seedlink client
+
+        Multiselect string is one or more comma separated
+        network/station/location/channel combinations as defined by seedlink
+        standard, e.g.
+        "NETWORK_STATION:LOCATIONCHANNEL,NETWORK_STATION:LOCATIONCHANNEL"
+        where location+channel may contain '?' characters but should be exactly
+        5 characters long.
+
+        :rtype: :class:`~obspy.core.stream.Stream`
+        """
         self._init_client()
-        self._slclient.multiselect = seedlink_id
+        self._slclient.multiselect = multiselect
         self._slclient.begin_time = starttime
         self._slclient.end_time = endtime
         self._connect()
