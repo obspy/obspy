@@ -12,48 +12,31 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from obspy.core.util.decorator import file_format_check
+
 from . import evt
 from .evt_base import EvtBaseError
 
 
-def is_evt(filename_or_object):
+@file_format_check
+def is_evt(filename_or_object, **kwargs):
     """
     Checks whether a file is Evt or not.
 
-    :type filename_or_object: filename or file-like object
-    :param filename_or_object: Evt file to be checked
+    :type filename_or_object: :class:`io.BytesIOBase`
+    :param filename_or_object: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a Evt file, ``False`` otherwise
     """
-    if hasattr(filename_or_object, "seek") and \
-            hasattr(filename_or_object, "tell") and \
-            hasattr(filename_or_object, "read"):
-        is_fileobject = True
-        pos = filename_or_object.tell()
-    else:
-        is_fileobject = False
-
+    fh = filename_or_object
     tag = evt.EvtTag()
-
-    if is_fileobject:
-        try:
-            tag.read(filename_or_object)
-            if tag.verify(verbose=False) is False:
-                return False
-            return True
-        except EvtBaseError:
+    try:
+        tag.read(fh)
+        if tag.verify(verbose=False) is False:
             return False
-        finally:
-            filename_or_object.seek(pos, 0)
-    else:
-        with open(filename_or_object, "rb") as file_obj:
-            try:
-                tag.read(file_obj)
-                if tag.verify(verbose=False) is False:
-                    return False
-                return True
-            except (EvtBaseError, IOError):
-                return False
+        return True
+    except EvtBaseError:
+        return False
 
 
 def read_evt(filename_or_object, **kwargs):
