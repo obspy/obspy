@@ -42,6 +42,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
+from obspy.core.util.decorator import file_format_check
 
 
 HEADER = ("TIMESERIES {network}_{station}_{location}_{channel}_{dataquality}, "
@@ -61,12 +62,13 @@ def _format_header(stats, format, dataquality, dtype, unit):
     return header
 
 
-def _is_slist(filename):
+@file_format_check
+def _is_slist(filename, **kwargs):
     """
     Checks whether a file is ASCII SLIST format.
 
-    :type filename: str
-    :param filename: Name of the ASCII SLIST file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if ASCII SLIST file.
 
@@ -75,24 +77,22 @@ def _is_slist(filename):
     >>> _is_slist('/path/to/slist.ascii')  # doctest: +SKIP
     True
     """
-    try:
-        with open(filename, 'rt') as f:
-            temp = f.readline()
-    except Exception:
+    fh = filename
+    temp = fh.readline()
+    if not temp.startswith(b'TIMESERIES'):
         return False
-    if not temp.startswith('TIMESERIES'):
-        return False
-    if 'SLIST' not in temp:
+    if b'SLIST' not in temp:
         return False
     return True
 
 
-def _is_tspair(filename):
+@file_format_check
+def _is_tspair(filename, **kwargs):
     """
     Checks whether a file is ASCII TSPAIR format.
 
-    :type filename: str
-    :param filename: Name of the ASCII TSPAIR file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if ASCII TSPAIR file.
 
@@ -101,14 +101,11 @@ def _is_tspair(filename):
     >>> _is_tspair('/path/to/tspair.ascii')  # doctest: +SKIP
     True
     """
-    try:
-        with open(filename, 'rt') as f:
-            temp = f.readline()
-    except Exception:
+    fh = filename
+    temp = fh.readline()
+    if not temp.startswith(b'TIMESERIES'):
         return False
-    if not temp.startswith('TIMESERIES'):
-        return False
-    if 'TSPAIR' not in temp:
+    if b'TSPAIR' not in temp:
         return False
     return True
 
