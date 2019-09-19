@@ -22,6 +22,7 @@ from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
                               WaveformStreamID)
+from obspy.core.util.decorator import file_format_check
 from obspy.geodetics import kilometer2degrees
 
 
@@ -31,13 +32,19 @@ POLARITIES = {"c": "positive", "u": "positive", "d": "negative"}
 POLARITIES_REVERSE = {"positive": "u", "negative": "d"}
 
 
-def is_nlloc_hyp(filename):
+@file_format_check
+def is_nlloc_hyp(filename, **kwargs):
     """
     Checks that a file is actually a NonLinLoc Hypocenter-Phase file.
+
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if NLLOC Hypocenter file.
     """
+    fh = filename
     try:
-        with open(filename, 'rb') as fh:
-            temp = fh.read(6)
+        temp = fh.read(6)
     except Exception:
         return False
     if temp != b'NLLOC ':
