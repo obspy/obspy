@@ -23,6 +23,7 @@ from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
+from obspy.core.util.decorator import file_format_check
 
 
 INVALID_CHAR_MSG = (
@@ -105,12 +106,13 @@ def _parse_tag(fh):
     return endian, tag_type, next_tag, next_same
 
 
-def _is_y(filename):
+@file_format_check
+def _is_y(filename, **kwargs):
     """
     Checks whether a file is a Nanometrics Y file or not.
 
-    :type filename: str
-    :param filename: Name of the Nanometrics Y file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a Nanometrics Y file.
 
@@ -119,10 +121,10 @@ def _is_y(filename):
     >>> _is_y("/path/to/YAYT_BHZ_20021223.124800")  #doctest: +SKIP
     True
     """
+    fh = filename
     try:
         # get first tag (16 bytes)
-        with open(filename, 'rb') as fh:
-            _, tag_type, _, _ = _parse_tag(fh)
+        _, tag_type, _, _ = _parse_tag(fh)
     except Exception:
         return False
     # The first tag in a Y-file must be the TAG_Y_FILE tag (tag type 0)
