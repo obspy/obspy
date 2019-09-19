@@ -1032,11 +1032,10 @@ class TauPyModelTestCase(unittest.TestCase):
                     output_folder=folder, verbose=False)
                 model = TauPyModel(os.path.join(folder, model_name + ".npz"))
 
-            arrvials = model.get_ray_paths(source_depth_in_km=18.0,
+            arrivals = model.get_ray_paths(source_depth_in_km=18.0,
                                            distance_in_degree=1.0)
-
-            self.assertEqual(len(arrvials), len(expects))
-            for arrival, expect in zip(arrvials, expects):
+            self.assertEqual(len(arrivals), len(expects))
+            for arrival, expect in zip(arrivals, expects):
                 self.assertEqual(arrival.name, expect[0])
                 self.assertAlmostEqual(arrival.time, expect[1], 3)
 
