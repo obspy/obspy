@@ -28,6 +28,7 @@ import numpy as np
 
 from obspy import Stream, Trace
 from obspy.core.compatibility import from_buffer
+from obspy.core.util.decorator import file_format_check
 
 
 # WAVE data format is unsigned char up to 8bit, and signed int
@@ -39,12 +40,13 @@ WIDTH2DTYPE = {
 }
 
 
-def _is_wav(filename):
+@file_format_check
+def _is_wav(filename, **kwargs):
     """
     Checks whether a file is a audio WAV file or not.
 
-    :type filename: str
-    :param filename: Name of the audio WAV file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a WAV file.
 
@@ -53,12 +55,16 @@ def _is_wav(filename):
     >>> _is_wav("/path/to/3cssan.near.8.1.RNON.wav")  #doctest: +SKIP
     True
     """
+    fh = filename
     try:
-        fh = wave.open(filename, 'rb')
+        fh = wave.open(fh, 'rb')
         try:
             (_nchannel, width, _rate, _len, _comptype, _compname) = \
                 fh.getparams()
         finally:
+            # according to docs, this call does not close the underlying file
+            # object that was passed in, so this can stay (it might do some
+            # cleanup for the wave specific part, dunno)
             fh.close()
     except Exception:
         return False
