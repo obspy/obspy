@@ -16,6 +16,7 @@ import numpy as np
 
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.trace import Stats
+from obspy.core.util.decorator import file_format_check
 
 
 class KNETException(Exception):
@@ -53,16 +54,16 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
             return function(fh, *args, **kwargs)
 
 
-def _is_knet_ascii(filename_or_buf):
+@file_format_check
+def _is_knet_ascii(filename_or_buf, **kwargs):
     """
     Checks if the file is a valid K-NET/KiK-net ASCII file.
 
-    :param filename_or_buf: File to test.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: :class:`io.BytesIOBase`
+    :param filename_or_buf: Open file or file-like object to be checked
     """
     try:
-        return _buffer_proxy(filename_or_buf, _internal_is_knet_ascii,
-                             reset_fp=True)
+        return _internal_is_knet_ascii(filename_or_buf)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
     except (OSError, UnicodeDecodeError):
