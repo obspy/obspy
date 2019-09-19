@@ -45,6 +45,7 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, Enum
 from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _xml_doc_from_anything
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -60,30 +61,6 @@ def _get_first_child_namespace(element):
     except IndexError:
         return None
     return etree.QName(element.tag).namespace
-
-
-def _xml_doc_from_anything(source):
-    """
-    Helper function attempting to create an xml etree element from either a
-    filename, a file-like object, or a (byte)string.
-
-    Will raise a ValueError if it fails.
-    """
-    if isinstance(source, etree._Element):
-        return source
-
-    try:
-        xml_doc = etree.parse(source).getroot()
-    except Exception:
-        try:
-            xml_doc = etree.fromstring(source)
-        except Exception:
-            try:
-                xml_doc = etree.fromstring(source.encode())
-            except Exception:
-                raise ValueError("Could not parse '%s' to an etree element." %
-                                 source)
-    return xml_doc
 
 
 @file_format_check

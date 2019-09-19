@@ -28,6 +28,7 @@ from subprocess import STDOUT, CalledProcessError, check_output
 
 
 import numpy as np
+from lxml import etree
 from pkg_resources import load_entry_point
 
 WIN32 = sys.platform.startswith('win32')
@@ -768,6 +769,30 @@ def _seed_id_map(
     if user_id_map is not None:
         id_map.update(user_id_map)
     return id_map
+
+
+def _xml_doc_from_anything(source):
+    """
+    Helper function attempting to create an xml etree element from either a
+    filename, a file-like object, or a (byte)string.
+
+    Will raise a ValueError if it fails.
+    """
+    if isinstance(source, etree._Element):
+        return source
+
+    try:
+        xml_doc = etree.parse(source).getroot()
+    except Exception:
+        try:
+            xml_doc = etree.fromstring(source)
+        except Exception:
+            try:
+                xml_doc = etree.fromstring(source.encode())
+            except Exception:
+                raise ValueError("Could not parse '%s' to an etree element." %
+                                 source)
+    return xml_doc
 
 
 if __name__ == '__main__':
