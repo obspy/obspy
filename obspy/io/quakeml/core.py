@@ -44,6 +44,7 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, Enum
+from obspy.core.util.decorator import file_format_check
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -82,12 +83,13 @@ def _xml_doc_from_anything(source):
     return xml_doc
 
 
-def _is_quakeml(filename):
+@file_format_check
+def _is_quakeml(filename, **kwargs):
     """
     Checks whether a file is QuakeML format.
 
-    :type filename: str
-    :param filename: Name of the QuakeML file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if QuakeML file.
 
@@ -96,20 +98,10 @@ def _is_quakeml(filename):
     >>> _is_quakeml('/path/to/quakeml.xml')  # doctest: +SKIP
     True
     """
-    if hasattr(filename, "tell") and hasattr(filename, "seek") and \
-            hasattr(filename, "read"):
-        file_like_object = True
-        position = filename.tell()
-    else:
-        file_like_object = False
-
     try:
         xml_doc = _xml_doc_from_anything(filename)
     except Exception:
         return False
-    finally:
-        if file_like_object:
-            filename.seek(position, 0)
 
     # check if node "*/eventParameters/event" for the global namespace exists
     try:
