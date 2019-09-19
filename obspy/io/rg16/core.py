@@ -10,6 +10,7 @@ from collections import namedtuple
 import numpy as np
 
 from obspy.core import Stream, Trace, Stats, UTCDateTime
+from obspy.core.util.decorator import file_format_check
 from obspy.io.rg16.util import _read, _open_file, _quick_merge
 
 
@@ -497,13 +498,13 @@ def _read_trace_header_10(fi, trace_block_start):
     return dict_header_10
 
 
-@_open_file
+@file_format_check
 def _is_rg16(filename, **kwargs):
     """
     Determine if a file is a rg16 file.
 
-    :param filename: a path to a file or a file object
-    :type filename: str, buffer
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: True if the file object is a rg16 file.
     """
