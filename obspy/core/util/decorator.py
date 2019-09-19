@@ -11,6 +11,7 @@ Decorator used in ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2, native_str, native_bytes
 
 import functools
 import inspect
@@ -25,7 +26,6 @@ import zipfile
 
 import numpy as np
 from decorator import decorator
-from future.utils import PY2, native_str
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
@@ -251,12 +251,13 @@ def file_format_check(func, filename, **kwargs):
     """
     Decorator to use on file format checker routines.
 
-    The decorator determines if the given input is e.g. a filename or a
+    The decorator checks if the given input is a filename or a
     file-like object, and makes sure the decorated file format checker receives
-    a :class:`io.BufferedIOBase` object to work on. The decorator also makes
-    sure to bring any given file-like object back to it's original file
-    position after the decorated routine performed it's checking.
-    The decorated function will be called with an additional kwarg
+    a :class:`io.BufferedIOBase` object to work on. If the input is bytes or a
+    string, a :class:`io.BytesIO` or :class:`io.TextIO` object will be created.
+    The decorator also makes sure to bring any given file-like object back to
+    it's original file position after the decorated routine performed it's
+    checking.  The decorated function will be called with an additional kwarg
     ``_file_size``.
 
     .. rubric:: Notes
@@ -265,18 +266,8 @@ def file_format_check(func, filename, **kwargs):
     Also, if a file-like object opened as a text stream with automatic decoding
     is provided, it will be passed down to the checker routine as is.
     """
-    # Open filehandle or..
-    if not hasattr(filename, 'read'):
-        if not os.path.exists(filename):
-            msg = 'File not found: ' + filename
-            # we can raise FileNotFoundError after dropping Python2
-            raise Exception(msg)
-        file_size = os.path.getsize(filename)
-        kwargs['_file_size'] = file_size
-        with io.open(filename, 'rb') as fh:
-            return func(fh, **kwargs)
-    # ..use an existing open file or file-like object.
-    else:
+    # Pass on existing file-like object
+    if hasattr(filename, 'read'):
         fh = filename
         initial_pos = fh.tell()
         try:
@@ -294,6 +285,25 @@ def file_format_check(func, filename, **kwargs):
         finally:
             # Reset pointer.
             fh.seek(initial_pos, 0)
+    # Or open it if it is a local file
+    elif os.path.exists(filename):
+        file_size = os.path.getsize(filename)
+        kwargs['_file_size'] = file_size
+        with io.open(filename, 'rb') as fh:
+            return func(fh, **kwargs)
+    # Or initialize a BytesIO object
+    elif isinstance(filename, (bytes, native_bytes)):
+        kwargs['_file_size'] = len(filename)
+        with io.BytesIO(filename) as fh:
+            return func(fh, **kwargs)
+    # Or initialize a TextIO object
+    elif isinstance(filename, (str, native_str)):
+        kwargs['_file_size'] = len(filename)
+        with io.StringIO(filename) as fh:
+            return func(fh, **kwargs)
+    # Any other cases: raise Exception
+    msg = 'Invalid input: ' + str(filename)[:100]
+    raise Exception(msg)
 
 
 def map_example_filename(arg_kwarg_name):
