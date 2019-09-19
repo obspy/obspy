@@ -8,6 +8,7 @@ import unittest
 import warnings
 
 from obspy.io.y.core import _is_y, _read_y
+from obspy.core.util.base import get_example_file
 
 
 class CoreTestCase(unittest.TestCase):
@@ -24,8 +25,8 @@ class CoreTestCase(unittest.TestCase):
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
         self.assertEqual(_is_y(testfile), True)
-        self.assertEqual(_is_y("/path/to/slist.ascii"), False)
-        self.assertEqual(_is_y("/path/to/tspair.ascii"), False)
+        self.assertEqual(_is_y(get_example_file("slist.ascii")), False)
+        self.assertEqual(_is_y(get_example_file("tspair.ascii")), False)
 
     def test_read_y_file(self):
         """
