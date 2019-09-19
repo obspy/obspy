@@ -1021,7 +1021,8 @@ class TauPyModelTestCase(unittest.TestCase):
              ("PcP", 18.039), ("ScP", 19.988), ("sP", 22.640), ("sP", 22.716),
              ("sP", 22.992), ("PcS", 23.051), ("sP", 24.039), ("sP", 24.042),
              ("Sn", 30.029), ("S", 30.563), ("s", 30.801), ("S", 30.913),
-             ("ScS", 31.208)]]
+             ("ScS", 31.208)],
+             None]
 
         for model_name, expects in zip(model_names, expected_results):
             with TemporaryWorkingDirectory():
