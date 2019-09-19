@@ -24,6 +24,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
 from obspy.core.compatibility import from_buffer
+from obspy.core.util.decorator import file_format_check
 from .header import MONTHS
 
 
@@ -339,15 +340,19 @@ class SEG2(object):
             setattr(attrib_dict, key, value)
 
 
-def _is_seg2(filename):
-    if not hasattr(filename, 'write'):
-        file_pointer = open(filename, 'rb')
-    else:
-        file_pointer = filename
+@file_format_check
+def _is_seg2(filename, **kwargs):
+    """
+    Checks whether a file is SEG2 format.
+
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if SEG2 file.
+    """
+    file_pointer = filename
 
     file_descriptor_block = file_pointer.read(4)
-    if not hasattr(filename, 'write'):
-        file_pointer.close()
     try:
         # Determine the endianness and check if the block id is valid.
         if unpack_from(b'2B', file_descriptor_block) == (0x55, 0x3a):
