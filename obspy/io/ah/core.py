@@ -24,6 +24,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
+from obspy.core.util.decorator import file_format_check
 
 AH1_CODESIZE = 6
 AH1_CHANSIZE = 6
@@ -32,16 +33,18 @@ AH1_COMSIZE = 80
 AH1_LOGSIZE = 202
 
 
-def _is_ah(filename):
+@file_format_check
+def _is_ah(filename, **kwargs):
     """
     Checks whether a file is AH waveform data or not.
 
-    :type filename: str
-    :param filename: AH file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a AH waveform file.
     """
-    if _get_ah_version(filename):
+    fh = filename
+    if _get_ah_version_from_fh(fh):
         return True
     return False
 
@@ -76,44 +79,7 @@ def _get_ah_version(filename):
     :return: version string of AH waveform data or ``False`` if unknown.
     """
     with open(filename, "rb") as fh:
-        # read first 8 bytes with XDR library
-        try:
-            data = xdrlib.Unpacker(fh.read(8))
-            # check for magic version number
-            magic = data.unpack_int()
-        except Exception:
-            return False
-        if magic == 1100:
-            try:
-                # get record length
-                length = data.unpack_uint()
-                # read first record
-                fh.read(length)
-            except Exception:
-                return False
-            # seems to be AH v2
-            return '2.0'
-        elif magic == 6:
-            # AH1 has no magic variable :/
-            # so we have to use some fixed values as indicators
-            try:
-                fh.seek(12)
-                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 6:
-                    return False
-                fh.seek(24)
-                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 8:
-                    return False
-                fh.seek(700)
-                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 80:
-                    return False
-                fh.seek(784)
-                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 202:
-                    return False
-            except Exception:
-                return False
-            return '1.0'
-        else:
-            return False
+        return _get_ah_version_from_fh(fh)
 
 
 def _unpack_string(data):
@@ -590,3 +556,55 @@ def _read_ah2(filename):
             except EOFError:
                 break
         return st
+
+
+def _get_ah_version_from_fh(fh):
+    """
+    Returns version of AH waveform data.
+
+    Does not close open file-like object.
+
+    :type fh: :class:`io.BytesIOBase`
+    :param fh: Open file or file-like object to be checked
+    :rtype: str or False
+    :return: version string of AH waveform data or ``False`` if unknown.
+    """
+    initial_position = fh.tell()
+    # read first 8 bytes with XDR library
+    try:
+        data = xdrlib.Unpacker(fh.read(8))
+        # check for magic version number
+        magic = data.unpack_int()
+    except Exception:
+        return False
+    if magic == 1100:
+        try:
+            # get record length
+            length = data.unpack_uint()
+            # read first record
+            fh.read(length)
+        except Exception:
+            return False
+        # seems to be AH v2
+        return '2.0'
+    elif magic == 6:
+        # AH1 has no magic variable :/
+        # so we have to use some fixed values as indicators
+        try:
+            fh.seek(initial_position + 12)
+            if xdrlib.Unpacker(fh.read(4)).unpack_int() != 6:
+                return False
+            fh.seek(initial_position + 24)
+            if xdrlib.Unpacker(fh.read(4)).unpack_int() != 8:
+                return False
+            fh.seek(initial_position + 700)
+            if xdrlib.Unpacker(fh.read(4)).unpack_int() != 80:
+                return False
+            fh.seek(initial_position + 784)
+            if xdrlib.Unpacker(fh.read(4)).unpack_int() != 202:
+                return False
+        except Exception:
+            return False
+        return '1.0'
+    else:
+        return False
