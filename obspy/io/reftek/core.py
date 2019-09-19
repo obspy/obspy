@@ -15,6 +15,7 @@ import warnings
 import numpy as np
 
 from obspy import Trace, Stream, UTCDateTime
+from obspy.core.util.decorator import file_format_check
 from obspy.core.util.obspy_types import ObsPyException
 
 from .packet import (Packet, EHPacket, _initial_unpack_packets, PACKET_TYPES,
@@ -29,12 +30,13 @@ class Reftek130Exception(ObsPyException):
     pass
 
 
-def _is_reftek130(filename):
+@file_format_check
+def _is_reftek130(filename, **kwargs):
     """
     Checks whether a file is REFTEK130 format or not.
 
-    :type filename: str
-    :param filename: REFTEK130 file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a REFTEK130 file.
 
@@ -42,23 +44,22 @@ def _is_reftek130(filename):
     bytes) and checks for valid packet type identifiers in the first 20
     expected packet positions.
     """
-    if not os.path.isfile(filename):
-        return False
-    filesize = os.stat(filename).st_size
+    fp = filename
+    filesize = kwargs['_file_size']
+
     # check if overall file size is a multiple of 1024
     if filesize < 1024 or filesize % 1024 != 0:
         return False
 
-    with open(filename, 'rb') as fp:
-        # check first 20 expected packets' type header field
-        for i in range(20):
-            packet_type = fp.read(2).decode("ASCII", "replace")
-            if not packet_type:
-                # reached end of file..
-                break
-            if packet_type not in PACKET_TYPES:
-                return False
-            fp.seek(1022, os.SEEK_CUR)
+    # check first 20 expected packets' type header field
+    for i in range(20):
+        packet_type = fp.read(2).decode("ASCII", "replace")
+        if not packet_type:
+            # reached end of file..
+            break
+        if packet_type not in PACKET_TYPES:
+            return False
+        fp.seek(1022, os.SEEK_CUR)
     return True
 
 
