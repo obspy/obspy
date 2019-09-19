@@ -19,14 +19,16 @@ import warnings
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
+from obspy.core.util.decorator import file_format_check
 
 
-def _is_seisan(filename):
+@file_format_check
+def _is_seisan(filename, **kwargs):
     """
     Checks whether a file is SEISAN or not.
 
-    :type filename: str
-    :param filename: Name of the audio SEISAN file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a SEISAN file.
 
@@ -35,9 +37,9 @@ def _is_seisan(filename):
     >>> _is_seisan("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
     True
     """
+    fh = filename
     try:
-        with open(filename, 'rb') as f:
-            data = f.read(12 * 80)
+        data = fh.read(12 * 80)
     except Exception:
         return False
     # read some data - contains at least 12 lines a 80 characters
