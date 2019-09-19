@@ -203,9 +203,12 @@ class Client(object):
         >>> info = client.get_info(station="FDF")
         >>> print(info)
         [('G', 'FDF')]
-        >>> netsta = client.get_info(station="FDF", level='channel')
-        >>> print(info)
-        [('G', 'FDF')]
+        >>> info = client.get_info(station="FD?", channel='*Z',
+        ...                        level='channel')
+        >>> print(info)  # doctest: +NORMALIZE_WHITESPACE
+        [('G', 'FDF', '00', 'BHZ'),
+         ('G', 'FDF', '00', 'HNZ'),
+         ('G', 'FDF', '00', 'LHZ')]
 
         Available station information is cached after the first request to the
         server, so use ``cache=False`` on subsequent requests if there is a
@@ -229,8 +232,8 @@ class Client(object):
             to force fetching station metadata again from the server.
         :rtype: list
         :returns: list of 2-tuples (or 4-tuples with ``level='channel'``) with
-            network/station (network/station/location/channel) code
-            combinations for which data is served by the server.
+            network/station (network/station/location/channel, respectively)
+            code combinations for which data is served by the server.
         """
         if level not in ('station', 'channel'):
             msg = "Invalid option for 'level': '%s'" % str(level)
