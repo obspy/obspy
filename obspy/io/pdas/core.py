@@ -16,21 +16,23 @@ import numpy as np
 
 from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
+from obspy.core.util.decorator import file_format_check
 
 
-def _is_pdas(filename):
+@file_format_check
+def _is_pdas(filename, **kwargs):
     """
     Checks whether a file is a PDAS file or not.
 
-    :type filename: str
-    :param filename: Name of file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a PDAS file.
     """
+    fh = filename
     try:
-        with open(filename, "rb") as fh:
-            header_fields = [fh.readline().split()[0].decode()
-                             for i_ in range(11)]
+        header_fields = [fh.readline().split()[0].decode()
+                         for i_ in range(11)]
         expected_headers = ['DATASET', 'FILE_TYPE', 'VERSION', 'SIGNAL',
                             'DATE', 'TIME', 'INTERVAL', 'VERT_UNITS',
                             'HORZ_UNITS', 'COMMENT', 'DATA']
