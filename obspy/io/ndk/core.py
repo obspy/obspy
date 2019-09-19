@@ -33,6 +33,7 @@ from obspy.core.event import (Axis, Catalog, Comment, CreationInfo, DataUsed,
                               Magnitude, MomentTensor, NodalPlane, NodalPlanes,
                               Origin, PrincipalAxes, SourceTimeFunction,
                               Tensor)
+from obspy.core.util.decorator import file_format_check
 from obspy.geodetics import FlinnEngdahl
 
 
@@ -85,35 +86,26 @@ def _parse_date_time(date, time):
     return dt
 
 
-def _is_ndk(filename):
+@file_format_check
+def _is_ndk(filename, **kwargs):
     """
     Checks that a file is actually an NDK file.
 
     It will read the first line and check to see if the date, time, and the
     location are valid. Then it assumes the file is an NDK file.
+
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if NDK file.
     """
     # Get the first line.
-    # Not a file-like object.
-    if not hasattr(filename, "readline"):
-        # Check if it exists, otherwise assume its a string.
+    first_line = filename.readline()
+    if hasattr(first_line, "decode"):
         try:
-            with open(filename, "rt") as fh:
-                first_line = fh.readline()
-        except Exception:
-            try:
-                filename = filename.decode()
-            except Exception:
-                filename = str(filename)
-            filename = filename.strip()
-            line_ending = filename.find("\n")
-            if line_ending == -1:
-                return False
-            first_line = filename[:line_ending]
-    # File like object.
-    else:
-        first_line = filename.readline()
-        if hasattr(first_line, "decode"):
             first_line = first_line.decode()
+        except UnicodeDecodeError:
+            return False
 
     # A certain minimum length is required to extract all the following
     # parameters.
