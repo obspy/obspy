@@ -20,6 +20,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
+from obspy.core.util.decorator import file_format_check
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .segy import _read_segy as _read_segyrev1
@@ -55,34 +56,35 @@ class SEGYSampleIntervalError(SEGYError):
     pass
 
 
-def _is_segy(filename):
+@file_format_check
+def _is_segy(filename, **kwargs):
     """
     Checks whether or not the given file is a SEG Y file.
 
-    :type filename: str
-    :param filename: SEG Y file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a SEG Y file.
     """
+    fp = filename
     # This is a very weak test. It tests two things: First if the data sample
     # format code is valid. This is also used to determine the endianness. This
     # is then used to check if the sampling interval is set to any sane number
     # greater than 0 and that the number of samples per trace is greater than
     # 0.
     try:
-        with open(filename, 'rb') as fp:
-            fp.seek(3212)
-            _number_of_data_traces = fp.read(2)
-            _number_of_auxiliary_traces = fp.read(2)
-            _sample_interval = fp.read(2)
-            fp.seek(2, 1)
-            _samples_per_trace = fp.read(2)
-            fp.seek(2, 1)
-            data_format_code = fp.read(2)
-            fp.seek(3500, 0)
-            _format_number = fp.read(2)
-            _fixed_length = fp.read(2)
-            _extended_number = fp.read(2)
+        fp.seek(3212)
+        _number_of_data_traces = fp.read(2)
+        _number_of_auxiliary_traces = fp.read(2)
+        _sample_interval = fp.read(2)
+        fp.seek(2, 1)
+        _samples_per_trace = fp.read(2)
+        fp.seek(2, 1)
+        data_format_code = fp.read(2)
+        fp.seek(3500, 0)
+        _format_number = fp.read(2)
+        _fixed_length = fp.read(2)
+        _extended_number = fp.read(2)
     except Exception:
         return False
     # Unpack using big endian first and check if it is valid.
@@ -403,12 +405,13 @@ def _write_segy(stream, filename, data_encoding=None, byteorder=None,
     segy_file.write(filename, data_encoding=data_encoding, endian=byteorder)
 
 
-def _is_su(filename):
+@file_format_check
+def _is_su(filename, **kwargs):
     """
     Checks whether or not the given file is a Seismic Unix (SU) file.
 
-    :type filename: str
-    :param filename: Seismic Unix file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a Seismic Unix file.
 
@@ -416,8 +419,8 @@ def _is_su(filename):
         This test is rather shaky because there is no reliable identifier in a
         Seismic Unix file.
     """
-    with open(filename, 'rb') as f:
-        stat = autodetect_endian_and_sanity_check_su(f)
+    fh = filename
+    stat = autodetect_endian_and_sanity_check_su(fh)
     if stat is False:
         return False
     else:
