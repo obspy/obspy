@@ -20,7 +20,7 @@ import math
 from obspy.core import UTCDateTime
 from obspy.core.event import (Catalog, Event, Magnitude, Origin,
                               OriginUncertainty)
-from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.decorator import map_example_filename, file_format_check
 
 
 _STD_ZMAP_COLUMNS = ('lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',
@@ -336,7 +336,8 @@ def _read_zmap(filename, **kwargs):
 
 
 @map_example_filename("filename")
-def _is_zmap(filename):
+@file_format_check
+def _is_zmap(filename, **kwargs):
     """
     Checks whether a file is ZMAP format.
 
@@ -344,9 +345,8 @@ def _is_zmap(filename):
     will not detect a ZMAP file unless it consists of exactly 10 or 13
     numerical columns.
 
-    :type filename: str or file
-    :param filename: ZMAP string, name of the file to be checked or open
-        file-like object.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if ZMAP file.
 
@@ -355,27 +355,12 @@ def _is_zmap(filename):
     >>> _is_zmap('/path/to/zmap_events.txt')
     True
     """
-    if all(hasattr(filename, attr) for attr in ['tell', 'seek', 'read']):
-        # we got an open file
-        pos = filename.tell()
-        filename.seek(0)
-        first_line = filename.readline()
-        filename.seek(pos)
-        if hasattr(first_line, 'decode'):
-            first_line = first_line.decode()
-    else:
+    first_line = filename.readline()
+    if hasattr(first_line, 'decode'):
         try:
-            with open(filename, 'rb') as f:
-                first_line = f.readline().decode()
-        except Exception:
-            try:
-                first_line = filename.decode()
-            except Exception:
-                first_line = str(filename)
-            line_ending = first_line.find("\n")
-            if line_ending == -1:
-                return False
-            first_line = first_line[:line_ending]
+            first_line = first_line.decode()
+        except UnicodeDecodeError:
+            return False
 
     # we expect 10 (standard) or 13 columns (extended)
     columns = first_line.split('\t')
