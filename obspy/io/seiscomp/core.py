@@ -20,6 +20,7 @@ import re
 
 from lxml import etree
 
+from obspy.core.util.decorator import file_format_check
 from obspy.io.quakeml.core import _xml_doc_from_anything
 
 
@@ -27,7 +28,8 @@ from obspy.io.quakeml.core import _xml_doc_from_anything
 SUPPORTED_XSD_VERSION = ['0.3', '0.5', '0.6', '0.7', '0.8', '0.9', '0.10']
 
 
-def _is_sc3ml(path_or_file_object):
+@file_format_check
+def _is_sc3ml(path_or_file_object, **kwargs):
     """
     Simple function checking if the passed object contains a valid sc3ml file
     according to the list of versions given in parameters. Returns True of
@@ -38,38 +40,18 @@ def _is_sc3ml(path_or_file_object):
     test for a StationXML file, many real world files are false negatives as
     they don't adhere to the standard.
 
-    :type path_or_file_object: str
-    :param path_or_file_object: File name or file like object.
+    :type path_or_file_object: :class:`io.BytesIOBase`
+    :param path_or_file_object: Open file or file-like object to be checked
     :rtype: bool
     :return: `True` if file is a SC3ML file.
     """
-    if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
-                                                        "seek"):
-        current_position = path_or_file_object.tell()
-
-    if isinstance(path_or_file_object, etree._Element):
-        xmldoc = path_or_file_object
-    else:
-        try:
-            xmldoc = _xml_doc_from_anything(path_or_file_object)
-        except ValueError:
-            return False
-        finally:
-            # Make sure to reset file pointer position.
-            try:
-                path_or_file_object.seek(current_position, 0)
-            except Exception:
-                pass
-
-    if hasattr(xmldoc, "getroot"):
-        root = xmldoc.getroot()
-    else:
-        root = xmldoc
-
+    try:
+        root = _xml_doc_from_anything(path_or_file_object)
+    except ValueError:
+        return False
     match = re.match(
         r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
         r'[0-9]*\.?[0-9]+)}', root.tag)
-
     return match is not None
 
 

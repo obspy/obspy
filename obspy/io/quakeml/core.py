@@ -69,6 +69,9 @@ def _xml_doc_from_anything(source):
 
     Will raise a ValueError if it fails.
     """
+    if isinstance(source, etree._Element):
+        return source
+
     try:
         xml_doc = etree.parse(source).getroot()
     except Exception:
