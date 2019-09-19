@@ -22,6 +22,7 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import loadtxt
+from obspy.core.util.decorator import file_format_check
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
@@ -71,12 +72,13 @@ SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.items() if v.startswith('R')]
 INVERTED_SH_IDX = {v: k for k, v in SH_IDX.items()}
 
 
-def _is_asc(filename):
+@file_format_check
+def _is_asc(filename, **kwargs):
     """
     Checks whether a file is a Seismic Handler ASCII file or not.
 
-    :type filename: str
-    :param filename: Name of the ASCII file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a Seismic Handler ASCII file.
 
@@ -85,10 +87,10 @@ def _is_asc(filename):
     >>> _is_asc("/path/to/QFILE-TEST-ASC.ASC")  #doctest: +SKIP
     True
     """
+    fh = filename
     # first six chars should contain 'DELTA:'
     try:
-        with open(filename, 'rb') as f:
-            temp = f.read(6)
+        temp = fh.read(6)
     except Exception:
         return False
     if temp != b'DELTA:':
@@ -301,12 +303,13 @@ def _write_asc(stream, filename, included_headers=None, npl=4,
         fh.write(sio.read().encode('ascii', 'strict'))
 
 
-def _is_q(filename):
+@file_format_check
+def _is_q(filename, **kwargs):
     """
     Checks whether a file is a Seismic Handler Q file or not.
 
-    :type filename: str
-    :param filename: Name of the Q file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a Seismic Handler Q file.
 
@@ -315,10 +318,10 @@ def _is_q(filename):
     >>> _is_q("/path/to/QFILE-TEST.QHD")  #doctest: +SKIP
     True
     """
+    fh = filename
     # file must start with magic number 43981
     try:
-        with open(filename, 'rb') as f:
-            temp = f.read(5)
+        temp = fh.read(5)
     except Exception:
         return False
     if temp != b'43981':
