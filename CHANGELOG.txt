@@ -68,8 +68,12 @@ master:
    * Properly handle fetching poles and zeros in presence of multiple metadata
      files for a given station (see #2411)
  - obspy.clients.seedlink:
-   * add method "get_stations()" to fetch list of network/stations for which
-     streams are available (see #2405)
+   * add method "get_info()" to fetch information on what
+     networks/stations/locations/channels are served by the seedlink server
+     (see #2405)
+   * "get_waveforms()" can now be used with '*' and '?' wildcards in any part
+     of requested SEED ID, i.e. network, station, location and channel (see
+     #2405)
  - obspy.imaging:
    * obspy-scan can now be used with wildcarded SEED IDs when specifying what
      to plot after scanning data (see #2227)
