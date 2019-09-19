@@ -32,7 +32,7 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               PrincipalAxes, QuantityError, ResourceIdentifier,
                               StationMagnitude, Tensor, WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.decorator import map_example_filename, file_format_check
 from obspy.geodetics import FlinnEngdahl
 
 
@@ -41,13 +41,14 @@ res_id_prefix = 'quakeml:us.anss.org'
 
 
 @map_example_filename('filename')
-def _is_mchedr(filename):
+@file_format_check
+def _is_mchedr(filename, **kwargs):
     """
     Checks whether a file format is mchedr
     (machine-readable Earthquake Data Report).
 
-    :type filename: str
-    :param filename: Name of the mchedr file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if mchedr file.
 
@@ -56,18 +57,16 @@ def _is_mchedr(filename):
     >>> _is_mchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
-    if not isinstance(filename, (str, native_str)):
-        return False
-    with open(filename, 'rb') as fh:
-        for line in fh.readlines():
-            # skip blank lines at beginning, if any
-            if line.strip() == b'':
-                continue
-            # first record has to be 'HY':
-            if line[0:2] == b'HY':
-                return True
-            else:
-                return False
+    fh = filename
+    for line in fh.readlines():
+        # skip blank lines at beginning, if any
+        if line.strip() == b'':
+            continue
+        # first record has to be 'HY':
+        if line[0:2] == b'HY':
+            return True
+        else:
+            return False
 
 
 class Unpickler(object):
