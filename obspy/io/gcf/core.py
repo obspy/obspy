@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util.decorator import file_format_check
 
 from . import libgcf
 
@@ -40,18 +41,19 @@ def merge_gcf_stream(st):
     return Stream(traces=traces)
 
 
-def _is_gcf(filename):
+@file_format_check
+def _is_gcf(filename, **kwargs):
     """
     Checks whether a file is GCF or not.
 
-    :type filename: str
-    :param filename: GCF file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a GCF file.
     """
+    fh = filename
     try:
-        with open(filename, 'rb') as f:
-            libgcf.is_gcf(f)
+        libgcf.is_gcf(fh)
     except Exception:
         return False
     return True
