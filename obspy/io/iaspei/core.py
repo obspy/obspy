@@ -22,6 +22,7 @@ from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
     QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier,
     Pick, StationMagnitude, WaveformStreamID, Amplitude)
+from obspy.core.util.decorator import file_format_check
 from obspy.core.util.obspy_types import ObsPyReadingError
 from .util import (
     float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status,
@@ -643,19 +644,18 @@ def __read_ims10_bulletin(fh, **kwargs):  # NOQA
     return ISFReader(fh, **kwargs).deserialize()
 
 
+@file_format_check
 def _is_ims10_bulletin(filename_or_buf, **kwargs):
     """
     Checks whether a file is ISF IMS1.0 bulletin format.
 
-    :type filename_or_buf: str or file
-    :param filename_or_buf: name of the file to be checked or open file-like
-        object.
+    :type filename_or_buf: :class:`io.BytesIOBase`
+    :param filename_or_buf: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if ISF IMS1.0 bulletin file.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_ims10_bulletin,
-                             reset_fp=True, **kwargs)
+        return __is_ims10_bulletin(filename_or_buf, **kwargs)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
     except OSError:
