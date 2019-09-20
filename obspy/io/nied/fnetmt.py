@@ -21,6 +21,7 @@ from obspy import UTCDateTime
 from obspy.core.event import (Catalog, Comment, Event,
                               Origin, Magnitude, FocalMechanism, MomentTensor,
                               Tensor, NodalPlane, NodalPlanes)
+from obspy.core.util.decorator import file_format_check
 from . import util
 
 
@@ -69,16 +70,18 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
             return function(fh, *args, **kwargs)
 
 
-def _is_fnetmt_catalog(filename_or_buf):
+@file_format_check
+def _is_fnetmt_catalog(filename_or_buf, **kwargs):
     """
     Checks if the file is an F-net moment tensor file.
 
-    :param filename_or_buf: File to test.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: :class:`io.BytesIOBase`
+    :param filename_or_buf: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if F-net moment tensor file.
     """
     try:
-        return _buffer_proxy(filename_or_buf, _internal_is_fnetmt_catalog,
-                             reset_fp=True)
+        return _internal_is_fnetmt_catalog(filename_or_buf)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
     except (OSError):
