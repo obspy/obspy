@@ -801,16 +801,22 @@ def _xml_doc_from_anything(source):
 
 def _text_buffer_wrapper(buf, encoding):
     """
-    Derives a text buffer from a (potentially open) binary or text buffer
+    Derives a text buffer from a (potentially open) binary buffer
+
+    If a text buffer is given it is returned as is, since there are some
+    problems e.g. calling readline() on a TextIOWrapper if it is wrapping
+    another TextIOBase object it seems.
 
     :type buf: :class:`io.BufferedIOBase` or :class:`io.TextIOBase`
     :param buf: An open file-like object open in binary or text mode or a
         BytesIO/StringIO object.
-    :rtype: :class:`io.TextIOWrapper`
+    :rtype: :class:`io.TextIOWrapper` or :class:`io.TextIOBase`
     """
-    if not isinstance(buf, (io.BufferedIOBase, io.TextIOBase)):
-        raise TypeError()
-    return io.TextIOWrapper(buf, encoding=encoding)
+    if isinstance(buf, io.BufferedIOBase):
+        return io.TextIOWrapper(buf, encoding=encoding)
+    elif isinstance(buf, io.TextIOBase):
+        return buf
+    raise TypeError()
 
 
 if __name__ == '__main__':

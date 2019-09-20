@@ -24,6 +24,8 @@ from obspy import UTCDateTime
 from obspy.core.inventory import (Inventory, Network, Station, Channel,
                                   Response, Equipment, Site,
                                   InstrumentSensitivity)
+from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _text_buffer_wrapper
 
 
 def float_or_none(value):
@@ -76,36 +78,26 @@ def utf_8_encoder(unicode_csv_data):
             yield line.encode('utf-8')
 
 
-def is_fdsn_station_text_file(path_or_file_object):
+@file_format_check
+def is_fdsn_station_text_file(path_or_file_object, **kwargs):
     """
     Simple function checking if the passed object contains a valid FDSN
     station text file.
 
-    :param path_or_file_object: File name or file like object.
+    :type path_or_file_object: :class:`io.BytesIOBase`
+    :param path_or_file_object: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if FDSN StationText file.
     """
+    fh = _text_buffer_wrapper(path_or_file_object, encoding='utf-8')
     try:
-        if hasattr(path_or_file_object, "readline"):
-            cur_pos = path_or_file_object.tell()
-            first_line = path_or_file_object.readline()
-        else:
-            with open(path_or_file_object, "rt", encoding="utf8") as fh:
-                first_line = fh.readline()
-    except Exception:
+        # Attempt to decode.
+        first_line = fh.readline()
+    # non intuitively, this can also raise an UnicodeEncodeError, when not a
+    # binary buffer was wrapped for pure decoding, but rather a text buffer
+    # with a different encoding.
+    except (UnicodeDecodeError, UnicodeEncodeError):
         return False
-
-    # Attempt to move the file pointer to the old position.
-    try:
-        path_or_file_object.seek(cur_pos, 0)
-    except Exception:
-        pass
-
-    first_line = first_line.strip()
-
-    # Attempt to decode.
-    try:
-        first_line = first_line.decode("utf-8")
-    except Exception:
-        pass
 
     if not first_line.startswith("#"):
         return False
