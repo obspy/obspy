@@ -17,6 +17,7 @@ from obspy import UTCDateTime
 from obspy.core.event import (
     Catalog, Event, Origin, Magnitude, Pick, WaveformStreamID, Arrival,
     OriginQuality)
+from obspy.core.util.decorator import file_format_check
 from obspy.core.util.misc import _seed_id_map
 
 
@@ -58,10 +59,17 @@ def _block2event(block, seed_map, id_default, ph2comp):
     return event
 
 
-def _is_pha(filename):
+@file_format_check
+def _is_pha(filename, **kwargs):
+    """
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if HYPODD PHA file.
+    """
+    f = filename
     try:
-        with open(filename, 'rb') as f:
-            line = f.readline()
+        line = f.readline()
         assert line.startswith(b'#')
         assert len(line.split()) == 15
         yr, mo, dy, hr, mn, sc = line.split()[1:7]
