@@ -135,10 +135,8 @@ class TestNordicMethods(unittest.TestCase):
         self.assertEqual(read_ev.amplitudes[1].waveform_id.station_code,
                          test_ev.amplitudes[1].waveform_id.station_code)
         self.assertEqual(read_ev.amplitudes[1].waveform_id.channel_code,
-                         test_ev.amplitudes[1].
-                         waveform_id.channel_code[0] +
-                         test_ev.amplitudes[1].
-                         waveform_id.channel_code[-1])
+                         test_ev.amplitudes[1].waveform_id.channel_code[0] +
+                         test_ev.amplitudes[1].waveform_id.channel_code[-1])
         self.assertEqual(read_ev.amplitudes[1].magnitude_hint,
                          test_ev.amplitudes[1].magnitude_hint)
         # snr is not supported in s-file
@@ -958,7 +956,7 @@ class TestNordicMethods(unittest.TestCase):
         hor_min = val['min_horizontal_uncertainty']
         azi_max = val['azimuth_max_horizontal_uncertainty']
         self.assertAlmostEqual(hor_max, 1120.674193646)
-        self.assertAlmostEqual(hor_min,  451.762494786)
+        self.assertAlmostEqual(hor_min, 451.762494786)
         self.assertAlmostEqual(azi_max, 167.9407699)
 
 
