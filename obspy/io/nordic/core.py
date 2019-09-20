@@ -37,6 +37,8 @@ from obspy.core.event import (
     OriginQuality, Pick, WaveformStreamID, Arrival, Amplitude,
     FocalMechanism, MomentTensor, NodalPlane, NodalPlanes, QuantityError,
     Tensor, ResourceIdentifier)
+from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _text_buffer_wrapper
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
@@ -52,51 +54,49 @@ INV_EVALUTATION_MAPPING = {
     item: key for key, item in EVALUATION_MAPPING.items()}
 
 
-def _is_sfile(sfile, encoding='latin-1'):
+@file_format_check
+def _is_sfile(sfile, **kwargs):
     """
     Basic test of whether the file is nordic format or not.
 
     Not exhaustive, but checks some of the basics.
 
-    :type sfile: str
-    :param sfile: Path to sfile
+    :type sfile: :class:`io.BytesIOBase`
+    :param sfile: Open file or file-like object to be checked
     :type encoding: str
     :param encoding: Encoding of the file.
-
     :rtype: bool
+    :return: ``True`` if nordic file.
     """
-    if not hasattr(sfile, "readline"):
-        try:
-            with open(sfile, 'r', encoding=encoding) as f:
-                tags = _get_line_tags(f=f, report=False)
-        except Exception:
-            return False
-    else:
-        try:
-            tags = _get_line_tags(f=sfile, report=False)
-        except Exception:
-            return False
-    if tags is not None:
-        try:
-            head_line = tags['1'][0][0]
-        except IndexError:
-            return False
-        try:
-            sfile_seconds = int(head_line[16:18])
-        except ValueError:
-            return False
-        if sfile_seconds == 60:
-            sfile_seconds = 0
-        try:
-            UTCDateTime(
-                int(head_line[1:5]), int(head_line[6:8]), int(head_line[8:10]),
-                int(head_line[11:13]), int(head_line[13:15]), sfile_seconds,
-                int(head_line[19:20]) * 100000)
-            return True
-        except Exception:
-            return False
-    else:
+    encoding = kwargs.pop('encoding', 'latin-1')
+    f = sfile
+    # we're getting either a binary buffer or a text buffer, doesn't matter
+    # though, we can always wrap another TextIOWrapper around it
+    f = _text_buffer_wrapper(f, encoding=encoding)
+    try:
+        tags = _get_line_tags(f=f, report=False)
+    except Exception:
         return False
+    if tags is None:
+        return False
+    try:
+        head_line = tags['1'][0][0]
+    except IndexError:
+        return False
+    try:
+        sfile_seconds = int(head_line[16:18])
+    except ValueError:
+        return False
+    if sfile_seconds == 60:
+        sfile_seconds = 0
+    try:
+        UTCDateTime(
+            int(head_line[1:5]), int(head_line[6:8]), int(head_line[8:10]),
+            int(head_line[11:13]), int(head_line[13:15]), sfile_seconds,
+            int(head_line[19:20]) * 100000)
+    except Exception:
+        return False
+    return True
 
 
 def readheader(sfile, encoding='latin-1'):
