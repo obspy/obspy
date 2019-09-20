@@ -26,6 +26,8 @@ from lxml import etree
 import obspy
 from obspy.core import compatibility
 from obspy.core.util import AttribDict
+from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _xml_doc_from_anything
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (CoefficientsTypeResponseStage,
@@ -44,7 +46,8 @@ SOFTWARE_URI = "https://www.obspy.org"
 SCHEMA_VERSION = "1.0"
 
 
-def _is_stationxml(path_or_file_object):
+@file_format_check
+def _is_stationxml(path_or_file_object, **kwargs):
     """
     Simple function checking if the passed object contains a valid StationXML
     1.0 file. Returns True of False.
@@ -54,41 +57,29 @@ def _is_stationxml(path_or_file_object):
     test for a StationXML file, many real world files are false negatives as
     they don't adhere to the standard.
 
-    :param path_or_file_object: File name or file like object.
+    :type path_or_file_object: :class:`io.BytesIOBase`
+    :param path_or_file_object: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if StationXML file.
     """
-    if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
-                                                        "seek"):
-        current_position = path_or_file_object.tell()
-
     try:
-        if isinstance(path_or_file_object, etree._Element):
-            xmldoc = path_or_file_object
-        else:
-            try:
-                xmldoc = etree.parse(path_or_file_object)
-            except etree.XMLSyntaxError:
-                return False
-        root = xmldoc.getroot()
-        try:
-            match = re.match(
-                r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
-                root.tag)
-            assert match is not None
-        except Exception:
-            return False
-        # Convert schema number to a float to have positive comparisons
-        # between, e.g "1" and "1.0".
-        if float(root.attrib["schemaVersion"]) != float(SCHEMA_VERSION):
-            warnings.warn("The StationXML file has version %s, ObsPy can "
-                          "deal with version %s. Proceed with caution." % (
-                              root.attrib["schemaVersion"], SCHEMA_VERSION))
-        return True
-    finally:
-        # Make sure to reset file pointer position.
-        try:
-            path_or_file_object.seek(current_position, 0)
-        except Exception:
-            pass
+        root = _xml_doc_from_anything(path_or_file_object)
+    except ValueError:
+        return False
+    try:
+        match = re.match(
+            r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
+            root.tag)
+        assert match is not None
+    except Exception:
+        return False
+    # Convert schema number to a float to have positive comparisons
+    # between, e.g "1" and "1.0".
+    if float(root.attrib["schemaVersion"]) != float(SCHEMA_VERSION):
+        warnings.warn("The StationXML file has version %s, ObsPy can "
+                      "deal with version %s. Proceed with caution." % (
+                          root.attrib["schemaVersion"], SCHEMA_VERSION))
+    return True
 
 
 def validate_stationxml(path_or_object):
