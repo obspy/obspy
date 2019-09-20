@@ -478,7 +478,7 @@ def _read_uncertainty(tagged_lines, event):
         orig.latitude_errors = QuantityError(
                              _km_to_deg_lat(errors['y_err']))
         orig.longitude_errors = QuantityError(
-                             _km_to_deg_lon(errors['x_err'],orig.latitude))
+                             _km_to_deg_lon(errors['x_err'], orig.latitude))
         orig.depth_errors = QuantityError(errors['z_err'] * 1000.)
     try:
         orig.quality = OriginQuality(
