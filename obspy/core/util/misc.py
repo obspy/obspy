@@ -780,6 +780,8 @@ def _xml_doc_from_anything(source):
     """
     if isinstance(source, etree._Element):
         return source
+    if isinstance(source, etree._ElementTree):
+        return source.getroot()
 
     try:
         xml_doc = etree.parse(source).getroot()
@@ -792,6 +794,8 @@ def _xml_doc_from_anything(source):
             except Exception:
                 raise ValueError("Could not parse '%s' to an etree element." %
                                  source)
+    if isinstance(xml_doc, etree._ElementTree):
+        return xml_doc.getroot()
     return xml_doc
 
 
