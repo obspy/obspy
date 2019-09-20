@@ -26,6 +26,7 @@ from obspy.core.event.header import (
     EvaluationMode, EventDescriptionType, EventType, EventTypeCertainty,
     OriginDepthType, OriginUncertaintyDescription, PickOnset, PickPolarity)
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.decorator import file_format_check
 
 
 # Convert GSE2 depth flag to ObsPy depth type
@@ -103,18 +104,19 @@ class GSE2BulletinSyntaxError(Exception):
     """Raised when the file is not a valid GSE2 file"""
 
 
-def _is_gse2(filename):
+@file_format_check
+def _is_gse2(filename, **kwargs):
     """
     Checks whether a file is GSE2.0 format.
 
-    :type filename: str
-    :param filename: Name of the GSE2.0 file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if GSE2.0 file.
     """
+    fh = filename
     try:
-        with open(filename, 'rb') as fh:
-            temp = fh.read(12)
+        temp = fh.read(12)
     except Exception:
         return False
     if temp != b'BEGIN GSE2.0':
