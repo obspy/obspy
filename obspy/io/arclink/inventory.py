@@ -27,6 +27,8 @@ import warnings
 from lxml import etree
 
 import obspy
+from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _xml_doc_from_anything
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
@@ -43,7 +45,8 @@ SCHEMA_VERSION = "1.0"
 SCHEMA_NAMESPACE = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 
 
-def _is_inventory_xml(path_or_file_object):
+@file_format_check
+def _is_inventory_xml(path_or_file_object, **kwargs):
     """
     Simple function checking if the passed object contains a valid arclink XML
     1.0 file. Returns True of False.
@@ -52,38 +55,26 @@ def _is_inventory_xml(path_or_file_object):
     test for a StationXML file, many real world files are false negatives as
     they don't adhere to the standard.
 
-    :param path_or_file_object: File name or file like object.
+    :type path_or_file_object: :class:`io.BytesIOBase`
+    :param path_or_file_object: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if arclink Inventory XML file.
     """
-    if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
-                                                        "seek"):
-        current_position = path_or_file_object.tell()
-
     try:
-        if isinstance(path_or_file_object, etree._Element):
-            xmldoc = path_or_file_object
-        else:
-            try:
-                xmldoc = etree.parse(path_or_file_object)
-            except etree.XMLSyntaxError:
-                return False
-        root = xmldoc.getroot()
-        if re.match(r'{http://geofon.gfz-potsdam.de/ns/Inventory/'
-                    r'[0-9]*\.?[0-9]+/}', root.tag) is None:
-            return False
-        # Match and convert schema number to a float to have positive
-        # comparisons between, e.g "1" and "1.0".
-        version = float(re.findall(r"\d+\.\d+", root.tag)[0])
-        if float(version != float(SCHEMA_VERSION)):
-            warnings.warn("The inventory file has version %s, ObsPy can "
-                          "deal with version %s. Proceed with caution." % (
-                              root.attrib["version"], SCHEMA_VERSION))
-        return True
-    finally:
-        # Make sure to reset file pointer position.
-        try:
-            path_or_file_object.seek(current_position, 0)
-        except Exception:
-            pass
+        root = _xml_doc_from_anything(path_or_file_object)
+    except ValueError:
+        return False
+    if re.match(r'{http://geofon.gfz-potsdam.de/ns/Inventory/'
+                r'[0-9]*\.?[0-9]+/}', root.tag) is None:
+        return False
+    # Match and convert schema number to a float to have positive
+    # comparisons between, e.g "1" and "1.0".
+    version = float(re.findall(r"\d+\.\d+", root.tag)[0])
+    if float(version != float(SCHEMA_VERSION)):
+        warnings.warn("The inventory file has version %s, ObsPy can "
+                      "deal with version %s. Proceed with caution." % (
+                          root.attrib["version"], SCHEMA_VERSION))
+    return True
 
 
 def validate_arclink_xml(path_or_object):
