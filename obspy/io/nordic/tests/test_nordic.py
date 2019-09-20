@@ -817,9 +817,11 @@ class TestNordicMethods(unittest.TestCase):
         self.assertEqual(event_depth, 1969.)
         self.assertEqual(event_rms, 0.051)
 
-    def test_uncert_ellipse(self, debug=False):
+    def test_ellipse_from__to_uncerts(self):
         """
-        Verify that confidence ellipse is properly calculated and inverted
+        Verify ellipse is properly calculated and inverted using uncertainties
+
+        tests _ellipse.from_uncerts and _ellipse.to_uncerts()
         """
         center = (20, 30)
         # First try simple cases without correlation
@@ -829,11 +831,6 @@ class TestNordicMethods(unittest.TestCase):
             for (x_err, y_err) in zip(x_errs, y_errs):
                 ell = _ellipse.from_uncerts(x_err, y_err, c_xy, center)
                 (x_err_out, y_err_out, c_xy_out, center_out) = ell.to_uncerts()
-                if debug:
-                    print()
-                    print(x_err, y_err, c_xy, center)
-                    print(ell)
-                    print(x_err_out, y_err_out, c_xy_out, center_out)
                 self.assertAlmostEqual(x_err, x_err_out)
                 self.assertAlmostEqual(y_err, y_err_out)
                 self.assertAlmostEqual(c_xy, c_xy_out)
@@ -849,14 +846,103 @@ class TestNordicMethods(unittest.TestCase):
         self.assertAlmostEqual(ell.theta, 167.9407699)
         # Calculate covariance error from ellipse
         (x_err_out, y_err_out, c_xy_out, center_out) = ell.to_uncerts()
-        if debug:
-            print(x_err, y_err, c_xy, center)
-            print(ell)
-            print(x_err_out, y_err_out, c_xy_out, center_out)
         self.assertAlmostEqual(x_err, x_err_out)
         self.assertAlmostEqual(y_err, y_err_out)
         self.assertAlmostEqual(c_xy, c_xy_out)
         self.assertAlmostEqual(center, center_out)
+
+    def test_ellipse_from_to_cov(self):
+        """
+        Verify ellipse is properly calculated and inverted using covariance
+
+        tests _ellipse.from_uncerts and _ellipse.to_uncerts()
+        """
+        center = (20, 30)
+        x_err = 0.5
+        y_err = 1.1
+        c_xy = -0.2149
+        cov = [[x_err**2, c_xy], [c_xy, y_err**2]]
+        # Calculate ellipse
+        ell = _ellipse.from_cov(cov, center)
+        self.assertAlmostEqual(ell.a, 1.120674193646)
+        self.assertAlmostEqual(ell.b, 0.451762494786)
+        self.assertAlmostEqual(ell.theta, 167.9407699)
+        # Calculate covariance error from ellipse
+        cov_out, center_out = ell.to_cov()
+        self.assertAlmostEqual(cov[0][0], cov_out[0][0])
+        self.assertAlmostEqual(cov[0][1], cov_out[0][1])
+        self.assertAlmostEqual(cov[1][0], cov_out[1][0])
+        self.assertAlmostEqual(cov[1][1], cov_out[1][1])
+
+    def test_ellipse_from_uncerts_baz(self, debug=False):
+        """
+        Verify alternative ellipse creator
+
+        tests _ellipse.from_uncerts_baz
+        """
+        # Now a specific case with a finite covariance
+        x_err = 0.5
+        y_err = 1.1
+        c_xy = -0.2149
+        dist = 10
+        baz = 90
+        viewpoint = (5, 5)
+        # Calculate ellipse
+        ell = _ellipse.from_uncerts_baz(x_err, y_err, c_xy,
+                                        dist, baz, viewpoint)
+        self.assertAlmostEqual(ell.a, 1.120674193646)
+        self.assertAlmostEqual(ell.b, 0.451762494786)
+        self.assertAlmostEqual(ell.theta, 167.9407699)
+        self.assertAlmostEqual(ell.x, 15)
+        self.assertAlmostEqual(ell.y, 5)
+        baz = 180
+        ell = _ellipse.from_uncerts_baz(x_err, y_err, c_xy,
+                                        dist, baz, viewpoint)
+        self.assertAlmostEqual(ell.x, 5)
+        self.assertAlmostEqual(ell.y, -5)
+
+    def test_ellipse_is_inside(self, debug=False):
+        """
+        Verify _ellipse.is_inside()
+        """
+        ell = _ellipse(20, 10, 90)
+        self.assertIs(ell.is_inside((0, 0)), True)
+        self.assertFalse(ell.is_inside((100, 100)))
+        self.assertTrue(ell.is_inside((-19.9, 0)))
+        self.assertTrue(ell.is_inside((19.9, 0)))
+        self.assertFalse(ell.is_inside((-20.1, 0)))
+        self.assertFalse(ell.is_inside((20.1, 0)))
+        self.assertTrue(ell.is_inside((0, 9.9)))
+        self.assertTrue(ell.is_inside((0, -9.9)))
+        self.assertFalse(ell.is_inside((0, 10.1)))
+        self.assertFalse(ell.is_inside((0, -10.1)))
+
+    def test_ellipse_is_on(self, debug=False):
+        """
+        Verify _ellipse.is_on()
+        """
+        ell = _ellipse(20, 10, 90)
+        self.assertFalse(ell.is_on((0, 0)))
+        self.assertFalse(ell.is_on((100, 100)))
+        self.assertTrue(ell.is_on((-20, 0)))
+        self.assertTrue(ell.is_on((20, 0)))
+        self.assertFalse(ell.is_on((-20.1, 0)))
+        self.assertFalse(ell.is_on((20.1, 0)))
+        self.assertTrue(ell.is_on((0, 10)))
+        self.assertTrue(ell.is_on((0, -10)))
+        self.assertFalse(ell.is_on((0, 10.1)))
+        self.assertFalse(ell.is_on((0, -10.1)))
+
+    def test_ellipse_subtended_angle(self, debug=False):
+        """
+        Verify _ellipse.subtended_angle()
+        """
+        ell = _ellipse(20, 10, 90)
+        self.assertAlmostEqual(ell.subtended_angle((20, 0)), 180.)
+        self.assertAlmostEqual(ell.subtended_angle((0, 0)), 360.)
+        self.assertAlmostEqual(ell.subtended_angle((40, 0)), 32.2042275039720)
+        self.assertAlmostEqual(ell.subtended_angle((0, 40)), 54.6234598480584)
+        self.assertAlmostEqual(ell.subtended_angle((20, 10)), 89.9994270422)
 
     def test_read_uncert_ellipse(self):
         """

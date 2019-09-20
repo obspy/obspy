@@ -40,7 +40,7 @@ from obspy.core.event import (
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
-    _get_line_tags)
+    _get_line_tags, _km_to_deg_lat, _km_to_deg_lon)
 from obspy.io.nordic.ellipse import _ellipse
 
 
@@ -444,6 +444,11 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False):
 def _read_uncertainty(tagged_lines, event):
     """
     Read hyp uncertainty line.
+
+    :param tagged_lines: Lines keyed by line type
+    :type tagged_lines: dict
+    :returns: updated event
+    :rtype: :class:`~obspy.core.event.event.Event`
     """
     if 'E' not in tagged_lines.keys():
         return event
@@ -453,21 +458,30 @@ def _read_uncertainty(tagged_lines, event):
     # TODO: Convert this to ConfidenceEllipsoid
     errors = {'x_err': None}
     try:
-        errors = {'x_err': float(line[24:30]), 'y_err': float(line[32:38]),
-                  'z_err': float(line[38:43]), 'xy_cov': float(line[43:55]),
-                  'xz_cov': float(line[55:67]), 'yz_cov': float(line[67:79])}
+        errors = {'x_err': _float_conv(line[24:30]),
+                  'y_err': _float_conv(line[32:38]),
+                  'z_err': _float_conv(line[38:43]),
+                  'xy_cov': _float_conv(line[43:55]),
+                  'xz_cov': _float_conv(line[55:67]),
+                  'yz_cov': _float_conv(line[67:79])}
     except ValueError:
         pass
-    if errors['x_err']:
+    orig = event.origins[0]
+    if errors['x_err'] is not None:
         e = _ellipse.from_uncerts(errors['x_err'],
                                   errors['y_err'], errors['xy_cov'])
-        event.origins[0].origin_uncertainty = OriginUncertainty(
-            max_horizontal_uncertainty=e.a*1000.,
-            min_horizontal_uncertainty=e.b*1000.,
-            azimuth_max_horizontal_uncertainty=e.theta,
-            preferred_description="uncertainty ellipse")
+        orig.origin_uncertainty = OriginUncertainty(
+                        max_horizontal_uncertainty=e.a * 1000.,
+                        min_horizontal_uncertainty=e.b * 1000.,
+                        azimuth_max_horizontal_uncertainty=e.theta,
+                        preferred_description="uncertainty ellipse")
+        orig.latitude_errors = QuantityError(
+                             _km_to_deg_lat(errors['y_err']))
+        orig.longitude_errors = QuantityError(
+                             _km_to_deg_lon(errors['x_err'],orig.latitude))
+        orig.depth_errors = QuantityError(errors['z_err'] * 1000.)
     try:
-        event.origins[0].quality = OriginQuality(
+        orig.quality = OriginQuality(
             azimuthal_gap=int(line[5:8]), standard_error=float(line[14:20]))
     except ValueError:
         pass
@@ -477,15 +491,23 @@ def _read_uncertainty(tagged_lines, event):
 def _read_highaccuracy(tagged_lines, event):
     """
     Read high accuracy origin line.
+
+    :param tagged_lines: Lines keyed by line type
+    :type tagged_lines: dict
+    :returns: updated event
+    :rtype: :class:`~obspy.core.event.event.Event`
     """
     if 'H' not in tagged_lines.keys():
         return event
     # In principle there shouldn't be more than one high precision line
     line = tagged_lines['H'][0][0]
     try:
-        dt = {'Y':  int(line[1:5]),  'MO': int(line[6:8]),
-              'D':  int(line[8:10]),  'H': int(line[11:13]),
-              'MI': int(line[13:15]), 'S': float(line[16:23])}
+        dt = {'Y':  _int_conv(line[1:5]),
+              'MO': _int_conv(line[6:8]),
+              'D':  _int_conv(line[8:10]),
+              'H':  _int_conv(line[11:13]),
+              'MI': _int_conv(line[13:15]),
+              'S':  _float_conv(line[16:23])}
     except ValueError:
         pass
     try:
@@ -498,18 +520,19 @@ def _read_highaccuracy(tagged_lines, event):
     except ValueError:
         pass
     try:
-        values = {'latitude': float(line[23:32]),
-                  'longitude': float(line[33:43]),
-                  'depth': float(line[44:52]), 'rms': float(line[53:59])}
+        values = {'latitude':  _float_conv(line[23:32]),
+                  'longitude': _float_conv(line[33:43]),
+                  'depth':     _float_conv(line[44:52]),
+                  'rms':       _float_conv(line[53:59])}
     except ValueError:
         pass
-    if values['latitude']:
+    if values['latitude'] is not None:
         event.origins[0].latitude = values['latitude']
-    if values['longitude']:
+    if values['longitude'] is not None:
         event.origins[0].longitude = values['longitude']
-    if values['depth']:
+    if values['depth'] is not None:
         event.origins[0].depth = values['depth']*1000.
-    if values['rms']:
+    if values['rms'] is not None:
         if event.origins[0].quality is not None:
             event.origins[0].quality.standard_error = values['rms']
         else:
@@ -521,6 +544,11 @@ def _read_highaccuracy(tagged_lines, event):
 def _read_focal_mechanisms(tagged_lines, event):
     """
     Read focal mechanism info from s-file
+
+    :param tagged_lines: Lines keyed by line type
+    :type tagged_lines: dict
+    :returns: updated event
+    :rtype: :class:`~obspy.core.event.event.Event`
     """
     if 'F' not in tagged_lines.keys():
         return event
@@ -551,6 +579,14 @@ def _read_focal_mechanisms(tagged_lines, event):
 
 
 def _read_moment_tensors(tagged_lines, event):
+    """
+    Read moment tensors from s-file
+
+    :param tagged_lines: Lines keyed by line type
+    :type tagged_lines: dict
+    :returns: updated event
+    :rtype: :class:`~obspy.core.event.event.Event`
+    """
     if 'M' not in tagged_lines.keys():
         return event
     # Group moment tensor lines together
