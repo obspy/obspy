@@ -21,6 +21,7 @@ import numpy as np
 from obspy import UTCDateTime, Catalog, __version__
 from obspy.core.event import (
     Event, FocalMechanism, NodalPlanes, NodalPlane, Comment, CreationInfo)
+from obspy.core.util.decorator import file_format_check
 
 
 # XXX some current PR was doing similar, should be merged to
@@ -43,13 +44,19 @@ POLARITIES_EMERGENT = '+-lrfb'
 POLARITIES = POLARITIES_IMPULSIVE + POLARITIES_EMERGENT
 
 
-def _is_focmec(filename):
+@file_format_check
+def _is_focmec(filename, **kwargs):
     """
     Checks that a file is actually a FOCMEC output data file
+
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if FOCMEC file.
     """
+    fh = filename
     try:
-        with open(filename, 'rb') as fh:
-            line = fh.readline()
+        line = fh.readline()
     except Exception:
         return False
     # first line should be ASCII only, something like:
