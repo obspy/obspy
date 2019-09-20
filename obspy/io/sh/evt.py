@@ -23,14 +23,16 @@ from obspy.core.event import (Arrival, Catalog, Event,
                               OriginUncertainty, Pick, ResourceIdentifier,
                               StationMagnitude, WaveformStreamID)
 from obspy.core.event.header import EvaluationMode, EventType, PickOnset
+from obspy.core.util.decorator import file_format_check
 from obspy.core.util.misc import _seed_id_map
 from obspy.io.sh.core import to_utcdatetime
 
 
-def _is_evt(filename):
+@file_format_check
+def _is_evt(filename, **kwargs):
+    f = filename
     try:
-        with open(filename, 'rb') as f:
-            temp = f.read(20)
+        temp = f.read(20)
     except Exception:
         return False
     return b'Event ID' in temp
