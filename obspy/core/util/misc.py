@@ -799,6 +799,20 @@ def _xml_doc_from_anything(source):
     return xml_doc
 
 
+def _text_buffer_wrapper(buf, encoding):
+    """
+    Derives a text buffer from a (potentially open) binary or text buffer
+
+    :type buf: :class:`io.BufferedIOBase` or :class:`io.TextIOBase`
+    :param buf: An open file-like object open in binary or text mode or a
+        BytesIO/StringIO object.
+    :rtype: :class:`io.TextIOWrapper`
+    """
+    if not isinstance(buf, (io.BufferedIOBase, io.TextIOBase)):
+        raise TypeError()
+    return io.TextIOWrapper(buf, encoding=encoding)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
