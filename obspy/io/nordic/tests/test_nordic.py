@@ -12,6 +12,9 @@ import io
 import os
 import unittest
 import warnings
+from itertools import cycle
+import numpy as np
+import matplotlib.pyplot as plt
 
 from obspy import read_events, Catalog, UTCDateTime, read
 from obspy.core.event import (
@@ -21,6 +24,7 @@ from obspy.core.event import (
     NodalPlane, NodalPlanes, ResourceIdentifier, Tensor)
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory
+from obspy.core.util.testing import ImageComparison
 
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.core import (
@@ -29,7 +33,7 @@ from obspy.io.nordic.core import (
 from obspy.io.nordic.utils import (
     _int_conv, _float_conv, _str_conv, _nortoevmag, _evmagtonor,
     _get_line_tags)
-from obspy.io.nordic.ellipse import _ellipse
+from obspy.io.nordic.ellipse import Ellipse
 
 
 class TestNordicMethods(unittest.TestCase):
@@ -819,7 +823,7 @@ class TestNordicMethods(unittest.TestCase):
         """
         Verify ellipse is properly calculated and inverted using uncertainties
 
-        tests _ellipse.from_uncerts and _ellipse.to_uncerts()
+        tests Ellipse.from_uncerts and Ellipse.to_uncerts()
         """
         center = (20, 30)
         # First try simple cases without correlation
@@ -827,7 +831,7 @@ class TestNordicMethods(unittest.TestCase):
         y_errs = (1.33, 0.5, 1.0)
         for c_xy in [0, 0.2, 0.4, 0.6]:
             for (x_err, y_err) in zip(x_errs, y_errs):
-                ell = _ellipse.from_uncerts(x_err, y_err, c_xy, center)
+                ell = Ellipse.from_uncerts(x_err, y_err, c_xy, center)
                 (x_err_out, y_err_out, c_xy_out, center_out) = ell.to_uncerts()
                 self.assertAlmostEqual(x_err, x_err_out)
                 self.assertAlmostEqual(y_err, y_err_out)
@@ -838,7 +842,7 @@ class TestNordicMethods(unittest.TestCase):
         y_err = 1.1
         c_xy = -0.2149
         # Calculate ellipse
-        ell = _ellipse.from_uncerts(x_err, y_err, c_xy, center)
+        ell = Ellipse.from_uncerts(x_err, y_err, c_xy, center)
         self.assertAlmostEqual(ell.a, 1.120674193646)
         self.assertAlmostEqual(ell.b, 0.451762494786)
         self.assertAlmostEqual(ell.theta, 167.9407699)
@@ -853,7 +857,7 @@ class TestNordicMethods(unittest.TestCase):
         """
         Verify ellipse is properly calculated and inverted using covariance
 
-        tests _ellipse.from_uncerts and _ellipse.to_uncerts()
+        tests Ellipse.from_uncerts and Ellipse.to_uncerts()
         """
         center = (20, 30)
         x_err = 0.5
@@ -861,7 +865,7 @@ class TestNordicMethods(unittest.TestCase):
         c_xy = -0.2149
         cov = [[x_err**2, c_xy], [c_xy, y_err**2]]
         # Calculate ellipse
-        ell = _ellipse.from_cov(cov, center)
+        ell = Ellipse.from_cov(cov, center)
         self.assertAlmostEqual(ell.a, 1.120674193646)
         self.assertAlmostEqual(ell.b, 0.451762494786)
         self.assertAlmostEqual(ell.theta, 167.9407699)
@@ -876,7 +880,7 @@ class TestNordicMethods(unittest.TestCase):
         """
         Verify alternative ellipse creator
 
-        tests _ellipse.from_uncerts_baz
+        tests Ellipse.from_uncerts_baz
         """
         # Now a specific case with a finite covariance
         x_err = 0.5
@@ -886,24 +890,24 @@ class TestNordicMethods(unittest.TestCase):
         baz = 90
         viewpoint = (5, 5)
         # Calculate ellipse
-        ell = _ellipse.from_uncerts_baz(x_err, y_err, c_xy,
-                                        dist, baz, viewpoint)
+        ell = Ellipse.from_uncerts_baz(x_err, y_err, c_xy,
+                                       dist, baz, viewpoint)
         self.assertAlmostEqual(ell.a, 1.120674193646)
         self.assertAlmostEqual(ell.b, 0.451762494786)
         self.assertAlmostEqual(ell.theta, 167.9407699)
         self.assertAlmostEqual(ell.x, 15)
         self.assertAlmostEqual(ell.y, 5)
         baz = 180
-        ell = _ellipse.from_uncerts_baz(x_err, y_err, c_xy,
-                                        dist, baz, viewpoint)
+        ell = Ellipse.from_uncerts_baz(x_err, y_err, c_xy,
+                                       dist, baz, viewpoint)
         self.assertAlmostEqual(ell.x, 5)
         self.assertAlmostEqual(ell.y, -5)
 
     def test_ellipse_is_inside(self, debug=False):
         """
-        Verify _ellipse.is_inside()
+        Verify Ellipse.is_inside()
         """
-        ell = _ellipse(20, 10, 90)
+        ell = Ellipse(20, 10, 90)
         self.assertIs(ell.is_inside((0, 0)), True)
         self.assertFalse(ell.is_inside((100, 100)))
         self.assertTrue(ell.is_inside((-19.9, 0)))
@@ -917,9 +921,9 @@ class TestNordicMethods(unittest.TestCase):
 
     def test_ellipse_is_on(self, debug=False):
         """
-        Verify _ellipse.is_on()
+        Verify Ellipse.is_on()
         """
-        ell = _ellipse(20, 10, 90)
+        ell = Ellipse(20, 10, 90)
         self.assertFalse(ell.is_on((0, 0)))
         self.assertFalse(ell.is_on((100, 100)))
         self.assertTrue(ell.is_on((-20, 0)))
@@ -933,14 +937,87 @@ class TestNordicMethods(unittest.TestCase):
 
     def test_ellipse_subtended_angle(self, debug=False):
         """
-        Verify _ellipse.subtended_angle()
+        Verify Ellipse.subtended_angle()
         """
-        ell = _ellipse(20, 10, 90)
+        ell = Ellipse(20, 10, 90)
         self.assertAlmostEqual(ell.subtended_angle((20, 0)), 180.)
         self.assertAlmostEqual(ell.subtended_angle((0, 0)), 360.)
         self.assertAlmostEqual(ell.subtended_angle((40, 0)), 32.2042275039720)
         self.assertAlmostEqual(ell.subtended_angle((0, 40)), 54.6234598480584)
         self.assertAlmostEqual(ell.subtended_angle((20, 10)), 89.9994270422)
+
+    def test_ellipse_plot(self):
+        """
+        Test Ellipse.plot()
+        """
+        # Test single ellipse
+        with ImageComparison(self.testing_path, 'plot_ellipse.png',
+                             style='classic', reltol=10) as ic:
+            Ellipse(20, 10, 90).plot(outfile=ic.name)
+        # Test multi-ellipse figure
+        with ImageComparison(self.testing_path, 'plot_ellipses.png',
+                             style='classic', reltol=10) as ic:
+            fig = Ellipse(20, 10, 90).plot(color='r')
+            fig = Ellipse(20, 10, 45).plot(fig=fig, color='b')
+            fig = Ellipse(20, 10, 0, center=(10, 10)).plot(fig=fig, color='g')
+            fig = Ellipse(20, 10, -45).plot(fig=fig, outfile=ic.name)
+
+    def test_ellipse_plot_tangents(self):
+        """
+        Test Ellipse.plot_tangents()
+        """
+        # Test single ellipse and point
+        with ImageComparison(self.testing_path, 'plot_ellipse_tangents.png',
+                             style='classic', reltol=10) as ic:
+            Ellipse(20, 10, 90).plot_tangents((30, 30),
+                                              color='b',
+                                              print_angle=True,
+                                              ellipse_name='Ellipse',
+                                              outfile=ic.name)
+        # Test multi-ellipse figure
+        dist = 50
+        fig = None
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = cycle(prop_cycle.by_key()['color'])
+        step = 45
+        with ImageComparison(self.testing_path, 'plot_ellipses_tangents.png',
+                             style='classic', reltol=15) as ic:
+            for angle in range(step, 360 + step - 1, step):
+                x = dist * np.sin(np.radians(angle))
+                y = dist * np.cos(np.radians(angle))
+                ell = Ellipse(20, 10, 90, center=(x, y))
+                if angle == 360:
+                    outfile = ic.name
+                else:
+                    outfile = None
+                fig = ell.plot_tangents((0, 0),
+                                        fig=fig,
+                                        color=next(colors),
+                                        print_angle=True,
+                                        ellipse_name='E{:d}'.format(angle),
+                                        outfile=outfile)
+        # Test multi-station figure
+        fig = None
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = cycle(prop_cycle.by_key()['color'])
+        with ImageComparison(self.testing_path,
+                             'plot_ellipse_tangents_pts.png',
+                             style='classic',
+                             reltol=15) as ic:
+            for angle in range(step, 360 + step - 1, step):
+                x = dist * np.sin(np.radians(angle))
+                y = dist * np.cos(np.radians(angle))
+                ell = Ellipse(20, 10, 90)
+                if angle == 360:
+                    outfile = ic.name
+                else:
+                    outfile = None
+                fig = ell.plot_tangents((x, y),
+                                        fig=fig,
+                                        color=next(colors),
+                                        print_angle=True,
+                                        pt_name='pt{:d}'.format(angle),
+                                        outfile=outfile)
 
     def test_read_uncert_ellipse(self):
         """

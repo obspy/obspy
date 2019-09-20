@@ -17,10 +17,11 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
+import io
 import warnings
 
 
-class _ellipse:
+class Ellipse:
     def __init__(self, a, b, theta=0, center=(0, 0)):
         """Defines an ellipse
 
@@ -38,7 +39,7 @@ class _ellipse:
         :param center: x,y coordinates of ellipse center
         :type center: tuple of numeric
         :return: ellipse
-        :rtype: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
         if a < b:
             warnings.warn('Semi-major smaller than semi-minor! Switching...')
@@ -63,7 +64,7 @@ class _ellipse:
         :param center: center position (x,y)
         :type center: 2-tuple of numeric
         :return: ellipse
-        :rtype: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
         evals, evecs = np.linalg.eig(cov)
         evals = np.sqrt(evals)
@@ -83,7 +84,7 @@ class _ellipse:
     def from_uncerts(cls, x_err, y_err, c_xy, center=(0, 0)):
         """Set error ellipse using Nordic epicenter uncertainties
 
-        Call as e=_ellipse.from_uncerts(x_err,y_err,c_xy,center)
+        Call as e=Ellipse.from_uncerts(x_err,y_err,c_xy,center)
 
         :param x_err: x error (dist_units)
         :type x_err: float
@@ -94,7 +95,7 @@ class _ellipse:
         :param center: center position (x,y)
         :type center: 2-tuple of numeric
         :return: ellipse
-        :rtype: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
         cov = [[x_err**2, c_xy], [c_xy, y_err**2]]
         return cls.from_cov(cov, center)
@@ -103,8 +104,6 @@ class _ellipse:
     def from_uncerts_baz(cls, x_err, y_err, c_xy, dist, baz,
                          viewpoint=(0, 0)):
         """Set error ellipse using uncertainties, distance and back-azimuth
-
-        Call as e=_ellipse.from_uncerts_baz(xerr,yerr,c_xy,dist,baz[,viewpt])
 
         Inputs:
         :param x_err: x error (dist_units)
@@ -120,7 +119,7 @@ class _ellipse:
         :param viewpoint: observer's position
         :type viewpoint: 2-tuple of floats
         :return: ellipse
-        :rtype: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
         x = viewpoint[0] + dist * np.sin(np.radians(baz))
         y = viewpoint[1] + dist * np.cos(np.radians(baz))
@@ -152,7 +151,7 @@ class _ellipse:
         Call as x_err, y_err, c_xy, center =myellipse.to_uncerts()
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :returns: x_error (m), y_error (m),
                   x-y covariance (dist^2), center (x,y)
         :rtype: 4-tuple
@@ -167,9 +166,9 @@ class _ellipse:
     def __repr__(self):
         """String describing the ellipse
 
-        >>> str(_ellipse(20,10))
+        >>> str(Ellipse(20,10))
         '<a=20, b=10, theta=  0.0>'
-        >>>str(ellipse._ellipse(20,10,45,(3,4)))
+        >>>str(Ellipse(20,10,45,(3,4)))
         '<a=20, b=10, theta= 45.0, center=(3,4)>'
         """
         s = f'<a={self.a:.3g}, b={self.b:.3g}'
@@ -193,7 +192,7 @@ class _ellipse:
         """ Is the given point inside the ellipse?
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
         :type pt: 2-tuple of floats
         :return: True or False
@@ -210,7 +209,7 @@ class _ellipse:
         """ Is the given point on the ellipse?
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
         :type pt: 2-tuple of floats
         :return: True or False
@@ -230,7 +229,7 @@ class _ellipse:
         along the y-axis
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: original coordinates of the point (x,y)
         :type pt: 2-tuple of floats
         :return: new coordinates of the viewpoint
@@ -240,7 +239,7 @@ class _ellipse:
         pt1 = (pt[0] - self.x, pt[1] - self.y)
 
         # Rotate
-        R_rot = _ellipse.__ROT_CCW(self.theta)
+        R_rot = Ellipse.__ROT_CCW(self.theta)
         rotated = np.dot(R_rot, pt1)
         return rotated
 
@@ -251,14 +250,14 @@ class _ellipse:
         put the point back in its true position
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: original coordinates of the point (x,y)
         :type pt: 2-tuple of floats
         :return: new coordinates of the viewpoint
         :rtype: 2-tuple of floats
         """
         # Unrotate
-        R_rot = _ellipse.__ROT_CW(self.theta)
+        R_rot = Ellipse.__ROT_CW(self.theta)
         unrot = np.dot(R_rot, pt)
         # Untranslate
         pt1 = (unrot[0] + self.x, unrot[1] + self.y)
@@ -271,7 +270,7 @@ class _ellipse:
         P = (-a**2 * m/c, b**2 / c)
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
         :type pt: 2-tuple of floats
         :return: coordinates of both tangent intersections
@@ -315,7 +314,7 @@ class _ellipse:
             and then c  = y - mx
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
         :type pt: 2-tuple of floats
         :return: subtended angle (degrees)
@@ -336,38 +335,142 @@ class _ellipse:
         sinang = np.linalg.norm(np.cross(T0, T1))
         return np.degrees(np.arctan2(sinang, cosang))
 
-    def plot(self):
+    def plot(self, linewidth=2, color='k',
+             npts=100, alpha=1.0, zorder=100,
+             outfile=None, format=None, fig=None, show=False):
         """ Plot the ellipse
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
+        :param color: Color of the edges. Defaults to ``'k'`` (black).
+        :param npts: Controls the number of interpolation points for the
+            curves. Minimum is automatically set to ``100``.
+        :param alpha: The alpha level of the beach ball. Defaults to ``1.0``
+            (opaque).
+        :param zorder: Set zorder. Artists with lower zorder values are drawn
+            first.
+        :param outfile: Output file string. Also used to automatically
+            determine the output format. Supported file formats depend on your
+            matplotlib backend. Most backends support png, pdf, ps, eps and
+            svg. Defaults to ``None``.
+        :param format: Format of the graph picture. If no format is given the
+            outfile parameter will be used to try to automatically determine
+            the output format. If no format is found it defaults to png output.
+            If no outfile is specified but a format is, than a binary
+            imagestring will be returned.
+            Defaults to ``None``.
+        :param fig: Give an existing figure instance to plot into.
+            New Figure if set to ``None``.
+        :param show: If no outfile/format, sets plt.show()
         """
-        t = np.linspace(0, 2 * np.pi, 100)
+        t = np.linspace(0, 2 * np.pi, npts)
         Ell = np.array([self.b * np.sin(t), self.a * np.cos(t)])
-        R_rot = _ellipse.__ROT_CW(self.theta)
+        R_rot = Ellipse.__ROT_CW(self.theta)
         Ell_rot = np.zeros((2, Ell.shape[1]))
         for i in range(Ell.shape[1]):
             Ell_rot[:, i] = np.dot(R_rot, Ell[:, i])
-        plt.plot(self.x + Ell_rot[0, :], self.y + Ell_rot[1, :])
-        plt.axis('equal')
-        return plt.gca()
 
-    def plot_tangents(self, pt=(0, 0)):
+        # plot the figure
+        if not fig:
+            fig = plt.figure(figsize=(3, 3), dpi=100)
+            fig.add_subplot(111, aspect='equal')
+            # ax = fig.add_subplot(111, aspect='equal')
+        # else:
+        #    ax = fig.gca()
+        plt.plot(self.x + Ell_rot[0, :], self.y + Ell_rot[1, :],
+                 linewidth=linewidth, color=color,
+                 alpha=alpha, zorder=zorder)
+        # export
+        if outfile:
+            if format:
+                fig.savefig(outfile, dpi=100, transparent=True, format=format)
+            else:
+                fig.savefig(outfile, dpi=100, transparent=True)
+        elif format and not outfile:
+            imgdata = io.BytesIO()
+            fig.savefig(imgdata, format=format, dpi=100, transparent=True)
+            imgdata.seek(0)
+            return imgdata.read()
+        else:
+            if show:
+                plt.show()
+            return fig
+
+    def plot_tangents(self, pt=(0, 0), linewidth=2, color='k',
+                      print_angle=False, ellipse_name=None, pt_name=None,
+                      npts=100, alpha=1.0, zorder=100,
+                      outfile=None, format=None, fig=None, show=False):
         """ Plot tangents to an ellipse when viewed from x,y
 
         :parm self: ellipse
-        :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the viewpoint (x,y)
         :type pt: 2-tuple of floats
+        :parm self: ellipse
+        :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
+        :param color: Color of the edges. Defaults to ``'k'`` (black).
+        :param print_angle: print the subtended angle on the plot (False)
+        :param ellipse_name: text to print in the middle of the ellipse (None)
+        :param pt_name: text to print next to the pt (None)
+        :param npts: Controls the number of interpolation points for the
+            curves. Minimum is automatically set to ``100``.
+        :param alpha: The alpha level of the beach ball. Defaults to ``1.0``
+            (opaque).
+        :param zorder: Set zorder. Artists with lower zorder values are drawn
+            first.
+        :param outfile: Output file string. Also used to automatically
+            determine the output format. Supported file formats depend on your
+            matplotlib backend. Most backends support png, pdf, ps, eps and
+            svg. Defaults to ``None``.
+        :param format: Format of the graph picture. If no format is given the
+            outfile parameter will be used to try to automatically determine
+            the output format. If no format is found it defaults to png output.
+            If no outfile is specified but a format is, than a binary
+            imagestring will be returned.
+            Defaults to ``None``.
+        :param fig: Give an existing figure instance to plot into.
+            New Figure if set to ``None``.
+        :param show: If no outfile/format, sets plt.show()
         """
-        ax = self.plot()
+        # plot the figure
+        fig = self.plot(linewidth=linewidth, color=color,
+                        npts=npts, alpha=alpha, zorder=zorder,
+                        fig=fig, show=False)
+        ax = fig.gca()
         ax.plot(pt[0], pt[1], '+')
         T0, T1 = self._get_tangents(pt)
         if T0:
-            ax.plot([pt[0], T0[0]], [pt[1], T0[1]])
-            ax.plot([pt[0], T1[0]], [pt[1], T1[1]])
-        plt.show()
-        return
+            ax.plot([pt[0], T0[0]], [pt[1], T0[1]], color=color)
+            ax.plot([pt[0], T1[0]], [pt[1], T1[1]], color=color)
+            if print_angle:
+                sub_angle = self.subtended_angle(pt)
+                ax.text(np.mean([pt[0], T0[0], T1[0]]),
+                        np.mean([pt[1], T0[1], T1[1]]),
+                        '{:.1f}'.format(sub_angle),
+                        fontsize=6, color=color,
+                        va='center', ha='center')
+        if isinstance(ellipse_name, str):
+            ax.text(self.x, self.y, ellipse_name, fontsize=8, color=color,
+                    va='center', ha='center')
+        if isinstance(pt_name, str):
+            ax.text(pt[0], pt[1], pt_name, fontsize=8, color=color,
+                    va='center', ha='center')
+
+        # export
+        if outfile:
+            if format:
+                fig.savefig(outfile, dpi=100, transparent=True, format=format)
+            else:
+                fig.savefig(outfile, dpi=100, transparent=True)
+        elif format and not outfile:
+            imgdata = io.BytesIO()
+            fig.savefig(imgdata, format=format, dpi=100, transparent=True)
+            imgdata.seek(0)
+            return imgdata.read()
+        else:
+            if show:
+                plt.show()
+            return fig
 
 
 if __name__ == "__main__":

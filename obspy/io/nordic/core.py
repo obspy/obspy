@@ -41,7 +41,7 @@ from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
     _get_line_tags, _km_to_deg_lat, _km_to_deg_lon)
-from obspy.io.nordic.ellipse import _ellipse
+from obspy.io.nordic.ellipse import Ellipse
 
 
 POLARITY_MAPPING = {"": "undecidable", "C": "positive", "D": "negative"}
@@ -468,8 +468,9 @@ def _read_uncertainty(tagged_lines, event):
         pass
     orig = event.origins[0]
     if errors['x_err'] is not None:
-        e = _ellipse.from_uncerts(errors['x_err'],
-                                  errors['y_err'], errors['xy_cov'])
+        e = Ellipse.from_uncerts(errors['x_err'],
+                                 errors['y_err'],
+                                 errors['xy_cov'])
         orig.origin_uncertainty = OriginUncertainty(
             max_horizontal_uncertainty=e.a * 1000.,
             min_horizontal_uncertainty=e.b * 1000.,
