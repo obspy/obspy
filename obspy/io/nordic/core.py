@@ -471,14 +471,14 @@ def _read_uncertainty(tagged_lines, event):
         e = _ellipse.from_uncerts(errors['x_err'],
                                   errors['y_err'], errors['xy_cov'])
         orig.origin_uncertainty = OriginUncertainty(
-                        max_horizontal_uncertainty=e.a * 1000.,
-                        min_horizontal_uncertainty=e.b * 1000.,
-                        azimuth_max_horizontal_uncertainty=e.theta,
-                        preferred_description="uncertainty ellipse")
+            max_horizontal_uncertainty=e.a * 1000.,
+            min_horizontal_uncertainty=e.b * 1000.,
+            azimuth_max_horizontal_uncertainty=e.theta,
+            preferred_description="uncertainty ellipse")
         orig.latitude_errors = QuantityError(
-                             _km_to_deg_lat(errors['y_err']))
+            _km_to_deg_lat(errors['y_err']))
         orig.longitude_errors = QuantityError(
-                             _km_to_deg_lon(errors['x_err'], orig.latitude))
+            _km_to_deg_lon(errors['x_err'], orig.latitude))
         orig.depth_errors = QuantityError(errors['z_err'] * 1000.)
     try:
         orig.quality = OriginQuality(
@@ -502,12 +502,12 @@ def _read_highaccuracy(tagged_lines, event):
     # In principle there shouldn't be more than one high precision line
     line = tagged_lines['H'][0][0]
     try:
-        dt = {'Y':  _int_conv(line[1:5]),
+        dt = {'Y': _int_conv(line[1:5]),
               'MO': _int_conv(line[6:8]),
-              'D':  _int_conv(line[8:10]),
-              'H':  _int_conv(line[11:13]),
+              'D': _int_conv(line[8:10]),
+              'H': _int_conv(line[11:13]),
               'MI': _int_conv(line[13:15]),
-              'S':  _float_conv(line[16:23])}
+              'S': _float_conv(line[16:23])}
     except ValueError:
         pass
     try:
@@ -520,10 +520,10 @@ def _read_highaccuracy(tagged_lines, event):
     except ValueError:
         pass
     try:
-        values = {'latitude':  _float_conv(line[23:32]),
+        values = {'latitude': _float_conv(line[23:32]),
                   'longitude': _float_conv(line[33:43]),
-                  'depth':     _float_conv(line[44:52]),
-                  'rms':       _float_conv(line[53:59])}
+                  'depth': _float_conv(line[44:52]),
+                  'rms': _float_conv(line[53:59])}
     except ValueError:
         pass
     if values['latitude'] is not None:
@@ -531,7 +531,7 @@ def _read_highaccuracy(tagged_lines, event):
     if values['longitude'] is not None:
         event.origins[0].longitude = values['longitude']
     if values['depth'] is not None:
-        event.origins[0].depth = values['depth']*1000.
+        event.origins[0].depth = values['depth'] * 1000.
     if values['rms'] is not None:
         if event.origins[0].quality is not None:
             event.origins[0].quality.standard_error = values['rms']
@@ -1393,7 +1393,7 @@ def nordpick(event, high_accuracy=True):
         if len(amplitude) > 0:
             if len(amplitude) > 1:
                 msg = 'Nordic files need one pick for each amplitude, ' + \
-                      'using the first amplitude only'
+                    'using the first amplitude only'
                 warnings.warn(msg)
             amplitude = amplitude[0]
             # Determine type of amplitude

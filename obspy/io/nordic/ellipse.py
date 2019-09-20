@@ -76,7 +76,7 @@ class _ellipse:
         if y_v1 == 0.:
             theta = 90.
         else:
-            theta = (np.degrees(np.arctan((x_v1)/(y_v1))) + 180) % 180
+            theta = (np.degrees(np.arctan((x_v1) / (y_v1))) + 180) % 180
         return cls(a, b, theta, center)
 
     @classmethod
@@ -122,8 +122,8 @@ class _ellipse:
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse._ellipse`
         """
-        x = viewpoint[0] + dist*np.sin(np.radians(baz))
-        y = viewpoint[1] + dist*np.cos(np.radians(baz))
+        x = viewpoint[0] + dist * np.sin(np.radians(baz))
+        y = viewpoint[1] + dist * np.cos(np.radians(baz))
         return cls.from_uncerts(x_err, y_err, c_xy, (x, y))
 
     def to_cov(self):
@@ -144,7 +144,7 @@ class _ellipse:
         c_yy = self.a**2 * cos_theta**2 + self.b**2 * sin_theta**2
         c_xx = self.a**2 * sin_theta**2 + self.b**2 * cos_theta**2
         c_xy = (self.a**2 - self.b**2) * sin_theta * cos_theta
-        return [[c_xx, c_xy], [c_xy, c_yy]],  (self.x, self.y)
+        return [[c_xx, c_xy], [c_xy, c_yy]], (self.x, self.y)
 
     def to_uncerts(self):
         """Convert to Nordic uncertainty values
@@ -201,7 +201,7 @@ class _ellipse:
         """
         pt1 = self._relative_viewpoint(pt)
         x1, y1 = pt1
-        value = ((y1**2)/(self.a**2)) + ((x1**2)/(self.b**2))
+        value = ((y1**2) / (self.a**2)) + ((x1**2) / (self.b**2))
         if value < 1:
             return True
         return False
@@ -218,8 +218,8 @@ class _ellipse:
         """
         pt1 = self._relative_viewpoint(pt)
         x1, y1 = pt1
-        value = ((y1**2)/(self.a**2)) + ((x1**2)/(self.b**2))
-        if abs(value - 1) < 2*np.finfo(float).eps:
+        value = ((y1**2) / (self.a**2)) + ((x1**2) / (self.b**2))
+        if abs(value - 1) < 2 * np.finfo(float).eps:
             return True
         return False
 
@@ -237,7 +237,7 @@ class _ellipse:
         :rtype: 2-tuple of floats
         """
         # Translate
-        pt1 = (pt[0]-self.x, pt[1]-self.y)
+        pt1 = (pt[0] - self.x, pt[1] - self.y)
 
         # Rotate
         R_rot = _ellipse.__ROT_CCW(self.theta)
@@ -261,7 +261,7 @@ class _ellipse:
         R_rot = _ellipse.__ROT_CW(self.theta)
         unrot = np.dot(R_rot, pt)
         # Untranslate
-        pt1 = (unrot[0] + self.x, unrot[1]+self.y)
+        pt1 = (unrot[0] + self.x, unrot[1] + self.y)
         return pt1
 
     def _get_tangents(self, pt=(0, 0)):
@@ -286,15 +286,15 @@ class _ellipse:
 
         # for calculations, assume ellipse is centered at zero and pointing S-N
         (x1, y1) = self._relative_viewpoint(pt)
-        coeffs = [self.a**2 - y1**2, 2*y1*x1, self.b**2 - x1**2]
+        coeffs = [self.a**2 - y1**2, 2 * y1 * x1, self.b**2 - x1**2]
         if coeffs[0] == 0:
             coeffs[0] = (abs(coeffs[1]) + abs(coeffs[2])) / 1.e5
         ms = np.roots(coeffs)
         cs = -(y1 * ms) + x1
         # Determine the tangent intersect with ellipse
         # Rotated from equation because ellipse theta=0 is N-S
-        T0 = (self.b**2 / cs[0],         -self.a**2 * ms[0] / cs[0])
-        T1 = (self.b**2 / cs[1],         -self.a**2 * ms[1] / cs[1])
+        T0 = (self.b**2 / cs[0], -self.a**2 * ms[0] / cs[0])
+        T1 = (self.b**2 / cs[1], -self.a**2 * ms[1] / cs[1])
 
         # Rotate back to true coords
         T0 = self._absolute_viewpoint(T0)
@@ -342,8 +342,8 @@ class _ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse._ellipse`
         """
-        t = np.linspace(0, 2*np.pi, 100)
-        Ell = np.array([self.b*np.sin(t), self.a*np.cos(t)])
+        t = np.linspace(0, 2 * np.pi, 100)
+        Ell = np.array([self.b * np.sin(t), self.a * np.cos(t)])
         R_rot = _ellipse.__ROT_CW(self.theta)
         Ell_rot = np.zeros((2, Ell.shape[1]))
         for i in range(Ell.shape[1]):
