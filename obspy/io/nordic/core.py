@@ -64,15 +64,19 @@ def _is_sfile(sfile, **kwargs):
     :type sfile: :class:`io.BytesIOBase`
     :param sfile: Open file or file-like object to be checked
     :type encoding: str
-    :param encoding: Encoding of the file.
+    :param encoding: Encoding of the file. Given setting is ignored if the
+        input is already a Text stream with a set encoding.
     :rtype: bool
     :return: ``True`` if nordic file.
     """
-    encoding = kwargs.pop('encoding', 'latin-1')
+    if isinstance(sfile, io.BufferedIOBase):
+        encoding = kwargs.pop('encoding', 'latin-1')
+        sfile = _text_buffer_wrapper(sfile, encoding)
+    else:
+        msg = ("'encoding' parameter is being ignored on a Text buffer input "
+               "already having an encoding.")
+        warnings.warn(msg)
     f = sfile
-    # we're getting either a binary buffer or a text buffer, doesn't matter
-    # though, we can always wrap another TextIOWrapper around it
-    f = _text_buffer_wrapper(f, encoding=encoding)
     try:
         tags = _get_line_tags(f=f, report=False)
     except Exception:
