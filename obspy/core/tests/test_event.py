@@ -508,10 +508,11 @@ class CatalogTestCase(unittest.TestCase):
         # create event and save to disk
         origin = Origin(time=UTCDateTime('2016-01-01'))
         event1 = Event(origins=[origin])
-        bio = io.BytesIO()
-        event1.write(bio, 'quakeml')
-        # read from disk
-        event2 = read_events(bio)[0]
+        with io.BytesIO() as bio:
+            event1.write(bio, 'quakeml')
+            # read from disk
+            bio.seek(0)
+            event2 = read_events(bio, format='QUAKEML')[0]
         # saved and loaded event should be equal
         self.assertEqual(event1, event2)
 
