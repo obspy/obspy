@@ -89,14 +89,14 @@ def is_fdsn_station_text_file(path_or_file_object, **kwargs):
     :rtype: bool
     :return: ``True`` if FDSN StationText file.
     """
-    fh = _text_buffer_wrapper(path_or_file_object, encoding='utf-8')
+    if isinstance(path_or_file_object, io.BufferedIOBase):
+        fh = _text_buffer_wrapper(path_or_file_object, encoding='utf-8')
+    else:
+        fh = path_or_file_object
     try:
         # Attempt to decode.
         first_line = fh.readline()
-    # non intuitively, this can also raise an UnicodeEncodeError, when not a
-    # binary buffer was wrapped for pure decoding, but rather a text buffer
-    # with a different encoding.
-    except (UnicodeDecodeError, UnicodeEncodeError):
+    except UnicodeDecodeError:
         return False
 
     if not first_line.startswith("#"):
