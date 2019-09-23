@@ -19,36 +19,26 @@ import warnings
 
 import obspy
 import obspy.core.inventory
+from obspy.core.util.decorator import file_format_check
 
 from . import InvalidResponseError
 from .parser import Parser, is_xseed
 
 
-def _is_seed(filename):
+@file_format_check
+def _is_seed(filename, **kwargs):
     """
     Determine if the file is (dataless) SEED file.
 
     No comprehensive check - it only checks the initial record sequence
     number and the very first blockette.
 
-    :type filename: str
-    :param filename: Path/filename of a local file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
-    :returns: `True` if file seems to be a RESP file, `False` otherwise.
+    :returns: `True` if file seems to be a SEED file, `False` otherwise.
     """
-    try:
-        if hasattr(filename, "read") and hasattr(filename, "seek") and \
-                hasattr(filename, "tell"):
-            pos = filename.tell()
-            try:
-                buf = filename.read(128)
-            finally:
-                filename.seek(pos, 0)
-        else:
-            with io.open(filename, "rb") as fh:
-                buf = fh.read(128)
-    except IOError:
-        return False
+    buf = filename.read(128)
 
     # Minimum record size.
     if len(buf) < 128:
@@ -63,36 +53,32 @@ def _is_seed(filename):
     return True
 
 
-def _is_xseed(filename):
+@file_format_check
+def _is_xseed(filename, **kwargs):
     """
     Determine if the file is an XML-SEED file.
 
     Does not do any schema validation but only check the root tag.
 
-    :type filename: str
-    :param filename: Path/filename of a local file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
-    :returns: `True` if file seems to be a RESP file, `False` otherwise.
+    :returns: `True` if file seems to be a XSEED file, `False` otherwise.
     """
     return is_xseed(filename)
 
 
-def _is_resp(filename):
+@file_format_check
+def _is_resp(filename, **kwargs):
     """
     Check if a file at the specified location appears to be a RESP file.
 
-    :type filename: str
-    :param filename: Path/filename of a local file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :returns: `True` if file seems to be a RESP file, `False` otherwise.
     """
-    if hasattr(filename, "readline"):
-        return _internal_is_resp(filename)
-    try:
-        with open(filename, "rb") as fh:
-            return _internal_is_resp(fh)
-    except (IOError, TypeError):
-        return False
+    return _internal_is_resp(filename)
 
 
 def _internal_is_resp(fh):
