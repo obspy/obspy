@@ -285,25 +285,32 @@ def file_format_check(func, filename, **kwargs):
         finally:
             # Reset pointer.
             fh.seek(initial_pos, 0)
+        return
+    # Do not accept directories
+    try:
+        is_local_path = os.path.exists(filename)
+    except TypeError:
+        is_local_path = False
+    if is_local_path and os.path.isdir(filename):
+        return False
     # Or open it if it is a local file
-    elif os.path.exists(filename):
+    if is_local_path:
         file_size = os.path.getsize(filename)
         kwargs['_file_size'] = file_size
         with io.open(filename, 'rb') as fh:
             return func(fh, **kwargs)
     # Or initialize a BytesIO object
-    elif isinstance(filename, (bytes, native_bytes)):
+    if isinstance(filename, (bytes, native_bytes)):
         kwargs['_file_size'] = len(filename)
         with io.BytesIO(filename) as fh:
             return func(fh, **kwargs)
     # Or initialize a TextIO object
-    elif isinstance(filename, (str, native_str)):
+    if isinstance(filename, (str, native_str)):
         kwargs['_file_size'] = len(filename)
         with io.StringIO(filename) as fh:
             return func(fh, **kwargs)
-    # Any other cases: raise Exception
-    msg = 'Invalid input: ' + str(filename)[:100]
-    raise Exception(msg)
+    # Any other cases: return False
+    return False
 
 
 def map_example_filename(arg_kwarg_name):
