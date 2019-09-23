@@ -749,9 +749,9 @@ def make_diverse_catalog_list(*args):  # NOQA
         cat1.write(bytes_io, 'quakeml')
         # get a few copies from reading from bytes
         bytes_io.seek(0)
-        cat2 = read_events(bytes_io)
+        cat2 = read_events(bytes_io, format='QUAKEML')
         bytes_io.seek(0)
-        cat3 = read_events(bytes_io)
+        cat3 = read_events(bytes_io, format='QUAKEML')
     # make more catalogs with copy method
     cat4 = cat1.copy()
     cat5 = cat4.copy()
