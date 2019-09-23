@@ -745,11 +745,13 @@ def make_diverse_catalog_list(*args):  # NOQA
     """
     # create a complex catalog
     cat1 = create_diverse_catalog()
-    bytes_io = io.BytesIO()
-    cat1.write(bytes_io, 'quakeml')
-    # get a few copies from reading from bytes
-    cat2 = read_events(bytes_io)
-    cat3 = read_events(bytes_io)
+    with io.BytesIO() as bytes_io:
+        cat1.write(bytes_io, 'quakeml')
+        # get a few copies from reading from bytes
+        bytes_io.seek(0)
+        cat2 = read_events(bytes_io)
+        bytes_io.seek(0)
+        cat3 = read_events(bytes_io)
     # make more catalogs with copy method
     cat4 = cat1.copy()
     cat5 = cat4.copy()
