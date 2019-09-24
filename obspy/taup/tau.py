@@ -483,8 +483,8 @@ class Arrivals(list):
             possible_distances = [_i for _i in possible_distances
                                   if x[0] <= _i <= x[1]]
             if possible_distances:
-                ax.plot(possible_distances, [arrivals[0].receiver_depth]
-                        * len(possible_distances),
+                ax.plot(possible_distances,
+                        [arrivals[0].receiver_depth] * len(possible_distances),
                         marker="v", color="#C95241",
                         markersize=ms, zorder=10, markeredgewidth=1.5,
                         markeredgecolor="0.3", clip_on=False, lw=0,

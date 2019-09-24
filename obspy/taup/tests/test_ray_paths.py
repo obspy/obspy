@@ -37,12 +37,12 @@ class RayPathCalculationsTestCase(unittest.TestCase):
 
         # this test checks if we get a single P wave greatcircle
         station = obspy.core.inventory.Station(
-                    code='STA', latitude=0., longitude=30., elevation=0.)
+            code='STA', latitude=0., longitude=30., elevation=0.)
         # make two (identical) stations
         network = obspy.core.inventory.Network(
-                    code='NET', stations=[station, station])
+            code='NET', stations=[station, station])
         inventory = obspy.core.inventory.Inventory(
-                source='ME', networks=[network])
+            source='ME', networks=[network])
 
         otime = obspy.UTCDateTime('2017-02-03T12:00:00.0Z')
         origin = obspy.core.event.Origin(latitude=0., longitude=90.,

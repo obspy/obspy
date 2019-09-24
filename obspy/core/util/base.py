@@ -382,7 +382,13 @@ def get_proj_version(raw_string=False):
     # proj4 is a c library, prproj wraps this.  proj_version is an attribute
     # of the Proj class that is only set when the projection is made. Make
     # a dummy projection and get the version
-    version_string = str(Proj(proj='utm', zone=10, ellps='WGS84').proj_version)
+    _proj = Proj(proj='utm', zone=10, ellps='WGS84')
+    if hasattr(_proj, 'proj_version'):
+        version_string = str(getattr(_proj, 'proj_version'))
+    else:
+        from pyproj import proj_version_str
+        version_string = proj_version_str
+
     if raw_string:
         return version_string
     version_list = [to_int_or_zero(no) for no in version_string.split(".")]
@@ -434,7 +440,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             # check format
             is_format = is_format(filename)
             if position is not None:
-                filename.seek(0, 0)
+                filename.seek(position, 0)
             if is_format:
                 break
         else:
@@ -565,8 +571,8 @@ class ComparingObject(object):
     """
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__)
-                and self.__dict__ == other.__dict__)
+        return (isinstance(other, self.__class__) and
+                self.__dict__ == other.__dict__)
 
     def __ne__(self, other):
         return not self.__eq__(other)

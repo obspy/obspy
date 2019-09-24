@@ -366,8 +366,8 @@ class BaseRoutingClient(HTTPClient):
         """
         # Just pass these to the bulk request.
         bulk = [kwargs.pop(key, '*') for key in (
-                    "network", "station", "location", "channel", "starttime",
-                    "endtime")]
+                "network", "station", "location", "channel", "starttime",
+                "endtime")]
         return self.get_stations_bulk([bulk], **kwargs)
 
 

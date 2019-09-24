@@ -75,7 +75,7 @@ def _read_bcd(fi, length, left_part):
     :type left_part: bool
     """
     tens = np.power(10, range(12))[::-1]
-    nbr_half_bytes = round(2*length)
+    nbr_half_bytes = round(2 * length)
     if isinstance(length, float):
         length = int(length) + 1
     byte_values = fi.read(length)
@@ -83,7 +83,7 @@ def _read_bcd(fi, length, left_part):
     if left_part is True:
         unpack_bits = np.unpackbits(ints).reshape(-1, 4)[0:nbr_half_bytes]
     else:
-        unpack_bits = np.unpackbits(ints).reshape(-1, 4)[1:nbr_half_bytes+1]
+        unpack_bits = np.unpackbits(ints).reshape(-1, 4)[1:nbr_half_bytes + 1]
     bits = np.dot(unpack_bits, np.array([1, 2, 4, 8])[::-1].reshape(4, 1))
     if np.any(bits > 9):
         raise ValueError('invalid bcd values encountered')

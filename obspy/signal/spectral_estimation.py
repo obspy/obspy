@@ -226,6 +226,8 @@ class PPSD(object):
     # because some types are not loadable without allowing pickle (#2409).
     NPZ_SIMPLE_TYPE_MAP = {None: ''}
     NPZ_SIMPLE_TYPE_MAP_R = {v: i for i, v in NPZ_SIMPLE_TYPE_MAP.items()}
+    # Add current version as a class attribute to avoid hard coding it.
+    _CURRENT_VERSION = 3
 
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
@@ -339,7 +341,7 @@ class PPSD(object):
             raise ValueError(msg)
 
         # save version numbers
-        self.ppsd_version = 2
+        self.ppsd_version = self._CURRENT_VERSION
         self.obspy_version = __version__
         self.matplotlib_version = ".".join(map(str, MATPLOTLIB_VERSION))
         self.numpy_version = np.__version__
@@ -798,8 +800,8 @@ class PPSD(object):
                 else:
                     # throw warnings if trace length is different
                     # than ppsd_length..!?!
-                    slice = tr.slice(t1, t1 + self.ppsd_length
-                                     - tr.stats.delta)
+                    slice = tr.slice(
+                        t1, t1 + self.ppsd_length - tr.stats.delta)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
                     success = self.__process(slice)
@@ -1267,7 +1269,7 @@ class PPSD(object):
             return None
         hist_count = self.current_histogram_count
         mean = (hist * self.db_bin_centers / hist_count).sum(axis=1)
-        return (self.period_bin_centers, mean)
+        return self.period_bin_centers, mean
 
     def save_npz(self, filename):
         """
@@ -1289,7 +1291,7 @@ class PPSD(object):
         np.savez_compressed(filename, **out)
 
     @staticmethod
-    def load_npz(filename, metadata=None):
+    def load_npz(filename, metadata=None, allow_pickle=False):
         """
         Load previously computed PPSD results.
 
@@ -1306,6 +1308,11 @@ class PPSD(object):
             :class:`~obspy.io.xseed Parser` or str or dict
         :param metadata: Response information of instrument. See notes in
             :meth:`PPSD.__init__` for details.
+        :type allow_pickle: bool
+        :param allow_pickle:
+            Allow the pickle protocol to be used when de-serializing saved
+            PPSDs. This is only required for npz files written by ObsPy
+            versions less than 1.2.0.
         """
         def _load(data):
             # the information regarding stats is set from the npz
@@ -1317,7 +1324,13 @@ class PPSD(object):
                 # we have to convert those back to lists (or simple types), so
                 # that additionally processed data can be appended/inserted
                 # later.
-                data_ = data[key]
+                try:
+                    data_ = data[key]
+                except ValueError:
+                    msg = ("Loading PPSD results saved with ObsPy versions < "
+                           "1.2 requires setting the allow_pickle parameter "
+                           "of PPSD.load_npz to True")
+                    raise ValueError(msg)
                 if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
                     if key in ['_times_data', '_times_gaps']:
                         data_ = data_.tolist()
@@ -1338,12 +1351,12 @@ class PPSD(object):
                         data_ = [UTCDateTime(t)._ns for t in data_]
                 setattr(ppsd, key, data_)
             # we converted all data, so update ppsd version
-            ppsd.ppsd_version = 2
+            ppsd.ppsd_version = PPSD._CURRENT_VERSION
             return ppsd
 
         # XXX get rid of if/else again when bumping minimal numpy to 1.7
         if NUMPY_VERSION >= [1, 7]:
-            with np.load(filename, allow_pickle=True) as data:
+            with np.load(filename, allow_pickle=allow_pickle) as data:
                 return _load(data)
         else:
             data = np.load(filename)
@@ -1352,7 +1365,7 @@ class PPSD(object):
             finally:
                 data.close()
 
-    def add_npz(self, filename):
+    def add_npz(self, filename, allow_pickle=False):
         """
         Add previously computed PPSD results to current PPSD instance.
 
@@ -1368,11 +1381,16 @@ class PPSD(object):
         :param filename: Name of numpy .npz file(s) with stored PPSD data.
             Wildcards are possible and will be expanded using
             :py:func:`glob.glob`.
+        :type allow_pickle: bool
+        :param allow_pickle:
+            Allow the pickle protocol to be used when de-serializing saved
+            PPSDs. This is only required for npz files written by ObsPy
+            versions less than 1.2.0.
         """
         for filename in glob.glob(filename):
-            self._add_npz(filename)
+            self._add_npz(filename, allow_pickle=allow_pickle)
 
-    def _add_npz(self, filename):
+    def _add_npz(self, filename, allow_pickle=False):
         """
         See :meth:`PPSD.add_npz()`.
         """
@@ -1434,8 +1452,14 @@ class PPSD(object):
 
         # XXX get rid of if/else again when bumping minimal numpy to 1.7
         if NUMPY_VERSION >= [1, 7]:
-            with np.load(filename) as data:
-                _add(data)
+            try:
+                with np.load(filename, allow_pickle=allow_pickle) as data:
+                    _add(data)
+            except ValueError:
+                msg = ("Loading PPSD results saved with ObsPy versions < "
+                       "1.2 requires setting the allow_pickle parameter "
+                       "of PPSD.load_npz to True.")
+                raise ValueError(msg)
         else:
             data = np.load(filename)
             try:
@@ -2044,7 +2068,7 @@ def get_nhnm():
 
 
 def _check_npz_ppsd_version(ppsd, npzfile):
-    # add some future-proofing and show a warning if older obspy
+    # add some future-proofing and show a warning if older ObsPy
     # versions should read a more recent ppsd npz file, since this is very
     # like problematic
     if npzfile['ppsd_version'].item() > ppsd.ppsd_version:

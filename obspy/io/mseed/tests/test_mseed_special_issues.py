@@ -223,7 +223,10 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
     def test_invalid_data_type(self):
         """
-        Writing data of type int64 and int16 are not supported.
+        Writing data of type int64 and int8 are not supported.
+
+        int64 data can now be written since #2356 if it can be downcast to
+        int32.
         """
         npts = 6000
         np.random.seed(815)  # make test reproducible
@@ -231,6 +234,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             tempfile = tf.name
             # int64
             data = np.random.randint(-1000, 1000, npts).astype(np.int64)
+            # add a data point that can not be downcast (even though we have a
+            # separate test for this)
+            data[4] = np.iinfo(np.int32).max + 2
             st = Stream([Trace(data=data)])
             self.assertRaises(Exception, st.write, tempfile, format="MSEED")
             # int8
