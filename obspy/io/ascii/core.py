@@ -36,6 +36,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import io
+import locale
 
 import numpy as np
 
@@ -79,9 +80,16 @@ def _is_slist(filename, **kwargs):
     """
     fh = filename
     temp = fh.readline()
-    if not temp.startswith(b'TIMESERIES'):
+    try:
+        # mimic old behavior of decoding bytes input using default encoding
+        temp = temp.decode(locale.getpreferredencoding())
+    except UnicodeError:
         return False
-    if b'SLIST' not in temp:
+    except AttributeError:
+        pass
+    if not temp.startswith('TIMESERIES'):
+        return False
+    if 'SLIST' not in temp:
         return False
     return True
 
@@ -103,9 +111,16 @@ def _is_tspair(filename, **kwargs):
     """
     fh = filename
     temp = fh.readline()
-    if not temp.startswith(b'TIMESERIES'):
+    try:
+        # mimic old behavior of decoding bytes input using default encoding
+        temp = temp.decode(locale.getpreferredencoding())
+    except UnicodeError:
         return False
-    if b'TSPAIR' not in temp:
+    except AttributeError:
+        pass
+    if not temp.startswith('TIMESERIES'):
+        return False
+    if 'TSPAIR' not in temp:
         return False
     return True
 
