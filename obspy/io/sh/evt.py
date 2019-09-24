@@ -35,7 +35,13 @@ def _is_evt(filename, **kwargs):
         temp = f.read(20)
     except Exception:
         return False
-    return b'Event ID' in temp
+    try:
+        temp = temp.decode('utf-8')
+    except UnicodeError:
+        return False
+    except AttributeError:
+        pass
+    return 'Event ID' in temp
 
 
 def _km2m(km):
