@@ -28,20 +28,18 @@ else:
 # usually is little reason to fight flake8.
 # NOTE: Keep consistent between..
 #   - obspy/core/tests/test_code_formatting.py FLAKE8_IGNORE_CODES
-#   - .circleci/config.yml --ignore
+#   - .flake8 --ignore
 FLAKE8_IGNORE_CODES = [
-    # E402 module level import not at top of file
-    # This is really annoying when using the standard library import hooks
-    # from the future package.
-    "E402",
-    "E504",
-    "W504",
-    # E133 closing bracket is missing indentation
-    #   this is an Error shown for one alternative form of closing bracket,
-    #   closing it without indentation with regard to opening line. This gets
-    #   raised when --hang-closing is selected to allow the form with 4 spaces
-    #   as indent (which is valid according to PEP8 but raised by pycodestyle)
-    "E133",
+    'E121',
+    'E123',
+    'E126',
+    'E133',
+    'E24',
+    'E226',
+    'E402',
+    'E704',
+    'W503',
+    'W504',
 ]
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
@@ -75,21 +73,11 @@ class CodeFormattingTestCase(unittest.TestCase):
         # Import the legacy API as flake8 3.0 currently has not official
         # public API - this has to be changed at some point.
         from flake8.api import legacy as flake8
-        # not sure if there's a better way to get a hold of default ignore
-        # codes..
-        default_ignore_codes = \
-            flake8.get_style_guide().options.__dict__['ignore']
-        try:
-            import pycodestyle
-        except ImportError:
-            pass
-        else:
-            default_ignore_codes += pycodestyle.DEFAULT_IGNORE.split(',')
-        ignore_codes = list(set(default_ignore_codes + FLAKE8_IGNORE_CODES))
+        
         # --hang-closing allows valid indented closing brackets, see
         # https://github.com/PyCQA/pycodestyle/issues/103#issuecomment-17366719
         style_guide = flake8.get_style_guide(
-            ignore=ignore_codes, hang_closing=True)
+            ignore=FLAKE8_IGNORE_CODES, hang_closing=True)
 
         untracked_files = get_untracked_files_from_git() or []
         files = []
