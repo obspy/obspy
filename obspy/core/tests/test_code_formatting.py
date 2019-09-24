@@ -73,7 +73,6 @@ class CodeFormattingTestCase(unittest.TestCase):
         # Import the legacy API as flake8 3.0 currently has not official
         # public API - this has to be changed at some point.
         from flake8.api import legacy as flake8
-        
         # --hang-closing allows valid indented closing brackets, see
         # https://github.com/PyCQA/pycodestyle/issues/103#issuecomment-17366719
         style_guide = flake8.get_style_guide(
