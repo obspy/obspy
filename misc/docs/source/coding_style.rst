@@ -8,9 +8,9 @@ Code) and :pep:`257` (Docstring Conventions) with the modifications documented
 here. Be sure to read all documents if you intend to contribute code to ObsPy.
 
 We rely on flake8_ for code style checks, it can be installed using ``conda
-install`` or ``pip install``. Thanks to configuration file included in the 
-repository, check of your contributions with flake8_ can be done with a single 
-command ``flake8``.
+install`` or ``pip install``. Thanks to `.flake8` configuration file included 
+in the repository, check of your contributions with flake8_ can be done with 
+a single command ``flake8``.
 
 .. _flake8: https://flake8.pycqa.org
 
@@ -18,8 +18,8 @@ Pre-Commit Hooks
 ------------------
 
 In order to further ease the development process you can use pre-commit hooks.
-Pre-commit hooks can be configured in your repository with use of pre-commit 
-framework <https://pre-commit.com>_. In order to do that, execute two commands::
+Pre-commit hooks can be configured in your repository with use of pre-commit_ 
+framework. In order to do that, execute two commands::
     pip install pre-commit
     pre-commit install
 
@@ -29,6 +29,8 @@ That way, ``flake8`` will immediately complain about problems with the coding
 style and the changes staged for committing can be adapted accordingly
 (even with git commit hooks installed, they can be ignored on a per-commit
 basis using ``git commit -n``).
+
+.. _pre-commit: https://flake8.pycqa.org
 
 Import Conventions
 ------------------
