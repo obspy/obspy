@@ -28,3 +28,4 @@ jobs:
             git diff --name-only $CIRCLE_COMPARE_URL | xargs -I {} find {} -size +1 | wc -l
             git diff --name-only master | xargs -I {} find {} -size +1 | wc -l
             git diff --name-only master | xargs -I {} find {}
+            ls
