@@ -23,4 +23,6 @@ jobs:
             /opt/conda/bin/flake8 obspy
           name: run file size check
           command: |
-            git diff --name-only $CIRCLE_COMPARE_URL | xargs -I {} find {} -size +5 | wc -l
+            echo $CIRCLE_COMPARE_URL
+            git diff --name-only $CIRCLE_COMPARE_URL | xargs -I {} find {} -size +1 | wc -l
+            git diff --name-only master | xargs -I {} find {} -size +1 | wc -l
