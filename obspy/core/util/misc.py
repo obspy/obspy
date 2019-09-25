@@ -813,7 +813,14 @@ def _text_buffer_wrapper(buf, encoding):
     :rtype: :class:`io.TextIOWrapper` or :class:`io.TextIOBase`
     """
     if isinstance(buf, io.BufferedIOBase):
-        return io.TextIOWrapper(buf, encoding=encoding)
+        tbuf = io.TextIOWrapper(buf, encoding=encoding)
+        # we need to attach the TextIOWrapper as a variable to save it from
+        # garbage collection. if we don't it closes the underlying bytes
+        # buffer, which we don't want to happen, open file-like objects should
+        # stay open and be able to return to initial position during automatic
+        # file format detection
+        buf.__text_io_wrapper = tbuf
+        return tbuf
     elif isinstance(buf, io.TextIOBase):
         return buf
     raise TypeError()

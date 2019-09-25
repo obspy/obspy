@@ -283,6 +283,14 @@ def file_format_check(func, filename, **kwargs):
             kwargs['_file_size'] = file_size
             return func(fh, **kwargs)
         finally:
+            # if we attached a TextIOWrapper by means of
+            # core.util.misc._text_buffer_wrapper and saved it from garbage
+            # collection by attaching it as a variable, detach it now and clear
+            # the reference so it can be garbage collected
+            if hasattr(fh, '__text_io_wrapper') and \
+                    isinstance(fh.__text_io_wrapper, io.TextIOWrapper):
+                fh.__text_io_wrapper.detach()
+                del fh.__text_io_wrapper
             # Reset pointer.
             fh.seek(initial_pos, 0)
         return
