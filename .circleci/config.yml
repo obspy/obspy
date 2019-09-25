@@ -21,11 +21,4 @@ jobs:
           command: |
             /opt/conda/bin/flake8 --version
             /opt/conda/bin/flake8 obspy
-          name: run file size check
-          command: |
-            echo $CIRCLE_COMPARE_URL
-            echo 1
-            git diff --name-only $CIRCLE_COMPARE_URL | xargs -I {} find {} -size +1 | wc -l
-            git diff --name-only master | xargs -I {} find {} -size +1 | wc -l
-            git diff --name-only master | xargs -I {} find {}
-            ls
+            EXIT_CODE=0;for SIZE in $(git log --pretty='format:%H' master.. | git cat-file --batch-check='%(objectsize)'); do if (( $SIZE > 500000 )); then echo "File you added exceeds our limit of 500k"; EXIT_CODE=1; fi; (exit $EXIT_CODE) done
