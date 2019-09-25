@@ -27,4 +27,4 @@ jobs:
             echo 1
             git diff --name-only $CIRCLE_COMPARE_URL | xargs -I {} find {} -size +1 | wc -l
             git diff --name-only master | xargs -I {} find {} -size +1 | wc -l
-            git diff --name-only master
+            git diff --name-only master | xargs -I {} find {}
