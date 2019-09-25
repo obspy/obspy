@@ -24,5 +24,7 @@ jobs:
           name: run file size check
           command: |
             echo $CIRCLE_COMPARE_URL
+            echo 1
             git diff --name-only $CIRCLE_COMPARE_URL | xargs -I {} find {} -size +1 | wc -l
             git diff --name-only master | xargs -I {} find {} -size +1 | wc -l
+            git diff --name-only master
