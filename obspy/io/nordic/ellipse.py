@@ -66,12 +66,16 @@ class Ellipse:
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
+        if Ellipse._almost_good_cov(cov):
+            cov = Ellipse._fix_cov(cov)
         evals, evecs = np.linalg.eig(cov)
-        evals = np.sqrt(evals)
+        if np.any(evals < 0):
+            warnings.warn('Bad covariance matrix, no ellipse calculated')
+            return cls(None, None, None, center)
         # Sort eigenvalues in decreasing order
         sort_indices = np.argsort(evals)[::-1]
         # Select semi-major and semi-minor axes
-        a, b = evals[sort_indices[0]], evals[sort_indices[1]]
+        a, b = np.sqrt(evals[sort_indices[0]]), np.sqrt(evals[sort_indices[1]])
         # Calculate angle of semi-major axis
         x_v1, y_v1 = evecs[:, sort_indices[0]]
         if y_v1 == 0.:
@@ -124,6 +128,28 @@ class Ellipse:
         x = viewpoint[0] + dist * np.sin(np.radians(baz))
         y = viewpoint[1] + dist * np.cos(np.radians(baz))
         return cls.from_uncerts(x_err, y_err, c_xy, (x, y))
+
+    def _almost_good_cov(cov):
+        """Checks if a covariance matrix is "almost good" (c_xy is greater
+        than c_xx and/or c_yy, but only by a little bit)
+        """
+        if cov[0][1] != cov[1][0]:
+            return False
+        ratio = cov[0][1]**2 / (cov[0][0] * cov[1][1])
+        if (ratio > 1) and (ratio < 1.1):
+            return True
+        return False
+
+    def _fix_cov(cov):
+        """Correct an "almost good" covariance matrix by making c_xx*c_yy
+        > c_xy^2
+        """
+        if not Ellipse._almost_good_cov(cov):
+            return None
+        ratio = cov[0][1]**2 / (cov[0][0] * cov[1][1])
+        cov[0][0] *= np.sqrt(ratio)*1.01
+        cov[1][1] *= np.sqrt(ratio)*1.01
+        return cov
 
     def to_cov(self):
         """Convert to covariance matrix notation
