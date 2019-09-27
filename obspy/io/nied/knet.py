@@ -17,41 +17,11 @@ import numpy as np
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.trace import Stats
 from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _buffer_proxy
 
 
 class KNETException(Exception):
     pass
-
-
-def _buffer_proxy(filename_or_buf, function, reset_fp=True,
-                  file_mode="rb", *args, **kwargs):
-    """
-    Calls a function with an open file or file-like object as the first
-    argument. If the file originally was a filename, the file will be
-    opened, otherwise it will just be passed to the underlying function.
-
-    :param filename_or_buf: File to pass.
-    :type filename_or_buf: str, open file, or file-like object.
-    :param function: The function to call.
-    :param reset_fp: If True, the file pointer will be set to the initial
-        position after the function has been called.
-    :type reset_fp: bool
-    :param file_mode: Mode to open file in if necessary.
-    """
-    try:
-        position = filename_or_buf.tell()
-        is_buffer = True
-    except AttributeError:
-        is_buffer = False
-
-    if is_buffer is True:
-        ret_val = function(filename_or_buf, *args, **kwargs)
-        if reset_fp:
-            filename_or_buf.seek(position, 0)
-        return ret_val
-    else:
-        with open(filename_or_buf, file_mode) as fh:
-            return function(fh, *args, **kwargs)
 
 
 @file_format_check
