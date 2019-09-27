@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 
 import numpy as np
-import matplotlib.pyplot as plt
 import copy
 import io
 import warnings
@@ -357,6 +356,7 @@ class Ellipse:
             New Figure if set to ``None``.
         :param show: If no outfile/format, sets plt.show()
         """
+        import matplotlib.pyplot as plt
         t = np.linspace(0, 2 * np.pi, npts)
         ell = np.array([self.b * np.sin(t), self.a * np.cos(t)])
         r_rot = _rot_cw(self.theta)
@@ -426,6 +426,7 @@ class Ellipse:
             New Figure if set to ``None``.
         :param show: If no outfile/format, sets plt.show()
         """
+        import matplotlib.pyplot as plt
         # plot the figure
         fig = self.plot(linewidth=linewidth, color=color,
                         npts=npts, alpha=alpha, zorder=zorder,
