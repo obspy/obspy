@@ -377,6 +377,29 @@ def map_example_filename(arg_kwarg_name):
     return _map_example_filename
 
 
+@decorator
+def _open_file(func, *args, **kwargs):
+    """
+    Ensure a file buffer is passed as first argument to the
+    decorated function.
+
+    :param func: callable that takes at least one argument;
+        the first argument must be treated as a buffer.
+    :return: callable
+    """
+    first_arg = args[0]
+    try:
+        with open(first_arg, 'rb') as fi:
+            args = tuple([fi] + list(args[1:]))
+            return func(*args, **kwargs)
+    except TypeError:  # assume we have been passed a buffer
+        if not hasattr(args[0], 'read'):
+            raise  # type error was in function call, not in opening file
+        out = func(*args, **kwargs)
+        first_arg.seek(0)  # reset position to start of file
+    return out
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
