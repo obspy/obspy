@@ -386,14 +386,16 @@ def _write_stationtxt(inventory, path_or_file_object, level='channel',
         ``'station'`` or ``'channel'``.
     """
     stationtxt = inventory_to_station_text(inventory, level)
+    file_opened = False
     if not hasattr(path_or_file_object, 'write'):
+        file_opened = True
         f = open(path_or_file_object, 'w')
     else:
         f = path_or_file_object
     try:
         f.write(stationtxt)
     finally:
-        if not hasattr(path_or_file_object, 'write'):
+        if file_opened:
             f.close()
 
 
