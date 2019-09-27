@@ -948,11 +948,12 @@ class TestNordicMethods(unittest.TestCase):
     def test_ellipse_plot(self):
         """
         Test Ellipse.plot()
-        
-        To generate test figures, used same commands after setting
+
+        To generate test figures, used same commands after:
+        from ellipse import Ellipse
+        import matplotlib.pyplot as plt
         plt.style.use('classic')
         """
-        import matplotlib.pyplot as plt
         # Test single ellipse
         with ImageComparison(self.testing_path, 'plot_ellipse.png',
                              style='classic', reltol=10) as ic:
@@ -970,7 +971,6 @@ class TestNordicMethods(unittest.TestCase):
         Test Ellipse.plot_tangents()
         """
         import matplotlib.pyplot as plt
-        
         # Test single ellipse and point
         with ImageComparison(self.testing_path, 'plot_ellipse_tangents.png',
                              style='classic', reltol=10) as ic:
