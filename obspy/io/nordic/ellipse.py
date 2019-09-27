@@ -66,8 +66,8 @@ class Ellipse:
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
-        if Ellipse._almost_good_cov(cov):
-            cov = Ellipse._fix_cov(cov)
+        if _almost_good_cov(cov):
+            cov = _fix_cov(cov)
         evals, evecs = np.linalg.eig(cov)
         if np.any(evals < 0):
             warnings.warn('Bad covariance matrix, no ellipse calculated')
@@ -144,28 +144,6 @@ class Ellipse:
         s += ')'
         return s
 
-    def _almost_good_cov(cov):
-        """Checks if a covariance matrix is "almost good" (c_xy is greater
-        than c_xx and/or c_yy, but only by a little bit)
-        """
-        if cov[0][1] != cov[1][0]:
-            return False
-        ratio = cov[0][1]**2 / (cov[0][0] * cov[1][1])
-        if (ratio > 1) and (ratio < 1.1):
-            return True
-        return False
-
-    def _fix_cov(cov):
-        """Correct an "almost good" covariance matrix by making c_xx*c_yy
-        > c_xy^2
-        """
-        if not Ellipse._almost_good_cov(cov):
-            return None
-        ratio = cov[0][1]**2 / (cov[0][0] * cov[1][1])
-        cov[0][0] *= np.sqrt(ratio) * 1.01
-        cov[1][1] *= np.sqrt(ratio) * 1.01
-        return cov
-
     def to_cov(self):
         """Convert to covariance matrix notation
 
@@ -204,12 +182,12 @@ class Ellipse:
         c_xy = cov[0][1]
         return x_err, y_err, c_xy, center
 
-    def __ROT_CCW(theta):
+    def __rot_ccw(theta):
         """counter-clockwise rotation matrix for theta in DEGREES"""
         c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
         return np.array(((c, -s), (s, c)))
 
-    def __ROT_CW(theta):
+    def __rot_cw(theta):
         """clockwise rotation matrix for theta in DEGREES"""
         c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
         return np.array(((c, s), (-s, c)))
@@ -265,8 +243,8 @@ class Ellipse:
         pt1 = (pt[0] - self.x, pt[1] - self.y)
 
         # Rotate
-        R_rot = Ellipse.__ROT_CCW(self.theta)
-        rotated = np.dot(R_rot, pt1)
+        r_rot = Ellipse.__rot_ccw(self.theta)
+        rotated = np.dot(r_rot, pt1)
         return rotated
 
     def _absolute_viewpoint(self, pt):
@@ -283,8 +261,8 @@ class Ellipse:
         :rtype: 2-tuple of floats
         """
         # Unrotate
-        R_rot = Ellipse.__ROT_CW(self.theta)
-        unrot = np.dot(R_rot, pt)
+        r_rot = Ellipse.__rot_cw(self.theta)
+        unrot = np.dot(r_rot, pt)
         # Untranslate
         pt1 = (unrot[0] + self.x, unrot[1] + self.y)
         return pt1
@@ -318,13 +296,13 @@ class Ellipse:
         cs = -(y1 * ms) + x1
         # Determine the tangent intersect with ellipse
         # Rotated from equation because ellipse theta=0 is N-S
-        T0 = (self.b**2 / cs[0], -self.a**2 * ms[0] / cs[0])
-        T1 = (self.b**2 / cs[1], -self.a**2 * ms[1] / cs[1])
+        t0 = (self.b**2 / cs[0], -self.a**2 * ms[0] / cs[0])
+        t1 = (self.b**2 / cs[1], -self.a**2 * ms[1] / cs[1])
 
         # Rotate back to true coords
-        T0 = self._absolute_viewpoint(T0)
-        T1 = self._absolute_viewpoint(T1)
-        return T0, T1
+        t0 = self._absolute_viewpoint(t0)
+        t1 = self._absolute_viewpoint(t1)
+        return t0, t1
 
     def subtended_angle(self, pt=(0, 0)):
         """ Find the angle subtended by an ellipse when viewed from x,y
@@ -356,9 +334,9 @@ class Ellipse:
         temp = copy.copy(self)
         temp.x -= pt[0]
         temp.y -= pt[1]
-        T0, T1 = temp._get_tangents((0, 0))
-        cosang = np.dot(T0, T1)
-        sinang = np.linalg.norm(np.cross(T0, T1))
+        t0, t1 = temp._get_tangents((0, 0))
+        cosang = np.dot(t0, t1)
+        sinang = np.linalg.norm(np.cross(t0, t1))
         return np.degrees(np.arctan2(sinang, cosang))
 
     def plot(self, linewidth=2, color='k',
@@ -390,11 +368,11 @@ class Ellipse:
         :param show: If no outfile/format, sets plt.show()
         """
         t = np.linspace(0, 2 * np.pi, npts)
-        Ell = np.array([self.b * np.sin(t), self.a * np.cos(t)])
-        R_rot = Ellipse.__ROT_CW(self.theta)
-        Ell_rot = np.zeros((2, Ell.shape[1]))
-        for i in range(Ell.shape[1]):
-            Ell_rot[:, i] = np.dot(R_rot, Ell[:, i])
+        ell = np.array([self.b * np.sin(t), self.a * np.cos(t)])
+        r_rot = Ellipse.__rot_cw(self.theta)
+        ell_rot = np.zeros((2, ell.shape[1]))
+        for i in range(ell.shape[1]):
+            ell_rot[:, i] = np.dot(r_rot, ell[:, i])
 
         # plot the figure
         if not fig:
@@ -403,7 +381,7 @@ class Ellipse:
             # ax = fig.add_subplot(111, aspect='equal')
         # else:
         #    ax = fig.gca()
-        plt.plot(self.x + Ell_rot[0, :], self.y + Ell_rot[1, :],
+        plt.plot(self.x + ell_rot[0, :], self.y + ell_rot[1, :],
                  linewidth=linewidth, color=color,
                  alpha=alpha, zorder=zorder)
         # export
@@ -464,14 +442,14 @@ class Ellipse:
                         fig=fig, show=False)
         ax = fig.gca()
         ax.plot(pt[0], pt[1], '+')
-        T0, T1 = self._get_tangents(pt)
-        if T0:
-            ax.plot([pt[0], T0[0]], [pt[1], T0[1]], color=color)
-            ax.plot([pt[0], T1[0]], [pt[1], T1[1]], color=color)
+        t0, t1 = self._get_tangents(pt)
+        if t0:
+            ax.plot([pt[0], t0[0]], [pt[1], t0[1]], color=color)
+            ax.plot([pt[0], t1[0]], [pt[1], t1[1]], color=color)
             if print_angle:
                 sub_angle = self.subtended_angle(pt)
-                ax.text(np.mean([pt[0], T0[0], T1[0]]),
-                        np.mean([pt[1], T0[1], T1[1]]),
+                ax.text(np.mean([pt[0], t0[0], t1[0]]),
+                        np.mean([pt[1], t0[1], t1[1]]),
                         '{:.1f}'.format(sub_angle),
                         fontsize=6, color=color,
                         va='center', ha='center')
@@ -497,6 +475,30 @@ class Ellipse:
             if show:
                 plt.show()
             return fig
+
+
+def _almost_good_cov(cov):
+    """Checks if a covariance matrix is "almost good" (c_xy is greater
+    than c_xx and/or c_yy, but only by a little bit)
+    """
+    if cov[0][1] != cov[1][0]:
+        return False
+    ratio = cov[0][1]**2 / (cov[0][0] * cov[1][1])
+    if (ratio > 1) and (ratio < 1.1):
+        return True
+    return False
+
+
+def _fix_cov(cov):
+    """Correct an "almost good" covariance matrix by making c_xx*c_yy
+    > c_xy^2
+    """
+    if not _almost_good_cov(cov):
+        return None
+    ratio = cov[0][1]**2 / (cov[0][0] * cov[1][1])
+    cov[0][0] *= np.sqrt(ratio) * 1.01
+    cov[1][1] *= np.sqrt(ratio) * 1.01
+    return cov
 
 
 if __name__ == "__main__":
