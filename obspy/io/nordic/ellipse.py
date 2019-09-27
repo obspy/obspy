@@ -182,16 +182,6 @@ class Ellipse:
         c_xy = cov[0][1]
         return x_err, y_err, c_xy, center
 
-    def __rot_ccw(theta):
-        """counter-clockwise rotation matrix for theta in DEGREES"""
-        c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
-        return np.array(((c, -s), (s, c)))
-
-    def __rot_cw(theta):
-        """clockwise rotation matrix for theta in DEGREES"""
-        c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
-        return np.array(((c, s), (-s, c)))
-
     def is_inside(self, pt):
         """ Is the given point inside the ellipse?
 
@@ -243,7 +233,7 @@ class Ellipse:
         pt1 = (pt[0] - self.x, pt[1] - self.y)
 
         # Rotate
-        r_rot = Ellipse.__rot_ccw(self.theta)
+        r_rot = _rot_ccw(self.theta)
         rotated = np.dot(r_rot, pt1)
         return rotated
 
@@ -261,7 +251,7 @@ class Ellipse:
         :rtype: 2-tuple of floats
         """
         # Unrotate
-        r_rot = Ellipse.__rot_cw(self.theta)
+        r_rot = _rot_cw(self.theta)
         unrot = np.dot(r_rot, pt)
         # Untranslate
         pt1 = (unrot[0] + self.x, unrot[1] + self.y)
@@ -369,7 +359,7 @@ class Ellipse:
         """
         t = np.linspace(0, 2 * np.pi, npts)
         ell = np.array([self.b * np.sin(t), self.a * np.cos(t)])
-        r_rot = Ellipse.__rot_cw(self.theta)
+        r_rot = _rot_cw(self.theta)
         ell_rot = np.zeros((2, ell.shape[1]))
         for i in range(ell.shape[1]):
             ell_rot[:, i] = np.dot(r_rot, ell[:, i])
@@ -475,6 +465,18 @@ class Ellipse:
             if show:
                 plt.show()
             return fig
+
+
+def _rot_ccw(theta):
+    """counter-clockwise rotation matrix for theta in DEGREES"""
+    c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
+    return np.array(((c, -s), (s, c)))
+
+
+def _rot_cw(theta):
+    """clockwise rotation matrix for theta in DEGREES"""
+    c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
+    return np.array(((c, s), (-s, c)))
 
 
 def _almost_good_cov(cov):
