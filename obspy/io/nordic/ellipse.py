@@ -129,6 +129,21 @@ class Ellipse:
         y = viewpoint[1] + dist * np.cos(np.radians(baz))
         return cls.from_uncerts(x_err, y_err, c_xy, (x, y))
 
+    def __repr__(self):
+        """String describing the ellipse
+
+        >>> str(Ellipse(20, 10))
+        'Ellipse(20, 10, 0)'
+        >>>str(Ellipse(20, 10, 45, (3,4)))
+        'Ellipse(20, 10, 45, (3,4)>'
+        """
+        s = 'Ellipse({:.3g}, {:.3g}'.format(self.a, self.b)
+        s += ', {:.3g}'.format(self.theta)
+        if self.x != 0 or self.y != 0:
+            s += ', ({:.3g},{:.3g})'.format(self.x, self.y)
+        s += ')'
+        return s
+
     def _almost_good_cov(cov):
         """Checks if a covariance matrix is "almost good" (c_xy is greater
         than c_xx and/or c_yy, but only by a little bit)
@@ -147,8 +162,8 @@ class Ellipse:
         if not Ellipse._almost_good_cov(cov):
             return None
         ratio = cov[0][1]**2 / (cov[0][0] * cov[1][1])
-        cov[0][0] *= np.sqrt(ratio)*1.01
-        cov[1][1] *= np.sqrt(ratio)*1.01
+        cov[0][0] *= np.sqrt(ratio) * 1.01
+        cov[1][1] *= np.sqrt(ratio) * 1.01
         return cov
 
     def to_cov(self):
@@ -188,21 +203,6 @@ class Ellipse:
         y_err = np.sqrt(cov[1][1])
         c_xy = cov[0][1]
         return x_err, y_err, c_xy, center
-
-    def __repr__(self):
-        """String describing the ellipse
-
-        >>> str(Ellipse(20,10))
-        '<a=20, b=10, theta=  0.0>'
-        >>>str(Ellipse(20,10,45,(3,4)))
-        '<a=20, b=10, theta= 45.0, center=(3,4)>'
-        """
-        s = f'<a={self.a:.3g}, b={self.b:.3g}'
-        s += f', theta={self.theta:5.1f}'
-        if self.x != 0 or self.y != 0:
-            s += f', center=({self.x:.3g},{self.y:.3g})'
-        s += '>'
-        return s
 
     def __ROT_CCW(theta):
         """counter-clockwise rotation matrix for theta in DEGREES"""
