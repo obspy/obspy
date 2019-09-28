@@ -131,8 +131,9 @@ class UTCDateTime(object):
         >>> UTCDateTime(1240561632.5)
         UTCDateTime(2009, 4, 24, 8, 27, 12, 500000)
 
-    (2) Using a `ISO8601:2004`_ string. The detection may be enforced by
-        setting the ``iso8601`` parameter to True.
+    (2) Using a `ISO8601:2004`_ string. The detection may be enabled/disabled
+        using the``iso8601`` parameter, the default is to attempt to
+        auto-detect ISO8601 compliant strings.
 
         * Calendar date representation.
 
@@ -169,6 +170,17 @@ class UTCDateTime(object):
 
             >>> UTCDateTime("2009W011", iso8601=True)      # enforce ISO8601
             UTCDateTime(2008, 12, 29, 0, 0)
+
+        * Specifying time zones.
+
+            >>> UTCDateTime('2019-09-18T+06')  # time zone is UTC+6
+            UTCDateTime(2019, 9, 17, 18, 0)
+
+            >>> UTCDateTime('2019-09-18T02-02')  # time zone is UTC-2
+            UTCDateTime(2019, 9, 18, 4, 0)
+
+            >>> UTCDateTime('2019-09-18T18:23:10.22-01')  # time zone is UTC-1
+            UTCDateTime(2019, 9, 18, 19, 23, 10, 220000)
 
     (3) Using not ISO8601 compatible strings.
 
@@ -244,7 +256,8 @@ class UTCDateTime(object):
 
     You may change that behavior either by,
 
-    (1) using the ``precision`` keyword during object initialization:
+    (1) using the ``precision`` keyword during object initialization
+        (preferred):
 
         >>> dt = UTCDateTime(0, precision=4)
         >>> dt2 = UTCDateTime(0.00001, precision=4)
@@ -253,8 +266,9 @@ class UTCDateTime(object):
         >>> dt == dt2
         True
 
-    (2) or set it the class attribute ``DEFAULT_PRECISION`` for all new
-        :class:`UTCDateTime` objects using a monkey patch:
+    (2) or by setting the class attribute ``DEFAULT_PRECISION`` to the desired
+        precision to affect all new :class:`UTCDateTime` objects
+        (not recommended):
 
         >>> UTCDateTime.DEFAULT_PRECISION = 4
         >>> dt = UTCDateTime(0)
