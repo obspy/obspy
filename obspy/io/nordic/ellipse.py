@@ -68,7 +68,7 @@ class Ellipse:
         """
         a = uncert.max_horizontal_uncertainty
         b = uncert.min_horizontal_uncertainty
-        theta = uncert.azimuth_max_horizontal_uncertainty 
+        theta = uncert.azimuth_max_horizontal_uncertainty
         return cls(a, b, theta, center)
 
     @classmethod
