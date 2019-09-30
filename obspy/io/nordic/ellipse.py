@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Routines for error ellipses
- - Calculate an ellipse from covariance matrix
- - See if a point is inside an ellipse
- - Calculate the angle subtended by an ellipse (for back-azimuth uncert)
- - Plot an ellipse
+Routines for error ellipses in seismological coordinates (N=0, W=90)
 
-TODO:
- - ellipsoids (3D ellipses)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+
+- Calculate an ellipse from the covariance matrix
+- See if a point is inside or on an ellipse
+- Calculate the angle subtended by an ellipse (for back-azimuth uncertainty)
+- Plot an ellipse
+
+.. note:
+ TODO: ellipsoids (3D ellipses)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
