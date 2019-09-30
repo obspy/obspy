@@ -56,6 +56,22 @@ class Ellipse:
         self.y = center[1]
 
     @classmethod
+    def from_origin_uncertainty(cls, uncert, center=(0, 0)):
+        """Set Ellipse from obspy origin_uncertainty
+
+        :param uncert: obspy origin_uncertainty
+        :type uncert: :class: `~obspy.origin.origin_uncertainty`
+        :param center: center position (x,y)
+        :type center: 2-tuple of numeric
+        :return: ellipse
+        :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
+        """
+        a = uncert.max_horizontal_uncertainty
+        b = uncert.min_horizontal_uncertainty
+        theta = uncert.azimuth_max_horizontal_uncertainty 
+        return cls(a, b, theta, center)
+
+    @classmethod
     def from_cov(cls, cov, center=(0, 0)):
         """Set error ellipse using covariance matrix
 
