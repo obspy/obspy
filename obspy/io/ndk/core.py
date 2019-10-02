@@ -15,6 +15,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import locale
 import math
 import re
 import sys
@@ -34,6 +35,7 @@ from obspy.core.event import (Axis, Catalog, Comment, CreationInfo, DataUsed,
                               Origin, PrincipalAxes, SourceTimeFunction,
                               Tensor)
 from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _text_buffer_wrapper
 from obspy.geodetics import FlinnEngdahl
 
 
@@ -96,16 +98,23 @@ def _is_ndk(filename, **kwargs):
 
     :type filename: :class:`io.BytesIOBase`
     :param filename: Open file or file-like object to be checked
+    :type encoding: str
+    :param encoding: Encoding of the file. Given setting is ignored if the
+        input is already a Text stream with a set encoding (default: default
+        system encoding)
     :rtype: bool
     :return: ``True`` if NDK file.
     """
+    fh = filename
+    # mimic old behavior of decoding bytes input using default encoding if
+    # nothing else was specified explicitly
+    encoding = kwargs.pop('encoding', locale.getpreferredencoding())
+    fh = _text_buffer_wrapper(fh, encoding)
     # Get the first line.
-    first_line = filename.readline()
-    if hasattr(first_line, "decode"):
-        try:
-            first_line = first_line.decode()
-        except UnicodeDecodeError:
-            return False
+    try:
+        first_line = fh.readline()
+    except UnicodeError:
+        return False
 
     # A certain minimum length is required to extract all the following
     # parameters.

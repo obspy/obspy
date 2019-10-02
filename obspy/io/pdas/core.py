@@ -17,6 +17,7 @@ import numpy as np
 from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
 from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _text_buffer_wrapper
 
 
 @file_format_check
@@ -26,21 +27,26 @@ def _is_pdas(filename, **kwargs):
 
     :type filename: :class:`io.BytesIOBase`
     :param filename: Open file or file-like object to be checked
+    :type encoding: str
+    :param encoding: Encoding of the file. Given setting is ignored if the
+        input is already a Text stream with a set encoding (default:
+        ``'latin-1'``)
     :rtype: bool
     :return: ``True`` if a PDAS file.
     """
     fh = filename
+    encoding = kwargs.pop('encoding', 'latin-1')
+    fh = _text_buffer_wrapper(fh, encoding)
     try:
-        header_fields = [fh.readline().split()[0].decode()
-                         for i_ in range(11)]
-        expected_headers = ['DATASET', 'FILE_TYPE', 'VERSION', 'SIGNAL',
-                            'DATE', 'TIME', 'INTERVAL', 'VERT_UNITS',
-                            'HORZ_UNITS', 'COMMENT', 'DATA']
-        if header_fields == expected_headers:
-            return True
-        else:
-            return False
-    except Exception:
+        header_fields = [fh.readline().split()[0] for i_ in range(11)]
+    except UnicodeError:
+        return False
+    expected_headers = ['DATASET', 'FILE_TYPE', 'VERSION', 'SIGNAL',
+                        'DATE', 'TIME', 'INTERVAL', 'VERT_UNITS',
+                        'HORZ_UNITS', 'COMMENT', 'DATA']
+    if header_fields == expected_headers:
+        return True
+    else:
         return False
 
 

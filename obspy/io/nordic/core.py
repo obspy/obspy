@@ -69,13 +69,8 @@ def _is_sfile(sfile, **kwargs):
     :rtype: bool
     :return: ``True`` if nordic file.
     """
-    if isinstance(sfile, io.BufferedIOBase):
-        encoding = kwargs.pop('encoding', 'latin-1')
-        sfile = _text_buffer_wrapper(sfile, encoding)
-    else:
-        msg = ("'encoding' parameter is being ignored on a Text buffer input "
-               "already having an encoding.")
-        warnings.warn(msg)
+    encoding = kwargs.pop('encoding', 'latin-1')
+    sfile = _text_buffer_wrapper(sfile, encoding)
     f = sfile
     try:
         tags = _get_line_tags(f=f, report=False)

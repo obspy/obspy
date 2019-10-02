@@ -89,10 +89,7 @@ def is_fdsn_station_text_file(path_or_file_object, **kwargs):
     :rtype: bool
     :return: ``True`` if FDSN StationText file.
     """
-    if isinstance(path_or_file_object, io.BufferedIOBase):
-        fh = _text_buffer_wrapper(path_or_file_object, encoding='utf-8')
-    else:
-        fh = path_or_file_object
+    fh = _text_buffer_wrapper(path_or_file_object, encoding='utf-8')
     try:
         # Attempt to decode.
         first_line = fh.readline()

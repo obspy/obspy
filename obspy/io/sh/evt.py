@@ -24,23 +24,26 @@ from obspy.core.event import (Arrival, Catalog, Event,
                               StationMagnitude, WaveformStreamID)
 from obspy.core.event.header import EvaluationMode, EventType, PickOnset
 from obspy.core.util.decorator import file_format_check
-from obspy.core.util.misc import _seed_id_map
+from obspy.core.util.misc import _seed_id_map, _text_buffer_wrapper
 from obspy.io.sh.core import to_utcdatetime
 
 
 @file_format_check
 def _is_evt(filename, **kwargs):
+    """
+    Checks whether a file is EVT format.
+
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
+    :rtype: bool
+    :return: ``True`` if EVT file.
+    """
     f = filename
+    f = _text_buffer_wrapper(f, 'utf-8')
     try:
         temp = f.read(20)
-    except Exception:
-        return False
-    try:
-        temp = temp.decode('utf-8')
     except UnicodeError:
         return False
-    except AttributeError:
-        pass
     return 'Event ID' in temp
 
 

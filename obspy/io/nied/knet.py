@@ -10,6 +10,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import locale
 import re
 
 import numpy as np
@@ -17,7 +18,7 @@ import numpy as np
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.trace import Stats
 from obspy.core.util.decorator import file_format_check
-from obspy.core.util.misc import _buffer_proxy
+from obspy.core.util.misc import _buffer_proxy, _text_buffer_wrapper
 
 
 class KNETException(Exception):
@@ -31,23 +32,39 @@ def _is_knet_ascii(filename_or_buf, **kwargs):
 
     :type filename_or_buf: :class:`io.BytesIOBase`
     :param filename_or_buf: Open file or file-like object to be checked
+    :type encoding: str
+    :param encoding: Encoding of the file. Given setting is ignored if the
+        input is already a Text stream with a set encoding (default: default
+        system encoding)
+    :rtype: bool
+    :return: ``True`` if KNET ASCII file.
     """
-    try:
-        return _internal_is_knet_ascii(filename_or_buf)
-    # Happens for example when passing the data as a string which would be
-    # interpreted as a filename.
-    except (OSError, UnicodeDecodeError):
-        return False
+    encoding = kwargs.pop('encoding', None)
+    return _internal_is_knet_ascii(filename_or_buf, encoding=encoding)
 
 
-def _internal_is_knet_ascii(buf):
+def _internal_is_knet_ascii(buf, encoding=None):
     """
     Checks if the file is a valid K-NET/KiK-net ASCII file.
 
     :param buf: File to read.
     :type buf: Open file or open file like object.
+    :type encoding: str
+    :param encoding: Encoding of the file. Given setting is ignored if the
+        input is already a Text stream with a set encoding (default: default
+        system encoding)
+    :rtype: bool
+    :return: ``True`` if KNET ASCII file.
     """
-    first_string = buf.read(11).decode()
+    # mimic old behavior of decoding bytes input using default encoding if
+    # nothing else was specified explicitly
+    if encoding is None:
+        encoding = locale.getpreferredencoding()
+    buf = _text_buffer_wrapper(buf, encoding)
+    try:
+        first_string = buf.read(11)
+    except UnicodeError:
+        return False
     # File has less than 11 characters
     if len(first_string) != 11:
         return False

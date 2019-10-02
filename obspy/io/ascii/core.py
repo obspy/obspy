@@ -44,6 +44,7 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
 from obspy.core.util.decorator import file_format_check
+from obspy.core.util.misc import _text_buffer_wrapper
 
 
 HEADER = ("TIMESERIES {network}_{station}_{location}_{channel}_{dataquality}, "
@@ -70,6 +71,10 @@ def _is_slist(filename, **kwargs):
 
     :type filename: :class:`io.BytesIOBase`
     :param filename: Open file or file-like object to be checked
+    :type encoding: str
+    :param encoding: Encoding of the file. Given setting is ignored if the
+        input is already a Text stream with a set encoding (default: default
+        system encoding)
     :rtype: bool
     :return: ``True`` if ASCII SLIST file.
 
@@ -79,14 +84,14 @@ def _is_slist(filename, **kwargs):
     True
     """
     fh = filename
-    temp = fh.readline()
+    # mimic old behavior of decoding bytes input using default encoding if
+    # nothing else was specified explicitly
+    encoding = kwargs.pop('encoding', locale.getpreferredencoding())
+    fh = _text_buffer_wrapper(fh, encoding)
     try:
-        # mimic old behavior of decoding bytes input using default encoding
-        temp = temp.decode(locale.getpreferredencoding())
+        temp = fh.readline()
     except UnicodeError:
         return False
-    except AttributeError:
-        pass
     if not temp.startswith('TIMESERIES'):
         return False
     if 'SLIST' not in temp:
@@ -101,6 +106,10 @@ def _is_tspair(filename, **kwargs):
 
     :type filename: :class:`io.BytesIOBase`
     :param filename: Open file or file-like object to be checked
+    :type encoding: str
+    :param encoding: Encoding of the file. Given setting is ignored if the
+        input is already a Text stream with a set encoding (default: default
+        system encoding)
     :rtype: bool
     :return: ``True`` if ASCII TSPAIR file.
 
@@ -110,14 +119,14 @@ def _is_tspair(filename, **kwargs):
     True
     """
     fh = filename
-    temp = fh.readline()
+    # mimic old behavior of decoding bytes input using default encoding if
+    # nothing else was specified explicitly
+    encoding = kwargs.pop('encoding', locale.getpreferredencoding())
+    fh = _text_buffer_wrapper(fh, encoding)
     try:
-        # mimic old behavior of decoding bytes input using default encoding
-        temp = temp.decode(locale.getpreferredencoding())
+        temp = fh.readline()
     except UnicodeError:
         return False
-    except AttributeError:
-        pass
     if not temp.startswith('TIMESERIES'):
         return False
     if 'TSPAIR' not in temp:
