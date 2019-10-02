@@ -633,11 +633,13 @@ def buffered_load_entry_point(dist, group, name):
     """
     Return `name` entry point of `group` for `dist` or raise ImportError
     :type dist: str
-    :param dist: The name of the distribution containing the entry point.
+    :param dist: The name of the distribution containing the entry point
+        (e.g. ``"obspy"``).
     :type group: str
-    :param group: The name of the group containing the entry point.
+    :param group: The name of the group containing the entry point
+        (e.g. ``"obspy.plugin.waveform.MSEED"``).
     :type name: str
-    :param name: The name of the entry point.
+    :param name: The name of the entry point (e.g. ``"isFormat"``)
     :return: The loaded entry point
     """
     hash_str = '/'.join([dist, group, name])
