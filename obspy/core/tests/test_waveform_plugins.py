@@ -20,7 +20,8 @@ from obspy.core.compatibility import mock
 from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
-                                  DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
+                                  DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER,
+                                  get_example_file)
 from obspy.core.util.misc import buffered_load_entry_point, _ENTRY_POINT_CACHE
 
 
@@ -603,6 +604,83 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 msg.append("Buffer's position was changed by function(s): " +
                            ' '.join(fails_position_change))
             self.fail('\n   '.join(msg))
+
+    def test_is_format_text_buffer_with_encoding_switch(self):
+        """
+        Test those _is_format() check routines that can work on decoded data
+        when providing text buffers in different encodings. File formats that
+        have (at least some) binary parts are excluded here (e.g. REFTEK130),
+        because it hardly makes sense to provide a text buffer to detect/read
+        those anyway.
+        """
+        # - plugin name
+        # - test file
+        # - appropriate encoding
+        # - encoding that does not work for the file check
+        formats = (('SLIST', 'waveform', 'slist.ascii', 'ascii', 'utf-16'),
+                   ('TSPAIR', 'waveform', 'tspair.ascii', 'ascii', 'utf-16'),
+                   ('NDK', 'event', 'C200604092050A.ndk', 'ascii', 'utf-16'),
+                   ('KNET', 'waveform', 'test.knet', 'ascii', 'utf-16'),
+                   ('EVT', 'event', 'local1.evt', 'ascii', 'utf-16'),
+                   ('STATIONTXT', 'inventory', 'channel_level_fdsn.txt',
+                    'utf-8', 'utf-16'),
+                   ('PDAS', 'waveform', 'p1246001.108', 'latin-1', 'ascii'))
+        # stationtxt
+        for name, type_, example_file, encoding, bad_encoding in formats:
+            is_format = buffered_load_entry_point(
+                'obspy', '.'.join(('obspy.plugin', type_, name)), 'isFormat')
+            path = get_example_file(example_file)
+            # try different ways to pass in the data
+            # 1. by filename
+            self.assertTrue(is_format(path))
+            # 2. pass in bytes
+            with open(path, 'rb') as fh:
+                data = fh.read()
+            self.assertTrue(is_format(data))
+            # 3. pass in string, appropiate encoding
+            #   - REFTEK is only decoding some header bits, not the whole file
+            #     in ascii, most is binary, so skip this one, can't read reftek
+            #     file like this anyway
+            if name in ['REFTEK130']:
+                pass
+            else:
+                self.assertTrue(is_format(data.decode(encoding)))
+            # 4. pass in binary file handle
+            with open(path, 'rb') as fh:
+                self.assertTrue(is_format(fh))
+            # 5. pass in file handle in text mode with appropriate encoding
+            with io.open(path, 'rt', encoding=encoding) as fh:
+                self.assertTrue(is_format(fh))
+            # 6. pass in file handle in text mode with an encoding that can not
+            #    decode the file contents
+            #    .. should still work because we switch the encoding internally
+            with io.open(path, 'rt', encoding=bad_encoding) as fh:
+                self.assertTrue(is_format(fh))
+            # 7. pass in file handle in text mode with appropriate encoding but
+            #    specify non-working encoding, this should return False as the
+            #    file can not be recognized as this file type when a wrong
+            #    encoding is explicitly specified
+            #      - EVT and STATIONTXT are always decoding in UTF-8 so a
+            #        different encoding can not be specified for it and we just
+            #        always rewrap to utf8 if possible and necessary
+            if name in ['EVT', 'STATIONTXT']:
+                pass
+            else:
+                with io.open(path, 'rt', encoding=encoding) as fh:
+                    self.assertFalse(is_format(fh, encoding=bad_encoding))
+            # 8. pass in file handle in text mode with an encoding that can not
+            #    decode the file contents and specify non-working encoding as
+            #    well, this should return False as the file can not be
+            #    recognized as this file type when a wrong encoding is
+            #    explicitly specified
+            #      - EVT and STATIONTXT are always decoding in UTF-8 so a
+            #        different encoding can not be specified for it and we just
+            #        always rewrap to utf8 if possible and necessary
+            if name in ['EVT', 'STATIONTXT']:
+                pass
+            else:
+                with io.open(path, 'rt', encoding=bad_encoding) as fh:
+                    self.assertFalse(is_format(fh, encoding=bad_encoding))
 
 
 def suite():
