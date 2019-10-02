@@ -809,23 +809,35 @@ def _text_buffer_wrapper(buf, encoding):
     problems e.g. calling readline() on a TextIOWrapper if it is wrapping
     another TextIOBase object it seems.
 
-    :type buf: :class:`io.BufferedIOBase` or :class:`io.TextIOBase`
+    :type buf: file-like object or :class:`io.BufferedIOBase` or
+        :class:`io.TextIOBase`
     :param buf: An open file-like object open in binary or text mode or a
         BytesIO/StringIO object.
-    :rtype: :class:`io.TextIOWrapper` or :class:`io.TextIOBase`
+    :rtype: :class:`io.TextIOWrapper` or same as input
+    :returns: a new `TextIOWrapper` instance with given encoding or the input
+        object if it has specified encoding set or if it is a
+        :class:`io.StringIO` object
     """
-    if isinstance(buf, io.BufferedIOBase):
-        tbuf = io.TextIOWrapper(buf, encoding=encoding)
-        # we need to attach the TextIOWrapper as a variable to save it from
-        # garbage collection. if we don't it closes the underlying bytes
-        # buffer, which we don't want to happen, open file-like objects should
-        # stay open and be able to return to initial position during automatic
-        # file format detection
+    # if we get decoded input, there is nothing we can do, just return it
+    if isinstance(buf, io.StringIO):
+        return buf
+    # if we get a text buffer, try to wrap the underlying binary buffer if a
+    # different encoding is set
+    if getattr(buf, 'encoding', None):
+        if buf.encoding == encoding:
+            return buf
+        tbuf = io.TextIOWrapper(buf.buffer, encoding=encoding)
         buf.__text_io_wrapper = tbuf
         return tbuf
-    elif isinstance(buf, io.TextIOBase):
-        return buf
-    raise TypeError()
+    # otherwise we should have a binary buffer that we can wrap
+    tbuf = io.TextIOWrapper(buf, encoding=encoding)
+    # we need to attach the TextIOWrapper as a variable to save it from
+    # garbage collection. if we don't it closes the underlying bytes
+    # buffer, which we don't want to happen, open file-like objects should
+    # stay open and be able to return to initial position during automatic
+    # file format detection
+    buf.__text_io_wrapper = tbuf
+    return tbuf
 
 
 def _buffer_proxy(filename_or_buf, function, reset_fp=True,
