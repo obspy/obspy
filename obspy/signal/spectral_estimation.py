@@ -1960,7 +1960,8 @@ class PPSD(object):
                 accelerations = np.array(accelerations)
                 frequencies = np.array(frequencies)
                 periods = 1.0 / frequencies
-                # Eq.1 Cauzzi & Clinton (2013)
+                # Eq.1 from Clinton and Cauzzi (2013) converts 
+                # power to density
                 ydata = accelerations / (periods ** (-.5))
                 ydata = 20 * np.log10(ydata / 2)
                 if not (min_mag <= magnitude <= max_mag and
