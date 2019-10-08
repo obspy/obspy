@@ -26,6 +26,18 @@ from obspy.io.segy.tests.header import DTYPES, FILES
 from . import _patch_header
 
 
+class DuckTypedFileWrapper:
+    """File wrapper for minimal file-like protocol implementation."""
+    def __init__(self, file):
+        self._file = file
+
+    def __getattr__(self, item):
+        if item in {"read", "seek", "tell"}:
+            return getattr(self._file, item)
+        else:
+            raise AttributeError(item)
+
+
 class SEGYTestCase(unittest.TestCase):
     """
     Test cases for SEG Y reading and writing..
@@ -609,6 +621,50 @@ class SEGYTestCase(unittest.TestCase):
         del ist[0].stats.segy.endian
 
         self.assertEqual(st.traces, ist)
+
+    def test_iterative_reading_file_like(self):
+        """
+        Tests iterative reading of a file-like object.
+        """
+        # Read normally.
+        filename = os.path.join(self.path, 'example.y_first_trace')
+        st = obspy.read(filename, unpack_trace_headers=True)
+
+        # Read iterative.
+        with open(filename, "rb") as raw_file:
+            file = DuckTypedFileWrapper(raw_file)
+            ist = [_i for _i in iread_segy(file, unpack_headers=True)]
+
+            del ist[0].stats.segy.textual_file_header
+            del ist[0].stats.segy.binary_file_header
+            del ist[0].stats.segy.textual_file_header_encoding
+            del ist[0].stats.segy.data_encoding
+            del ist[0].stats.segy.endian
+
+            self.assertEqual(st.traces, ist)
+
+    def test_iterative_reading_file_like_headonly(self):
+        """
+        Tests iterative reading of a file-like object.
+        """
+        # Read normally.
+        filename = os.path.join(self.path, 'example.y_first_trace')
+        st = obspy.read(filename, unpack_trace_headers=True)
+
+        # Read iterative.
+        with open(filename, "rb") as raw_file:
+            file = DuckTypedFileWrapper(raw_file)
+            ist = [_i for _i in iread_segy(file, unpack_headers=True, headonly=True)]
+
+            del ist[0].stats.segy.textual_file_header
+            del ist[0].stats.segy.binary_file_header
+            del ist[0].stats.segy.textual_file_header_encoding
+            del ist[0].stats.segy.data_encoding
+            del ist[0].stats.segy.endian
+
+            self.assertEqual(ist[0].id, st.traces[0].id)
+            self.assertEqual(ist[0].meta, st.traces[0].meta)
+            self.assertEqual(ist[0].stats, st.traces[0].stats)
 
     def test_revision_number_in_binary_file_header(self):
         """

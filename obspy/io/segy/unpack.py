@@ -160,3 +160,22 @@ class OnTheFlyDataUnpacker:
             fp.seek(self.seek)
             raw = self.unpack_function(fp, self.count, endian=self.endian)
         return raw
+
+
+class OnTheFlyFileDataUnpacker:
+    """
+    Tie-up a data sample unpack function with its parameters.
+
+    This class allows for data to be read directly from a file-like object
+    as needed, preventing the need to store data in memory.
+    """
+    def __init__(self, unpack_function, file, seek, count, endian='>'):
+        self.unpack_function = unpack_function
+        self.file = file
+        self.seek = seek
+        self.count = count
+        self.endian = endian
+
+    def __call__(self):
+        self.file.seek(self.seek)
+        return self.unpack_function(self.file, self.count, endian=self.endian)

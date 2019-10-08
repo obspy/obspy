@@ -3,6 +3,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
+import os
 from struct import unpack
 
 from obspy.core.util.libnames import _load_cdll
@@ -36,3 +38,18 @@ def unpack_header_value(endian, packed_value, length, special_format):
     # Should not happen
     else:
         raise Exception
+
+
+def get_filesize(file):
+    """Get a size of provided file-like object."""
+    try:
+        fileno = file.fileno()
+    except (AttributeError, io.UnsupportedOperation):
+        pos = file.tell()
+        file.seek(0, 2)  # go t end of file
+        filesize = file.tell()
+        file.seek(pos, 0)
+    else:
+        filesize = os.fstat(fileno)[6]
+
+    return filesize

@@ -29,8 +29,8 @@ from .header import (BINARY_FILE_HEADER_FORMAT,
                      DATA_SAMPLE_FORMAT_SAMPLE_SIZE,
                      DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, ENDIAN,
                      TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
-from .unpack import OnTheFlyDataUnpacker
-from .util import unpack_header_value
+from .unpack import OnTheFlyDataUnpacker, OnTheFlyFileDataUnpacker
+from .util import unpack_header_value, get_filesize
 
 
 class SEGYError(Exception):
@@ -406,13 +406,8 @@ class SEGYFile(object):
         """
         self.traces = []
         # Determine the filesize once.
-        if isinstance(self.file, io.BytesIO):
-            pos = self.file.tell()
-            self.file.seek(0, 2)  # go t end of file
-            filesize = self.file.tell()
-            self.file.seek(pos, 0)
-        else:
-            filesize = os.fstat(self.file.fileno())[6]
+        filesize = get_filesize(self.file)
+
         # Big loop to read all data traces.
         while True:
             # Read and as soon as the trace header is too small abort.
@@ -584,13 +579,8 @@ class SEGYTrace(object):
         if filesize:
             self.filesize = filesize
         else:
-            if isinstance(self.file, io.BytesIO):
-                _pos = self.file.tell()
-                self.file.seek(0, 2)
-                self.filesize = self.file.tell()
-                self.file.seek(_pos)
-            else:
-                self.filesize = os.fstat(self.file.fileno())[6]
+            self.filesize = get_filesize(self.file)
+
         # Otherwise read the file.
         self._read_trace(unpack_headers=unpack_headers, headonly=headonly)
 
@@ -633,17 +623,24 @@ class SEGYTrace(object):
                   byte order or a corrupt file.
                   """.strip()
             raise SEGYTraceReadingError(msg)
+
+        unpack_func = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[self.data_encoding]
+
         if headonly:
             # skip reading the data, but still advance the file
             self.file.seek(data_needed, 1)
             # build a function for reading data from the disk on the fly
-            self.unpack_data = OnTheFlyDataUnpacker(
-                DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[self.data_encoding],
-                self.file.name, self.file.mode, pos, npts, endian=self.endian)
+            if hasattr(self.file, "name"):
+                self.unpack_data = OnTheFlyDataUnpacker(
+                    unpack_func, self.file.name, self.file.mode, pos, npts,
+                    endian=self.endian)
+            else:
+                self.unpack_data = OnTheFlyFileDataUnpacker(
+                    unpack_func, self.file, pos, npts, endian=self.endian
+                )
         else:
             # Unpack the data.
-            self.data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[
-                self.data_encoding](self.file, npts, endian=self.endian)
+            self.data = unpack_func(self.file, npts, endian=self.endian)
 
     def write(self, file, data_encoding=None, endian=None):
         """
@@ -1359,12 +1356,7 @@ def autodetect_endian_and_sanity_check_su(file):
     the Trace header.
     """
     pos = file.tell()
-    if isinstance(file, io.BytesIO):
-        file.seek(0, 2)
-        size = file.tell()
-        file.seek(pos, 0)
-    else:
-        size = os.fstat(file.fileno())[6]
+    size = get_filesize(file)
     if size < 244:
         return False
     # Also has to be a multiple of 4 in length because every header is 400 long
