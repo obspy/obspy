@@ -3123,7 +3123,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def stack(self, group_by='all', stack_type='linear', npts_tol=0,
               time_tol=0):
         """
-        Return stream with traces stacked by the same selected metadata.
+        Stack traces by the same selected metadata.
+
+        The metadata of each trace (including starttime) corresponds to the
+        metadata of the original traces if those are the same.
+        Additionaly, the entry ``stack`` is written to the stats object(s).
+        It contains the fields ``group``
+        (result of the format operation on the ``group_by`` parameter),
+        ``count`` (number of stacked traces) and ``type``
+        (``stack_type`` argument).
 
         :type group_by: str
         :param group_by: Stack waveforms together which have the same metadata
@@ -3148,13 +3156,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param time_tol: Tolerate difference in startime when setting the
             new starttime of the stack. If starttimes differs more than this
             value it will be set to timestamp 0.
-
-        :returns: New stream object with stacked traces. The metadata of each
-            trace (inlcuding starttime) corresponds to the metadata of the
-            original traces if those are the same. Additionaly, the entries
-            ``stack`` (result of the format operation on the group parameter)
-            and ``stack_count`` (number of stacked traces)
-            are written to the stats object(s).
 
         >>> from obspy import read
         >>> st = read()
