@@ -334,3 +334,8 @@ class MiniseedDataExtractor(object):
             else:
                 yield FileDataSegment(nrow.filename, nrow.triminfo[0][1],
                                       nrow.bytes, nrow.srcname)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

@@ -103,3 +103,8 @@ def get_tsindex_summary_table(table_name='tsindex_summary'):
 
         _table_cache["summary_tables"][table_name] = TSIndexSummaryTable
     return _table_cache["summary_tables"][table_name]
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

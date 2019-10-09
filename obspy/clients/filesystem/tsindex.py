@@ -1827,3 +1827,8 @@ class TSIndexDatabaseHandler(object):
             session.execute("PRAGMA temp_store=MEMORY")
         except Exception:
             raise OSError("Failed to setup sqlite3 database for indexing.")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

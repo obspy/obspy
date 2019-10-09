@@ -182,3 +182,8 @@ class MSRIterator(object):
         return self.fpos.value
 
     offset = property(get_offset, set_offset)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
