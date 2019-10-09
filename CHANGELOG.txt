@@ -44,6 +44,8 @@ master:
      get_quakeml_uri methods of the ResourceIdentifier class (see #2303).
    * Added get_quakeml_uri_str and get_quakeml_id methods to the
      ResourceIdentifier class (see #2303).
+   * New method to create response objects directly from poles and zeros (see
+     #1962).
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
@@ -73,7 +75,7 @@ master:
    * fix a problem in Scanner when loading npz on Python3 that was written on
      Python2 (see #2413)
  - obspy.io.mseed:
-   * Add ability to write int64 data to mseed if it can safely be downcast 
+   * Add ability to write int64 data to mseed if it can safely be downcast
      to int32 data, otherwise raises ObsPyMSEEDError. (see #2356)
    * The recordanalyzer can now detect calibration blockettes 300, 310,
      and 320 (see #2370).
