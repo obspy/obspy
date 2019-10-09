@@ -28,6 +28,7 @@ import numpy as np
 from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, _generic_reader)
 from obspy.core.util.decorator import (map_example_filename,
@@ -3119,11 +3120,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.remove_sensitivity(*args, **kwargs)
         return self
 
-    def stack(self, group='all', type='linear', npts_tol=0):
+    def stack(self, group_by='all', stack_type='linear', npts_tol=0,
+              time_tol=0):
         """
         Return stream with traces stacked by the same selected metadata.
 
-        :param str group: Stack waveforms together which have the same metadata
+        :type group_by: str
+        :param group_by: Stack waveforms together which have the same metadata
             given by this parameter. The parameter should name the
             corresponding keys of the stats object,
             e.g. ``'{network}.{station}'`` for stacking all
@@ -3132,14 +3135,19 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             This parameter can take two special values,
             ``'id'`` which stacks the waveforms by SEED id and
             ``'all'`` (default) which stacks together all traces in the stream.
-        :type type: str or tuple
-        :param type: Type of stack, one of the following:
+        :type stack_type: str or tuple
+        :param stack_type: Type of stack, one of the following:
             ``'linear'``: average stack (default),
             ``('pw', order)``: phase weighted stack of given order,
             see [Schimmel1997]_,
             ``('root', order)``: root stack of given order.
-        :param int npts_tol: Tolerate traces with different number of points
+        :type npts_tol: int
+        :param npts_tol: Tolerate traces with different number of points
             with a difference up to this value. Surplus samples are discarded.
+        :type time_tol: float (seconds)
+        :param time_tol: Tolerate difference in startime when setting the
+            new starttime of the stack. If starttimes differs more than this
+            value it will be set to timestamp 0.
 
         :returns: New stream object with stacked traces. The metadata of each
             trace (inlcuding starttime) corresponds to the metadata of the
@@ -3154,18 +3162,34 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> print(stack)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         BW.RJOB.. | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
         """
-        if group == 'id':
-            group = '{network}.{station}.{location}.{channel}'
+        if group_by == 'id':
+            group_by = '{network}.{station}.{location}.{channel}'
         groups = collections.defaultdict(list)
         for tr in self:
-            groups[group.format(**tr.stats)].append(tr)
+            groups[group_by.format(**tr.stats)].append(tr)
         stacks = []
         for groupid, traces in groups.items():
             header = {k: v for k, v in traces[0].stats.items()
                       if all(tr.stats.get(k) == v for tr in traces)}
-            header['stack'] = groupid
-            header['stack_count'] = len(traces)
+            header.pop('endtime', None)
+            if 'sampling_rate' not in header:
+                msg = 'Sampling rate of traces to stack is different'
+                raise ValueError(msg)
+            if 'starttime' not in header and time_tol > 0:
+                times = [tr.stats.starttime for tr in traces]
+                if np.ptp(times) <= time_tol:
+                    # use high median as starttime
+                    header['starttime'] = sorted(times)[len(times) // 2]
+            header['stack'] = AttribDict(group=groupid, count=len(traces),
+                                         type=stack_type)
             npts_all = [len(tr) for tr in traces]
             npts_dif = np.ptp(npts_all)
             npts = min(npts_all)
@@ -3174,24 +3198,26 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                        ' than requested tolerance ({} > {})')
                 raise ValueError(msg.format(npts_dif, npts_tol))
             data = np.array([tr.data[:npts] for tr in traces])
-            if type == 'linear':
+            if stack_type == 'linear':
                 stack = np.mean(data, axis=0)
-            elif type[0] == 'pw':
+            elif stack_type[0] == 'pw':
                 from scipy.signal import hilbert
                 from scipy.fftpack import next_fast_len
                 nfft = next_fast_len(npts)
                 anal_sig = hilbert(data, N=nfft)[:, :npts]
                 norm_anal_sig = anal_sig / np.abs(anal_sig)
-                phase_stack = np.abs(np.mean(norm_anal_sig, axis=0)) ** type[1]
+                phase_stack = np.abs(
+                        np.mean(norm_anal_sig, axis=0)) ** stack_type[1]
                 stack = np.mean(data, axis=0) * phase_stack
-            elif type[0] == 'root':
+            elif stack_type[0] == 'root':
                 r = np.mean(np.sign(data) * np.abs(data)
-                            ** (1 / type[1]), axis=0)
-                stack = np.sign(r) * np.abs(r) ** type[1]
+                            ** (1 / stack_type[1]), axis=0)
+                stack = np.sign(r) * np.abs(r) ** stack_type[1]
             else:
                 raise ValueError('stack type is not valid.')
             stacks.append(traces[0].__class__(data=stack, header=header))
-        return self.__class__(stacks)
+        self.traces = stacks
+        return self
 
     @staticmethod
     def _dummy_stream_from_string(s):
