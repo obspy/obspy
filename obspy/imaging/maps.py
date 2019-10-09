@@ -345,7 +345,7 @@ def _plot_basemap_into_axes(
         elif projection == 'ortho':
             bmap = Basemap(projection='ortho',
                            resolution=_BASEMAP_RESOLUTIONS[resolution],
-                           area_thresh=1000.0, lat_0=round(np.mean(lats), 4),
+                           lat_0=round(np.mean(lats), 4),
                            lon_0=round(mean_longitude(lons), 4), ax=ax)
         elif projection == 'local':
             if min(lons) < -150 and max(lons) > 150:
@@ -383,7 +383,7 @@ def _plot_basemap_into_axes(
 
             bmap = Basemap(projection='aea',
                            resolution=_BASEMAP_RESOLUTIONS[resolution],
-                           area_thresh=1000.0, lat_0=round(lat_0, 4),
+                           lat_0=round(lat_0, 4),
                            lon_0=round(lon_0, 4),
                            width=width, height=height, ax=ax)
             # not most elegant way to calculate some round lats/lons
