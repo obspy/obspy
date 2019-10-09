@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+r"""
 obspy.clients.filesystem.tsindex - IRIS TSIndex Client and Indexer
 ==========================================================================
 
@@ -1052,12 +1052,12 @@ class Indexer(object):
                                    .format(rc, cmd, out, err))
             pool.join()
         except KeyboardInterrupt:
-                logger.warning('Parent received keyboard interrupt.')
-                if build_summary is True:
-                    logger.warning("Skipped building timeseries summary "
-                                   "table since indexing was ended "
-                                   "prematurely.")
-                pool.terminate()
+            logger.warning('Parent received keyboard interrupt.')
+            if build_summary is True:
+                logger.warning("Skipped building timeseries summary "
+                               "table since indexing was ended "
+                               "prematurely.")
+            pool.terminate()
         else:
             if build_summary is True:
                 self.request_handler.build_tsindex_summary()

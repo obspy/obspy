@@ -6,14 +6,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import re
-import os
-import ctypes
-import bisect
-import logging
-
+import abc
 from collections import namedtuple
+import bisect
+import ctypes
 from io import BytesIO
+import logging
+import os
+import re
+
+from future.utils import with_metaclass
+
 from obspy import read
 from obspy.core import UTCDateTime
 from obspy.core.stream import Stream
@@ -36,38 +39,38 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 
-class NoDataError(Exception):
+class ObsPyClientFileSystemMiniSEEDException(Exception):
+    pass
+
+
+class NoDataError(ObsPyClientFileSystemMiniSEEDException):
     """
     Error raised when no data is found
     """
     pass
 
 
-class RequestLimitExceededError(Exception):
+class RequestLimitExceededError(ObsPyClientFileSystemMiniSEEDException):
     """
     Error raised when the amount of data exceeds the configured limit
     """
     pass
 
 
-class ExtractedDataSegment(object):
+class ExtractedDataSegment(with_metaclass(abc.ABCMeta)):
     """
     There are a few different forms that a chunk of extracted data can take,
     so we return a wrapped object that exposes a simple, consistent API
     for the handler to use.
     """
-    def write(self, wfile):
-        """
-        Write the data to the given file-like object
-        """
-        raise NotImplementedError()
-
+    @abc.abstractmethod
     def get_num_bytes(self):
         """
         Return the number of bytes in the segment
         """
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_src_name(self):
         """
         Return the name of the data source

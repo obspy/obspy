@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+r"""
 obspy.clients.filesystem - Local filesystem (SDS or TSINDEX) client for ObsPy
 =============================================================================
 This package provides read support for some local directory structures.
