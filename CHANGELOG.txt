@@ -150,7 +150,7 @@ master:
    * Fix `period_lim` option when `xaxis_frequency=True` (see #2246).
    * Added `allow_pickle` parameter to `PPSD.add_npz` and `PPSD.load_npz` and
      set its default to `False` (see #2457).
-   * Added representation of earthquake models from Clinton & Heaton (2002) in 
+   * Added representation of earthquake models from Clinton & Heaton (2002) in
      'plot()' method using option 'show_earthquakes' (see #2455).
  - obspy.signal.cross_correlation:
    * Add new `correlate_template()` function with 'full' normalization option,
