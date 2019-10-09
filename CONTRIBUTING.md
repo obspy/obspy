@@ -26,13 +26,13 @@ First, if the pull request (PR) is directly related to an already existing issue
  1. Fork the repo.
  2. Make a new branch. For feature additions/changes base your new branch at `master`, for pure bugfixes base your new branch at e.g. `maintenance_1.0.x` .
  3. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding functionality or fixing a bug, we need a test!
- 4. Make the test pass.
+ 4. Make the test pass (call `obspy-runtests` or run individual tests using e.g. [pytest](https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests))
  5. Push to your fork and submit a pull request.
     - for feature branches set base branch to `obspy:master`
     - for bugfix branches set base branch to the latests maintenance branch, e.g. `obspy:maintenance_1.0.x`
  6. Wait for our review. We may suggest some changes or improvements or alternatives. Keep in mind that PR checklist items can be met after the pull request has been opened by adding more commits to the branch.
 
-Please make sure to select the correct base branch (`master` vs. `maintenance_x.x.x`) for your PR.
+Please make sure to select the correct base branch (`master` vs. `maintenance_x.x.x`) for your PR. If in doubt, ask us which one is appropriate first.
 
 If your PR is adding a new submodule, please go through the [to-do items for new submodules in the wiki](https://github.com/obspy/obspy/wiki/How-to%3A-add-a-new-submodule).
 
@@ -40,7 +40,7 @@ If you want to request an automated build of ObsPy's API docs for your PR, simpl
 
 If any specific networking modules should be tested for the PR, e.g. when proposing changes to the FDSN client module, please include a magic string like e.g. `+TESTS:clients.fdsn` somewhere in the PR's comments. Multiple modules can be comma separated (e.g. `+TESTS:clients.fdsn,clients.iris`) or put in separate `+TESTS:...` strings, which will be accumulated across all of the PR's comments. To run *all* modules' test suites, include `+TESTS:ALL` somewhere in a comment.
 
-All the submitted pieces including potential data must be compatible with the LGPLv3 license and will be LGPLv3 licensed as soon as they are part of ObsPy. Sending a pull request implies that you agree with this.
+**All the submitted pieces including potential data must be compatible with the LGPLv3 license and will be LGPLv3 licensed as soon as they are part of ObsPy. Sending a pull request implies that you agree with this.**
 
 Additionally take care to not add big files. Even for tests we generally only accept files that are very small and at max on the order of a few kilobytes. When in doubt.. ask us in the PR.
 
