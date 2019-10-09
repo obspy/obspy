@@ -550,9 +550,9 @@ class PsdTestCase(unittest.TestCase):
         test_magnitudes = [3.5, 2.5, 1.5]
         for magnitude in test_magnitudes:
             key = (magnitude, 10)
-            fig = ppsd.plot(show_earthquakes=(magnitude-0.5, magnitude+0.5,
-                                              5, 15),
-                          show_noise_models=False, show=False)
+            fig = ppsd.plot(
+                show_earthquakes=(magnitude - 0.5, magnitude + 0.5, 5, 15),
+                show_noise_models=False, show=False)
             ax = fig.axes[0]
             line = ax.lines[0]
             frequencies, accelerations = earthquake_models[key]

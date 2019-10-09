@@ -1850,13 +1850,13 @@ class PPSD(object):
             like in [ClintonHeaton2002]_ and [CauzziClinton2013]_. Disabled by
             default (``None``). Specify ranges (minimum and maximum) for
             magnitude and distance of earthquake models given as four floats,
-            e.g. ``(0, 5, 0, 99)`` for magnitude 1.5 - 4.5 at a epicentral 
-            distance of 10 km. Note only 10, 100 and 3000 km distances and 
+            e.g. ``(0, 5, 0, 99)`` for magnitude 1.5 - 4.5 at a epicentral
+            distance of 10 km. Note only 10, 100 and 3000 km distances and
             magnitudes 1.5 to 7.5 are available. Alternatively, a distance can
-            be specified in last float of a tuple of three, e.g. ``(0, 5, 10)`` 
-            for 10 km distance, or magnitude and distance can be specified in 
-            a tuple of two floats, e.g. ``(5.5, 10)`` for magnitude 5.5 at 10 km 
-            distance.
+            be specified in last float of a tuple of three, e.g. ``(0, 5, 10)``
+            for 10 km distance, or magnitude and distance can be specified in
+            a tuple of two floats, e.g. ``(5.5, 10)`` for magnitude 5.5 at 10
+            km distance.
         :type grid: bool, optional
         :param grid: Enable/disable grid in histogram plot.
         :type show: bool, optional
@@ -1948,11 +1948,11 @@ class PPSD(object):
         if show_earthquakes is not None:
             if len(show_earthquakes) == 2:
                 show_earthquakes = (show_earthquakes[0],
-                                    show_earthquakes[0]+0.1,
+                                    show_earthquakes[0] + 0.1,
                                     show_earthquakes[1],
-                                    show_earthquakes[1]+1)
+                                    show_earthquakes[1] + 1)
             if len(show_earthquakes) == 3:
-                show_earthquakes += (show_earthquakes[-1]+1, )
+                show_earthquakes += (show_earthquakes[-1] + 1, )
             min_mag, max_mag, min_dist, max_dist = show_earthquakes
             for key, data in earthquake_models.items():
                 magnitude, distance = key
@@ -1960,7 +1960,7 @@ class PPSD(object):
                 accelerations = np.array(accelerations)
                 frequencies = np.array(frequencies)
                 periods = 1.0 / frequencies
-                # Eq.1 from Clinton and Cauzzi (2013) converts 
+                # Eq.1 from Clinton and Cauzzi (2013) converts
                 # power to density
                 ydata = accelerations / (periods ** (-.5))
                 ydata = 20 * np.log10(ydata / 2)
