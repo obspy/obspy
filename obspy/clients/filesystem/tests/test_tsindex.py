@@ -8,6 +8,7 @@ from obspy.core.compatibility import mock
 
 import obspy
 from obspy import UTCDateTime
+from obspy.core.compatibility import RegExTestCase
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler
 
@@ -40,17 +41,17 @@ def get_test_client():
     return client
 
 
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase(RegExTestCase):
 
     def test_bad_sqlitdb_filepath(self):
         """
         Checks that an error is raised when an invalid path is provided to
         a SQLite database
         """
-        self.assertRaisesRegexp(OSError,
-                                "^Database path.*does not exist.$",
-                                Client,
-                                "/some/bad/path/timeseries.sqlite")
+        self.assertRaisesRegex(OSError,
+                               "^Database path.*does not exist.$",
+                               Client,
+                               "/some/bad/path/timeseries.sqlite")
 
     def test_get_waveforms(self):
         filepath = get_test_data_filepath()
@@ -594,7 +595,7 @@ def purge(dir, pattern):
             os.remove(os.path.join(dir, f))
 
 
-class IndexerTestCase(unittest.TestCase):
+class IndexerTestCase(RegExTestCase):
 
     def test_bad_rootpath(self):
         """
@@ -606,13 +607,13 @@ class IndexerTestCase(unittest.TestCase):
                                 'timeseries.sqlite')
 
         # test that a bad leap second file path raises an error
-        self.assertRaisesRegexp(OSError,
-                                "^Root path.*does not exists.$",
-                                Indexer,
-                                "/some/bad/path",
-                                database=database,
-                                filename_pattern="*.mseed",
-                                parallel=2)
+        self.assertRaisesRegex(OSError,
+                               "^Root path.*does not exists.$",
+                               Indexer,
+                               "/some/bad/path",
+                               database=database,
+                               filename_pattern="*.mseed",
+                               parallel=2)
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -620,12 +621,12 @@ class IndexerTestCase(unittest.TestCase):
         a SQLite database
         """
         filepath = get_test_data_filepath()
-        self.assertRaisesRegexp(OSError,
-                                "^Database path.*does not exist.$",
-                                Indexer,
-                                filepath,
-                                database='/some/bad/path/',
-                                filename_pattern="*.mseed")
+        self.assertRaisesRegex(OSError,
+                               "^Database path.*does not exist.$",
+                               Indexer,
+                               filepath,
+                               database='/some/bad/path/',
+                               filename_pattern="*.mseed")
 
     def test_bad_database(self):
         """
@@ -634,13 +635,13 @@ class IndexerTestCase(unittest.TestCase):
         a ValueError is raised.
         """
         filepath = get_test_data_filepath()
-        self.assertRaisesRegexp(ValueError,
-                                "^Database must be a string or "
-                                "TSIndexDatabaseHandler object.$",
-                                Indexer,
-                                filepath,
-                                database=None,
-                                filename_pattern="*.mseed")
+        self.assertRaisesRegex(ValueError,
+                               "^Database must be a string or "
+                               "TSIndexDatabaseHandler object.$",
+                               Indexer,
+                               filepath,
+                               database=None,
+                               filename_pattern="*.mseed")
 
     def test_download_leap_seconds_file(self):
         filepath = get_test_data_filepath()
@@ -657,7 +658,7 @@ class IndexerTestCase(unittest.TestCase):
         # assert that the file was put in the same location as the
         # sqlite db
         self.assertTrue(os.path.isfile(file_path))
-        self.assertEquals(file_path, test_file)
+        self.assertEqual(file_path, test_file)
         os.remove(test_file)
 
     def test_download_leap_seconds_file_no_path_given(self):
@@ -686,16 +687,16 @@ class IndexerTestCase(unittest.TestCase):
                           database=database)
 
         # test that a bad leap second file path raises an error
-        self.assertRaisesRegexp(OSError,
-                                "^No leap seconds file exists at.*$",
-                                Indexer,
-                                filepath,
-                                database=database,
-                                leap_seconds_file="/some/bad/path/")
-        self.assertRaisesRegexp(OSError,
-                                "^No leap seconds file exists at.*$",
-                                indexer._get_leap_seconds_file,
-                                "/some/bad/path/")
+        self.assertRaisesRegex(OSError,
+                               "^No leap seconds file exists at.*$",
+                               Indexer,
+                               filepath,
+                               database=database,
+                               leap_seconds_file="/some/bad/path/")
+        self.assertRaisesRegex(OSError,
+                               "^No leap seconds file exists at.*$",
+                               indexer._get_leap_seconds_file,
+                               "/some/bad/path/")
 
         # test search
         # create a empty leap-seconds.list file
@@ -703,7 +704,7 @@ class IndexerTestCase(unittest.TestCase):
                             os.path.dirname(database), "leap-seconds.list")
         open(test_file, 'a').close()
         file_path = indexer._get_leap_seconds_file("SEARCH")
-        self.assertEquals(file_path, test_file)
+        self.assertEqual(file_path, test_file)
         os.remove(test_file)
 
     def test_build_file_list(self):
@@ -733,10 +734,10 @@ class IndexerTestCase(unittest.TestCase):
         indexer = Indexer(tempfile.mkdtemp(),
                           database=TSIndexDatabaseHandler(database=database),
                           filename_pattern="*.mseed")
-        self.assertRaisesRegexp(OSError,
-                                "^No files matching filename.*$",
-                                indexer.build_file_list,
-                                reindex=True)
+        self.assertRaisesRegex(OSError,
+                               "^No files matching filename.*$",
+                               indexer.build_file_list,
+                               reindex=True)
 
         # test for absolute paths
         # this time pass a TSIndexDatabaseHandler instance as the database
@@ -766,16 +767,16 @@ class IndexerTestCase(unittest.TestCase):
                       'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
                       file_list[2])
         # test that already indexed files (relative and absolute) get skipped.
-        self.assertRaisesRegexp(OSError,
-                                "^No unindexed files matching filename.*$",
-                                indexer.build_file_list,
-                                reindex=False,
-                                relative_paths=False)
-        self.assertRaisesRegexp(OSError,
-                                "^No unindexed files matching filename.*$",
-                                indexer.build_file_list,
-                                reindex=False,
-                                relative_paths=True)
+        self.assertRaisesRegex(OSError,
+                               "^No unindexed files matching filename.*$",
+                               indexer.build_file_list,
+                               reindex=False,
+                               relative_paths=False)
+        self.assertRaisesRegex(OSError,
+                               "^No unindexed files matching filename.*$",
+                               indexer.build_file_list,
+                               reindex=False,
+                               relative_paths=True)
         # for this test mock an unindexed file ('data.mseed') to ensure that
         # it gets added when reindex is True
         mocked_files = [
@@ -788,10 +789,10 @@ class IndexerTestCase(unittest.TestCase):
                 'data.mseed'
             ]
         indexer._get_rootpath_files = mock.MagicMock(return_value=mocked_files)
-        self.assertEquals(indexer.build_file_list(
-                            reindex=False,
-                            relative_paths=False),
-                          ['data.mseed'])
+        self.assertEqual(indexer.build_file_list(
+                           reindex=False,
+                           relative_paths=False),
+                         ['data.mseed'])
 
     def test_run_bad_index_cmd(self):
         """
@@ -803,9 +804,9 @@ class IndexerTestCase(unittest.TestCase):
                           filename_pattern="*.mseed",
                           index_cmd="some_bad_command")
 
-        self.assertRaisesRegexp(OSError,
-                                "^Required program.* is not installed.*$",
-                                indexer.run)
+        self.assertRaisesRegex(OSError,
+                               "^Required program.* is not installed.*$",
+                               indexer.run)
 
     def test_run(self):
         my_uuid = uuid.uuid4().hex
@@ -874,7 +875,7 @@ class IndexerTestCase(unittest.TestCase):
             purge(filepath, '^{}.*$'.format(fname))
 
 
-class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
+class TSIndexDatabaseHandlerTestCase(RegExTestCase):
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -882,13 +883,13 @@ class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
         a SQLite database
         """
         filepath = get_test_data_filepath()
-        self.assertRaisesRegexp(OSError,
-                                "^Database path.*does not exist.$",
-                                Indexer,
-                                filepath,
-                                database='/some/bad/path/',
-                                filename_pattern="*.mseed",
-                                parallel=2)
+        self.assertRaisesRegex(OSError,
+                               "^Database path.*does not exist.$",
+                               Indexer,
+                               filepath,
+                               database='/some/bad/path/',
+                               filename_pattern="*.mseed",
+                               parallel=2)
 
     def test__fetch_summary_rows(self):
         # test with actual sqlite3 database that is missing a summary table
