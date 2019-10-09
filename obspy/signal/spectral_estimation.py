@@ -833,9 +833,9 @@ class PPSD(object):
             tr.data = tr.data[:-1]
         # one last check..
         if len(tr) != self.len:
-            msg = "Got a piece of data with wrong length. Skipping"
+            msg = ("Got a piece of data with wrong length. Skipping:\n" +
+                   str(tr))
             warnings.warn(msg)
-            print(len(tr), self.len)
             return False
         # being paranoid, only necessary if in-place operations would follow
         tr.data = tr.data.astype(np.float64)
