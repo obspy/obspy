@@ -4,12 +4,11 @@ obspy.clients.filesystem.tsindex - IRIS TSIndex Client and Indexer
 ==========================================================================
 
 The obspy.clients.filesystem.tsindex module includes a timeseries extraction
-:class:`~obspy.clients.filesystem.tsindex.Client` class for a database created
-by the IRIS
+:class:`Client` class for a database created by the IRIS
 `mseedindex <https://github.com/iris-edu/mseedindex>`_ program, as well as, a
-:class:`~obspy.clients.filesystem.tsindex.Indexer` class for creating a SQLite3
-database that follows the IRIS `tsindex database
-schema <https://github.com/iris-edu/mseedindex/wiki/Database-Schema/>`_\.
+:class:`Indexer` class for creating a SQLite3 database that follows the IRIS
+`tsindex database schema
+<https://github.com/iris-edu/mseedindex/wiki/Database-Schema/>`_\.
 
 :copyright:
     Nick Falco, Chad Trabant, IRISDMC, 2018
@@ -30,9 +29,10 @@ Client Usage
 The first step is always to initialize a client object.
 
 .. highlight:: python
+
 >>> from obspy.clients.filesystem.tsindex import Client
 >>> from obspy.clients.filesystem.tests.test_tsindex \
-import get_test_data_filepath
+...     import get_test_data_filepath
 >>> import os
 >>> # for this example get the file path to test data
 >>> filepath = get_test_data_filepath()
@@ -44,19 +44,19 @@ The example below uses the test SQLite3 tsindex database included with ObsPy to
 illustrate how to do the following:
 
 * Determine what data is available in the tsindex database using
-  :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability_extent()`
-  and :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability()`, as
+  :meth:`~Client.get_availability_extent()`
+  and :meth:`~Client.get_availability()`, as
   well as, the percentage of data available using
-  :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability_percentage()`.
+  :meth:`~Client.get_availability_percentage()`.
 * Request available timeseries data using
-  :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms()` and
-  :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms_bulk()`.
+  :meth:`~Client.get_waveforms()` and
+  :meth:`~Client.get_waveforms_bulk()`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Determining Data Availability
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability_extent()`:
+* :meth:`~Client.get_availability_extent()`:
   Returns a list of (network, station, location, channel, earliest, latest)
   tuples that represent the full extent of available data. This example
   retrieves from the very small obspy test tsindex database a list of all
@@ -69,27 +69,21 @@ Determining Data Availability
 IU  ANMO   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994536Z
 IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
 
-* :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability()`:
-  Works in the same way as
-  :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability_extent()`
-  but returns a list of (network, station, location, channel, starttime,
-  endtime) tuples representing contiguous time spans for selected channels
-  and time ranges.
+* :meth:`~Client.get_availability()`: Works in the same way as
+  :meth:`~Client.get_availability_extent()` but returns a list of (network,
+  station, location, channel, starttime, endtime) tuples representing
+  contiguous time spans for selected channels and time ranges.
 
-* :meth: \
-  `~obspy.clients.filesystem.tsindex.Client.get_availability_percentage()`:
+* :meth:`~Client.get_availability_percentage()`:
   Returns the tuple(float, int) of percentage of available data
   (``0.0`` to ``1.0``) and number of gaps/overlaps. Availability percentage is
   calculated relative to the provided ``starttime`` and ``endtime``.
 
 >>> from obspy import UTCDateTime
->>> avail_percentage = client.get_availability_percentage( \
-"IU", \
-"ANMO", \
-"10", \
-"BHZ", \
-UTCDateTime(2018, 1, 1, 0, 0, 0, 19500), \
-UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))
+>>> avail_percentage = client.get_availability_percentage(
+...     "IU", "ANMO", "10", "BHZ",
+...     UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
+...     UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))
 >>> print(avail_percentage)
 (0.5083705674817509, 1)
 
@@ -97,11 +91,11 @@ UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))
 Requesting Timeseries Data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms()`:
+* :meth:`~Client.get_waveforms()`:
   This example illustrates how to request 1 second of available ("IU")
   timeseries data in the test tsindex database. Results are returned as a
   :class:`~obspy.core.stream.Stream` object. See the
-  :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms_bulk()`
+  :meth:`~Client.get_waveforms_bulk()`
   method for information on how to make multiple requests at once.
 
 >>> t = UTCDateTime("2018-01-01T00:00:00.019500")
@@ -113,7 +107,7 @@ Requesting Timeseries Data
     from obspy import UTCDateTime
     from obspy.clients.filesystem.tsindex import Client
     from obspy.clients.filesystem.tests.test_tsindex \
-    import get_test_data_filepath
+        import get_test_data_filepath
     # for this example get the file path to test data
     filepath = get_test_data_filepath()
     db_path = os.path.join(filepath, 'timeseries.sqlite')
@@ -127,7 +121,7 @@ Requesting Timeseries Data
 Indexer Usage
 -------------
 
-The :class:`~obspy.clients.filesystem.tsindex.Indexer` provides a high level
+The :class:`~Indexer` provides a high level
 API for indexing a directory tree of miniSEED files using the IRIS
 `mseedindex <https://github.com/iris-edu/mseedindex/>`_ software.
 
@@ -135,18 +129,18 @@ Initialize a indexer object by supplying the root path to data to be indexed.
 
 >>> from obspy.clients.filesystem.tsindex import Indexer
 >>> from obspy.clients.filesystem.tests.test_tsindex \
-import get_test_data_filepath
+...     import get_test_data_filepath
 >>> # for this example get the file path to test data
 >>> filepath = get_test_data_filepath()
 >>> # create a new Indexer instance
 >>> indexer = Indexer(filepath, filename_pattern='*.mseed')
 
 Index a directory tree of miniSEED files by calling
-:meth:`~obspy.clients.filesystem.tsindex.Indexer.run`. By default this will
+:meth:`~Indexer.run`. By default this will
 create a database called ``timeseries.sqlite`` in the current working
 directory. The name of the index database can be changed by supplying the
 ``database`` parameter when instantiating the
-:class:`~obspy.clients.filesystem.tsindex.Indexer` object.
+:class:`~Indexer` object.
 
 .. code-block:: python
 
@@ -222,7 +216,7 @@ class Client(object):
         Initializes the client.
 
         :type database: str or
-            :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
+            :class:`~TSIndexDatabaseHandler`
         :param database: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object
         :type datapath_replace: 2-value tuple(str, str)
@@ -936,7 +930,7 @@ class Indexer(object):
         :type root_path: str
         :param root_path: Root path to the directory structure to index.
         :type database: str or
-            :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
+            :class:`~TSIndexDatabaseHandler`
         :param database: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object. A database will be created
             if one does not already exists at the specified path.
@@ -946,7 +940,7 @@ class Indexer(object):
             in the same directory as the sqlite3 database. If set to `None`
             then no leap seconds file will be used.
 
-            In :meth:`~obspy.clients.filesystem.tsindex.Indexer.run` the leap
+            In :meth:`~Indexer.run` the leap
             seconds listed in this file will be used to adjust the time
             coverage for records that contain a leap second. Also, leap second
             indicators in the miniSEED headers will be ignored. See the
@@ -1119,7 +1113,7 @@ class Indexer(object):
         :param file_path: Optional path to file path where leap seconds
             file should be downloaded. By default the file is downloaded to
             the same directory as the
-            :class:`~obspy.clients.filesystem.tsindex.Indexer` instances
+            :class:`~Indexer` instances
             sqlite3 timeseries index database path.
 
         :rtype: str
@@ -1176,7 +1170,7 @@ class Indexer(object):
 
         :type leap_seconds_file: str or None
         :param leap_seconds_file: Leap second file options defined in the
-            :class:`~obspy.clients.filesystem.tsindex.Indexer` constructor.
+            :class:`~Indexer` constructor.
         """
         if leap_seconds_file is not None:
             if leap_seconds_file == "SEARCH":
@@ -1342,8 +1336,7 @@ class TSIndexDatabaseHandler(object):
                                    self.tsindex_table))
             logger.info("For improved performance create a permanent "
                         "{0} table by running the "
-                        "`~obspy.clients.filesystem.tsindex."
-                        "TSIndexDatabaseHandler.build_tsindex_summary()` "
+                        "TSIndexDatabaseHandler.build_tsindex_summary() "
                         "instance method."
                         .format(self.tsindex_summary_table))
             # create the tsindex summary cte by querying the tsindex table.
