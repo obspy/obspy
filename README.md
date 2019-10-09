@@ -31,6 +31,10 @@ A one-hour introduction to ObsPy is [available at YouTube](https://www.youtube.c
 
 The **detailed changelog** is available [here](CHANGELOG.txt).
 
+### Contributing
+
+Please see details on how to contribute to the project [here](CONTRIBUTING.md).
+
 ### References
 
   * Moritz Beyreuther, Robert Barsch, Lion Krischer, Tobias Megies, Yannik Behr and Joachim Wassermann (2010), [ObsPy: A Python Toolbox for Seismology](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), _SRL_, 81(3), 530-533,  doi:`10.1785/gssrl.81.3.530`.
