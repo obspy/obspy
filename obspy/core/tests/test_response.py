@@ -326,7 +326,7 @@ class ResponseTestCase(unittest.TestCase):
         np.testing.assert_array_equal(r_zeros, zeros)
         np.testing.assert_array_equal(r_poles, poles)
         np.testing.assert_equal(r_stage_gain, sensitivity)
-        np.testing.assert_equal(r_sens/normalization, sensitivity)
+        np.testing.assert_equal(r_sens / normalization, sensitivity)
 
     def test_resp_from_paz_loading_vs_evalresp(self):
         zeros = [0., 0.]
@@ -335,13 +335,12 @@ class ResponseTestCase(unittest.TestCase):
                                 'RESP.XX.NS306..SHZ.GS13.1.2180')
         resp_er = read_inventory(filename)[0][0][0].response
         loaded_resp = resp_er.get_evalresp_response(.1, 2**6, output='VEL')
-        resp = Response.from_paz(zeros, poles, 22.,
-                                 stage_gain_frequency=5.,
-                                 normalization_frequency=5.,
+        # The optional kwargs are the same as those being set in the RESP file.
+        resp = Response.from_paz(zeros=zeros, poles=poles, stage_gain=22.0,
+                                 stage_gain_frequency=5.0,
+                                 normalization_frequency=5.0,
                                  normalization_factor=1.070401)
         paz_resp = resp.get_evalresp_response(.1, 2**6, output='VEL')
-        loaded_curve, _ = zip(loaded_resp)
-        paz_curve, _ = zip(paz_resp)
         np.testing.assert_allclose(paz_resp, loaded_resp)
 
     def test_str_method_of_the_polynomial_response_stage(self):

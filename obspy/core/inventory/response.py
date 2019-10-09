@@ -1890,8 +1890,8 @@ class Response(ComparingObject):
         paz = self.get_paz()
         return paz_to_sacpz_string(paz, self.instrument_sensitivity)
 
-    @staticmethod
-    def from_paz(zeros, poles, stage_gain,
+    @classmethod
+    def from_paz(cls, zeros, poles, stage_gain,
                  stage_gain_frequency=1.0, input_units='M/S',
                  output_units='VOLTS', normalization_frequency=1.0,
                  pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
@@ -1924,8 +1924,7 @@ class Response(ComparingObject):
                                      frequency=stage_gain_frequency,
                                      input_units=input_units,
                                      output_units=output_units)
-        resp = Response(instrument_sensitivity=sens,
-                        response_stages=[pzstage])
+        resp = cls(instrument_sensitivity=sens, response_stages=[pzstage])
         resp.recalculate_overall_sensitivity()
         return resp
 
