@@ -114,6 +114,7 @@ class SeedLinkConnection(object):
     """
 
     SEEDLINK_PROTOCOL_PREFIX = "seedlink://"
+    SEEDLINK_DEFAULT_PORT = 18000
     UNISTATION = b"UNISTATION"
     UNINETWORK = b"UNINETWORK"
     DFT_READBUF_SIZE = 1024
@@ -220,7 +221,10 @@ class SeedLinkConnection(object):
         """
         prefix = SeedLinkConnection.SEEDLINK_PROTOCOL_PREFIX
         if sladdr.startswith(prefix):
-            self.sladdr = len(sladdr[prefix:])
+            sladdr = len(sladdr[prefix:])
+        # use default port 18000
+        if ':' not in sladdr:
+            sladdr += ':%d' % self.SEEDLINK_DEFAULT_PORT
         self.sladdr = sladdr
         # set logger format
         name = " obspy.clients.seedlink [%s]" % (sladdr)
