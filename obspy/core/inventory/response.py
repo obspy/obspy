@@ -1913,13 +1913,13 @@ class Response(ComparingObject):
         :returns: new Response instance with given P-Z values
         """
         pzstage = PolesZerosResponseStage(
-                    stage_sequence_number=1, stage_gain=stage_gain,
-                    stage_gain_frequency=stage_gain_frequency,
-                    input_units=input_units, output_units=output_units,
-                    pz_transfer_function_type=pz_transfer_function_type,
-                    normalization_frequency=normalization_frequency,
-                    zeros=zeros, poles=poles,
-                    normalization_factor=normalization_factor)
+            stage_sequence_number=1, stage_gain=stage_gain,
+            stage_gain_frequency=stage_gain_frequency,
+            input_units=input_units, output_units=output_units,
+            pz_transfer_function_type=pz_transfer_function_type,
+            normalization_frequency=normalization_frequency,
+            zeros=zeros, poles=poles,
+            normalization_factor=normalization_factor)
         sens = InstrumentSensitivity(value=stage_gain,
                                      frequency=stage_gain_frequency,
                                      input_units=input_units,

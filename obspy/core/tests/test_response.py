@@ -311,12 +311,12 @@ class ResponseTestCase(unittest.TestCase):
                   0 + 39477.164708432785j])
 
     def test_resp_from_paz_setting_zeros_poles_and_sensitivity(self):
-        poles = [1+2j, 1-2j, 2+1j, 2-1j]
+        poles = [1 + 2j, 1 - 2j, 2 + 1j, 2 - 1j]
         zeros = [0, 0, 5]
-        sensitivity = 1201.*(2**26/40.)
+        sensitivity = 1201. * (2 ** 26 / 40.)
         # a0 normalization factor at 1Hz for these values
-        normalization = np.prod(2*pi*1j-np.array(zeros))
-        normalization /= np.prod(2*pi*1j-np.array(poles))
+        normalization = np.prod(2 * pi * 1j - np.array(zeros))
+        normalization /= np.prod(2 * pi * 1j - np.array(poles))
         normalization = np.abs(normalization)
         resp = Response.from_paz(zeros, poles, sensitivity)
         r_zeros = resp.response_stages[0].zeros
@@ -330,7 +330,7 @@ class ResponseTestCase(unittest.TestCase):
 
     def test_resp_from_paz_loading_vs_evalresp(self):
         zeros = [0., 0.]
-        poles = [-8.443+1.443j, -8.443-1.443j]
+        poles = [-8.443 + 1.443j, -8.443 - 1.443j]
         filename = os.path.join(self.data_dir,
                                 'RESP.XX.NS306..SHZ.GS13.1.2180')
         resp_er = read_inventory(filename)[0][0][0].response
