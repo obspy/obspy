@@ -146,7 +146,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     # Return as collection
     plot_dc_used = True
     if mt:
-        (t, n, p) = mt2axes(mt)
+        (t, n, p) = mt2axes(mt.normalized)
         if np.fabs(n.val) < EPSILON and np.fabs(t.val + p.val) < EPSILON:
             colors, p = plot_dc(np1, size, xy=xy, width=width)
         else:
@@ -1015,6 +1015,14 @@ class MomentTensor(object):
             self.expo = args[6]
         else:
             raise TypeError("Wrong size of input parameter.")
+
+    @property
+    def normalized(self):
+        return MomentTensor(self.mt_normalized, self.expo)
+
+    @property
+    def mt_normalized(self):
+        return self.mt / np.linalg.norm(self.mt)
 
     @property
     def xx(self):
