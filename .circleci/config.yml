@@ -19,5 +19,6 @@ jobs:
       - run:
           name: run linting
           command: |
+            echo 'verbosity = 1' >> .flake8
             /opt/conda/bin/flake8 --version
             /opt/conda/bin/flake8 obspy
