@@ -1136,18 +1136,18 @@ class Indexer(object):
                 logger.debug("No leap seconds file path specified. Attempting "
                              "to create a leap seconds file at {}."
                              .format(file_path))
-        except Exception:
-            raise OSError("Failed to download leap seconds file. "
-                          "No leap seconds file will be used.")
+        except Exception as e:  # pragma: no cover
+            raise OSError(
+                ("Failed to download leap seconds file due to: {}. "
+                 "No leap seconds file will be used.").format(str(e)))
         try:
             logger.debug("Writing IETF leap seconds info to a file at {}."
                          .format(file_path))
-            f = open(file_path, "w")
-            f.write(r.text)
-            f.close()
-        except Exception:
-            raise OSError("Failed to create leap seconds file at {}."
-                          .format(file_path))
+            with open(file_path, "w") as fh:
+                fh.write(r.text)
+        except Exception as e:  # pragma: no cover
+            raise OSError("Failed to create leap seconds file at {} due to {}."
+                          .format(file_path, str(e)))
         return file_path
 
     def _get_rootpath_files(self, relative_paths=False):

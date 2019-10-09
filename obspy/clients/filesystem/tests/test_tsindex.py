@@ -660,6 +660,25 @@ class IndexerTestCase(unittest.TestCase):
         self.assertEquals(file_path, test_file)
         os.remove(test_file)
 
+    def test_download_leap_seconds_file_no_path_given(self):
+        filepath = get_test_data_filepath()
+        database = os.path.join(filepath, 'timeseries.sqlite')
+        indexer = Indexer(filepath,
+                          database=database)
+        # mock actually downloading the file since this requires a internet
+        # connection
+        indexer._download = mock.MagicMock(return_value=requests.Response())
+        file_path = indexer.download_leap_seconds_file()
+
+        self.assertEqual(
+            file_path,
+            os.path.join(os.path.dirname(database), "leap-seconds.list"))
+
+        # assert that the file was put in the same location as the
+        # sqlite db
+        self.assertTrue(os.path.isfile(file_path))
+        os.remove(file_path)
+
     def test__get_leap_seconds_file(self):
         filepath = get_test_data_filepath()
         database = os.path.join(filepath, 'timeseries.sqlite')

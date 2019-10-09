@@ -64,14 +64,14 @@ class ExtractedDataSegment(with_metaclass(abc.ABCMeta)):
     for the handler to use.
     """
     @abc.abstractmethod
-    def get_num_bytes(self):
+    def get_num_bytes(self):  # pragma: no cover
         """
         Return the number of bytes in the segment
         """
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_src_name(self):
+    def get_src_name(self):  # pragma: no coveg
         """
         Return the name of the data source
         """
