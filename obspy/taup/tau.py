@@ -346,17 +346,15 @@ class Arrivals(list):
 
             intp = matplotlib.cbook.simple_linear_interpolation
             radius = self.model.radius_of_planet
+            phase_names_encountered = set([ray.name for ray in arrivals])
+            colors = {name: COLORS[i % len(COLORS)]
+                      for i, name in enumerate(phase_names_encountered)}
             for ray in arrivals:
-                if ray.name in phase_names:
-                    # Requires interpolation,or diffracted phases look funny.
-                    ax.plot(intp(ray.path["dist"], 100),
-                            radius - intp(ray.path["depth"], 100),
-                            color=COLORS[phase_names.index(ray.name) %
-                                         len(COLORS)], label=ray.name, lw=2.0)
-                else:
-                    ax.plot(intp(ray.path["dist"], 100),
-                            radius - intp(ray.path["depth"], 100),
-                            color='k', label=ray.name, lw=2.0)
+                color = colors.get(ray.name, 'k')
+                # Requires interpolation,or diffracted phases look funny.
+                ax.plot(intp(ray.path["dist"], 100),
+                        radius - intp(ray.path["depth"], 100),
+                        color=color, label=ray.name, lw=2.0)
                 ax.set_yticks(radius - discons)
                 ax.xaxis.set_major_formatter(plt.NullFormatter())
                 ax.yaxis.set_major_formatter(plt.NullFormatter())
