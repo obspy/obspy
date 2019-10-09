@@ -4,8 +4,11 @@ This document aims to give an overview of how to contribute to ObsPy. It tries
 to answer commonly asked questions, and to provide some insight into how the
 community process works in practice.
 
-* If you plan on submitting an issue, please follow this [template](https://github.com/obspy/obspy/blob/master/.github/ISSUE_TEMPLATE.md).
-* If you want to open a pull request make sure to read the information on this page but also have a look at our [pull request template](https://github.com/obspy/obspy/blob/master/.github/PULL_REQUEST_TEMPLATE.md).
+* To report a suspected bug or propose a feature addition, please open a new issue (please read and address what is pointed out in the issue [template](https://github.com/obspy/obspy/blob/master/.github/ISSUE_TEMPLATE.md))
+* To directly propose changes, a bug fix or to add a new feature, please open a pull request (please read the information on this page and also check the points mentioned in our [pull request template](https://github.com/obspy/obspy/blob/master/.github/PULL_REQUEST_TEMPLATE.md))
+* If you have questions that you want ask before opening an issue/pull request on Github, you can contact a developer..
+   * on our public gitter channel: https://gitter.im/obspy/obspy
+   * or writing to our [user's mailing list](https://github.com/obspy/obspy/wiki#obspy-users)
 
 ## Getting Started
 
@@ -18,7 +21,7 @@ community process works in practice.
 
 We love pull requests! Here's a quick guide:
 
-First, if the PR is directly related to an already existing issue (which is no PR yet), drop us a note in that issue before opening the PR. We can make existing issues into a PR, which avoids duplicated tickets. Otherwise, please follow the ObsPy [branching model](https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model).
+First, if the pull request (PR) is directly related to an already existing issue (which is no PR yet), drop us a note in that issue before opening the PR. We can convert existing issues into a PR, which avoids duplicated tickets. Otherwise, please follow the ObsPy [branching model](https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model). If it is unclear what base branch is appropriate for your code changes, please contact us on gitter, the users mailing list or by opening an issue to discuss the PR first.
 
  1. Fork the repo.
  2. Make a new branch. For feature additions/changes base your new branch at `master`, for pure bugfixes base your new branch at e.g. `maintenance_1.0.x` .
