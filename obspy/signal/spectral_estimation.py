@@ -1977,9 +1977,9 @@ class PPSD(object):
                     continue
                 ax.text(xdata[leftpoint],
                         ydata[leftpoint],
-                        '$^{M%.1f}_{%dkm}$' % (magnitude, distance),
+                        'M%.1f\n%dkm' % (magnitude, distance),
                         ha='right', va='top',
-                        color='w', weight='bold', fontsize='small',
+                        color='w', weight='bold', fontsize='x-small',
                         path_effects=[withStroke(linewidth=3,
                                                  foreground='0.4')])
 
