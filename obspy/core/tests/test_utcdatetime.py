@@ -294,6 +294,19 @@ class UTCDateTimeTestCase(unittest.TestCase):
             a + -0.5, UTCDateTime(1969, 12, 31, 23, 59, 59, 500000))
         td = datetime.timedelta(seconds=1)
         self.assertEqual(a + td, UTCDateTime(1970, 1, 1, 0, 0, 1))
+        # Test that ns precision is maintained (time delta has us precision).
+        start = UTCDateTime(ns=1111111111)
+        self.assertEqual(start.ns + int(1e9), (start + td).ns)
+
+    def test_add_numpy_datetime_delta(self):
+        """
+        Numpy datetimedelta and UTCDateTime should be able to be added
+        and subtracted.
+        """
+        utc = UTCDateTime('2019-09-18 18-00-00')
+        td = np.timedelta64(6, 'h')
+        expected_utc = UTCDateTime('2019-09-19 00-00-00')
+        self.assertEqual(utc + td, expected_utc)
 
     def test_sub(self):
         # 1
@@ -312,6 +325,19 @@ class UTCDateTimeTestCase(unittest.TestCase):
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 999999)
         end = UTCDateTime(2000, 1, 1, 0, 0, 1, 1)
         self.assertAlmostEqual(end - start, 0.000002, 6)
+        # Test that ns precision is maintained (time delta has us precision).
+        start = UTCDateTime(ns=1111111111)
+        self.assertEqual(start.ns - int(1e9), (start - td).ns)
+
+    def test_sub_numpy_datetime_delta(self):
+        """
+        Numpy datetimedelta and UTCDateTime should be able to be added
+        and subtracted.
+        """
+        utc = UTCDateTime('2019-09-18 18-00-00')
+        td = np.timedelta64(6, 'h')
+        expected_utc = UTCDateTime('2019-09-18 12-00-00')
+        self.assertEqual(utc - td, expected_utc)
 
     def test_negative_timestamp(self):
         dt = UTCDateTime(-1000.1)
@@ -385,6 +411,14 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(str(dt), "2008-01-01T12:00:00.005000Z")
         # without parameters returns current date time
         UTCDateTime()
+
+    def test_init_utcdatetime_datetime64(self):
+        """
+        It should be possible to init a UTCDateTime from a numpy datetime64.
+        """
+        utc = UTCDateTime('2017-09-18 18:25:12.1111')
+        out = UTCDateTime(utc.datetime64)
+        self.assertEqual(utc, out)
 
     def test_init_utcdatetime_mixing_keyworks_with_arguments(self):
         # times
@@ -945,6 +979,30 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(max(times), dt3)
         self.assertEqual(min(times), dt1)  # expected
         self.assertEqual(min(times), dt2)  # due to precision
+
+    def test_rich_comparisons_datetimes(self):
+        """
+        Ensure rich comparisons work with datetime.datetime.
+        """
+        # Init 3 UTCDateTime objects for use in testing and other dtypes.
+        utc = UTCDateTime('2017-09-18T18:00:00')
+        dts = [x.datetime for x in [utc - 1, utc, utc + 1]]
+        # first test equality-like operators
+        utc.__eq__(dts[1])
+        self.assertEqual(utc, dts[1])
+        self.assertEqual(dts[1], utc)
+        self.assertLessEqual(utc, dts[1])
+        self.assertGreaterEqual(dts[1], utc)
+        # then less than
+        self.assertLess(utc, dts[2])
+        self.assertLessEqual(utc, dts[2])
+        self.assertLess(dts[0], utc)
+        self.assertLessEqual(dts[0], utc)
+        # then greater than
+        self.assertGreater(utc, dts[0])
+        self.assertGreaterEqual(utc, dts[0])
+        self.assertGreater(dts[2], utc)
+        self.assertGreaterEqual(dts[2], utc)
 
     def test_datetime_with_timezone(self):
         """
@@ -1562,6 +1620,14 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # skip ISO8601 mode
         self.assertEqual(UTCDateTime('2019-01-01T02-02:33', iso8601=False),
                          UTCDateTime(2019, 1, 1, 2, 2, 33))
+
+    def test_convert_to_numpy_datetime64(self):
+        """
+        UTCDateTime should be convertible to numpy datetime64.
+        """
+        utc = UTCDateTime('2019-09-18 18-00-00.102020201')
+        dt64 = utc.datetime64
+        self.assertEqual(utc.ns, dt64.astype(int))
 
 
 def suite():
