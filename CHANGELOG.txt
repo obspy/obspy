@@ -153,6 +153,8 @@ Changes:
    * Better ISO8601 detection for UTCDateTime objects and UTCDateTime(...,
      iso8601=False) now completely disables ISO8601 handling (see #2447)
    * Added replace method to UTCDateTime class (see #2077).
+   * Added method for converting UTCDateTime to numpy's datetime64 and support
+     for adding and subtracting np.timedelta64 (see #2480).
    * Added remove method to Inventory class (see #2088).
    * Added id property to WaveformStreamID (see #2131).
    * Added __str__ and _repr_pretty_ method for Comment class (see #2115)
