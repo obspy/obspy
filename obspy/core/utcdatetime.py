@@ -555,8 +555,7 @@ class UTCDateTime(object):
             dt = datetime.datetime(dt.year, dt.month, dt.day)
             self.__ns = _datetime_to_ns(dt)
         elif isinstance(dt, np.datetime64):
-            # Note: need extra int call here to ensure python int not numpy.
-            self.__ns = int(dt.astype('datetime64[ns]').astype(int))
+            self.__ns = _datetime_to_ns(dt)
 
     def _from_timestamp(self, value):
         """
@@ -1747,7 +1746,8 @@ def _datetime_to_ns(dt):
     """
     Get equivalent nanoseconds from python's datetime or timedelta.
 
-    :type dt: :class:`datetime.datetime` or :class:`datetime.timedelta`
+    :type dt: :class:`datetime.datetime`, :class:`datetime.timedelta`, or
+        :class:`numpy.datetime64`.
     :param dt: Python datetime or timedelta object.
     :returns: nanoseconds as an int.
     """
@@ -1758,6 +1758,9 @@ def _datetime_to_ns(dt):
             td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
     elif isinstance(dt, datetime.timedelta):
         td = dt
+    elif isinstance(dt, np.datetime64):
+        # Note: need extra int call here to ensure python int not numpy int.
+        return int(dt.astype('datetime64').astype(int))
     # see datetime.timedelta.total_seconds
     return (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
 
