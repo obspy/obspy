@@ -3171,11 +3171,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        if group_by == 'id':
-            group_by = '{network}.{station}.{location}.{channel}'
-        groups = collections.defaultdict(list)
-        for tr in self:
-            groups[group_by.format(**tr.stats)].append(tr)
+        groups = self._group_by(group_by)
         stacks = []
         for groupid, traces in groups.items():
             header = {k: v for k, v in traces[0].stats.items()
@@ -3313,6 +3309,26 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     "start": start, "end": end, "gaps": gaps,
                     "channels": channels_}
         return all_channels
+
+    def _group_by(self, group_by):
+        """
+        Group traces by same metadata.
+
+        :param group_by: Group traces together which have the same metadata
+            given by this parameter. The parameter should name the
+            corresponding keys of the stats object,
+            e.g. ``'{network}.{station}'``
+            This parameter can take the value
+            ``'id'`` which stacks groups the traces by SEED id
+
+        :return: dictionary {group: stream}
+        """
+        if group_by == 'id':
+            group_by = '{network}.{station}.{location}.{channel}'
+        groups = collections.defaultdict(self.__class__)
+        for tr in self:
+            groups[group_by.format(**tr.stats)].append(tr)
+        return dict(groups)
 
     def _trim_common_channels(self):
         """
