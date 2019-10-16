@@ -177,7 +177,7 @@ def smooth(x, smoothie):
             # out = signal.lfilter(np.ones(smoothie) / smoothie, 1, help)
             out = signal.lfilter(
                 np.hstack((np.ones(smoothie) / (2 * smoothie), 0,
-                          np.ones(smoothie) / (2 * smoothie))), 1, help)
+                           np.ones(smoothie) / (2 * smoothie))), 1, help)
             out = np.transpose(out)
             # out = out[smoothie:len(out), :]
             out = out[2 * smoothie:len(out), :]
@@ -225,7 +225,7 @@ def rdct(x, n=0):
                       axis=1)
         x = x[0, :, :]
         z = np.append(np.sqrt(2.), 2. * np.exp((-0.5j * float(np.pi / n)) *
-                      np.arange(1, n)))
+                                               np.arange(1, n)))
         y = np.real(np.multiply(np.transpose(fftpack.fft(np.transpose(x))),
                     np.transpose(np.array([z])) * np.ones(k))) / float(a)
         return y
@@ -295,6 +295,37 @@ def _npts2nfft(npts, smart=True):
             nfft = next_pow_2(nfft)
 
     return nfft
+
+
+def stack(data, stack_type='linear'):
+    """
+    Stack data by first axis.
+
+    :type stack_type: str or tuple
+    :param stack_type: Type of stack, one of the following:
+        ``'linear'``: average stack (default),
+        ``('pw', order)``: phase weighted stack of given order,
+        see [Schimmel1997]_,
+        ``('root', order)``: root stack of given order.
+    """
+    if stack_type == 'linear':
+        stack = np.mean(data, axis=0)
+    elif stack_type[0] == 'pw':
+        from scipy.signal import hilbert
+        from scipy.fftpack import next_fast_len
+        npts = np.shape(data)[1]
+        nfft = next_fast_len(npts)
+        anal_sig = hilbert(data, N=nfft)[:, :npts]
+        norm_anal_sig = anal_sig / np.abs(anal_sig)
+        phase_stack = np.abs(np.mean(norm_anal_sig, axis=0)) ** stack_type[1]
+        stack = np.mean(data, axis=0) * phase_stack
+    elif stack_type[0] == 'root':
+        r = np.mean(np.sign(data) * np.abs(data)
+                    ** (1 / stack_type[1]), axis=0)
+        stack = np.sign(r) * np.abs(r) ** stack_type[1]
+    else:
+        raise ValueError('stack type is not valid.')
+    return stack
 
 
 if __name__ == '__main__':
