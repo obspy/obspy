@@ -1832,7 +1832,7 @@ class Stream(object):
             if npts is not None and int(npts) != trace.stats.npts:
                 continue
             if component is not None:
-                if not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
+                if not fnmatch.fnmatch(trace.stats.component.upper(),
                                        component.upper()):
                     continue
             traces.append(trace)
