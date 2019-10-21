@@ -1798,10 +1798,11 @@ class Stream(object):
         location) may also contain Unix style wildcards (``*``, ``?``, ...).
         """
         # make given component letter uppercase (if e.g. "z" is given)
-        if component and channel:
+        if component is not None and channel is not None:
             component = component.upper()
             channel = channel.upper()
-            if channel[-1] != "*" and component != channel[-1]:
+            if (channel[-1:] not in "?*" and component not in "?*" and
+                    component != channel[-1:]):
                 msg = "Selection criteria for channel and component are " + \
                       "mutually exclusive!"
                 raise ValueError(msg)
