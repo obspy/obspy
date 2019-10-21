@@ -1,5 +1,6 @@
 master:
  - obspy.core:
+   * Fixed import of custom plugins (see #2423)
    * Fixed "==" comparison for Stream and Trace which was very slow in case of
      traces with >1e6 samples (see #2377)
    * Added almost_equal method for Stream and Trace classes (see #2286).
@@ -13,6 +14,11 @@ master:
    * UTCDateTime objects can now accept hour, minute, second, and microsecond
      values greater than their normal limits by setting the strict keyword
      argument to False (see #2232).
+   * fixed UTCDateTime(..., julday=366) for non-leap years. This was returning
+     January 1st of the next year in case of non-leap years being used. Now it
+     properly raises an out-of-bounds ValueError (see #2369)
+   * better ISO8601 detection for UTCDateTime objects and UTCDateTime(...,
+     iso8601=False) now completely disables ISO8601 handling (see #2447)
    * Added replace method to UTCDateTime class (see #2077).
    * Added remove method to Inventory class (see #2088).
    * Added id property to WaveformStreamID (see #2131).
@@ -38,6 +44,9 @@ master:
      get_quakeml_uri methods of the ResourceIdentifier class (see #2303).
    * Added get_quakeml_uri_str and get_quakeml_id methods to the
      ResourceIdentifier class (see #2303).
+   * New method to create response objects directly from poles and zeros (see
+     #1962).
+   * Added Stream.stack method (see #2440).
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
@@ -56,15 +65,26 @@ master:
      clients (see #2342 and #2344)
    * make it possible to use signed EIDA tokens and also skip token validation
      completely (see #2297)
+ - obspy.clients.neic:
+   * properly use specified timeout value (see #2450)
  - obspy.clients.seishub:
    * Properly handle fetching poles and zeros in presence of multiple metadata
      files for a given station (see #2411)
+ - obspy.clients.seedlink:
+   * add method "get_info()" to fetch information on what
+     networks/stations/locations/channels are served by the seedlink server
+     (see #2405)
+   * "get_waveforms()" can now be used with '*' and '?' wildcards in any part
+     of requested SEED ID, i.e. network, station, location and channel (see
+     #2405)
  - obspy.imaging:
    * obspy-scan can now be used with wildcarded SEED IDs when specifying what
      to plot after scanning data (see #2227)
    * fix a problem in Scanner when loading npz on Python3 that was written on
      Python2 (see #2413)
  - obspy.io.mseed:
+   * Add ability to write int64 data to mseed if it can safely be downcast
+     to int32 data, otherwise raises ObsPyMSEEDError. (see #2356)
    * The recordanalyzer can now detect calibration blockettes 300, 310,
      and 320 (see #2370).
  - obspy.io.nordic:
@@ -90,6 +110,9 @@ master:
    * Handle data format code 3 trace data (#2022, #2385).
    * Improve parsing of free-form entries (#2385).
    * Fix non-native endian data loading (#2385).
+ - obspy.io.segy:
+   * show nice error message when trying to write a trace with too many samples
+     in it (see #2358, #1393)
  - obspy.io.quakeml:
    * Allow writing invalid ids but raise a warning
      (see #2104, #2090, #2093, #1872).
@@ -124,14 +147,17 @@ master:
  - obspy.signal.polarization:
    * Fix an issue in selecting Z/N/E traces from given stream (see #2365)
  - obspy.signal.PPSD:
+   * Changed numpy-based serialization as to not require pickling (see #2424).
    * Fixed exact trace cutting for PSD segments (see #2040).
    * Timestamp representations internally and in npz I/O were changed to use
      integer nanosecond POSIX timestamps to avoid any potential floating point
      inaccuracies and since this is also what UTCDateTime is based on nowadays
-     (see #2045)
+     (see #2045).
    * Fixed the check for new PSD slices whether they should be added or whether
-     they would add unwanted duplicated data (see #2229)
-   * Fix `period_lim` option when `xaxis_frequency=True` (see #2246)
+     they would add unwanted duplicated data (see #2229).
+   * Fix `period_lim` option when `xaxis_frequency=True` (see #2246).
+   * Added `allow_pickle` parameter to `PPSD.add_npz` and `PPSD.load_npz` and
+     set its default to `False` (see #2457).
  - obspy.signal.cross_correlation:
    * Add new `correlate_template()` function with 'full' normalization option,
      required for correlations in template-matching

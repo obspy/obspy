@@ -1,7 +1,6 @@
-FROM ubuntu:18.10
+FROM obspy/base-images:debian_10_buster_32bit
 
 MAINTAINER Tobias Megies
-MAINTAINER Lion Krischer
 
 # Set the env variables to non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -53,7 +52,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-dev \
     python3-flake8 \
     python3-future \
-    python3-gdal \
     python3-geographiclib \
     python3-jsonschema \
     python3-lxml \

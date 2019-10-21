@@ -1522,6 +1522,54 @@ class UTCDateTimeTestCase(unittest.TestCase):
             msg = "'%s' does not start with a 4 digit year" % value
             self.assertEqual(msg, e.exception.args[0])
 
+    def test_leap_years(self):
+        """
+        Test for issue #2369, correct implementation of juldays for leap years.
+
+        Test one leap year (2016; valid juldays 365, 366; invalid julday 367)
+        and one regular year (2018; valid juldays 364, 365; invalid julday 366)
+        """
+        # these should fail
+        with self.assertRaises(ValueError):
+            UTCDateTime(year=2018, julday=366)
+        with self.assertRaises(ValueError):
+            UTCDateTime(year=2016, julday=367)
+
+        # these should work and check we got the expected output
+        got = UTCDateTime(year=2018, julday=364)
+        expected = UTCDateTime(2018, 12, 30)
+        self.assertEqual(got, expected)
+
+        got = UTCDateTime(year=2018, julday=365)
+        expected = UTCDateTime(2018, 12, 31)
+        self.assertEqual(got, expected)
+
+        got = UTCDateTime(year=2016, julday=365)
+        expected = UTCDateTime(2016, 12, 30)
+        self.assertEqual(got, expected)
+
+        got = UTCDateTime(year=2016, julday=366)
+        expected = UTCDateTime(2016, 12, 31)
+        self.assertEqual(got, expected)
+
+    def test_issue_2447(self):
+        """
+        Setting iso8601=False should disable ISO8601 parsing.
+
+        See issue #2447.
+        """
+        # auto detection
+        self.assertEqual(UTCDateTime('2019-01-01T02-02:33'),
+                         UTCDateTime(2019, 1, 1, 4, 33, 0))
+        self.assertEqual(UTCDateTime('2019-01-01 02-02:33'),
+                         UTCDateTime(2019, 1, 1, 2, 2, 33))
+        # enforce ISO8601 mode
+        self.assertEqual(UTCDateTime('2019-01-01T02-02:33', iso8601=True),
+                         UTCDateTime(2019, 1, 1, 4, 33, 0))
+        # skip ISO8601 mode
+        self.assertEqual(UTCDateTime('2019-01-01T02-02:33', iso8601=False),
+                         UTCDateTime(2019, 1, 1, 2, 2, 33))
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

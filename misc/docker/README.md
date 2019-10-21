@@ -216,7 +216,7 @@ $ cd /tmp
 $ wget https://archive.raspbian.org/raspbian.public.key -O - | sudo gpg --import -
 $ DISTRO=stretch
 $ DISTRO_FULL=debian_9_stretch_armhf
-$ sudo qemu-debootstrap --arch=armhf --keyring /root/.gnupg/pubring.gpg ${DISTRO} ${DISTRO_FULL} http://archive.raspbian.org/raspbian 2>&1 | tee ${DISTRO_FULL}.debootstrap.log
+$ sudo qemu-debootstrap --arch=armhf --keyring /root/.gnupg/pubring.kbx ${DISTRO} ${DISTRO_FULL} http://archive.raspbian.org/raspbian 2>&1 | tee ${DISTRO_FULL}.debootstrap.log
 $ sudo tar -C ${DISTRO_FULL} -c . | docker import - obspy/base-images:${DISTRO_FULL}
 $ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
 $ docker push obspy/base-images:${DISTRO_FULL}

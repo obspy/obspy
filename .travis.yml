@@ -79,6 +79,8 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
+  - conda config --set restore_free_channel true
+  - conda config --add channels conda-forge
   # Useful for debugging any issues with conda
   - conda info -a
   - |
@@ -89,6 +91,7 @@ install:
         # no basemap version works with this old numpy, so leave out
         BASEMAP=""
         PYPROJ="pyproj"
+        GFORTRAN="libgfortran=1"
         PROJ4="proj4"
         # ancient matplotlib needs to be turned to AGG before anything else,
         # otherwise it tries to import incompatible version of Qt as a backend
@@ -104,6 +107,7 @@ install:
         BASEMAP="basemap"
         PYPROJ="pyproj"
         PROJ4="proj4"
+        GFORTRAN=""
       # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
       #   # Special packages for 32bit. Also let conda resolve to the latest
       #   # versions.
@@ -122,6 +126,17 @@ install:
         BASEMAP="basemap"
         PYPROJ="pyproj"
         PROJ4="proj4=4.9.3"
+        GFORTRAN=""
+      elif [[ "${PYTHON_VERSION}" == '3.7' ]]; then
+        # Pin proj4 to 4.9.3 for map testing - see basemap #433
+        # Let conda resolve to the latest versions otherwise.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP="basemap>=1.2.1"
+        PYPROJ="pyproj"
+        PROJ4="proj4"
+        GFORTRAN=""
       else
         NUMPY="numpy"
         SCIPY="scipy"
@@ -129,13 +144,8 @@ install:
         BASEMAP="basemap"
         PYPROJ="pyproj"
         PROJ4="proj4"
+        GFORTRAN=""
       fi
-  - |
-    if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
-      FREETYPE="freetype"
-    else
-      FREETYPE="freetype<2.8"
-    fi
   # proj4 version 5.2.0 has issues with psuedocyl projections (see basemap #433).
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
@@ -145,6 +155,7 @@ install:
         $BASEMAP
         $PYPROJ
         $PROJ4
+        $GFORTRAN
         coverage
         decorator
         docopt
@@ -155,7 +166,6 @@ install:
         nose
         requests
         sqlalchemy
-        $FREETYPE
         cryptography
   - source activate test-environment
   # additional, optional packages that run some more tests but are not

@@ -6,7 +6,7 @@ LOG_DIR_ROOT=logs/package_debs
 LOG_DIR_BASE=$LOG_DIR_ROOT/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
-DOCKER_IMAGES="debian_8_jessie debian_8_jessie_32bit debian_8_jessie_armhf debian_9_stretch debian_9_stretch_32bit debian_9_stretch_armhf ubuntu_14_04_trusty ubuntu_14_04_trusty_32bit ubuntu_16_04_xenial ubuntu_16_04_xenial_32bit ubuntu_18_04_bionic ubuntu_18_04_bionic_32bit ubuntu_18_10_cosmic ubuntu_18_10_cosmic_32bit"
+DOCKER_IMAGES="debian_8_jessie debian_8_jessie_32bit debian_8_jessie_armhf debian_9_stretch debian_9_stretch_32bit debian_9_stretch_armhf debian_10_buster debian_10_buster_32bit debian_10_buster_armhf ubuntu_14_04_trusty ubuntu_14_04_trusty_32bit ubuntu_16_04_xenial ubuntu_16_04_xenial_32bit ubuntu_18_04_bionic ubuntu_18_04_bionic_32bit"
 
 # Parse the target for deb package building (e.g. "-tmegies:deb_1.0.2")
 SET_COMMIT_STATUS=false

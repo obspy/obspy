@@ -19,7 +19,7 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NATIVE_BYTEORDER
 from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
-               ObsPyMSEEDFilesizeTooLargeError)
+               ObsPyMSEEDFilesizeTooLargeError, ObsPyMSEEDError)
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
                       VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
@@ -496,6 +496,21 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     return Stream(traces=traces)
 
 
+def _np_copy_astype(data, dtype):
+    """
+    Helper function to copy data, replacing `trace.data.copy().astype(dtype)`
+
+    This is done to avoid copying data in memory twice that could happen due to
+    an API change in numpy's `astype` method (`copy` kwarg).
+    This helper workaround function can be dropped once bumping minimum numpy
+    version to >=1.7.0
+    """
+    try:
+        return data.astype(dtype, copy=True)
+    except TypeError:
+        return data.copy().astype(dtype)
+
+
 def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                  sequence_number=None, flush=True, verbose=0, **_kwargs):
     """
@@ -774,7 +789,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                 warnings.warn(msg, UserWarning)
                 trace_attr['encoding'] = None
         # automatically detect encoding if no encoding is given.
-        if not trace_attr['encoding']:
+        if trace_attr['encoding'] is None:
             if trace.data.dtype.type == np.int32:
                 trace_attr['encoding'] = 11
             elif trace.data.dtype.type == np.float32:
@@ -785,6 +800,19 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['encoding'] = 1
             elif trace.data.dtype.type == np.dtype(native_str('|S1')).type:
                 trace_attr['encoding'] = 0
+            # int64 data not supported; if possible downcast to int32, else
+            # create error message. After bumping up to numpy 1.9.0 this check
+            # can be replaced by numpy.can_cast()
+            elif trace.data.dtype.type == np.int64:
+                # check if data can be safely downcast to int32
+                ii32 = np.iinfo(np.int32)
+                if abs(trace.max()) <= ii32.max:
+                    trace_data.append(_np_copy_astype(trace.data, np.int32))
+                    trace_attr['encoding'] = 11
+                else:
+                    msg = ("int64 data only supported when writing MSEED if "
+                           "it can be downcast to int32 type data.")
+                    raise ObsPyMSEEDError(msg)
             else:
                 msg = "Unsupported data type %s in Stream[%i].data" % \
                     (trace.data.dtype, _i)
@@ -793,7 +821,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Convert data if necessary, otherwise store references in list.
         if trace_attr['encoding'] == 1:
             # INT16 needs INT32 data type
-            trace_data.append(trace.data.copy().astype(np.int32))
+            trace_data.append(_np_copy_astype(trace.data, np.int32))
         else:
             trace_data.append(trace.data)
 

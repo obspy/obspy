@@ -4,7 +4,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: continuumio/anaconda:latest
+      - image: continuumio/miniconda:latest
 
     working_directory: ~/repo
 
@@ -14,13 +14,11 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            conda create -n test-env
-            source activate test-env
-            conda install -y flake8 pep8-naming
+            /opt/conda/bin/conda install -y flake8 pep8-naming
 
       - run:
           name: run linting
           command: |
-            source activate test-env
-            flake8 --version
-            flake8 --verbose --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
+            echo 'verbosity = 1' >> .flake8
+            /opt/conda/bin/flake8 --version
+            /opt/conda/bin/flake8 obspy

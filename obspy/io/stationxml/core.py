@@ -246,8 +246,8 @@ def _read_station(sta_element, _ns):
             msg = ("Channel %s.%s of station %s does not have a complete set "
                    "of coordinates and thus it cannot be read. It will not be "
                    "part of the final inventory object." % (
-                    channel.get("locationCode"), channel.get("code"),
-                    sta_element.get("code")))
+                       channel.get("locationCode"), channel.get("code"),
+                       sta_element.get("code")))
             warnings.warn(msg, UserWarning)
         else:
             channels.append(cha)

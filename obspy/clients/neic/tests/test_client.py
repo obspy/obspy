@@ -18,7 +18,7 @@ class ClientTestCase(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        cls.client = Client(host="137.227.224.97", port=2061)
+        cls.client = Client(host="137.227.224.97", port=2061, timeout=8)
         cls.starttime = UTCDateTime() - 5 * 60 * 60
 
     def test_get_waveform(self):

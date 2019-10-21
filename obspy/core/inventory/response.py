@@ -1890,6 +1890,44 @@ class Response(ComparingObject):
         paz = self.get_paz()
         return paz_to_sacpz_string(paz, self.instrument_sensitivity)
 
+    @classmethod
+    def from_paz(cls, zeros, poles, stage_gain,
+                 stage_gain_frequency=1.0, input_units='M/S',
+                 output_units='VOLTS', normalization_frequency=1.0,
+                 pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
+                 normalization_factor=1.0):
+        """
+        Convert poles and zeros lists into a single-stage response.
+
+        Takes in lists of complex poles and zeros and returns a Response with
+        those values defining its only stage. Most of the optional parameters
+        defined here are from
+        :class:`~obspy.core.inventory.response.PolesZerosResponseStage`.
+
+        :type zeros: list of complex
+        :param zeros: All zeros of the response to be defined.
+        :type poles: list of complex
+        :param poles: All poles of the response to be defined.
+        :type stage_gain: float
+        :param stage_gain: The gain value of the response [sensitivity]
+        :returns: new Response instance with given P-Z values
+        """
+        pzstage = PolesZerosResponseStage(
+            stage_sequence_number=1, stage_gain=stage_gain,
+            stage_gain_frequency=stage_gain_frequency,
+            input_units=input_units, output_units=output_units,
+            pz_transfer_function_type=pz_transfer_function_type,
+            normalization_frequency=normalization_frequency,
+            zeros=zeros, poles=poles,
+            normalization_factor=normalization_factor)
+        sens = InstrumentSensitivity(value=stage_gain,
+                                     frequency=stage_gain_frequency,
+                                     input_units=input_units,
+                                     output_units=output_units)
+        resp = cls(instrument_sensitivity=sens, response_stages=[pzstage])
+        resp.recalculate_overall_sensitivity()
+        return resp
+
 
 def paz_to_sacpz_string(paz, instrument_sensitivity):
     """

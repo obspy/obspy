@@ -320,7 +320,7 @@ class CoreTestCase(unittest.TestCase):
             np.testing.assert_array_almost_equal(tr.data[:4], np.array([
                 -236., -242., -252., -262.]))
             np.testing.assert_array_almost_equal(tr.data[-4:], np.array([
-                101.,  106.,  107.,  104.]))
+                101., 106., 107., 104.]))
 
 
 def suite():

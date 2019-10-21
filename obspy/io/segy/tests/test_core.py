@@ -14,7 +14,7 @@ import warnings
 
 import numpy as np
 
-from obspy import UTCDateTime, read
+from obspy import UTCDateTime, read, Trace, Stream
 from obspy.core.util import NamedTemporaryFile, AttribDict
 from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
                                 _is_segy, _is_su, _read_segy, _read_su,
@@ -672,6 +672,24 @@ class SEGYCoreTestCase(unittest.TestCase):
                     # Ignore the auto-generated parts of the header.
                     st2.stats.textual_file_header.decode().split()[0],
                     "12345")
+
+    def test_writing_too_long_trace(self):
+        """
+        Test nice exception message when trying to write a too long trace
+        (#1393)
+        """
+        x = np.arange(32768, dtype=np.int32)
+        tr = Trace(x)
+        tr.stats.sampling_rate = 100
+        st = Stream([tr])
+        bio = io.BytesIO()
+        with self.assertRaises(ValueError) as e:
+            _write_segy(st, bio, data_encoding=2)
+        self.assertEqual(
+            str(e.exception),
+            "Can not write traces with more than 32767 samples (trace at "
+            "index 0):\n... | 1970-01-01T00:00:00.000000Z - "
+            "1970-01-01T00:05:27.670000Z | 100.0 Hz, 32768 samples")
 
 
 def suite():

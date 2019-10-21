@@ -332,12 +332,12 @@ class SEGYFile(object):
         # warning but don't do anything.
 
         # Make sure the textual header has the required fields.
-        revision_number = textual_header[3200-160:3200-146].decode()
-        end_header_mark = textual_header[3200-80:3200-58]
+        revision_number = textual_header[3200 - 160:3200 - 146].decode()
+        end_header_mark = textual_header[3200 - 80:3200 - 58]
         if revision_number != "C39 SEG Y REV1":
             if revision_number.strip() in ("", "C", "C39"):
-                textual_header = textual_header[:3200-160] + \
-                    b"C39 SEG Y REV1" + textual_header[3200-146:]
+                textual_header = textual_header[:3200 - 160] + \
+                    b"C39 SEG Y REV1" + textual_header[3200 - 146:]
             else:
                 # Raise warning but don't do anything.
                 msg = ("The revision number in the textual header should be "
@@ -352,8 +352,8 @@ class SEGYFile(object):
 
         if end_header_mark != desired_end_header_mark:
             if end_header_mark.strip() in (b"", b"C", b"C40"):
-                textual_header = textual_header[:3200-80] + \
-                    desired_end_header_mark + textual_header[3200-58:]
+                textual_header = textual_header[:3200 - 80] + \
+                    desired_end_header_mark + textual_header[3200 - 58:]
             else:
                 # Raise warning but don't do anything.
                 msg = ("The end header mark in the textual header should be "

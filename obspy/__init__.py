@@ -54,37 +54,15 @@ __all__ = [native_str(i) for i in __all__]
 
 
 # insert supported read/write format plugin lists dynamically in docstrings
-from obspy.core.util.base import make_format_plugin_table
-read.__doc__ = \
-    read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
-read_events.__doc__ = \
-    read_events.__doc__ % make_format_plugin_table("event", "read",
-                                                   numspaces=4)
-read_inventory.__doc__ = \
-    read_inventory.__doc__ % make_format_plugin_table("inventory", "read",
-                                                      numspaces=4)
+from obspy.core.util.base import _add_format_plugin_table
 
 
-if PY2:
-    Stream.write.im_func.func_doc = \
-        Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
-                                                        numspaces=8)
-    Catalog.write.im_func.func_doc = \
-        Catalog.write.__doc__ % make_format_plugin_table("event", "write",
-                                                         numspaces=8)
-    Inventory.write.im_func.func_doc = \
-        Inventory.write.__doc__ % make_format_plugin_table(
-            "inventory", "write", numspaces=8)
-else:
-    Stream.write.__doc__ = \
-        Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
-                                                        numspaces=8)
-    Catalog.write.__doc__ = \
-        Catalog.write.__doc__ % make_format_plugin_table("event", "write",
-                                                         numspaces=8)
-    Inventory.write.__doc__ = \
-        Inventory.write.__doc__ % make_format_plugin_table(
-            "inventory", "write", numspaces=8)
+_add_format_plugin_table(read, "waveform", "read", numspaces=4)
+_add_format_plugin_table(read_events, "event", "read", numspaces=4)
+_add_format_plugin_table(read_inventory, "inventory", "read", numspaces=4)
+_add_format_plugin_table(Stream.write, "waveform", "write", numspaces=8)
+_add_format_plugin_table(Catalog.write, "event", "write", numspaces=8)
+_add_format_plugin_table(Inventory.write, "inventory", "write", numspaces=8)
 
 
 if requests.__version__ in ('2.12.0', '2.12.1', '2.12.2'):

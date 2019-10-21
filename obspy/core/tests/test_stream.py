@@ -2656,6 +2656,92 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(e.exception.args[0],
                              'Can not write empty stream to file.')
 
+    def test_stack(self):
+        """
+        Tests stack method
+        """
+        # check number of traces and headers
+        # stack with default options
+        st = read()
+        st2 = st.copy().stack()
+        self.assertEqual(len(st2), 1)
+        self.assertIn('stack', st2[0].stats)
+        self.assertEqual(st2[0].stats.stack.group, 'all')
+        self.assertEqual(st2[0].stats.stack.count, 3)
+        self.assertEqual(st2[0].stats.stack.type, 'linear')
+        # stack by SEED id
+        st += st.copy()
+        st2 = st.copy().stack('id')
+        self.assertEqual(len(st2), 3)
+        self.assertEqual({tr.stats.stack.group for tr in st2},
+                         {tr.id for tr in st})
+        self.assertEqual({tr.id for tr in st2}, {tr.id for tr in st})
+        self.assertEqual(st2[0].stats.stack.count, 2)
+        # stack by other metadata
+        for tr in st[3:]:
+            tr.stats.station = 'OTH'
+        st2 = st.copy().stack('{network}.{station}')
+        self.assertEqual(len(st2), 2)
+        self.assertEqual(
+            {tr.stats.stack.group for tr in st2},
+            {'.'.join((tr.stats.network, tr.stats.station)) for tr in st})
+        self.assertEqual(st2[0].stats.stack.count, 3)
+
+        # check npts_tol option and correct npts of stack
+        st = read()
+        st[2].data = st[2].data[:-1]
+        npts = len(st[0])
+        # self.assertRaisesRegex(ValueError, 'number of points', st.stack)
+        self.assertRaises(ValueError, st.stack)
+        st2 = st.copy().stack(npts_tol=1)
+        self.assertEqual(len(st2), 1)
+        self.assertEqual(len(st2[0]), npts-1)
+        self.assertEqual(len(st[0]), npts)
+
+        # check correct setting of metadata
+        st = read()
+        st[0].stats.back_azimuth -= 10
+        st2 = st.copy().stack()
+        self.assertEqual(st2[0].stats.station, st[0].stats.station)
+        self.assertEqual(st2[0].stats.inclination, st[0].stats.inclination)
+        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
+        self.assertEqual(st2[0].stats.channel, '')
+        self.assertNotIn('back_azimuth', st2[0].stats)
+        st[1].stats.starttime += 10
+        st2 = st.copy().stack()
+        self.assertEqual(st2[0].stats.starttime, UTCDateTime(0))
+        st2 = st.copy().stack(time_tol=11)
+        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
+        st[0].stats.sampling_rate /= 10
+        # self.assertRaisesRegex(ValueError, 'Sampling rate', st.stack)
+        self.assertRaises(ValueError, st.stack)
+
+        # Check pw and root stacking types, these must result in the linear
+        # stack for order 0, resp. 1.
+        # For larger order pw stack is always of smaller magnitude than linear
+        # stack. For a root stack this is not always the case, but its
+        # magnitude is definitely smaller if all stacked samples have the
+        # same sign.
+        st = read()
+        st2 = st.copy().stack()
+        st3 = st.copy().stack(stack_type=('pw', 0))
+        st4 = st.copy().stack(stack_type=('root', 1))
+        self.assertEqual(len(st2), 1)
+        self.assertEqual(len(st3), 1)
+        self.assertEqual(len(st4), 1)
+        np.testing.assert_allclose(st3[0].data, st2[0].data)
+        np.testing.assert_allclose(st4[0].data, st2[0].data)
+        st3 = st.copy().stack(stack_type=('pw', 2))
+        st4 = st.copy().stack(stack_type=('root', 2))
+        self.assertEqual(np.sum(np.abs(st3[0].data) <= np.abs(st2[0].data)),
+                         npts)
+        all_data = np.array([tr.data for tr in st])
+        same_sign = np.logical_or(np.all(all_data < 0, axis=0),
+                                  np.all(all_data > 0, axis=0))
+        npts = np.sum(same_sign)
+        self.assertEqual(np.sum(np.abs(st4[0].data[same_sign]) <=
+                                np.abs(st2[0].data[same_sign])), npts)
+
 
 def suite():
     suite = unittest.TestSuite()

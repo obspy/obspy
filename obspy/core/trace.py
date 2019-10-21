@@ -23,7 +23,7 @@ from decorator import decorator
 
 from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, create_empty_data_chunk
+from obspy.core.util import AttribDict, create_empty_data_chunk, NUMPY_VERSION
 from obspy.core.util.base import _get_function_from_entry_point
 from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
@@ -2528,8 +2528,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 [self.stats.starttime + t_ for t_ in time_array])
         elif type == "matplotlib":
             from matplotlib.dates import date2num
-            time_array = (date2num(self.stats.starttime.datetime)
-                          + time_array / 86400.0)
+            time_array = (
+                date2num(self.stats.starttime.datetime) + time_array / 86400.0)
         else:
             msg = "Invalid `type`: {}".format(type)
             raise ValueError(msg)
@@ -2742,7 +2742,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             plot is saved to file (filename must have a valid image suffix
             recognizable by matplotlib e.g. '.png').
         """
-        limit_numpy_fft_cache()
+        if NUMPY_VERSION < [1, 17]:
+            limit_numpy_fft_cache()
 
         from obspy.core.inventory import PolynomialResponseStage
         from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,

@@ -11,10 +11,10 @@
 [![PyPI Version](https://img.shields.io/pypi/v/obspy.svg)](https://pypi.python.org/pypi/obspy)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.1040770.svg)](http://dx.doi.org/10.5281/zenodo.1040770)
 [![Depsy](http://depsy.org/api/package/pypi/obspy/badge.svg)](http://depsy.org/package/python/obspy)
+![Conda](https://img.shields.io/conda/dn/conda-forge/obspy?label=conda%20downloads)
 
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-
+![Twitter Follow](https://img.shields.io/twitter/follow/obspy?label=Follow%20%40obspy&style=social)
 
 
 ObsPy is an open-source project dedicated to provide a **Python framework for processing seismological** data. It provides parsers for common file formats, clients to access data centers and seismological signal processing routines which allow the manipulation of seismological time series (see [Beyreuther et al. 2010](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), [Megies et al. 2011](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838), [Krischer et al. 2015](http://iopscience.iop.org/article/10.1088/1749-4699/8/1/014003)).
@@ -31,6 +31,10 @@ A one-hour introduction to ObsPy is [available at YouTube](https://www.youtube.c
 
 The **detailed changelog** is available [here](CHANGELOG.txt).
 
+### Contributing
+
+Please see details on how to contribute to the project [here](CONTRIBUTING.md).
+
 ### References
 
   * Moritz Beyreuther, Robert Barsch, Lion Krischer, Tobias Megies, Yannik Behr and Joachim Wassermann (2010), [ObsPy: A Python Toolbox for Seismology](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), _SRL_, 81(3), 530-533,  doi:`10.1785/gssrl.81.3.530`.
@@ -38,3 +42,7 @@ The **detailed changelog** is available [here](CHANGELOG.txt).
   * Lion Krischer, Tobias Megies, Robert Barsch, Moritz Beyreuther, Thomas Lecocq, Corentin Caudron and Joachim Wassermann (2015), [ObsPy: a bridge for seismology into the scientific Python ecosystem](http://iopscience.iop.org/1749-4699/8/1/014003/), _Computational Science & Discovery_, 8(1), 014003, doi:`10.1088/1749-4699/8/1/014003`
   * [concept DOI, that always resolves to latest ObsPy versions: `10.5281/zenodo.1040769`](https://doi.org/10.5281/zenodo.1040769) (see [Zenodo FAQ](http://help.zenodo.org/#versioning))
   * [specific version DOIs for all released ObsPy versions](https://zenodo.org/search?ln=en&p=obspy&action_search=)
+
+### Impact
+
+![ObsPy impact statistics](https://user-images.githubusercontent.com/1842780/62694458-abeaae00-b9d4-11e9-8652-f548c9ea18f1.png)

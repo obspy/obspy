@@ -114,8 +114,8 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
                 in zip(evlats, evlons, evdepths, times, magnitudes, event_ids,
                        origin_ids):
             arrivals = model.get_ray_paths_geo(
-                    evdepth_km, evlat, evlon, stlat, stlon,
-                    phase_list=phase_list, resample=True)
+                evdepth_km, evlat, evlon, stlat, stlon, phase_list=phase_list,
+                resample=True)
             if len(arrivals) == 0:
                 continue
 

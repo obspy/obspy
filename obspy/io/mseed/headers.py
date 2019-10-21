@@ -829,7 +829,7 @@ class _LibmseedWrapper(object):
                 if _errs:
                     msg = ("Encountered %i error(s) during a call to "
                            "%s():\n%s" % (
-                            len(_errs), item, "\n".join(_errs)))
+                               len(_errs), item, "\n".join(_errs)))
                     raise InternalMSEEDError(msg)
         return _wrapper
 
