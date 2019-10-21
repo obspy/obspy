@@ -70,6 +70,11 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
             trace = _make_trace(filename, trace_block_start, headonly,
                                 contacts_north, details)
             traces.append(trace)
+        if trace_starttime <= starttime.timestamp < trace_endtime and\
+           trace_starttime < endtime.timestamp <= trace_endtime:
+            trace = _make_trace(filename, trace_block_start, headonly,
+                                contacts_north, details)
+            traces.append(trace)
         trace_block_start += nbr_bytes_trace_block
     if merge:
         traces = _quick_merge(traces)
