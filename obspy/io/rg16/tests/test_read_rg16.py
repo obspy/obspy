@@ -76,8 +76,8 @@ class TestReadRG16(unittest.TestCase):
         """
         t1 = UTCDateTime(2017, 8, 9, 16, 0, 15)
         t2 = UTCDateTime(2017, 8, 9, 16, 0, 45)
-        t3 = UTCDateTime(2017, 8, 9, 16, 0, 1)
-        t4 = UTCDateTime(2017, 8, 9, 16, 0, 22)
+        t3 = UTCDateTime(2017, 8, 9, 16, 0, 47)
+        t4 = UTCDateTime(2017, 8, 9, 16, 0, 58)
 
         # read streams for testing. The three channel rg16 file has 6 traces
         # but the streams may have less depending on the starttime/endtime
@@ -90,10 +90,10 @@ class TestReadRG16(unittest.TestCase):
             self.assertEqual(tr.stats.starttime, tr1.stats.starttime)
             self.assertEqual(tr.stats.endtime, tr1.stats.endtime)
         
-        # test when starttime and endtime are comprised in a data blocket.
+        # test when starttime and endtime are comprised in a data packet.
         st2 = rc._read_rg16(THREE_CHAN_FCNT, starttime=t3, endtime=t4)
         self.assertEqual(len(st2), 3)
-        for tr, tr2 in zip(st[0::2], st2):
+        for tr, tr2 in zip(st[1::2], st2):
             self.assertEqual(tr.stats.starttime, tr2.stats.starttime)
             self.assertEqual(tr.stats.endtime, tr2.stats.endtime)
 
