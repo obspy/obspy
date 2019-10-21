@@ -346,9 +346,10 @@ class Arrivals(list):
 
             intp = matplotlib.cbook.simple_linear_interpolation
             radius = self.model.radius_of_planet
-            phase_names_encountered = set([ray.name for ray in arrivals])
-            colors = {name: COLORS[i % len(COLORS)]
-                      for i, name in enumerate(phase_names_encountered)}
+            phase_names_encountered = {ray.name for ray in arrivals}
+            colors = {
+                name: COLORS[i % len(COLORS)]
+                for i, name in enumerate(sorted(phase_names_encountered))}
             for ray in arrivals:
                 color = colors.get(ray.name, 'k')
                 # Requires interpolation,or diffracted phases look funny.
