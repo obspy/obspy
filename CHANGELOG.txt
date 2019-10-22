@@ -106,7 +106,7 @@ master:
      16/32bit integers, see #2058 and #2059)
  - obspy.io.rg16:
    * implement module to read waveforms and headers from fcnt format (see #2265).
-   * Fix reading when the starttime and endtime options are comprised in the same data block (see #2485).
+   * Fix reading when start+endtime are inside one data packet (see #2485).
  - obspy.io.seg2:
    * Handle data format code 3 trace data (#2022, #2385).
    * Improve parsing of free-form entries (#2385).
