@@ -74,7 +74,7 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
             trace_block_start += nbr_bytes_trace_block
             continue
         trace = _make_trace(filename, trace_block_start, headonly,
-                                contacts_north, details)
+                            contacts_north, details)
         traces.append(trace)
         trace_block_start += nbr_bytes_trace_block
     if merge:

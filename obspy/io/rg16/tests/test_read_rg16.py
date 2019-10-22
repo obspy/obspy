@@ -91,7 +91,7 @@ class TestReadRG16(unittest.TestCase):
     def test_intrablock_starttime_endtime(self):
         """
         Test starttime/endtime options when starttime and endtime are comprised
-        in a data block. 
+        in a data block.
         """
         t1 = UTCDateTime(2017, 8, 9, 16, 0, 47)
         t2 = UTCDateTime(2017, 8, 9, 16, 0, 58)
