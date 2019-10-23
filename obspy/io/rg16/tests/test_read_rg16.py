@@ -526,8 +526,8 @@ class TestReadRG16Headers(unittest.TestCase):
 
 def suite():
     test_suite = unittest.TestSuite()
-    test_suite.addTest(unittest.makeSuite(TestReadRG16, 'test_stream'))
-    test_suite.addTest(unittest.makeSuite(TestReadRG16Headers, 'test_headers'))
+    test_suite.addTest(unittest.makeSuite(TestReadRG16, 'test'))
+    test_suite.addTest(unittest.makeSuite(TestReadRG16Headers, 'test'))
     return test_suite
 
 
