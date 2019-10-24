@@ -3176,7 +3176,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         stacks = []
         for groupid, traces in groups.items():
             header = {k: v for k, v in traces[0].stats.items()
-                      if all(tr.stats.get(k) == v for tr in traces)}
+                      if all(np.all(tr.stats.get(k) == v) for tr in traces)}
             header.pop('endtime', None)
             if 'sampling_rate' not in header:
                 msg = 'Sampling rate of traces to stack is different'
