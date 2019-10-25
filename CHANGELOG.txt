@@ -82,6 +82,8 @@ master:
      to plot after scanning data (see #2227)
    * fix a problem in Scanner when loading npz on Python3 that was written on
      Python2 (see #2413)
+   * fix an issue that could make small landmasses not get plotted in basemap
+     plots (see #2471, #2477)
  - obspy.io.mseed:
    * Add ability to write int64 data to mseed if it can safely be downcast
      to int32 data, otherwise raises ObsPyMSEEDError. (see #2356)
