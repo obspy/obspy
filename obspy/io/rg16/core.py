@@ -65,11 +65,17 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
         trace_starttime = _read(filename, trace_block_start + 20 + 2 * 32, 8,
                                 'binary') / 1e6
         trace_endtime = trace_starttime + record_length
-        if starttime.timestamp <= trace_starttime < endtime.timestamp or\
-           starttime.timestamp <= trace_endtime < endtime.timestamp:
-            trace = _make_trace(filename, trace_block_start, headonly,
-                                contacts_north, details)
-            traces.append(trace)
+        con1 = starttime.timestamp > trace_endtime
+        con2 = endtime.timestamp < trace_starttime
+        # determine if this block is excluded based in starttime/endtime params
+        if con1 or con2:
+            # the block has to be excluded, increment trace_block_start
+            #  and continue
+            trace_block_start += nbr_bytes_trace_block
+            continue
+        trace = _make_trace(filename, trace_block_start, headonly,
+                            contacts_north, details)
+        traces.append(trace)
         trace_block_start += nbr_bytes_trace_block
     if merge:
         traces = _quick_merge(traces)

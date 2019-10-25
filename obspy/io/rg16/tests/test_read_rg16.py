@@ -72,7 +72,7 @@ class TestReadRG16(unittest.TestCase):
 
     def test_starttime_endtime_option(self):
         """
-        Test the the options starttime and endtime
+        Test the options starttime and endtime
         """
         t1 = UTCDateTime(2017, 8, 9, 16, 0, 15)
         t2 = UTCDateTime(2017, 8, 9, 16, 0, 45)
@@ -85,6 +85,24 @@ class TestReadRG16(unittest.TestCase):
         # test using starttime and endtime
         self.assertEqual(len(st1), len(st))
         for tr, tr1 in zip(st, st1):
+            self.assertEqual(tr.stats.starttime, tr1.stats.starttime)
+            self.assertEqual(tr.stats.endtime, tr1.stats.endtime)
+
+    def test_intrablock_starttime_endtime(self):
+        """
+        Test starttime/endtime options when starttime and endtime are comprised
+        in a data block.
+        """
+        t1 = UTCDateTime(2017, 8, 9, 16, 0, 47)
+        t2 = UTCDateTime(2017, 8, 9, 16, 0, 58)
+
+        # read streams for testing
+        st = rc._read_rg16(THREE_CHAN_FCNT)  # no time filtering
+        st1 = rc._read_rg16(THREE_CHAN_FCNT, starttime=t1, endtime=t2)
+
+        # test when starttime and endtime are comprised in a data packet.
+        self.assertEqual(len(st1), 3)
+        for tr, tr1 in zip(st[1::2], st1):
             self.assertEqual(tr.stats.starttime, tr1.stats.starttime)
             self.assertEqual(tr.stats.endtime, tr1.stats.endtime)
 
