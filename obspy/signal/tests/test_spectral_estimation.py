@@ -548,8 +548,9 @@ class PsdTestCase(unittest.TestCase):
         """
         ppsd = _get_ppsd()
         test_magnitudes = [3.5, 2.5, 1.5]
+        distance = 10
         for magnitude in test_magnitudes:
-            key = (magnitude, 10)
+            key = (magnitude, distance)
             fig = ppsd.plot(
                 show_earthquakes=(magnitude - 0.5, magnitude + 0.5, 5, 15),
                 show_noise_models=False, show=False)
@@ -562,8 +563,8 @@ class PsdTestCase(unittest.TestCase):
             power = 20 * np.log10(power / 2)
             self.assertEqual(list(line.get_ydata()), list(power))
             self.assertEqual(list(line.get_xdata()), list(periods))
-            caption = '$^{M%.1f}_{10km}$' % (key[0])
-            self.assertIn(ax.texts[0].get_text(), caption)
+            caption = 'M%.1f\n%dkm' % (magnitude, distance)
+            self.assertEqual(ax.texts[0].get_text(), caption)
 
     def test_ppsd_add_npz(self):
         """
