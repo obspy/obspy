@@ -2002,7 +2002,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @skip_if_no_data
     @_add_processing_info
-    def taper(self, max_percentage, type='hann', max_length=None,
+    def taper(self, max_percentage=None, type='hann', max_length=None,
               side='both', **kwargs):
         """
         Taper the trace.
