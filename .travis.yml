@@ -24,6 +24,8 @@ matrix:
       env: PYTHON_VERSION=3.6
     - os: linux
       env: PYTHON_VERSION=3.7
+    - os: linux
+      env: PYTHON_VERSION=3.8
     # - os: linux
     #   env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
     #   addons:
@@ -38,6 +40,8 @@ matrix:
       env: PYTHON_VERSION=3.6
     - os: osx
       env: PYTHON_VERSION=3.7
+    - os: osx
+      env: PYTHON_VERSION=3.8
 
 # mimick travis fast fail and rolling build setup from:
 # https://github.com/JuliaLang/julia/blob/master/.travis.yml
