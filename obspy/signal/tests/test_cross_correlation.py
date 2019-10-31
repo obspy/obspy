@@ -100,8 +100,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
         cc2 = correlate(a, b, shift, normalize=True)
         cc3 = correlate(a, b, shift, normalize=None)
         cc4 = correlate(a, b, shift, normalize=False)
-        np.testing.assert_equal(cc1, cc2)
-        np.testing.assert_equal(cc3, cc4)
+        np.testing.assert_allclose(cc1, cc2, rtol=1e-6)
+        np.testing.assert_allclose(cc3, cc4, rtol=1e-6)
 
     def test_srl_xcorr(self):
         """
