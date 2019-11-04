@@ -16,6 +16,8 @@ import warnings
 from collections import defaultdict
 
 from obspy.io.nordic import NordicParsingError
+from obspy.geodetics.base import kilometers2degrees
+from numpy import cos, radians
 
 
 MAG_MAPPING = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
@@ -23,7 +25,7 @@ MAG_MAPPING = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
 INV_MAG_MAPPING = {item: key for key, item in MAG_MAPPING.items()}
 # List of currently implemented line-endings, which in Nordic mark what format
 # info in that line will be.
-ACCEPTED_TAGS = ('1', '6', '7', 'E', ' ', 'F', 'M', '3')
+ACCEPTED_TAGS = ('1', '6', '7', 'E', ' ', 'F', 'M', '3', 'H')
 
 
 def _int_conv(string):
@@ -162,6 +164,34 @@ def _nortoevmag(mag_type):
     if mag == '':
         warnings.warn(mag_type + ' is not convertible')
     return mag
+
+
+def _km_to_deg_lat(kilometers):
+    """
+    Convenience tool for converting km to degrees latitude.
+
+    """
+    try:
+        degrees = kilometers2degrees(kilometers)
+    except Exception:
+        degrees = None
+    return degrees
+
+
+def _km_to_deg_lon(kilometers, latitude):
+    """
+    Convenience tool for converting km to degrees longitude.
+
+    latitude in degrees
+
+    """
+    try:
+        degrees_lat = kilometers2degrees(kilometers)
+    except Exception:
+        return None
+    degrees_lon = degrees_lat / cos(radians(latitude))
+
+    return degrees_lon
 
 
 if __name__ == "__main__":
