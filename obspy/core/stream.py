@@ -3172,7 +3172,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a copy of your stream object.
         """
         from obspy.signal.util import stack as stack_func
-        groups = self._group_by(group_by)
+        groups = self._groupby(group_by)
         stacks = []
         for groupid, traces in groups.items():
             header = {k: v for k, v in traces[0].stats.items()
@@ -3295,7 +3295,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     "channels": channels_}
         return all_channels
 
-    def _group_by(self, group_by):
+    def _groupby(self, group_by):
         """
         Group traces by same metadata.
 
