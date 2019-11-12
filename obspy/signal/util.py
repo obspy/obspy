@@ -304,9 +304,10 @@ def stack(data, stack_type='linear'):
     :type stack_type: str or tuple
     :param stack_type: Type of stack, one of the following:
         ``'linear'``: average stack (default),
-        ``('pw', order)``: phase weighted stack of given order,
-        see [Schimmel1997]_,
-        ``('root', order)``: root stack of given order.
+        ``('pw', order)``: phase weighted stack of given order
+        (see [Schimmel1997]_, order 0 corresponds to linear stack),
+        ``('root', order)``: root stack of given order
+        (order 1 corresponds to linear stack).
     """
     if stack_type == 'linear':
         stack = np.mean(data, axis=0)
