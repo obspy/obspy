@@ -63,6 +63,11 @@ class ClientTestCase(unittest.TestCase):
         self.assertAlmostEqual(result['backazimuth'], 5.46944)
         self.assertAlmostEqual(result['azimuth'], 185.47695)
         self.assertEqual(result['ellipsoidname'], 'WGS84')
+        self.assertTrue(isinstance(result['distance'], float))
+        self.assertTrue(isinstance(result['distancemeters'], float))
+        self.assertTrue(isinstance(result['backazimuth'], float))
+        self.assertTrue(isinstance(result['azimuth'], float))
+        self.assertTrue(isinstance(result['ellipsoidname'], str))
         # w/o kwargs
         result = client.distaz(1.1, 1.2, 3.2, 1.4)
         self.assertAlmostEqual(result['distance'], 2.10256)
@@ -84,18 +89,23 @@ class ClientTestCase(unittest.TestCase):
         # code
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
         self.assertEqual(result, 683)
+        self.assertTrue(isinstance(result, int))
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "code")
         self.assertEqual(result, 683)
         # region
         result = client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
         self.assertEqual(result, 'OREGON')
+        self.assertTrue(isinstance(result, str))
         # w/o kwargs
         result = client.flinnengdahl(42, -122.24, "region")
         self.assertEqual(result, 'OREGON')
         # both
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="both")
         self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
+        self.assertTrue(isinstance(result[0], int))
+        self.assertTrue(isinstance(result[1], str))
+
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "both")
         self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))

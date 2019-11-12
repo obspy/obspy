@@ -617,10 +617,10 @@ class Client(object):
         data = objectify.fromstring(data.decode())
         results = {}
         results['ellipsoidname'] = data.ellipsoid.attrib['name']
-        results['distance'] = data.distance
-        results['distancemeters'] = data.distanceMeters
-        results['backazimuth'] = data.backAzimuth
-        results['azimuth'] = data.azimuth
+        results['distance'] = float(data.distance)
+        results['distancemeters'] = float(data.distanceMeters)
+        results['backazimuth'] = float(data.backAzimuth)
+        results['azimuth'] = float(data.azimuth)
         return results
 
     def flinnengdahl(self, lat, lon, rtype="both"):
