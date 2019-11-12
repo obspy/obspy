@@ -105,7 +105,6 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
         self.assertTrue(isinstance(result[0], int))
         self.assertTrue(isinstance(result[1], str))
-
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "both")
         self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
