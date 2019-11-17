@@ -482,10 +482,17 @@ def _read_uncertainty(tagged_lines, event):
             _km_to_deg_lon(errors['x_err'], orig.latitude))
         orig.depth_errors = QuantityError(errors['z_err'] * 1000.)
     try:
-        orig.quality = OriginQuality(
-            azimuthal_gap=int(line[5:8]), standard_error=float(line[14:20]))
+        gap = int(line[5:8])
+    except ValueError:
+        gap = None
+    try:
+        orig.time_errors = QuantityError(float(line[14:20]))
     except ValueError:
         pass
+    if orig.quality:
+        orig.quality.azimuthal_gap = gap
+    else:
+        orig.quality = OriginQuality(azimuthal_gap=gap)
     return event
 
 
@@ -1463,7 +1470,7 @@ def nordpick(event, high_accuracy=True):
                 polarity.rjust(1) + ' ')
         pick_string_formatter = (
             " {station:5s}{instrument:1s}{component:1s}{phase_info:10s}"
-            "{hour:2d}{minute:2d}{seconds:6s}{coda:5s}{amp:7s}{period:5s}"
+            "{hour:2d}{minute:2d}{seconds:>6s}{coda:5s}{amp:7s}{period:5s}"
             "{azimuth:6s}{velocity:5s}{ain:4s}{azimuthres:3s}{timeres:5s}  "
             "{distance:5s}{caz:4s} ")
         # Note that pick seconds rounding only works because SEISAN does not
