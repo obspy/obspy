@@ -87,9 +87,9 @@ clibsignal.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
 clibsignal.utl_geo_km.restype = C.c_void_p
 
 head_stalta_t = np.dtype([
-    (native_str('N'), np.uint32, 1),
-    (native_str('nsta'), np.uint32, 1),
-    (native_str('nlta'), np.uint32, 1),
+    (native_str('N'), np.uint32),
+    (native_str('nsta'), np.uint32),
+    (native_str('nlta'), np.uint32),
 ], align=True)
 
 clibsignal.stalta.argtypes = [
