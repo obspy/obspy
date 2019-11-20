@@ -52,9 +52,10 @@ def decode36(data):
     while data:
         imed = data % 36
         if imed > 9:
-            c = chr(imed - 10 + ord('A'))
+            pos = imed - 10 + ord('A')
         else:
-            c = chr(imed + ord('0'))
+            pos = imed + ord('0')
+        c = chr(pos[0])
         s = c + s
         data = data // 36
     return s
