@@ -93,11 +93,12 @@ class Ellipse:
             cov = _fix_cov(cov)
         evals, evecs = np.linalg.eig(cov)
         if np.any(evals < 0):
-            cov_factor=cov[0][1]
-            cov_base=cov/cov_factor
+            cov_factor = cov[0][1]
+            cov_base = cov/cov_factor
             warnings.warn("Can't make data ellipse because cov matrix not pos "
                           "definite: {:g}x[{:.2f} {:g}][{:g} {:.2f}]. ".format(
-                cov_factor,cov_base[0][0],cov_base[0][1], cov_base[1][0],cov_base[1][1]))
+                            cov_factor, cov_base[0][0], cov_base[0][1],
+                            cov_base[1][0], cov_base[1][1]))
             # return cls(None, None, None, center)
             return None
         # Sort eigenvalues in decreasing order
