@@ -47,14 +47,10 @@ class Ellipse:
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
-        if a==None or b==None:
-            self.a=None
-            self.b=None
-        else:
-            if a < b:
-                warnings.warn('Semi-major smaller than semi-minor! Switching...')
-            self.a = max(a, b)
-            self.b = min(a, b)
+        if a < b:
+            warnings.warn('Semi-major smaller than semi-minor! Switching...')
+        self.a = max(a, b)
+        self.b = min(a, b)
         self.theta = theta
         self.x = center[0]
         self.y = center[1]
@@ -97,7 +93,6 @@ class Ellipse:
             cov = _fix_cov(cov)
         evals, evecs = np.linalg.eig(cov)
         if np.any(evals < 0):
-            np.set_printoptions(precision=3)
             cov_factor=cov[0][1]
             cov_base=cov/cov_factor
             warnings.warn("Can't make data ellipse because cov matrix not pos "
