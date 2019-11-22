@@ -472,16 +472,17 @@ def _read_uncertainty(tagged_lines, event):
         e = Ellipse.from_uncerts(errors['x_err'],
                                  errors['y_err'],
                                  errors['xy_cov'])
-        orig.origin_uncertainty = OriginUncertainty(
-            max_horizontal_uncertainty=e.a * 1000.,
-            min_horizontal_uncertainty=e.b * 1000.,
-            azimuth_max_horizontal_uncertainty=e.theta,
-            preferred_description="uncertainty ellipse")
-        orig.latitude_errors = QuantityError(
-            _km_to_deg_lat(errors['y_err']))
-        orig.longitude_errors = QuantityError(
-            _km_to_deg_lon(errors['x_err'], orig.latitude))
-        orig.depth_errors = QuantityError(errors['z_err'] * 1000.)
+        if e:
+            orig.origin_uncertainty = OriginUncertainty(
+                max_horizontal_uncertainty=e.a * 1000.,
+                min_horizontal_uncertainty=e.b * 1000.,
+                azimuth_max_horizontal_uncertainty=e.theta,
+                preferred_description="uncertainty ellipse")
+            orig.latitude_errors = QuantityError(
+                _km_to_deg_lat(errors['y_err']))
+            orig.longitude_errors = QuantityError(
+                _km_to_deg_lon(errors['x_err'], orig.latitude))
+            orig.depth_errors = QuantityError(errors['z_err'] * 1000.)
     try:
         gap = int(line[5:8])
     except ValueError:

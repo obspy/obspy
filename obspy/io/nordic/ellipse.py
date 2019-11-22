@@ -47,10 +47,14 @@ class Ellipse:
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
-        if a < b:
-            warnings.warn('Semi-major smaller than semi-minor! Switching...')
-        self.a = max(a, b)
-        self.b = min(a, b)
+        if a==None or b==None:
+            self.a=None
+            self.b=None
+        else:
+            if a < b:
+                warnings.warn('Semi-major smaller than semi-minor! Switching...')
+            self.a = max(a, b)
+            self.b = min(a, b)
         self.theta = theta
         self.x = center[0]
         self.y = center[1]
@@ -88,12 +92,19 @@ class Ellipse:
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
+        cov = np.array(cov)
         if _almost_good_cov(cov):
             cov = _fix_cov(cov)
         evals, evecs = np.linalg.eig(cov)
         if np.any(evals < 0):
-            warnings.warn('Bad covariance matrix, no ellipse calculated')
-            return cls(None, None, None, center)
+            np.set_printoptions(precision=3)
+            cov_factor=cov[0][1]
+            cov_base=cov/cov_factor
+            warnings.warn("Can't make data ellipse because cov matrix not pos "
+                          "definite: {:g}x[{:.2f} {:g}][{:g} {:.2f}]. ".format(
+                cov_factor,cov_base[0][0],cov_base[0][1], cov_base[1][0],cov_base[1][1]))
+            # return cls(None, None, None, center)
+            return None
         # Sort eigenvalues in decreasing order
         sort_indices = np.argsort(evals)[::-1]
         # Select semi-major and semi-minor axes
