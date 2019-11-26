@@ -166,7 +166,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
+                                 '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # cs as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -175,7 +175,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05 -1.055896E+04 1.473054E+02\n')
+                                 '1.000000E-05  -1.055896E+04  1.473054E+02\n')
         # fap & def as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -184,7 +184,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
+                                 '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # fap & dis as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -193,7 +193,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  6.635035E-01  2.692007E+02\n')
+                                 '1.000000E-05 6.635035E-01 2.692007E+02\n')
         # fap & vel as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -202,7 +202,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
+                                 '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # fap & acc as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -211,7 +211,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.680674E+08  8.920073E+01\n')
+                                 '1.000000E-05 1.680674E+08 8.920073E+01\n')
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')
