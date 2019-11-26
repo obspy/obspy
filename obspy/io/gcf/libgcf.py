@@ -52,9 +52,10 @@ def decode36(data):
     while data:
         imed = data % 36
         if imed > 9:
-            c = chr(imed - 10 + ord('A'))
+            pos = imed - 10 + ord('A')
         else:
-            c = chr(imed + ord('0'))
+            pos = imed + ord('0')
+        c = chr(pos)
         s = c + s
         data = data // 36
     return s
@@ -92,9 +93,17 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     sysid = np.frombuffer(sysid, count=1, dtype='>u4')
     if sysid >> 31 & 0b1 > 0:
         sysid = (sysid << 6) >> 6
+    if isinstance(sysid, np.ndarray) and sysid.shape == (1,):
+        sysid = sysid[0]
+    else:
+        raise ValueError('sysid should be a single element np.ndarray')
     sysid = decode36(sysid)
     # get Stream ID
     stid = np.frombuffer(f.read(4), count=1, dtype='>u4')
+    if isinstance(stid, np.ndarray) and stid.shape == (1,):
+        stid = stid[0]
+    else:
+        raise ValueError('stid should be a single element np.ndarray')
     stid = decode36(stid)
     # get Date & Time
     data = np.frombuffer(f.read(4), count=1, dtype='>u4')
