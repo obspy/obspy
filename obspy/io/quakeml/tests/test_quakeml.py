@@ -1129,6 +1129,33 @@ class QuakeMLTestCase(unittest.TestCase):
         # the two catalogs should be equal
         self.assertEqual(cat1, cat2)
 
+    def test_native_namespace_in_extra(self):
+        """
+        Make sure that QuakeML tags that are not the same as the document
+        root's namespaces still are handled as custom tags (coming
+        after any expected/mandatory tags) and get parsed into extras section
+        properly.
+        """
+        custom1 = {
+            'value': u'11111',
+            'namespace': 'http://quakeml.org/xmlns/bed/9.99'}
+        custom2 = {
+            'value': u'22222',
+            'namespace': 'http://quakeml.org/xmlns/quakeml/8.87'}
+        extra = {'custom1': custom1, 'custom2': custom2}
+
+        cat = Catalog()
+        cat.extra = extra
+
+        with io.BytesIO() as buf:
+            cat.write(buf, format='QUAKEML')
+            buf.seek(0)
+            cat2 = read_events(buf, format='QUAKEML')
+
+        self.assertEqual(extra, cat2.extra)
+        self.assertIn(('custom1', custom1), cat2.extra.items())
+        self.assertIn(('custom2', custom2), cat2.extra.items())
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')

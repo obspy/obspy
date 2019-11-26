@@ -27,6 +27,7 @@ from future.builtins import *  # NOQA
 import inspect
 import io
 import os
+import re
 import warnings
 
 from lxml import etree
@@ -45,9 +46,11 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, Enum
 
-
-NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
-                 'q': "http://quakeml.org/xmlns/quakeml/1.2"}
+QUAKEML_ROOTTAG_REGEX = r'^{(http://quakeml.org/xmlns/quakeml/([^}]*))}quakeml'
+NS_QUAKEML_PATTERN = 'http://quakeml.org/xmlns/quakeml/{version}'
+NS_QUAKEML_BED_PATTERN = 'http://quakeml.org/xmlns/bed/{version}'
+NSMAP_QUAKEML = {None: NS_QUAKEML_BED_PATTERN.format(version="1.2"),
+                 'q': NS_QUAKEML_PATTERN.format(version="1.2")}
 
 
 def _get_first_child_namespace(element):
@@ -902,9 +905,11 @@ class Unpickler(object):
             catalog_el = self._xpath('eventParameters', namespace=namespace)[0]
         except IndexError:
             raise Exception("Not a QuakeML compatible file or string")
+        root_namespace, quakeml_version = re.match(
+            QUAKEML_ROOTTAG_REGEX, self.xml_root.tag).groups()
         self._quakeml_namespaces = [
-            ns for ns in self.xml_root.nsmap.values()
-            if ns.startswith(r"http://quakeml.org/xmlns/")]
+            root_namespace,
+            NS_QUAKEML_BED_PATTERN.format(version=quakeml_version)]
         # create catalog
         catalog = Catalog(force_resource_id=False)
         # add any custom namespace abbreviations of root element to Catalog

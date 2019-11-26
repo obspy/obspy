@@ -128,6 +128,9 @@ master:
      (see #2106, #2098, #2095)
    * Catalogs with empty event description objects can be round-tripped (see
      #2339, #2340).
+   * Correctly handle QuakeML native namespaces (if they are not matching the
+     document root's namespace) as custom namespaces and parse them into
+     `.extra` (see #2466)
  - obspy.io.sac:
    * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
  - obspy.io.segy:
