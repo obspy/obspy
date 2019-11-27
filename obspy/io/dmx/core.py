@@ -81,17 +81,21 @@ def _is_dmx(filename):
             while fid.read(12):  # we require at least 1 full structtag
                 fid.seek(-12, 1)
                 structtag = readstructtag(fid)
-                if structtag.id_struct == 7:
+                if int(structtag.len_struct) + int(structtag.len_data) <= 0:
+                    return False
+                elif structtag.id_struct == 7:
                     descripttrace = readdescripttrace(fid)
                     UTCDateTime(descripttrace.begintime)
+                    readdata(fid, descripttrace.length, descripttrace.datatype)
                     return True
                 else:
                     fid.seek(
                         int(structtag.len_struct) + int(structtag.len_data), 1)
-
     except Exception:
         return False
-    return True
+
+    # If it reaches this point, this means no id_struct=7 has been found
+    return False
 
 
 def _read_dmx(filename, **kwargs):
