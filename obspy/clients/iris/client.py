@@ -616,7 +616,7 @@ class Client(object):
             raise Exception(msg)
         data = objectify.fromstring(data.decode())
         results = {}
-        results['ellipsoidname'] = data.ellipsoid.attrib['name']
+        results['ellipsoidname'] = str(data.ellipsoid.attrib['name'])
         results['distance'] = float(data.distance)
         results['distancemeters'] = float(data.distanceMeters)
         results['backazimuth'] = float(data.backAzimuth)
