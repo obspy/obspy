@@ -49,6 +49,8 @@ master:
    * Added Stream.stack method (see #2440).
    * Added a component field to the Stats object which allows to get and set
      the last character of the SEED channel (see #2484).
+   * Fixed a bug in Stream.plot(type='section', reftime=..., ...) that caused
+     wrong relative start times of traces relative to given reftime (see #2493)
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
@@ -88,6 +90,8 @@ master:
      Python2 (see #2413)
    * fix an issue that could make small landmasses not get plotted in basemap
      plots (see #2471, #2477)
+   * Fixed a bug in Stream.plot(type='section', reftime=..., ...) that caused
+     wrong relative start times of traces relative to given reftime (see #2493)
  - obspy.io.gcf:
    * Fixes Python 3.8 compatibility of GCF reader. (see #2505)
  - obspy.io.mseed:
