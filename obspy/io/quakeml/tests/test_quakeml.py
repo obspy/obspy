@@ -92,7 +92,9 @@ class QuakeMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             catalog = _read_quakeml(filename)
-        assert_no_extras(catalog)
+        # there are some custom namespace attributes
+        self.assertTrue(len(catalog[0].extra) == 3)
+        self.assertTrue(len(catalog[0].origins[0].extra) == 4)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(catalog[0].event_type, 'quarry blast')
 
