@@ -499,8 +499,8 @@ class Client(object):
         * START             : 2002-11-19T21:07:00
         * END               : 2008-06-30T00:00:00
         * DESCRIPTION       : Albuquerque, New Mexico, USA
-        * LATITUDE          : 34.945981
-        * LONGITUDE         : -106.457133
+        * LATITUDE          : 34.945980
+        * LONGITUDE         : -106.457130
         * ELEVATION         : 1671.0
         * DEPTH             : 145.0
         * DIP               : 0.0
@@ -616,11 +616,11 @@ class Client(object):
             raise Exception(msg)
         data = objectify.fromstring(data.decode())
         results = {}
-        results['ellipsoidname'] = data.ellipsoid.attrib['name']
-        results['distance'] = data.distance
-        results['distancemeters'] = data.distanceMeters
-        results['backazimuth'] = data.backAzimuth
-        results['azimuth'] = data.azimuth
+        results['ellipsoidname'] = str(data.ellipsoid.attrib['name'])
+        results['distance'] = float(data.distance)
+        results['distancemeters'] = float(data.distanceMeters)
+        results['backazimuth'] = float(data.backAzimuth)
+        results['azimuth'] = float(data.azimuth)
         return results
 
     def flinnengdahl(self, lat, lon, rtype="both"):
