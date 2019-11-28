@@ -306,7 +306,7 @@ class NetworkTestCase(unittest.TestCase):
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
     BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-    'matplotlib 3.0.1 is not campatible with basemap')
+    'matplotlib 3.0.1 is not compatible with basemap')
 class NetworkBasemapTestCase(unittest.TestCase):
     """
     Tests for the :meth:`~obspy.station.network.Network.plot` with Basemap.
@@ -350,6 +350,11 @@ class NetworkBasemapTestCase(unittest.TestCase):
                      continent_fill_color='0.5', marker='d',
                      color='yellow', label=False, outfile=ic.name)
 
+    @unittest.skipIf(
+        BASEMAP_VERSION >= [1, 2] and MATPLOTLIB_VERSION >= [3],
+        'matplotlib 3.x seems to not be compatible with basemap 1.2 '
+        '(see #2507 and e.g. '
+        'https://travis-ci.org/obspy/obspy/jobs/618159062#L5583)')
     def test_location_plot_local(self):
         """
         Tests the network location preview plot, local projection, some more
