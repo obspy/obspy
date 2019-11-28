@@ -350,11 +350,6 @@ class NetworkBasemapTestCase(unittest.TestCase):
                      continent_fill_color='0.5', marker='d',
                      color='yellow', label=False, outfile=ic.name)
 
-    @unittest.skipIf(
-        BASEMAP_VERSION >= [1, 2] and MATPLOTLIB_VERSION >= [3],
-        'matplotlib 3.x seems to not be compatible with basemap 1.2 '
-        '(see #2507 and e.g. '
-        'https://travis-ci.org/obspy/obspy/jobs/618159062#L5583)')
     def test_location_plot_local(self):
         """
         Tests the network location preview plot, local projection, some more

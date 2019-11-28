@@ -432,7 +432,10 @@ def _plot_basemap_into_axes(
             ax.set_facecolor(water_fill_color)
         else:
             ax.set_axis_bgcolor(water_fill_color)
-        bmap.drawcoastlines(color="0.4")
+        # newer matplotlib errors out if called with empty coastline data (no
+        # coast on map)
+        if np.size(getattr(bmap, 'coastsegs', [])):
+            bmap.drawcoastlines(color="0.4")
         bmap.drawcountries(color="0.75")
         bmap.fillcontinents(color=continent_fill_color,
                             lake_color=water_fill_color)
