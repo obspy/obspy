@@ -1439,7 +1439,12 @@ class PPSD(object):
 
         # XXX get rid of if/else again when bumping minimal numpy to 1.7
         if NUMPY_VERSION >= [1, 7]:
-            with np.load(filename, allow_pickle=allow_pickle) as data:
+            # XXX get rid of if/else again when bumping minimal numpy to 1.10
+            if NUMPY_VERSION >= [1, 10]:
+                kwargs = {'allow_pickle': allow_pickle}
+            else:
+                kwargs = {}
+            with np.load(filename, **kwargs) as data:
                 return _load(data)
         else:
             data = np.load(filename)
@@ -1535,13 +1540,18 @@ class PPSD(object):
 
         # XXX get rid of if/else again when bumping minimal numpy to 1.7
         if NUMPY_VERSION >= [1, 7]:
+            # XXX get rid of if/else again when bumping minimal numpy to 1.10
+            if NUMPY_VERSION >= [1, 10]:
+                kwargs = {'allow_pickle': allow_pickle}
+            else:
+                kwargs = {}
             try:
-                with np.load(filename, allow_pickle=allow_pickle) as data:
+                with np.load(filename, **kwargs) as data:
                     _add(data)
             except ValueError:
                 msg = ("Loading PPSD results saved with ObsPy versions < "
                        "1.2 requires setting the allow_pickle parameter "
-                       "of PPSD.load_npz to True.")
+                       "of PPSD.load_npz to True (needs numpy>=1.10).")
                 raise ValueError(msg)
         else:
             data = np.load(filename)
