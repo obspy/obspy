@@ -66,11 +66,7 @@ environment:
       PYTHON_VERSION: "3.7"
       PYTHON_ARCH: "64"
 
-    - PYTHON: "C:\\Miniconda38"
-      PYTHON_VERSION: "3.8"
-      PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Miniconda38-x64"
+    - PYTHON: "C:\\Miniconda37-x64"
       PYTHON_VERSION: "3.8"
       PYTHON_ARCH: "64"
 
@@ -121,7 +117,12 @@ install:
   - "activate test"
   # Install default dependencies
   # pip 10.0.1 seems buggy and breaks all our appveyor builds
-  - "conda install -q --yes \"pip<10\" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema pyshp cryptography proj4"
+  - ps: |
+      If ($env:PYTHON_VERSION -eq "3.8") {
+          conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests jsonschema cryptography proj4
+      }else {
+          conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema pyshp cryptography proj4
+      }
   # somehow basemap/pyproj/proj4 can fail when PROJ_LIB is not set correctly
   # for whatever reason, see:
   #  - conda-forge/basemap-feedstock#36

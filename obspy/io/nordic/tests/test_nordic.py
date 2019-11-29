@@ -982,8 +982,16 @@ class TestNordicMethods(unittest.TestCase):
         # Test multi-ellipse figure
         dist = 50
         fig = None
-        prop_cycle = plt.rcParams['axes.prop_cycle']
-        colors = cycle(prop_cycle.by_key()['color'])
+        try:
+            prop_cycle = plt.rcParams['axes.prop_cycle']
+        # prop_cycle was introduced at some point between mpl 1.x and 2.0 it
+        # seems
+        # XXX workaround can be removed when mpl is bumped to certain version
+        except KeyError:
+            colors = plt.rcParams['axes.color_cycle']
+        else:
+            colors = prop_cycle.by_key()['color']
+        color_cycle = cycle(colors)
         step = 45
         with ImageComparison(self.testing_path, 'plot_ellipses_tangents.png',
                              style='classic', reltol=15) as ic:
@@ -997,14 +1005,13 @@ class TestNordicMethods(unittest.TestCase):
                     outfile = None
                 fig = ell.plot_tangents((0, 0),
                                         fig=fig,
-                                        color=next(colors),
+                                        color=next(color_cycle),
                                         print_angle=True,
                                         ellipse_name='E{:d}'.format(angle),
                                         outfile=outfile)
         # Test multi-station figure
         fig = None
-        prop_cycle = plt.rcParams['axes.prop_cycle']
-        colors = cycle(prop_cycle.by_key()['color'])
+        color_cycle = cycle(colors)
         with ImageComparison(self.testing_path,
                              'plot_ellipse_tangents_pts.png',
                              style='classic',
@@ -1019,7 +1026,7 @@ class TestNordicMethods(unittest.TestCase):
                     outfile = None
                 fig = ell.plot_tangents((x, y),
                                         fig=fig,
-                                        color=next(colors),
+                                        color=next(color_cycle),
                                         print_angle=True,
                                         pt_name='pt{:d}'.format(angle),
                                         outfile=outfile)

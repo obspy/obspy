@@ -20,6 +20,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
 from obspy.core.inventory import Response
+from obspy.core.util import NUMPY_VERSION
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import (
@@ -97,6 +98,15 @@ def _get_ppsd():
     return deepcopy(_ppsd)
 
 
+# XXX get rid of if/else again when bumping minimal numpy to 1.10
+if NUMPY_VERSION >= [1, 10]:
+    allow_pickle = {'allow_pickle': True}
+    allow_pickle_false = {'allow_pickle': False}
+else:
+    allow_pickle = {}
+    allow_pickle_false = {}
+
+
 class PsdTestCase(unittest.TestCase):
     """
     Test cases for psd.
@@ -137,8 +147,7 @@ class PsdTestCase(unittest.TestCase):
         file_noise = os.path.join(self.path, "pitsa_noise.npy")
         fn_psd_pitsa = "pitsa_noise_psd_samprate_100_nfft_512_noverlap_0.npy"
         file_psd_pitsa = os.path.join(self.path, fn_psd_pitsa)
-
-        noise = np.load(file_noise, allow_pickle=True)
+        noise = np.load(file_noise, **allow_pickle)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
         psd_obspy, _ = psd(noise, NFFT=nfft, Fs=sampling_rate,
@@ -830,7 +839,7 @@ class PsdTestCase(unittest.TestCase):
                "consider updating your ObsPy installation.".format(
                    PPSD(stats=Stats(), metadata=None).ppsd_version))
         # 1 - loading a npz
-        data = np.load(self.example_ppsd_npz, allow_pickle=True)
+        data = np.load(self.example_ppsd_npz, **allow_pickle)
         # we have to load, modify 'ppsd_version' and save the npz file for the
         # test..
         items = {key: data[key] for key in data.files}
@@ -877,8 +886,13 @@ class PsdTestCase(unittest.TestCase):
         ppsd.save_npz(byte_me)
         byte_me.seek(0)
         # Load dict, will raise an exception if pickle is needed.
-        loaded_dict = dict(np.load(byte_me, allow_pickle=False))
+        loaded_dict = dict(np.load(byte_me, **allow_pickle_false))
         self.assertIsInstance(loaded_dict, dict)
+        # the rest of the test is only relevant on numpy versions that have
+        # allow_pickle kwarg (starting with version 1.10.0), older versions
+        # will always allow pickle and thus reading works
+        if NUMPY_VERSION < [1, 10]:
+            return
         # A helpful error message is issued when allow_pickle is needed.
         with self.assertRaises(ValueError) as context:
             PPSD.load_npz(self.example_ppsd_npz)
@@ -905,6 +919,11 @@ class PsdTestCase(unittest.TestCase):
             _save_nps_require_pickle(temp_path, ppsd)
             # We should be able to load the files when allowing pickle.
             ppsd.add_npz(temp_path, allow_pickle=True)
+            # the rest of the test is only relevant on numpy versions that have
+            # allow_pickle kwarg (starting with version 1.10.0), older versions
+            # will always allow pickle and thus reading works
+            if NUMPY_VERSION < [1, 10]:
+                return
             # If not allow_pickle,  a helpful error msg should be raised.
             with self.assertRaises(ValueError) as context:
                 ppsd.add_npz(temp_path)

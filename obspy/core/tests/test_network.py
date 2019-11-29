@@ -306,7 +306,7 @@ class NetworkTestCase(unittest.TestCase):
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
     BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-    'matplotlib 3.0.1 is not campatible with basemap')
+    'matplotlib 3.0.1 is not compatible with basemap')
 class NetworkBasemapTestCase(unittest.TestCase):
     """
     Tests for the :meth:`~obspy.station.network.Network.plot` with Basemap.
