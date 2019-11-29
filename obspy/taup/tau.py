@@ -300,6 +300,15 @@ class Arrivals(list):
         if phase_list is None:
             phase_list = ("ttall",)
 
+        requested_phase_names = parse_phase_list(phase_list)
+        requested_phase_name_map = {}
+        i = 0
+        for phase_name in requested_phase_names:
+            if phase_name in requested_phase_name_map:
+                continue
+            requested_phase_name_map[phase_name] = i
+            i += 1
+
         phase_names = sorted(parse_phase_list(phase_list))
         arrivals = []
         for arrival in self:
@@ -349,7 +358,13 @@ class Arrivals(list):
             phase_names_encountered = {ray.name for ray in arrivals}
             colors = {
                 name: COLORS[i % len(COLORS)]
-                for i, name in enumerate(sorted(phase_names_encountered))}
+                for name, i in requested_phase_name_map.items()}
+            i = len(colors)
+            for name in sorted(phase_names_encountered):
+                if name in colors:
+                    continue
+                colors[name] = COLORS[i % len(COLORS)]
+                i += 1
             for ray in arrivals:
                 color = colors.get(ray.name, 'k')
                 # Requires interpolation,or diffracted phases look funny.
