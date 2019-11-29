@@ -29,6 +29,24 @@ if version >= 2.3:
     IS_RECENT_LXML = True
 
 
+def assert_no_extras(obj, verbose=False):
+    """
+    Helper routine to make sure no information ends up in 'extra' when there is
+    not supposed to be anything in there. (to make sure, after changes in
+    #2466)
+    """
+    assert getattr(obj, 'extra', None) is None
+    if verbose:
+        print('no extras in {!s}'.format(obj))
+    if isinstance(obj, Catalog):
+        for event in obj:
+            assert_no_extras(event, verbose=verbose)
+        return
+    # recurse deeper if an event-type object
+    for name, _type in getattr(obj, '_properties', []):
+        assert_no_extras(getattr(obj, name), verbose=verbose)
+
+
 class QuakeMLTestCase(unittest.TestCase):
     """
     Test suite for obspy.io.quakeml
@@ -45,6 +63,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # IRIS
         filename = os.path.join(self.path, 'iris_events.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 2)
         self.assertEqual(
             catalog[0].resource_id,
@@ -56,6 +75,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 'smi:www.iris.edu/ws/event/query?eventId=2318174'))
         # NERIES
         catalog = self.neries_catalog
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 3)
         self.assertEqual(
             catalog[0].resource_id,
@@ -72,6 +92,9 @@ class QuakeMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             catalog = _read_quakeml(filename)
+        # there are some custom namespace attributes
+        self.assertTrue(len(catalog[0].extra) == 3)
+        self.assertTrue(len(catalog[0].origins[0].extra) == 4)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(catalog[0].event_type, 'quarry blast')
 
@@ -81,6 +104,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'quakeml_1.2_event.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         event = catalog[0]
         self.assertEqual(
@@ -134,6 +158,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'quakeml_1.2_origin.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].origins), 1)
         origin = catalog[0].origins[0]
@@ -236,6 +261,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'quakeml_1.2_magnitude.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].magnitudes), 1)
         mag = catalog[0].magnitudes[0]
@@ -282,6 +308,7 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(
             self.path, 'quakeml_1.2_stationmagnitudecontributions.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].magnitudes), 1)
         self.assertEqual(
@@ -315,6 +342,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'quakeml_1.2_stationmagnitude.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].station_magnitudes), 1)
         mag = catalog[0].station_magnitudes[0]
@@ -355,6 +383,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # Test reading first.
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         event = catalog[0]
 
         self.assertTrue(len(event.focal_mechanisms), 2)
@@ -395,6 +424,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'quakeml_1.2_arrival.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].origins[0].arrivals), 2)
         ar = catalog[0].origins[0].arrivals[0]
@@ -431,6 +461,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'quakeml_1.2_pick.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].picks), 2)
         pick = catalog[0].picks[0]
@@ -469,6 +500,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'quakeml_1.2_focalmechanism.xml')
         catalog = _read_quakeml(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].focal_mechanisms), 2)
         fm = catalog[0].focal_mechanisms[0]
@@ -565,6 +597,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             catalog = _read_quakeml(filename)
+            assert_no_extras(catalog)
             self.assertTrue(len(catalog), 1)
             _write_quakeml(catalog, tmpfile, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
@@ -572,6 +605,7 @@ class QuakeMLTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
                 catalog2 = _read_quakeml(tmpfile)
+                assert_no_extras(catalog2)
         self.assertTrue(len(catalog2), 1)
 
     def test_read_events(self):
@@ -581,6 +615,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             catalog = read_events(self.neries_filename)
+            assert_no_extras(catalog)
             self.assertTrue(len(catalog), 3)
             catalog.write(tmpfile, format='QUAKEML')
             # Read file again. Avoid the (legit) warning about the already used
@@ -588,6 +623,7 @@ class QuakeMLTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
                 catalog2 = read_events(tmpfile)
+                assert_no_extras(catalog2)
         self.assertTrue(len(catalog2), 3)
 
     @unittest.skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
@@ -664,6 +700,7 @@ class QuakeMLTestCase(unittest.TestCase):
             data = fp.read()
 
         catalog = read_events(data)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 3)
 
     def test_preferred_tags(self):
@@ -678,6 +715,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # testing existing event
         filename = os.path.join(self.path, 'preferred.xml')
         catalog = read_events(filename)
+        assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 " + \
                  "| 2.0 MW"
@@ -737,6 +775,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         memfile.seek(0, 0)
         new_cat = _read_quakeml(memfile)
+        assert_no_extras(new_cat)
         self.assertEqual(len(new_cat), 1)
         event = new_cat[0]
         self.assertEqual(len(event.origins), 1)
@@ -789,6 +828,7 @@ class QuakeMLTestCase(unittest.TestCase):
             self.assertEqual(len(w), 0)
             cat2 = _read_quakeml(filename)
             self.assertEqual(len(w), 0)
+        assert_no_extras(cat1)
 
         self.assertEqual(cat1, cat2)
 
@@ -865,6 +905,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             cat = _read_quakeml(filename)
+            assert_no_extras(cat)
             self.assertEqual(len(w), 0)
 
         # add some custom tags to first event:
@@ -1007,6 +1048,7 @@ class QuakeMLTestCase(unittest.TestCase):
             cat1 = read_events(sio)  # NOQA
             cat2 = read_events(sio)  # NOQA
 
+        assert_no_extras(cat1)
         # No warning should have been raised.
         self.assertEqual(len(w), 0)
 
@@ -1026,6 +1068,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # rather `None`
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
+        assert_no_extras(cat)
         self.assertEqual(cat[0].focal_mechanisms[0].moment_tensor, None)
 
     def test_avoid_empty_stub_elements(self):
@@ -1045,6 +1088,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # MomentTensor, but rather `None`
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
+        assert_no_extras(cat)
         self.assertEqual(cat[0].focal_mechanisms[0].moment_tensor.tensor, None)
         self.assertEqual(
             cat[0].focal_mechanisms[0].moment_tensor.source_time_function,
@@ -1060,6 +1104,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # rather `None`
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
+        assert_no_extras(cat)
         self.assertEqual(cat[0].focal_mechanisms[0].nodal_planes, None)
         self.assertEqual(cat[0].focal_mechanisms[0].principal_axes, None)
 
@@ -1122,12 +1167,40 @@ class QuakeMLTestCase(unittest.TestCase):
         cat1.write(bio, 'quakeml')
         bio.seek(0)
         cat2 = read_events(bio)
+        assert_no_extras(cat2)
         # the text of the empty EventDescription instances should be equal
         text1 = cat1[0].event_descriptions[-1].text
         text2 = cat2[0].event_descriptions[-1].text
         self.assertEqual(text1, text2)
         # the two catalogs should be equal
         self.assertEqual(cat1, cat2)
+
+    def test_native_namespace_in_extra(self):
+        """
+        Make sure that QuakeML tags that are not the same as the document
+        root's namespaces still are handled as custom tags (coming
+        after any expected/mandatory tags) and get parsed into extras section
+        properly.
+        """
+        custom1 = {
+            'value': u'11111',
+            'namespace': 'http://quakeml.org/xmlns/bed/9.99'}
+        custom2 = {
+            'value': u'22222',
+            'namespace': 'http://quakeml.org/xmlns/quakeml/8.87'}
+        extra = {'custom1': custom1, 'custom2': custom2}
+
+        cat = Catalog()
+        cat.extra = extra
+
+        with io.BytesIO() as buf:
+            cat.write(buf, format='QUAKEML')
+            buf.seek(0)
+            cat2 = read_events(buf, format='QUAKEML')
+
+        self.assertEqual(extra, cat2.extra)
+        self.assertIn(('custom1', custom1), cat2.extra.items())
+        self.assertIn(('custom2', custom2), cat2.extra.items())
 
 
 def suite():
