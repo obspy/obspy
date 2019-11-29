@@ -313,7 +313,10 @@ def stack(data, stack_type='linear'):
         stack = np.mean(data, axis=0)
     elif stack_type[0] == 'pw':
         from scipy.signal import hilbert
-        from scipy.fftpack import next_fast_len
+        try:
+            from scipy.fftpack import next_fast_len
+        except ImportError:  # scipy < 0.18
+            next_fast_len = next_pow_2
         npts = np.shape(data)[1]
         nfft = next_fast_len(npts)
         anal_sig = hilbert(data, N=nfft)[:, :npts]
