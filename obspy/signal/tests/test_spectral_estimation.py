@@ -888,6 +888,11 @@ class PsdTestCase(unittest.TestCase):
         # Load dict, will raise an exception if pickle is needed.
         loaded_dict = dict(np.load(byte_me, **allow_pickle_false))
         self.assertIsInstance(loaded_dict, dict)
+        # the rest of the test is only relevant on numpy versions that have
+        # allow_pickle kwarg (starting with version 1.10.0), older versions
+        # will always allow pickle and thus reading works
+        if NUMPY_VERSION < [1, 10]:
+            return
         # A helpful error message is issued when allow_pickle is needed.
         with self.assertRaises(ValueError) as context:
             PPSD.load_npz(self.example_ppsd_npz)
@@ -914,6 +919,11 @@ class PsdTestCase(unittest.TestCase):
             _save_nps_require_pickle(temp_path, ppsd)
             # We should be able to load the files when allowing pickle.
             ppsd.add_npz(temp_path, allow_pickle=True)
+            # the rest of the test is only relevant on numpy versions that have
+            # allow_pickle kwarg (starting with version 1.10.0), older versions
+            # will always allow pickle and thus reading works
+            if NUMPY_VERSION < [1, 10]:
+                return
             # If not allow_pickle,  a helpful error msg should be raised.
             with self.assertRaises(ValueError) as context:
                 ppsd.add_npz(temp_path)
