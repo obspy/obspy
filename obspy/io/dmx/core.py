@@ -11,6 +11,7 @@ from tempfile import SpooledTemporaryFile
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.compatibility import from_buffer
 from obspy.core.util.attribdict import AttribDict
 
 
@@ -47,7 +48,8 @@ types = {"s": np.uint16, "q": np.int16, "u": np.uint16, "i": np.int16,
 
 def readstructtag(fid):
     y = AttribDict()
-    data = np.fromfile(fid, structtag_dtypes, 1)
+    data = fid.read(structtag_dtypes.itemsize)
+    data = from_buffer(data, structtag_dtypes)
     for (key, (fmt, size)) in structtag_dtypes.fields.items():
         if str(fmt).count("S") != 0:
             y[key] = data[key][0].decode('UTF-8')
@@ -59,7 +61,8 @@ def readstructtag(fid):
 def readdescripttrace(fid):
     y = AttribDict()
 
-    data = np.fromfile(fid, descript_trace_dtypes, 1)
+    data = fid.read(descript_trace_dtypes.itemsize)
+    data = from_buffer(data, descript_trace_dtypes)
 
     for (key, (fmt, size)) in descript_trace_dtypes.fields.items():
         if str(fmt).count("S") != 0:
@@ -72,7 +75,8 @@ def readdescripttrace(fid):
 
 def readdata(fid, n, t):
     target = types[t]
-    return np.fromfile(fid, target, n)
+    data = fid.read(np.dtype(target).itemsize * n)
+    return from_buffer(data, target)
 
 
 def _is_dmx(filename):
