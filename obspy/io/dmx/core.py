@@ -48,7 +48,12 @@ types = {"s": np.uint16, "q": np.int16, "u": np.uint16, "i": np.int16,
 
 def readstructtag(fid):
     y = AttribDict()
-    data = fid.read(structtag_dtypes.itemsize)
+    # avoid passing np.intXX down to SpooledTemporaryFile.read() since it
+    # errors out on numpy integer types on at least Python 3.6, seems fixed in
+    # Python 3.7
+    # see https://ci.appveyor.com/project/obspy/obspy/
+    #                  builds/29252080/job/9gr8bqkgr005523n#L742
+    data = fid.read(int(structtag_dtypes.itemsize))
     data = from_buffer(data, structtag_dtypes)
     for (key, (fmt, size)) in structtag_dtypes.fields.items():
         if str(fmt).count("S") != 0:
@@ -61,7 +66,12 @@ def readstructtag(fid):
 def readdescripttrace(fid):
     y = AttribDict()
 
-    data = fid.read(descript_trace_dtypes.itemsize)
+    # avoid passing np.intXX down to SpooledTemporaryFile.read() since it
+    # errors out on numpy integer types on at least Python 3.6, seems fixed in
+    # Python 3.7
+    # see https://ci.appveyor.com/project/obspy/obspy/
+    #                  builds/29252080/job/9gr8bqkgr005523n#L742
+    data = fid.read(int(descript_trace_dtypes.itemsize))
     data = from_buffer(data, descript_trace_dtypes)
 
     for (key, (fmt, size)) in descript_trace_dtypes.fields.items():
@@ -75,7 +85,12 @@ def readdescripttrace(fid):
 
 def readdata(fid, n, t):
     target = types[t]
-    data = fid.read(np.dtype(target).itemsize * n)
+    # avoid passing np.intXX down to SpooledTemporaryFile.read() since it
+    # errors out on numpy integer types on at least Python 3.6, seems fixed in
+    # Python 3.7
+    # see https://ci.appveyor.com/project/obspy/obspy/
+    #                  builds/29252080/job/9gr8bqkgr005523n#L742
+    data = fid.read(int(np.dtype(target).itemsize * n))
     return from_buffer(data, target)
 
 
