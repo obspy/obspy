@@ -344,18 +344,14 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(stats.component, '')
         stats.component = 'Z'
         self.assertEqual(stats.channel, 'Z')
-        # Setting an empty component.
-        # That does not make sense and the result does not make sense either,
-        # but the result is expected and therefore documented here as test.
+        # Components must be single character
         stats.channel = 'HHZ'
-        stats.component = ''
-        stats.component = ''
-        self.assertEqual(stats.channel, 'H')
-        self.assertEqual(stats.component, 'H')
-        stats.component = ''
-        self.assertEqual(stats.channel, '')
-        stats.component = ''
-        self.assertEqual(stats.channel, '')
+        with self.assertRaises(ValueError):
+            stats.component = ''
+        self.assertEqual(stats.channel, 'HHZ')
+        with self.assertRaises(ValueError):
+            stats.component = 'ZZ'
+        self.assertEqual(stats.channel, 'HHZ')
 
 
 def suite():

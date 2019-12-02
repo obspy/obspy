@@ -209,7 +209,11 @@ class Stats(AttribDict):
             return
         if key == 'component':
             key = 'channel'
-            value = self.channel[:-1] + str(value)
+            value = str(value)
+            if len(value) != 1:
+                msg = 'Component must be set with single character'
+                raise ValueError(msg)
+            value = self.channel[:-1] + value
         # prevent a calibration factor of 0
         if key == 'calib' and value == 0:
             msg = 'Calibration factor set to 0.0!'
