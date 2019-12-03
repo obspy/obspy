@@ -137,10 +137,10 @@ class Stats(AttribDict):
 
         >>> stats = Stats()
         >>> stats.channel = 'HHZ'
-        >>> stats.component
+        >>> stats.component  # doctest: +SKIP
         'Z'
         >>> stats.component = 'L'
-        >>> stats.channel
+        >>> stats.channel  # doctest: +SKIP
         'HHL'
 
     """
