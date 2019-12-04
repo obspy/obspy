@@ -1265,8 +1265,8 @@ class WaveformPlotting(object):
         self._tr_times = []
         for _tr in range(self._tr_num):
             self._tr_times.append(
-                (np.arange(self._tr_npts[_tr]) +
-                 (self._tr_starttimes[_tr] - reftime)) * self._tr_delta[_tr])
+                np.arange(self._tr_npts[_tr]) * self._tr_delta[_tr] +
+                (self._tr_starttimes[_tr] - reftime))
             if self.sect_vred:
                 self._tr_times[-1] -= self._tr_offsets[_tr] / self.sect_vred
 

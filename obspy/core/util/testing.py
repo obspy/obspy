@@ -362,6 +362,10 @@ class ImageComparison(NamedTemporaryFile):
             # quite high.
             elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
                 self.tol *= 12
+            # Some section waveform plots made on 2.2.2 have offset ticks on
+            # 2.0.2, so up tolerance a bit (see #2493)
+            elif MATPLOTLIB_VERSION < [2, 1]:
+                self.tol *= 5
 
             # One last pass depending on the freetype version.
             # XXX: Should eventually be handled differently!
