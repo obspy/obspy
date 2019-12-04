@@ -280,6 +280,7 @@ class MiniseedDataExtractor(object):
                 if self.dp_replace_re and self.dp_replace_sub:
                     filename = self.dp_replace_re.sub(self.dp_replace_sub,
                                                       filename)
+                filename = os.path.normpath(filename)
                 if not os.path.exists(filename):
                     raise Exception("Data file does not exist: %s" % filename)
                 request_rows.append(Request(srcname=srcname,

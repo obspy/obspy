@@ -719,15 +719,15 @@ class IndexerTestCase(RegExTestCase):
                                             reindex=True)
         file_list.sort()
         self.assertEqual(len(file_list), 3)
-        self.assertEqual('CU/2018/001/'
-                         'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                         file_list[0])
-        self.assertEqual('IU/2018/001/'
-                         'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                         file_list[1])
-        self.assertEqual('IU/2018/001/'
-                         'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
-                         file_list[2])
+        self.assertEqual(os.path.normpath(
+            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
+            file_list[0])
+        self.assertEqual(os.path.normpath(
+            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
+            file_list[1])
+        self.assertEqual(os.path.normpath(
+            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
+            file_list[2])
 
         # case where the root path is outside of the absolute
         # data path, to assert that already indexed files are still skipped
@@ -748,24 +748,24 @@ class IndexerTestCase(RegExTestCase):
         file_list = indexer.build_file_list(reindex=True)
         file_list.sort()
         self.assertEqual(len(file_list), 3)
-        self.assertNotEqual('CU/2018/001/'
-                            'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                            file_list[0])
-        self.assertIn('CU/2018/001/'
-                      'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                      file_list[0])
-        self.assertNotEqual('IU/2018/001/'
-                            'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                            file_list[1])
-        self.assertIn('IU/2018/001/'
-                      'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                      file_list[1])
-        self.assertNotEqual('IU/2018/001/'
-                            'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
-                            file_list[2])
-        self.assertIn('IU/2018/001/'
-                      'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
-                      file_list[2])
+        self.assertNotEqual(os.path.normpath(
+            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
+            file_list[0])
+        self.assertIn(os.path.normpath(
+            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
+            file_list[0])
+        self.assertNotEqual(os.path.normpath(
+            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
+            file_list[1])
+        self.assertIn(os.path.normpath(
+            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
+            file_list[1])
+        self.assertNotEqual(os.path.normpath(
+            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
+            file_list[2])
+        self.assertIn(os.path.normpath(
+            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
+            file_list[2])
         # test that already indexed files (relative and absolute) get skipped.
         self.assertRaisesRegex(OSError,
                                "^No unindexed files matching filename.*$",

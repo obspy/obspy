@@ -233,8 +233,9 @@ class Client(object):
 
         # setup handler for database
         if isinstance(database, (str, native_str)):
-            self.request_handler = TSIndexDatabaseHandler(database,
-                                                          debug=self.debug)
+            self.request_handler = TSIndexDatabaseHandler(
+                os.path.normpath(database),
+                debug=self.debug)
         elif isinstance(database, TSIndexDatabaseHandler):
             self.request_handler = database
         else:
