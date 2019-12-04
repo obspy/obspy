@@ -1609,8 +1609,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         with io.BytesIO() as buf:
             tr.write(buf, format="mseed")
             buf.seek(0, 0)
-            tr2 = read(buf)
+            tr2 = read(buf)[0]
 
+        # Delete meta-data that gets added during reading.
+        del tr2.stats["_format"]
+        del tr2.stats["mseed"]
         self.assertEqual(tr, tr2)
 
 

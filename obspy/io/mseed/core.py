@@ -637,8 +637,9 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         # of more than 100 microseconds, or if timing quality is set, \
         # Blockette 1001 will be written for every record.
         starttime = util._convert_datetime_to_mstime(trace.stats.starttime)
-        if starttime % 100 != 0 or \
-           (1.0 / trace.stats.sampling_rate * HPTMODULUS) % 100 != 0:
+        if starttime % 100 != 0 or (
+                trace.stats.sampling_rate and
+                (1.0 / trace.stats.sampling_rate * HPTMODULUS) % 100 != 0):
             use_blkt_1001 = True
 
         if hasattr(trace.stats, 'mseed') and \
