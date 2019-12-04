@@ -2714,12 +2714,19 @@ class StreamTestCase(unittest.TestCase):
         # check correct setting of metadata
         st = read()
         st[0].stats.back_azimuth -= 10
+        st[0].stats.array1 = np.array([1, 2])
+        st[1].stats.array1 = np.array([1, 2, 3])
+        st[2].stats.array1 = 'no array here'
+        for tr in st:
+            tr.stats.array2 = np.array([3, 4])
         st2 = st.copy().stack()
         self.assertEqual(st2[0].stats.station, st[0].stats.station)
         self.assertEqual(st2[0].stats.inclination, st[0].stats.inclination)
         self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
         self.assertEqual(st2[0].stats.channel, '')
         self.assertNotIn('back_azimuth', st2[0].stats)
+        self.assertNotIn('array1', st2[0].stats)
+        self.assertIn('array2', st2[0].stats)
         st[1].stats.starttime += 10
         st2 = st.copy().stack()
         self.assertEqual(st2[0].stats.starttime, UTCDateTime(0))

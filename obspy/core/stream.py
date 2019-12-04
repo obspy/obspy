@@ -3147,9 +3147,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type stack_type: str or tuple
         :param stack_type: Type of stack, one of the following:
             ``'linear'``: average stack (default),
-            ``('pw', order)``: phase weighted stack of given order,
-            see [Schimmel1997]_,
-            ``('root', order)``: root stack of given order.
+            ``('pw', order)``: phase weighted stack of given order
+            (see [Schimmel1997]_, order 0 corresponds to linear stack),
+            ``('root', order)``: root stack of given order
+            (order 1 corresponds to linear stack).
         :type npts_tol: int
         :param npts_tol: Tolerate traces with different number of points
             with a difference up to this value. Surplus samples are discarded.
@@ -3172,15 +3173,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        if group_by == 'id':
-            group_by = '{network}.{station}.{location}.{channel}'
-        groups = collections.defaultdict(list)
-        for tr in self:
-            groups[group_by.format(**tr.stats)].append(tr)
+        from obspy.signal.util import stack as stack_func
+        groups = self._groupby(group_by)
         stacks = []
         for groupid, traces in groups.items():
             header = {k: v for k, v in traces[0].stats.items()
-                      if all(tr.stats.get(k) == v for tr in traces)}
+                      if all(np.all(tr.stats.get(k) == v) for tr in traces)}
             header.pop('endtime', None)
             if 'sampling_rate' not in header:
                 msg = 'Sampling rate of traces to stack is different'
@@ -3200,23 +3198,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                        ' than requested tolerance ({} > {})')
                 raise ValueError(msg.format(npts_dif, npts_tol))
             data = np.array([tr.data[:npts] for tr in traces])
-            if stack_type == 'linear':
-                stack = np.mean(data, axis=0)
-            elif stack_type[0] == 'pw':
-                from scipy.signal import hilbert
-                from scipy.fftpack import next_fast_len
-                nfft = next_fast_len(npts)
-                anal_sig = hilbert(data, N=nfft)[:, :npts]
-                norm_anal_sig = anal_sig / np.abs(anal_sig)
-                phase_stack = np.abs(
-                        np.mean(norm_anal_sig, axis=0)) ** stack_type[1]
-                stack = np.mean(data, axis=0) * phase_stack
-            elif stack_type[0] == 'root':
-                r = np.mean(np.sign(data) * np.abs(data)
-                            ** (1 / stack_type[1]), axis=0)
-                stack = np.sign(r) * np.abs(r) ** stack_type[1]
-            else:
-                raise ValueError('stack type is not valid.')
+            stack = stack_func(data, stack_type=stack_type)
             stacks.append(traces[0].__class__(data=stack, header=header))
         self.traces = stacks
         return self
@@ -3314,6 +3296,26 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     "start": start, "end": end, "gaps": gaps,
                     "channels": channels_}
         return all_channels
+
+    def _groupby(self, group_by):
+        """
+        Group traces by same metadata.
+
+        :param group_by: Group traces together which have the same metadata
+            given by this parameter. The parameter should name the
+            corresponding keys of the stats object,
+            e.g. ``'{network}.{station}'``
+            This parameter can take the value
+            ``'id'`` which stacks groups the traces by SEED id
+
+        :return: dictionary {group: stream}
+        """
+        if group_by == 'id':
+            group_by = '{network}.{station}.{location}.{channel}'
+        groups = collections.defaultdict(self.__class__)
+        for tr in self:
+            groups[group_by.format(**tr.stats)].append(tr)
+        return dict(groups)
 
     def _trim_common_channels(self):
         """
