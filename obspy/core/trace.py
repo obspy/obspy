@@ -130,6 +130,19 @@ class Stats(AttribDict):
         >>> trace.data = np.array([1, 2, 3, 4])
         >>> trace.stats.npts
         4
+
+    (5)
+        The attribute ``component`` can be used to get or set the component,
+        i.e. the last character of the ``channel`` attribute.
+
+        >>> stats = Stats()
+        >>> stats.channel = 'HHZ'
+        >>> stats.component  # doctest: +SKIP
+        'Z'
+        >>> stats.component = 'L'
+        >>> stats.channel  # doctest: +SKIP
+        'HHL'
+
     """
     # set of read only attrs
     readonly = ['endtime']
@@ -194,6 +207,13 @@ class Stats(AttribDict):
                 timediff = float(self.npts - 1) * delta
             self.__dict__['endtime'] = self.starttime + timediff
             return
+        if key == 'component':
+            key = 'channel'
+            value = str(value)
+            if len(value) != 1:
+                msg = 'Component must be set with single character'
+                raise ValueError(msg)
+            value = self.channel[:-1] + value
         # prevent a calibration factor of 0
         if key == 'calib' and value == 0:
             msg = 'Calibration factor set to 0.0!'
@@ -205,6 +225,14 @@ class Stats(AttribDict):
             super(Stats, self).__setitem__(key, value)
 
     __setattr__ = __setitem__
+
+    def __getitem__(self, key, default=None):
+        """
+        """
+        if key == 'component':
+            return super(Stats, self).__getitem__('channel', default)[-1:]
+        else:
+            return super(Stats, self).__getitem__(key, default)
 
     def __str__(self):
         """
@@ -999,7 +1027,7 @@ class Trace(object):
             delta = int(delta)
         else:
             delta = int(math.floor(round((self.stats.starttime - starttime) *
-                                   self.stats.sampling_rate, 7))) * -1
+                                         self.stats.sampling_rate, 7))) * -1
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
         if delta > 0 or pad:
@@ -1062,7 +1090,7 @@ class Trace(object):
             #     (self.stats.endtime - endtime) * \
             #     self.stats.sampling_rate, 7)))
             delta = int(math.floor(round((endtime - self.stats.endtime) *
-                                   self.stats.sampling_rate, 7)))
+                                         self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):
             return self
         if delta > 0 and pad:

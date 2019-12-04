@@ -320,6 +320,39 @@ class StatsTestCase(unittest.TestCase):
                     setattr(stats, nslc, a_str)
                 self.assertIsInstance(getattr(stats, nslc), (str, native_str))
 
+    def test_component(self):
+        """
+        Test setting and getting of component.
+        """
+        stats = Stats()
+        # Channel with 3 characters
+        stats.channel = 'HHZ'
+        self.assertEqual(stats.component, 'Z')
+        stats.component = 'L'
+        self.assertEqual(stats.component, 'L')
+        self.assertEqual(stats.channel, 'HHL')
+        stats['component'] = 'Q'
+        self.assertEqual(stats['component'], 'Q')
+        self.assertEqual(stats.channel, 'HHQ')
+        # Channel with 1 character as component
+        stats.channel = 'N'
+        stats.component = 'E'
+        self.assertEqual(stats.channel, 'E')
+        self.assertEqual(stats.component, 'E')
+        # Channel with 0 characters
+        stats.channel = ''
+        self.assertEqual(stats.component, '')
+        stats.component = 'Z'
+        self.assertEqual(stats.channel, 'Z')
+        # Components must be single character
+        stats.channel = 'HHZ'
+        with self.assertRaises(ValueError):
+            stats.component = ''
+        self.assertEqual(stats.channel, 'HHZ')
+        with self.assertRaises(ValueError):
+            stats.component = 'ZZ'
+        self.assertEqual(stats.channel, 'HHZ')
+
 
 def suite():
     return unittest.makeSuite(StatsTestCase, 'test')

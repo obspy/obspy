@@ -47,6 +47,8 @@ master:
    * New method to create response objects directly from poles and zeros (see
      #1962).
    * Added Stream.stack method (see #2440).
+   * Added a component field to the Stats object which allows to get and set
+     the last character of the SEED channel (see #2484).
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
