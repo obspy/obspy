@@ -93,6 +93,7 @@ categories.*
     obspy.io.ah
     obspy.io.ascii
     obspy.io.css
+    obspy.io.dmx
     obspy.io.gcf
     obspy.io.gse2
     obspy.io.kinemetrics
