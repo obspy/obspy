@@ -101,6 +101,7 @@ master:
      to int32 data, otherwise raises ObsPyMSEEDError. (see #2356)
    * The recordanalyzer can now detect calibration blockettes 300, 310,
      and 320 (see #2370).
+   * Can now write zero sampling-rate traces. (see #2488, 2509)
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
      information. (see #1924)

@@ -1595,6 +1595,27 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(''.join(tr.data.astype(str)),
                          '001:00:00:00 REF TEK 130\r\n')
 
+    def test_reading_and_writing_zero_sampling_rate_traces(self):
+        """
+        LOG channels for example usually have sampling rates of zero.
+        """
+        tr = Trace(
+            data=np.linspace(0, 1, 10),
+            header={
+                "sampling_rate": 0.0,
+                "network": "AA",
+                "station": "CC",
+                "channel": "LOG"})
+        with io.BytesIO() as buf:
+            tr.write(buf, format="mseed")
+            buf.seek(0, 0)
+            tr2 = read(buf)[0]
+
+        # Delete meta-data that gets added during reading.
+        del tr2.stats["_format"]
+        del tr2.stats["mseed"]
+        self.assertEqual(tr, tr2)
+
 
 def suite():
     return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
