@@ -196,6 +196,8 @@ def _read_base_node(element, object_to_write_to, _ns):
         _attr2obj(element, "alternateCode", str)
     object_to_write_to.historical_code = \
         _attr2obj(element, "historicalCode", str)
+    object_to_write_to.source_id = \
+        _attr2obj(element, "sourceID", str)
     object_to_write_to.description = \
         _tag2obj(element, _ns("Description"), str)
     object_to_write_to.identifier = \
@@ -939,6 +941,8 @@ def _get_base_node_attributes(element):
         attributes["alternateCode"] = element.alternate_code
     if element.historical_code:
         attributes["historicalCode"] = element.historical_code
+    if element.source_id:
+        attributes["sourceID"] = element.source_id
     return attributes
 
 

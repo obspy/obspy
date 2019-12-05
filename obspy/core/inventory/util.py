@@ -34,7 +34,7 @@ class BaseNode(ComparingObject):
     def __init__(self, code, description=None, comments=None, start_date=None,
                  end_date=None, restricted_status=None, alternate_code=None,
                  historical_code=None, data_availability=None,
-                 identifiers=None):
+                 identifiers=None, source_id=None):
         """
         :type code: str
         :param code: The SEED network, station, or channel code
@@ -61,6 +61,9 @@ class BaseNode(ComparingObject):
         :type identifiers: list of str, optional
         :param identifiers: Persistent identifiers for network/station/channel
             (schema version >=1.1)
+        :type source_id: str, optional
+        :param source_id: A data source identifier in URI form
+           (schema version >=1.1)
         """
         self.code = code
         self.comments = comments or []
@@ -72,6 +75,7 @@ class BaseNode(ComparingObject):
         self.historical_code = historical_code
         self.data_availability = data_availability
         self.identifiers = identifiers or []
+        self.source_id = source_id
 
     @property
     def code(self):
@@ -83,6 +87,17 @@ class BaseNode(ComparingObject):
             msg = "A code is required"
             raise ValueError(msg)
         self._code = str(value).strip()
+
+    @property
+    def source_id(self):
+        return self._source_id
+
+    @source_id.setter
+    def source_id(self, value):
+        if value:
+            self._source_id = value.strip()
+        else:
+            self._source_id = None
 
     @property
     def alternate_code(self):

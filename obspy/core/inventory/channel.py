@@ -39,7 +39,7 @@ class Channel(BaseNode):
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
                  historical_code=None, data_availability=None,
-                 identifiers=None, water_level=None):
+                 identifiers=None, water_level=None, source_id=None):
         """
         :type code: str
         :param code: The SEED channel code for this channel
@@ -132,7 +132,10 @@ class Channel(BaseNode):
             (schema version >=1.1)
         :type water_level: float, optional
         :param water_level: Elevation of the water surface in meters for
-            underwater sites, where 0 is sea level.
+            underwater sites, where 0 is sea level. (schema version >=1.1)
+        :type source_id: str, optional
+        :param source_id: A data source identifier in URI form
+           (schema version >=1.1)
         """
         self.location_code = location_code
         self.latitude = latitude
@@ -164,7 +167,8 @@ class Channel(BaseNode):
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
-            data_availability=data_availability, identifiers=identifiers)
+            data_availability=data_availability, identifiers=identifiers,
+            source_id=source_id)
 
     def __str__(self):
         ret = (

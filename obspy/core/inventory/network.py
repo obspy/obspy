@@ -40,7 +40,7 @@ class Network(BaseNode):
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
                  historical_code=None, data_availability=None,
-                 identifiers=None, operators=None):
+                 identifiers=None, operators=None, source_id=None):
         """
         :type code: str
         :param code: The SEED network code.
@@ -82,6 +82,9 @@ class Network(BaseNode):
             an Operator tag. Since the Contact element is a generic type that
             represents any contact person, it also has its own optional Agency
             element.
+        :type source_id: str, optional
+        :param source_id: A data source identifier in URI form
+           (schema version >=1.1)
         """
         self.stations = stations or []
         self.total_number_of_stations = total_number_of_stations
@@ -94,7 +97,7 @@ class Network(BaseNode):
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
             data_availability=data_availability,
-            identifiers=identifiers)
+            identifiers=identifiers, source_id=source_id)
 
     @property
     def total_number_of_stations(self):
