@@ -42,8 +42,8 @@ from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip, Distance,
 # Define some constants for writing StationXML files.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "https://www.obspy.org"
-DEFAULT_SCHEMA_VERSION = "1.1"
-SCHEMA_VERSIONS = ["1.0", "1.1"]
+SCHEMA_VERSION = "1.1"
+READABLE_VERSIONS = ("1.0", "1.1")
 
 
 def _is_stationxml(path_or_file_object):
@@ -78,14 +78,11 @@ def _is_stationxml(path_or_file_object):
             assert match is not None
         except Exception:
             return False
-        # Convert schema number to a float to have positive comparisons
-        # between, e.g "1" and "1.0".
-        if (float(root.attrib["schemaVersion"]) not in
-                [float(version) for version in SCHEMA_VERSIONS]):
+        if root.attrib["schemaVersion"] not in READABLE_VERSIONS:
             warnings.warn("The StationXML file has version %s, ObsPy can "
-                          "deal with versions (%s). Proceed with caution." % (
+                          "read versions (%s). Proceed with caution." % (
                               root.attrib["schemaVersion"],
-                              ", ".join(SCHEMA_VERSIONS)))
+                              ", ".join(READABLE_VERSIONS)))
         return True
     finally:
         # Make sure to reset file pointer position.
@@ -804,8 +801,7 @@ def _read_phone(phone_element, _ns):
 
 
 def _write_stationxml(inventory, file_or_file_object, validate=False,
-                      nsmap=None, level="response",
-                      schema_version=DEFAULT_SCHEMA_VERSION, **kwargs):
+                      nsmap=None, level="response", **kwargs):
     """
     Writes an inventory object to a buffer.
     :type inventory: :class:`~obspy.core.inventory.Inventory`
@@ -818,8 +814,7 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     :type nsmap: dict
     :param nsmap: Additional custom namespace abbreviation mappings
         (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
-    :type schema_version: str, optional
-    :param schema_version: What version of the StationXML schema to write
+
     """
     if nsmap is None:
         nsmap = {}
@@ -830,7 +825,7 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         raise ValueError(msg)
 
     nsmap[None] = "http://www.fdsn.org/xml/station/1"
-    attrib = {"schemaVersion": schema_version}
+    attrib = {"schemaVersion": SCHEMA_VERSION}
 
     # Check if any of the channels has a data availability element. In that
     # case the namespaces need to be adjusted.
@@ -880,7 +875,7 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         raise ValueError("Requested stationXML write level is unsupported.")
 
     for network in inventory.networks:
-        _write_network(root, network, level, schema_version)
+        _write_network(root, network, level)
 
     # Add custom namespace tags to root element
     _write_extra(root, inventory)
@@ -939,7 +934,7 @@ def _write_base_node(element, object_to_read_from):
     _write_extra(element, object_to_read_from)
 
 
-def _write_network(parent, network, level, schema_version):
+def _write_network(parent, network, level):
     """
     Helper function converting a Network instance to an etree.Element.
     """
@@ -954,29 +949,27 @@ def _write_network(parent, network, level, schema_version):
     if network.selected_number_of_stations is not None:
         etree.SubElement(network_elem, "SelectedNumberStations").text = \
             str(network.selected_number_of_stations)
-    # Add optional network fields for schemas > 1.0
-    if float(schema_version) > 1.0:
-        for operator in network.operators:
-            operator_elem = etree.SubElement(network_elem, "Operator")
-            for agency in operator.agencies:
-                etree.SubElement(operator_elem, "Agency").text = agency
-                if len(operator.agencies) > 1:
-                    warnings.warn("The StationXML file contains more than one "
-                                  "Agency for a single Operator. StationXML "
-                                  "schemas > 1.0 only support a single Agency "
-                                  "per Operator. Only the first agency will "
-                                  "be used.")
-                break  # skip other operators for schemas > 1.0
-            for contact in operator.contacts:
-                _write_person(operator_elem, contact, "Contact")
-            etree.SubElement(operator_elem, "WebSite").text = operator.website
-            _write_extra(operator_elem, operator)
+    for operator in network.operators:
+        operator_elem = etree.SubElement(network_elem, "Operator")
+        for agency in operator.agencies:
+            etree.SubElement(operator_elem, "Agency").text = agency
+            if len(operator.agencies) > 1:
+                warnings.warn("The StationXML file contains more than one "
+                              "Agency for a single Operator. StationXML "
+                              "schemas > 1.0 only support a single Agency "
+                              "per Operator. Only the first agency will "
+                              "be used.")
+            break  # skip other operators for schemas > 1.0
+        for contact in operator.contacts:
+            _write_person(operator_elem, contact, "Contact")
+        etree.SubElement(operator_elem, "WebSite").text = operator.website
+        _write_extra(operator_elem, operator)
 
     if level == "network":
         return
 
     for station in network.stations:
-        _write_station(network_elem, station, level, schema_version)
+        _write_station(network_elem, station, level)
 
 
 def _write_floattype(parent, obj, attr_name, tag, additional_mapping={},
@@ -1072,7 +1065,7 @@ def _write_polezero_list(parent, obj):
     _write_extra(parent, obj)
 
 
-def _write_station(parent, station, level, schema_version):
+def _write_station(parent, station, level):
     # Write the base node type fields.
     attribs = _get_base_node_attributes(station)
     station_elem = etree.SubElement(parent, "Station", attribs)
@@ -1106,13 +1099,10 @@ def _write_station(parent, station, level, schema_version):
         etree.SubElement(operator_elem, "WebSite").text = operator.website
         _write_extra(operator_elem, operator)
 
-    if float(schema_version) > 1.0 and station.water_level is not None:
+    if station.water_level is not None:
         _write_floattype(station_elem, station, "water_level", "WaterLevel")
 
-    if float(schema_version) == 1.0:
-        etree.SubElement(station_elem, "CreationDate").text = \
-            str(station.creation_date) if station.creation_date else ""
-    elif float(schema_version) > 1.0 and station.creation_date is not None:
+    if station.creation_date is not None:
         # CreationDate is optional in schemas > 1.0
         etree.SubElement(station_elem, "CreationDate").text = \
             str(station.creation_date)
@@ -1133,10 +1123,10 @@ def _write_station(parent, station, level, schema_version):
         return
 
     for channel in station.channels:
-        _write_channel(station_elem, channel, level, schema_version)
+        _write_channel(station_elem, channel, level)
 
 
-def _write_channel(parent, channel, level, schema_version):
+def _write_channel(parent, channel, level):
     # Write the base node type fields.
     attribs = _get_base_node_attributes(channel)
     attribs['locationCode'] = channel.location_code
@@ -1163,7 +1153,7 @@ def _write_channel(parent, channel, level, schema_version):
     _write_floattype(channel_elem, channel, "azimuth", "Azimuth")
     _write_floattype(channel_elem, channel, "dip", "Dip")
 
-    if float(schema_version) > 1.0 and channel.water_level is not None:
+    if channel.water_level is not None:
         _write_floattype(channel_elem, channel, "water_level", "WaterLevel")
 
     for type_ in channel.types:
@@ -1178,8 +1168,6 @@ def _write_channel(parent, channel, level, schema_version):
         etree.SubElement(srr, "NumberSeconds").text = \
             str(channel.sample_rate_ratio_number_seconds)
 
-    if float(schema_version) == 1.0:  # StorageFormat omitted in schemas > 1.0
-        _obj2tag(channel_elem, "StorageFormat", channel.storage_format)
     _write_floattype(channel_elem, channel,
                      "clock_drift_in_seconds_per_sample", "ClockDrift")
 
