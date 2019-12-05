@@ -20,7 +20,7 @@ from future.utils import with_metaclass
 from obspy import read
 from obspy.core import UTCDateTime
 from obspy.core.stream import Stream
-from obspy.clients.filesystem.msriterator import MSRIterator
+from obspy.clients.filesystem.msriterator import _MSRIterator
 
 
 # Setup the logger.
@@ -57,7 +57,7 @@ class RequestLimitExceededError(ObsPyClientFileSystemMiniSEEDException):
     pass
 
 
-class ExtractedDataSegment(with_metaclass(abc.ABCMeta)):
+class _ExtractedDataSegment(with_metaclass(abc.ABCMeta)):
     """
     There are a few different forms that a chunk of extracted data can take,
     so we return a wrapped object that exposes a simple, consistent API
@@ -78,14 +78,14 @@ class ExtractedDataSegment(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError()
 
 
-class MSRIDataSegment(ExtractedDataSegment):
+class _MSRIDataSegment(_ExtractedDataSegment):
     """
-    Segment of data from a MSRIterator
+    Segment of data from a _MSRIterator
     """
     def __init__(self, msri, sample_rate, start_time, end_time, src_name,
                  debug=False):
         """
-        :param msri: A `MSRIterator`
+        :param msri: A `_MSRIterator`
         :param sample_rate: Sample rate of the data
         :param start_time: A `UTCDateTime` giving the start of the
                            requested data
@@ -148,7 +148,7 @@ class MSRIDataSegment(ExtractedDataSegment):
         return self.src_name
 
 
-class FileDataSegment(ExtractedDataSegment):
+class _FileDataSegment(_ExtractedDataSegment):
     """
     Segment of data that comes directly from a data file
     """
@@ -179,7 +179,7 @@ class FileDataSegment(ExtractedDataSegment):
         return self.src_name
 
 
-class MiniseedDataExtractor(object):
+class _MiniseedDataExtractor(object):
     """
     Component for extracting, trimming, and validating data.
     """
@@ -249,7 +249,7 @@ class MiniseedDataExtractor(object):
 
         :param index_rows: requested data, as produced by
         `HTTPServer_RequestHandler.fetch_index_rows`
-        :yields: sequence of `ExtractedDataSegment`s
+        :yields: sequence of `_ExtractedDataSegment`s
         """
 
         # Pre-scan the index rows:
@@ -311,21 +311,21 @@ class MiniseedDataExtractor(object):
             # if only part of the section is needed
             if nrow.triminfo[0][2] or nrow.triminfo[1][2]:
 
-                for msri in MSRIterator(filename=nrow.filename,
-                                        startoffset=nrow.triminfo[0][1],
-                                        dataflag=False):
+                for msri in _MSRIterator(filename=nrow.filename,
+                                         startoffset=nrow.triminfo[0][1],
+                                         dataflag=False):
                     offset = msri.get_offset()
 
                     # Done if we are beyond end offset
                     if offset >= nrow.triminfo[1][1]:
                         break
 
-                    yield MSRIDataSegment(msri,
-                                          nrow.samplerate,
-                                          nrow.starttime,
-                                          nrow.endtime,
-                                          nrow.srcname,
-                                          self.debug)
+                    yield _MSRIDataSegment(msri,
+                                           nrow.samplerate,
+                                           nrow.starttime,
+                                           nrow.endtime,
+                                           nrow.srcname,
+                                           self.debug)
 
                     # Check for passing end offset
                     if (offset + msri.msr.contents.reclen) >= \
@@ -334,8 +334,8 @@ class MiniseedDataExtractor(object):
 
             # Otherwise, return the entire section
             else:
-                yield FileDataSegment(nrow.filename, nrow.triminfo[0][1],
-                                      nrow.bytes, nrow.srcname)
+                yield _FileDataSegment(nrow.filename, nrow.triminfo[0][1],
+                                       nrow.bytes, nrow.srcname)
 
 
 if __name__ == '__main__':

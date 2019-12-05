@@ -171,10 +171,10 @@ from sqlalchemy.pool import QueuePool
 
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
-from obspy.clients.filesystem.miniseed import MiniseedDataExtractor, \
+from obspy.clients.filesystem.miniseed import _MiniseedDataExtractor, \
     NoDataError
-from obspy.clients.filesystem.db import get_tsindex_table, \
-    get_tsindex_summary_table
+from obspy.clients.filesystem.db import _get_tsindex_table, \
+    _get_tsindex_summary_table
 
 
 # Setup the logger.
@@ -243,9 +243,9 @@ class Client(object):
                              "TSIndexDatabaseHandler object.")
 
         # Create and configure the data extraction
-        self.data_extractor = MiniseedDataExtractor(
-                                                dp_replace=datapath_replace,
-                                                debug=self.debug)
+        self.data_extractor = _MiniseedDataExtractor(
+            dp_replace=datapath_replace,
+            debug=self.debug)
 
     def get_waveforms(self, network, station, location,
                       channel, starttime, endtime, merge=-1):
@@ -1279,9 +1279,9 @@ class TSIndexDatabaseHandler(object):
 
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table
-        self.TSIndexTable = get_tsindex_table(self.tsindex_table)
+        self.TSIndexTable = _get_tsindex_table(self.tsindex_table)
         self.TSIndexSummaryTable = \
-            get_tsindex_summary_table(self.tsindex_summary_table)
+            _get_tsindex_summary_table(self.tsindex_summary_table)
 
         if database and session:
             raise ValueError("Both a database path and an existing database "

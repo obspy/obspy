@@ -26,7 +26,7 @@ Base = declarative_base()
 _table_cache = {"index_tables": {}, "summary_tables": {}}
 
 
-def get_tsindex_table(table_name='tsindex'):
+def _get_tsindex_table(table_name='tsindex'):
 
     if table_name not in _table_cache["index_tables"]:
         class TSIndexTable(Base):
@@ -73,7 +73,7 @@ def get_tsindex_table(table_name='tsindex'):
     return _table_cache["index_tables"][table_name]
 
 
-def get_tsindex_summary_table(table_name='tsindex_summary'):
+def _get_tsindex_summary_table(table_name='tsindex_summary'):
     if table_name not in _table_cache["summary_tables"]:
         class TSIndexSummaryTable(Base):
             """
