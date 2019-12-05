@@ -46,6 +46,25 @@ SCHEMA_VERSION = "1.1"
 READABLE_VERSIONS = ("1.0", "1.1")
 
 
+def _get_version_from_xmldoc(xmldoc):
+    """
+    Return StationXML version string or ``None`` if parsing fails.
+    """
+    root = xmldoc.getroot()
+    try:
+        match = re.match(
+            r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
+            root.tag)
+        assert match is not None
+    except Exception:
+        return None
+    try:
+        version = root.attrib["schemaVersion"]
+    except KeyError:
+        return None
+    return version
+
+
 def _is_stationxml(path_or_file_object):
     """
     Simple function checking if the passed object contains a valid StationXML
@@ -70,19 +89,13 @@ def _is_stationxml(path_or_file_object):
                 xmldoc = etree.parse(path_or_file_object)
             except etree.XMLSyntaxError:
                 return False
-        root = xmldoc.getroot()
-        try:
-            match = re.match(
-                r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
-                root.tag)
-            assert match is not None
-        except Exception:
+        version = _get_version_from_xmldoc(xmldoc)
+        if version is None:
             return False
-        if root.attrib["schemaVersion"] not in READABLE_VERSIONS:
+        if version not in READABLE_VERSIONS:
             warnings.warn("The StationXML file has version %s, ObsPy can "
                           "read versions (%s). Proceed with caution." % (
-                              root.attrib["schemaVersion"],
-                              ", ".join(READABLE_VERSIONS)))
+                              version, ", ".join(READABLE_VERSIONS)))
         return True
     finally:
         # Make sure to reset file pointer position.
