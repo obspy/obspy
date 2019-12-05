@@ -37,7 +37,8 @@ class Channel(BaseNode):
                  equipment=None, response=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None, data_availability=None):
+                 historical_code=None, data_availability=None,
+                 identifier=None, water_level=None):
         """
         :type code: str
         :param code: The SEED channel code for this channel
@@ -125,6 +126,11 @@ class Channel(BaseNode):
             :class:`~obspy.core.inventor.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the channel.
+        :type identifier: str, optional
+        :param identifier: Persistent station identifier (schema version >=1.1)
+        :type water_level: float, optional
+        :param water_level: Elevation of the water surface in meters for
+            underwater sites, where 0 is sea level.
         """
         self.location_code = location_code
         self.latitude = latitude
@@ -133,6 +139,7 @@ class Channel(BaseNode):
         self.depth = depth
         self.azimuth = azimuth
         self.dip = dip
+        self.water_level = water_level
         self.types = types or []
         self.external_references = external_references or []
         self.sample_rate = sample_rate
@@ -155,7 +162,7 @@ class Channel(BaseNode):
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
-            data_availability=data_availability)
+            data_availability=data_availability, identifier=identifier)
 
     def __str__(self):
         ret = (
@@ -275,6 +282,14 @@ class Channel(BaseNode):
             self._dip = value
         else:
             self._dip = Dip(value)
+
+    @property
+    def water_level(self):
+        return self._water_level
+
+    @water_level.setter
+    def water_level(self, value):
+        self._water_level = float(value) if value else value
 
     @property
     def sample_rate(self):

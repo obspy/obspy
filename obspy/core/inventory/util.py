@@ -33,7 +33,8 @@ class BaseNode(ComparingObject):
     """
     def __init__(self, code, description=None, comments=None, start_date=None,
                  end_date=None, restricted_status=None, alternate_code=None,
-                 historical_code=None, data_availability=None):
+                 historical_code=None, data_availability=None,
+                 identifier=None):
         """
         :type code: str
         :param code: The SEED network, station, or channel code
@@ -57,6 +58,9 @@ class BaseNode(ComparingObject):
         :type data_availability: :class:`~obspy.station.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network/station/channel.
+        :type identifier: str, optional
+        :param identifier: Persistent identifier for network, station,
+            and channel (schema version >=1.1)
         """
         self.code = code
         self.comments = comments or []
@@ -67,6 +71,7 @@ class BaseNode(ComparingObject):
         self.alternate_code = alternate_code
         self.historical_code = historical_code
         self.data_availability = data_availability
+        self.identifier = identifier
 
     @property
     def code(self):
@@ -109,6 +114,22 @@ class BaseNode(ComparingObject):
             self._historical_code = value.strip()
         else:
             self._historical_code = None
+
+    @property
+    def identifier(self):
+        """
+        From the StationXML schema version >=1.1 definition:
+            Identifier values should be specified without a URI scheme
+            (prefix), instead the identifer type is documented as an attribute.
+        """
+        return self._identifier
+
+    @identifier.setter
+    def identifier(self, value):
+        if value:
+            self._identifier = value.strip()
+        else:
+            self._identifier = None
 
     def copy(self):
         """

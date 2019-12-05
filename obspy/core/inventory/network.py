@@ -22,7 +22,8 @@ from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .station import Station
 from .util import (
-    BaseNode, _unified_content_strings, _textwrap, _response_plot_label)
+    BaseNode, Operator, _unified_content_strings, _textwrap,
+    _response_plot_label)
 
 
 @python_2_unicode_compatible
@@ -38,7 +39,8 @@ class Network(BaseNode):
                  selected_number_of_stations=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None, data_availability=None):
+                 historical_code=None, data_availability=None,
+                 identifier=None, operators=None):
         """
         :type code: str
         :param code: The SEED network code.
@@ -71,17 +73,27 @@ class Network(BaseNode):
         :type data_availability: :class:`~obspy.station.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network.
+        :type identifier: str, optional
+        :param identifier: Persistent network identifier (schema version >=1.1)
+        :type operators: list of :class:`~obspy.core.inventory.util.Operator`
+        :param operators: An operating agency and associated contact persons.
+            If there multiple operators, each one should be encapsulated within
+            an Operator tag. Since the Contact element is a generic type that
+            represents any contact person, it also has its own optional Agency
+            element.
         """
         self.stations = stations or []
         self.total_number_of_stations = total_number_of_stations
         self.selected_number_of_stations = selected_number_of_stations
+        self.operators = operators or []
 
         super(Network, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
-            data_availability=data_availability)
+            data_availability=data_availability,
+            identifier=identifier)
 
     @property
     def total_number_of_stations(self):
@@ -104,6 +116,20 @@ class Network(BaseNode):
             msg = "selected_number_of_stations cannot be negative."
             raise ValueError(msg)
         self._selected_number_of_stations = value
+
+    @property
+    def operators(self):
+        return self._operators
+
+    @operators.setter
+    def operators(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "Operators needs to be an iterable, e.g. a list."
+            raise ValueError(msg)
+        if any([not isinstance(x, Operator) for x in value]):
+            msg = "Operators can only contain Operator objects."
+            raise ValueError(msg)
+        self._operators = value
 
     def __len__(self):
         return len(self.stations)
