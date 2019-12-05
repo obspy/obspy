@@ -969,15 +969,17 @@ def _write_network(parent, network, level):
             str(network.selected_number_of_stations)
     for operator in network.operators:
         operator_elem = etree.SubElement(network_elem, "Operator")
-        for agency in operator.agencies:
-            etree.SubElement(operator_elem, "Agency").text = agency
+        if not operator.agencies:
+            pass
+        else:
             if len(operator.agencies) > 1:
-                warnings.warn("The StationXML file contains more than one "
-                              "Agency for a single Operator. StationXML "
+                warnings.warn("The output StationXML file contains more than "
+                              "one Agency for a single Operator. StationXML "
                               "schemas > 1.0 only support a single Agency "
                               "per Operator. Only the first agency will "
-                              "be used.")
-            break  # skip other operators for schemas > 1.0
+                              "be output.")
+            agency = operator.agencies[0]
+            etree.SubElement(operator_elem, "Agency").text = agency
         for contact in operator.contacts:
             _write_person(operator_elem, contact, "Contact")
         etree.SubElement(operator_elem, "WebSite").text = operator.website
@@ -1104,14 +1106,17 @@ def _write_station(parent, station, level):
 
     for operator in station.operators:
         operator_elem = etree.SubElement(station_elem, "Operator")
-        for agency in operator.agencies:
+        if not operator.agencies:
+            pass
+        else:
+            if len(operator.agencies) > 1:
+                warnings.warn("The output StationXML file contains more than "
+                              "one Agency for a single Operator. StationXML "
+                              "schemas > 1.0 only support a single Agency "
+                              "per Operator. Only the first agency will "
+                              "be output.")
+            agency = operator.agencies[0]
             etree.SubElement(operator_elem, "Agency").text = agency
-            if float(schema_version) > 1.0 and len(operator.agencies) > 1:
-                warnings.warn("The StationXML file contains more than one "
-                              "Agency for a single Operator. StationXML "
-                              "schemas > 1.0 only support a single Agency per "
-                              "Operator. Only the first agency will be used.")
-                break  # skip other operators for schemas > 1.0
         for contact in operator.contacts:
             _write_person(operator_elem, contact, "Contact")
         etree.SubElement(operator_elem, "WebSite").text = operator.website
