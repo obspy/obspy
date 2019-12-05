@@ -116,13 +116,6 @@ def validate_stationxml(path_or_object):
     :param path_or_object: File name or file like object. Can also be an etree
         element.
     """
-    # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "fdsn-station-1.1.xsd")
-
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
-
     if isinstance(path_or_object, etree._Element):
         xmldoc = path_or_object
     else:
@@ -130,6 +123,18 @@ def validate_stationxml(path_or_object):
             xmldoc = etree.parse(path_or_object)
         except etree.XMLSyntaxError:
             return (False, ("Not a XML file.",))
+    version = _get_version_from_xmldoc(xmldoc)
+
+    # Get the schema location.
+    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
+    schema_location = os.path.join(schema_location, "data",
+                                   "fdsn-station-%s.xsd" % version)
+
+    if not os.path.exists(schema_location):
+        msg = "No schema file found to validate StationXML version '%s'"
+        raise ValueError(msg % version)
+
+    xmlschema = etree.XMLSchema(etree.parse(schema_location))
 
     valid = xmlschema.validate(xmldoc)
 
