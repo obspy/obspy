@@ -21,7 +21,8 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
+from obspy.core.util.obspy_types import (ObsPyException, ZeroSamplingRate,
+                                         FloatWithUncertaintiesAndUnit)
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
                    Longitude, _unified_content_strings, _textwrap, Site)
@@ -331,7 +332,12 @@ class Station(BaseNode):
 
     @water_level.setter
     def water_level(self, value):
-        self._water_level = float(value) if value else value
+        if value is None:
+            self._water_level = None
+        elif isinstance(value, FloatWithUncertaintiesAndUnit):
+            self._water_level = value
+        else:
+            self._water_level = FloatWithUncertaintiesAndUnit(value)
 
     def select(self, location=None, channel=None, time=None, starttime=None,
                endtime=None, sampling_rate=None):

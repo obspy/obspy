@@ -14,7 +14,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import python_2_unicode_compatible
 
-from obspy.core.util.obspy_types import FloatWithUncertainties
+from obspy.core.util.obspy_types import (
+    FloatWithUncertainties, FloatWithUncertaintiesAndUnit)
 from . import BaseNode
 from .util import Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude
 
@@ -289,7 +290,12 @@ class Channel(BaseNode):
 
     @water_level.setter
     def water_level(self, value):
-        self._water_level = float(value) if value else value
+        if value is None:
+            self._water_level = None
+        elif isinstance(value, FloatWithUncertaintiesAndUnit):
+            self._water_level = value
+        else:
+            self._water_level = FloatWithUncertaintiesAndUnit(value)
 
     @property
     def sample_rate(self):

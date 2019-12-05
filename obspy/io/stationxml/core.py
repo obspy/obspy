@@ -226,7 +226,9 @@ def _read_station(sta_element, _ns):
     station.site = _read_site(sta_element.find(_ns("Site")), _ns)
     _read_base_node(sta_element, station, _ns)
     # water level only for schemas > 1.0
-    station.water_level = _tag2obj(sta_element, _ns("WaterLevel"), float)
+    station.water_level = _read_floattype(sta_element, _ns("WaterLevel"),
+                                          FloatWithUncertaintiesAndUnit,
+                                          unit=True)
     station.vault = _tag2obj(sta_element, _ns("Vault"), str)
     station.geology = _tag2obj(sta_element, _ns("Geology"), str)
     for equipment in sta_element.findall(_ns("Equipment")):
@@ -351,7 +353,9 @@ def _read_channel(cha_element, _ns):
     channel.azimuth = _read_floattype(cha_element, _ns("Azimuth"), Azimuth)
     channel.dip = _read_floattype(cha_element, _ns("Dip"), Dip)
     # water level only for schemas > 1.0
-    channel.water_level = _tag2obj(cha_element, _ns("WaterLevel"), float)
+    channel.water_level = _read_floattype(cha_element, _ns("WaterLevel"),
+                                          FloatWithUncertaintiesAndUnit,
+                                          unit=True)
     # Add all types.
     for type_element in cha_element.findall(_ns("Type")):
         channel.types.append(type_element.text)
@@ -1103,8 +1107,7 @@ def _write_station(parent, station, level, schema_version):
         _write_extra(operator_elem, operator)
 
     if float(schema_version) > 1.0 and station.water_level is not None:
-        etree.SubElement(station_elem, "WaterLevel").text = \
-            str(station.water_level)
+        _write_floattype(station_elem, station, "water_level", "WaterLevel")
 
     if float(schema_version) == 1.0:
         etree.SubElement(station_elem, "CreationDate").text = \
@@ -1161,8 +1164,7 @@ def _write_channel(parent, channel, level, schema_version):
     _write_floattype(channel_elem, channel, "dip", "Dip")
 
     if float(schema_version) > 1.0 and channel.water_level is not None:
-        etree.SubElement(channel_elem, "WaterLevel").text = \
-            str(channel.water_level)
+        _write_floattype(channel_elem, channel, "water_level", "WaterLevel")
 
     for type_ in channel.types:
         etree.SubElement(channel_elem, "Type").text = type_
