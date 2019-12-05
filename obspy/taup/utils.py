@@ -24,7 +24,7 @@ def parse_phase_list(phase_list):
     for phase_name in phase_list:
         phase_names += get_phase_names(phase_name)
     # Remove duplicates.
-    return list(set(phase_names))
+    return sorted(list(set(phase_names)))
 
 
 def get_phase_names(phase_name):
