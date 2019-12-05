@@ -17,7 +17,8 @@ from future.utils import python_2_unicode_compatible
 from obspy.core.util.obspy_types import (
     FloatWithUncertainties, FloatWithUncertaintiesAndUnit)
 from . import BaseNode
-from .util import Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude
+from .util import (Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude,
+                   Equipment)
 
 
 @python_2_unicode_compatible
@@ -35,7 +36,7 @@ class Channel(BaseNode):
                  clock_drift_in_seconds_per_sample=None,
                  calibration_units=None, calibration_units_description=None,
                  sensor=None, pre_amplifier=None, data_logger=None,
-                 equipment=None, response=None, description=None,
+                 equipments=None, response=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
                  historical_code=None, data_availability=None,
@@ -103,8 +104,8 @@ class Channel(BaseNode):
         :param pre_amplifier: The pre-amplifier
         :type data_logger: :class:`~obspy.core.inventory.util.Equipment`
         :param data_logger: The data-logger
-        :type equipment: :class:`~obspy.core.inventory.util.Equipment`
-        :param equipment: Other station equipment
+        :type equipments: list of :class:`~obspy.core.inventory.util.Equipment`
+        :param equipments: Other station equipment
         :type response: :class:`~obspy.core.inventory.response.Response`
         :param response: The response of the channel
         :type description: str
@@ -160,7 +161,7 @@ class Channel(BaseNode):
         self.sensor = sensor
         self.pre_amplifier = pre_amplifier
         self.data_logger = data_logger
-        self.equipment = equipment
+        self.equipments = equipments or []
         self.response = response
         super(Channel, self).__init__(
             code=code, description=description, comments=comments,
@@ -327,6 +328,20 @@ class Channel(BaseNode):
             self._clock_drift_in_seconds_per_sample = value
         else:
             self._clock_drift_in_seconds_per_sample = ClockDrift(value)
+
+    @property
+    def equipments(self):
+        return self._equipments
+
+    @equipments.setter
+    def equipments(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "equipments needs to be an iterable, e.g. a list."
+            raise ValueError(msg)
+        if any([not isinstance(x, Equipment) for x in value]):
+            msg = "equipments can only contain Equipment objects."
+            raise ValueError(msg)
+        self._equipments = value
 
     def plot(self, min_freq, output="VEL", start_stage=None, end_stage=None,
              label=None, axes=None, unwrap_phase=False, plot_degrees=False,

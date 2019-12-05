@@ -60,6 +60,7 @@ class Station(BaseNode):
         :param vault: Type of vault, e.g. WWSSN, tunnel, transportable array,
             etc
         :param geology: Type of rock and/or geologic formation.
+        :type equipments: list of :class:`~obspy.core.inventory.util.Equipment`
         :param equipments: Equipment used by all channels at a station.
         :type operators: list of :class:`~obspy.core.inventory.util.Operator`
         :param operators: An operating agency and associated contact persons.

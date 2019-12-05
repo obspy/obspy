@@ -414,9 +414,8 @@ def _read_channel(cha_element, _ns):
     if data_logger is not None:
         channel.data_logger = _read_equipment(data_logger, _ns)
     # Other equipment
-    equipment = cha_element.find(_ns("Equipment"))
-    if equipment is not None:
-        channel.equipment = _read_equipment(equipment, _ns)
+    for equipment in cha_element.findall(_ns("Equipment")):
+        channel.equipments.append(_read_equipment(equipment, _ns))
     # Finally parse the response.
     response = cha_element.find(_ns("Response"))
     if response is not None:
@@ -1210,7 +1209,8 @@ def _write_channel(parent, channel, level):
     _write_equipment(channel_elem, channel.sensor, "Sensor")
     _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
     _write_equipment(channel_elem, channel.data_logger, "DataLogger")
-    _write_equipment(channel_elem, channel.equipment, "Equipment")
+    for equipment in channel.equipments:
+        _write_equipment(channel_elem, equipment, "Equipment")
 
     if level == "channel":
         return
