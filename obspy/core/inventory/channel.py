@@ -39,7 +39,7 @@ class Channel(BaseNode):
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
                  historical_code=None, data_availability=None,
-                 identifier=None, water_level=None):
+                 identifiers=None, water_level=None):
         """
         :type code: str
         :param code: The SEED channel code for this channel
@@ -127,8 +127,9 @@ class Channel(BaseNode):
             :class:`~obspy.core.inventor.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the channel.
-        :type identifier: str, optional
-        :param identifier: Persistent station identifier (schema version >=1.1)
+        :type identifiers: list of str, optional
+        :param identifiers: Persistent identifiers for network/station/channel
+            (schema version >=1.1)
         :type water_level: float, optional
         :param water_level: Elevation of the water surface in meters for
             underwater sites, where 0 is sea level.
@@ -163,7 +164,7 @@ class Channel(BaseNode):
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
-            data_availability=data_availability, identifier=identifier)
+            data_availability=data_availability, identifiers=identifiers)
 
     def __str__(self):
         ret = (

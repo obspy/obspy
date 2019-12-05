@@ -40,7 +40,7 @@ class Network(BaseNode):
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
                  historical_code=None, data_availability=None,
-                 identifier=None, operators=None):
+                 identifiers=None, operators=None):
         """
         :type code: str
         :param code: The SEED network code.
@@ -73,8 +73,9 @@ class Network(BaseNode):
         :type data_availability: :class:`~obspy.station.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network.
-        :type identifier: str, optional
-        :param identifier: Persistent network identifier (schema version >=1.1)
+        :type identifiers: list of str, optional
+        :param identifiers: Persistent identifiers for network/station/channel
+            (schema version >=1.1)
         :type operators: list of :class:`~obspy.core.inventory.util.Operator`
         :param operators: An operating agency and associated contact persons.
             If there multiple operators, each one should be encapsulated within
@@ -93,7 +94,7 @@ class Network(BaseNode):
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
             data_availability=data_availability,
-            identifier=identifier)
+            identifiers=identifiers)
 
     @property
     def total_number_of_stations(self):

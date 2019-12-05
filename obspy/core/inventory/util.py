@@ -485,7 +485,7 @@ class Comment(ComparingObject):
         31, 51 and 59.
     """
     def __init__(self, value, id=None, begin_effective_time=None,
-                 end_effective_time=None, authors=None):
+                 end_effective_time=None, authors=None, subject=None):
         """
         :type value: str
         :param value: The actual comment string
@@ -499,12 +499,15 @@ class Comment(ComparingObject):
         :param end_effective_time: The effective end date.
         :type authors: list of :class:`Person`, optional
         :param authors: The authors of this comment.
+        :type subject: str, optional
+        :param subject: Subject for relating comment, optional
         """
         self.value = value
         self.begin_effective_time = begin_effective_time
         self.end_effective_time = end_effective_time
         self.authors = authors or []
         self.id = id
+        self.subject = subject
 
     @property
     def id(self):
@@ -560,6 +563,14 @@ class Comment(ComparingObject):
             msg = "authors needs to be iterable, e.g. a list."
             raise ValueError(msg)
         self._authors = values
+
+    @property
+    def subject(self):
+        return self._subject
+
+    @subject.setter
+    def subject(self, value):
+        self._subject = value
 
     def __str__(self):
         ret = ("Comment:\t{value}\n"

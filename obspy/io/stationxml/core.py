@@ -784,11 +784,13 @@ def _read_comment(comment_element, _ns):
         _tag2obj(comment_element, _ns("EndEffectiveTime"), obspy.UTCDateTime)
     authors = []
     id = _attr2obj(comment_element, "id", int)
+    subject = _attr2obj(comment_element, "subject", str)
     for author in comment_element.findall(_ns("Author")):
         authors.append(_read_person(author, _ns))
     obj = obspy.core.inventory.Comment(
         value=value, begin_effective_time=begin_effective_time,
-        end_effective_time=end_effective_time, authors=authors, id=id)
+        end_effective_time=end_effective_time, authors=authors, id=id,
+        subject=subject)
     _read_extra(comment_element, obj)
     return obj
 
@@ -1444,6 +1446,8 @@ def _write_comment(parent, comment):
     attribs = {}
     if comment.id is not None:
         attribs["id"] = str(comment.id)
+    if comment.subject is not None:
+        attribs["subject"] = str(comment.subject)
     comment_elem = etree.SubElement(parent, "Comment", attribs)
     etree.SubElement(comment_elem, "Value").text = comment.value
     if comment.begin_effective_time:
