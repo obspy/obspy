@@ -59,14 +59,15 @@ class ClientTestCase(RegExTestCase):
 
         expected_stream = \
             obspy.read(
-                    filepath +
-                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                    filepath + os.path.join(
+                        'IU', '2018', '001',
+                        'IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
                     starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                     endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         returned_stream = client.get_waveforms(
-                                  "IU", "ANMO", "10", "BHZ",
-                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+            "IU", "ANMO", "10", "BHZ",
+            starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+            endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         returned_stream.sort()
         expected_stream.sort()
 
@@ -76,22 +77,25 @@ class ClientTestCase(RegExTestCase):
         # wildcard request spanning multiple files
         expected_stream1 = \
             obspy.read(
-                    filepath +
-                    'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+                filepath + os.path.join(
+                    'CU', '2018', '001',
+                    'CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
+                starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream2 = \
             obspy.read(
-                    filepath +
-                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+                filepath + os.path.join(
+                    'IU', '2018', '001',
+                    'IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
+                starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream3 = \
             obspy.read(
-                    filepath +
-                    'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed',
-                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+                filepath + os.path.join(
+                    'IU', '2018', '001',
+                    'IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
+                starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream = \
             expected_stream1 + expected_stream2 + expected_stream3
         returned_stream = client.get_waveforms(
@@ -672,8 +676,9 @@ class IndexerTestCase(RegExTestCase):
         file_path = indexer.download_leap_seconds_file()
 
         self.assertEqual(
-            file_path,
-            os.path.join(os.path.dirname(database), "leap-seconds.list"))
+            os.path.normpath(file_path),
+            os.path.normpath(os.path.join(os.path.dirname(database),
+                                          "leap-seconds.list")))
 
         # assert that the file was put in the same location as the
         # sqlite db
@@ -700,10 +705,10 @@ class IndexerTestCase(RegExTestCase):
 
         # test search
         # create a empty leap-seconds.list file
-        test_file = os.path.join(
-                            os.path.dirname(database), "leap-seconds.list")
+        test_file = os.path.normpath(os.path.join(
+                            os.path.dirname(database), "leap-seconds.list"))
         open(test_file, 'a').close()
-        file_path = indexer._get_leap_seconds_file("SEARCH")
+        file_path = os.path.normpath(indexer._get_leap_seconds_file("SEARCH"))
         self.assertEqual(file_path, test_file)
         os.remove(test_file)
 
@@ -788,6 +793,8 @@ class IndexerTestCase(RegExTestCase):
                 'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
                 'data.mseed'
             ]
+        for i in range(len(mocked_files)):
+            mocked_files[i] = os.path.normpath(mocked_files[i])
         indexer._get_rootpath_files = mock.MagicMock(return_value=mocked_files)
         self.assertEqual(indexer.build_file_list(
                            reindex=False,

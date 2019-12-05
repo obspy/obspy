@@ -277,9 +277,10 @@ class MiniseedDataExtractor(object):
                     raise RequestLimitExceededError(
                             "Result exceeds limit of %d bytes" %
                             self.request_limit)
+                filename = os.path.normpath(filename).replace("\\", "/")
                 if self.dp_replace_re and self.dp_replace_sub:
-                    filename = self.dp_replace_re.sub(self.dp_replace_sub,
-                                                      filename)
+                    filename = self.dp_replace_re.sub(
+                        self.dp_replace_sub.replace("\\", "/"), filename)
                 filename = os.path.normpath(filename)
                 if not os.path.exists(filename):
                     raise Exception("Data file does not exist: %s" % filename)

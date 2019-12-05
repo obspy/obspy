@@ -1084,7 +1084,8 @@ class Indexer(object):
             unindexed_abs = []
             unindexed_rel = []
             tsindex = self.request_handler._fetch_index_rows()
-            tsindex_filenames = [row.filename for row in tsindex]
+            tsindex_filenames = [os.path.normpath(row.filename)
+                                 for row in tsindex]
             for abs_fn, rel_fn in zip(file_list, file_list_relative):
                 if abs_fn not in tsindex_filenames and \
                    rel_fn not in tsindex_filenames:
@@ -1150,13 +1151,14 @@ class Indexer(object):
         Return a list of absolute paths to files under the rootpath that
         match the Indexers filename pattern
         """
-        file_list = [y for x in os.walk(self.root_path)
+        file_list = [os.path.normpath(y) for x in os.walk(self.root_path)
                      for y in glob(os.path.join(x[0], self.filename_pattern))
                      if os.path.isfile(y)]
         if relative_paths:
             file_list_relative = []
             for abs_path in file_list:
-                file_list_relative.append(relpath(abs_path, self.root_path))
+                file_list_relative.append(os.path.normpath(relpath(
+                    abs_path, self.root_path)))
             return file_list_relative
         else:
             return file_list
