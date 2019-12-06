@@ -3,25 +3,23 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import unittest
-from obspy.core.compatibility import mock
-
-import obspy
-from obspy import UTCDateTime
-from obspy.core.compatibility import RegExTestCase
-from obspy.clients.filesystem.tsindex import Client, Indexer, \
-    TSIndexDatabaseHandler
-
 from collections import namedtuple
 
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
-import uuid
 import os
 import re
 import requests
 import tempfile
+import unittest
+import uuid
+
+from obspy.core.compatibility import mock, RegExTestCase
+from obspy.clients.filesystem.tsindex import Client, Indexer, \
+    TSIndexDatabaseHandler
+from obspy import read
+from obspy import UTCDateTime
 
 
 def get_test_data_filepath():
@@ -58,12 +56,12 @@ class ClientTestCase(RegExTestCase):
         client = get_test_client()
 
         expected_stream = \
-            obspy.read(
-                    filepath + os.path.join(
-                        'IU', '2018', '001',
-                        'IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
-                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+            read(
+                filepath + os.path.join(
+                    'IU', '2018', '001',
+                    'IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
+                starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         returned_stream = client.get_waveforms(
             "IU", "ANMO", "10", "BHZ",
             starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
@@ -76,21 +74,21 @@ class ClientTestCase(RegExTestCase):
 
         # wildcard request spanning multiple files
         expected_stream1 = \
-            obspy.read(
+            read(
                 filepath + os.path.join(
                     'CU', '2018', '001',
                     'CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
                 starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                 endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream2 = \
-            obspy.read(
+            read(
                 filepath + os.path.join(
                     'IU', '2018', '001',
                     'IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
                 starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                 endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream3 = \
-            obspy.read(
+            read(
                 filepath + os.path.join(
                     'IU', '2018', '001',
                     'IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
@@ -121,17 +119,17 @@ class ClientTestCase(RegExTestCase):
         client = get_test_client()
 
         expected_stream1 = \
-            obspy.read(
-                    filepath +
-                    'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 1),
-                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 7))
+            read(
+                filepath +
+                'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                starttime=UTCDateTime(2018, 1, 1, 0, 0, 1),
+                endtime=UTCDateTime(2018, 1, 1, 0, 0, 7))
         expected_stream2 = \
-            obspy.read(
-                    filepath +
-                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+            read(
+                filepath +
+                'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         expected_stream = expected_stream1 + expected_stream2
         expected_stream.sort()
 

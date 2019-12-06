@@ -5,23 +5,21 @@ Data extraction and transfer from miniSEED files
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import with_metaclass
 
 import abc
-from collections import namedtuple
 import bisect
+from collections import namedtuple
 import ctypes
 from io import BytesIO
 import logging
 import os
 import re
 
-from future.utils import with_metaclass
-
-from obspy import read
-from obspy.core import UTCDateTime
-from obspy.core.stream import Stream
 from obspy.clients.filesystem.msriterator import _MSRIterator
-
+from obspy.core.stream import Stream
+from obspy.core import UTCDateTime
+from obspy import read
 
 # Setup the logger.
 logger = logging.getLogger(__name__)
