@@ -1395,9 +1395,12 @@ def _write_response_stage(parent, stage):
         _write_floattype(sub_, stage, "decimation_correction", "Correction")
     # write gain
     if isinstance(stage, PolynomialResponseStage):
-        # disallow <StageGain> for <Polynomial> response stages
-        warnings.warn("<StageGain> is not allowed for <Polynomial> response "
-                      "stages in StationXML schema > 1.0. Ignoring.")
+        # <StageGain> was removed for <Polynomial> response stages in
+        # StationXML 1.1
+        if stage.stage_gain not in (None, 1.0):
+            msg = ("Stage gain is not allowed for Polynomial response "
+                   "stages in StationXML schema > 1.0. Ignoring.")
+            warnings.warn(msg)
     else:
         sub_ = etree.SubElement(sub, "StageGain")
         _obj2tag(sub_, "Value", stage.stage_gain)
