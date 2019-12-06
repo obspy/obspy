@@ -177,20 +177,7 @@ from obspy.clients.filesystem.db import _get_tsindex_table, \
     _get_tsindex_summary_table
 
 
-# Setup the logger.
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-# Prevent propagating to higher loggers.
-logger.propagate = 0
-# Console log handler. By default any logs of level info and above are
-# written to the console
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-# Add formatter
-FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
-formatter = logging.Formatter(FORMAT)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+logger = logging.getLogger('obspy.clients.filesystem.tsindex')
 
 
 def _pickle_method(m):
@@ -211,7 +198,7 @@ class Client(object):
     Time series extraction client for IRIS tsindex database schema.
     """
 
-    def __init__(self, database, datapath_replace=None, debug=False):
+    def __init__(self, database, datapath_replace=None, loglevel="WARNING"):
         """
         Initializes the client.
 
@@ -222,20 +209,21 @@ class Client(object):
         :type datapath_replace: 2-value tuple(str, str)
         :param datapath_replace: A 2-value ``tuple(str, str)``, where any
             occurrence of the first value will be replaced with the second
-            value in åfilename paths from the index.
-        :type debug: bool
-        :param debug: Debug flag.
+            value in filename paths from the index.
+        :type loglevel: str
+        :param loglevel: logging verbosity
         """
-        self.debug = debug
-        if self.debug is True:
-            # write debug level logs to the console
-            ch.setLevel(logging.DEBUG)
+        numeric_level = getattr(logging, loglevel.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
+        logger.setLevel(numeric_level)
 
         # setup handler for database
         if isinstance(database, (str, native_str)):
             self.request_handler = TSIndexDatabaseHandler(
                 os.path.normpath(database),
-                debug=self.debug)
+                loglevel=loglevel)
         elif isinstance(database, TSIndexDatabaseHandler):
             self.request_handler = database
         else:
@@ -245,7 +233,7 @@ class Client(object):
         # Create and configure the data extraction
         self.data_extractor = _MiniseedDataExtractor(
             dp_replace=datapath_replace,
-            debug=self.debug)
+            loglevel=loglevel)
 
     def get_waveforms(self, network, station, location,
                       channel, starttime, endtime, merge=-1):
@@ -924,7 +912,7 @@ class Indexer(object):
     def __init__(self, root_path, database="timeseries.sqlite",
                  leap_seconds_file="SEARCH", index_cmd='mseedindex',
                  bulk_params=None, filename_pattern='*', parallel=5,
-                 debug=False):
+                 loglevel="WARNING"):
         """
         Initializes the Indexer.
 
@@ -958,13 +946,14 @@ class Indexer(object):
         :type parallel: int
         :param parallel: Max number of ``index_cmd`` instances to run in
             parallel. By default a max of 5 parallel process are run.
-        :type debug: bool
-        :param debug: Debug flag. Sets logging level to debug.
+        :type loglevel: str
+        :param loglevel: logging verbosity
         """
-        self.debug = debug
-        if self.debug is True:
-            # write debug level logs to the console
-            ch.setLevel(logging.DEBUG)
+        numeric_level = getattr(logging, loglevel.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
+        logger.setLevel(numeric_level)
 
         self.index_cmd = index_cmd
         if bulk_params is None:
@@ -976,7 +965,7 @@ class Indexer(object):
         # setup handler for database
         if isinstance(database, (str, native_str)):
             self.request_handler = TSIndexDatabaseHandler(database,
-                                                          debug=self.debug)
+                                                          loglevel=loglevel)
         elif isinstance(database, TSIndexDatabaseHandler):
             self.request_handler = database
         else:
@@ -1257,7 +1246,7 @@ class TSIndexDatabaseHandler(object):
 
     def __init__(self, database=None, tsindex_table="tsindex",
                  tsindex_summary_table="tsindex_summary",
-                 session=None, debug=False):
+                 session=None, loglevel="WARNING"):
         """
         Main query interface to timeseries index database.
 
@@ -1269,13 +1258,14 @@ class TSIndexDatabaseHandler(object):
         :param tsindex_summary_table: Name of timeseries index summary table
         :type session: :class:`sqlalchemy.orm.session.Session`
         :param session: An existing database session object.
-        :type debug: bool
-        :param debug: Debug flag.
+        :type loglevel: str
+        :param loglevel: logging verbosity
         """
-        self.debug = debug
-        if self.debug is True:
-            # write debug level logs to the console
-            ch.setLevel(logging.DEBUG)
+        numeric_level = getattr(logging, loglevel.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
+        logger.setLevel(numeric_level)
 
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table

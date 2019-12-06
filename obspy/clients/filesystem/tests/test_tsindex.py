@@ -35,7 +35,7 @@ def get_test_client():
     client = Client(db_path,
                     datapath_replace=("^",
                                       filepath),
-                    debug=True)
+                    loglevel="ERROR")
     return client
 
 
@@ -49,7 +49,8 @@ class ClientTestCase(RegExTestCase):
         self.assertRaisesRegex(OSError,
                                "^Database path.*does not exist.$",
                                Client,
-                               "/some/bad/path/timeseries.sqlite")
+                               "/some/bad/path/timeseries.sqlite",
+                               loglevel="ERROR")
 
     def test_get_waveforms(self):
         filepath = get_test_data_filepath()
@@ -615,7 +616,8 @@ class IndexerTestCase(RegExTestCase):
                                "/some/bad/path",
                                database=database,
                                filename_pattern="*.mseed",
-                               parallel=2)
+                               parallel=2,
+                               loglevel="ERROR")
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -628,7 +630,8 @@ class IndexerTestCase(RegExTestCase):
                                Indexer,
                                filepath,
                                database='/some/bad/path/',
-                               filename_pattern="*.mseed")
+                               filename_pattern="*.mseed",
+                               loglevel="ERROR")
 
     def test_bad_database(self):
         """
@@ -643,13 +646,15 @@ class IndexerTestCase(RegExTestCase):
                                Indexer,
                                filepath,
                                database=None,
-                               filename_pattern="*.mseed")
+                               filename_pattern="*.mseed",
+                               loglevel="ERROR")
 
     def test_download_leap_seconds_file(self):
         filepath = get_test_data_filepath()
         database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
-                          database=database)
+                          database=database,
+                          loglevel="ERROR")
         # mock actually downloading the file since this requires a internet
         # connection
         indexer._download = mock.MagicMock(return_value=requests.Response())
@@ -667,7 +672,8 @@ class IndexerTestCase(RegExTestCase):
         filepath = get_test_data_filepath()
         database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
-                          database=database)
+                          database=database,
+                          loglevel="ERROR")
         # mock actually downloading the file since this requires a internet
         # connection
         indexer._download = mock.MagicMock(return_value=requests.Response())
@@ -687,7 +693,8 @@ class IndexerTestCase(RegExTestCase):
         filepath = get_test_data_filepath()
         database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
-                          database=database)
+                          database=database,
+                          loglevel="ERROR")
 
         # test that a bad leap second file path raises an error
         self.assertRaisesRegex(OSError,
@@ -695,7 +702,8 @@ class IndexerTestCase(RegExTestCase):
                                Indexer,
                                filepath,
                                database=database,
-                               leap_seconds_file="/some/bad/path/")
+                               leap_seconds_file="/some/bad/path/",
+                               loglevel="ERROR")
         self.assertRaisesRegex(OSError,
                                "^No leap seconds file exists at.*$",
                                indexer._get_leap_seconds_file,
@@ -715,7 +723,8 @@ class IndexerTestCase(RegExTestCase):
         database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
                           database=database,
-                          filename_pattern="*.mseed")
+                          filename_pattern="*.mseed",
+                          loglevel="ERROR")
 
         # test for relative paths
         file_list = indexer.build_file_list(relative_paths=True,
@@ -736,7 +745,8 @@ class IndexerTestCase(RegExTestCase):
         # data path, to assert that already indexed files are still skipped
         indexer = Indexer(tempfile.mkdtemp(),
                           database=TSIndexDatabaseHandler(database=database),
-                          filename_pattern="*.mseed")
+                          filename_pattern="*.mseed",
+                          loglevel="ERROR")
         self.assertRaisesRegex(OSError,
                                "^No files matching filename.*$",
                                indexer.build_file_list,
@@ -747,7 +757,8 @@ class IndexerTestCase(RegExTestCase):
         indexer = Indexer(filepath,
                           database=TSIndexDatabaseHandler(database=database),
                           filename_pattern="*.mseed",
-                          leap_seconds_file=None)
+                          leap_seconds_file=None,
+                          loglevel="ERROR")
         file_list = indexer.build_file_list(reindex=True)
         file_list.sort()
         self.assertEqual(len(file_list), 3)
@@ -807,7 +818,9 @@ class IndexerTestCase(RegExTestCase):
         filepath = get_test_data_filepath()
         indexer = Indexer(filepath,
                           filename_pattern="*.mseed",
-                          index_cmd="some_bad_command")
+                          index_cmd="some_bad_command",
+                          loglevel="ERROR"
+                          )
 
         self.assertRaisesRegex(OSError,
                                "^Required program.* is not installed.*$",
@@ -823,7 +836,7 @@ class IndexerTestCase(RegExTestCase):
                               database=database,
                               filename_pattern="*.mseed",
                               parallel=2,
-                              debug=True)
+                              loglevel="ERROR")
             if indexer._is_index_cmd_installed():
                 indexer.run(relative_paths=True)
                 keys = ['network', 'station', 'location', 'channel',
@@ -894,14 +907,16 @@ class TSIndexDatabaseHandlerTestCase(RegExTestCase):
                                filepath,
                                database='/some/bad/path/',
                                filename_pattern="*.mseed",
-                               parallel=2)
+                               parallel=2,
+                               loglevel="ERROR")
 
     def test__fetch_summary_rows(self):
         # test with actual sqlite3 database that is missing a summary table
         # a temporary summary table gets created at runtime
         filepath = get_test_data_filepath()
         db_path = os.path.join(filepath, 'timeseries.sqlite')
-        request_handler = TSIndexDatabaseHandler(db_path)
+        request_handler = TSIndexDatabaseHandler(db_path,
+                                                 loglevel="ERROR")
 
         keys = ['network', 'station', 'location', 'channel',
                 'earliest', 'latest']
@@ -949,7 +964,8 @@ class TSIndexDatabaseHandlerTestCase(RegExTestCase):
         # supply an existing session
         engine = sa.create_engine("sqlite:///{}".format(db_path))
         session = sessionmaker(bind=engine)
-        request_handler = TSIndexDatabaseHandler(session=session)
+        request_handler = TSIndexDatabaseHandler(session=session,
+                                                 loglevel="ERROR")
 
         ts_summary_cte = request_handler.get_tsindex_summary_cte()
 

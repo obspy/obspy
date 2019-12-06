@@ -21,20 +21,8 @@ from obspy.core.stream import Stream
 from obspy.core import UTCDateTime
 from obspy import read
 
-# Setup the logger.
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-# Prevent propagating to higher loggers.
-logger.propagate = 0
-# Console log handler. By default any logs of level info and above are
-# written to the console
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-# Add formatter
-FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
-formatter = logging.Formatter(FORMAT)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+
+logger = logging.getLogger('obspy.clients.filesystem.miniseed')
 
 
 class ObsPyClientFileSystemMiniSEEDException(Exception):
@@ -81,7 +69,7 @@ class _MSRIDataSegment(_ExtractedDataSegment):
     Segment of data from a _MSRIterator
     """
     def __init__(self, msri, sample_rate, start_time, end_time, src_name,
-                 debug=False):
+                 loglevel="WARNING"):
         """
         :param msri: A `_MSRIterator`
         :param sample_rate: Sample rate of the data
@@ -89,13 +77,14 @@ class _MSRIDataSegment(_ExtractedDataSegment):
                            requested data
         :param end_time: A `UTCDateTime` giving the end of the requested data
         :param src_name: Name of the data source for logging
-        :type debug: bool
-        :param debug: Debug flag.
+        :type loglevel: str
+        :param loglevel: logging verbosity
         """
-        self.debug = debug
-        if self.debug is True:
-            # write debug level logs to the console
-            ch.setLevel(logging.DEBUG)
+        numeric_level = getattr(logging, loglevel.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
+        logger.setLevel(numeric_level)
 
         self.msri = msri
         self.sample_rate = sample_rate
@@ -181,20 +170,22 @@ class _MiniseedDataExtractor(object):
     """
     Component for extracting, trimming, and validating data.
     """
-    def __init__(self, dp_replace=None, request_limit=0, debug=False):
+    def __init__(self, dp_replace=None, request_limit=0, loglevel="WARNING"):
         """
         :param dp_replace: optional tuple of (regex, replacement) indicating
           the location of data files. If regex is omitted, then the replacement
           string is appended to the beginning of the file name.
         :param request_limit: optional limit (in bytes) on how much data can
           be extracted at once
-        :type debug: bool
-        :param debug: Debug flag.
+        :type loglevel: str
+        :param loglevel: logging verbosity
         """
-        self.debug = debug
-        if self.debug is True:
-            # write debug level logs to the console
-            ch.setLevel(logging.DEBUG)
+        self.loglevel = loglevel
+        numeric_level = getattr(logging, loglevel.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
+        logger.setLevel(numeric_level)
 
         if dp_replace:
             self.dp_replace_re = re.compile(dp_replace[0])
@@ -323,7 +314,7 @@ class _MiniseedDataExtractor(object):
                                            nrow.starttime,
                                            nrow.endtime,
                                            nrow.srcname,
-                                           self.debug)
+                                           loglevel=self.loglevel)
 
                     # Check for passing end offset
                     if (offset + msri.msr.contents.reclen) >= \
