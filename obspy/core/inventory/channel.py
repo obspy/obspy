@@ -14,6 +14,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import python_2_unicode_compatible
 
+import warnings
+
+from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (
     FloatWithUncertainties, FloatWithUncertaintiesAndUnit)
 from . import BaseNode
@@ -28,6 +32,7 @@ class Channel(BaseNode):
         Equivalent to SEED blockette 52 and parent element for the related
         response blockettes.
     """
+    @deprecated_keywords({"equipment": "equipments"})
     def __init__(self, code, location_code, latitude, longitude,
                  elevation, depth, azimuth=None, dip=None, types=None,
                  external_references=None, sample_rate=None,
@@ -161,6 +166,8 @@ class Channel(BaseNode):
         self.sensor = sensor
         self.pre_amplifier = pre_amplifier
         self.data_logger = data_logger
+        if isinstance(equipments, Equipment):
+            equipments = [equipments]
         self.equipments = equipments or []
         self.response = response
         super(Channel, self).__init__(
@@ -170,6 +177,19 @@ class Channel(BaseNode):
             historical_code=historical_code,
             data_availability=data_availability, identifiers=identifiers,
             source_id=source_id)
+
+    @property
+    def equipment(self):
+        msg = ("Attribute 'equipment' (holding a single Equipment) is "
+               "deprecated in favor of 'equipments' which now holds a list "
+               "of Equipment objects (following changes in StationXML 1.1) "
+               "and might be removed in the future. Returning the first entry "
+               "found in 'equipments'.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
+        equipments = self.equipments
+        if not equipments:
+            return None
+        return equipments[0]
 
     def __str__(self):
         ret = (
