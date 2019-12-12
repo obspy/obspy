@@ -64,10 +64,6 @@ class Station(BaseNode):
         :param equipments: Equipment used by all channels at a station.
         :type operators: list of :class:`~obspy.core.inventory.util.Operator`
         :param operators: An operating agency and associated contact persons.
-            If there multiple operators, each one should be encapsulated within
-            an Operator tag. Since the Contact element is a generic type that
-            represents any contact person, it also has its own optional Agency
-            element.
         :type creation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param creation_date: Date and time (UTC) when the station was first
             installed
@@ -240,10 +236,13 @@ class Station(BaseNode):
         if not hasattr(value, "__iter__"):
             msg = "Operators needs to be an iterable, e.g. a list."
             raise ValueError(msg)
-        if any([not isinstance(x, Operator) for x in value]):
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        operators = [operator for operator in value]
+        if any([not isinstance(x, Operator) for x in operators]):
             msg = "Operators can only contain Operator objects."
             raise ValueError(msg)
-        self._operators = value
+        self._operators = operators
 
     @property
     def equipments(self):

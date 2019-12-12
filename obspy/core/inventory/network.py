@@ -80,10 +80,6 @@ class Network(BaseNode):
             which separated by a colon.
         :type operators: list of :class:`~obspy.core.inventory.util.Operator`
         :param operators: An operating agency and associated contact persons.
-            If there multiple operators, each one should be encapsulated within
-            an Operator tag. Since the Contact element is a generic type that
-            represents any contact person, it also has its own optional Agency
-            element.
         :type source_id: str, optional
         :param source_id: A data source identifier in URI form
             (schema version >=1.1). URIs are in general composed of a 'scheme'
@@ -134,10 +130,13 @@ class Network(BaseNode):
         if not hasattr(value, "__iter__"):
             msg = "Operators needs to be an iterable, e.g. a list."
             raise ValueError(msg)
-        if any([not isinstance(x, Operator) for x in value]):
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        operators = [operator for operator in value]
+        if any([not isinstance(x, Operator) for x in operators]):
             msg = "Operators can only contain Operator objects."
             raise ValueError(msg)
-        self._operators = value
+        self._operators = operators
 
     def __len__(self):
         return len(self.stations)
