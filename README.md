@@ -27,6 +27,10 @@ A one-hour introduction to ObsPy is [available at YouTube](https://www.youtube.c
 
 [Read more](https://github.com/obspy/obspy/wiki)
 
+### Installation
+
+Installation instructions can be found in the [wiki](https://github.com/obspy/obspy/wiki#installation).
+
 ### Changelog
 
 The **detailed changelog** is available [here](CHANGELOG.txt).
