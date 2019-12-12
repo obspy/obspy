@@ -601,14 +601,6 @@ class Comment(ComparingObject):
             raise ValueError(msg)
         self._authors = values
 
-    @property
-    def subject(self):
-        return self._subject
-
-    @subject.setter
-    def subject(self, value):
-        self._subject = value
-
     def __str__(self):
         ret = ("Comment:\t{value}\n"
                "\tBegin Effective Time:\t{begin_effective_time}\n"
