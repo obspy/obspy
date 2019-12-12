@@ -20,6 +20,8 @@ from textwrap import TextWrapper
 
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
+from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit,
                                          FloatWithUncertaintiesFixedUnit)
 
@@ -350,30 +352,62 @@ class Operator(ComparingObject):
     the Contact element is a generic type that represents any contact person,
     it also has its own optional Agency element.
     """
-    def __init__(self, agencies, contacts=None, website=None):
+    @deprecated_keywords({"agencies": "agency"})
+    def __init__(self, agency, contacts=None, website=None):
         """
-        :type agencies: list of str
-        :param agencies: The agencies of the operator.
+        :type agency: str
+        :param agency: The agency of the operator.
         :type contacts: list of :class:`Person`, optional
         :param contacts: One or more contact persons.
         :type website: str, optional
         :param website: The website.
         """
-        self.agencies = agencies
+        self.agency = agency
         self.contacts = contacts or []
         self.website = website
 
     @property
+    def agency(self):
+        return self._agency
+
+    @agency.setter
+    def agency(self, value):
+        # check if a list of agencies was provided, which is not supported
+        # anymore (if we get a string, types of provided value and any index
+        # will match)
+        if not isinstance(value[0], type(value)):
+            msg = ("Only a single agency can be assigned to Operator due to "
+                   "the changes in StationXML 1.1. Subsequent agencies are "
+                   "ignored.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+            value = value[0]
+        self._agency = value
+
+    @property
     def agencies(self):
-        return self._agencies
+        msg = ("Attribute 'agencies' (holding a list of strings as Agencies) "
+               "is deprecated in favor of 'agency' which now holds a single "
+               "string (following changes in StationXML 1.1) and might be "
+               "removed in the future. Returning a list built up of the "
+               "single agency or an empty list if agency is None.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
+        if self.agency is not None:
+            return [self.agency]
+        return []
 
     @agencies.setter
     def agencies(self, value):
+        msg = ("Attribute 'agencies' (holding a list of strings as Agencies) "
+               "is deprecated in favor of 'agency' which now holds a single "
+               "string (following changes in StationXML 1.1) and might be "
+               "removed in the future. Setting 'agency' with first item in "
+               "provided list.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
         if not hasattr(value, "__iter__") or len(value) < 1:
             msg = ("agencies needs to be iterable, e.g. a list, and contain "
                    "at least one entry.")
             raise ValueError(msg)
-        self._agencies = value
+        self._agency = value[0]
 
     @property
     def contacts(self):

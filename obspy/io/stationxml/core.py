@@ -716,12 +716,12 @@ def _read_external_reference(ref_element, _ns):
 
 
 def _read_operator(operator_element, _ns):
-    agencies = [_i.text for _i in operator_element.findall(_ns("Agency"))]
+    agency = operator_element.find(_ns("Agency")).text
     contacts = []
     for contact in operator_element.findall(_ns("Contact")):
         contacts.append(_read_person(contact, _ns))
     website = _tag2obj(operator_element, _ns("WebSite"), str)
-    obj = obspy.core.inventory.Operator(agencies=agencies, contacts=contacts,
+    obj = obspy.core.inventory.Operator(agency=agency, contacts=contacts,
                                         website=website)
     _read_extra(operator_element, obj)
     return obj
@@ -974,17 +974,7 @@ def _write_network(parent, network, level):
             str(network.selected_number_of_stations)
     for operator in network.operators:
         operator_elem = etree.SubElement(network_elem, "Operator")
-        if not operator.agencies:
-            pass
-        else:
-            if len(operator.agencies) > 1:
-                warnings.warn("The output StationXML file contains more than "
-                              "one Agency for a single Operator. StationXML "
-                              "schemas > 1.0 only support a single Agency "
-                              "per Operator. Only the first agency will "
-                              "be output.")
-            agency = operator.agencies[0]
-            etree.SubElement(operator_elem, "Agency").text = agency
+        etree.SubElement(operator_elem, "Agency").text = str(operator.agency)
         for contact in operator.contacts:
             _write_person(operator_elem, contact, "Contact")
         etree.SubElement(operator_elem, "WebSite").text = operator.website
@@ -1111,17 +1101,7 @@ def _write_station(parent, station, level):
 
     for operator in station.operators:
         operator_elem = etree.SubElement(station_elem, "Operator")
-        if not operator.agencies:
-            pass
-        else:
-            if len(operator.agencies) > 1:
-                warnings.warn("The output StationXML file contains more than "
-                              "one Agency for a single Operator. StationXML "
-                              "schemas > 1.0 only support a single Agency "
-                              "per Operator. Only the first agency will "
-                              "be output.")
-            agency = operator.agencies[0]
-            etree.SubElement(operator_elem, "Agency").text = agency
+        etree.SubElement(operator_elem, "Agency").text = str(operator.agency)
         for contact in operator.contacts:
             _write_person(operator_elem, contact, "Contact")
         etree.SubElement(operator_elem, "WebSite").text = operator.website
