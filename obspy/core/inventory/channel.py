@@ -195,6 +195,16 @@ class Channel(BaseNode):
             return None
         return equipments[0]
 
+    @equipment.setter
+    def equipment(self, value):
+        msg = ("Attribute 'equipment' (holding a single Equipment) is "
+               "deprecated in favor of 'equipments' which now holds a list "
+               "of Equipment objects (following changes in StationXML 1.1) "
+               "and might be removed in the future. Setting 'equipments' "
+               "attribute with a list with the given item as only entry.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
+        self.equipments = [value]
+
     def __str__(self):
         ret = (
             "Channel '{id}', Location '{location}' {description}\n"
