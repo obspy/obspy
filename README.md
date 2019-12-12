@@ -49,4 +49,4 @@ Please see details on how to contribute to the project [here](CONTRIBUTING.md).
 
 ### Impact
 
-![ObsPy impact statistics](https://user-images.githubusercontent.com/1842780/62694458-abeaae00-b9d4-11e9-8652-f548c9ea18f1.png)
+![ObsPy impact statistics](https://user-images.githubusercontent.com/1842780/70671351-0c884100-1c7c-11ea-81ed-7c477b7cf29c.png)
