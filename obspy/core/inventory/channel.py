@@ -362,10 +362,13 @@ class Channel(BaseNode):
         if not hasattr(value, "__iter__"):
             msg = "equipments needs to be an iterable, e.g. a list."
             raise ValueError(msg)
-        if any([not isinstance(x, Equipment) for x in value]):
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        equipments = [equipment for equipment in value]
+        if any([not isinstance(x, Equipment) for x in equipments]):
             msg = "equipments can only contain Equipment objects."
             raise ValueError(msg)
-        self._equipments = value
+        self._equipments = equipments
 
     def plot(self, min_freq, output="VEL", start_stage=None, end_stage=None,
              label=None, axes=None, unwrap_phase=False, plot_degrees=False,
