@@ -61,7 +61,9 @@ class BaseNode(ComparingObject):
             for the network/station/channel.
         :type identifiers: list of str, optional
         :param identifiers: Persistent identifiers for network/station/channel
-            (schema version >=1.1)
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         :type source_id: str, optional
         :param source_id: A data source identifier in URI form
             (schema version >=1.1). URIs are in general composed of a 'scheme'
@@ -102,6 +104,22 @@ class BaseNode(ComparingObject):
             self._source_id = value.strip()
         else:
             self._source_id = None
+
+    @property
+    def identifiers(self):
+        return self._identifiers
+
+    @identifiers.setter
+    def identifiers(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "equipments needs to be an iterable, e.g. a list."
+            raise ValueError(msg)
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        identifiers = [identifier for identifier in value]
+        for identifier in identifiers:
+            _warn_on_invalid_uri(identifier)
+        self._identifiers = identifiers
 
     @property
     def alternate_code(self):

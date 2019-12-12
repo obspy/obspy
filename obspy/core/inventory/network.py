@@ -75,7 +75,9 @@ class Network(BaseNode):
             for the network.
         :type identifiers: list of str, optional
         :param identifiers: Persistent identifiers for network/station/channel
-            (schema version >=1.1)
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         :type operators: list of :class:`~obspy.core.inventory.util.Operator`
         :param operators: An operating agency and associated contact persons.
             If there multiple operators, each one should be encapsulated within

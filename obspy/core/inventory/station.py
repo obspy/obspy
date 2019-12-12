@@ -108,7 +108,9 @@ class Station(BaseNode):
             for the station.
         :type identifiers: list of str, optional
         :param identifiers: Persistent identifiers for network/station/channel
-            (schema version >=1.1)
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         :type water_level: float, optional
         :param water_level: Elevation of the water surface in meters for
             underwater sites, where 0 is sea level. (schema version >=1.1)
