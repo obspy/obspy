@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 
 import copy
 import re
+import warnings
 from textwrap import TextWrapper
 
 from obspy import UTCDateTime
@@ -63,7 +64,9 @@ class BaseNode(ComparingObject):
             (schema version >=1.1)
         :type source_id: str, optional
         :param source_id: A data source identifier in URI form
-           (schema version >=1.1)
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         """
         self.code = code
         self.comments = comments or []
@@ -95,6 +98,7 @@ class BaseNode(ComparingObject):
     @source_id.setter
     def source_id(self, value):
         if value:
+            _warn_on_invalid_uri(value)
             self._source_id = value.strip()
         else:
             self._source_id = None
@@ -921,6 +925,21 @@ def _response_plot_label(network, station, channel, label_epoch_dates):
             end = str(end.date)
         label += '\n{} -- {}'.format(start, end)
     return label
+
+
+def _is_valid_uri(uri):
+    if ':' not in uri:
+        return False
+    scheme, path = uri.split(':', 1)
+    if any(not x.strip() for x in (scheme, path)):
+        return False
+    return True
+
+
+def _warn_on_invalid_uri(uri):
+    if not _is_valid_uri(uri):
+        msg = "Given string seems to not be a valid URI: ''" % uri
+        warnings.warn(msg)
 
 
 if __name__ == '__main__':

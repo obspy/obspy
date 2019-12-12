@@ -84,7 +84,9 @@ class Network(BaseNode):
             element.
         :type source_id: str, optional
         :param source_id: A data source identifier in URI form
-           (schema version >=1.1)
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         """
         self.stations = stations or []
         self.total_number_of_stations = total_number_of_stations

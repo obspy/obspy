@@ -141,7 +141,9 @@ class Channel(BaseNode):
             underwater sites, where 0 is sea level. (schema version >=1.1)
         :type source_id: str, optional
         :param source_id: A data source identifier in URI form
-           (schema version >=1.1)
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         """
         self.location_code = location_code
         self.latitude = latitude
