@@ -91,9 +91,8 @@ class Channel(BaseNode):
         :param sample_rate_ratio_number_seconds: The sample rate expressed as
             number of samples in a number of seconds. This is the number of
             seconds.
-        :type storage_format: str
-        :param storage_format: The storage format of the recorded data (e.g.
-            SEED)
+        :param storage_format: Ignored. Removed with ObsPy version 1.2.0 in
+            accordance with StationXML 1.1
         :type clock_drift_in_seconds_per_sample: float
         :param clock_drift_in_seconds_per_sample: A tolerance value, measured
             in seconds per sample, used as a threshold for time error detection
@@ -162,7 +161,10 @@ class Channel(BaseNode):
             sample_rate_ratio_number_samples
         self.sample_rate_ratio_number_seconds = \
             sample_rate_ratio_number_seconds
-        self.storage_format = storage_format
+        if storage_format is not None:
+            msg = ("Attribute 'storage_format' was removed in accordance with "
+                   "StationXML 1.1, ignoring.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
         self.clock_drift_in_seconds_per_sample = \
             clock_drift_in_seconds_per_sample
         self.calibration_units = calibration_units
@@ -181,6 +183,19 @@ class Channel(BaseNode):
             historical_code=historical_code,
             data_availability=data_availability, identifiers=identifiers,
             source_id=source_id)
+
+    @property
+    def storage_format(self):
+        msg = ("Attribute 'storage_format' was removed in accordance with "
+               "StationXML 1.1, returning None.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
+        return None
+
+    @storage_format.setter
+    def storage_format(self, value):
+        msg = ("Attribute 'storage_format' was removed in accordance with "
+               "StationXML 1.1, ignoring.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
 
     @property
     def equipment(self):

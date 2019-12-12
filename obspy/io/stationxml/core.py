@@ -388,8 +388,6 @@ def _read_channel(cha_element, _ns):
             _tag2obj(sample_rate_ratio, _ns("NumberSamples"), int)
         channel.sample_rate_ratio_number_seconds = \
             _tag2obj(sample_rate_ratio, _ns("NumberSeconds"), int)
-    channel.storage_format = _tag2obj(cha_element, _ns("StorageFormat"),
-                                      str)
     # The clock drift is one of the few examples where the attribute name is
     # different from the tag name. This improves clarity.
     channel.clock_drift_in_seconds_per_sample = \
