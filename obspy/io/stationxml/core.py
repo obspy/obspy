@@ -22,7 +22,6 @@ import re
 import warnings
 
 from lxml import etree
-from numpy import double
 
 import obspy
 from obspy.core import compatibility
@@ -633,8 +632,8 @@ def _read_response_stage(stage_elem, _ns):
         appr_type = _tag2obj(elem, _ns("ApproximationType"), str)
         f_low = _read_floattype(elem, _ns("FrequencyLowerBound"), Frequency)
         f_high = _read_floattype(elem, _ns("FrequencyUpperBound"), Frequency)
-        appr_low = _tag2obj(elem, _ns("ApproximationLowerBound"), double)
-        appr_high = _tag2obj(elem, _ns("ApproximationUpperBound"), double)
+        appr_low = _tag2obj(elem, _ns("ApproximationLowerBound"), float)
+        appr_high = _tag2obj(elem, _ns("ApproximationUpperBound"), float)
         max_err = _tag2obj(elem, _ns("MaximumError"), float)
         coeffs = _read_floattype_list(elem, _ns("Coefficient"),
                                       CoefficientWithUncertainties,
