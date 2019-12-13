@@ -143,7 +143,8 @@ def _read_sc3ml(path_or_file_object):
     responses = {
         "responsePAZ": {},
         "responsePolynomial": {},
-        "responseFIR": {}
+        "responseFIR": {},
+        "responseIIR": {}
     }
     for response_type in responses.keys():
         for response_element in inv_element.findall(_ns(response_type)):
