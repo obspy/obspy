@@ -531,7 +531,9 @@ class Inventory(ComparingObject):
 
     def select(self, network=None, station=None, location=None, channel=None,
                time=None, starttime=None, endtime=None, sampling_rate=None,
-               keep_empty=False):
+               keep_empty=False, minlatitude=None, maxlatitude=None,
+               minlongitude=None, maxlongitude=None, latitude=None,
+               longitude=None, minradius=None, maxradius=None):
         r"""
         Return a copy of the inventory filtered on various parameters.
 
@@ -597,10 +599,39 @@ class Inventory(ComparingObject):
             or at given point in time (i.e. channels starting after given time
             will not be shown).
         :type sampling_rate: float
+        :param sampling_rate: Only include channels whose sampling rate
+            matches the given sampling rate, in Hz (within absolute tolerance
+            of 1E-8 Hz and relative tolerance of 1E-5)
         :type keep_empty: bool
         :param keep_empty: If set to `True`, networks/stations that match
             themselves but have no matching child elements (stations/channels)
             will be included in the result.
+        :type minlatitude: float
+        :param minlatitude: Only include stations/channels with a latitude
+            larger than the specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Only include stations/channels with a latitude
+            smaller than the specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Only include stations/channels with a longitude
+            larger than the specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Only include stations/channels with a longitude
+            smaller than the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius
+            selection.
+        :type longitude: float
+        :param longitude: Specify the longitude to be used for a radius
+            selection.
+        :type minradius: float
+        :param minradius: Only include stations/channels within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Only include stations/channels within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
         """
         networks = []
         for net in self.networks:
@@ -619,7 +650,11 @@ class Inventory(ComparingObject):
             net_ = net.select(
                 station=station, location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
-                sampling_rate=sampling_rate, keep_empty=keep_empty)
+                sampling_rate=sampling_rate, keep_empty=keep_empty,
+                minlatitude=minlatitude, maxlatitude=maxlatitude,
+                minlongitude=minlongitude, maxlongitude=maxlongitude,
+                latitude=latitude, longitude=longitude,
+                minradius=minradius, maxradius=maxradius)
 
             # If the network previously had stations but no longer has any
             # and keep_empty is False: Skip the network.

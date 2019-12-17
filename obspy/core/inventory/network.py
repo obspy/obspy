@@ -19,6 +19,7 @@ import fnmatch
 import warnings
 
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
+from obspy.geodetics import inside_geobounds
 
 from .station import Station
 from .util import (
@@ -364,7 +365,9 @@ class Network(BaseNode):
 
     def select(self, station=None, location=None, channel=None, time=None,
                starttime=None, endtime=None, sampling_rate=None,
-               keep_empty=False):
+               keep_empty=False, minlatitude=None, maxlatitude=None,
+               minlongitude=None, maxlongitude=None, latitude=None,
+               longitude=None, minradius=None, maxradius=None):
         r"""
         Returns the :class:`Network` object with only the
         :class:`~obspy.core.inventory.station.Station`\ s /
@@ -422,6 +425,35 @@ class Network(BaseNode):
             given point in time (i.e. channels starting after given time will
             not be shown).
         :type sampling_rate: float
+        :param sampling_rate: Only include channels whose sampling rate
+            matches the given sampling rate, in Hz (within absolute tolerance
+            of 1E-8 Hz and relative tolerance of 1E-5)
+        :type minlatitude: float
+        :param minlatitude: Only include stations/channels with a latitude
+            larger than the specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Only include stations/channels with a latitude
+            smaller than the specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Only include stations/channels with a longitude
+            larger than the specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Only include stations/channels with a longitude
+            smaller than the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius
+            selection.
+        :type longitude: float
+        :param longitude: Specify the longitude to be used for a radius
+            selection.
+        :type minradius: float
+        :param minradius: Only include stations/channels within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Only include stations/channels within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
         :type keep_empty: bool
         :param keep_empty: If set to `True`, stations that match
             themselves but have no matching child elements (channels)
@@ -440,13 +472,23 @@ class Network(BaseNode):
                 if not sta.is_active(time=time, starttime=starttime,
                                      endtime=endtime):
                     continue
+            geo_filters = (minlatitude, maxlatitude,
+                           minlongitude, maxlongitude,
+                           latitude, longitude,
+                           minradius, maxradius)
+            if not inside_geobounds(sta, *geo_filters):
+                continue
 
             has_channels = bool(sta.channels)
 
             sta_ = sta.select(
                 location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
-                sampling_rate=sampling_rate)
+                sampling_rate=sampling_rate,
+                minlatitude=minlatitude, maxlatitude=maxlatitude,
+                minlongitude=minlongitude, maxlongitude=maxlongitude,
+                latitude=latitude, longitude=longitude,
+                minradius=minradius, maxradius=maxradius)
 
             # If the station previously had channels but no longer has any
             # and keep_empty is False: Skip the station.

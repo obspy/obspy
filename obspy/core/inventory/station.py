@@ -23,6 +23,7 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core.util.obspy_types import (ObsPyException, ZeroSamplingRate,
                                          FloatWithUncertaintiesAndUnit)
+from obspy.geodetics import inside_geobounds
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
                    Longitude, _unified_content_strings, _textwrap, Site)
@@ -352,7 +353,9 @@ class Station(BaseNode):
             self._water_level = FloatWithUncertaintiesAndUnit(value)
 
     def select(self, location=None, channel=None, time=None, starttime=None,
-               endtime=None, sampling_rate=None):
+               endtime=None, sampling_rate=None, minlatitude=None,
+               maxlatitude=None, minlongitude=None, maxlongitude=None,
+               latitude=None, longitude=None, minradius=None, maxradius=None):
         r"""
         Returns the :class:`Station` object with only the
         :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
@@ -402,6 +405,35 @@ class Station(BaseNode):
             in time (i.e. channels starting after given time will not be
             shown).
         :type sampling_rate: float
+        :param sampling_rate: Only include channels whose sampling rate
+            matches the given sampling rate, in Hz (within absolute tolerance
+            of 1E-8 Hz and relative tolerance of 1E-5)
+        :type minlatitude: float
+        :param minlatitude: Only include channels with a latitude larger than
+            the specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Only include channels with a latitude smaller than
+            the specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Only include channels with a longitude larger than
+            the specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Only include channels with a longitude smaller
+            than the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius
+            selection.
+        :type longitude: float
+        :param longitude: Specify the longitude to be used for a radius
+            selection.
+        :type minradius: float
+        :param minradius: Only include channels within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Only include channels within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
         """
         channels = []
         for cha in self.channels:
@@ -427,6 +459,12 @@ class Station(BaseNode):
                 if not cha.is_active(time=time, starttime=starttime,
                                      endtime=endtime):
                     continue
+            geo_filters = (minlatitude, maxlatitude,
+                           minlongitude, maxlongitude,
+                           latitude, longitude,
+                           minradius, maxradius)
+            if not inside_geobounds(cha, *geo_filters):
+                continue
 
             channels.append(cha)
         sta = copy.copy(self)

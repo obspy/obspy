@@ -182,6 +182,21 @@ class StationTestCase(unittest.TestCase):
         self.assertEqual(len(sta.select(sampling_rate=1.0 + 1E-6)), 3)
         self.assertEqual(len(sta.select(sampling_rate=0.1 - 1E-6)), 3)
 
+        # Artificially set different coordinates for a channel of RJOB.
+        sta = read_inventory()[1][0]
+        sta[0].latitude = 47.9
+        sta[0].longitude = 12.9
+        self.assertEqual(len(sta.select(
+            minlatitude=47.8, maxlatitude=48,
+            minlongitude=12.8, maxlongitude=13)), 1)
+        self.assertEqual(len(sta.select(
+            latitude=47.95, longitude=12.95, maxradius=0.1)), 1)
+        self.assertEqual(len(sta.select(
+            latitude=47.95, longitude=12.95, minradius=0.1)), 2)
+        self.assertEqual(len(sta.select(
+            latitude=47.95, longitude=12.95,
+            minradius=0.08, maxradius=0.1)), 0)
+
 
 def suite():
     return unittest.makeSuite(StationTestCase, 'test')

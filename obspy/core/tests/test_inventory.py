@@ -440,6 +440,23 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(
             sum(len(sta) for net in inv.select(station="R?O*") for sta in net),
             9)
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(
+                minlatitude=47.5, maxlatitude=47.9,
+                minlongitude=11.9, maxlongitude=13.3) for sta in net),
+            9)
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(
+                latitude=48, longitude=13,
+                maxradius=0.5) for sta in net),
+            9)
+
+        # Only WET Station.
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(
+                latitude=48, longitude=13,
+                minradius=0.5, maxradius=1.15) for sta in net),
+            9)
 
         # Most parameters are just passed to the Network.select() method.
         select_kwargs = {
@@ -450,7 +467,15 @@ class InventoryTestCase(unittest.TestCase):
             "time": UTCDateTime(2001, 1, 1),
             "sampling_rate": 123.0,
             "starttime": UTCDateTime(2002, 1, 1),
-            "endtime": UTCDateTime(2003, 1, 1)}
+            "endtime": UTCDateTime(2003, 1, 1),
+            "minlatitude": None,
+            "maxlatitude": None,
+            "minlongitude": None,
+            "maxlongitude": None,
+            "latitude": None,
+            "longitude": None,
+            "minradius": None,
+            "maxradius": None}
         with mock.patch("obspy.core.inventory.network.Network.select") as p:
             p.return_value = obspy.core.inventory.network.Network("BW")
             inv.select(**select_kwargs)
