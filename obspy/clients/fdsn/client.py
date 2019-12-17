@@ -442,7 +442,7 @@ class Client(object):
         :type latitude: float, optional
         :param latitude: Specify the latitude to be used for a radius search.
         :type longitude: float, optional
-        :param longitude: Specify the longitude to the used for a radius
+        :param longitude: Specify the longitude to be used for a radius
             search.
         :type minradius: float, optional
         :param minradius: Limit to events within the specified minimum number
@@ -668,7 +668,7 @@ class Client(object):
         :type latitude: float
         :param latitude: Specify the latitude to be used for a radius search.
         :type longitude: float
-        :param longitude: Specify the longitude to the used for a radius
+        :param longitude: Specify the longitude to be used for a radius
             search.
         :type minradius: float
         :param minradius: Limit results to stations within the specified
