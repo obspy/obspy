@@ -732,13 +732,28 @@ def _read_operator(operator_element, _ns):
 
 def _read_data_availability(avail_element, _ns):
     extent = avail_element.find(_ns("Extent"))
-    # Recovery from empty Extent tags.
-    if extent is None:
-        return extent
-    start = obspy.UTCDateTime(extent.get("start"))
-    end = obspy.UTCDateTime(extent.get("end"))
-    obj = obspy.core.inventory.util.DataAvailability(start=start, end=end)
+    spans = avail_element.findall(_ns("Span"))
+    # Recovery from empty Extent tag + no spans.
+    if extent is None and not spans:
+        return None
+    start = extent.get("start")
+    end = extent.get("end")
+    spans = [_read_data_availability_span(span) for span in spans]
+    obj = obspy.core.inventory.util.DataAvailability(start=start, end=end,
+                                                     spans=spans)
     _read_extra(avail_element, obj)
+    return obj
+
+
+def _read_data_availability_span(element, _ns):
+    start = element.attribs['start']
+    end = element.attribs['end']
+    number_of_segments = element.attribs['numberSegments']
+    maximum_time_tear = element.attribs.get('maximumTimeTear')
+    obj = obspy.core.inventory.util.DataAvailabilitySpan(
+        start=start, end=end, number_of_segments=number_of_segments,
+        maximum_time_tear=maximum_time_tear)
+    _read_extra(element, obj)
     return obj
 
 

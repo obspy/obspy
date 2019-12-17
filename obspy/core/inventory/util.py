@@ -240,14 +240,87 @@ class DataAvailability(ComparingObject):
     request that resulted in the document or limited to the availability of
     data within the request range. These details may or may not be
     retained when synchronizing metadata between data centers.
+    Spans of data are represented by a start time, end time, number of segments
+    contained in the span and maximum time tear within a certain span.
+
+    :param start: Start of time extent
+    :type start: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param end: End of time extent
+    :type end: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param spans: Time spans with detail information
+    :type spans: list of :class:`DataAvailabilitySpan`
     """
-    def __init__(self, start, end):
-        self.start = UTCDateTime(start)
-        self.end = UTCDateTime(end)
+    def __init__(self, start=None, end=None, spans=None):
+        start = start is not None and UTCDateTime(start)
+        self.start = start
+        end = end is not None and UTCDateTime(end)
+        self.end = end
+        self.spans = spans
+
+    @property
+    def spans(self):
+        return self._spans
+
+    @spans.setter
+    def spans(self, value):
+        msg = 'Data availability spans must be of DataAvailabilitySpan type.'
+        try:
+            for item in value:
+                if not isinstance(item, DataAvailabilitySpan):
+                    raise TypeError
+        except TypeError:
+            raise TypeError(msg)
+        self._spans = value
 
     def __str__(self):
-        return "Data Availability from %s to %s." % (str(self.start),
-                                                     str(self.end))
+        if not self.spans:
+            span_info = 'no time span information'
+        else:
+            span_info = '%d time spans with details' % len(self.spans)
+        return "Data Availability from %s to %s, %s." % (self.start,
+                                                         self.end, span_info)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
+
+class DataAvailabilitySpan(ComparingObject):
+    """
+    Data availability spans are represented by a start time, end time, number
+    of segments contained in the span and maximum time tear within a certain
+    span.
+
+    :param start: Start of time span
+    :type start: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param end: End of time span
+    :type end: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param number_of_segments: The number of continuous time series segments
+        contained in the specified time range. A value of 1 indicates that the
+        time series is continuous from start to end.
+    :type number_of_segments: int
+    :param maximum_time_tear: The maximum time tear (gap or overlap) in seconds
+        between time series segments in the specified range.
+    :type maximum_time_tear: float
+    """
+    def __init__(self, start, end, number_of_segments, maximum_time_tear=None):
+        self.start = UTCDateTime(start)
+        self.end = UTCDateTime(end)
+        self.number_of_segments = number_of_segments
+        self.maximum_time_tear = maximum_time_tear
+
+    def __str__(self):
+        if self.maximum_time_tear is None:
+            tear_info = 'maximum time tear not specified'
+        elif abs(self.maximum_time_tear) < 0.1:
+            tear_info = '%.6fs maximum time tear'
+        elif abs(self.maximum_time_tear) < 2:
+            tear_info = '%.3fs maximum time tear'
+        elif abs(self.maximum_time_tear) < 10:
+            tear_info = '%.1fs maximum time tear'
+        else:
+            tear_info = '%.0fs maximum time tear'
+        return "Data Availability Span: %d segments from %s to %s, %s." % (
+            self.number_of_segments, self.start, self.end, tear_info)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
