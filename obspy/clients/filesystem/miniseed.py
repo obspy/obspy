@@ -9,17 +9,15 @@ from future.utils import with_metaclass
 
 import abc
 import bisect
-from collections import namedtuple
 import ctypes
-from io import BytesIO
 import logging
 import os
 import re
+from collections import namedtuple
+from io import BytesIO
 
+from obspy import read, Stream, UTCDateTime
 from obspy.clients.filesystem.msriterator import _MSRIterator
-from obspy.core.stream import Stream
-from obspy.core import UTCDateTime
-from obspy import read
 
 
 logger = logging.getLogger('obspy.clients.filesystem.miniseed')
