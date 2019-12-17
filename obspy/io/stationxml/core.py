@@ -312,6 +312,7 @@ def _read_floattype(parent, tag, cls, unit=False, datum=False,
         obj.datum = elem.attrib.get("datum")
     obj.lower_uncertainty = elem.attrib.get("minusError")
     obj.upper_uncertainty = elem.attrib.get("plusError")
+    obj.measurement_method = elem.attrib.get("measurementMethod")
     for key1, key2 in additional_mapping.items():
         setattr(obj, key1, elem.attrib.get(key2))
     return obj
@@ -329,6 +330,7 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
             obj.datum = elem.attrib.get("datum")
         obj.lower_uncertainty = elem.attrib.get("minusError")
         obj.upper_uncertainty = elem.attrib.get("plusError")
+        obj.measurement_method = elem.attrib.get("measurementMethod")
         for key1, key2 in additional_mapping.items():
             setattr(obj, key2, elem.attrib.get(key1))
         objs.append(obj)
@@ -570,6 +572,10 @@ def _read_response_stage(stage_elem, _ns):
                 imag = imag or 0
                 x.upper_uncertainty = complex(real, imag)
             x.number = _attr2obj(element, "number", int)
+            x.measurement_method_real = _attr2obj(element.find(_ns("Real")),
+                                                  "measurementMethod", str)
+            x.measurement_method_imag = _attr2obj(
+                element.find(_ns("Imaginary")), "measurementMethod", str)
             return x
 
         zeros = [_tag2pole_or_zero(el) for el in elem.findall(_ns("Zero"))]
@@ -997,6 +1003,7 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={},
         attribs["unit"] = obj_.unit
     attribs["minusError"] = obj_.lower_uncertainty
     attribs["plusError"] = obj_.upper_uncertainty
+    attribs["measurementMethod"] = obj_.measurement_method
     for key1, key2 in additional_mapping.items():
         attribs[key1] = getattr(obj_, key2)
     attribs = {k: str(v) for k, v in attribs.items() if v is not None}
@@ -1012,6 +1019,7 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
             attribs["unit"] = obj_.unit
         attribs["minusError"] = obj_.lower_uncertainty
         attribs["plusError"] = obj_.upper_uncertainty
+        attribs["measurementMethod"] = obj_.measurement_method
         for key1, key2 in additional_mapping.items():
             attribs[key2] = getattr(obj_, key1)
         attribs = {k: str(v) for k, v in attribs.items() if v is not None}
@@ -1045,6 +1053,10 @@ def _write_polezero_list(parent, obj):
                 _float_to_str(obj_.upper_uncertainty.real)
             attribs_imag['plusError'] = \
                 _float_to_str(obj_.upper_uncertainty.imag)
+        if obj_.measurement_method_real is not None:
+            attribs_real['measurement_method'] = obj_.measurement_method_real
+        if obj_.measurement_method_imag is not None:
+            attribs_imag['measurement_method'] = obj_.measurement_method_imag
         etree.SubElement(sub, "Real", attribs_real).text = \
             _float_to_str(obj_.real)
         etree.SubElement(sub, "Imaginary", attribs_imag).text = \

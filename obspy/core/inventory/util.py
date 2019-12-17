@@ -712,6 +712,8 @@ class Latitude(FloatWithUncertaintiesFixedUnit):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type datum: str
     :param datum: Datum for latitude coordinate
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = -90
     _maximum = 90
@@ -739,6 +741,8 @@ class Longitude(FloatWithUncertaintiesFixedUnit):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type datum: str
     :param datum: Datum for longitude coordinate
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = -180
     _maximum = 180
@@ -766,6 +770,8 @@ class Distance(FloatWithUncertaintiesAndUnit):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type unit: str
     :param unit: Unit for distance measure.
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
                  unit="METERS"):
@@ -785,6 +791,8 @@ class Azimuth(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = 0
     _maximum = 360
@@ -801,6 +809,8 @@ class Dip(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = -90
     _maximum = 90
@@ -817,6 +827,8 @@ class ClockDrift(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = 0
     unit = "SECONDS/SAMPLE"
@@ -832,6 +844,8 @@ class SampleRate(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     unit = "SAMPLES/S"
 
@@ -846,6 +860,8 @@ class Frequency(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     unit = "HERTZ"
 
@@ -860,6 +876,8 @@ class Angle(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = -360
     _maximum = 360

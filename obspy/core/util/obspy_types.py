@@ -240,7 +240,8 @@ class FloatWithUncertainties(CustomFloat):
             raise ValueError(msg)
         return super(FloatWithUncertainties, cls).__new__(cls, value)
 
-    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None):
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
+                 measurement_method=None):
         # set uncertainties, if initialized with similar type
         if isinstance(value, FloatWithUncertainties):
             if lower_uncertainty is None:
@@ -250,6 +251,7 @@ class FloatWithUncertainties(CustomFloat):
         # set/override uncertainties, if explicitly specified
         self.lower_uncertainty = lower_uncertainty
         self.upper_uncertainty = upper_uncertainty
+        self.measurement_method = measurement_method
 
 
 class FloatWithUncertaintiesFixedUnit(FloatWithUncertainties):
@@ -266,13 +268,17 @@ class FloatWithUncertaintiesFixedUnit(FloatWithUncertainties):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type unit: str (read only)
     :param unit: Unit for physical interpretation of the float value.
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _unit = ""
 
-    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None):
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
+                 measurement_method=None):
         super(FloatWithUncertaintiesFixedUnit, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
-            upper_uncertainty=upper_uncertainty)
+            upper_uncertainty=upper_uncertainty,
+            measurement_method=measurement_method)
 
     @property
     def unit(self):
@@ -297,12 +303,15 @@ class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type unit: str
     :param unit: Unit for physical interpretation of the float value.
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
-                 unit=None):
+                 unit=None, measurement_method=None):
         super(FloatWithUncertaintiesAndUnit, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
-            upper_uncertainty=upper_uncertainty)
+            upper_uncertainty=upper_uncertainty,
+            measurement_method=measurement_method)
         if unit is None and hasattr(value, "unit"):
             unit = value.unit
         self.unit = unit
@@ -411,6 +420,12 @@ class ComplexWithUncertainties(CustomComplex):
         :param lower_uncertainty: Lower uncertainty (aka minusError)
         :type upper_uncertainty: complex
         :param upper_uncertainty: Upper uncertainty (aka plusError)
+        :type measurement_method_real: str
+        :param measurement_method_real: Method used in the measurement of real
+            part.
+        :type measurement_method_imag: str
+        :param measurement_method_imag: Method used in the measurement of
+            imaginary part.
 
         """
         real_upper = None
@@ -435,22 +450,26 @@ class ComplexWithUncertainties(CustomComplex):
             self.lower_uncertainty = kwargs['lower_uncertainty']
         if "upper_uncertainty" in kwargs:
             self.upper_uncertainty = kwargs['upper_uncertainty']
+        self.measurement_method_real = kwargs.get('measurement_method_real')
+        self.measurement_method_imag = kwargs.get('measurement_method_imag')
 
     @property
     def real(self):
         _real = super(ComplexWithUncertainties, self).real
         _lower = self._attr(self.lower_uncertainty, 'real')
         _upper = self._attr(self.upper_uncertainty, 'real')
-        return FloatWithUncertainties(_real, lower_uncertainty=_lower,
-                                      upper_uncertainty=_upper)
+        return FloatWithUncertainties(
+            _real, lower_uncertainty=_lower, upper_uncertainty=_upper,
+            measurement_method=self.measurement_method_real)
 
     @property
     def imag(self):
         _imag = super(ComplexWithUncertainties, self).imag
         _lower = self._attr(self.lower_uncertainty, 'imag')
         _upper = self._attr(self.upper_uncertainty, 'imag')
-        return FloatWithUncertainties(_imag, lower_uncertainty=_lower,
-                                      upper_uncertainty=_upper)
+        return FloatWithUncertainties(
+            _imag, lower_uncertainty=_lower, upper_uncertainty=_upper,
+            measurement_method=self.measurement_method_imag)
 
 
 class ObsPyException(Exception):
