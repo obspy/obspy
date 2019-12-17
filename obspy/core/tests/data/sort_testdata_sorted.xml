@@ -1,0 +1,517 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
+  <Source>IRIS-DMC</Source>
+  <Module>None</Module>
+  <ModuleURI>None</ModuleURI>
+  <Created>2019-03-28T20:00:00.000000Z</Created>
+  <Network code="A" endDate="2500-12-12T23:59:59.000000Z" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+    <Station code="A" endDate="2599-12-31T23:59:59.000000Z" startDate="2011-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="B" endDate="2599-12-31T23:59:59.000000Z" startDate="2012-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="B" endDate="2599-12-31T23:59:59.000000Z" startDate="2013-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+  </Network>
+  <Network code="B" endDate="2500-12-12T23:59:59.000000Z" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+    <Station code="A" endDate="2599-12-31T23:59:59.000000Z" startDate="2011-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="B" endDate="2599-12-31T23:59:59.000000Z" startDate="2012-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="B" endDate="2599-12-31T23:59:59.000000Z" startDate="2013-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+  </Network>
+  <Network code="B" endDate="2500-12-12T23:59:59.000000Z" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+    <Station code="A" endDate="2599-12-31T23:59:59.000000Z" startDate="2011-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="B" endDate="2599-12-31T23:59:59.000000Z" startDate="2012-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="B" endDate="2599-12-31T23:59:59.000000Z" startDate="2013-01-01T00:00:00.000000Z">
+      <Latitude>34.94591</Latitude>
+      <Longitude>-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>A</Name>
+      </Site>
+      <CreationDate>1989-08-29T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>117</TotalNumberChannels>
+      <SelectedNumberChannels>51</SelectedNumberChannels>
+      <Channel code="A" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2011-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2012-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>Vaisala Weather Transmitter</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="B" endDate="2599-12-31T23:59:59.000000Z" locationCode="00" restrictedStatus="open" startDate="2013-01-01T00:00:00.000000Z">
+        <Latitude>34.94591</Latitude>
+        <Longitude>-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate>1.0</SampleRate>
+        <ClockDrift>0.0</ClockDrift>
+        <Sensor>
+          <Type>CI/PAS pressure sensor</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>

@@ -647,6 +647,61 @@ class InventoryTestCase(unittest.TestCase):
         got = read_inventory(os.path.join(self.path, "IU_*_00*.xml"))
         self.assertEqual(expected, got)
 
+    def test_sort(self):
+        """
+        Test the inventory.sort method.
+        """
+        cha_1 = Channel(code="A", start_date=UTCDateTime(0),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        cha_2 = Channel(code="A", start_date=UTCDateTime(1),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        cha_3 = Channel(code="B", start_date=UTCDateTime(0),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        # sorted
+        sta_1_s = Station(code="A", start_date=UTCDateTime(0),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_1, cha_2, cha_3])
+        sta_2_s = Station(code="A", start_date=UTCDateTime(1),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_1, cha_2, cha_3])
+        sta_3_s = Station(code="B", start_date=UTCDateTime(0),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_1, cha_2, cha_3])
+        # unsorted
+        sta_1_u = Station(code="B", start_date=UTCDateTime(0),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_3, cha_2, cha_1])
+        sta_2_u = Station(code="A", start_date=UTCDateTime(1),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_3, cha_2, cha_1])
+        sta_3_u = Station(code="A", start_date=UTCDateTime(0),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_3, cha_2, cha_1])
+
+        unsorted_networks = [Network(code="B", start_date=UTCDateTime(0),
+                                     stations=[sta_3_u, sta_2_u, sta_1_u]),
+                             Network(code="A", start_date=UTCDateTime(0),
+                                     stations=[sta_3_u, sta_2_u, sta_1_u]),
+                             Network(code="A", start_date=UTCDateTime(1),
+                                     stations=[sta_3_u, sta_2_u, sta_1_u])]
+
+        sorted_networks = [Network(code="A", start_date=UTCDateTime(0),
+                                   stations=[sta_1_s, sta_2_s, sta_3_s]),
+                           Network(code="A", start_date=UTCDateTime(1),
+                                   stations=[sta_1_s, sta_2_s, sta_3_s]),
+                           Network(code="B", start_date=UTCDateTime(0),
+                                   stations=[sta_1_s, sta_2_s, sta_3_s])]
+
+        inv_unsorted = Inventory(networks=unsorted_networks)
+        inv_sorted = Inventory(networks=sorted_networks)
+
+        inv_unsorted.sort()
+
+        self.assertEqual(inv_unsorted, inv_sorted)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
