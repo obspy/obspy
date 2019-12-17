@@ -594,10 +594,12 @@ def _read_response_stage(stage_elem, _ns):
             _tag2obj(elem, _ns("CfTransferFunctionType"), str)
         numerator = \
             _read_floattype_list(elem, _ns("Numerator"),
-                                 FloatWithUncertaintiesAndUnit, unit=True)
+                                 FloatWithUncertaintiesAndUnit, unit=True,
+                                 additional_mapping={"number": "number"})
         denominator = \
             _read_floattype_list(elem, _ns("Denominator"),
-                                 FloatWithUncertaintiesAndUnit, unit=True)
+                                 FloatWithUncertaintiesAndUnit, unit=True,
+                                 additional_mapping={"number": "number"})
         obj = obspy.core.inventory.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
@@ -1371,9 +1373,11 @@ def _write_response_stage(parent, stage):
             _obj2tag(sub_, "CfTransferFunctionType",
                      stage.cf_transfer_function_type)
             _write_floattype_list(sub_, stage,
-                                  "numerator", "Numerator")
+                                  "numerator", "Numerator",
+                                  additional_mapping={'number': 'number'})
             _write_floattype_list(sub_, stage,
-                                  "denominator", "Denominator")
+                                  "denominator", "Denominator",
+                                  additional_mapping={'number': 'number'})
         elif isinstance(stage, ResponseListResponseStage):
             for rlelem in stage.response_list_elements:
                 sub__ = etree.SubElement(sub_, "ResponseListElement")
