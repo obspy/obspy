@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 r"""
 obspy.clients.filesystem.tsindex - IRIS TSIndex Client and Indexer
-==========================================================================
+==================================================================
 
 The obspy.clients.filesystem.tsindex module includes a timeseries extraction
 :class:`Client` class for a database created by the IRIS
@@ -22,7 +22,6 @@ The obspy.clients.filesystem.tsindex module includes a timeseries extraction
     :local:
     :depth: 2
 
-------------
 Client Usage
 ------------
 
@@ -52,7 +51,6 @@ illustrate how to do the following:
   :meth:`~Client.get_waveforms()` and
   :meth:`~Client.get_waveforms_bulk()`.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Determining Data Availability
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -87,7 +85,6 @@ IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
 >>> print(avail_percentage)
 (0.5083705674817509, 1)
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Requesting Timeseries Data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -117,7 +114,6 @@ Requesting Timeseries Data
     st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
     st.plot()
 
--------------
 Indexer Usage
 -------------
 
@@ -125,7 +121,7 @@ The :class:`~Indexer` provides a high level
 API for indexing a directory tree of miniSEED files using the IRIS
 `mseedindex <https://github.com/iris-edu/mseedindex/>`_ software.
 
-Initialize a indexer object by supplying the root path to data to be indexed.
+Initialize an indexer object by supplying the root path to data to be indexed.
 
 >>> from obspy.clients.filesystem.tsindex import Indexer
 >>> from obspy.clients.filesystem.tests.test_tsindex \
@@ -153,28 +149,29 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import os
-from os.path import relpath
-from glob import glob
-import datetime
-import subprocess
 import copyreg
-from multiprocessing import Pool
-import types
+import datetime
 import logging
+import os
 import requests
-from collections import namedtuple
 import sqlalchemy as sa
+import subprocess
+import types
+
+from collections import namedtuple
+from glob import glob
+from multiprocessing import Pool
+from os.path import relpath
 from sqlalchemy.exc import ResourceClosedError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from obspy import UTCDateTime
-from obspy.core.stream import Stream
 from obspy.clients.filesystem.miniseed import _MiniseedDataExtractor, \
     NoDataError
 from obspy.clients.filesystem.db import _get_tsindex_table, \
     _get_tsindex_summary_table
+from obspy.core.stream import Stream
 
 
 logger = logging.getLogger('obspy.clients.filesystem.tsindex')
@@ -804,7 +801,7 @@ class Client(object):
         :type sample_rate: int
         :param sample_rate: Sensor sample rate.
         :type tolerance: float
-        :param tolerance: Tolerance to determine whether a adjacent
+        :param tolerance: Tolerance in seconds to determine whether a adjacent
             timespan should be merged.
         """
         # @40Hz sample period = 0.025
@@ -989,8 +986,8 @@ class Indexer(object):
             be turned off by setting `build_summary` to False.
         :type relative_paths: bool
         :param relative_paths: By default, the absolute path to each file is
-            stored in the index. If `relative_paths` is True, the file paths
-            will be relative to the `root_path`.
+            stored in the index. If ``relative_paths`` is True, the file paths
+            will be relative to the ``root_path``.
         :type reindex: bool
         :param reindex: By default, files are not indexed that are already in
             the index and have not been modified.  The ``reindex`` option can
@@ -1098,7 +1095,8 @@ class Indexer(object):
 
     def download_leap_seconds_file(self, file_path=None):
         """
-        Attempt to download leap-seconds.list from IETF and save to a file.
+        Attempt to download leap-seconds.list from Internet Engineering Task
+        Force (IETF) and save to a file.
 
         :type file_path: str
         :param file_path: Optional path to file path where leap seconds
@@ -1212,7 +1210,7 @@ class Indexer(object):
 
         :type index_cmd: str
         :param index_cmd: Name of indexing command to execute. Defaults to
-            `mseedindex`.
+            ``mseedindex``.
         :type file_name: str
         :param file_name: Name of file to index.
         :type bulk_params: dict
