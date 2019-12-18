@@ -875,34 +875,6 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     nsmap[None] = "http://www.fdsn.org/xml/station/1"
     attrib = {"schemaVersion": SCHEMA_VERSION}
 
-    # Check if any of the channels has a data availability element. In that
-    # case the namespaces need to be adjusted.
-    data_availability = False
-    for net in inventory:
-        for sta in net:
-            for cha in sta:
-                if cha.data_availability is not None:
-                    data_availability = True
-                    break
-            else:
-                continue
-            break
-        else:
-            continue
-        break
-    if data_availability:
-        attrib["{http://www.w3.org/2001/XMLSchema-instance}"
-               "schemaLocation"] = (
-            "http://www.fdsn.org/xml/station/1 "
-            "http://www.fdsn.org/xml/station/fdsn-station+"
-            "availability-1.0.xsd")
-        if "xsi" in nsmap:
-            msg = ("Custom namespace mappings do not allow redefinition of "
-                   "StationXML availability namespace (key `xsi`). Use other "
-                   "namespace abbreviations for custom namespace tags.")
-            raise ValueError(msg)
-        nsmap["xsi"] = "http://www.w3.org/2001/XMLSchema-instance"
-
     root = etree.Element("FDSNStationXML", attrib=attrib, nsmap=nsmap)
 
     etree.SubElement(root, "Source").text = inventory.source
