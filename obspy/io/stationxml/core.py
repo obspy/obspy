@@ -199,8 +199,15 @@ def _read_base_node(element, object_to_write_to, _ns):
         _attr2obj(element, "sourceID", str)
     object_to_write_to.description = \
         _tag2obj(element, _ns("Description"), str)
-    object_to_write_to.identifier = \
-        _tag2obj(element, _ns("Identifier"), str)
+    identifiers = []
+    for identifier in element.findall(_ns("identifier")):
+        scheme = identifier.get('type')
+        path = identifier.text
+        if scheme is not None:
+            identifier.append(scheme + ':' + path)
+        else:
+            identifier.append(path)
+    object_to_write_to.identifiers = identifiers
     object_to_write_to.comments = []
     for comment in element.findall(_ns("Comment")):
         object_to_write_to.comments.append(_read_comment(comment, _ns))
@@ -966,9 +973,14 @@ def _get_base_node_attributes(element):
 
 
 def _write_base_node(element, object_to_read_from):
-    if object_to_read_from.identifier:
-        etree.SubElement(element, "Identifier", {"type": "DOI"}).text = \
-            object_to_read_from.identifier
+    for identifier in object_to_read_from.identifiers:
+        attrib = {}
+        if ':' in identifier:
+            scheme, path = identifier.split(':', 1)
+            attrib['type'] = scheme
+        else:
+            path = identifier
+        etree.SubElement(element, "Identifier", attrib).text = path
     if object_to_read_from.description:
         etree.SubElement(element, "Description").text = \
             object_to_read_from.description
