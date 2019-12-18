@@ -1406,24 +1406,29 @@ def _write_response_stage(parent, stage):
         elif isinstance(stage, PolynomialResponseStage):
             _write_polynomial_common_fields(sub_, stage)
 
-    # write decimation
-    if stage.decimation_input_sample_rate is not None:
-        sub_ = etree.SubElement(sub, "Decimation")
-        _write_floattype(sub_, stage, "decimation_input_sample_rate",
-                         "InputSampleRate")
-        _obj2tag(sub_, "Factor", stage.decimation_factor)
-        _obj2tag(sub_, "Offset", stage.decimation_offset)
-        _write_floattype(sub_, stage, "decimation_delay", "Delay")
-        _write_floattype(sub_, stage, "decimation_correction", "Correction")
-    # write gain
     if isinstance(stage, PolynomialResponseStage):
-        # <StageGain> was removed for <Polynomial> response stages in
-        # StationXML 1.1
+        # <StageGain> and <Decimation> were removed for <Polynomial> response
+        # stages in StationXML 1.1
+        if stage.decimation_input_sample_rate is not None:
+            msg = ("Decimation is not allowed for Polynomial response "
+                   "stages in StationXML schema > 1.0. Ignoring.")
+            warnings.warn(msg)
         if stage.stage_gain not in (None, 1.0):
             msg = ("Stage gain is not allowed for Polynomial response "
                    "stages in StationXML schema > 1.0. Ignoring.")
             warnings.warn(msg)
     else:
+        # write decimation
+        if stage.decimation_input_sample_rate is not None:
+            sub_ = etree.SubElement(sub, "Decimation")
+            _write_floattype(sub_, stage, "decimation_input_sample_rate",
+                             "InputSampleRate")
+            _obj2tag(sub_, "Factor", stage.decimation_factor)
+            _obj2tag(sub_, "Offset", stage.decimation_offset)
+            _write_floattype(sub_, stage, "decimation_delay", "Delay")
+            _write_floattype(sub_, stage, "decimation_correction",
+                             "Correction")
+        # write gain
         sub_ = etree.SubElement(sub, "StageGain")
         _obj2tag(sub_, "Value", stage.stage_gain)
         _obj2tag(sub_, "Frequency", stage.stage_gain_frequency)
