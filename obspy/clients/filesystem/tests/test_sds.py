@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import glob
 import imghdr
 import inspect
 import os
@@ -13,8 +14,8 @@ import unittest
 
 import numpy as np
 
-from obspy import UTCDateTime, Trace, Stream
-from obspy.core.util.misc import TemporaryWorkingDirectory
+from obspy import UTCDateTime, Trace, Stream, read
+from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
 from obspy.clients.filesystem.sds import SDS_FMTSTR, Client
 from obspy.scripts.sds_html_report import main as sds_report
 
@@ -80,7 +81,45 @@ class TemporarySDSDirectory(object):
         shutil.rmtree(self.tempdir)
 
 
-class SDSTestCase(unittest.TestCase):
+class ObsPyTestCase(unittest.TestCase):
+    def assert_traces_equal(self, first, second):
+        if not isinstance(first, Trace):
+            msg = "'first' not a Trace object: " + repr(first)
+        if not isinstance(second, Trace):
+            msg = "'second' not a Trace object: " + repr(second)
+        try:
+            np.testing.assert_array_equal(first.data, second.data)
+        except Exception as e:
+            msg = "Traces' data array not equal:\n" + str(e)
+            raise AssertionError(msg)
+        try:
+            self.assertEqual(first.stats.__dict__, second.stats.__dict__)
+        except Exception as e:
+            msg = "Traces' Stats not equal:\n" + str(e)
+            raise AssertionError(msg)
+
+    def assert_streams_equal(self, first, second):
+        if len(first) != len(second):
+            msg = "\n".join(("Streams not equal:", str(first), str(second)))
+            raise AssertionError(msg)
+        msg = "Streams not equal (comparing traces no. {}):\n{}"
+        for i, (tr1, tr2) in enumerate(zip(first, second)):
+            try:
+                self.assert_traces_equal(tr1, tr2)
+            except Exception as e:
+                msg = msg.format(i, str(e))
+                raise AssertionError(msg)
+
+    def assertEqual(self, first, second):  # NoQA
+        if isinstance(first, Trace) and isinstance(second, Trace):
+            self.assert_traces_equal(first, second)
+        if isinstance(first, Stream) and isinstance(second, Stream):
+            self.assert_streams_equal(first, second)
+        else:
+            super(ObsPyTestCase, self).assertEqual(first, second)
+
+
+class SDSTestCase(ObsPyTestCase):
     """
     Test reading data from SDS file structure.
     """
@@ -255,6 +294,206 @@ class SDSTestCase(unittest.TestCase):
             self.assertEqual([], got_nslc)
             got_nslc = client.get_all_nslc(datetime=t - 2 * 24 * 3600)
             self.assertEqual([], got_nslc)
+
+    def test_add_data_to_archive(self):
+        """
+        Test `add_data_to_archive` method
+        """
+        # generate SDS with some gappy data
+        t_start = UTCDateTime("2016-180T21")
+        t_daybreak1 = UTCDateTime("2016-181")
+        t_daybreak2 = UTCDateTime("2016-182")
+        tr = Trace(np.arange(1100, dtype=np.int32))
+        tr.id = "BW.RMOA..EHZ"
+        tr.stats.starttime = t_start
+        tr.stats.sampling_rate = 0.01
+        st_full = Stream([tr])
+        # now cut out some parts and put gappy data in SDS
+        st_sds = st_full.copy()
+        st_sds.trim(starttime=UTCDateTime("2016-180T22"))
+        st_sds.cutout(UTCDateTime("2016-181T10"),
+                      UTCDateTime("2016-181T12"))
+        st_sds.trim(endtime=UTCDateTime("2016-181T16"))
+        st_sds_1 = st_sds.slice(endtime=t_daybreak1-0.1, nearest_sample=False)
+        st_sds_2 = st_sds.slice(starttime=t_daybreak1)
+        for st in (st_sds_1, st_sds_2):
+            for tr in st:
+                tr.stats["_format"] = "MSEED"
+                tr.stats.pop("processing", None)
+        # prepare three streams with new data to add to SDS archive
+        st_new_1 = st_full.copy()
+        st_new_1.trim(endtime=UTCDateTime("2016-180T23:30")-0.1,
+                      nearest_sample=False)
+        st_new_1.cutout(UTCDateTime("2016-180T22:20"),
+                        UTCDateTime("2016-180T22:50"))
+        st_new_2 = st_full.slice(UTCDateTime("2016-181T05"),
+                                 UTCDateTime("2016-181T13:30")).copy()
+        st_new_2 += st_full.slice(UTCDateTime("2016-181T16"),
+                                  UTCDateTime("2016-181T18")).copy()
+        st_new_2 += st_full.slice(UTCDateTime("2016-181T20"),
+                                  UTCDateTime("2016-181T22")).copy()
+        st_new_2 += st_full.slice(
+            UTCDateTime("2016-181T23"), t_daybreak2-0.1,
+            nearest_sample=False).copy()
+        st_new_3 = st_full.slice(t_daybreak2,
+                                 UTCDateTime("2016-182T01")).copy()
+        # prepare expected streams for the three files
+        st_expected_1 = (st_sds_1 + st_new_1).copy()
+        st_expected_2 = (st_sds_2 + st_new_2).copy()
+        st_expected_3 = st_new_3.copy()
+        for st in (st_expected_1, st_expected_2, st_expected_3):
+            st.merge(-1)
+            for tr in st:
+                tr.stats["_format"] = "MSEED"
+                tr.stats.pop("processing", None)
+
+        try:
+            with TemporaryWorkingDirectory():
+                # set up initial SDS structure
+                basedir = os.path.abspath(os.path.curdir)
+                sds_root = os.path.join(basedir, "SDS")
+                filename_1 = os.path.join(sds_root, "2016", "BW", "RMOA",
+                                          "EHZ.D", "BW.RMOA..EHZ.D.2016.180")
+                filename_2 = os.path.join(sds_root, "2016", "BW", "RMOA",
+                                          "EHZ.D", "BW.RMOA..EHZ.D.2016.181")
+                filename_3 = os.path.join(sds_root, "2016", "BW", "RMOA",
+                                          "EHZ.D", "BW.RMOA..EHZ.D.2016.182")
+                os.makedirs(os.path.dirname(filename_1))
+                st_sds_1.write(filename_1, format="MSEED")
+                st_sds_2.write(filename_2, format="MSEED")
+                # setup files with new data
+                new_file_1 = os.path.join(basedir, "new_1.slist")
+                new_file_2 = os.path.join(basedir, "new_2.mseed")
+                st_new_1.write(new_file_1, format="SLIST")
+                (st_new_2 + st_new_3).write(new_file_2, format="MSEED")
+                # add data and check verbose stdout
+                client = Client(sds_root=sds_root)
+                with CatchOutput() as out:
+                    (new_data_string, changed_files, backupdir,
+                     plot_output_file) = client.add_data_to_archive(
+                        filenames=glob.glob("new*"))
+                self.assertTrue(os.path.exists(plot_output_file))
+                for file_ in (filename_1, filename_2, filename_3):
+                    self.assertTrue(os.path.exists(file_))
+                expected = [
+                    "The following files have been appended to:",
+                    "\t" + filename_1,
+                    "\t" + filename_2,
+                    "The following new files have been created:",
+                    "\t" + filename_3,
+                    "Backups of original files have been stored in: {}".format(
+                        backupdir),
+                    "Before/after comparison plot saved as: " +
+                    plot_output_file,
+                    "New data added to archive:",
+                    "BW.RMOA..EHZ | 2016-06-28T21:00:00.000000Z - "
+                    "2016-06-28T21:58:20.000000Z | 100.0 s, 36 samples",
+                    "BW.RMOA..EHZ | 2016-06-29T10:01:40.000000Z - "
+                    "2016-06-29T11:58:20.000000Z | 100.0 s, 71 samples",
+                    "BW.RMOA..EHZ | 2016-06-29T16:01:40.000000Z - "
+                    "2016-06-29T18:00:00.000000Z | 100.0 s, 72 samples",
+                    "BW.RMOA..EHZ | 2016-06-29T20:00:00.000000Z - "
+                    "2016-06-29T22:00:00.000000Z | 100.0 s, 73 samples",
+                    "BW.RMOA..EHZ | 2016-06-29T23:00:00.000000Z - "
+                    "2016-06-29T23:58:20.000000Z | 100.0 s, 36 samples",
+                    "BW.RMOA..EHZ | 2016-06-30T00:00:00.000000Z - "
+                    "2016-06-30T01:00:00.000000Z | 100.0 s, 37 samples",
+                    ]
+                self.assertEqual(expected, out.stdout.decode().splitlines())
+                # check that backup directory holds original data
+                for st_orig, doy in zip((st_sds_1, st_sds_2), ("180", "181")):
+                    st_backup = read(os.path.join(
+                        backupdir, "2016", "BW", "RMOA", "EHZ.D",
+                        "BW.RMOA..EHZ.D.2016.{}".format(doy)), format="MSEED")
+                    for tr in st_backup:
+                        tr.stats.pop("mseed", None)
+                    self.assertEqual(st_orig, st_backup)
+                # now check the contents of SDS after adding the data
+                st_got_1 = read(filename_1, format="MSEED")
+                st_got_2 = read(filename_2, format="MSEED")
+                st_got_3 = read(filename_3, format="MSEED")
+                for st in (st_got_1, st_got_2, st_got_3):
+                    for tr in st:
+                        tr.stats.pop("mseed")
+                    st.merge(-1)
+                for expected, got in zip(
+                        (st_expected_1, st_expected_2, st_expected_3),
+                        (st_got_1, st_got_2, st_got_3)):
+                    self.assertEqual(expected, got)
+                # finally, add some data that ends up in a file whose directory
+                # does not exist yet, first of an existing SEED ID (before and
+                # after any other existing data) and then with a completely new
+                # SEED ID
+                tr = Trace(np.ones(10))
+                got_stdout = []
+                expected_trace_infos = []
+                comparison_plot_filename = os.path.join(
+                    tempfile.gettempdir(), "obspy-sds-testplot.png")
+                for id in ("BW.RMOA..EHZ", "XX.XYZ.99.KLM"):
+                    for t in ("1980-003", "2100-345"):
+                        tr.id = id
+                        tr.stats.starttime = t
+                        expected_trace_infos.append(str(tr).splitlines()[-1])
+                        filename = os.path.join(basedir, "other.slist")
+                        tr.write(filename, format="SLIST")
+                        with CatchOutput() as out:
+                            _, _, _, plot_output_file_2 = \
+                                client.add_data_to_archive(
+                                    filenames=(filename,),
+                                    plot=comparison_plot_filename)
+                        got_stdout += out.stdout.decode().splitlines()
+                self.assertEqual(comparison_plot_filename, plot_output_file_2)
+                self.assertTrue(os.path.exists(comparison_plot_filename))
+                expected_paths = (
+                    ("1980", "BW", "RMOA", "EHZ.D", "BW.RMOA..EHZ.D.1980.003"),
+                    ("2100", "BW", "RMOA", "EHZ.D", "BW.RMOA..EHZ.D.2100.345"),
+                    ("1980", "XX", "XYZ", "KLM.D", "XX.XYZ.99.KLM.D.1980.003"),
+                    ("2100", "XX", "XYZ", "KLM.D", "XX.XYZ.99.KLM.D.2100.345"))
+                expected_files = [os.path.join(sds_root, *expected_path)
+                                  for expected_path in expected_paths]
+                expected_stdout = [
+                    "The following new files have been created:",
+                    "\t" + expected_files[0],
+                    "Before/after comparison plot saved as: " +
+                    comparison_plot_filename,
+                    "New data added to archive:",
+                    expected_trace_infos[0],
+                    "The following new files have been created:",
+                    "\t" + expected_files[1],
+                    "Before/after comparison plot saved as: " +
+                    comparison_plot_filename,
+                    "New data added to archive:",
+                    expected_trace_infos[1],
+                    "The following new files have been created:",
+                    "\t" + expected_files[2],
+                    "Before/after comparison plot saved as: " +
+                    comparison_plot_filename,
+                    "New data added to archive:",
+                    expected_trace_infos[2],
+                    "The following new files have been created:",
+                    "\t" + expected_files[3],
+                    "Before/after comparison plot saved as: " +
+                    comparison_plot_filename,
+                    "New data added to archive:",
+                    expected_trace_infos[3],
+                    ]
+                self.assertEqual(expected_stdout, got_stdout)
+                for expected_file in expected_files:
+                    self.assertTrue(os.path.isfile(expected_file))
+                self.assertTrue(os.path.isdir(backupdir))
+        finally:
+            try:
+                os.remove(plot_output_file)
+            except:
+                pass
+            try:
+                os.remove(comparison_plot_filename)
+            except:
+                pass
+            try:
+                shutil.rmtree(backupdir)
+            except:
+                pass
 
 
 def suite():

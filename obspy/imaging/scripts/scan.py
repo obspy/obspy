@@ -233,7 +233,7 @@ class Scanner(object):
         import obspy
         directory = os.path.join(os.path.dirname(obspy.__file__),
                                  "io", "gse2", "tests", "data")
-        scanner = Scanner()
+        scanner = Scanner(quiet=True)
         scanner.parse(directory)
         scanner.plot()
 

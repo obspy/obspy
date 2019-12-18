@@ -42,14 +42,19 @@ from future.builtins import *  # NOQA
 import glob
 import os
 import re
+import shutil
+import tempfile
+import traceback
 import warnings
 from datetime import timedelta
 
 import numpy as np
+from matplotlib.dates import num2date
 
 from obspy import Stream, read, UTCDateTime
 from obspy.core.stream import _headonly_warning_msg
 from obspy.core.util.misc import BAND_CODE
+from obspy.imaging.scripts.scan import scan, Scanner
 from obspy.io.mseed import ObsPyMSEEDFilesizeTooSmallError
 
 
@@ -107,12 +112,13 @@ class Client(object):
             both ``fileborder_seconds`` and ``fileborder_samples`` is used when
             determining if previous/next day should be checked for data.
         """
+        sds_root = os.path.abspath(sds_root)
         if not os.path.isdir(sds_root):
             msg = ("SDS root is not a local directory: " + sds_root)
             raise IOError(msg)
         self.sds_root = sds_root
         self.sds_type = sds_type
-        self.format = format and format.upper()
+        self.format = format and format.upper() or format
         self.fileborder_seconds = fileborder_seconds
         self.fileborder_samples = fileborder_samples
 
@@ -199,7 +205,7 @@ class Client(object):
         return st
 
     def _get_filenames(self, network, station, location, channel, starttime,
-                       endtime, sds_type=None):
+                       endtime, sds_type=None, only_existing_files=True):
         """
         Get list of filenames for certain waveform and time span.
 
@@ -218,8 +224,20 @@ class Client(object):
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
+        :type only_existing_files: bool
+        :param only_existing_files: Whether to only return filenames of
+            existing files or not. If True, globbing is performed and
+            wildcards can be used in ``network`` and other fields.
         :rtype: list of str
         """
+        if not only_existing_files:
+            for field in (network, station, location, channel):
+                if glob.has_magic(field):
+                    msg = (
+                        "No wildcards allowed with 'only_existing_files=False'"
+                        " (input was: '{}')").format(field)
+                    raise ValueError(msg)
+
         sds_type = sds_type or self.sds_type
         # SDS has data sometimes in adjacent days, so also try to read the
         # requested data from those files. Usually this is only a few seconds
@@ -246,7 +264,10 @@ class Client(object):
                 network=network, station=station, location=location,
                 channel=channel, year=year, doy=doy, sds_type=sds_type)
             full_path = os.path.join(self.sds_root, filename)
-            full_paths = full_paths.union(glob.glob(full_path))
+            if only_existing_files:
+                full_paths = full_paths.union(glob.glob(full_path))
+            else:
+                full_paths.add(full_path)
 
         return full_paths
 
@@ -276,6 +297,78 @@ class Client(object):
             channel=channel, year=time.year, doy=time.julday,
             sds_type=sds_type)
         return os.path.join(self.sds_root, filename)
+
+    def _split_stream_by_filenames(self, stream, sds_type=None):
+        """
+        Split stream into dictionary mapping by filenames in SDS archive.
+
+        :type stream: str
+        :param stream: Input stream to split up.
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :rtype: dict
+        """
+        sds_type = sds_type or self.sds_type
+        ids = set([tr.id for tr in stream])
+        dict_ = {}
+        for id_ in ids:
+            network, station, location, channel = id_.split(".")
+            st_ = stream.select(id=id_)
+            start = min([tr.stats.starttime for tr in st_])
+            end = max([tr.stats.endtime for tr in st_])
+            filenames = self._get_filenames(
+                network=network, station=station, location=location,
+                channel=channel, starttime=start, endtime=end,
+                only_existing_files=False)
+            for filename in filenames:
+                start, end = self._filename_to_time_range(filename)
+                st__ = st_.slice(start, end, nearest_sample=False)
+                # leave out last sample if it is exactly on the boundary.
+                # it belongs to the next file in that case.
+                for tr in st__:
+                    if tr.stats.endtime == end:
+                        tr.data = tr.data[:-1]
+                # the above can lead to empty traces.. remove those
+                st__.traces = [tr for tr in st__.traces if len(tr.data)]
+                for tr in st__:
+                    if tr.stats.endtime == end:
+                        tr.data = tr.data[:-1]
+                if st__:
+                    dict_[filename] = st__
+        return dict_
+
+    def _filename_to_time_range(self, filename):
+        """
+        Get expected start and end time of data stored in given filename (full
+        path).
+
+        >>> client = Client(sds_root="/tmp")
+        >>> t = UTCDateTime("2016-05-18T14:12:43.682261Z")
+        >>> filename = client._get_filename("NE", "STA", "LO", "CHA", t)
+        >>> print(filename)
+        /tmp/2016/NE/STA/CHA.D/NE.STA.LO.CHA.D.2016.139
+        >>> client._filename_to_time_range(filename)
+        (UTCDateTime(2016, 5, 18, 0, 0), UTCDateTime(2016, 5, 19, 0, 0))
+        >>> filename = "/tmp/2016/NE/STA/CHA.D/NE.STA.LO.CHA.D.2016.366"
+        >>> client._filename_to_time_range(filename)
+        (UTCDateTime(2016, 12, 31, 0, 0), UTCDateTime(2017, 1, 1, 0, 0))
+
+        :type filename: str
+        :param filename: Filename to get expected start and end time for.
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :rtype: dict
+        """
+        pattern = os.path.join(self.sds_root, self.FMTSTR)
+        group_map = {i: groups[0] for i, groups in
+                     enumerate(re.findall(FORMAT_STR_PLACEHOLDER_REGEX,
+                                          pattern))}
+        dict_ = _parse_path_to_dict(filename, pattern, group_map)
+        starttime = UTCDateTime(year=dict_["year"], julday=dict_["doy"])
+        endtime = starttime + 24 * 3600
+        return (starttime, endtime)
 
     def get_availability_percentage(self, network, station, location, channel,
                                     starttime, endtime, sds_type=None):
@@ -582,6 +675,298 @@ class Client(object):
             result.add((network, station))
         return sorted(result)
 
+    def _extract_missing_data(self, filenames):
+        """
+        Extracts information on data that is missing in SDS archive and could
+        be retrieved from given local files.
+
+        :type filenames: list of str
+        :param filenames: Files to extract data from.
+        """
+        # assemble information on the files with new data for the SDS archive
+        data = {}
+        times_min = {}
+        times_max = {}
+        filenames_to_check_sds = {}
+
+        for filename in filenames:
+            for tr in read(filename, headonly=True):
+                # remember overall earliest/latest data time per SEED ID
+                times_min[tr.id] = min(
+                    tr.stats.starttime,
+                    times_min.get(tr.id, tr.stats.starttime))
+                times_max[tr.id] = max(
+                    tr.stats.endtime + tr.stats.delta,
+                    times_max.get(tr.id, tr.stats.endtime))
+                # remember that file contains data for respective SEED ID
+                data.setdefault(tr.id, {}).setdefault(filename, []).append(tr)
+                # remember which files we need to check for gaps in SDS archive
+                filenames_to_check_sds.setdefault(tr.id, set()).update(
+                    self._get_filenames(
+                        network=tr.stats.network, station=tr.stats.station,
+                        location=tr.stats.location, channel=tr.stats.channel,
+                        starttime=tr.stats.starttime, endtime=tr.stats.endtime,
+                        only_existing_files=False))
+
+        # assemble information on gaps in the SDS archive that might be covered
+        # by new data
+        gaps = {}
+        earliest = {}
+        latest = {}
+        for seed_id, filenames_ in filenames_to_check_sds.items():
+            gaps.setdefault(seed_id, [])
+            earliest.setdefault(seed_id, np.inf)
+            latest.setdefault(seed_id, -np.inf)
+            scanner = scan(
+                paths=filenames_, format=self.format, recursive=False,
+                ignore_links=False, starttime=times_min[seed_id],
+                verbose=False, endtime=times_max[seed_id], seed_ids=[seed_id],
+                plot=False, print_gaps=False)
+            if scanner is None:
+                continue
+            for id_, info in scanner._info.items():
+                gaps[id_].extend([(UTCDateTime(num2date(start_)),
+                                   UTCDateTime(num2date(end_)))
+                                  for start_, end_ in info["gaps"]])
+                if len(info["data_startends_compressed"]):
+                    earliest_ = min([start_ for start_, _ in
+                                    info["data_startends_compressed"]])
+                    earliest[id_] = min(earliest[id_], earliest_)
+                    latest_ = max([end_ for _, end_ in
+                                   info["data_startends_compressed"]])
+                    latest[id_] = max(latest[id_], latest_)
+
+        timeranges = {}
+        for id_ in gaps:
+            start = earliest[id_]
+            end = latest[id_]
+            if start == np.inf:
+                start = None
+                end = None
+            else:
+                start = UTCDateTime(num2date(start))
+                end = UTCDateTime(num2date(end))
+            timeranges[id_] = (start, end)
+
+        # set a full-extent gap for all IDs that we did not encounter existing
+        # data in the time range of new data
+        for id_ in gaps:
+            if timeranges[id_] == (None, None):
+                gaps[id_] = [(times_min[seed_id], times_max[seed_id])]
+
+        return data, gaps
+
+    def add_data_to_archive(self, filenames, only_missing=True, backup=True,
+                            verbose=True, plot=True):
+        """
+        Adds data from given files to SDS Archive.
+
+        Currently only implemented for SDS archive in MSEED format.
+
+        :type filenames: list of str
+        :param filenames: Files to check for new data to add to archive.
+        :type only_missing: bool
+        :param only_missing: Whether to only add data missing in archive
+            (slicing the input data to gaps present in archive) or just add all
+            input data to archive without any checks of archive contents (might
+            lead to duplicate data in archive).
+        :type backup: bool
+        :param backup: Whether to backup original version of changed files in
+            SDS archive to a temporary directory.
+        :type verbose: bool
+        :param verbose: Whether to print info messages on performed operations.
+        :type plot: bool or str
+        :param plot: Whether to save a before/after comparison plot to an image
+            file. ``False`` for no image output, ``True`` for output to a
+            temporary file or a filename.
+        :rtype: str
+        :returns: Textual information of new data added to SDS archive.
+        """
+        format = self.format
+        now = UTCDateTime()
+        now_str = now.strftime("%Y%m%d%H%M%S")
+
+        if format != "MSEED":
+            msg = ("Currently only implemented for SDS Archive with format "
+                   "'MSEED'.")
+            raise NotImplementedError(msg)
+
+        self._backupdir = None
+        tmp_prefix = "obspy-sds-backup-{}-".format(now_str)
+        # maps original file paths (that were appended to) to backup file paths
+        # (or `None` if backup option is not selected)
+        changed_files = {}
+        new_files = set()
+        if plot:
+            scanner = Scanner(verbose=False, recursive=False,
+                              ignore_links=False)
+
+        new_data_string = []
+
+        def _handle_gap(id, start, end):
+            """
+            """
+            backupdir = self._backupdir
+
+            data_files = set()
+            for filename, traces in data.get(id, {}).items():
+                for tr in traces:
+                    if start and tr.stats.endtime < start:
+                        continue
+                    if end and tr.stats.starttime > end:
+                        continue
+                    data_files.add(filename)
+            for filename in data_files:
+                st = read(filename, starttime=start, endtime=end,
+                          sourcename=id, details=True)
+                st = st.select(id=id).trim(start, end,
+                                           nearest_sample=False)
+                for tr in st:
+                    if tr.stats.endtime == end:
+                        tr.data = tr.data[:-1]
+                st_dict = self._split_stream_by_filenames(st)
+                if not st_dict:
+                    continue
+                for filename_, st_ in st_dict.items():
+                    if not st_:
+                        continue
+                    # backup original file
+                    backupfile = None
+                    if (backup and filename_ not in changed_files and
+                            filename_ not in new_files and
+                            os.path.exists(filename_)):
+                        if backupdir is None:
+                            self._backupdir = tempfile.mkdtemp(
+                                prefix=tmp_prefix)
+                            backupdir = self._backupdir
+                        backupfile = os.path.join(
+                            backupdir,
+                            self._filename_strip_sds_root(filename_))
+                        target_dir = os.path.dirname(backupfile)
+                        try:
+                            if not os.path.isdir(target_dir):
+                                os.makedirs(target_dir)
+                            shutil.copy2(filename_, backupfile)
+                        except Exception:
+                            err_msg = \
+                                traceback.format_exc(0).\
+                                splitlines()[-1]
+                            info = ""
+                            if changed_files:
+                                info = (
+                                    " The following files have so far "
+                                    "been modified: {}").format(
+                                        changed_files.keys())
+                            msg = (
+                                "Backup option chosen and backup of "
+                                "file '{}' to '{}' failed ({}). "
+                                "Aborting appending to SDS archive.{}")
+                            msg = msg.format(filename_, backupfile,
+                                             err_msg, info)
+                            raise Exception(msg)
+                    # scan original file for before/after comparison
+                    if plot and filename_ not in changed_files:
+                        scanner.parse(filename_)
+                    # check if we can convert data to int32 without
+                    # changing it
+                    for tr in st_:
+                        try:
+                            data_int32 = tr.data.astype(np.int32)
+                            np.testing.assert_array_equal(
+                                tr.data, data_int32)
+                        except:
+                            pass
+                        else:
+                            tr.data = data_int32
+                    # now append the missing segment to the file
+                    target_dir = os.path.dirname(filename_)
+                    if not os.path.exists(target_dir):
+                        os.makedirs(target_dir)
+                    with open(filename_, "ab") as fh:
+                        st_.write(fh, format=format)
+
+                    new_data_string.extend(str(st_).splitlines()[1:])
+                    if filename_ in new_files:
+                        pass
+                    elif filename_ in changed_files:
+                        pass
+                    elif backupfile:
+                        changed_files[filename_] = backupfile
+                    else:
+                        new_files.add(filename_)
+
+        if only_missing:
+            data, gaps = self._extract_missing_data(filenames)
+            # handle gaps inside data
+            for id, gaps_ in gaps.items():
+                for start, end in gaps_:
+                    _handle_gap(id, start, end)
+        else:
+            # XXX TODO
+            raise NotImplementedError()
+
+        if verbose:
+            if changed_files:
+                print("The following files have been appended to:")
+                print("\n".join("\t" + filename
+                                for filename in sorted(changed_files)))
+            if new_files:
+                print("The following new files have been created:")
+                print("\n".join("\t" + filename
+                                for filename in sorted(new_files)))
+            if backup and changed_files:
+                print("Backups of original files have been stored "
+                      "in: {}".format(self._backupdir))
+
+        plot_output_file = None
+        if plot and (changed_files or new_files):
+            if plot is True:
+                fd, plot_output_file = tempfile.mkstemp(
+                    prefix=tmp_prefix, suffix=".png")
+                os.close(fd)
+            else:
+                plot_output_file = plot
+            # change seed id's of "before" data so that they don't clash with
+            # the "after" data
+            for id_ in scanner.data.keys():
+                scanner.data[id_ + " (before)"] = scanner.data.pop(id_)
+                scanner.samp_int[id_ + " (before)"] = scanner.samp_int.pop(id_)
+            # now scan modified files
+            for path in changed_files.keys():
+                scanner.parse(path)
+            for id_ in scanner.data.keys():
+                if id_.endswith(" (before)"):
+                    continue
+                scanner.data[id_ + "  (after)"] = scanner.data.pop(id_)
+                scanner.samp_int[id_ + "  (after)"] = scanner.samp_int.pop(id_)
+            # also scan new files
+            for path in new_files:
+                scanner.parse(path)
+            for id_ in scanner.data.keys():
+                if id_.endswith(" (before)") or id_.endswith("  (after)"):
+                    continue
+                scanner.data[id_ + "    (new)"] = scanner.data.pop(id_)
+                scanner.samp_int[id_ + "    (new)"] = scanner.samp_int.pop(id_)
+            # plot everything together
+            scanner.plot(show=False, outfile=plot_output_file)
+            if verbose:
+                print(("Before/after comparison plot saved as: {}").format(
+                    plot_output_file))
+
+        new_data_string = "\n".join(sorted(new_data_string))
+        if verbose and new_data_string:
+            print("New data added to archive:")
+            print(new_data_string)
+
+        return (new_data_string, changed_files, self._backupdir,
+                plot_output_file)
+
+    def _filename_strip_sds_root(self, filename):
+        """
+        Strip SDS root from a full-path filename in the SDS archive.
+        """
+        return re.sub(r'^{}{}*'.format(self.sds_root, os.sep), '', filename)
+
 
 def _wildcarded_except(exclude=[]):
     """
@@ -621,6 +1006,9 @@ def _parse_path_to_dict(path, pattern, group_map):
                 warnings.warn(msg)
                 return None
         result[key] = value
+    for key in ("year", "doy"):
+        if key in result:
+            result[key] = int(result[key])
     return result
 
 
