@@ -1040,11 +1040,11 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={},
 
 
 def _write_floattype_list(parent, obj, attr_list_name, tag,
-                          additional_mapping={}):
+                          additional_mapping={}, unit=True):
     for obj_ in getattr(obj, attr_list_name):
         attribs = {}
         attribs["datum"] = obj_.__dict__.get("datum")
-        if hasattr(obj_, "unit"):
+        if hasattr(obj_, "unit") and unit:
             attribs["unit"] = obj_.unit
         attribs["minusError"] = obj_.lower_uncertainty
         attribs["plusError"] = obj_.upper_uncertainty
@@ -1386,10 +1386,12 @@ def _write_response_stage(parent, stage):
                      stage.cf_transfer_function_type)
             _write_floattype_list(sub_, stage,
                                   "numerator", "Numerator",
-                                  additional_mapping={'number': 'number'})
+                                  additional_mapping={'number': 'number'},
+                                  unit=False)
             _write_floattype_list(sub_, stage,
                                   "denominator", "Denominator",
-                                  additional_mapping={'number': 'number'})
+                                  additional_mapping={'number': 'number'},
+                                  unit=False)
         elif isinstance(stage, ResponseListResponseStage):
             for rlelem in stage.response_list_elements:
                 sub__ = etree.SubElement(sub_, "ResponseListElement")
