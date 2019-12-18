@@ -786,11 +786,6 @@ class StationXMLTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             # manually add custom namespace definition
             tmpfile = tf.name
-            # assert that namespace prefix of xsi raises ValueError
-            mynsmap = {'xsi': 'http://bad.custom.ns/'}
-            self.assertRaises(
-                ValueError, inv.write, path_or_file_object=tmpfile,
-                format="STATIONXML", nsmap=mynsmap)
             # assert that namespace prefix of None raises ValueError
             mynsmap = {None: 'http://bad.custom.ns/'}
             self.assertRaises(
@@ -870,8 +865,7 @@ class StationXMLTestCase(unittest.TestCase):
             # check namespace definitions in root element
             expected = [
                 b'xmlns="http://www.fdsn.org/xml/station/1"',
-                b'xmlns:myns="http://test.myns.ns/"',
-                b'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"']
+                b'xmlns:myns="http://test.myns.ns/"']
             for line in expected:
                 self.assertIn(line, content)
             # check additional tags
