@@ -26,6 +26,7 @@ import scipy.interpolate
 
 from .. import compatibility
 from obspy.core.util.base import ComparingObject
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit,
@@ -408,6 +409,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
         for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
                 value[_i] = FloatWithUncertaintiesAndUnit(x)
+        if any(x.unit is not None for x in value):
+            msg = 'Setting Numerator/Denominator with a unit is deprecated.'
+            warnings.warn(msg, ObsPyDeprecationWarning)
         self._numerator = value
 
     @property
@@ -424,6 +428,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
         for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
                 value[_i] = FloatWithUncertaintiesAndUnit(x)
+        if any(x.unit is not None for x in value):
+            msg = 'Setting Numerator/Denominator with a unit is deprecated.'
+            warnings.warn(msg, ObsPyDeprecationWarning)
         self._denominator = value
 
     @property
