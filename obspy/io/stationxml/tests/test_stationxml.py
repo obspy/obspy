@@ -488,8 +488,28 @@ class StationXMLTestCase(unittest.TestCase):
                          obspy.UTCDateTime(1992, 5, 5))
 
         self.assertEqual(len(station.operators), 2)
-        self.assertEqual(station.operators[0].agencies[0], "Agency 1")
-        self.assertEqual(station.operators[0].agencies[1], "Agency 2")
+        self.assertEqual(station.operators[0].agency, "Agency 1")
+        # legacy, "agencies" was a thing for StationXML 1.0
+        # make sure warning shows up
+        try:
+            obspy.io.stationxml.core.__warningregistry__.clear()
+        except AttributeError:
+            # no warnings registered yet so nothing to do
+            pass
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", UserWarning)
+            self.assertEqual(station.operators[0].agencies[0], "Agency 1")
+        msg = (
+            "Attribute 'agencies' (holding a list of strings as Agencies) is "
+            "deprecated in favor of 'agency' which now holds a single string "
+            "(following changes in StationXML 1.1) and might be removed in "
+            "the future. Returning a list built up of the single agency or "
+            "an empty list if agency is None.")
+        for _w in w:
+            if _w.message.args[0] == msg:
+                break
+        else:
+            raise AssertionError("Expected warning not shown.")
         self.assertEqual(station.operators[0].contacts[0].names[0],
                          "This person")
         self.assertEqual(station.operators[0].contacts[0].names[1],
