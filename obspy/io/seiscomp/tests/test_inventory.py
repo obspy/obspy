@@ -20,14 +20,15 @@ from future.builtins import *  # NOQA
 
 import io
 import os
-import warnings
+import re
 import unittest
+import warnings
 
 from obspy.core.inventory import read_inventory
 from obspy.core.inventory.response import (CoefficientsTypeResponseStage,
                                            FIRResponseStage)
 from obspy.io.seiscomp.inventory import (
-    _count_complex, _parse_list_of_complex_string)
+    _count_complex, _parse_list_of_complex_string, SCHEMA_NAMESPACE_BASE)
 
 
 class SC3MLTestCase(unittest.TestCase):
@@ -99,8 +100,15 @@ class SC3MLTestCase(unittest.TestCase):
         # <Coefficients> | <Coefficients name="EBR.2002.091.H" ~
 
         # We disregard these differences because they are unimportant
-
         excluded_tags = ["Source", "Sender", "Created", "Coefficients"]
+
+        # also ignore StorageFormat which doesnt exist anymore in
+        # StationXML 1.1 and is saved into extra / a foreign tag
+        pattern_format_line = (
+            r'<([^:]*):format xmlns:\1='
+            r'"http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[\.0-9]*">')
+        sc3ml_arr = [line for line in sc3ml_arr
+                     if not re.search(pattern_format_line, line)]
 
         # Compare the two stationXMLs line by line
         # If one XML has an entry that the other one does not, this procedure
@@ -190,8 +198,17 @@ class SC3MLTestCase(unittest.TestCase):
                                      stationxml_cha.azimuth)
                     self.assertEqual(sc3ml_cha.dip,
                                      stationxml_cha.dip)
-                    self.assertEqual(sc3ml_cha.storage_format,
-                                     stationxml_cha.storage_format)
+                    # reading stationxml will ignore old StationXML 1.0 defined
+                    # StorageFormat, Arclink Inventory XML and SC3ML get it
+                    # stored in extra now
+                    with warnings.catch_warnings(record=True):
+                        self.assertEqual(sc3ml_cha.storage_format, None)
+                        self.assertEqual(stationxml_cha.storage_format, None)
+                    self.assertEqual(sc3ml_cha.extra['format']['value'],
+                                     'Steim2')
+                    namespace = sc3ml_cha.extra['format'].get('namespace')
+                    self.assertTrue(
+                        namespace.startswith(SCHEMA_NAMESPACE_BASE))
 
                     cdisps = "clock_drift_in_seconds_per_sample"
                     self.assertEqual(getattr(sc3ml_cha, cdisps),
