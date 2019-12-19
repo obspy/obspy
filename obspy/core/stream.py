@@ -3304,9 +3304,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param group_by: Group traces together which have the same metadata
             given by this parameter. The parameter should name the
             corresponding keys of the stats object,
-            e.g. ``'{network}.{station}'``
+            e.g. ``'{network}.{station}'``.
             This parameter can take the value
-            ``'id'`` which stacks groups the traces by SEED id
+            ``'id'`` which groups the traces by SEED id.
 
         :return: dictionary {group: stream}
         """
