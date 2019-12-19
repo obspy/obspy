@@ -1182,13 +1182,14 @@ def _test_similarity(event_1, event_2):
                 if not amp_1[key] == amp_2[key]:
                     return ("{0} is not the same as {1} for key "
                             "{2}\n{3}\n{4}".format(
-                        amp_1[key], amp_2[key], key, amp_1, amp_2))
+                                amp_1[key], amp_2[key], key, amp_1, amp_2))
             elif key == "waveform_id":
                 if pick_1[key].station_code != pick_2[key].station_code:
                     return 'Station codes do not match'
                 if pick_1[key].channel_code[0] != pick_2[key].channel_code[0]:
                     return 'Channel codes do not match'
-                if pick_1[key].channel_code[-1] != pick_2[key].channel_code[-1]:
+                if pick_1[key].channel_code[-1] !=\
+                        pick_2[key].channel_code[-1]:
                     return 'Channel codes do not match'
             elif key in ["magnitude_hint", "type"]:
                 # Reading back in will define both, but input event might have
