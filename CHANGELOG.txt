@@ -117,6 +117,7 @@ master:
    * Include AIN as takeoff-angle when reading and writing nordic files
      (see #2404).
    * Add error ellipses and read high-accuracy hypocenter lines (see #2451)
+   * BUG-FIX: cope with missing pick evaluation information (see #XXXX)
  - obspy.io.reftek:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)
