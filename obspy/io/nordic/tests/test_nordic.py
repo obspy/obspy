@@ -74,7 +74,12 @@ class TestNordicMethods(unittest.TestCase):
             self.assertEqual(read_pick.backazimuth, test_pick.backazimuth)
             self.assertEqual(read_pick.onset, test_pick.onset)
             self.assertEqual(read_pick.phase_hint, test_pick.phase_hint)
-            self.assertEqual(read_pick.polarity, test_pick.polarity)
+            if test_pick.polarity == "undecidable":
+                self.assertIsNone(read_pick.polarity)
+            elif read_pick.polarity == "undecidable":
+                self.assertIsNone(test_pick.polarity)
+            else:
+                self.assertEqual(read_pick.polarity, test_pick.polarity)
             self.assertEqual(read_pick.waveform_id.station_code,
                              test_pick.waveform_id.station_code)
             self.assertEqual(read_pick.waveform_id.channel_code[-1],
@@ -1049,7 +1054,7 @@ class TestNordicMethods(unittest.TestCase):
         self.assertAlmostEqual(azi_max, 167.9407699)
 
 
-def _assert_similarity(event_1, event_2, verbose=False):
+def _assert_similarity(event_1, event_2, verbose=True):
     """
     Raise AssertionError if testing similarity fails
     """
@@ -1071,6 +1076,9 @@ def _test_similarity(event_1, event_2, verbose=False):
     :type verbose: bool
     :param verbose: If true and fails will output why it fails.
     """
+    # What None maps to.
+    pick_default_mapper = {
+        "polarity": "undecidable", "evaluation_mode": "manual"}
     # Check origins
     if len(event_1.origins) != len(event_2.origins):
         return False
@@ -1117,6 +1125,13 @@ def _test_similarity(event_1, event_2, verbose=False):
         for key in pick_1.keys():
             if key not in ["resource_id", "waveform_id"]:
                 if pick_1[key] != pick_2[key]:
+                    default = pick_default_mapper.get(key, None)
+                    if pick_1[key] is None:
+                        if pick_2[key] == default:
+                            continue
+                    elif pick_2[key] is None:
+                        if pick_1[key] == default:
+                            continue
                     if verbose:
                         print('%s is not the same as %s for key %s' %
                               (pick_1[key], pick_2[key], key))
@@ -1220,7 +1235,16 @@ def full_test_event():
              evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_2, onset='impulsive', phase_hint='PN',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.62,
-             evaluation_mode="automatic")]
+             evaluation_mode="automatic"),
+        # Missing info shouldn't be an issue
+        Pick(waveform_id=_waveform_id_2, onset=None, phase_hint='PN',
+             polarity=None, time=UTCDateTime("2012-03-26") + 1.92,
+             evaluation_mode=None),
+        # Long-phase
+        Pick(waveform_id=_waveform_id_2, onset='impulsive', phase_hint='PKiKP',
+             polarity=None, time=UTCDateTime("2012-03-26") + 1.92,
+             evaluation_mode=None),
+    ]
     # Test a generic local magnitude amplitude pick
     test_event.amplitudes = [
         Amplitude(generic_amplitude=2.0, period=0.4,
@@ -1246,7 +1270,16 @@ def full_test_event():
         Arrival(time_weight=2, phase=test_event.picks[4].phase_hint,
                 pick_id=test_event.picks[4].resource_id,
                 backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25, takeoff_angle=170)]
+                azimuth=25, takeoff_angle=170),
+        Arrival(time_weight=2, phase=test_event.picks[5].phase_hint,
+                pick_id=test_event.picks[5].resource_id,
+                backazimuth_residual=5, time_residual=0.2, distance=15,
+                azimuth=25, takeoff_angle=170),
+        Arrival(time_weight=0, phase=test_event.picks[6].phase_hint,
+                pick_id=test_event.picks[6].resource_id,
+                backazimuth_residual=5, time_residual=0.2, distance=15,
+                azimuth=25, takeoff_angle=170),
+    ]
     # Add in error info (line E)
     test_event.origins[0].quality = OriginQuality(
         standard_error=0.01, azimuthal_gap=36)
