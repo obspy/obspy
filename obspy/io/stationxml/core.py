@@ -26,6 +26,7 @@ from lxml import etree
 import obspy
 from obspy.core import compatibility
 from obspy.core.util import AttribDict
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (CoefficientsTypeResponseStage,
@@ -155,6 +156,8 @@ def _read_stationxml(path_or_file_object):
     # to be adjusted if the StationXML format gets another revision!
     namespace = "http://www.fdsn.org/xml/station/1"
 
+    stationxml_version = root.attrib.get('schemaVersion')
+
     def _ns(tagname):
         return "{%s}%s" % (namespace, tagname)
 
@@ -168,8 +171,14 @@ def _read_stationxml(path_or_file_object):
     module_uri = _tag2obj(root, _ns("ModuleURI"), str)
 
     networks = []
-    for network in root.findall(_ns("Network")):
-        networks.append(_read_network(network, _ns))
+    with warnings.catch_warnings():
+        if stationxml_version == '1.0':
+            warnings.filterwarnings(
+                'ignore',
+                'Setting Numerator/Denominator with a unit is deprecated.',
+                ObsPyDeprecationWarning)
+        for network in root.findall(_ns("Network")):
+            networks.append(_read_network(network, _ns))
 
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
