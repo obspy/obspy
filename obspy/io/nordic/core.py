@@ -671,6 +671,8 @@ def _read_picks(tagged_lines, new_event):
         weight = line[14]
         if weight not in ' 012349_':  # Long phase name
             weight = line[8]
+            if weight == ' ':
+                weight = 0
             phase = line[10:17].strip()
             polarity = ''
         elif weight == '_':
@@ -682,7 +684,8 @@ def _read_picks(tagged_lines, new_event):
             polarity = line[16]
             if weight == ' ':
                 weight = 0
-        polarity = POLARITY_MAPPING.get(polarity, "undecidable")
+        polarity = POLARITY_MAPPING.get(polarity, None)  # Empty could be None
+        # or undecidable.
         # It is valid nordic for the origin to be hour 23 and picks to be hour
         # 00 or 24: this signifies a pick over a day boundary.
         pick_hour = int(line[18:20])
@@ -1445,6 +1448,7 @@ def nordpick(event, high_accuracy=True):
         if eval_mode is None:
             warnings.warn("Evaluation mode {0} is not mappable".format(
                 pick.evaluation_mode))
+            eval_mode = " "
         # Generate a print string and attach it to the list
         channel_code = pick.waveform_id.channel_code or '   '
         pick_hour = pick.time.hour
