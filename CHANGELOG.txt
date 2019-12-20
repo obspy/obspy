@@ -1,5 +1,8 @@
 master:
  - obspy.core:
+   * inventory objects have been adapted to StationXML 1.1 for details on
+     changes see #2510 and
+     https://github.com/FDSN/StationXML/blob/master/Changes.md
    * Fixed import of custom plugins (see #2423)
    * Fixed "==" comparison for Stream and Trace which was very slow in case of
      traces with >1e6 samples (see #2377)
@@ -150,6 +153,9 @@ master:
  - obspy.io.stationxml:
    * When reading StationXML/SC3ML, make sure to properly read empty string
      fields as empty strings instead of "None" (see #2519 and #2527)
+   * inventory objects have been adapted to StationXML 1.1 for details on
+     changes see #2510 and
+     https://github.com/FDSN/StationXML/blob/master/Changes.md
  - obspy.io.quakeml:
    * Allow writing invalid ids but raise a warning
      (see #2104, #2090, #2093, #1872).
