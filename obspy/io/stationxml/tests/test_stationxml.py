@@ -22,7 +22,8 @@ import unittest
 import warnings
 
 import obspy
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, CatchAndAssertWarnings
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.inventory import (Inventory, Network, ResponseStage)
 from obspy.core.util.base import NamedTemporaryFile
 from lxml import etree
@@ -575,26 +576,16 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(len(station.operators), 2)
         self.assertEqual(station.operators[0].agency, "Agency 1")
         # legacy, "agencies" was a thing for StationXML 1.0
-        # make sure warning shows up
-        try:
-            obspy.io.stationxml.core.__warningregistry__.clear()
-        except AttributeError:
-            # no warnings registered yet so nothing to do
-            pass
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always", UserWarning)
+        regex = (
+            r"Attribute 'agencies' \(holding a list of strings as Agencies\) "
+            r"is deprecated in favor of 'agency' which now holds a single "
+            r"string \(following changes in StationXML 1\.1\) and might be "
+            r"removed in the future. Returning a list built up of the single "
+            r"agency or an empty list if agency is None.")
+        with CatchAndAssertWarnings(
+                clear=['obspy.io.stationxml.core'],
+                expected=[(ObsPyDeprecationWarning, regex)]):
             self.assertEqual(station.operators[0].agencies[0], "Agency 1")
-        msg = (
-            "Attribute 'agencies' (holding a list of strings as Agencies) is "
-            "deprecated in favor of 'agency' which now holds a single string "
-            "(following changes in StationXML 1.1) and might be removed in "
-            "the future. Returning a list built up of the single agency or "
-            "an empty list if agency is None.")
-        for _w in w:
-            if _w.message.args[0] == msg:
-                break
-        else:
-            raise AssertionError("Expected warning not shown.")
         self.assertEqual(station.operators[0].contacts[0].names[0],
                          "This person")
         self.assertEqual(station.operators[0].contacts[0].names[1],
