@@ -29,6 +29,72 @@ from lxml import etree
 import obspy.io.stationxml.core
 
 
+fullrandom_stationxml_1_0_changes = {
+    1: b'<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" '
+       b'schemaVersion="1.0">',
+    502: b'                            <Numerator unit="IoDwslh8kHJBTY6U28" '
+         b'plusError="-1096718463.14" '
+         b'minusError="1126505295.72">643096860.28</Numerator>',
+    503: b'                            <Numerator '
+         b'unit="SowFov80sfXY29yH8QKDkM46" plusError="1487660393.16" '
+         b'minusError="1518618020.33">-1135677195.92</Numerator>',
+    504: b'                            <Denominator '
+         b'unit="R0-VApVbeaaxNu08Vz2Yn2U" plusError="-1418173713.21" '
+         b'minusError="-696602068.55">1504792438.09</Denominator>',
+    505: b'                            <Denominator unit="YZJt" '
+         b'plusError="587099516.91" '
+         b'minusError="618144513.11">1711947659.78</Denominator>',
+    1574: b'                            <Numerator unit="UJ60-cTOQW-" '
+          b'plusError="-1762674286.27" '
+          b'minusError="-1269852413.17">-191637952.97</Numerator>',
+    1575: b'                            <Numerator '
+          b'unit="dWVUbVRdoW84E9aMmhoPMf0_Vz5" plusError="1954449462.37" '
+          b'minusError="221794746.01">-661293296.04</Numerator>',
+    1576: b'                            <Denominator unit="rGnLumgUQBtR" '
+          b'plusError="-1789269251.46" '
+          b'minusError="-2058655199.36">1333976063.09</Denominator>',
+    1577: b'                            <Denominator '
+          b'unit="VjFL7CjQnMjn.gRbuy" plusError="1009129881.95" '
+          b'minusError="487439513.87">-94223624.85</Denominator>',
+    3041: b'                            <Numerator unit="KtMY_H" '
+          b'plusError="1980779412.19" '
+          b'minusError="1967022575.02">1495868669.19</Numerator>',
+    3042: b'                            <Numerator '
+          b'unit="Tmb9fYQNp.BIIG3WpTN6n4o" plusError="97119083.65" '
+          b'minusError="-405991834.0">1874295789.18</Numerator>',
+    3043: b'                            <Denominator unit="Ium-gE2" '
+          b'plusError="-852864606.7" '
+          b'minusError="317433598.29">-1136352379.95</Denominator>',
+    3044: b'                            <Denominator '
+          b'unit="_3xqScYZeK4IifBd3hEoC-n-TZQ" plusError="-1568478443.12" '
+          b'minusError="-487684414.86">691232466.85</Denominator>',
+    }
+# don't reinsert all the changes made in #2510, it's enough to add every type
+# of change once
+fullrandom_stationxml_1_0_insertions = [
+    (216, b'                <Agency>UIyHdtVpO</Agency>'),
+    (411, b'                <StorageFormat>WwXQ2n1i</StorageFormat>'),
+    (600, b'                        <Decimation>'),
+    (600, b'                            <InputSampleRate unit="HERTZ" '
+          b'plusError="59663358.91" '
+          b'minusError="-1077596674.88">-2002635152.29</InputSampleRate>'),
+    (600, b'                            <Factor>240803815</Factor>'),
+    (600, b'                            <Offset>-262793817</Offset>'),
+    (600, b'                            <Delay unit="XPpuXfwz-L8fb_ckRH" '
+          b'plusError="1934268189.45" '
+          b'minusError="2001850363.0">1582595339.45</Delay>'),
+    (600, b'                            <Correction '
+          b'unit="XC0nuO8jNBprXjIhFSgmZ" plusError="302375551.96" '
+          b'minusError="-977920682.23">-1860361815.98</Correction>'),
+    (600, b'                        </Decimation>'),
+    (600, b'                        <StageGain>'),
+    (600, b'                            <Value>-1413005224.06</Value>'),
+    (600, b'                            '
+          b'<Frequency>-1093676557.19</Frequency>'),
+    (600, b'                        </StageGain>'),
+    ]
+
+
 class StationXMLTestCase(unittest.TestCase):
     """
     """
@@ -38,6 +104,25 @@ class StationXMLTestCase(unittest.TestCase):
         # Most generic way to get the actual data directory.
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
+
+    def _make_old_1_0_full_stationxml(self):
+        """
+        Takes the full random StationXML 1.1 file (which originally was created
+        as 1.0, see #2510) and reinserts some changes to make it a StationXML
+        1.0 file which we still want to be able to read without issues
+        """
+        filename = os.path.join(self.data_dir, "full_random_stationxml.xml")
+        with open(filename, 'rb') as fh:
+            lines = fh.readlines()
+        # insert/replace those lines that were stripped/changed
+        for lineno, line in fullrandom_stationxml_1_0_changes.items():
+            lines[lineno] = line + b'\n'
+        for lineno, line in fullrandom_stationxml_1_0_insertions[::-1]:
+            lines.insert(lineno, line + b'\n')
+        fh = io.BytesIO()
+        fh.writelines(lines)
+        fh.seek(0)
+        return fh
 
     def _assert_station_xml_equality(self, xml_file_buffer,
                                      expected_xml_file_buffer):
@@ -1191,6 +1276,18 @@ class StationXMLTestCase(unittest.TestCase):
             response_2.response_stages[2].input_units_description, "Volts")
         self.assertEqual(
             response_2.response_stages[2].output_units_description, "Volts")
+
+    def test_reading_full_stationxml_1_0_file(self):
+        """
+        Tests reading a fully filled StationXML 1.0 file.
+        """
+        fh = self._make_old_1_0_full_stationxml()
+        inv = obspy.read_inventory(fh, format='STATIONXML')
+        lats = [cha.latitude for net in inv for sta in net for cha in sta]
+        # for now just check that all expected channels are there.. test could
+        # be much improved
+        self.assertEqual(
+            lats, [-53.12, 44.77, 63.39, 12.46, -13.16, -84.44, 43.9, -88.41])
 
 
 def suite():
