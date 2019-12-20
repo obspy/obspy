@@ -31,7 +31,7 @@ from obspy.core.util.base import (ALL_MODULES, DEFAULT_MODULES,
                                   get_script_dir_name, MATPLOTLIB_VERSION,
                                   SCIPY_VERSION, NUMPY_VERSION,
                                   BASEMAP_VERSION, CARTOPY_VERSION,
-                                  PROJ4_VERSION)
+                                  PROJ4_VERSION, CatchAndAssertWarnings)
 from obspy.core.util.misc import (BAND_CODE, CatchOutput, complexify_string,
                                   guess_delta, loadtxt, score_at_percentile,
                                   to_int_or_zero, SuppressOutput)

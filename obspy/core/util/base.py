@@ -16,6 +16,7 @@ from future.utils import PY2
 import builtins
 import doctest
 import glob
+import importlib
 import inspect
 import io
 import os
@@ -23,6 +24,7 @@ import re
 import sys
 import tempfile
 import unicodedata
+import warnings
 from collections import OrderedDict
 
 import numpy as np
@@ -701,6 +703,87 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
             for filename in pathnames[1:]:
                 generic.extend(callback_func(filename, **kwargs))
         return generic
+
+
+class CatchAndAssertWarnings(warnings.catch_warnings):
+    def __init__(self, clear=None, expected=None, show_all=True, **kwargs):
+        """
+        :type clear: list of str
+        :param clear: list of modules to clear warning
+            registries on (e.g. ``["obspy.signal", "obspy.core"]``), in order
+            to make sure any expected warnings will be shown and not suppressed
+            because already raised in previously executed code.
+        :type expected: list
+        :param expected: list of 2-tuples specifying expected
+            warnings that should be looked for when exiting the context
+            manager. An ``AssertionError`` will be raised if any expected
+            warning is not encountered. First item in tuple should be the
+            class of the warning, second item should be a regex matching (a
+            part of) the warning message (e.g.
+            ``(ObsPyDeprecationWarning, 'Attribute .* is deprecated')``).
+            Make sure to escape regex special characters like `(` or `.` with a
+            backslash and provide message regex as a raw string.
+        :type show_all: str
+        :param show_all: Whether to set ``warnings.simplefilter('always')``
+            when entering context.
+        """
+        self.registries_to_clear = clear
+        self.expected_warnings = expected
+        self.show_all = show_all
+        # always record warnings, obviously..
+        kwargs['record'] = True
+        super(CatchAndAssertWarnings, self).__init__(**kwargs)
+
+    def __enter__(self):
+        self.warnings = super(CatchAndAssertWarnings, self).__enter__()
+        if self.registries_to_clear:
+            for modulename in self.registries_to_clear:
+                self.clear_warning_registry(modulename)
+        if self.show_all:
+            warnings.simplefilter("always", Warning)
+        # this will always return the list of warnings because we set
+        # record=True
+        return self.warnings
+
+    def __exit__(self, *exc_info):
+        super(CatchAndAssertWarnings, self).__exit__(self, *exc_info)
+        # after cleanup, check expected warnings
+        self._assert_warnings()
+
+    @staticmethod
+    def clear_warning_registry(modulename):
+        """
+        Clear warning registry of specified module
+
+        :type modulename: str
+        :param modulename: Full module name (e.g. ``'obspy.signal'``)
+        """
+        mod = importlib.import_module(modulename)
+        try:
+            registry = mod.__warningregistry__
+        except AttributeError:
+            pass
+        else:
+            registry.clear()
+
+    def _assert_warnings(self):
+        """
+        Checks for expected warnings and raises an AssertionError if anyone of
+        these is not encountered.
+        """
+        if not self.expected_warnings:
+            return
+        for category, regex in self.expected_warnings:
+            for warning in self.warnings:
+                if not isinstance(warning.message, category):
+                    continue
+                if not re.search(regex, str(warning.message)):
+                    continue
+                # found a matching warning, so break out
+                break
+            else:
+                msg = 'Expected warning not raised: (%s, %s)'
+                raise AssertionError(msg % (category.__name__, regex))
 
 
 if __name__ == '__main__':
