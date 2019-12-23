@@ -203,8 +203,8 @@ class Client(object):
             :class:`~TSIndexDatabaseHandler`
         :param database: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object
-        :type datapath_replace: 2-value tuple(str, str)
-        :param datapath_replace: A 2-value ``tuple(str, str)``, where any
+        :type datapath_replace: tuple(str, str)
+        :param datapath_replace: A ``tuple(str, str)``, where any
             occurrence of the first value will be replaced with the second
             value in filename paths from the index.
         :type loglevel: str
