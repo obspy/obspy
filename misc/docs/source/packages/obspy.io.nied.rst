@@ -1,3 +1,5 @@
+:orphan:
+
 .. currentmodule:: obspy.io.nied
 .. automodule:: obspy.io.nied
 

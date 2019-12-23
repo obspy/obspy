@@ -1,3 +1,5 @@
+:orphan:
+
 .. currentmodule:: obspy.core.inventory
 .. automodule:: obspy.core.inventory
 
