@@ -46,6 +46,33 @@ manner:
 .. _SciPy: https://scipy.scipy.org/
 .. _matplotlib: http://matplotlib.org/
 
+Import statements in source code are grouped by ``__future__``, standard
+library, third party packages and finally obspy imports. Inside blocks
+``from ...`` imports come after ``import ...`` statements, and both should be
+sorted alphabetically:
+
+.. code-block:: python
+
+    from __future__ import (absolute_import, division, print_function,
+                            unicode_literals)
+    from future.builtins import *  # NOQA
+    from future.utils import native_str
+
+    import inspect
+    import math
+    import warnings
+    from copy import copy, deepcopy
+
+    import numpy as np
+    from decorator import decorator
+
+    from obspy import read, Stream
+    from obspy.core import compatibility
+    from obspy.core.utcdatetime import UTCDateTime
+    from obspy.core.util import AttribDict, create_empty_data_chunk, NUMPY_VERSION
+    from obspy.core.util.base import _get_function_from_entry_point
+    from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
+
 Naming
 ------
 
