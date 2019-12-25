@@ -161,6 +161,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
 import warnings
 
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
@@ -172,7 +173,9 @@ msg = (
     "the client contacting the routing service provided by EIDA: "
     "https://docs.obspy.org/packages/obspy.clients.fdsn.html#"
     "basic-routing-clients-usage")
-warnings.warn(msg, category=ObsPyDeprecationWarning)
+# suppress warning on docs build
+if os.environ.get('SPHINX') != 'true':
+    warnings.warn(msg, category=ObsPyDeprecationWarning)
 
 from .client import Client  # NOQA
 
