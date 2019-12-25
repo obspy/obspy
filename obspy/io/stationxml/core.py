@@ -1445,18 +1445,37 @@ def _write_extra(parent, obj):
             _write_element(parent, element, tagname)
 
 
-def _tag2obj(element, tag, convert):
-    # we use future.builtins.str and are sure we have unicode here
+def _convert(text, convert):
+    if convert is str:
+        return _convert_str(text)
     try:
-        return convert(element.find(tag).text)
+        return convert(text)
     except Exception:
         None
+
+
+def _convert_str(text):
+    # we use future.builtins.str and are sure we have unicode here
+    # lxml gives ``None`` for tags with empty text, best way to handle this is
+    # probably to give back an empty string
+    if not text:
+        # Returning an empty string
+        return ''
+    return text
+
+
+def _tag2obj(element, tag, convert):
+    try:
+        text = element.find(tag).text
+    except Exception:
+        return None
+    return _convert(text, convert)
 
 
 def _tags2obj(element, tag, convert):
     values = []
     for elem in element.findall(tag):
-        values.append(convert(elem.text))
+        values.append(_convert(elem.text, convert))
     return values
 
 
