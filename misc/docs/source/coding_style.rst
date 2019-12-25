@@ -46,9 +46,10 @@ manner:
 .. _SciPy: https://scipy.scipy.org/
 .. _matplotlib: http://matplotlib.org/
 
-Import statements in source code are grouped by ``__future__``, builtins, third
-party packages and finally obspy imports. Inside blocks ``from ...`` imports
-come after ``import ...`` statements, and both should be sorted alphabetically:
+Import statements in source code are grouped by ``__future__``, standard
+library, third party packages and finally obspy imports. Inside blocks
+``from ...`` imports come after ``import ...`` statements, and both should be
+sorted alphabetically:
 
 .. code-block:: python
 
