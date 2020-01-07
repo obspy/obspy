@@ -1,3 +1,5 @@
+:orphan:
+
 .. currentmodule:: obspy.core.event.header
 .. automodule:: obspy.core.event.header
     :members:

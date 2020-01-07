@@ -1,3 +1,5 @@
+:orphan:
+
 .. currentmodule:: obspy.core.util
 .. automodule:: obspy.core.util
 

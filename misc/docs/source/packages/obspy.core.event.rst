@@ -1,3 +1,5 @@
+:orphan:
+
 .. currentmodule:: obspy.core.event
 .. automodule:: obspy.core.event
 
