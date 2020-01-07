@@ -51,8 +51,8 @@ master:
      the last character of the SEED channel (see #2484).
    * Fixed a bug in Stream.plot(type='section', reftime=..., ...) that caused
      wrong relative start times of traces relative to given reftime (see #2493)
-   * Fixed path case issue that was causing unit test failure on Windows (see
-     #2296)
+   * Fixed a Windows-specific path case issue in a helper function that returns
+     a list of untracked files in the git repository (see #2296)
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
@@ -136,11 +136,8 @@ master:
      in it (see #2358, #1393)
  - obspy.io.seiscomp:
    * Very large performance improvement reading large sc3ml inventory files by
-     pre-indexing sensors, dataloggers and responses (see #2296).
-   * Sped up reading sc3ml inventory files by reducing number of calls to
-     element.find (see #2296).
-   * Fixed bug in warnings filters that depended on order of execution (see
-     #2296).
+     pre-indexing sensors, dataloggers and responses and reducing lxml calls
+     (see #2296).
  - obspy.io.quakeml:
    * Allow writing invalid ids but raise a warning
      (see #2104, #2090, #2093, #1872).
