@@ -47,6 +47,31 @@ def _isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
+def _check_latitude(latitude, variable_name='latitude'):
+    """
+    Check whether latitude is in the -90 to +90 range.
+    """
+    if latitude is None:
+        return
+    if latitude > 90 or latitude < -90:
+        msg = '{} out of bounds! (-90 <= {} <=90)'.format(
+            variable_name, variable_name)
+        raise ValueError(msg)
+
+
+def _normalize_longitude(longitude):
+    """
+    Normalize longitude in the -180 to +180 range.
+    """
+    if longitude is None:
+        return
+    while longitude > 180:
+        longitude -= 360
+    while longitude < -180:
+        longitude += 360
+    return longitude
+
+
 def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     """
     Vincenty Inverse Solution of Geodesics on the Ellipsoid.
@@ -101,20 +126,10 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
               azimuth and distance.
     """
     # Check inputs
-    if lat1 > 90 or lat1 < -90:
-        msg = "Latitude of Point 1 out of bounds! (-90 <= lat1 <=90)"
-        raise ValueError(msg)
-    while lon1 > 180:
-        lon1 -= 360
-    while lon1 < -180:
-        lon1 += 360
-    if lat2 > 90 or lat2 < -90:
-        msg = "Latitude of Point 2 out of bounds! (-90 <= lat2 <=90)"
-        raise ValueError(msg)
-    while lon2 > 180:
-        lon2 -= 360
-    while lon2 < -180:
-        lon2 += 360
+    _check_latitude(lat1, 'lat1')
+    lon1 = _normalize_longitude(lon1)
+    _check_latitude(lat2, 'lat2')
+    lon2 = _normalize_longitude(lon2)
 
     b = a * (1 - f)  # semiminor axis
 
@@ -244,12 +259,8 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
         slower.
     """
     if HAS_GEOGRAPHICLIB:
-        if lat1 > 90 or lat1 < -90:
-            msg = "Latitude of Point 1 out of bounds! (-90 <= lat1 <=90)"
-            raise ValueError(msg)
-        if lat2 > 90 or lat2 < -90:
-            msg = "Latitude of Point 2 out of bounds! (-90 <= lat2 <=90)"
-            raise ValueError(msg)
+        _check_latitude(lat1, 'lat1')
+        _check_latitude(lat2, 'lat2')
         result = Geodesic(a=a, f=f).Inverse(lat1, lon1, lat2, lon2)
         azim = result['azi1']
         if azim < 0:
@@ -383,11 +394,103 @@ def mean_longitude(longitudes):
         in degrees.
     """
     mean_longitude = circmean(np.array(longitudes), low=-180, high=180)
-    while mean_longitude < -180:
-        mean_longitude += 360
-    while mean_longitude > 180:
-        mean_longitude -= 360
+    mean_longitude = _normalize_longitude(mean_longitude)
     return mean_longitude
+
+
+def inside_geobounds(object, minlatitude=None, maxlatitude=None,
+                     minlongitude=None, maxlongitude=None,
+                     latitude=None, longitude=None,
+                     minradius=None, maxradius=None):
+    """
+    Check whether an object is within a given latitude and/or longitude range,
+    or within a given distance range from a reference geographic point.
+
+    The object must have ``latitude`` and ``longitude`` attributes, expressed
+    in degrees.
+
+    :type object: object
+    :param object: An object with `latitude` and `longitude` attributes.
+    :type minlatitude: float
+    :param minlatitude: Minimum latitude in degrees.
+    :type maxlatitude: float
+    :param maxlatitude: Maximum latitude in degrees. If this value is smaller
+        than ``minlatitude``, then 360 degrees are added to this value (i.e.,
+        wrapping around latitude of +/- 180 degrees)
+    :type minlongitude: float
+    :param minlongitude: Minimum longitude in degrees.
+    :type maxlongitude: float
+    :param maxlongitude: Minimum longitude in degrees.
+    :type latitude: float
+    :param latitude: Latitude of the reference point, in degrees, for distance
+        range selection.
+    :type longitude: float
+    :param longitude: Longitude of the reference point, in degrees, for
+        distance range selection.
+    :type minradius: float
+    :param minradius: Minimum distance, in degrees, from the reference
+        geographic point defined by the latitude and longitude parameters.
+    :type maxradius: float
+    :param maxradius: Maximum distance, in degrees, from the reference
+        geographic point defined by the latitude and longitude parameters.
+    :return: ``True`` if the object is within the given range, ``False``
+        otherwise.
+
+    .. rubric:: Example
+
+    >>> from obspy.geodetics import inside_geobounds
+    >>> from obspy import read_events
+    >>> ev = read_events()[0]
+    >>> orig = ev.origins[0]
+    >>> inside_geobounds(orig, minlatitude=40, maxlatitude=42)
+    True
+    >>> inside_geobounds(orig, minlatitude=40, maxlatitude=42,
+    ...                  minlongitude=78, maxlongitude=79)
+    False
+    >>> inside_geobounds(orig, latitude=40, longitude=80,
+    ...                  minradius=1, maxradius=10)
+    True
+    """
+    if not hasattr(object, 'latitude') or not hasattr(object, 'longitude'):
+        raise AttributeError(
+            'Object must have "latitude" and "longitude" attributes.')
+    olatitude = object.latitude
+    _check_latitude(olatitude, 'object.latitude')
+    _check_latitude(minlatitude, 'minlatitude')
+    _check_latitude(maxlatitude, 'maxlatitude')
+    _check_latitude(latitude, 'latitude')
+    # Make sure longitudes are between -180 to 180 degrees
+    olongitude = _normalize_longitude(object.longitude)
+    minlongitude = _normalize_longitude(minlongitude)
+    maxlongitude = _normalize_longitude(maxlongitude)
+    longitude = _normalize_longitude(longitude)
+    if minlatitude is not None:
+        if olatitude is None or olatitude < minlatitude:
+            return False
+    if maxlatitude is not None:
+        if olatitude is None or olatitude > maxlatitude:
+            return False
+    # Wrap longitude around +/- 180°, if necessary
+    if None not in [minlongitude, maxlongitude] \
+            and maxlongitude < minlongitude:
+        maxlongitude += 360
+        if olongitude is not None and olongitude < minlongitude:
+            olongitude += 360
+    if minlongitude is not None:
+        if olongitude is None or olongitude < minlongitude:
+            return False
+    if maxlongitude is not None:
+        if olongitude is None or olongitude > maxlongitude:
+            return False
+    if all([l is not None for l in
+           (latitude, longitude, olatitude, olongitude)]):
+        distance = locations2degrees(latitude, longitude,
+                                     olatitude, olongitude)
+        if minradius is not None and distance < minradius:
+            return False
+        if maxradius is not None and distance > maxradius:
+            return False
+    return True
 
 
 if __name__ == '__main__':

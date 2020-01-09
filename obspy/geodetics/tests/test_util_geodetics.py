@@ -9,9 +9,10 @@ import warnings
 import numpy as np
 
 from obspy.geodetics import (calc_vincenty_inverse, degrees2kilometers,
-                             gps2dist_azimuth, kilometer2degrees,
-                             locations2degrees)
+                             gps2dist_azimuth, inside_geobounds,
+                             kilometer2degrees, locations2degrees)
 from obspy.geodetics.base import HAS_GEOGRAPHICLIB
+from obspy.core import AttribDict
 
 
 def dms2dec(degs, mins, secs):
@@ -308,6 +309,27 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         _, azim, bazim = gps2dist_azimuth(50, 10, 50 - 1, 10 - 1)
         self.assertEqual(round(azim, 0), 213)
         self.assertEqual(round(bazim, 0), 33)
+
+    def test_inside_geobounds(self):
+        obj = AttribDict()
+        obj.latitude = 48.8566
+        obj.longitude = 2.3522
+        ret = inside_geobounds(obj, minlatitude=48, maxlatitude=49,
+                               minlongitude=2, maxlongitude=3)
+        self.assertTrue(ret)
+        ret = inside_geobounds(obj, latitude=48, longitude=2,
+                               minradius=1, maxradius=2)
+        self.assertFalse(ret)
+        # Test for wrapping around longitude +/- 180°
+        obj.latitude = -41.2865
+        obj.longitude = 174.7762
+        ret = inside_geobounds(obj, minlongitude=170, maxlongitude=-170)
+        self.assertTrue(ret)
+        obj.longitude = -175.
+        ret = inside_geobounds(obj, minlongitude=170, maxlongitude=-170)
+        self.assertTrue(ret)
+        ret = inside_geobounds(obj, minlongitude=170, maxlongitude=190)
+        self.assertTrue(ret)
 
 
 def suite():
