@@ -19,6 +19,13 @@ RUN sed 's#deb[ ]\+[^ ]\+ \(.*\)#deb http://archive.raspbian.org/raspbian/ \1#' 
 # of checking the repository/package signatures.
 RUN echo '' >> /etc/apt/apt.conf && echo 'APT::Sandbox::User "root";' >> /etc/apt/apt.conf
 
+# make sure public key for Raspbian archive is set up in keyring
+# this usually wasn't needed but during building 1.1.1-2 somehow the keyring
+# was not properly added to the docker image filesystem it seems see #2530
+# gpg and wget are not added by debootstrap by default, so need to explicitly
+# specify them as well during building the base image
+RUN wget http://archive.raspbian.org/raspbian.public.key -O - | gpg --import -
+
 # install packages to install obspy and build deb packages
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get update && apt-get -y --no-install-recommends install \
