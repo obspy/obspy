@@ -15,6 +15,7 @@ from copy import deepcopy
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
+from obspy.core.inventory import Channel, Inventory, Network, Station
 from obspy.core.compatibility import mock
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
@@ -704,6 +705,60 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st.select(component="Z")), 1)
         self.assertEqual(len(st.select(component="N")), 1)
         self.assertEqual(len(st.select(component="E")), 1)
+
+    def test_select_from_inventory(self):
+        # Create a test stream
+        headers = [
+            {'network': 'AA', 'station': 'ST01', 'channel': 'EHZ',
+             'location': '00', 'sampling_rate': 200.0, 'npts': 100,
+             'starttime': UTCDateTime(1990, 1, 1)},
+            {'network': 'AA', 'station': 'ST01', 'channel': 'EHZ',
+             'location': '00', 'sampling_rate': 200.0, 'npts': 100,
+             'starttime': UTCDateTime(1998, 1, 1)},
+            {'network': 'AA', 'station': 'ST01', 'channel': 'EHZ',
+             'location': '00', 'sampling_rate': 200.0, 'npts': 100,
+             'starttime': UTCDateTime(2000, 1, 1)},
+            {'network': 'AA', 'station': 'ST01', 'channel': 'EHN',
+             'location': '00', 'sampling_rate': 200.0, 'npts': 100,
+             'starttime': UTCDateTime(2000, 1, 1)},
+            {'network': 'AA', 'station': 'ST01', 'channel': 'EHE',
+             'location': '00', 'sampling_rate': 200.0, 'npts': 100,
+             'starttime': UTCDateTime(2000, 1, 1)},
+            {'network': 'AA', 'station': 'ST02', 'channel': 'EHZ',
+             'location': '00', 'sampling_rate': 200.0, 'npts': 100,
+             'starttime': UTCDateTime(2000, 1, 1)},
+            {'network': 'AB', 'station': 'ST01', 'channel': 'EHZ',
+             'location': '00', 'sampling_rate': 200.0, 'npts': 100,
+             'starttime': UTCDateTime(2000, 1, 1)}
+        ]
+        traces = []
+        for header in headers:
+            traces.append(Trace(data=np.random.randint(0, 1000, 100),
+                                header=header))
+        st = Stream(traces=traces)
+        # Create a test inventory
+        channels = [
+            Channel(code='EHZ', location_code='00',
+                    latitude=0.0, longitude=0.0, elevation=0.0, depth=0.0,
+                    start_date=UTCDateTime(1990, 1, 1),
+                    end_date=UTCDateTime(1998, 1, 1)),
+            Channel(code='EHZ', location_code='00',
+                    latitude=0.0, longitude=0.0, elevation=0.0, depth=0.0,
+                    start_date=UTCDateTime(1999, 1, 1))
+        ]
+        stations = [Station(code='ST01',
+                            latitude=0.0,
+                            longitude=0.0,
+                            elevation=0.0,
+                            channels=channels)]
+        networks = [Network('AA', stations=stations)]
+        inv = Inventory(networks=networks, source='TEST')
+        # tests
+        self.assertEqual(len(st.select(inventory=inv)), 2)
+        st_sel = st.select(network='AB')
+        self.assertEqual(len(st_sel.select(inventory=inv)), 0)
+        inv_sel = inv.select(starttime=UTCDateTime(2000, 1, 1))
+        self.assertEqual(len(st.select(inventory=inv_sel)), 1)
 
     def test_sort(self):
         """

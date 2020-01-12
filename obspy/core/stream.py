@@ -1748,10 +1748,16 @@ class Stream(object):
             yield temp
 
     def select(self, network=None, station=None, location=None, channel=None,
-               sampling_rate=None, npts=None, component=None, id=None):
+               sampling_rate=None, npts=None, component=None, id=None,
+               inventory=None):
         """
         Return new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with ``channel="EHZ"``).
+
+        Alternatively, traces can be selected based on the content of an
+        :class:`~obspy.core.inventory.inventory.Inventory` object: trace will
+        be selected if the inventory contains a matching channel active at the
+        trace start time.
 
         .. rubric:: Examples
 
@@ -1778,6 +1784,25 @@ class Stream(object):
         >>> print(st2)  # doctest: +NORMALIZE_WHITESPACE
         0 Trace(s) in Stream:
 
+        >>> from obspy import read_inventory
+        >>> inv = read_inventory('/path/to/BW_RJOB__EHZ.xml')
+        >>> print(inv)  # doctest: +NORMALIZE_WHITESPACE
+        Inventory created at 2013-12-07T18:00:42.878000Z
+                Created by: fdsn-stationxml-converter/1.0.0
+                            http://www.iris.edu/fdsnstationconverter
+                Sending institution: Erdbebendienst Bayern
+                Contains:
+                        Networks (1):
+                                BW
+                        Stations (1):
+                                BW.RJOB (Jochberg, Bavaria, BW-Net)
+                        Channels (1):
+                                BW.RJOB..EHZ
+        >>> st2 = st.select(inventory=inv)
+        >>> print(st2)  # doctest: +ELLIPSIS
+        1 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+
         .. warning::
             A new Stream object is returned but the traces it contains are
             just aliases to the traces of the original stream. Does not copy
@@ -1797,6 +1822,38 @@ class Stream(object):
         All other selection criteria that accept strings (network, station,
         location) may also contain Unix style wildcards (``*``, ``?``, ...).
         """
+        if inventory is not None:
+            trace_ids = []
+            start_dates = []
+            end_dates = []
+            for net in inventory.networks:
+                for sta in net.stations:
+                    for chan in sta.channels:
+                        id = '.'.join((net.code, sta.code,
+                                       chan.location_code, chan.code))
+                        trace_ids.append(id)
+                        start_dates.append(chan.start_date)
+                        end_dates.append(chan.end_date)
+            traces = []
+            for trace in self:
+                idx = 0
+                while True:
+                    try:
+                        idx = trace_ids.index(trace.id, idx)
+                        start_date = start_dates[idx]
+                        end_date = end_dates[idx]
+                        idx += 1
+                        if start_date is not None and\
+                                trace.stats.starttime < start_date:
+                            continue
+                        if end_date is not None and\
+                                trace.stats.endtime > end_date:
+                            continue
+                        traces.append(trace)
+                    except ValueError:
+                        break
+            return self.__class__(traces=traces)
+
         # make given component letter uppercase (if e.g. "z" is given)
         if component is not None and channel is not None:
             component = component.upper()
