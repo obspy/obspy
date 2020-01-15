@@ -146,16 +146,16 @@ def _read_sc3ml(path_or_file_object):
         "responseFIR": {},
         "responseIIR": {}
     }
-    for response_type in responses.keys():
+    for response_type, all_elements in responses.items():
         for response_element in inv_element.findall(_ns(response_type)):
             public_id = response_element.get("publicID")
             if public_id:
-                if public_id in responses[response_type]:
+                if public_id in all_elements:
                     msg = ("Found multiple matching {} tags with the same "
                            "publicID '{}'.".format(response_type, public_id))
                     raise obspy.ObsPyException(msg)
                 else:
-                    responses[response_type][public_id] = response_element
+                    all_elements[public_id] = response_element
     # Organize all the collection instrument information into a unified
     # intrumentation register.
     instrumentation_register = {
@@ -431,9 +431,8 @@ def _read_channel(instrumentation_register, cha_element, _ns):
         response_id = sensor_element.get("response")
         response_elements = []
 
-        for resp_type in instrumentation_register["responses"].keys():
-            found_response = instrumentation_register["responses"][resp_type]\
-                             .get(response_id)
+        for resp_element in instrumentation_register["responses"].values():
+            found_response = resp_element.get(response_id)
             if found_response is not None:
                 response_elements.append(found_response)
 
@@ -518,9 +517,9 @@ def _read_channel(instrumentation_register, cha_element, _ns):
         if digital_filter_chain is not None:
             response_fir_id = digital_filter_chain.split(" ")
 
-    channel.response = _read_response(instrumentation_register, sensor_element,
-                                      response_element, cha_element,
-                                      data_log_element, _ns,
+    channel.response = _read_response(instrumentation_register['responses'],
+                                      sensor_element, response_element,
+                                      cha_element, data_log_element, _ns,
                                       channel.sample_rate,
                                       response_fir_id, response_paz_id)
 
@@ -553,13 +552,15 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
     return sensitivity
 
 
-def _read_response(instrumentation_register, sen_element, resp_element,
+def _read_response(instrumentation_responses, sen_element, resp_element,
                    cha_element, data_log_element, _ns, samp_rate, fir,
                    analogue):
     """
     reads response from sc3ml format
 
-    :param instrumentation_register: register of instrumentation metadata
+    :param instrumentation_responses: Dictionary of dictionaries of
+        instrumentation response metadata, top level keyed by response type,
+        and subdictionaries keyed by response ID.
     :param _ns: namespace
     """
     response = obspy.core.inventory.response.Response()
@@ -593,8 +594,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
         for fir_id in fir:
             # get the particular fir stage decimation factor
             # multiply the decimated sample rate by this factor
-            fir_element = instrumentation_register["responses"]["responseFIR"]\
-                          .get(fir_id)
+            fir_element = instrumentation_responses["responseFIR"].get(fir_id)
             if fir_element is None:
                 continue
             dec_fac = _tag2obj(fir_element, _ns("decimationFactor"), int)
@@ -633,8 +633,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
     # Output unit: V
     if len(analogue):
         for analogue_id in analogue:
-            analogue_element = \
-                instrumentation_register["responses"]["responsePAZ"]\
+            analogue_element = instrumentation_responses["responsePAZ"]\
                 .get(analogue_id)
             if analogue_element is None:
                 msg = ('Analogue responsePAZ not in inventory:'
@@ -663,8 +662,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
     # Input unit: COUNTS
     # Output unit: COUNTS
     for fir_id, rate in zip(fir, fir_stage_rates):
-        stage_element = instrumentation_register["responses"]["responseFIR"]\
-                        .get(fir_id)
+        stage_element = instrumentation_responses["responseFIR"].get(fir_id)
         if stage_element is None:
             msg = ("fir response not in inventory: %s, stopping correction"
                    "before stage %i") % (fir_id, stage)
