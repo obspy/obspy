@@ -1793,7 +1793,7 @@ class Response(ComparingObject):
 
         t_samp = 1.0 / sampling_rate
         nyquist = sampling_rate / 2.0
-        nfft = sampling_rate / min_freq
+        nfft = int(sampling_rate / min_freq)
 
         cpx_response, freq = self.get_evalresp_response(
             t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
