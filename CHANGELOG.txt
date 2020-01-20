@@ -53,6 +53,9 @@ master:
      wrong relative start times of traces relative to given reftime (see #2493)
    * Fixed a Windows-specific path case issue in a helper function that returns
      a list of untracked files in the git repository (see #2296)
+   * Fix a bug that was causing an exception being raised in `Response.plot()`
+     because a float was being passed down to numpy.linspace as length of array
+     (see #2533)
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can

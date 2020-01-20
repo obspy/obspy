@@ -1652,7 +1652,11 @@ class Response(ComparingObject):
         # Calculate the output frequencies.
         fy = 1 / (t_samp * 2.0)
         # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
+        # numpy 1.9 introduced a dtype kwarg
+        try:
+            freqs = np.linspace(0, fy, int(nfft // 2) + 1, dtype=np.float64)
+        except Exception:
+            freqs = np.linspace(0, fy, int(nfft // 2) + 1).astype(np.float64)
 
         response = self.get_evalresp_response_for_frequencies(
             freqs, output=output, start_stage=start_stage, end_stage=end_stage)
@@ -1789,7 +1793,7 @@ class Response(ComparingObject):
 
         t_samp = 1.0 / sampling_rate
         nyquist = sampling_rate / 2.0
-        nfft = sampling_rate / min_freq
+        nfft = int(sampling_rate / min_freq)
 
         cpx_response, freq = self.get_evalresp_response(
             t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
