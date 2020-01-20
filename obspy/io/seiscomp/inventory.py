@@ -536,7 +536,7 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
     frequency = _tag2obj(cha_element, _ns("gainFrequency"), float)
 
     input_units_name = _tag2obj(sen_element, _ns("unit"), str)
-    output_units_name = str(None)
+    output_units_name = ''
 
     sensitivity = obspy.core.inventory.response.InstrumentSensitivity(
         value=gain, frequency=frequency,
