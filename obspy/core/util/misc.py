@@ -258,7 +258,7 @@ def get_untracked_files_from_git():
         git_root_dir = p.decode().strip()
         if git_root_dir:
             git_root_dir = os.path.abspath(git_root_dir)
-        if git_root_dir != dir_:
+        if os.path.normcase(git_root_dir) != os.path.normcase(dir_):
             raise ValueError('Git root directory (%s) does not match expected '
                              'path (%s).' % (git_root_dir, dir_))
         p = check_output(['git', 'status', '-u', '--porcelain'],
