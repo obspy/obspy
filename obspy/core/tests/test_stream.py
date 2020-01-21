@@ -2255,7 +2255,15 @@ class StreamTestCase(unittest.TestCase):
             # testing for full equality.
             if platform.system() == "Windows":  # pragma: no cover
                 self.assertEqual(tr1.stats, tr2.stats)
-                np.testing.assert_allclose(tr1.data, tr2.data, rtol=1e-6)
+                # as of 2020-01-21 we see some new Win fails with one sample
+                # failing with:
+                #    Mismatched elements: 1 / 3000 (0.0333%)
+                #    Max absolute difference: 6.617444900424222e-24
+                #    Max relative difference: 2.0
+                # Maximum amplitudes in the trace are around 1e-8, so we can
+                # live with an atol of 1e-22
+                np.testing.assert_allclose(
+                    tr1.data, tr2.data, rtol=1e-6, atol=1e-22)
             else:
                 self.assertEqual(tr1, tr2)
 
