@@ -1324,6 +1324,21 @@ class MSEEDUtilTestCase(unittest.TestCase):
             'number_of_records': 1,
             'excess_bytes': 0})
 
+    def test_read_fullseed_no_data_record(self):
+        # see 2534
+        filename = os.path.join(self.path, 'data',
+                                'RJOB.BW.EHZ.D.300806.0000.fullseed')
+        # file contains two records, the second being the miniseed record.
+        # make a bytes buffer without the data record
+        with open(filename, 'rb') as fh:
+            data = fh.read()
+        buf = io.BytesIO(data[:512])  # only first record
+        buf.seek(0)
+        with self.assertRaises(ValueError) as e:
+            _read_mseed(buf)
+        self.assertEqual(
+            str(e.exception), "No MiniSEED data record found in file.")
+
 
 def suite():
     return unittest.makeSuite(MSEEDUtilTestCase, 'test')
