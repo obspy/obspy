@@ -30,6 +30,7 @@ Falco, Nicholas
 Fee, Jeremy
 Grellier, Clément
 Grunberg, Marc
+Hagerty, Mike
 Hammer, Conny
 Heimann, Sebastian
 Heiniger, Lukas
