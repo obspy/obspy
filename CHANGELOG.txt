@@ -99,6 +99,8 @@ master:
  - obspy.io.gcf:
    * Fixes Python 3.8 compatibility of GCF reader. (see #2505)
  - obspy.io.mseed:
+   * Fix a bug resulting in an infinite loop when trying to read a FullSEED
+     file without any data records (see #2534 and #2535)
    * Add ability to write int64 data to mseed if it can safely be downcast
      to int32 data, otherwise raises ObsPyMSEEDError. (see #2356)
    * The recordanalyzer can now detect calibration blockettes 300, 310,

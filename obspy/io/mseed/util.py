@@ -643,7 +643,15 @@ def _get_record_information(file_object, offset=0, endian=None):
         # reset file pointer
         file_object.seek(record_start, 0)
         # cycle through file using record length until first data record found
-        while file_object.read(7)[6:7] not in [b'D', b'R', b'Q', b'M']:
+        while True:
+            data = file_object.read(7)[6:7]
+            if data in [b'D', b'R', b'Q', b'M']:
+                break
+            # stop looking when hitting end of file
+            # the second check should be enough.. but play it safe
+            if not data or record_start > info['filesize']:
+                msg = "No MiniSEED data record found in file."
+                raise ValueError(msg)
             record_start += rec_len
             file_object.seek(record_start, 0)
 
