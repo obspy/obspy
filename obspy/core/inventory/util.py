@@ -255,7 +255,7 @@ class DataAvailability(ComparingObject):
         self.start = start
         end = end is not None and UTCDateTime(end)
         self.end = end
-        self.spans = spans
+        self.spans = spans or []
 
     @property
     def spans(self):
