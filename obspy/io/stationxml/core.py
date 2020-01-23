@@ -770,10 +770,18 @@ def _read_data_availability(avail_element, _ns):
 
 
 def _read_data_availability_span(element, _ns):
-    start = element.attribs['start']
-    end = element.attribs['end']
-    number_of_segments = element.attribs['numberSegments']
-    maximum_time_tear = element.attribs.get('maximumTimeTear')
+    start = element.attrib['start']
+    if start is not None:
+        start = obspy.UTCDateTime(start)
+    end = element.attrib['end']
+    if end is not None:
+        end = obspy.UTCDateTime(end)
+    number_of_segments = element.attrib['numberSegments']
+    if number_of_segments is not None:
+        number_of_segments = int(number_of_segments)
+    maximum_time_tear = element.attrib.get('maximumTimeTear')
+    if maximum_time_tear is not None:
+        maximum_time_tear = float(maximum_time_tear)
     obj = obspy.core.inventory.util.DataAvailabilitySpan(
         start=start, end=end, number_of_segments=number_of_segments,
         maximum_time_tear=maximum_time_tear)
