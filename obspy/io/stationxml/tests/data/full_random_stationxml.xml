@@ -5,9 +5,11 @@
     <Module>pZr</Module>
     <ModuleURI>http://mANaoYVB/</ModuleURI>
     <Created>2013-12-11T16:29:13.000000Z</Created>
-    <Network code="ebdz" startDate="2014-06-11T16:29:13.000000Z" endDate="2014-05-09T16:29:13.000000Z" restrictedStatus="closed" alternateCode="wBHfTN1Ypxh79.tE" historicalCode="OYD3xrgoG">
+    <Network code="ebdz" startDate="2014-06-11T16:29:13.000000Z" endDate="2014-05-09T16:29:13.000000Z" restrictedStatus="closed" alternateCode="wBHfTN1Ypxh79.tE" historicalCode="OYD3xrgoG" sourceID="http://www.example.com">
         <Description>qEhqqijuc1XhCirqZl</Description>
-        <Comment id="555942826">
+        <Identifier type="abc">def</Identifier>
+        <Identifier type="uvw">xyz</Identifier>
+        <Comment subject="my topic">
             <Value>ihu3IUkxZ6pZG.f4Qcp</Value>
             <BeginEffectiveTime>2014-11-16T16:29:13.000000Z</BeginEffectiveTime>
             <EndEffectiveTime>2015-11-01T16:29:13.000000Z</EndEffectiveTime>
@@ -89,9 +91,94 @@
                 </Phone>
             </Author>
         </Comment>
+        <DataAvailability>
+            <Extent start="2011-02-03T04:05:06.000000Z" end="2011-03-04T05:06:07.000000Z"/>
+            <Span start="2012-02-03T04:05:06.000000Z" end="2012-03-04T05:06:07.000000Z" numberSegments="5" maximumTimeTear="7.8"/>
+            <Span start="2013-02-03T04:05:06.000000Z" end="2013-03-04T05:06:07.000000Z" numberSegments="8" maximumTimeTear="2.4"/>
+        </DataAvailability>
+        <Operator>
+            <Agency>ABC0.oszQNsC4l66ieQFM</Agency>
+            <Contact>
+                <Name>A</Name>
+                <Name>tqEC9Te1F11VsXJcqk</Name>
+                <Agency>gele5fNTUMhT.pqaA8iMX2O27GJbfJ</Agency>
+                <Agency>kqYq6DKQCGNF5W-dS</Agency>
+                <Email>-@k</Email>
+                <Email>_lm@7_</Email>
+                <Phone description="raL9MGoDu3uxuKs1Sa">
+                    <CountryCode>493576428</CountryCode>
+                    <AreaCode>716510519</AreaCode>
+                    <PhoneNumber>9-8</PhoneNumber>
+                </Phone>
+                <Phone description="wG-wsHscmW4kSVdCQ4HIZR8VY.rMO">
+                    <CountryCode>334955237</CountryCode>
+                    <AreaCode>1800063363</AreaCode>
+                    <PhoneNumber>0-333</PhoneNumber>
+                </Phone>
+            </Contact>
+            <Contact>
+                <Name>XYZdOI5jnAUev6s8PC9v.6fRS92</Name>
+                <Name>GCvhJfAbcbNVrvrcdR</Name>
+                <Agency>k10wRqk6xOB.iDUvN</Agency>
+                <Agency>bz8pgp3rMvoi</Agency>
+                <Email>PA@_</Email>
+                <Email>___@_</Email>
+                <Phone description="adSiy9mFnp31TfNSCg">
+                    <CountryCode>1884226669</CountryCode>
+                    <AreaCode>-2111350717</AreaCode>
+                    <PhoneNumber>5-412</PhoneNumber>
+                </Phone>
+                <Phone description="IKSWf">
+                    <CountryCode>-66922996</CountryCode>
+                    <AreaCode>763165572</AreaCode>
+                    <PhoneNumber>5-03</PhoneNumber>
+                </Phone>
+            </Contact>
+            <WebSite>http://YvnICqFW/</WebSite>
+        </Operator>
+        <Operator>
+            <Agency>dfa4wYdrPYC_g25Yi72Pn24cJ2M2Zg</Agency>
+            <Contact>
+                <Name>c.5feKj2W1</Name>
+                <Name>P7r8K6zcmVbUMyesWAdq4M</Name>
+                <Agency>M</Agency>
+                <Agency>F7Tg.A7ucwdoAM6Qhrbi0chqlJ</Agency>
+                <Email>_@-</Email>
+                <Email>_@Y</Email>
+                <Phone description="a1K1duYRPAs5iYOVI3Ea9O">
+                    <CountryCode>-1146774091</CountryCode>
+                    <AreaCode>1279559438</AreaCode>
+                    <PhoneNumber>39-3</PhoneNumber>
+                </Phone>
+                <Phone description="k4oxWx9D2xAc">
+                    <CountryCode>662491130</CountryCode>
+                    <AreaCode>2124103979</AreaCode>
+                    <PhoneNumber>2-5</PhoneNumber>
+                </Phone>
+            </Contact>
+            <Contact>
+                <Name>wuEcYfL</Name>
+                <Name>IiZ0W-</Name>
+                <Agency>Lph</Agency>
+                <Agency>MsdC.Q</Agency>
+                <Email>_@_</Email>
+                <Email>_@_-_</Email>
+                <Phone description="rf.TAMjOWp4scbXbJOtXhmtKq1LVr">
+                    <CountryCode>-1740279063</CountryCode>
+                    <AreaCode>-490519067</AreaCode>
+                    <PhoneNumber>2-9</PhoneNumber>
+                </Phone>
+                <Phone description="Blur220AuVhRRBo">
+                    <CountryCode>1071231279</CountryCode>
+                    <AreaCode>819665155</AreaCode>
+                    <PhoneNumber>7-2055</PhoneNumber>
+                </Phone>
+            </Contact>
+            <WebSite>http://UBdXgcoM/</WebSite>
+        </Operator>
         <TotalNumberStations>1664027705</TotalNumberStations>
         <SelectedNumberStations>472200261</SelectedNumberStations>
-        <Station code="rrkqyXsRMJtPa" startDate="2014-03-20T16:29:13.000000Z" endDate="2014-06-08T16:29:13.000000Z" restrictedStatus="closed" alternateCode="lmy.V_xYd85DTUQMfVcHftPZ7gIvEB" historicalCode="akTv">
+        <Station code="rrkqyXsRMJtPa" startDate="2014-03-20T16:29:13.000000Z" endDate="2014-06-08T16:29:13.000000Z" restrictedStatus="closed" alternateCode="lmy.V_xYd85DTUQMfVcHftPZ7gIvEB" historicalCode="akTv" sourceID="http://www.example2.com">
             <Description>ZnGUA9j2Ur</Description>
             <Comment id="848648951">
                 <Value>fKua5Y73n</Value>
@@ -175,9 +262,9 @@
                     </Phone>
                 </Author>
             </Comment>
-            <Latitude datum="WGS84" unit="DEGREES" plusError="158169445.66" minusError="1768585416.39">-17.78</Latitude>
-            <Longitude datum="WGS84" unit="DEGREES" plusError="-896569074.48" minusError="-8433099.53">-11.81</Longitude>
-            <Elevation unit="METERS" plusError="1926293739.13" minusError="-182891004.29">-932334367.71</Elevation>
+            <Latitude datum="WGS84" unit="DEGREES" plusError="158169445.66" minusError="1768585416.39" measurementMethod="GPS">-17.78</Latitude>
+            <Longitude datum="WGS84" unit="DEGREES" plusError="-896569074.48" minusError="-8433099.53" measurementMethod="GPS">-11.81</Longitude>
+            <Elevation unit="METERS" plusError="1926293739.13" minusError="-182891004.29" measurementMethod="digital elevation model">-932334367.71</Elevation>
             <Site>
                 <Name>ZkgZ</Name>
                 <Description>BBMVXtn47eMUi6zX0Ztffgcb2mSN4</Description>
@@ -186,6 +273,7 @@
                 <Region>boqHE</Region>
                 <Country>SHNxrhUGvw1N1kYmlc</Country>
             </Site>
+            <WaterLevel unit="METERS" plusError="4.2" minusError="2.3">250.4</WaterLevel>
             <Vault>fuWmJrd-LJY8vsh</Vault>
             <Geology>shovOWTuLKF3</Geology>
             <Equipment resourceId="VC7MHR7I3yKHs6njr4C-YQA4MY8YS">
@@ -304,7 +392,7 @@
                 <URI>http://ciiKURCr/</URI>
                 <Description>sJtNcgoqxP3mpkEi</Description>
             </ExternalReference>
-            <Channel locationCode="mARsF" code="kepD5Hi47y" startDate="2014-08-28T16:29:13.000000Z" endDate="2015-02-09T16:29:13.000000Z" restrictedStatus="partial" alternateCode="FFOV_hPP7kIL7baO" historicalCode="R6.Qpri">
+            <Channel locationCode="mARsF" code="kepD5Hi47y" startDate="2014-08-28T16:29:13.000000Z" endDate="2015-02-09T16:29:13.000000Z" restrictedStatus="partial" alternateCode="FFOV_hPP7kIL7baO" historicalCode="R6.Qpri" sourceID="http://www.example3.com">
                 <Description>i_bqj3jjvk8h5sxte9Gf</Description>
                 <Comment id="1300736518">
                     <Value>UQyUzx3FRaV9wHg</Value>
@@ -400,8 +488,9 @@
                 <Longitude datum="WGS84" unit="DEGREES" plusError="-1635073567.96" minusError="-2036701898.06">-93.75</Longitude>
                 <Elevation unit="METERS" plusError="-74939587.84" minusError="643958632.79">-2065227015.14</Elevation>
                 <Depth unit="METERS" plusError="1134950515.52" minusError="-49932928.17">218301187.84</Depth>
-                <Azimuth unit="DEGREES" plusError="916950370.7" minusError="-1080590168.51">319.06</Azimuth>
+                <Azimuth unit="DEGREES" plusError="916950370.7" minusError="-1080590168.51" measurementMethod="fibre optic gyro compass">319.06</Azimuth>
                 <Dip unit="DEGREES" plusError="-1778098068.67" minusError="1931668907.04">-79.66</Dip>
+                <WaterLevel unit="METERS" plusError="3.2" minusError="5.3">631.2</WaterLevel>
                 <Type>BEAM</Type>
                 <Type>WEATHER</Type>
                 <SampleRate unit="SAMPLES/S" plusError="680748035.12" minusError="1681460903.58">-1058267605.43</SampleRate>
@@ -461,6 +550,9 @@
                     <RemovalDate>2015-09-21T16:29:13.000000Z</RemovalDate>
                     <CalibrationDate>2015-11-05T16:29:13.000000Z</CalibrationDate>
                     <CalibrationDate>2014-08-28T16:29:13.000000Z</CalibrationDate>
+                </Equipment>
+                <Equipment resourceId="XYZ">
+                    <Type>some type</Type>
                 </Equipment>
                 <Response resourceId="tgWhxj-6ZmE">
                         <InstrumentPolynomial resourceId="FGvGDgMhPkOlcb6IC6Zw" name="qHl9qj5KLLN0MOoYmXr1WwHSlZD">
