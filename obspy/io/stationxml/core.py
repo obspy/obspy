@@ -326,8 +326,14 @@ def _read_floattype(parent, tag, cls, unit=False, datum=False,
         obj.unit = elem.attrib.get("unit")
     if datum:
         obj.datum = elem.attrib.get("datum")
-    obj.lower_uncertainty = elem.attrib.get("minusError")
-    obj.upper_uncertainty = elem.attrib.get("plusError")
+    lower_uncertainty = elem.attrib.get("minusError")
+    if lower_uncertainty is not None:
+        lower_uncertainty = float(lower_uncertainty)
+    obj.lower_uncertainty = lower_uncertainty
+    upper_uncertainty = elem.attrib.get("plusError")
+    if upper_uncertainty is not None:
+        upper_uncertainty = float(upper_uncertainty)
+    obj.upper_uncertainty = upper_uncertainty
     obj.measurement_method = elem.attrib.get("measurementMethod")
     for key1, key2 in additional_mapping.items():
         setattr(obj, key1, elem.attrib.get(key2))
