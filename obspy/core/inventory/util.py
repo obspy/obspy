@@ -114,7 +114,7 @@ class BaseNode(ComparingObject):
     @identifiers.setter
     def identifiers(self, value):
         if not hasattr(value, "__iter__"):
-            msg = "equipments needs to be an iterable, e.g. a list."
+            msg = "identifiers needs to be an iterable, e.g. a list."
             raise ValueError(msg)
         # make sure to unwind actual iterators, or the just might get exhausted
         # at some point

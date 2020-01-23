@@ -209,13 +209,13 @@ def _read_base_node(element, object_to_write_to, _ns):
     object_to_write_to.description = \
         _tag2obj(element, _ns("Description"), str)
     identifiers = []
-    for identifier in element.findall(_ns("identifier")):
+    for identifier in element.findall(_ns("Identifier")):
         scheme = identifier.get('type')
         path = identifier.text
         if scheme is not None:
-            identifier.append(scheme + ':' + path)
+            identifiers.append(scheme + ':' + path)
         else:
-            identifier.append(path)
+            identifiers.append(path)
     object_to_write_to.identifiers = identifiers
     object_to_write_to.comments = []
     for comment in element.findall(_ns("Comment")):
@@ -756,7 +756,7 @@ def _read_data_availability(avail_element, _ns):
         return None
     start = extent.get("start")
     end = extent.get("end")
-    spans = [_read_data_availability_span(span) for span in spans]
+    spans = [_read_data_availability_span(span, _ns) for span in spans]
     obj = obspy.core.inventory.util.DataAvailability(start=start, end=end,
                                                      spans=spans)
     _read_extra(avail_element, obj)
