@@ -962,7 +962,7 @@ def _get_base_node_attributes(element):
         attributes["alternateCode"] = element.alternate_code
     if element.historical_code:
         attributes["historicalCode"] = element.historical_code
-    if element.source_id:
+    if element.source_id is not None:
         attributes["sourceID"] = element.source_id
     return attributes
 
@@ -981,6 +981,9 @@ def _write_base_node(element, object_to_read_from):
         etree.SubElement(element, "Identifier", attrib).text = path
     for comment in object_to_read_from.comments:
         _write_comment(element, comment)
+    if object_to_read_from.data_availability:
+        _write_data_availability(element,
+                                 object_to_read_from.data_availability)
     _write_extra(element, object_to_read_from)
 
 
@@ -1174,14 +1177,6 @@ def _write_channel(parent, channel, level):
     attribs['locationCode'] = channel.location_code
     channel_elem = etree.SubElement(parent, "Channel", attribs)
     _write_base_node(channel_elem, channel)
-
-    if channel.data_availability is not None:
-        da = etree.SubElement(channel_elem, "DataAvailability")
-        etree.SubElement(da, "Extent", {
-            "start": str(channel.data_availability.start),
-            "end": str(channel.data_availability.end)
-        })
-        _write_extra(da, channel.data_availability)
 
     for ref in channel.external_references:
         _write_external_reference(channel_elem, ref)
@@ -1494,6 +1489,40 @@ def _write_comment(parent, comment):
     for author in comment.authors:
         _write_person(comment_elem, author, "Author")
     _write_extra(parent, comment)
+
+
+def _write_data_availability(parent, data_availability):
+    data_availability_elem = etree.SubElement(parent, "DataAvailability")
+    if any(value is not None for value in (data_availability.start,
+                                           data_availability.end)):
+        # we need both start and end to write a valid Extent tag
+        if any(value is None for value in (data_availability.start,
+                                           data_availability.end)):
+            # play safe and raise an exception
+            msg = ("Both start/end need to be set to write a valid "
+                   "DataAvailability Extent tag ('%s').") % data_availability
+            raise ValueError(msg)
+        # XXX foreign namespace custom attributes not yet implemented
+        attribs = {'start': str(data_availability.start),
+                   'end': str(data_availability.end)}
+        etree.SubElement(data_availability_elem, "Extent", attribs)
+    for span in data_availability.spans:
+        _write_data_availability_span(data_availability_elem, span)
+    _write_extra(data_availability_elem, data_availability)
+
+
+def _write_data_availability_span(parent, span):
+    if any(value is None for value in (span.start, span.end,
+                                       span.number_of_segments)):
+        msg = ("All of start/end/number_of_segments need to be set to write "
+               " a valid DataAvailability Span tag ('%s').") % span
+        raise ValueError(msg)
+    attribs = {'start': str(span.start), 'end': str(span.end),
+               'numberSegments': str(span.number_of_segments)}
+    if span.maximum_time_tear is not None:
+        attribs['maximumTimeTear'] = str(span.maximum_time_tear)
+    # XXX foreign namespace custom attributes not yet implemented
+    etree.SubElement(parent, "Span", attribs)
 
 
 def _write_person(parent, person, tag_name):
