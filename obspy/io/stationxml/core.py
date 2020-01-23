@@ -231,12 +231,12 @@ def _read_base_node(element, object_to_write_to, _ns):
 def _read_network(net_element, _ns):
     network = obspy.core.inventory.Network(net_element.get("code"))
     _read_base_node(net_element, network, _ns)
+    for operator in net_element.findall(_ns("Operator")):
+        network.operators.append(_read_operator(operator, _ns))
     network.total_number_of_stations = \
         _tag2obj(net_element, _ns("TotalNumberStations"), int)
     network.selected_number_of_stations = \
         _tag2obj(net_element, _ns("SelectedNumberStations"), int)
-    for operator in net_element.findall(_ns("Operator")):
-        network.operators.append(_read_operator(operator, _ns))
     stations = []
     for station in net_element.findall(_ns("Station")):
         stations.append(_read_station(station, _ns))
@@ -954,6 +954,9 @@ def _get_base_node_attributes(element):
 
 
 def _write_base_node(element, object_to_read_from):
+    if object_to_read_from.description:
+        etree.SubElement(element, "Description").text = \
+            object_to_read_from.description
     for identifier in object_to_read_from.identifiers:
         attrib = {}
         if ':' in identifier:
@@ -962,9 +965,6 @@ def _write_base_node(element, object_to_read_from):
         else:
             path = identifier
         etree.SubElement(element, "Identifier", attrib).text = path
-    if object_to_read_from.description:
-        etree.SubElement(element, "Description").text = \
-            object_to_read_from.description
     for comment in object_to_read_from.comments:
         _write_comment(element, comment)
     _write_extra(element, object_to_read_from)
@@ -978,13 +978,6 @@ def _write_network(parent, network, level):
     network_elem = etree.SubElement(parent, "Network", attribs)
     _write_base_node(network_elem, network)
 
-    # Add the two, network specific fields.
-    if network.total_number_of_stations is not None:
-        etree.SubElement(network_elem, "TotalNumberStations").text = \
-            str(network.total_number_of_stations)
-    if network.selected_number_of_stations is not None:
-        etree.SubElement(network_elem, "SelectedNumberStations").text = \
-            str(network.selected_number_of_stations)
     for operator in network.operators:
         operator_elem = etree.SubElement(network_elem, "Operator")
         etree.SubElement(operator_elem, "Agency").text = str(operator.agency)
@@ -992,6 +985,14 @@ def _write_network(parent, network, level):
             _write_person(operator_elem, contact, "Contact")
         etree.SubElement(operator_elem, "WebSite").text = operator.website
         _write_extra(operator_elem, operator)
+
+    # Add the two, network specific fields.
+    if network.total_number_of_stations is not None:
+        etree.SubElement(network_elem, "TotalNumberStations").text = \
+            str(network.total_number_of_stations)
+    if network.selected_number_of_stations is not None:
+        etree.SubElement(network_elem, "SelectedNumberStations").text = \
+            str(network.selected_number_of_stations)
 
     if level == "network":
         return
@@ -1111,6 +1112,9 @@ def _write_station(parent, station, level):
 
     _write_site(station_elem, station.site)
 
+    if station.water_level is not None:
+        _write_floattype(station_elem, station, "water_level", "WaterLevel")
+
     # Optional tags.
     _obj2tag(station_elem, "Vault", station.vault)
     _obj2tag(station_elem, "Geology", station.geology)
@@ -1125,9 +1129,6 @@ def _write_station(parent, station, level):
             _write_person(operator_elem, contact, "Contact")
         etree.SubElement(operator_elem, "WebSite").text = operator.website
         _write_extra(operator_elem, operator)
-
-    if station.water_level is not None:
-        _write_floattype(station_elem, station, "water_level", "WaterLevel")
 
     if station.creation_date is not None:
         # CreationDate is optional in schemas > 1.0
