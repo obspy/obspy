@@ -398,7 +398,7 @@ def mean_longitude(longitudes):
     return mean_longitude
 
 
-def inside_geobounds(object, minlatitude=None, maxlatitude=None,
+def inside_geobounds(obj, minlatitude=None, maxlatitude=None,
                      minlongitude=None, maxlongitude=None,
                      latitude=None, longitude=None,
                      minradius=None, maxradius=None):
@@ -409,8 +409,8 @@ def inside_geobounds(object, minlatitude=None, maxlatitude=None,
     The object must have ``latitude`` and ``longitude`` attributes, expressed
     in degrees.
 
-    :type object: object
-    :param object: An object with `latitude` and `longitude` attributes.
+    :type obj: object
+    :param obj: An object with `latitude` and `longitude` attributes.
     :type minlatitude: float
     :param minlatitude: Minimum latitude in degrees.
     :type maxlatitude: float
@@ -451,16 +451,16 @@ def inside_geobounds(object, minlatitude=None, maxlatitude=None,
     ...                  minradius=1, maxradius=10)
     True
     """
-    if not hasattr(object, 'latitude') or not hasattr(object, 'longitude'):
+    if not hasattr(obj, 'latitude') or not hasattr(obj, 'longitude'):
         raise AttributeError(
             'Object must have "latitude" and "longitude" attributes.')
-    olatitude = object.latitude
-    _check_latitude(olatitude, 'object.latitude')
+    olatitude = obj.latitude
+    _check_latitude(olatitude, 'obj.latitude')
     _check_latitude(minlatitude, 'minlatitude')
     _check_latitude(maxlatitude, 'maxlatitude')
     _check_latitude(latitude, 'latitude')
     # Make sure longitudes are between -180 to 180 degrees
-    olongitude = _normalize_longitude(object.longitude)
+    olongitude = _normalize_longitude(obj.longitude)
     minlongitude = _normalize_longitude(minlongitude)
     maxlongitude = _normalize_longitude(maxlongitude)
     longitude = _normalize_longitude(longitude)
