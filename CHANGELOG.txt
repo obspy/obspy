@@ -95,7 +95,7 @@ master:
  - obspy.clients.iris:
    * results of distaz method are now returned as native floats (see #2499)
  - obspy.geodetics:
-   * new utility function `inside_geobounds()` to check wether an object is
+   * new utility function `inside_geobounds()` to check whether an object is
      inside a geographic bound (see #2515)
  - obspy.imaging:
    * obspy-scan can now be used with wildcarded SEED IDs when specifying what
