@@ -1822,7 +1822,9 @@ class Stream(object):
         All other selection criteria that accept strings (network, station,
         location) may also contain Unix style wildcards (``*``, ``?``, ...).
         """
-        if inventory is not None:
+        if inventory is None:
+            traces = self.traces
+        else:
             trace_ids = []
             start_dates = []
             end_dates = []
@@ -1852,7 +1854,7 @@ class Stream(object):
                         traces.append(trace)
                     except ValueError:
                         break
-            return self.__class__(traces=traces)
+        traces_after_inventory_filter = traces
 
         # make given component letter uppercase (if e.g. "z" is given)
         if component is not None and channel is not None:
@@ -1864,7 +1866,7 @@ class Stream(object):
                       "mutually exclusive!"
                 raise ValueError(msg)
         traces = []
-        for trace in self:
+        for trace in traces_after_inventory_filter:
             # skip trace if any given criterion is not matched
             if id and not fnmatch.fnmatch(trace.id.upper(), id.upper()):
                 continue
