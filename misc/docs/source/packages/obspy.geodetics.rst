@@ -10,8 +10,10 @@
        :nosignatures:
 
        ~base.calc_vincenty_inverse
+       ~base.degrees2kilometers
        ~base.gps2dist_azimuth
-       ~base.kilometer2degrees
+       ~base.inside_geobounds
+       ~base.kilometers2degrees
        ~base.locations2degrees
        ~flinnengdahl.FlinnEngdahl
 
@@ -27,4 +29,3 @@
        flinnengdahl
 
     .. comment to end block
-

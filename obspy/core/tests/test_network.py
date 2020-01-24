@@ -211,6 +211,14 @@ class NetworkTestCase(unittest.TestCase):
                              net.select(station="F*", keep_empty=True)), 12)
         self.assertEqual(sum(len(i) for i in
                              net.select(station="WET", keep_empty=True)), 9)
+        self.assertEqual(sum(len(i) for i in
+                             net.select(
+                                minlatitude=47.89, maxlatitude=48.39,
+                                minlongitude=10.88, maxlongitude=11.98)), 12)
+        self.assertEqual(sum(len(i) for i in
+                             net.select(
+                                latitude=48.12, longitude=12.24,
+                                maxradius=1)), 12)
 
         # Test the keep_empty flag.
         net_2 = net.select(time=UTCDateTime(2000, 1, 1))
@@ -222,15 +230,23 @@ class NetworkTestCase(unittest.TestCase):
         self.assertEqual(len(net_2), 1)
         self.assertEqual(sum(len(i) for i in net_2), 0)
 
-        # location, channel, time, starttime, endtime, and sampling_rate are
-        # also passed on to the station selector.
+        # location, channel, time, starttime, endtime, and sampling_rate
+        # and geographic parameters are also passed on to the station selector.
         select_kwargs = {
             "location": "00",
             "channel": "EHE",
             "time": UTCDateTime(2001, 1, 1),
             "sampling_rate": 123.0,
             "starttime": UTCDateTime(2002, 1, 1),
-            "endtime": UTCDateTime(2003, 1, 1)}
+            "endtime": UTCDateTime(2003, 1, 1),
+            "minlatitude": None,
+            "maxlatitude": None,
+            "minlongitude": None,
+            "maxlongitude": None,
+            "latitude": None,
+            "longitude": None,
+            "minradius": None,
+            "maxradius": None}
 
         with mock.patch("obspy.core.inventory.station.Station.select") as p:
             p.return_value = obspy.core.inventory.station.Station("FUR", 1,

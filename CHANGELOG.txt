@@ -61,6 +61,7 @@ master:
    * Fix a bug that was causing an exception being raised in `Response.plot()`
      because a float was being passed down to numpy.linspace as length of array
      (see #2533)
+   * Geographic select of inventory/network/station (see #2515)
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
@@ -93,6 +94,9 @@ master:
      #2405)
  - obspy.clients.iris:
    * results of distaz method are now returned as native floats (see #2499)
+ - obspy.geodetics:
+   * new utility function `inside_geobounds()` to check whether an object is
+     inside a geographic bound (see #2515)
  - obspy.imaging:
    * obspy-scan can now be used with wildcarded SEED IDs when specifying what
      to plot after scanning data (see #2227)
