@@ -22,8 +22,11 @@ import unittest
 import warnings
 
 import obspy
-from obspy.core.util import AttribDict
+from obspy import UTCDateTime
+from obspy.core.util import AttribDict, CatchAndAssertWarnings
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.inventory import (Inventory, Network, ResponseStage)
+from obspy.core.inventory.util import DataAvailability
 from obspy.core.util.base import NamedTemporaryFile
 from lxml import etree
 import obspy.io.stationxml.core
@@ -212,6 +215,88 @@ class StationXMLTestCase(unittest.TestCase):
 
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
+
+        # test some new fields added in StationXML 1.1 specifically
+        net = inv[0]
+        sta = net[0]
+        cha = sta[0]
+        self.assertEqual(len(net.identifiers), 2)
+        self.assertEqual(net.identifiers[0], "abc:def")
+        self.assertEqual(net.identifiers[1], "uvw:xyz")
+        self.assertEqual(len(net.operators), 2)
+        self.assertEqual(net.operators[0].agency, 'ABC0.oszQNsC4l66ieQFM')
+        # accessing "agencies" this should raise a DeprecationWarning but its
+        # tested in another test case already
+        with CatchAndAssertWarnings():
+            self.assertEqual(net.operators[0].agencies,
+                             ['ABC0.oszQNsC4l66ieQFM'])
+        self.assertEqual(net.operators[0].contacts[0].names[0], 'A')
+        # check WaterLevel tag
+        self.assertEqual(sta.water_level, 250.4)
+        self.assertEqual(sta.water_level.lower_uncertainty, 2.3)
+        self.assertEqual(sta.water_level.upper_uncertainty, 4.2)
+        self.assertEqual(sta.water_level.unit, 'METERS')
+        self.assertEqual(cha.water_level, 631.2)
+        self.assertEqual(cha.water_level.lower_uncertainty, 5.3)
+        self.assertEqual(cha.water_level.upper_uncertainty, 3.2)
+        self.assertEqual(cha.water_level.unit, 'METERS')
+        # multiple equipments allowed now on channel, deprecation for old
+        # single equipment attribute
+        self.assertEqual(len(cha.equipments), 2)
+        self.assertEqual(cha.equipments[1].type, "some type")
+        msg = (r"Attribute 'equipment' \(holding a single Equipment\) is "
+               r"deprecated in favor of 'equipments' which now holds a list "
+               r"of Equipment objects \(following changes in StationXML 1.1\) "
+               r"and might be removed in the future. Returning the first "
+               r"entry found in 'equipments'.")
+        with CatchAndAssertWarnings(
+                clear=['obspy.core.inventory.channel'],
+                expected=[(ObsPyDeprecationWarning, msg)]):
+            self.assertEqual(cha.equipment.type, cha.equipments[0].type)
+        # check new measurementMethod attributes
+        self.assertEqual(sta.latitude.measurement_method, "GPS")
+        self.assertEqual(sta.longitude.measurement_method, "GPS")
+        self.assertEqual(sta.elevation.measurement_method,
+                         "digital elevation model")
+        self.assertEqual(cha.azimuth.measurement_method,
+                         "fibre optic gyro compass")
+        # check data availability tags
+        self.assertEqual(
+            net.data_availability.start, UTCDateTime(2011, 2, 3, 4, 5, 6))
+        self.assertEqual(
+            net.data_availability.end, UTCDateTime(2011, 3, 4, 5, 6, 7))
+        self.assertEqual(len(net.data_availability.spans), 2)
+        span1 = net.data_availability.spans[0]
+        span2 = net.data_availability.spans[1]
+        self.assertEqual(span1.start, UTCDateTime(2012, 2, 3, 4, 5, 6))
+        self.assertEqual(span1.end, UTCDateTime(2012, 3, 4, 5, 6, 7))
+        self.assertEqual(span1.number_of_segments, 5)
+        self.assertEqual(span1.maximum_time_tear, 7.8)
+        self.assertEqual(span2.start, UTCDateTime(2013, 2, 3, 4, 5, 6))
+        self.assertEqual(span2.end, UTCDateTime(2013, 3, 4, 5, 6, 7))
+        self.assertEqual(span2.number_of_segments, 8)
+        self.assertEqual(span2.maximum_time_tear, 2.4)
+        # test sourceID
+        self.assertEqual(net.source_id, "http://www.example.com")
+        self.assertEqual(sta.source_id, "http://www.example2.com")
+        self.assertEqual(cha.source_id, "http://www.example3.com")
+        # Comment topic
+        self.assertEqual(net.comments[0].subject, "my topic")
+        # Comment id optional now
+        self.assertEqual(net.comments[0].id, None)
+        # storage_format was deprecated since it was removed in StationXML 1.1
+        msg = (r"Attribute 'storage_format' was removed in accordance with "
+               r"StationXML 1\.1, ignoring\.")
+        with CatchAndAssertWarnings(
+                clear=['obspy.core.inventory.channel'],
+                expected=[(ObsPyDeprecationWarning, msg)]):
+            cha.storage_format = "something"
+        msg = (r"Attribute 'storage_format' was removed in accordance with "
+               r"StationXML 1\.1, returning None\.")
+        with CatchAndAssertWarnings(
+                clear=['obspy.core.inventory.channel'],
+                expected=[(ObsPyDeprecationWarning, msg)]):
+            self.assertEqual(cha.storage_format, None)
 
     def test_writing_module_tags(self):
         """
@@ -488,8 +573,18 @@ class StationXMLTestCase(unittest.TestCase):
                          obspy.UTCDateTime(1992, 5, 5))
 
         self.assertEqual(len(station.operators), 2)
-        self.assertEqual(station.operators[0].agencies[0], "Agency 1")
-        self.assertEqual(station.operators[0].agencies[1], "Agency 2")
+        self.assertEqual(station.operators[0].agency, "Agency 1")
+        # legacy, "agencies" was a thing for StationXML 1.0
+        regex = (
+            r"Attribute 'agencies' \(holding a list of strings as Agencies\) "
+            r"is deprecated in favor of 'agency' which now holds a single "
+            r"string \(following changes in StationXML 1\.1\) and might be "
+            r"removed in the future. Returning a list built up of the single "
+            r"agency or an empty list if agency is None.")
+        with CatchAndAssertWarnings(
+                clear=['obspy.io.stationxml.core'],
+                expected=[(ObsPyDeprecationWarning, regex)]):
+            self.assertEqual(station.operators[0].agencies[0], "Agency 1")
         self.assertEqual(station.operators[0].contacts[0].names[0],
                          "This person")
         self.assertEqual(station.operators[0].contacts[0].names[1],
@@ -547,7 +642,7 @@ class StationXMLTestCase(unittest.TestCase):
             "456-7890")
         self.assertEqual(station.operators[0].website, "http://www.web.site")
 
-        self.assertEqual(station.operators[1].agencies[0], "Agency")
+        self.assertEqual(station.operators[1].agency, "Agency")
         self.assertEqual(station.operators[1].contacts[0].names[0], "New Name")
         self.assertEqual(station.operators[1].contacts[0].agencies[0],
                          "Agency")
@@ -766,11 +861,6 @@ class StationXMLTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             # manually add custom namespace definition
             tmpfile = tf.name
-            # assert that namespace prefix of xsi raises ValueError
-            mynsmap = {'xsi': 'http://bad.custom.ns/'}
-            self.assertRaises(
-                ValueError, inv.write, path_or_file_object=tmpfile,
-                format="STATIONXML", nsmap=mynsmap)
             # assert that namespace prefix of None raises ValueError
             mynsmap = {None: 'http://bad.custom.ns/'}
             self.assertRaises(
@@ -808,9 +898,9 @@ class StationXMLTestCase(unittest.TestCase):
             'type': 'attribute'})
         channel = inv[0][0][0]
         # add data availability to inventory
-        channel.data_availability = AttribDict({
-            'start': obspy.UTCDateTime('1998-10-26T20:35:58+00:00'),
-            'end': obspy.UTCDateTime('2014-07-21T12:00:00+00:00')})
+        channel.data_availability = DataAvailability(
+            start=UTCDateTime('1998-10-26T20:35:58+00:00'),
+            end=UTCDateTime('2014-07-21T12:00:00+00:00'))
         channel.extra = {}
         channel.extra['mynsChannelTag'] = AttribDict({
             'value': 'mynsChannelTagValue', 'namespace': ns})
@@ -850,8 +940,7 @@ class StationXMLTestCase(unittest.TestCase):
             # check namespace definitions in root element
             expected = [
                 b'xmlns="http://www.fdsn.org/xml/station/1"',
-                b'xmlns:myns="http://test.myns.ns/"',
-                b'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"']
+                b'xmlns:myns="http://test.myns.ns/"']
             for line in expected:
                 self.assertIn(line, content)
             # check additional tags
@@ -1177,6 +1266,19 @@ class StationXMLTestCase(unittest.TestCase):
             response_2.response_stages[2].input_units_description, "Volts")
         self.assertEqual(
             response_2.response_stages[2].output_units_description, "Volts")
+
+    def test_reading_full_stationxml_1_0_file(self):
+        """
+        Tests reading a fully filled StationXML 1.0 file.
+        """
+        filename = os.path.join(self.data_dir,
+                                "full_random_stationxml_1_0.xml")
+        inv = obspy.read_inventory(filename, format='STATIONXML')
+        lats = [cha.latitude for net in inv for sta in net for cha in sta]
+        # for now just check that all expected channels are there.. test could
+        # be much improved
+        self.assertEqual(
+            lats, [-53.12, 44.77, 63.39, 12.46, -13.16, -84.44, 43.9, -88.41])
 
 
 def suite():

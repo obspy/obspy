@@ -13,6 +13,7 @@ import warnings
 import numpy as np
 
 from obspy.core.inventory.response import PolynomialResponseStage
+from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.core.util.testing import NamedTemporaryFile
 from obspy.io.xseed import Parser, InvalidResponseError
 from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
@@ -136,7 +137,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # One seed file is a bit faulty and thus raises a warning when read
         # - catch it.
-        with warnings.catch_warnings(record=True):
+        with CatchAndAssertWarnings():
             for f in self.seed_files:
                 _read_seed(f)
 
@@ -448,7 +449,7 @@ class CoreTestCase(unittest.TestCase):
 
         for filename in self.seed_files + self.xseed_files:
             # Parse the files using the Parser object.
-            with warnings.catch_warnings(record=True):
+            with CatchAndAssertWarnings():
                 p = Parser(filename)
                 p_resp = {_i[0]: _i[1] for _i in p.get_resp()}
                 # Also read using the core routines.
@@ -525,7 +526,7 @@ class CoreTestCase(unittest.TestCase):
     def test_warning_when_blockette_54_is_not_followed_by_57(self):
         filename = os.path.join(self.data_path, "RESP.SG.ST..LDO")
         # Fail if responses are explicitly not skipped.
-        with warnings.catch_warnings(record=True):
+        with CatchAndAssertWarnings():
             with self.assertRaises(InvalidResponseError) as e:
                 obspy.read_inventory(filename, skip_invalid_responses=False)
         self.assertEqual(
@@ -538,31 +539,28 @@ class CoreTestCase(unittest.TestCase):
             obspy.io.xseed.parser.__warningregistry__.clear()
 
         # Otherwise continue, but raise a warning.
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            obspy.read_inventory(filename)
+        msg1 = (
+            r"Epoch SG.ST..LDO "
+            r"\[1997-02-01T00:00:00.000000Z - 2599-12-31T23:59:59.000000Z\]: "
+            r"Response stage 2 does not end with blockette 58. Proceed at "
+            r"your own risk.")
+        msg2 = (
+            r"Failed to calculate response for SG.ST..LDO with epoch "
+            r"1997-02-01T00:00:00.000000Z - 2599-12-31T23:59:59.000000Z "
+            r"because: Stage 2: Invalid response specification. A blockette "
+            r"54 must always be followed by a blockette 57 which is missing.")
         # This actually raises two warnings - one that blockette 58 is
         # missing on stage 2 - this is a generic error that can be
         # potentially recovered from - then a second one that it actually
         # cannot recover.
-        self.assertEqual(len(w), 2)
-        self.assertEqual(
-            w[0].message.args[0],
-            "Epoch SG.ST..LDO "
-            "[1997-02-01T00:00:00.000000Z - 2599-12-31T23:59:59.000000Z]: "
-            "Response stage 2 does not end with blockette 58. Proceed at "
-            "your own risk.")
-        self.assertEqual(
-            w[1].message.args[0],
-            "Failed to calculate response for SG.ST..LDO with epoch "
-            "1997-02-01T00:00:00.000000Z - 2599-12-31T23:59:59.000000Z "
-            "because: Stage 2: Invalid response specification. A blockette 54 "
-            "must always be followed by a blockette 57 which is missing.")
+        with CatchAndAssertWarnings(
+                expected=[(Warning, msg1), (Warning, msg2)]):
+            obspy.read_inventory(filename)
 
     def test_warning_when_blockette_57_is_not_followed_by_58(self):
         filename = os.path.join(self.data_path, "RESP.decimation_without_gain")
         # Fail if responses are explicitly not skipped.
-        with warnings.catch_warnings(record=True):
+        with CatchAndAssertWarnings():
             with self.assertRaises(InvalidResponseError) as e:
                 obspy.read_inventory(filename, skip_invalid_responses=False)
         self.assertEqual(
@@ -570,49 +568,36 @@ class CoreTestCase(unittest.TestCase):
             "Stage 1: A decimation stage with blockette 57 must be followed "
             "by a blockette 58 which is missing here.")
         # Otherwise continue, but raise a warning.
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            obspy.read_inventory(filename)
-        # This triggers a number of warnings as the file is constructed and
-        # misses all kinds of information.
-        self.assertGreaterEqual(len(w), 1)
         msg = ("Failed to calculate response for XX.ABC..BHX with epoch "
                "1999-12-16T02:14:00.000000Z - 1999-12-21T19:10:59.000000Z "
                "because: Stage 1: A decimation stage with blockette 57 must "
                "be followed by a blockette 58 which is missing here.")
-        for _w in w:
-            if _w.message.args[0] == msg:
-                break
-        else:
-            raise AssertionError("Could not find warning to test for.")
+        # This triggers a number of warnings as the file is constructed and
+        # misses all kinds of information.
+        with CatchAndAssertWarnings(expected=[(Warning, msg)]):
+            obspy.read_inventory(filename)
 
     def test_warning_with_multiple_blockettes_58_in_stage_0(self):
         filename = os.path.join(self.data_path, "RESP.repeated_stage_0")
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        msg = (r"Epoch BN.WR0..SHZ "
+               r"\[1996-03-01T00:00:00.000000Z - "
+               r"1999-01-03T00:00:00.000000Z\]: "
+               r"Channel has multiple \(but identical\) blockettes 58 for "
+               r"stage 0. Only one will be used.")
+        with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
-        self.assertGreaterEqual(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            "Epoch BN.WR0..SHZ "
-            "[1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z]: "
-            "Channel has multiple (but identical) blockettes 58 for stage 0. "
-            "Only one will be used.")
 
     def test_warning_with_multiple_differing_blockettes_58_in_stage_0(self):
         filename = os.path.join(self.data_path,
                                 "RESP.repeated_differing_stage_0")
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        msg = (r"Epoch BN.WR0..SHZ "
+               r"\[1996-03-01T00:00:00.000000Z - "
+               r"1999-01-03T00:00:00.000000Z\]: "
+               r"Channel has multiple different blockettes 58 for stage 0. "
+               r"The last one will be chosen - this is a faulty file - try to "
+               r"fix it!")
+        with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
-        self.assertGreaterEqual(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            "Epoch BN.WR0..SHZ "
-            "[1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z]: "
-            "Channel has multiple different blockettes 58 for stage 0. The "
-            "last one will be chosen - this is a faulty file - try to fix "
-            "it!")
 
     def test_blkts_53_and_54_in_one_stage(self):
         """
@@ -626,16 +611,13 @@ class CoreTestCase(unittest.TestCase):
             e.exception.args[0],
             "Stage 1 has both, blockette 53 and 54. This is not valid.")
         # If invalid responses are skipped, check the warning.
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        msg = (
+            r"Failed to calculate response for BN.WR0..SHZ with epoch "
+            r"1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z "
+            r"because: Stage 1 has both, blockette 53 and 54. "
+            r"This is not valid.")
+        with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             inv = obspy.read_inventory(filename)
-        self.assertGreaterEqual(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            "Failed to calculate response for BN.WR0..SHZ with epoch "
-            "1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z "
-            "because: Stage 1 has both, blockette 53 and 54. "
-            "This is not valid.")
         self.assertIsNone(inv[0][0][0].response)
 
     def test_reconstructing_stage_0_from_other_blockettes(self):
@@ -702,16 +684,13 @@ class CoreTestCase(unittest.TestCase):
 
     def test_warning_with_no_blockettes_58(self):
         filename = os.path.join(self.data_path, "RESP.repeated_stage_0")
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        msg = (r"Epoch BN.WR0..SHZ "
+               r"\[1996-03-01T00:00:00.000000Z - "
+               r"1999-01-03T00:00:00.000000Z\]: "
+               r"Channel has multiple \(but identical\) blockettes 58 for "
+               r"stage 0. Only one will be used.")
+        with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
-        self.assertGreaterEqual(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            "Epoch BN.WR0..SHZ "
-            "[1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z]: "
-            "Channel has multiple (but identical) blockettes 58 for stage 0. "
-            "Only one will be used.")
 
     def test_paz_with_no_actual_values(self):
         filename = os.path.join(self.data_path, "RESP.paz_with_no_values")
@@ -758,7 +737,7 @@ class CoreTestCase(unittest.TestCase):
 
         for unit in ("DISP", "VEL", "ACC"):
             # This raises a warning that it has multiple gain blockettes.
-            with warnings.catch_warnings(record=True):
+            with CatchAndAssertWarnings():
                 r = obspy.read_inventory(filename)[0][0][0].response
             e_r = evalresp_for_frequencies(
                 t_samp=None, frequencies=frequencies, filename=filename,
@@ -822,7 +801,7 @@ class CoreTestCase(unittest.TestCase):
             #     t_samp=None, frequencies=frequencies, filename=filename,
             #     date=t, units=unit)
 
-            with warnings.catch_warnings(record=True):
+            with CatchAndAssertWarnings():
                 r = obspy.read_inventory(filename)[0][0][0].response
             r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)

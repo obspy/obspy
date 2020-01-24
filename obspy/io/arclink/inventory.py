@@ -431,7 +431,11 @@ def _read_channel(inventory_root, cha_element):
 
     channel.azimuth = _attr2obj(cha_element, "azimuth", Azimuth)
     channel.dip = _attr2obj(cha_element, "dip", Dip)
-    channel.storage_format = _attr2obj(cha_element, "format", str)
+    # storage format of channel not supported by StationXML1.1 anymore, keep it
+    # as a foreign tag to be nice if anybody needs to access it
+    channel.extra = {'format': {
+        'value': _tag2obj(cha_element, _ns("format"), str),
+        'namespace': SCHEMA_NAMESPACE}}
 
     if channel.sample_rate == 0.0:
         msg = "Something went hopelessly wrong, found sampling-rate of 0!"

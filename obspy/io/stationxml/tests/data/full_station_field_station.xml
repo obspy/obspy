@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">
+<FDSNStationXML schemaVersion="1.1" xmlns="http://www.fdsn.org/xml/station/1">
   <Source>OBS</Source>
   <Sender>The ObsPy Team</Sender>
   <Module>Some Random Module</Module>
@@ -108,7 +108,6 @@
           </Equipment>
           <Operator>
               <Agency>Agency 1</Agency>
-              <Agency>Agency 2</Agency>
               <Contact>
                   <Name>This person</Name>
                   <Name>has multiple names!</Name>

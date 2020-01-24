@@ -39,6 +39,18 @@ from obspy.io.stationxml.core import _read_floattype
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
 SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
+SCHEMA_NAMESPACE_BASE = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
+
+
+def _get_schema_namespace(version_string):
+    """
+    >>> print(_get_schema_namespace('0.9'))
+    http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9
+    >>> print(_get_schema_namespace('0.6'))
+    http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.6
+    """
+    namespace = "%s/%s" % (SCHEMA_NAMESPACE_BASE, version_string)
+    return namespace
 
 
 def _count_complex(complex_string):
@@ -83,9 +95,8 @@ def _read_sc3ml(path_or_file_object):
     root = etree.parse(path_or_file_object).getroot()
 
     # Code can be used for version 0.7, 0.8, and 0.9
-    basespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
     for version in SCHEMA_VERSION:
-        namespace = "%s/%s" % (basespace, version)
+        namespace = _get_schema_namespace(version)
         if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
             break
     else:
@@ -492,7 +503,16 @@ def _read_channel(instrumentation_register, cha_element, _ns):
 
     channel.azimuth = _read_floattype(cha_element, _ns("azimuth"), Azimuth)
     channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
-    channel.storage_format = _tag2obj(cha_element, _ns("format"), str)
+    match = re.search(r'{([^}]*)}', cha_element.tag)
+    if match:
+        namespace = match.group(1)
+    else:
+        namespace = _get_schema_namespace('0.9')
+    channel.extra = {'format': {
+        'value': _tag2obj(cha_element, _ns("format"), str),
+        # storage format of channel not supported by StationXML1.1 anymore,
+        # keep it as a foreign tag to be nice if anybody needs to access it
+        'namespace': namespace}}
 
     if channel.sample_rate == 0.0:
         msg = "Something went hopelessly wrong, found sampling-rate of 0!"

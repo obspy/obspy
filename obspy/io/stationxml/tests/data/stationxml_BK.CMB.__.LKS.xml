@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd" xmlns:iris="http://www.fdsn.org/xml/station/1/iris">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.11</Module>
@@ -10,7 +10,7 @@
   <Description>Berkeley Digital Seismograph Network</Description>
   <TotalNumberStations>80</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="CMB" startDate="1996-09-25T19:19:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" alternateNetworkCodes=".EARTHSCOPE,_GSN-BROADBAND,_US-TA,_GSN,_FDSN,_US-REGIONAL,.UNRESTRICTED,_ANSS,_US-REF,_US-ALL,_ANSS-BB,.EARTHSCOPE,_FDSN-ALL,_US-ALL,_REALTIME,_STS-1">
+  <Station code="CMB" startDate="1996-09-25T19:19:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes=".EARTHSCOPE,_GSN-BROADBAND,_US-TA,_GSN,_FDSN,_US-REGIONAL,.UNRESTRICTED,_ANSS,_US-REF,_US-ALL,_ANSS-BB,.EARTHSCOPE,_FDSN-ALL,_US-ALL,_REALTIME,_STS-1">
    <Latitude>38.03455</Latitude>
    <Longitude>-120.38651</Longitude>
    <Elevation>697.0</Elevation>

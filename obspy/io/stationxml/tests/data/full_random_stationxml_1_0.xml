@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.1">
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
     <Source>vT.HEbXDVzmI9Jak5SHOC30dI</Source>
     <Sender>Ia3zIdiZj</Sender>
     <Module>pZr</Module>
     <ModuleURI>http://mANaoYVB/</ModuleURI>
     <Created>2013-12-11T16:29:13.000000Z</Created>
-    <Network code="ebdz" startDate="2014-06-11T16:29:13.000000Z" endDate="2014-05-09T16:29:13.000000Z" restrictedStatus="closed" alternateCode="wBHfTN1Ypxh79.tE" historicalCode="OYD3xrgoG" sourceID="http://www.example.com">
+    <Network code="ebdz" startDate="2014-06-11T16:29:13.000000Z" endDate="2014-05-09T16:29:13.000000Z" restrictedStatus="closed" alternateCode="wBHfTN1Ypxh79.tE" historicalCode="OYD3xrgoG">
         <Description>qEhqqijuc1XhCirqZl</Description>
-        <Identifier type="abc">def</Identifier>
-        <Identifier type="uvw">xyz</Identifier>
-        <Comment subject="my topic">
+        <Comment id="555942826">
             <Value>ihu3IUkxZ6pZG.f4Qcp</Value>
             <BeginEffectiveTime>2014-11-16T16:29:13.000000Z</BeginEffectiveTime>
             <EndEffectiveTime>2015-11-01T16:29:13.000000Z</EndEffectiveTime>
@@ -91,94 +89,9 @@
                 </Phone>
             </Author>
         </Comment>
-        <DataAvailability>
-            <Extent start="2011-02-03T04:05:06.000000Z" end="2011-03-04T05:06:07.000000Z"/>
-            <Span start="2012-02-03T04:05:06.000000Z" end="2012-03-04T05:06:07.000000Z" numberSegments="5" maximumTimeTear="7.8"/>
-            <Span start="2013-02-03T04:05:06.000000Z" end="2013-03-04T05:06:07.000000Z" numberSegments="8" maximumTimeTear="2.4"/>
-        </DataAvailability>
-        <Operator>
-            <Agency>ABC0.oszQNsC4l66ieQFM</Agency>
-            <Contact>
-                <Name>A</Name>
-                <Name>tqEC9Te1F11VsXJcqk</Name>
-                <Agency>gele5fNTUMhT.pqaA8iMX2O27GJbfJ</Agency>
-                <Agency>kqYq6DKQCGNF5W-dS</Agency>
-                <Email>-@k</Email>
-                <Email>_lm@7_</Email>
-                <Phone description="raL9MGoDu3uxuKs1Sa">
-                    <CountryCode>493576428</CountryCode>
-                    <AreaCode>716510519</AreaCode>
-                    <PhoneNumber>9-8</PhoneNumber>
-                </Phone>
-                <Phone description="wG-wsHscmW4kSVdCQ4HIZR8VY.rMO">
-                    <CountryCode>334955237</CountryCode>
-                    <AreaCode>1800063363</AreaCode>
-                    <PhoneNumber>0-333</PhoneNumber>
-                </Phone>
-            </Contact>
-            <Contact>
-                <Name>XYZdOI5jnAUev6s8PC9v.6fRS92</Name>
-                <Name>GCvhJfAbcbNVrvrcdR</Name>
-                <Agency>k10wRqk6xOB.iDUvN</Agency>
-                <Agency>bz8pgp3rMvoi</Agency>
-                <Email>PA@_</Email>
-                <Email>___@_</Email>
-                <Phone description="adSiy9mFnp31TfNSCg">
-                    <CountryCode>1884226669</CountryCode>
-                    <AreaCode>-2111350717</AreaCode>
-                    <PhoneNumber>5-412</PhoneNumber>
-                </Phone>
-                <Phone description="IKSWf">
-                    <CountryCode>-66922996</CountryCode>
-                    <AreaCode>763165572</AreaCode>
-                    <PhoneNumber>5-03</PhoneNumber>
-                </Phone>
-            </Contact>
-            <WebSite>http://YvnICqFW/</WebSite>
-        </Operator>
-        <Operator>
-            <Agency>dfa4wYdrPYC_g25Yi72Pn24cJ2M2Zg</Agency>
-            <Contact>
-                <Name>c.5feKj2W1</Name>
-                <Name>P7r8K6zcmVbUMyesWAdq4M</Name>
-                <Agency>M</Agency>
-                <Agency>F7Tg.A7ucwdoAM6Qhrbi0chqlJ</Agency>
-                <Email>_@-</Email>
-                <Email>_@Y</Email>
-                <Phone description="a1K1duYRPAs5iYOVI3Ea9O">
-                    <CountryCode>-1146774091</CountryCode>
-                    <AreaCode>1279559438</AreaCode>
-                    <PhoneNumber>39-3</PhoneNumber>
-                </Phone>
-                <Phone description="k4oxWx9D2xAc">
-                    <CountryCode>662491130</CountryCode>
-                    <AreaCode>2124103979</AreaCode>
-                    <PhoneNumber>2-5</PhoneNumber>
-                </Phone>
-            </Contact>
-            <Contact>
-                <Name>wuEcYfL</Name>
-                <Name>IiZ0W-</Name>
-                <Agency>Lph</Agency>
-                <Agency>MsdC.Q</Agency>
-                <Email>_@_</Email>
-                <Email>_@_-_</Email>
-                <Phone description="rf.TAMjOWp4scbXbJOtXhmtKq1LVr">
-                    <CountryCode>-1740279063</CountryCode>
-                    <AreaCode>-490519067</AreaCode>
-                    <PhoneNumber>2-9</PhoneNumber>
-                </Phone>
-                <Phone description="Blur220AuVhRRBo">
-                    <CountryCode>1071231279</CountryCode>
-                    <AreaCode>819665155</AreaCode>
-                    <PhoneNumber>7-2055</PhoneNumber>
-                </Phone>
-            </Contact>
-            <WebSite>http://UBdXgcoM/</WebSite>
-        </Operator>
         <TotalNumberStations>1664027705</TotalNumberStations>
         <SelectedNumberStations>472200261</SelectedNumberStations>
-        <Station code="rrkqyXsRMJtPa" startDate="2014-03-20T16:29:13.000000Z" endDate="2014-06-08T16:29:13.000000Z" restrictedStatus="closed" alternateCode="lmy.V_xYd85DTUQMfVcHftPZ7gIvEB" historicalCode="akTv" sourceID="http://www.example2.com">
+        <Station code="rrkqyXsRMJtPa" startDate="2014-03-20T16:29:13.000000Z" endDate="2014-06-08T16:29:13.000000Z" restrictedStatus="closed" alternateCode="lmy.V_xYd85DTUQMfVcHftPZ7gIvEB" historicalCode="akTv">
             <Description>ZnGUA9j2Ur</Description>
             <Comment id="848648951">
                 <Value>fKua5Y73n</Value>
@@ -262,9 +175,9 @@
                     </Phone>
                 </Author>
             </Comment>
-            <Latitude datum="WGS84" unit="DEGREES" plusError="158169445.66" minusError="1768585416.39" measurementMethod="GPS">-17.78</Latitude>
-            <Longitude datum="WGS84" unit="DEGREES" plusError="-896569074.48" minusError="-8433099.53" measurementMethod="GPS">-11.81</Longitude>
-            <Elevation unit="METERS" plusError="1926293739.13" minusError="-182891004.29" measurementMethod="digital elevation model">-932334367.71</Elevation>
+            <Latitude datum="WGS84" unit="DEGREES" plusError="158169445.66" minusError="1768585416.39">-17.78</Latitude>
+            <Longitude datum="WGS84" unit="DEGREES" plusError="-896569074.48" minusError="-8433099.53">-11.81</Longitude>
+            <Elevation unit="METERS" plusError="1926293739.13" minusError="-182891004.29">-932334367.71</Elevation>
             <Site>
                 <Name>ZkgZ</Name>
                 <Description>BBMVXtn47eMUi6zX0Ztffgcb2mSN4</Description>
@@ -273,7 +186,6 @@
                 <Region>boqHE</Region>
                 <Country>SHNxrhUGvw1N1kYmlc</Country>
             </Site>
-            <WaterLevel unit="METERS" plusError="4.2" minusError="2.3">250.4</WaterLevel>
             <Vault>fuWmJrd-LJY8vsh</Vault>
             <Geology>shovOWTuLKF3</Geology>
             <Equipment resourceId="VC7MHR7I3yKHs6njr4C-YQA4MY8YS">
@@ -302,6 +214,7 @@
             </Equipment>
             <Operator>
                 <Agency>EEu0.oszQNsC4l66ieQFM</Agency>
+                <Agency>UIyHdtVpO</Agency>
                 <Contact>
                     <Name>V</Name>
                     <Name>tqEC9Te1F11VsXJcqk</Name>
@@ -342,6 +255,7 @@
             </Operator>
             <Operator>
                 <Agency>dfa4wYdrPYC_g25Yi72Pn24cJ2M2Zg</Agency>
+                <Agency>tYB0R9</Agency>
                 <Contact>
                     <Name>c.5feKj2W1</Name>
                     <Name>P7r8K6zcmVbUMyesWAdq4M</Name>
@@ -392,7 +306,7 @@
                 <URI>http://ciiKURCr/</URI>
                 <Description>sJtNcgoqxP3mpkEi</Description>
             </ExternalReference>
-            <Channel locationCode="mARsF" code="kepD5Hi47y" startDate="2014-08-28T16:29:13.000000Z" endDate="2015-02-09T16:29:13.000000Z" restrictedStatus="partial" alternateCode="FFOV_hPP7kIL7baO" historicalCode="R6.Qpri" sourceID="http://www.example3.com">
+            <Channel locationCode="mARsF" code="kepD5Hi47y" startDate="2014-08-28T16:29:13.000000Z" endDate="2015-02-09T16:29:13.000000Z" restrictedStatus="partial" alternateCode="FFOV_hPP7kIL7baO" historicalCode="R6.Qpri">
                 <Description>i_bqj3jjvk8h5sxte9Gf</Description>
                 <Comment id="1300736518">
                     <Value>UQyUzx3FRaV9wHg</Value>
@@ -488,9 +402,8 @@
                 <Longitude datum="WGS84" unit="DEGREES" plusError="-1635073567.96" minusError="-2036701898.06">-93.75</Longitude>
                 <Elevation unit="METERS" plusError="-74939587.84" minusError="643958632.79">-2065227015.14</Elevation>
                 <Depth unit="METERS" plusError="1134950515.52" minusError="-49932928.17">218301187.84</Depth>
-                <Azimuth unit="DEGREES" plusError="916950370.7" minusError="-1080590168.51" measurementMethod="fibre optic gyro compass">319.06</Azimuth>
+                <Azimuth unit="DEGREES" plusError="916950370.7" minusError="-1080590168.51">319.06</Azimuth>
                 <Dip unit="DEGREES" plusError="-1778098068.67" minusError="1931668907.04">-79.66</Dip>
-                <WaterLevel unit="METERS" plusError="3.2" minusError="5.3">631.2</WaterLevel>
                 <Type>BEAM</Type>
                 <Type>WEATHER</Type>
                 <SampleRate unit="SAMPLES/S" plusError="680748035.12" minusError="1681460903.58">-1058267605.43</SampleRate>
@@ -498,6 +411,7 @@
                     <NumberSamples>222092573</NumberSamples>
                     <NumberSeconds>-798915861</NumberSeconds>
                 </SampleRateRatio>
+                <StorageFormat>WwXQ2n1i</StorageFormat>
                 <ClockDrift unit="SECONDS/SAMPLE" plusError="-1780315743.09" minusError="-790477644.5">43696556.77</ClockDrift>
                 <CalibrationUnits>
                     <Name>_NFttiZamwZ0hMlK</Name>
@@ -551,9 +465,6 @@
                     <CalibrationDate>2015-11-05T16:29:13.000000Z</CalibrationDate>
                     <CalibrationDate>2014-08-28T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
-                <Equipment resourceId="XYZ">
-                    <Type>some type</Type>
-                </Equipment>
                 <Response resourceId="tgWhxj-6ZmE">
                         <InstrumentPolynomial resourceId="FGvGDgMhPkOlcb6IC6Zw" name="qHl9qj5KLLN0MOoYmXr1WwHSlZD">
                         <Description>eFJTLsRHTX.Ygk1Im2hWlWvFl</Description>
@@ -592,10 +503,10 @@
                                 <Description>gTe8KIKiU3RfrWAJOg.CTy8f7Cz</Description>
                             </OutputUnits>
                             <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
-                            <Numerator plusError="-1096718463.14" minusError="1126505295.72">643096860.28</Numerator>
-                            <Numerator plusError="1487660393.16" minusError="1518618020.33">-1135677195.92</Numerator>
-                            <Denominator plusError="-1418173713.21" minusError="-696602068.55">1504792438.09</Denominator>
-                            <Denominator plusError="587099516.91" minusError="618144513.11">1711947659.78</Denominator>
+                            <Numerator unit="IoDwslh8kHJBTY6U28" plusError="-1096718463.14" minusError="1126505295.72">643096860.28</Numerator>
+                            <Numerator unit="SowFov80sfXY29yH8QKDkM46" plusError="1487660393.16" minusError="1518618020.33">-1135677195.92</Numerator>
+                            <Denominator unit="R0-VApVbeaaxNu08Vz2Yn2U" plusError="-1418173713.21" minusError="-696602068.55">1504792438.09</Denominator>
+                            <Denominator unit="YZJt" plusError="587099516.91" minusError="618144513.11">1711947659.78</Denominator>
                         </Coefficients>
                         <Decimation>
                             <InputSampleRate unit="HERTZ" plusError="59663358.91" minusError="-1077596674.88">-2002635152.29</InputSampleRate>
@@ -690,6 +601,17 @@
                             <Coefficient number="1387120464" plusError="1835503571.44" minusError="-1547089820.01">752165230.03</Coefficient>
                             <Coefficient number="1234805940" plusError="595793658.31" minusError="7657165.27">-1902969017.93</Coefficient>
                         </Polynomial>
+                        <Decimation>
+                            <InputSampleRate unit="HERTZ" plusError="59663358.91" minusError="-1077596674.88">-2002635152.29</InputSampleRate>
+                            <Factor>240803815</Factor>
+                            <Offset>-262793817</Offset>
+                            <Delay unit="XPpuXfwz-L8fb_ckRH" plusError="1934268189.45" minusError="2001850363.0">1582595339.45</Delay>
+                            <Correction unit="XC0nuO8jNBprXjIhFSgmZ" plusError="302375551.96" minusError="-977920682.23">-1860361815.98</Correction>
+                        </Decimation>
+                        <StageGain>
+                            <Value>-1413005224.06</Value>
+                            <Frequency>-1093676557.19</Frequency>
+                        </StageGain>
                     </Stage>
                 </Response>
             </Channel>
@@ -798,6 +720,7 @@
                     <NumberSamples>-1755965690</NumberSamples>
                     <NumberSeconds>-268003670</NumberSeconds>
                 </SampleRateRatio>
+                <StorageFormat>cV-eiUu6KJCA42HUbhGZ1.QlV</StorageFormat>
                 <ClockDrift unit="SECONDS/SAMPLE" plusError="575955167.93" minusError="212750624.92">1103146286.57</ClockDrift>
                 <CalibrationUnits>
                     <Name>KFebJb7lv0.VKnAYoLh</Name>
@@ -1083,6 +1006,7 @@
             </Equipment>
             <Operator>
                 <Agency>e74znVlJ5eViiTUSzltTmCXSBx4</Agency>
+                <Agency>caaUHU35</Agency>
                 <Contact>
                     <Name>pWVv6yZXz8udk1JfQufqOvj</Name>
                     <Name>QRvp.B3NsWxNYOXhylC3eN3_</Name>
@@ -1123,6 +1047,7 @@
             </Operator>
             <Operator>
                 <Agency>Wawda</Agency>
+                <Agency>AVi</Agency>
                 <Contact>
                     <Name>XuGe2tav1V8NjLr5.S.</Name>
                     <Name>B-Gf45s5.MPBgsh8OM</Name>
@@ -1278,6 +1203,7 @@
                     <NumberSamples>-2043644086</NumberSamples>
                     <NumberSeconds>1709916744</NumberSeconds>
                 </SampleRateRatio>
+                <StorageFormat>rXn_FXxY1U2BhvKPP.tPQRB</StorageFormat>
                 <ClockDrift unit="SECONDS/SAMPLE" plusError="1282702515.95" minusError="-2075345756.96">2029323645.48</ClockDrift>
                 <CalibrationUnits>
                     <Name>vevuC0Oi</Name>
@@ -1540,6 +1466,7 @@
                     <NumberSamples>591582913</NumberSamples>
                     <NumberSeconds>1308721377</NumberSeconds>
                 </SampleRateRatio>
+                <StorageFormat>m9JLm.bGLMloIKOWipaE5cjK</StorageFormat>
                 <ClockDrift unit="SECONDS/SAMPLE" plusError="-1817984680.83" minusError="-304686649.93">173056684.22</ClockDrift>
                 <CalibrationUnits>
                     <Name>KN.PGh-RtfHO0</Name>
@@ -1664,10 +1591,10 @@
                                 <Description>okm2E-YYrk6.fk.7A0z9ekMtzu1n</Description>
                             </OutputUnits>
                             <CfTransferFunctionType>ANALOG (HERTZ)</CfTransferFunctionType>
-                            <Numerator plusError="-1762674286.27" minusError="-1269852413.17">-191637952.97</Numerator>
-                            <Numerator plusError="1954449462.37" minusError="221794746.01">-661293296.04</Numerator>
-                            <Denominator plusError="-1789269251.46" minusError="-2058655199.36">1333976063.09</Denominator>
-                            <Denominator plusError="1009129881.95" minusError="487439513.87">-94223624.85</Denominator>
+                            <Numerator unit="UJ60-cTOQW-" plusError="-1762674286.27" minusError="-1269852413.17">-191637952.97</Numerator>
+                            <Numerator unit="dWVUbVRdoW84E9aMmhoPMf0_Vz5" plusError="1954449462.37" minusError="221794746.01">-661293296.04</Numerator>
+                            <Denominator unit="rGnLumgUQBtR" plusError="-1789269251.46" minusError="-2058655199.36">1333976063.09</Denominator>
+                            <Denominator unit="VjFL7CjQnMjn.gRbuy" plusError="1009129881.95" minusError="487439513.87">-94223624.85</Denominator>
                         </Coefficients>
                         <Decimation>
                             <InputSampleRate unit="HERTZ" plusError="-1653887449.52" minusError="-1132843796.4">-65013890.08</InputSampleRate>
@@ -1894,6 +1821,7 @@
             </Equipment>
             <Operator>
                 <Agency>v</Agency>
+                <Agency>qKdW0</Agency>
                 <Contact>
                     <Name>XAAy2p1YI4k_jeuwQ</Name>
                     <Name>PSzW9Yo</Name>
@@ -1934,6 +1862,7 @@
             </Operator>
             <Operator>
                 <Agency>cJKa8T</Agency>
+                <Agency>uKl1NQp</Agency>
                 <Contact>
                     <Name>g</Name>
                     <Name>Z-0WY</Name>
@@ -2089,6 +2018,7 @@
                     <NumberSamples>1647112947</NumberSamples>
                     <NumberSeconds>360222105</NumberSeconds>
                 </SampleRateRatio>
+                <StorageFormat>HRRl_GSLg</StorageFormat>
                 <ClockDrift unit="SECONDS/SAMPLE" plusError="1744933028.67" minusError="407341595.05">92533278.85</ClockDrift>
                 <CalibrationUnits>
                     <Name>N2jAn5pCVKceLTmjf0lCmMrDA</Name>
@@ -2330,6 +2260,7 @@
                     <NumberSamples>-1296709218</NumberSamples>
                     <NumberSeconds>-1552109037</NumberSeconds>
                 </SampleRateRatio>
+                <StorageFormat>FQNXiiNVf</StorageFormat>
                 <ClockDrift unit="SECONDS/SAMPLE" plusError="920468155.64" minusError="548049888.31">1870114310.96</ClockDrift>
                 <CalibrationUnits>
                     <Name>JM4Jr-DyR2Cyd7M8R</Name>
@@ -2423,6 +2354,17 @@
                             <Coefficient number="1431274182" plusError="-797224495.26" minusError="-375130548.86">-383652233.67</Coefficient>
                             <Coefficient number="1617726136" plusError="-937422835.49" minusError="-1724163891.67">-127183582.34</Coefficient>
                         </Polynomial>
+                        <Decimation>
+                            <InputSampleRate unit="HERTZ" plusError="-1382684967.44" minusError="-1196290047.08">86673752.99</InputSampleRate>
+                            <Factor>2020072205</Factor>
+                            <Offset>84155626</Offset>
+                            <Delay unit="NaflK9d5nCBIbXo83UusgkDl" plusError="1922358287.37" minusError="568959695.27">2047298508.05</Delay>
+                            <Correction unit="d6" plusError="-680995981.88" minusError="1417491818.94">1779794526.57</Correction>
+                        </Decimation>
+                        <StageGain>
+                            <Value>-1683700207.0</Value>
+                            <Frequency>-61419945.41</Frequency>
+                        </StageGain>
                     </Stage>
                     <Stage number="404138579" resourceId="Uh5hOv">
                         <PolesZeros resourceId="jRg.XN" name="i">
@@ -2593,6 +2535,7 @@
             </Equipment>
             <Operator>
                 <Agency>XSWm_gWKJeLHK</Agency>
+                <Agency>cUU1KBx</Agency>
                 <Contact>
                     <Name>eiiGJetKpdARaRF</Name>
                     <Name>x0j</Name>
@@ -2633,6 +2576,7 @@
             </Operator>
             <Operator>
                 <Agency>bpAh3NHHUE80FQ7g3BfkzL8gpW</Agency>
+                <Agency>K1ml4hWB6</Agency>
                 <Contact>
                     <Name>g0JzX1qmWkpTV2Nh-e</Name>
                     <Name>P</Name>
@@ -2788,6 +2732,7 @@
                     <NumberSamples>891508742</NumberSamples>
                     <NumberSeconds>687812635</NumberSeconds>
                 </SampleRateRatio>
+                <StorageFormat>Q2V7EIcu8</StorageFormat>
                 <ClockDrift unit="SECONDS/SAMPLE" plusError="964281925.5" minusError="-649359608.76">1730337952.7</ClockDrift>
                 <CalibrationUnits>
                     <Name>TWgrmCJ</Name>
@@ -3050,6 +2995,7 @@
                     <NumberSamples>-811652002</NumberSamples>
                     <NumberSeconds>1900090080</NumberSeconds>
                 </SampleRateRatio>
+                <StorageFormat>kuVB</StorageFormat>
                 <ClockDrift unit="SECONDS/SAMPLE" plusError="-1928130584.75" minusError="1678826795.73">676572441.75</ClockDrift>
                 <CalibrationUnits>
                     <Name>xt34fts</Name>
@@ -3131,10 +3077,10 @@
                                 <Description>Yjoikt9dzL6cSXaLs4ocUO</Description>
                             </OutputUnits>
                             <CfTransferFunctionType>ANALOG (HERTZ)</CfTransferFunctionType>
-                            <Numerator plusError="1980779412.19" minusError="1967022575.02">1495868669.19</Numerator>
-                            <Numerator plusError="97119083.65" minusError="-405991834.0">1874295789.18</Numerator>
-                            <Denominator plusError="-852864606.7" minusError="317433598.29">-1136352379.95</Denominator>
-                            <Denominator plusError="-1568478443.12" minusError="-487684414.86">691232466.85</Denominator>
+                            <Numerator unit="KtMY_H" plusError="1980779412.19" minusError="1967022575.02">1495868669.19</Numerator>
+                            <Numerator unit="Tmb9fYQNp.BIIG3WpTN6n4o" plusError="97119083.65" minusError="-405991834.0">1874295789.18</Numerator>
+                            <Denominator unit="Ium-gE2" plusError="-852864606.7" minusError="317433598.29">-1136352379.95</Denominator>
+                            <Denominator unit="_3xqScYZeK4IifBd3hEoC-n-TZQ" plusError="-1568478443.12" minusError="-487684414.86">691232466.85</Denominator>
                         </Coefficients>
                         <Decimation>
                             <InputSampleRate unit="HERTZ" plusError="2005455636.17" minusError="1769892751.35">527050626.28</InputSampleRate>

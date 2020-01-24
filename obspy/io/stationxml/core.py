@@ -26,6 +26,7 @@ from lxml import etree
 import obspy
 from obspy.core import compatibility
 from obspy.core.util import AttribDict
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (CoefficientsTypeResponseStage,
@@ -41,13 +42,33 @@ from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip, Distance,
 # Define some constants for writing StationXML files.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "https://www.obspy.org"
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
+READABLE_VERSIONS = ("1.0", "1.1")
+
+
+def _get_version_from_xmldoc(xmldoc):
+    """
+    Return StationXML version string or ``None`` if parsing fails.
+    """
+    root = xmldoc.getroot()
+    try:
+        match = re.match(
+            r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
+            root.tag)
+        assert match is not None
+    except Exception:
+        return None
+    try:
+        version = root.attrib["schemaVersion"]
+    except KeyError:
+        return None
+    return version
 
 
 def _is_stationxml(path_or_file_object):
     """
     Simple function checking if the passed object contains a valid StationXML
-    1.0 file. Returns True of False.
+    1.0 or StationXML 1.1 file. Returns True of False.
 
     The test is not exhaustive - it only checks the root tag but that should
     be good enough for most real world use cases. If the schema is used to
@@ -68,20 +89,13 @@ def _is_stationxml(path_or_file_object):
                 xmldoc = etree.parse(path_or_file_object)
             except etree.XMLSyntaxError:
                 return False
-        root = xmldoc.getroot()
-        try:
-            match = re.match(
-                r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
-                root.tag)
-            assert match is not None
-        except Exception:
+        version = _get_version_from_xmldoc(xmldoc)
+        if version is None:
             return False
-        # Convert schema number to a float to have positive comparisons
-        # between, e.g "1" and "1.0".
-        if float(root.attrib["schemaVersion"]) != float(SCHEMA_VERSION):
+        if version not in READABLE_VERSIONS:
             warnings.warn("The StationXML file has version %s, ObsPy can "
-                          "deal with version %s. Proceed with caution." % (
-                              root.attrib["schemaVersion"], SCHEMA_VERSION))
+                          "read versions (%s). Proceed with caution." % (
+                              version, ", ".join(READABLE_VERSIONS)))
         return True
     finally:
         # Make sure to reset file pointer position.
@@ -102,13 +116,6 @@ def validate_stationxml(path_or_object):
     :param path_or_object: File name or file like object. Can also be an etree
         element.
     """
-    # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "fdsn-station-1.0.xsd")
-
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
-
     if isinstance(path_or_object, etree._Element):
         xmldoc = path_or_object
     else:
@@ -116,6 +123,18 @@ def validate_stationxml(path_or_object):
             xmldoc = etree.parse(path_or_object)
         except etree.XMLSyntaxError:
             return (False, ("Not a XML file.",))
+    version = _get_version_from_xmldoc(xmldoc)
+
+    # Get the schema location.
+    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
+    schema_location = os.path.join(schema_location, "data",
+                                   "fdsn-station-%s.xsd" % version)
+
+    if not os.path.exists(schema_location):
+        msg = "No schema file found to validate StationXML version '%s'"
+        raise ValueError(msg % version)
+
+    xmlschema = etree.XMLSchema(etree.parse(schema_location))
 
     valid = xmlschema.validate(xmldoc)
 
@@ -137,6 +156,8 @@ def _read_stationxml(path_or_file_object):
     # to be adjusted if the StationXML format gets another revision!
     namespace = "http://www.fdsn.org/xml/station/1"
 
+    stationxml_version = root.attrib.get('schemaVersion')
+
     def _ns(tagname):
         return "{%s}%s" % (namespace, tagname)
 
@@ -150,8 +171,14 @@ def _read_stationxml(path_or_file_object):
     module_uri = _tag2obj(root, _ns("ModuleURI"), str)
 
     networks = []
-    for network in root.findall(_ns("Network")):
-        networks.append(_read_network(network, _ns))
+    with warnings.catch_warnings():
+        if stationxml_version == '1.0':
+            warnings.filterwarnings(
+                'ignore',
+                'Setting Numerator/Denominator with a unit is deprecated.',
+                ObsPyDeprecationWarning)
+        for network in root.findall(_ns("Network")):
+            networks.append(_read_network(network, _ns))
 
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
@@ -177,8 +204,19 @@ def _read_base_node(element, object_to_write_to, _ns):
         _attr2obj(element, "alternateCode", str)
     object_to_write_to.historical_code = \
         _attr2obj(element, "historicalCode", str)
+    object_to_write_to.source_id = \
+        _attr2obj(element, "sourceID", str)
     object_to_write_to.description = \
         _tag2obj(element, _ns("Description"), str)
+    identifiers = []
+    for identifier in element.findall(_ns("Identifier")):
+        scheme = identifier.get('type')
+        path = identifier.text
+        if scheme is not None:
+            identifiers.append(scheme + ':' + path)
+        else:
+            identifiers.append(path)
+    object_to_write_to.identifiers = identifiers
     object_to_write_to.comments = []
     for comment in element.findall(_ns("Comment")):
         object_to_write_to.comments.append(_read_comment(comment, _ns))
@@ -193,6 +231,8 @@ def _read_base_node(element, object_to_write_to, _ns):
 def _read_network(net_element, _ns):
     network = obspy.core.inventory.Network(net_element.get("code"))
     _read_base_node(net_element, network, _ns)
+    for operator in net_element.findall(_ns("Operator")):
+        network.operators.append(_read_operator(operator, _ns))
     network.total_number_of_stations = \
         _tag2obj(net_element, _ns("TotalNumberStations"), int)
     network.selected_number_of_stations = \
@@ -217,6 +257,10 @@ def _read_station(sta_element, _ns):
                                            elevation=elevation)
     station.site = _read_site(sta_element.find(_ns("Site")), _ns)
     _read_base_node(sta_element, station, _ns)
+    # water level only for schemas > 1.0
+    station.water_level = _read_floattype(sta_element, _ns("WaterLevel"),
+                                          FloatWithUncertaintiesAndUnit,
+                                          unit=True)
     station.vault = _tag2obj(sta_element, _ns("Vault"), str)
     station.geology = _tag2obj(sta_element, _ns("Geology"), str)
     for equipment in sta_element.findall(_ns("Equipment")):
@@ -282,8 +326,15 @@ def _read_floattype(parent, tag, cls, unit=False, datum=False,
         obj.unit = elem.attrib.get("unit")
     if datum:
         obj.datum = elem.attrib.get("datum")
-    obj.lower_uncertainty = elem.attrib.get("minusError")
-    obj.upper_uncertainty = elem.attrib.get("plusError")
+    lower_uncertainty = elem.attrib.get("minusError")
+    if lower_uncertainty is not None:
+        lower_uncertainty = float(lower_uncertainty)
+    obj.lower_uncertainty = lower_uncertainty
+    upper_uncertainty = elem.attrib.get("plusError")
+    if upper_uncertainty is not None:
+        upper_uncertainty = float(upper_uncertainty)
+    obj.upper_uncertainty = upper_uncertainty
+    obj.measurement_method = elem.attrib.get("measurementMethod")
     for key1, key2 in additional_mapping.items():
         setattr(obj, key1, elem.attrib.get(key2))
     return obj
@@ -301,6 +352,7 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
             obj.datum = elem.attrib.get("datum")
         obj.lower_uncertainty = elem.attrib.get("minusError")
         obj.upper_uncertainty = elem.attrib.get("plusError")
+        obj.measurement_method = elem.attrib.get("measurementMethod")
         for key1, key2 in additional_mapping.items():
             setattr(obj, key2, elem.attrib.get(key1))
         objs.append(obj)
@@ -340,6 +392,10 @@ def _read_channel(cha_element, _ns):
     _read_base_node(cha_element, channel, _ns)
     channel.azimuth = _read_floattype(cha_element, _ns("Azimuth"), Azimuth)
     channel.dip = _read_floattype(cha_element, _ns("Dip"), Dip)
+    # water level only for schemas > 1.0
+    channel.water_level = _read_floattype(cha_element, _ns("WaterLevel"),
+                                          FloatWithUncertaintiesAndUnit,
+                                          unit=True)
     # Add all types.
     for type_element in cha_element.findall(_ns("Type")):
         channel.types.append(type_element.text)
@@ -356,8 +412,6 @@ def _read_channel(cha_element, _ns):
             _tag2obj(sample_rate_ratio, _ns("NumberSamples"), int)
         channel.sample_rate_ratio_number_seconds = \
             _tag2obj(sample_rate_ratio, _ns("NumberSeconds"), int)
-    channel.storage_format = _tag2obj(cha_element, _ns("StorageFormat"),
-                                      str)
     # The clock drift is one of the few examples where the attribute name is
     # different from the tag name. This improves clarity.
     channel.clock_drift_in_seconds_per_sample = \
@@ -381,9 +435,8 @@ def _read_channel(cha_element, _ns):
     if data_logger is not None:
         channel.data_logger = _read_equipment(data_logger, _ns)
     # Other equipment
-    equipment = cha_element.find(_ns("Equipment"))
-    if equipment is not None:
-        channel.equipment = _read_equipment(equipment, _ns)
+    for equipment in cha_element.findall(_ns("Equipment")):
+        channel.equipments.append(_read_equipment(equipment, _ns))
     # Finally parse the response.
     response = cha_element.find(_ns("Response"))
     if response is not None:
@@ -541,6 +594,10 @@ def _read_response_stage(stage_elem, _ns):
                 imag = imag or 0
                 x.upper_uncertainty = complex(real, imag)
             x.number = _attr2obj(element, "number", int)
+            x.measurement_method_real = _attr2obj(element.find(_ns("Real")),
+                                                  "measurementMethod", str)
+            x.measurement_method_imag = _attr2obj(
+                element.find(_ns("Imaginary")), "measurementMethod", str)
             return x
 
         zeros = [_tag2pole_or_zero(el) for el in elem.findall(_ns("Zero"))]
@@ -559,10 +616,12 @@ def _read_response_stage(stage_elem, _ns):
             _tag2obj(elem, _ns("CfTransferFunctionType"), str)
         numerator = \
             _read_floattype_list(elem, _ns("Numerator"),
-                                 FloatWithUncertaintiesAndUnit, unit=True)
+                                 FloatWithUncertaintiesAndUnit, unit=True,
+                                 additional_mapping={"number": "number"})
         denominator = \
             _read_floattype_list(elem, _ns("Denominator"),
-                                 FloatWithUncertaintiesAndUnit, unit=True)
+                                 FloatWithUncertaintiesAndUnit, unit=True,
+                                 additional_mapping={"number": "number"})
         obj = obspy.core.inventory.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
@@ -684,12 +743,12 @@ def _read_external_reference(ref_element, _ns):
 
 
 def _read_operator(operator_element, _ns):
-    agencies = [_i.text for _i in operator_element.findall(_ns("Agency"))]
+    agency = operator_element.find(_ns("Agency")).text
     contacts = []
     for contact in operator_element.findall(_ns("Contact")):
         contacts.append(_read_person(contact, _ns))
     website = _tag2obj(operator_element, _ns("WebSite"), str)
-    obj = obspy.core.inventory.Operator(agencies=agencies, contacts=contacts,
+    obj = obspy.core.inventory.Operator(agency=agency, contacts=contacts,
                                         website=website)
     _read_extra(operator_element, obj)
     return obj
@@ -697,13 +756,36 @@ def _read_operator(operator_element, _ns):
 
 def _read_data_availability(avail_element, _ns):
     extent = avail_element.find(_ns("Extent"))
-    # Recovery from empty Extent tags.
-    if extent is None:
-        return extent
-    start = obspy.UTCDateTime(extent.get("start"))
-    end = obspy.UTCDateTime(extent.get("end"))
-    obj = obspy.core.inventory.util.DataAvailability(start=start, end=end)
+    spans = avail_element.findall(_ns("Span"))
+    # Recovery from empty Extent tag + no spans.
+    if extent is None and not spans:
+        return None
+    start = extent.get("start")
+    end = extent.get("end")
+    spans = [_read_data_availability_span(span, _ns) for span in spans]
+    obj = obspy.core.inventory.util.DataAvailability(start=start, end=end,
+                                                     spans=spans)
     _read_extra(avail_element, obj)
+    return obj
+
+
+def _read_data_availability_span(element, _ns):
+    start = element.attrib['start']
+    if start is not None:
+        start = obspy.UTCDateTime(start)
+    end = element.attrib['end']
+    if end is not None:
+        end = obspy.UTCDateTime(end)
+    number_of_segments = element.attrib['numberSegments']
+    if number_of_segments is not None:
+        number_of_segments = int(number_of_segments)
+    maximum_time_tear = element.attrib.get('maximumTimeTear')
+    if maximum_time_tear is not None:
+        maximum_time_tear = float(maximum_time_tear)
+    obj = obspy.core.inventory.util.DataAvailabilitySpan(
+        start=start, end=end, number_of_segments=number_of_segments,
+        maximum_time_tear=maximum_time_tear)
+    _read_extra(element, obj)
     return obj
 
 
@@ -753,11 +835,13 @@ def _read_comment(comment_element, _ns):
         _tag2obj(comment_element, _ns("EndEffectiveTime"), obspy.UTCDateTime)
     authors = []
     id = _attr2obj(comment_element, "id", int)
+    subject = _attr2obj(comment_element, "subject", str)
     for author in comment_element.findall(_ns("Author")):
         authors.append(_read_person(author, _ns))
     obj = obspy.core.inventory.Comment(
         value=value, begin_effective_time=begin_effective_time,
-        end_effective_time=end_effective_time, authors=authors, id=id)
+        end_effective_time=end_effective_time, authors=authors, id=id,
+        subject=subject)
     _read_extra(comment_element, obj)
     return obj
 
@@ -813,34 +897,6 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
 
     nsmap[None] = "http://www.fdsn.org/xml/station/1"
     attrib = {"schemaVersion": SCHEMA_VERSION}
-
-    # Check if any of the channels has a data availability element. In that
-    # case the namespaces need to be adjusted.
-    data_availability = False
-    for net in inventory:
-        for sta in net:
-            for cha in sta:
-                if cha.data_availability is not None:
-                    data_availability = True
-                    break
-            else:
-                continue
-            break
-        else:
-            continue
-        break
-    if data_availability:
-        attrib["{http://www.w3.org/2001/XMLSchema-instance}"
-               "schemaLocation"] = (
-            "http://www.fdsn.org/xml/station/1 "
-            "http://www.fdsn.org/xml/station/fdsn-station+"
-            "availability-1.0.xsd")
-        if "xsi" in nsmap:
-            msg = ("Custom namespace mappings do not allow redefinition of "
-                   "StationXML availability namespace (key `xsi`). Use other "
-                   "namespace abbreviations for custom namespace tags.")
-            raise ValueError(msg)
-        nsmap["xsi"] = "http://www.w3.org/2001/XMLSchema-instance"
 
     root = etree.Element("FDSNStationXML", attrib=attrib, nsmap=nsmap)
 
@@ -906,6 +962,8 @@ def _get_base_node_attributes(element):
         attributes["alternateCode"] = element.alternate_code
     if element.historical_code:
         attributes["historicalCode"] = element.historical_code
+    if element.source_id is not None:
+        attributes["sourceID"] = element.source_id
     return attributes
 
 
@@ -913,8 +971,19 @@ def _write_base_node(element, object_to_read_from):
     if object_to_read_from.description:
         etree.SubElement(element, "Description").text = \
             object_to_read_from.description
+    for identifier in object_to_read_from.identifiers:
+        attrib = {}
+        if ':' in identifier:
+            scheme, path = identifier.split(':', 1)
+            attrib['type'] = scheme
+        else:
+            path = identifier
+        etree.SubElement(element, "Identifier", attrib).text = path
     for comment in object_to_read_from.comments:
         _write_comment(element, comment)
+    if object_to_read_from.data_availability:
+        _write_data_availability(element,
+                                 object_to_read_from.data_availability)
     _write_extra(element, object_to_read_from)
 
 
@@ -925,6 +994,14 @@ def _write_network(parent, network, level):
     attribs = _get_base_node_attributes(network)
     network_elem = etree.SubElement(parent, "Network", attribs)
     _write_base_node(network_elem, network)
+
+    for operator in network.operators:
+        operator_elem = etree.SubElement(network_elem, "Operator")
+        etree.SubElement(operator_elem, "Agency").text = str(operator.agency)
+        for contact in operator.contacts:
+            _write_person(operator_elem, contact, "Contact")
+        etree.SubElement(operator_elem, "WebSite").text = operator.website
+        _write_extra(operator_elem, operator)
 
     # Add the two, network specific fields.
     if network.total_number_of_stations is not None:
@@ -954,6 +1031,7 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={},
         attribs["unit"] = obj_.unit
     attribs["minusError"] = obj_.lower_uncertainty
     attribs["plusError"] = obj_.upper_uncertainty
+    attribs["measurementMethod"] = obj_.measurement_method
     for key1, key2 in additional_mapping.items():
         attribs[key1] = getattr(obj_, key2)
     attribs = {k: str(v) for k, v in attribs.items() if v is not None}
@@ -961,14 +1039,15 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={},
 
 
 def _write_floattype_list(parent, obj, attr_list_name, tag,
-                          additional_mapping={}):
+                          additional_mapping={}, unit=True):
     for obj_ in getattr(obj, attr_list_name):
         attribs = {}
         attribs["datum"] = obj_.__dict__.get("datum")
-        if hasattr(obj_, "unit"):
+        if hasattr(obj_, "unit") and unit:
             attribs["unit"] = obj_.unit
         attribs["minusError"] = obj_.lower_uncertainty
         attribs["plusError"] = obj_.upper_uncertainty
+        attribs["measurementMethod"] = obj_.measurement_method
         for key1, key2 in additional_mapping.items():
             attribs[key2] = getattr(obj_, key1)
         attribs = {k: str(v) for k, v in attribs.items() if v is not None}
@@ -1002,6 +1081,10 @@ def _write_polezero_list(parent, obj):
                 _float_to_str(obj_.upper_uncertainty.real)
             attribs_imag['plusError'] = \
                 _float_to_str(obj_.upper_uncertainty.imag)
+        if obj_.measurement_method_real is not None:
+            attribs_real['measurement_method'] = obj_.measurement_method_real
+        if obj_.measurement_method_imag is not None:
+            attribs_imag['measurement_method'] = obj_.measurement_method_imag
         etree.SubElement(sub, "Real", attribs_real).text = \
             _float_to_str(obj_.real)
         etree.SubElement(sub, "Imaginary", attribs_imag).text = \
@@ -1046,6 +1129,9 @@ def _write_station(parent, station, level):
 
     _write_site(station_elem, station.site)
 
+    if station.water_level is not None:
+        _write_floattype(station_elem, station, "water_level", "WaterLevel")
+
     # Optional tags.
     _obj2tag(station_elem, "Vault", station.vault)
     _obj2tag(station_elem, "Geology", station.geology)
@@ -1055,15 +1141,17 @@ def _write_station(parent, station, level):
 
     for operator in station.operators:
         operator_elem = etree.SubElement(station_elem, "Operator")
-        for agency in operator.agencies:
-            etree.SubElement(operator_elem, "Agency").text = agency
+        etree.SubElement(operator_elem, "Agency").text = str(operator.agency)
         for contact in operator.contacts:
             _write_person(operator_elem, contact, "Contact")
         etree.SubElement(operator_elem, "WebSite").text = operator.website
         _write_extra(operator_elem, operator)
 
-    etree.SubElement(station_elem, "CreationDate").text = \
-        str(station.creation_date)
+    if station.creation_date is not None:
+        # CreationDate is optional in schemas > 1.0
+        etree.SubElement(station_elem, "CreationDate").text = \
+            str(station.creation_date)
+
     if station.termination_date:
         etree.SubElement(station_elem, "TerminationDate").text = \
             str(station.termination_date)
@@ -1090,14 +1178,6 @@ def _write_channel(parent, channel, level):
     channel_elem = etree.SubElement(parent, "Channel", attribs)
     _write_base_node(channel_elem, channel)
 
-    if channel.data_availability is not None:
-        da = etree.SubElement(channel_elem, "DataAvailability")
-        etree.SubElement(da, "Extent", {
-            "start": str(channel.data_availability.start),
-            "end": str(channel.data_availability.end)
-        })
-        _write_extra(da, channel.data_availability)
-
     for ref in channel.external_references:
         _write_external_reference(channel_elem, ref)
 
@@ -1109,6 +1189,9 @@ def _write_channel(parent, channel, level):
     # Optional tags.
     _write_floattype(channel_elem, channel, "azimuth", "Azimuth")
     _write_floattype(channel_elem, channel, "dip", "Dip")
+
+    if channel.water_level is not None:
+        _write_floattype(channel_elem, channel, "water_level", "WaterLevel")
 
     for type_ in channel.types:
         etree.SubElement(channel_elem, "Type").text = type_
@@ -1122,7 +1205,6 @@ def _write_channel(parent, channel, level):
         etree.SubElement(srr, "NumberSeconds").text = \
             str(channel.sample_rate_ratio_number_seconds)
 
-    _obj2tag(channel_elem, "StorageFormat", channel.storage_format)
     _write_floattype(channel_elem, channel,
                      "clock_drift_in_seconds_per_sample", "ClockDrift")
 
@@ -1136,7 +1218,8 @@ def _write_channel(parent, channel, level):
     _write_equipment(channel_elem, channel.sensor, "Sensor")
     _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
     _write_equipment(channel_elem, channel.data_logger, "DataLogger")
-    _write_equipment(channel_elem, channel.equipment, "Equipment")
+    for equipment in channel.equipments:
+        _write_equipment(channel_elem, equipment, "Equipment")
 
     if level == "channel":
         return
@@ -1293,9 +1376,13 @@ def _write_response_stage(parent, stage):
             _obj2tag(sub_, "CfTransferFunctionType",
                      stage.cf_transfer_function_type)
             _write_floattype_list(sub_, stage,
-                                  "numerator", "Numerator")
+                                  "numerator", "Numerator",
+                                  additional_mapping={'number': 'number'},
+                                  unit=False)
             _write_floattype_list(sub_, stage,
-                                  "denominator", "Denominator")
+                                  "denominator", "Denominator",
+                                  additional_mapping={'number': 'number'},
+                                  unit=False)
         elif isinstance(stage, ResponseListResponseStage):
             for rlelem in stage.response_list_elements:
                 sub__ = etree.SubElement(sub_, "ResponseListElement")
@@ -1310,19 +1397,32 @@ def _write_response_stage(parent, stage):
         elif isinstance(stage, PolynomialResponseStage):
             _write_polynomial_common_fields(sub_, stage)
 
-    # write decimation
-    if stage.decimation_input_sample_rate is not None:
-        sub_ = etree.SubElement(sub, "Decimation")
-        _write_floattype(sub_, stage, "decimation_input_sample_rate",
-                         "InputSampleRate")
-        _obj2tag(sub_, "Factor", stage.decimation_factor)
-        _obj2tag(sub_, "Offset", stage.decimation_offset)
-        _write_floattype(sub_, stage, "decimation_delay", "Delay")
-        _write_floattype(sub_, stage, "decimation_correction", "Correction")
-    # write gain
-    sub_ = etree.SubElement(sub, "StageGain")
-    _obj2tag(sub_, "Value", stage.stage_gain)
-    _obj2tag(sub_, "Frequency", stage.stage_gain_frequency)
+    if isinstance(stage, PolynomialResponseStage):
+        # <StageGain> and <Decimation> were removed for <Polynomial> response
+        # stages in StationXML 1.1
+        if stage.decimation_input_sample_rate is not None:
+            msg = ("Decimation is not allowed for Polynomial response "
+                   "stages in StationXML schema > 1.0. Ignoring.")
+            warnings.warn(msg)
+        if stage.stage_gain not in (None, 1.0):
+            msg = ("Stage gain is not allowed for Polynomial response "
+                   "stages in StationXML schema > 1.0. Ignoring.")
+            warnings.warn(msg)
+    else:
+        # write decimation
+        if stage.decimation_input_sample_rate is not None:
+            sub_ = etree.SubElement(sub, "Decimation")
+            _write_floattype(sub_, stage, "decimation_input_sample_rate",
+                             "InputSampleRate")
+            _obj2tag(sub_, "Factor", stage.decimation_factor)
+            _obj2tag(sub_, "Offset", stage.decimation_offset)
+            _write_floattype(sub_, stage, "decimation_delay", "Delay")
+            _write_floattype(sub_, stage, "decimation_correction",
+                             "Correction")
+        # write gain
+        sub_ = etree.SubElement(sub, "StageGain")
+        _obj2tag(sub_, "Value", stage.stage_gain)
+        _obj2tag(sub_, "Frequency", stage.stage_gain_frequency)
     _write_extra(parent, stage)
 
 
@@ -1376,6 +1476,8 @@ def _write_comment(parent, comment):
     attribs = {}
     if comment.id is not None:
         attribs["id"] = str(comment.id)
+    if comment.subject is not None:
+        attribs["subject"] = str(comment.subject)
     comment_elem = etree.SubElement(parent, "Comment", attribs)
     etree.SubElement(comment_elem, "Value").text = comment.value
     if comment.begin_effective_time:
@@ -1387,6 +1489,40 @@ def _write_comment(parent, comment):
     for author in comment.authors:
         _write_person(comment_elem, author, "Author")
     _write_extra(parent, comment)
+
+
+def _write_data_availability(parent, data_availability):
+    data_availability_elem = etree.SubElement(parent, "DataAvailability")
+    if any(value is not None for value in (data_availability.start,
+                                           data_availability.end)):
+        # we need both start and end to write a valid Extent tag
+        if any(value is None for value in (data_availability.start,
+                                           data_availability.end)):
+            # play safe and raise an exception
+            msg = ("Both start/end need to be set to write a valid "
+                   "DataAvailability Extent tag ('%s').") % data_availability
+            raise ValueError(msg)
+        # XXX foreign namespace custom attributes not yet implemented
+        attribs = {'start': str(data_availability.start),
+                   'end': str(data_availability.end)}
+        etree.SubElement(data_availability_elem, "Extent", attribs)
+    for span in data_availability.spans:
+        _write_data_availability_span(data_availability_elem, span)
+    _write_extra(data_availability_elem, data_availability)
+
+
+def _write_data_availability_span(parent, span):
+    if any(value is None for value in (span.start, span.end,
+                                       span.number_of_segments)):
+        msg = ("All of start/end/number_of_segments need to be set to write "
+               " a valid DataAvailability Span tag ('%s').") % span
+        raise ValueError(msg)
+    attribs = {'start': str(span.start), 'end': str(span.end),
+               'numberSegments': str(span.number_of_segments)}
+    if span.maximum_time_tear is not None:
+        attribs['maximumTimeTear'] = str(span.maximum_time_tear)
+    # XXX foreign namespace custom attributes not yet implemented
+    etree.SubElement(parent, "Span", attribs)
 
 
 def _write_person(parent, person, tag_name):

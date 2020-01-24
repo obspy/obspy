@@ -26,6 +26,7 @@ import scipy.interpolate
 
 from .. import compatibility
 from obspy.core.util.base import ComparingObject
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit,
@@ -408,6 +409,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
         for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
                 value[_i] = FloatWithUncertaintiesAndUnit(x)
+        if any(x.unit is not None for x in value):
+            msg = 'Setting Numerator/Denominator with a unit is deprecated.'
+            warnings.warn(msg, ObsPyDeprecationWarning)
         self._numerator = value
 
     @property
@@ -424,6 +428,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
         for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
                 value[_i] = FloatWithUncertaintiesAndUnit(x)
+        if any(x.unit is not None for x in value):
+            msg = 'Setting Numerator/Denominator with a unit is deprecated.'
+            warnings.warn(msg, ObsPyDeprecationWarning)
         self._denominator = value
 
     @property
@@ -658,6 +665,8 @@ class PolynomialResponseStage(ResponseStage):
                  decimation_input_sample_rate=None, decimation_factor=None,
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
+        # XXX remove stage_gain and stage_gain_frequency completely, since
+        # changes in StationXML 1.1?
         self._approximation_type = approximation_type
         self.frequency_lower_bound = frequency_lower_bound
         self.frequency_upper_bound = frequency_upper_bound
@@ -665,6 +674,9 @@ class PolynomialResponseStage(ResponseStage):
         self.approximation_upper_bound = approximation_upper_bound
         self.maximum_error = maximum_error
         self.coefficients = coefficients
+        # XXX StationXML 1.1 does not allow stage gain in Polynomial response
+        # stages. Maybe we should we warn here.. but this could get very
+        # verbose when reading StationXML 1.0 files, so maybe not
         super(PolynomialResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,

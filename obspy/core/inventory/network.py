@@ -22,7 +22,8 @@ from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .station import Station
 from .util import (
-    BaseNode, _unified_content_strings, _textwrap, _response_plot_label)
+    BaseNode, Operator, _unified_content_strings, _textwrap,
+    _response_plot_label)
 
 
 @python_2_unicode_compatible
@@ -38,7 +39,8 @@ class Network(BaseNode):
                  selected_number_of_stations=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None, data_availability=None):
+                 historical_code=None, data_availability=None,
+                 identifiers=None, operators=None, source_id=None):
         """
         :type code: str
         :param code: The SEED network code.
@@ -71,17 +73,31 @@ class Network(BaseNode):
         :type data_availability: :class:`~obspy.station.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network.
+        :type identifiers: list of str, optional
+        :param identifiers: Persistent identifiers for network/station/channel
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
+        :type operators: list of :class:`~obspy.core.inventory.util.Operator`
+        :param operators: An operating agency and associated contact persons.
+        :type source_id: str, optional
+        :param source_id: A data source identifier in URI form
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         """
         self.stations = stations or []
         self.total_number_of_stations = total_number_of_stations
         self.selected_number_of_stations = selected_number_of_stations
+        self.operators = operators or []
 
         super(Network, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
-            data_availability=data_availability)
+            data_availability=data_availability,
+            identifiers=identifiers, source_id=source_id)
 
     @property
     def total_number_of_stations(self):
@@ -104,6 +120,23 @@ class Network(BaseNode):
             msg = "selected_number_of_stations cannot be negative."
             raise ValueError(msg)
         self._selected_number_of_stations = value
+
+    @property
+    def operators(self):
+        return self._operators
+
+    @operators.setter
+    def operators(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "Operators needs to be an iterable, e.g. a list."
+            raise ValueError(msg)
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        operators = [operator for operator in value]
+        if any([not isinstance(x, Operator) for x in operators]):
+            msg = "Operators can only contain Operator objects."
+            raise ValueError(msg)
+        self._operators = operators
 
     def __len__(self):
         return len(self.stations)

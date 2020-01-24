@@ -21,7 +21,8 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
+from obspy.core.util.obspy_types import (ObsPyException, ZeroSamplingRate,
+                                         FloatWithUncertaintiesAndUnit)
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
                    Longitude, _unified_content_strings, _textwrap, Site)
@@ -42,7 +43,8 @@ class Station(BaseNode):
                  selected_number_of_channels=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None, data_availability=None):
+                 historical_code=None, data_availability=None,
+                 identifiers=None, water_level=None, source_id=None):
         """
         :type channels: list of :class:`~obspy.core.inventory.channel.Channel`
         :param channels: All channels belonging to this station.
@@ -58,13 +60,10 @@ class Station(BaseNode):
         :param vault: Type of vault, e.g. WWSSN, tunnel, transportable array,
             etc
         :param geology: Type of rock and/or geologic formation.
+        :type equipments: list of :class:`~obspy.core.inventory.util.Equipment`
         :param equipments: Equipment used by all channels at a station.
         :type operators: list of :class:`~obspy.core.inventory.util.Operator`
-        :param operator: An operating agency and associated contact persons. If
-            there multiple operators, each one should be encapsulated within an
-            Operator tag. Since the Contact element is a generic type that
-            represents any contact person, it also has its own optional Agency
-            element.
+        :param operators: An operating agency and associated contact persons.
         :type creation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param creation_date: Date and time (UTC) when the station was first
             installed
@@ -103,6 +102,19 @@ class Station(BaseNode):
         :type data_availability: :class:`~obspy.station.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the station.
+        :type identifiers: list of str, optional
+        :param identifiers: Persistent identifiers for network/station/channel
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
+        :type water_level: float, optional
+        :param water_level: Elevation of the water surface in meters for
+            underwater sites, where 0 is sea level. (schema version >=1.1)
+        :type source_id: str, optional
+        :param source_id: A data source identifier in URI form
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         """
         self.latitude = latitude
         self.longitude = longitude
@@ -118,12 +130,14 @@ class Station(BaseNode):
         self.total_number_of_channels = total_number_of_channels
         self.selected_number_of_channels = selected_number_of_channels
         self.external_references = []
+        self.water_level = water_level
         super(Station, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
-            data_availability=data_availability)
+            data_availability=data_availability, identifiers=identifiers,
+            source_id=source_id)
 
     @property
     def total_number_of_channels(self):
@@ -222,10 +236,13 @@ class Station(BaseNode):
         if not hasattr(value, "__iter__"):
             msg = "Operators needs to be an iterable, e.g. a list."
             raise ValueError(msg)
-        if any([not isinstance(x, Operator) for x in value]):
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        operators = [operator for operator in value]
+        if any([not isinstance(x, Operator) for x in operators]):
             msg = "Operators can only contain Operator objects."
             raise ValueError(msg)
-        self._operators = value
+        self._operators = operators
 
     @property
     def equipments(self):
@@ -236,10 +253,13 @@ class Station(BaseNode):
         if not hasattr(value, "__iter__"):
             msg = "equipments needs to be an iterable, e.g. a list."
             raise ValueError(msg)
-        if any([not isinstance(x, Equipment) for x in value]):
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        equipments = [equipment for equipment in value]
+        if any([not isinstance(x, Equipment) for x in equipments]):
             msg = "equipments can only contain Equipment objects."
             raise ValueError(msg)
-        self._equipments = value
+        self._equipments = equipments
         # if value is None or isinstance(value, Equipment):
         #    self._equipment = value
         # elif isinstance(value, dict):
@@ -317,6 +337,19 @@ class Station(BaseNode):
             self._elevation = value
         else:
             self._elevation = Distance(value)
+
+    @property
+    def water_level(self):
+        return self._water_level
+
+    @water_level.setter
+    def water_level(self, value):
+        if value is None:
+            self._water_level = None
+        elif isinstance(value, FloatWithUncertaintiesAndUnit):
+            self._water_level = value
+        else:
+            self._water_level = FloatWithUncertaintiesAndUnit(value)
 
     def select(self, location=None, channel=None, time=None, starttime=None,
                endtime=None, sampling_rate=None):
