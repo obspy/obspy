@@ -477,8 +477,9 @@ class Network(BaseNode):
                 minlongitude=minlongitude, maxlongitude=maxlongitude,
                 latitude=latitude, longitude=longitude, minradius=minradius,
                 maxradius=maxradius)
-            if not inside_geobounds(sta, **geo_filters):
-                continue
+            if any(value is not None for value in geo_filters.values()):
+                if not inside_geobounds(sta, **geo_filters):
+                    continue
 
             has_channels = bool(sta.channels)
 
