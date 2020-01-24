@@ -459,11 +459,12 @@ class Station(BaseNode):
                 if not cha.is_active(time=time, starttime=starttime,
                                      endtime=endtime):
                     continue
-            geo_filters = (minlatitude, maxlatitude,
-                           minlongitude, maxlongitude,
-                           latitude, longitude,
-                           minradius, maxradius)
-            if not inside_geobounds(cha, *geo_filters):
+            geo_filters = dict(
+                minlatitude=minlatitude, maxlatitude=maxlatitude,
+                minlongitude=minlongitude, maxlongitude=maxlongitude,
+                latitude=latitude, longitude=longitude, minradius=minradius,
+                maxradius=maxradius)
+            if not inside_geobounds(cha, **geo_filters):
                 continue
 
             channels.append(cha)

@@ -472,11 +472,12 @@ class Network(BaseNode):
                 if not sta.is_active(time=time, starttime=starttime,
                                      endtime=endtime):
                     continue
-            geo_filters = (minlatitude, maxlatitude,
-                           minlongitude, maxlongitude,
-                           latitude, longitude,
-                           minradius, maxradius)
-            if not inside_geobounds(sta, *geo_filters):
+            geo_filters = dict(
+                minlatitude=minlatitude, maxlatitude=maxlatitude,
+                minlongitude=minlongitude, maxlongitude=maxlongitude,
+                latitude=latitude, longitude=longitude, minradius=minradius,
+                maxradius=maxradius)
+            if not inside_geobounds(sta, **geo_filters):
                 continue
 
             has_channels = bool(sta.channels)
