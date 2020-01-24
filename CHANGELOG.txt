@@ -1,4 +1,4 @@
-master:
+1.2.0rc1:
  - obspy.core:
    * inventory objects have been adapted to StationXML 1.1 for details on
      changes see #2510 and
