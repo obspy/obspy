@@ -2,7 +2,7 @@
 "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head><META HTTP-EQUIV=REFRESH CONTENT=60>
-<title>SDS Report [\w:/\\]*?[/\\]obspy-sdstest-[\w]*</title>
+<title>SDS Report .*obspy-sdstest-[\w]*</title>
 <style>
 p.monospace
     {font-family: "Lucida Console", Monaco, monospace;
