@@ -153,15 +153,15 @@ class TauBranch(object):
     def shift_branch(self, index):
         new_size = len(self.dist) + 1
 
-        self.time = self._robust_resize(self.time, new_size)
+        self.time.resize(new_size)
         self.time[index + 1:] = self.time[index:-1]
         self.time[index] = 0
 
-        self.dist = self._robust_resize(self.dist, new_size)
+        self.dist.resize(new_size)
         self.dist[index + 1:] = self.dist[index:-1]
         self.dist[index] = 0
 
-        self.tau = self._robust_resize(self.tau, new_size)
+        self.tau.resize(new_size)
         self.tau[index + 1:] = self.tau[index:-1]
         self.tau[index] = 0
 
@@ -477,19 +477,3 @@ class TauBranch(object):
                 arr_ = arr_[()]
             setattr(branch, key, arr_)
         return branch
-
-    @staticmethod
-    def _robust_resize(arr, new_size):
-        """
-        Try to resize an array inplace. If an error is raised use numpy
-        resize function to create a new array. Return the array.
-        """
-        try:
-            arr.resize(new_size)
-        except ValueError:
-            # msg = ('Resizing a TauP array inplace failed due to the '
-            #        'existence of other references to the array, creating '
-            #        'a new array. See Obspy #2280.')
-            # warnings.warn(msg)
-            arr = np.resize(arr, new_size)
-        return arr
