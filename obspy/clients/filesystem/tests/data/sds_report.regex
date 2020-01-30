@@ -29,7 +29,7 @@ p.monospace_narrow_columns
 </head>
 <body bgcolor="#999999">
 <h1 style="font-size:medium">
-    SDS Report for [\w:/\\]*?[/\\]obspy-sdstest-[\w]*<br>
+    SDS Report for .*obspy-sdstest-[\w]*<br>
     Latency, data percentage, number of gaps/overlaps
     \(last 1 days\)<br>[\w /]* [\d]{2}:[\d]{2}:[\d]{2} ([\d]{4} )?UTC</h1>
 <p class="monospace_wide_columns">
