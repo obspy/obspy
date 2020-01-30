@@ -489,9 +489,9 @@ class TauBranch(object):
         try:
             arr.resize(new_size)
         except ValueError:
-            # msg = ('Resizing a TauP array inplace failed due to the existence'
-            #        ' of other references to the array, creating a new array. '
-            #        'See Obspy #2280.')
+            # msg = ('Resizing a TauP array inplace failed due to the '
+            #        'existence of other references to the array, creating '
+            #        'a new array. See Obspy #2280.')
             # warnings.warn(msg)
             arr = np.resize(arr, new_size)
         return arr
