@@ -393,7 +393,7 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         result = client.get_networks(start, end)
-        self.assertIn('BW', result.keys())
+        self.assertIn('BW', list(result.keys()))
         self.assertEqual(result['BW']['code'], 'BW')
         self.assertEqual(result['BW']['description'], 'BayernNetz')
 
