@@ -483,7 +483,8 @@ class TauBranch(object):
     def _robust_resize(self, attr, new_size):
         """
         Try to resize an array inplace. If an error is raised use numpy
-        resize function to create a new array. Return the array.
+        resize function to create a new array. Assign the array to self as
+        attribute listed in attr.
         """
         try:
             getattr(self, attr).resize(new_size)
