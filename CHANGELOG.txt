@@ -185,6 +185,8 @@ Changes:
    * Fix reading when start+endtime are inside one data packet (see #2485).
  - obspy.io.sac:
    * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
+   * Blank-pad character header variables, as opposed to NUL-padding them, to
+     comply with SAC behavior (see #2543).
  - obspy.io.segy:
    * Raise nicer error messages when header packing fails (see #2194, #2196).
    * Show nice error message when trying to write a trace with too many samples

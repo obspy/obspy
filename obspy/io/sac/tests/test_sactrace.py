@@ -433,6 +433,32 @@ class SACTraceTestCase(unittest.TestCase):
                            ('depmax', depmax), ('npts', npts)]:
             self.assertEqual(getattr(sac, hdr), value)
 
+    def test_char_header_padding(self):
+        """
+        SAC binary file header fields should be padded with blanks, not NULs,
+	or NUL-terminated.
+        """
+
+	dat = np.zeros(8)
+
+        sac = SACTrace(
+	    kstnm='TEST',
+	    delta=1,
+	    kcmpnm='Z',
+	    kevnm='Bug test',
+	    npts=len(dat),
+	    data=dat
+	)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+        sac.write(tempfile,byteorder='big')
+
+        with open(tempfile, "rb") as fh:
+            str = fh.read()
+	# kstnm is at offset 0x1b8 in the file
+	self.assertEqual(str[0x1b8:(0x1b8+8)],'TEST    ')
+	# kcmpnm is at offset 0x258 in the file
+	self.assertEqual(str[0x258:(0x258+8)],'Z       ')
 
 def suite():
     return unittest.makeSuite(SACTraceTestCase, 'test')

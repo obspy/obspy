@@ -462,7 +462,7 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False, encoding='ASCII'):
                  if val != HD.FNULL] + \
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)
                  if val != HD.INULL] + \
-                [(key, val.decode(encoding)) for (key, val)
+                [(key, val.decode(encoding).strip()) for (key, val)
                  in zip(HD.STRHDRS, hs) if val.decode(encoding) != HD.SNULL]
 
     header = dict(items)
@@ -522,7 +522,7 @@ def dict_to_header_arrays(header=None, byteorder='='):
                     # TODO: why was encoding done?
                     # hs[HD.STRHDRS.index(hdr)] = value.encode('ascii',
                     #                                          'strict')
-                    hs[HD.STRHDRS.index(hdr)] = value
+                    hs[HD.STRHDRS.index(hdr)] = value.ljust(8)
             else:
                 msg = "Unrecognized header name: {}. Ignored.".format(hdr)
                 warnings.warn(msg)
