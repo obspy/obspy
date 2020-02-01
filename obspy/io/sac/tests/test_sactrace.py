@@ -456,9 +456,9 @@ class SACTraceTestCase(unittest.TestCase):
         with open(tempfile, "rb") as fh:
             str = fh.read()
         # kstnm is at offset 0x1b8 in the file
-        self.assertEqual(str[0x1b8:(0x1b8+8)], 'TEST    ')
+        self.assertEqual(str[0x1b8:(0x1b8+8)], b'TEST    ')
         # kcmpnm is at offset 0x258 in the file
-        self.assertEqual(str[0x258:(0x258+8)], 'Z       ')
+        self.assertEqual(str[0x258:(0x258+8)], b'Z       ')
 
 
 def suite():
