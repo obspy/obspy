@@ -592,10 +592,10 @@
                                 <Description>gTe8KIKiU3RfrWAJOg.CTy8f7Cz</Description>
                             </OutputUnits>
                             <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
-                            <Numerator plusError="-1096718463.14" minusError="1126505295.72">643096860.28</Numerator>
-                            <Numerator plusError="1487660393.16" minusError="1518618020.33">-1135677195.92</Numerator>
-                            <Denominator plusError="-1418173713.21" minusError="-696602068.55">1504792438.09</Denominator>
-                            <Denominator plusError="587099516.91" minusError="618144513.11">1711947659.78</Denominator>
+                            <Numerator number="1" plusError="-1096718463.14" minusError="1126505295.72">643096860.28</Numerator>
+                            <Numerator number="2" plusError="1487660393.16" minusError="1518618020.33">-1135677195.92</Numerator>
+                            <Denominator number="3" plusError="-1418173713.21" minusError="-696602068.55">1504792438.09</Denominator>
+                            <Denominator number="4" plusError="587099516.91" minusError="618144513.11">1711947659.78</Denominator>
                         </Coefficients>
                         <Decimation>
                             <InputSampleRate unit="HERTZ" plusError="59663358.91" minusError="-1077596674.88">-2002635152.29</InputSampleRate>

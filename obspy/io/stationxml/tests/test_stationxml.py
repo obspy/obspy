@@ -297,6 +297,13 @@ class StationXMLTestCase(unittest.TestCase):
                 clear=['obspy.core.inventory.channel'],
                 expected=[(ObsPyDeprecationWarning, msg)]):
             self.assertEqual(cha.storage_format, None)
+        # check new number attributes on Numerator/Denominator
+        resp = cha.response
+        stage = resp.response_stages[1]
+        self.assertEqual(stage.numerator[0].number, 1)
+        self.assertEqual(stage.numerator[1].number, 2)
+        self.assertEqual(stage.denominator[0].number, 3)
+        self.assertEqual(stage.denominator[1].number, 4)
 
     def test_writing_module_tags(self):
         """
