@@ -345,10 +345,10 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
         The function tries to match inputs to one of three types if it can.
     :type numerator: list of
-        :class:`~obspy.core.util.obspy_types.FloatWithUncertaintiesAndUnit`
+        :class:`~obspy.core.util.obspy_types.CoefficientWithUncertainties`
     :param numerator: Numerator of the coefficient response stage.
     :type denominator: list of
-        :class:`~obspy.core.util.obspy_types.FloatWithUncertaintiesAndUnit`
+        :class:`~obspy.core.util.obspy_types.CoefficientWithUncertainties`
     :param denominator: Denominator of the coefficient response stage.
     """
     def __init__(self, stage_sequence_number, stage_gain,
@@ -406,12 +406,12 @@ class CoefficientsTypeResponseStage(ResponseStage):
             return
         value = list(value) if isinstance(
             value, compatibility.collections_abc.Iterable) else [value]
-        for _i, x in enumerate(value):
-            if not isinstance(x, FloatWithUncertaintiesAndUnit):
-                value[_i] = FloatWithUncertaintiesAndUnit(x)
-        if any(x.unit is not None for x in value):
+        if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
+        for _i, x in enumerate(value):
+            if not isinstance(x, CoefficientWithUncertainties):
+                value[_i] = CoefficientWithUncertainties(x)
         self._numerator = value
 
     @property
@@ -425,12 +425,12 @@ class CoefficientsTypeResponseStage(ResponseStage):
             return
         value = list(value) if isinstance(
             value, compatibility.collections_abc.Iterable) else [value]
-        for _i, x in enumerate(value):
-            if not isinstance(x, FloatWithUncertaintiesAndUnit):
-                value[_i] = FloatWithUncertaintiesAndUnit(x)
-        if any(x.unit is not None for x in value):
+        if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
+        for _i, x in enumerate(value):
+            if not isinstance(x, CoefficientWithUncertainties):
+                value[_i] = CoefficientWithUncertainties(x)
         self._denominator = value
 
     @property

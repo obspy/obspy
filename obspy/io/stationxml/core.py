@@ -616,11 +616,11 @@ def _read_response_stage(stage_elem, _ns):
             _tag2obj(elem, _ns("CfTransferFunctionType"), str)
         numerator = \
             _read_floattype_list(elem, _ns("Numerator"),
-                                 FloatWithUncertaintiesAndUnit, unit=True,
+                                 CoefficientWithUncertainties, unit=False,
                                  additional_mapping={"number": "number"})
         denominator = \
             _read_floattype_list(elem, _ns("Denominator"),
-                                 FloatWithUncertaintiesAndUnit, unit=True,
+                                 CoefficientWithUncertainties, unit=False,
                                  additional_mapping={"number": "number"})
         obj = obspy.core.inventory.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
