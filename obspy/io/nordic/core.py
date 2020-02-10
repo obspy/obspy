@@ -429,6 +429,7 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False):
     for event_line in event_str:
         tmp_sfile.write(event_line)
     tagged_lines = _get_line_tags(f=tmp_sfile)
+    tmp_sfile.seek(0)
     new_event = _readheader(head_lines=tagged_lines['1'])
     new_event = _read_uncertainty(tagged_lines, new_event)
     new_event = _read_highaccuracy(tagged_lines, new_event)
