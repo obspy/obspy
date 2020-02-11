@@ -432,7 +432,7 @@ class TestNordicMethods(unittest.TestCase):
         self.assertEqual(len(wavefiles), 1)
         # Check that read_nordic reads wavname when return_wavnames=True
         cat, wavefiles = read_nordic(testing_path, return_wavnames=True)
-        self.assertEqual(len(wavefiles[0]), 1)
+        self.assertEqual(wavefiles, [['2013-09-01-0410-35.DFDPC_024_00']])
         # Test that full paths are handled
         test_event = full_test_event()
         # Add the event to a catalogue which can be used for QuakeML testing
