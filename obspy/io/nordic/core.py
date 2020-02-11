@@ -429,14 +429,13 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False):
     for event_line in event_str:
         tmp_sfile.write(event_line)
     tagged_lines = _get_line_tags(f=tmp_sfile)
-    tmp_sfile.seek(0)
     new_event = _readheader(head_lines=tagged_lines['1'])
     new_event = _read_uncertainty(tagged_lines, new_event)
     new_event = _read_highaccuracy(tagged_lines, new_event)
     new_event = _read_focal_mechanisms(tagged_lines, new_event)
     new_event = _read_moment_tensors(tagged_lines, new_event)
     if return_wavnames:
-        wav_names.append(_readwavename(f=tmp_sfile))
+        wav_names.append(_readwavename(tagged_lines=tagged_lines['6']))
     new_event = _read_picks(tagged_lines=tagged_lines, new_event=new_event)
     catalog += new_event
     return catalog, wav_names
@@ -800,23 +799,27 @@ def readwavename(sfile, encoding='latin-1'):
     :rtype: list
     """
     with open(sfile, 'r', encoding=encoding) as f:
-        wavenames = _readwavename(f=f)
+        tagged_lines = _get_line_tags(f=f)
+        if len(tagged_lines['6']) == 0:
+            msg = ('No waveform files in sfile %s' % sfile)
+            warnings.warn(msg)
+        wavenames = _readwavename(tagged_lines=tagged_lines['6'])
     return wavenames
 
 
-def _readwavename(f):
+def _readwavename(tagged_lines):
     """
     Internal wave-name reader.
 
-    :type f: file
-    :param f: File open in read-mode
+    :type tagged_lines: list
+    :param tagged_lines: 
+        List of tuples of (strings, line-number) of the waveform lines.
 
     :return: list of wave-file names
     """
     wavename = []
-    for line in f:
-        if len(line) == 81 and line[79] == '6':
-            wavename.append(line[1:79].strip())
+    for line in tagged_lines:
+        wavename.append(line[0][1:79].strip())
     return wavename
 
 
