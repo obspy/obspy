@@ -43,6 +43,10 @@ class ArclinkInventoryTestCase(unittest.TestCase):
         self.arclink_afc_path = os.path.join(self.data_dir, "arclink_afc.xml")
         self.station_afc_path = os.path.join(self.data_dir, "station_afc.xml")
 
+    def test_publicid_slash(self):
+        inv = read_inventory(os.path.join(self.data_dir, "public-id-slash.xml"))
+        self.assertEqual(len(inv[0][0][0].response.response_stages), 11)
+
     def test_analogue_filter_chain(self):
         """
         Test analogue filter chain and compare to stationXML equivalent
