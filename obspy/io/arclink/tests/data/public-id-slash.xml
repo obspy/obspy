@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ns0:inventory xmlns:ns0="http://geofon.gfz-potsdam.de/ns/Inventory/1.0/">
+	<ns0:network archive="MNDC" code="UB" description="MNDC" end="" institutions="" netClass="p" publicID="Network/20180917053317.001796.2" region="" restricted="false" shared="true" start="1980-01-01T00:00:00.0000Z" type="">
+		<ns0:remark />
+		<ns0:station affiliation="MNDC" archive="MNDC" archiveNetworkCode="" code="XXXX" country="Ulaanbaatar" description="Baruunsalaa,Ulaanbaatar" elevation="1639.0" end="" latitude="48.003542" longitude="106.771966" place="Baruunsalaa" publicID="Station/20190918025408.854879.3" restricted="false" shared="true" start="1996-11-11T00:00:00.0000Z" type="">
+			<ns0:remark />
+			<ns0:sensorLocation code="" elevation="1639.0" end="" latitude="0" longitude="0" publicID="SensorLocation/20190918025408.855246.4" start="1996-11-10T00:00:00.0000Z">
+				<ns0:stream azimuth="0.0" clockSerialNumber="" code="SHZ" datalogger="Datalogger/20190918025408.860453.32" dataloggerChannel="0" dataloggerSerialNumber="xxxx" depth="3.0" dip="-90.0" end="" flags="CG" format="" gain="4718590000.0" gainFrequency="1.0" gainUnit="M/S" publicID="Stream/20190918025408.860352.31" restricted="false" sampleRateDenominator="1" sampleRateNumerator="50" sensor="Sensor/20190918025408.862156.42" sensorChannel="0" sensorSerialNumber="yyyy" shared="true" start="1996-11-11T00:00:00.0000Z" />
+				<ns0:stream azimuth="90.0" clockSerialNumber="" code="SHE" datalogger="Datalogger/20190918025408.856043.6" dataloggerChannel="2" dataloggerSerialNumber="xxxx" depth="3.0" dip="0.0" end="" flags="CG" format="" gain="4718590000.0" gainFrequency="1.0" gainUnit="M/S" publicID="Stream/20190918025408.855375.5" restricted="false" sampleRateDenominator="1" sampleRateNumerator="50" sensor="Sensor/20190918025408.857653.16" sensorChannel="2" sensorSerialNumber="yyyy" shared="true" start="1996-11-10T00:00:00.0000Z" />
+				<ns0:stream azimuth="0.0" clockSerialNumber="" code="SHN" datalogger="Datalogger/20190918025408.858516.19" dataloggerChannel="1" dataloggerSerialNumber="xxxx" depth="3.0" dip="0.0" end="" flags="CG" format="" gain="4718590000.0" gainFrequency="1.0" gainUnit="M/S" publicID="Stream/20190918025408.858171.18" restricted="false" sampleRateDenominator="1" sampleRateNumerator="50" sensor="Sensor/20190918025408.860047.29" sensorChannel="1" sensorSerialNumber="yyyy" shared="true" start="1996-11-11T00:00:00.0000Z" />
+			</ns0:sensorLocation>
+		</ns0:station>
+	</ns0:network>
+	<ns0:datalogger clockManufacturer="" clockModel="" clockType="" description="" digitizerManufacturer="" digitizerModel="" gain="524288.0" maxClockDrift="0.0" name="UB.XXXX.SHZ.1996.316.00.00.00" publicID="Datalogger/20190918025408.860453.32" recorderManufacturer="" recorderModel="">
+		<ns0:remark />
+		<ns0:decimation sampleRateDenominator="1" sampleRateNumerator="50">
+			<ns0:analogueFilterChain />
+			<ns0:digitalFilterChain>ResponseFIR/20190918025408.86054.33 ResponseFIR/20190918025408.860808.34 ResponseFIR/20190918025408.860966.35 ResponseFIR/20190918025408.861108.36 ResponseFIR/20190918025408.861258.37 ResponseFIR/20190918025408.861422.38 ResponseFIR/20190918025408.861599.39 ResponseFIR/20190918025408.861711.40 ResponseFIR/20190918025408.861823.41</ns0:digitalFilterChain>
+		</ns0:decimation>
+	</ns0:datalogger>
+	<ns0:datalogger clockManufacturer="" clockModel="" clockType="" description="" digitizerManufacturer="" digitizerModel="" gain="524288.0" maxClockDrift="0.0" name="UB.XXXX.SHE.1996.315.00.00.00" publicID="Datalogger/20190918025408.856043.6" recorderManufacturer="" recorderModel="">
+		<ns0:remark />
+		<ns0:decimation sampleRateDenominator="1" sampleRateNumerator="50">
+			<ns0:analogueFilterChain />
+			<ns0:digitalFilterChain>ResponseFIR/20190918025408.856245.7 ResponseFIR/20190918025408.856509.8 ResponseFIR/20190918025408.856627.9 ResponseFIR/20190918025408.856731.10 ResponseFIR/20190918025408.856848.11 ResponseFIR/20190918025408.856948.12 ResponseFIR/20190918025408.857046.13 ResponseFIR/20190918025408.857142.14 ResponseFIR/20190918025408.857252.15</ns0:digitalFilterChain>
+		</ns0:decimation>
+	</ns0:datalogger>
+	<ns0:datalogger clockManufacturer="" clockModel="" clockType="" description="" digitizerManufacturer="" digitizerModel="" gain="524288.0" maxClockDrift="0.0" name="UB.XXXX.SHN.1996.316.00.00.00" publicID="Datalogger/20190918025408.858516.19" recorderManufacturer="" recorderModel="">
+		<ns0:remark />
+		<ns0:decimation sampleRateDenominator="1" sampleRateNumerator="50">
+			<ns0:analogueFilterChain />
+			<ns0:digitalFilterChain>ResponseFIR/20190918025408.858609.20 ResponseFIR/20190918025408.858793.21 ResponseFIR/20190918025408.858935.22 ResponseFIR/20190918025408.859041.23 ResponseFIR/20190918025408.859141.24 ResponseFIR/20190918025408.859247.25 ResponseFIR/20190918025408.85939.26 ResponseFIR/20190918025408.859508.27 ResponseFIR/20190918025408.859612.28</ns0:digitalFilterChain>
+		</ns0:decimation>
+	</ns0:datalogger>
+	<ns0:sensor description="" highFrequency="" lowFrequency="" manufacturer="" model="" name="UB.XXXX.SHZ.1996.316.00.00.00" publicID="Sensor/20190918025408.862156.42" response="ResponsePAZ/20190918025408.862188.43" type="" unit="M/S">
+		<ns0:remark>{"unit":"Velocity in Meters Per Second"}</ns0:remark>
+	</ns0:sensor>
+	<ns0:sensor description="" highFrequency="" lowFrequency="" manufacturer="" model="" name="UB.XXXX.SHE.1996.315.00.00.00" publicID="Sensor/20190918025408.857653.16" response="ResponsePAZ/20190918025408.857753.17" type="" unit="M/S">
+		<ns0:remark>{"unit":"Velocity in Meters Per Second"}</ns0:remark>
+	</ns0:sensor>
+	<ns0:sensor description="" highFrequency="" lowFrequency="" manufacturer="" model="" name="UB.XXXX.SHN.1996.316.00.00.00" publicID="Sensor/20190918025408.860047.29" response="ResponsePAZ/20190918025408.860085.30" type="" unit="M/S">
+		<ns0:remark>{"unit":"Velocity in Meters Per Second"}</ns0:remark>
+	</ns0:sensor>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_9" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.857046.13" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="16.0" decimationFactor="8" delay="16.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_3" numberOfCoefficients="17" publicID="ResponseFIR/20190918025408.856245.7" symmetry="B">
+		<ns0:coefficients>0.0 0.0 0.000244141 0.000976563 0.00244141 0.00488281 0.00854492 0.0136719 0.0205078 0.0292969 0.0393066 0.0498047 0.0600586 0.0693359 0.0769043 0.0820313 0.0839844</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_8" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.856948.12" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_6" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.856731.10" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_7" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.856848.11" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_4" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.856509.8" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_6" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.861108.36" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="50.0" decimationFactor="2" delay="50.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_11" numberOfCoefficients="51" publicID="ResponseFIR/20190918025408.861823.41" symmetry="B">
+		<ns0:coefficients>-3.09982e-06 -2.94483e-05 -9.8002e-05 -0.000162383 -0.000100029 0.000120655 0.000261935 2.52755e-05 -0.000410488 -0.000366852 0.00037627 0.000854597 -3.05213e-05 -0.00127677 -0.000911347 0.00127725 0.00215259 -0.000461754 -0.0033391 -0.00140994 0.00377236 0.00419596 -0.00264403 -0.00720434 -0.000644286 0.00918799 0.00608709 -0.00858197 -0.0127456 0.00398398 0.0186342 0.00520746 -0.0209498 -0.0181708 0.0166742 0.0322588 -0.00346739 -0.0429715 -0.0193349 0.0443283 0.0498126 -0.0294292 -0.0826437 -0.00934572 0.107599 0.0816959 -0.103155 -0.204297 -3.12367e-05 0.390602 0.590214</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_10" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.859508.27" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="50.0" decimationFactor="2" delay="50.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_11" numberOfCoefficients="51" publicID="ResponseFIR/20190918025408.859612.28" symmetry="B">
+		<ns0:coefficients>-3.09982e-06 -2.94483e-05 -9.8002e-05 -0.000162383 -0.000100029 0.000120655 0.000261935 2.52755e-05 -0.000410488 -0.000366852 0.00037627 0.000854597 -3.05213e-05 -0.00127677 -0.000911347 0.00127725 0.00215259 -0.000461754 -0.0033391 -0.00140994 0.00377236 0.00419596 -0.00264403 -0.00720434 -0.000644286 0.00918799 0.00608709 -0.00858197 -0.0127456 0.00398398 0.0186342 0.00520746 -0.0209498 -0.0181708 0.0166742 0.0322588 -0.00346739 -0.0429715 -0.0193349 0.0443283 0.0498126 -0.0294292 -0.0826437 -0.00934572 0.107599 0.0816959 -0.103155 -0.204297 -3.12367e-05 0.390602 0.590214</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_5" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.856627.9" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_10" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.857142.14" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="50.0" decimationFactor="2" delay="50.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHE.1996.315.00.00.00.stage_11" numberOfCoefficients="51" publicID="ResponseFIR/20190918025408.857252.15" symmetry="B">
+		<ns0:coefficients>-3.09982e-06 -2.94483e-05 -9.8002e-05 -0.000162383 -0.000100029 0.000120655 0.000261935 2.52755e-05 -0.000410488 -0.000366852 0.00037627 0.000854597 -3.05213e-05 -0.00127677 -0.000911347 0.00127725 0.00215259 -0.000461754 -0.0033391 -0.00140994 0.00377236 0.00419596 -0.00264403 -0.00720434 -0.000644286 0.00918799 0.00608709 -0.00858197 -0.0127456 0.00398398 0.0186342 0.00520746 -0.0209498 -0.0181708 0.0166742 0.0322588 -0.00346739 -0.0429715 -0.0193349 0.0443283 0.0498126 -0.0294292 -0.0826437 -0.00934572 0.107599 0.0816959 -0.103155 -0.204297 -3.12367e-05 0.390602 0.590214</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="16.0" decimationFactor="8" delay="16.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_3" numberOfCoefficients="17" publicID="ResponseFIR/20190918025408.858609.20" symmetry="B">
+		<ns0:coefficients>0.0 0.0 0.000244141 0.000976563 0.00244141 0.00488281 0.00854492 0.0136719 0.0205078 0.0292969 0.0393066 0.0498047 0.0600586 0.0693359 0.0769043 0.0820313 0.0839844</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_6" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.859041.23" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_7" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.859141.24" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_8" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.859247.25" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_9" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.85939.26" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_10" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.861711.40" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_8" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.861422.38" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_9" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.861599.39" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_5" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.860966.35" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_7" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.861258.37" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="16.0" decimationFactor="8" delay="16.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_3" numberOfCoefficients="17" publicID="ResponseFIR/20190918025408.86054.33" symmetry="B">
+		<ns0:coefficients>0.0 0.0 0.000244141 0.000976563 0.00244141 0.00488281 0.00854492 0.0136719 0.0205078 0.0292969 0.0393066 0.0498047 0.0600586 0.0693359 0.0769043 0.0820313 0.0839844</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHZ.1996.316.00.00.00.stage_4" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.860808.34" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_4" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.858793.21" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responseFIR correction="6.0" decimationFactor="2" delay="6.0" gain="1.0" gainFrequency="" name="UB.XXXX..SHN.1996.316.00.00.00.stage_5" numberOfCoefficients="7" publicID="ResponseFIR/20190918025408.858935.22" symmetry="B">
+		<ns0:coefficients>0.000244141 0.00292969 0.0161133 0.0537109 0.12085 0.193359 0.225586</ns0:coefficients>
+		<ns0:remark />
+	</ns0:responseFIR>
+	<ns0:responsePAZ correction="" decimationFactor="" delay="" gain="9000.0" gainFrequency="1.0" name="UB.XXXX.SHZ.1996.316.00.00.00" normalizationFactor="3.9272e+14" normalizationFrequency="1.0" numberOfPoles="7" numberOfZeros="3" publicID="ResponsePAZ/20190918025408.862188.43" type="A">
+		<ns0:zeros>(0.0,0.0) (0.0,0.0) (2767.35,0.0)</ns0:zeros>
+		<ns0:poles>(-4.44,-4.44) (-4.44,4.44) (-1261.26,2175.08) (-1261.26,-2175.08) (-2496.04,0.0) (-2767.33,0.0) (-24875.6,0.0)</ns0:poles>
+		<ns0:remark />
+	</ns0:responsePAZ>
+	<ns0:responsePAZ correction="" decimationFactor="" delay="" gain="9000.0" gainFrequency="1.0" name="UB.XXXX.SHE.1996.315.00.00.00" normalizationFactor="3.9272e+14" normalizationFrequency="1.0" numberOfPoles="7" numberOfZeros="3" publicID="ResponsePAZ/20190918025408.857753.17" type="A">
+		<ns0:zeros>(0.0,0.0) (0.0,0.0) (2767.35,0.0)</ns0:zeros>
+		<ns0:poles>(-4.44,-4.44) (-4.44,4.44) (-1261.26,2175.08) (-1261.26,-2175.08) (-2496.04,0.0) (-2767.33,0.0) (-24875.6,0.0)</ns0:poles>
+		<ns0:remark />
+	</ns0:responsePAZ>
+	<ns0:responsePAZ correction="" decimationFactor="" delay="" gain="9000.0" gainFrequency="1.0" name="UB.XXXX.SHN.1996.316.00.00.00" normalizationFactor="3.9272e+14" normalizationFrequency="1.0" numberOfPoles="7" numberOfZeros="3" publicID="ResponsePAZ/20190918025408.860085.30" type="A">
+		<ns0:zeros>(0.0,0.0) (0.0,0.0) (2767.35,0.0)</ns0:zeros>
+		<ns0:poles>(-4.44,-4.44) (-4.44,4.44) (-1261.26,2175.08) (-1261.26,-2175.08) (-2496.04,0.0) (-2767.33,0.0) (-24875.6,0.0)</ns0:poles>
+		<ns0:remark />
+	</ns0:responsePAZ>
+</ns0:inventory>

@@ -106,6 +106,9 @@
      plots (see #2471, #2477)
    * Fixed a bug in Stream.plot(type='section', reftime=..., ...) that caused
      wrong relative start times of traces relative to given reftime (see #2493)
+ - obspy.io.arclink:
+   * Accommodate change in SeisComP3 publicID delimiter from '#' to '/' in
+     ArclinkXML (see #2552)
  - obspy.io.dmx:
    * Add read support for INGV's DMX format (see #2452)
  - obspy.io.gcf:

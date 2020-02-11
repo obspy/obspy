@@ -379,7 +379,8 @@ def _read_channel(inventory_root, cha_element):
     if sensor_element is not None:
         response_id = sensor_element.get("response")
         if response_id is not None:
-            resp_type = response_id.split("#")[0]
+            # Fix #2552
+            resp_type = response_id.replace("#", "/").split("/")[0]
             if resp_type == 'ResponsePAZ':
                 search = "responsePAZ[@publicID='" + response_id + "']"
                 response_element = inventory_root.find(_ns(search))
