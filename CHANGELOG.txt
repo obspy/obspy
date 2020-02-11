@@ -1,4 +1,4 @@
-1.2.0rc4:
+1.2.0rc5:
  - obspy.core:
    * inventory objects have been adapted to StationXML 1.1 for details on
      changes see #2510 and
@@ -106,6 +106,10 @@
      plots (see #2471, #2477)
    * Fixed a bug in Stream.plot(type='section', reftime=..., ...) that caused
      wrong relative start times of traces relative to given reftime (see #2493)
+ - obspy.io:
+    * added read support for receiver gather format v. 1.6 (see #2070)
+    * added read support for FOCMEC 'out' and 'lst' files (see #2156)
+    * added read support for HypoDD 'pha' files (see #2378)
  - obspy.io.arclink:
    * Accommodate change in SeisComP3 publicID delimiter from '#' to '/' in
      ArclinkXML (see #2552)
@@ -189,10 +193,6 @@
  - obspy.io.xseed:
    * Ability to parse SEED files with extra newlines between blockettes
      (see #2383)
- - obspy.io
-    * added read support for receiver gather format v. 1.6 (see #2070)
-    * added read support for FOCMEC 'out' and 'lst' files (see #2156)
-    * added read support for HypoDD 'pha' files (see #2378)
  - obspy.signal.trigger:
     * fix a bug in AR picker (see #2157)
     * option to return Baer-Kradolfer characteristic function from pk_mbaer
