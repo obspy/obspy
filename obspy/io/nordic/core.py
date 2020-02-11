@@ -812,7 +812,7 @@ def _readwavename(tagged_lines):
     Internal wave-name reader.
 
     :type tagged_lines: list
-    :param tagged_lines: 
+    :param tagged_lines:
         List of tuples of (strings, line-number) of the waveform lines.
 
     :return: list of wave-file names
