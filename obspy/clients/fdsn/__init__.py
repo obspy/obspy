@@ -53,6 +53,7 @@ NOA     http://eida.gein.noa.gr
 ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
+RSHAKE  http://fdsnws.raspberryshakedata.com
 SCEDC   http://service.scedc.caltech.edu
 TEXNET  http://rtserve.beg.utexas.edu
 USGS    http://earthquake.usgs.gov
