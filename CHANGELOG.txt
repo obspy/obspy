@@ -80,6 +80,7 @@
      clients (see #2342 and #2344)
    * make it possible to use signed EIDA tokens and also skip token validation
      completely (see #2297)
+   * adding a mapping for RSHAKE
  - obspy.clients.neic:
    * properly use specified timeout value (see #2450)
  - obspy.clients.seishub:
