@@ -34,30 +34,30 @@ available providers are:
 >>> from obspy.clients.fdsn.header import URL_MAPPINGS
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<7} {1}".format(key,  URL_MAPPINGS[key]))
-BGR     http://eida.bgr.de
-EMSC    http://www.seismicportal.eu
-ETH     http://eida.ethz.ch
-GEONET  http://service.geonet.org.nz
-GFZ     http://geofon.gfz-potsdam.de
-ICGC    http://ws.icgc.cat
-INGV    http://webservices.ingv.it
-IPGP    http://ws.ipgp.fr
-IRIS    http://service.iris.edu
-ISC     http://isc-mirror.iris.washington.edu
-KNMI    http://rdsa.knmi.nl
-KOERI   http://eida.koeri.boun.edu.tr
-LMU     http://erde.geophysik.uni-muenchen.de
-NCEDC   http://service.ncedc.org
-NIEP    http://eida-sc3.infp.ro
-NOA     http://eida.gein.noa.gr
-ODC     http://www.orfeus-eu.org
-ORFEUS  http://www.orfeus-eu.org
-RESIF   http://ws.resif.fr
-RSHAKE  http://fdsnws.raspberryshakedata.com
-SCEDC   http://service.scedc.caltech.edu
-TEXNET  http://rtserve.beg.utexas.edu
-USGS    http://earthquake.usgs.gov
-USP     http://sismo.iag.usp.br
+BGR         http://eida.bgr.de
+EMSC        http://www.seismicportal.eu
+ETH         http://eida.ethz.ch
+GEONET      http://service.geonet.org.nz
+GFZ         http://geofon.gfz-potsdam.de
+ICGC        http://ws.icgc.cat
+INGV        http://webservices.ingv.it
+IPGP        http://ws.ipgp.fr
+IRIS        http://service.iris.edu
+ISC         http://isc-mirror.iris.washington.edu
+KNMI        http://rdsa.knmi.nl
+KOERI       http://eida.koeri.boun.edu.tr
+LMU         http://erde.geophysik.uni-muenchen.de
+NCEDC       http://service.ncedc.org
+NIEP        http://eida-sc3.infp.ro
+NOA         http://eida.gein.noa.gr
+ODC         http://www.orfeus-eu.org
+ORFEUS      http://www.orfeus-eu.org
+RESIF       http://ws.resif.fr
+RASPISHAKE  http://fdsnws.raspberryshakedata.com
+SCEDC       http://service.scedc.caltech.edu
+TEXNET      http://rtserve.beg.utexas.edu
+USGS        http://earthquake.usgs.gov
+USP         http://sismo.iag.usp.br
 
 (1) :meth:`~obspy.clients.fdsn.client.Client.get_waveforms()`: The following
     example illustrates how to request and plot 60 minutes of the ``"LHZ"``
