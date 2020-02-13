@@ -157,6 +157,7 @@ import requests
 import sqlalchemy as sa
 import subprocess
 import types
+import warnings
 
 from collections import namedtuple
 from glob import glob
@@ -175,6 +176,21 @@ from obspy.core.stream import Stream
 
 
 logger = logging.getLogger('obspy.clients.filesystem.tsindex')
+
+
+try:
+    import sqlalchemy
+    # TSIndex needs sqlalchemy 1.0.0
+    if not hasattr(sqlalchemy.engine.reflection.Inspector,
+                   'get_temp_table_names'):
+        raise ImportError
+except ImportError:
+    msg = ('TSIndex module expects sqlachemy version >1.0.0. Some '
+           'functionality might not work.')
+    warnings.warn(msg)
+    _sqlalchemy_version_insufficient = True
+else:
+    _sqlalchemy_version_insufficient = False
 
 
 def _pickle_method(m):
