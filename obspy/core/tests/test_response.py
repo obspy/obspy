@@ -326,7 +326,8 @@ class ResponseTestCase(unittest.TestCase):
         np.testing.assert_array_equal(r_zeros, zeros)
         np.testing.assert_array_equal(r_poles, poles)
         np.testing.assert_equal(r_stage_gain, sensitivity)
-        np.testing.assert_equal(r_sens / normalization, sensitivity)
+        np.testing.assert_allclose(r_sens / normalization, sensitivity, atol=0,
+                                   rtol=1e-8)
 
     def test_resp_from_paz_loading_vs_evalresp(self):
         zeros = [0., 0.]
