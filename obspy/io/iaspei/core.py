@@ -102,13 +102,23 @@ class ISFReader(object):
         while True:
             next_line_type = self._next_line_type()
             if next_line_type == 'event':
-                if self.cat:
+                # scope last event when a new one starts
+                # avoid trying to do it when starting to read first event,
+                # which results in index error
+                if len(self.cat):
                     self.cat[-1].scope_resource_ids()
                 self._read_event_header()
             elif next_line_type:
                 self._process_block()
             else:
                 raise ObsPyReadingError
+        # scope last event when no new events are encountered anymore
+        # in principle we should get rid of the above scoping and should just
+        # scope every event at the end in a loop? not sure if this has negative
+        # side effects so doing it like this for now, just fixing the
+        # IndexError for first event above
+        if len(self.cat):
+            self.cat[-1].scope_resource_ids()
 
     def _construct_id(self, parts, add_hash=False):
         id_ = '/'.join([str(self.cat.resource_id)] + list(parts))
