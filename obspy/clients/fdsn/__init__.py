@@ -52,8 +52,8 @@ NIEP        http://eida-sc3.infp.ro
 NOA         http://eida.gein.noa.gr
 ODC         http://www.orfeus-eu.org
 ORFEUS      http://www.orfeus-eu.org
-RESIF       http://ws.resif.fr
 RASPISHAKE  http://fdsnws.raspberryshakedata.com
+RESIF       http://ws.resif.fr
 SCEDC       http://service.scedc.caltech.edu
 TEXNET      http://rtserve.beg.utexas.edu
 USGS        http://earthquake.usgs.gov
