@@ -75,7 +75,7 @@ class MassDownloader(object):
         if providers is None:
             providers = dict(URL_MAPPINGS.items())
             _p = []
-            
+
             if "RASPISHAKE" in providers:
                 # exclude RASPISHAKE by default
                 del providers["RASPISHAKE"]
