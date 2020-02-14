@@ -1,4 +1,34 @@
-1.2.0rc5:
+1.2.0rc6
+========
+
+Work on this release was in parts and among others supported by the following
+institutions/companies and grants (in alphabetical order):
+ - Earthquake Commision of New Zealand (EQC), grant 18/753
+ - École et Observatoire des Sciences de la Terre - Université de Strasbourg
+ - ETH Zürich
+ - Friedrich-Schiller-Universität Jena
+ - Geoscience Australia
+ - Incorporated Research Institutions for Seismology (IRIS), NSF (SAGE) award
+   :: EAR-1851048
+ - Institut de Physique du Globe de Strasbourg
+ - Institut de Physique du Globe de Paris
+ - Institutions for Seismology (IRIS) through the PASSCAL Instrument Center at
+   New Mexico Tech. The facilities of the IRIS Consortium are supported by the
+   National Science Foundation under Cooperative Agreement EAR-1261681 and the
+   DOE National Nuclear Security Administration.
+ - Istituto Nazionale di Geofisica e Vulcanologia, Osservatorio Etneo (Italy),
+   Allegato B2 DPC-INGV 2012-2021 Task 10
+ - Ludwig-Maximilians-Universität München
+ - National Institute for Occupational Safety and Health
+ - Royal Netherlands Meteorological Institute (KNMI)
+ - School of Geography, Environment and Earth Sciences, Victoria University of
+   Wellington
+ - The European Union’s Horizon 2020 research and innovation programme under
+   the ChEESE project, grant agreement No. 823844
+ - The Royal Observatory of Belgium
+ - U.S. Geological Survey
+
+Changes:
  - obspy.core:
    * inventory objects have been adapted to StationXML 1.1 for details on
      changes see #2510 and
