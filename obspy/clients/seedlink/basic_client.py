@@ -278,7 +278,14 @@ class Client(object):
         # self._slclient.run()
         self._slclient.run(packet_handler=self._packet_handler)
         info = self._slclient.slconn.info_string
-        xml = etree.fromstring(info)
+        try:
+            xml = etree.fromstring(info)
+        except ValueError as e:
+            msg = 'Unicode strings with encoding declaration are not supported'
+            if msg not in str(e):
+                raise
+            parser = etree.XMLParser(encoding='utf-8')
+            xml = etree.fromstring(info.encode('utf-8'), parser=parser)
         station_cache = set()
         for tag in xml.xpath('./station'):
             net = tag.attrib['network']

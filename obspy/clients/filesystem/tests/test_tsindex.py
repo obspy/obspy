@@ -17,7 +17,7 @@ import uuid
 
 from obspy.core.compatibility import mock, RegExTestCase
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
-    TSIndexDatabaseHandler
+    TSIndexDatabaseHandler, _sqlalchemy_version_insufficient
 from obspy import read
 from obspy import UTCDateTime
 
@@ -39,6 +39,8 @@ def get_test_client():
     return client
 
 
+@unittest.skipIf(_sqlalchemy_version_insufficient,
+                 'TSIndex needs sqlalchemy 1.0.0 or higher')
 class ClientTestCase(RegExTestCase):
 
     def test_bad_sqlitdb_filepath(self):
@@ -598,6 +600,8 @@ def purge(dir, pattern):
             os.remove(os.path.join(dir, f))
 
 
+@unittest.skipIf(_sqlalchemy_version_insufficient,
+                 'TSIndex needs sqlalchemy 1.0.0 or higher')
 class IndexerTestCase(RegExTestCase):
 
     def test_bad_rootpath(self):
@@ -893,6 +897,8 @@ class IndexerTestCase(RegExTestCase):
             purge(filepath, '^{}.*$'.format(fname))
 
 
+@unittest.skipIf(_sqlalchemy_version_insufficient,
+                 'TSIndex needs sqlalchemy 1.0.0 or higher')
 class TSIndexDatabaseHandlerTestCase(RegExTestCase):
 
     def test_bad_sqlitdb_filepath(self):
