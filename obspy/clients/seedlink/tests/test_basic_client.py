@@ -19,7 +19,7 @@ class ClientTestCase(unittest.TestCase):
     def test_get_waveform(self):
         def _test_offset_from_realtime(offset):
             t = UTCDateTime() - offset
-            for request in [["G", "FDF", "00", "LHN", t, t + 20],
+            for request in [["G", "FDFM", "00", "LHN", t, t + 20],
                             ["G", "CLF", "00", "BHZ", t, t + 10]]:
                 st = self.client.get_waveforms(*request)
                 self.assertGreater(len(st), 0)
@@ -55,14 +55,14 @@ class ClientTestCase(unittest.TestCase):
         client = self.client
 
         info = client.get_info(station='F*')
-        self.assertIn(('G', 'FDF'), info)
+        self.assertIn(('G', 'FDFM'), info)
         # should have at least 7 stations
         self.assertTrue(len(info) > 2)
         # only fetch one station
-        info = client.get_info(network='G', station='FDF')
-        self.assertEqual([('G', 'FDF')], info)
+        info = client.get_info(network='G', station='FDFM')
+        self.assertEqual([('G', 'FDFM')], info)
         # check that we have a cache on station level
-        self.assertIn(('G', 'FDF'), client._station_cache)
+        self.assertIn(('G', 'FDFM'), client._station_cache)
         self.assertTrue(len(client._station_cache) > 20)
         self.assertEqual(client._station_cache_level, "station")
 
@@ -77,28 +77,28 @@ class ClientTestCase(unittest.TestCase):
             t = UTCDateTime() - offset
             # first do a request that needs an info request on station level
             # only
-            st = self.client.get_waveforms("*", "F?F", "??", "B??", t, t + 5)
+            st = self.client.get_waveforms("*", "F?FM", "??", "B??", t, t + 5)
             self.assertGreater(len(st), 2)
             self.assertTrue(len(self.client._station_cache) > 20)
             station_cache_size = len(self.client._station_cache)
-            self.assertIn(("G", "FDF"), self.client._station_cache)
+            self.assertIn(("G", "FDFM"), self.client._station_cache)
             self.assertEqual(self.client._station_cache_level, "station")
             for tr in st:
                 self.assertEqual(tr.stats.network, "G")
-                self.assertEqual(tr.stats.station, "FDF")
+                self.assertEqual(tr.stats.station, "FDFM")
                 self.assertEqual(tr.stats.channel[0], "B")
             # now make a subsequent request that needs an info request on
             # channel level
-            st = self.client.get_waveforms("*", "F?F", "*", "B*", t, t + 5)
+            st = self.client.get_waveforms("*", "F?FM", "*", "B*", t, t + 5)
             self.assertGreater(len(st), 2)
             self.assertTrue(
                 len(self.client._station_cache) > station_cache_size)
-            self.assertIn(("G", "FDF", "00", "BHZ"),
+            self.assertIn(("G", "FDFM", "00", "BHZ"),
                           self.client._station_cache)
             self.assertEqual(self.client._station_cache_level, "channel")
             for tr in st:
                 self.assertEqual(tr.stats.network, "G")
-                self.assertEqual(tr.stats.station, "FDF")
+                self.assertEqual(tr.stats.station, "FDFM")
                 self.assertEqual(tr.stats.channel[0], "B")
 
         # getting a result depends on two things.. how long backwards the ring

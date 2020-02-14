@@ -79,32 +79,38 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client('rtserver.ipgp.fr')
         >>> t = UTCDateTime() - 1500
-        >>> st = client.get_waveforms("G", "FDF", "00", "BHZ", t, t + 5)
+        >>> st = client.get_waveforms("G", "FDFM", "00", "BHZ", t, t + 5)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        G.FDF.00.BHZ | 20... | 20.0 Hz, ... samples
+        G.FDFM.00.BHZ | 20... | 20.0 Hz, ... samples
 
         Most servers support '?' single-character wildcard in location and
         channel code fields:
 
-        >>> st = client.get_waveforms("G", "FDF", "??", "B??", t, t + 5)
+        >>> st = client.get_waveforms("G", "FDFM", "??", "B??", t, t + 5)
         >>> st = st.sort(reverse=True)
         >>> print(st)  # doctest: +ELLIPSIS
-        3 Trace(s) in Stream:
-        G.FDF.00.BHZ | 20... | 20.0 Hz, ... samples
-        G.FDF.00.BHN | 20... | 20.0 Hz, ... samples
-        G.FDF.00.BHE | 20... | 20.0 Hz, ... samples
+        6 Trace(s) in Stream:
+        G.FDFM.10.BHZ | 20... | 20.0 Hz, ... samples
+        G.FDFM.10.BHN | 20... | 20.0 Hz, ... samples
+        G.FDFM.10.BHE | 20... | 20.0 Hz, ... samples
+        G.FDFM.00.BHZ | 20... | 20.0 Hz, ... samples
+        G.FDFM.00.BHN | 20... | 20.0 Hz, ... samples
+        G.FDFM.00.BHE | 20... | 20.0 Hz, ... samples
 
         Depending on server capabilities, '*' multi-character wildcards might
         work in any parameter:
 
-        >>> st = client.get_waveforms("*", "FDF", "*", "B*", t, t + 5)
+        >>> st = client.get_waveforms("*", "FDFM", "*", "B*", t, t + 5)
         >>> st = st.sort(reverse=True)
         >>> print(st)  # doctest: +ELLIPSIS
-        3 Trace(s) in Stream:
-        G.FDF.00.BHZ | 20... | 20.0 Hz, ... samples
-        G.FDF.00.BHN | 20... | 20.0 Hz, ... samples
-        G.FDF.00.BHE | 20... | 20.0 Hz, ... samples
+        6 Trace(s) in Stream:
+        G.FDFM.10.BHZ | 20... | 20.0 Hz, ... samples
+        G.FDFM.10.BHN | 20... | 20.0 Hz, ... samples
+        G.FDFM.10.BHE | 20... | 20.0 Hz, ... samples
+        G.FDFM.00.BHZ | 20... | 20.0 Hz, ... samples
+        G.FDFM.00.BHN | 20... | 20.0 Hz, ... samples
+        G.FDFM.00.BHE | 20... | 20.0 Hz, ... samples
 
         .. note::
 
@@ -200,15 +206,16 @@ class Client(object):
         ``station``, ``location`` and ``channel``.
 
         >>> client = Client('rtserver.ipgp.fr')
-        >>> info = client.get_info(station="FDF")
+        >>> info = client.get_info(station="FDFM")
         >>> print(info)
-        [('G', 'FDF')]
-        >>> info = client.get_info(station="FD?", channel='*Z',
+        [('G', 'FDFM')]
+        >>> info = client.get_info(station="FD?M", channel='*Z',
         ...                        level='channel')
         >>> print(info)  # doctest: +NORMALIZE_WHITESPACE
-        [('G', 'FDF', '00', 'BHZ'),
-         ('G', 'FDF', '00', 'HNZ'),
-         ('G', 'FDF', '00', 'LHZ')]
+        [('G', 'FDFM', '00', 'BHZ'), ('G', 'FDFM', '00', 'HHZ'),
+         ('G', 'FDFM', '00', 'HNZ'), ('G', 'FDFM', '00', 'LHZ'),
+         ('G', 'FDFM', '10', 'BHZ'), ('G', 'FDFM', '10', 'HHZ'),
+         ('G', 'FDFM', '10', 'LHZ')]
 
         Available station information is cached after the first request to the
         server, so use ``cache=False`` on subsequent requests if there is a

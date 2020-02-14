@@ -40,7 +40,7 @@ class SLClientTestCase(unittest.TestCase):
     def test_issue708(self):
         sl_client = SLClient()
         sl_client.slconn.set_sl_address("rtserve.iris.washington.edu:18000")
-        sl_client.multiselect = ("G_FDF:00BHZ, G_SSB:00BHZ")
+        sl_client.multiselect = ("G_FDFM:00BHZ, G_SSB:00BHZ")
         # set a time window from 2 min - 1 min in the past
         dt = UTCDateTime()
         sl_client.begin_time = (dt - 120.0).format_seedlink()
