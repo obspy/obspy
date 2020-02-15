@@ -16,7 +16,7 @@ def merge_gcf_stream(st):
     Merges GCF stream (replacing Stream.merge(-1) for headonly=True)
 
     :type st: :class:`~obspy.core.stream.Stream`
-    :param st: GCF Stream object whith no data
+    :param st: GCF Stream object with no data
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream object containing header and data.
     """
