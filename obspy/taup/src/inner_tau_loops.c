@@ -176,16 +176,15 @@ void bullen_radial_slowness_inner_loop(
     double B, sqrt_top, sqrt_bot;
 
     for (i=0; i<max_i; i++) {
-        if ((LAYER(i, SL_BOT_DEPTH) - LAYER(i, SL_TOP_DEPTH)) < 0.0000000001) {
-            continue;
-        }
+        double dumb_var = (LAYER(i, SL_BOT_DEPTH) - LAYER(i, SL_TOP_DEPTH));
+        if ((dumb_var < 0.0000000001) || isnan(dumb_var)) {continue;}
 
         B = log(LAYER(i, SL_TOP_P) / LAYER(i, SL_BOT_P)) /
             log((radius - LAYER(i, SL_TOP_DEPTH)) /
                 (radius - LAYER(i, SL_BOT_DEPTH)));
 
-        sqrt_top = sqrt(pow(LAYER(i, SL_TOP_P), 2) - pow(p[i], 2));
-        sqrt_bot = sqrt(pow(LAYER(i, SL_BOT_P), 2) - pow(p[i], 2));
+        sqrt_top = sqrt(fmax(0.,pow(LAYER(i, SL_TOP_P), 2) - pow(p[i], 2)));
+        sqrt_bot = sqrt(fmax(0.,pow(LAYER(i, SL_BOT_P), 2) - pow(p[i], 2)));
 
         dist[i] = (atan2(p[i], sqrt_bot) - atan2(p[i], sqrt_top)) / B;
         time[i] = (sqrt_top - sqrt_bot) / B;
