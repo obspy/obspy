@@ -255,6 +255,7 @@ Changes:
      functions to detect events based on template matching (see #2315)
  - obspy.taup:
    * fix cycling through colors in ray path plots (see #2470, #2478)
+   * fix a floating point issue on IBM machines (see #2559, #2560)
 
 1.1.1: (doi: 10.5281/zenodo.1040770)
  - General:
