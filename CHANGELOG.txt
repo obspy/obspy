@@ -111,6 +111,9 @@ Changes:
    * make it possible to use signed EIDA tokens and also skip token validation
      completely (see #2297)
    * adding a mapping for RASPISHAKE
+ - obspy.clients.filesystem.tsindex:
+   * Add new Client & Indexer modules based on IRIS time series index (see
+     #2206)
  - obspy.clients.neic:
    * properly use specified timeout value (see #2450)
  - obspy.clients.seishub:
