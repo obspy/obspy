@@ -123,8 +123,8 @@ Changes:
      networks/stations/locations/channels are served by the seedlink server
      (see #2405)
    * "get_waveforms()" can now be used with '*' and '?' wildcards in any part
-      of requested SEED ID, i.e. network, station, location and channel (see
-      #2405)
+     of requested SEED ID, i.e. network, station, location and channel (see
+     #2405)
  - obspy.clients.seishub:
    * Properly handle fetching poles and zeros in presence of multiple metadata
      files for a given station (see #2411)
