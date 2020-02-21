@@ -114,11 +114,10 @@ Changes:
  - obspy.clients.filesystem.tsindex:
    * Add new Client & Indexer modules based on IRIS time series index (see
      #2206)
+ - obspy.clients.iris:
+   * results of distaz method are now returned as native floats (see #2499)
  - obspy.clients.neic:
    * properly use specified timeout value (see #2450)
- - obspy.clients.seishub:
-   * Properly handle fetching poles and zeros in presence of multiple metadata
-     files for a given station (see #2411)
  - obspy.clients.seedlink:
    * add method "get_info()" to fetch information on what
      networks/stations/locations/channels are served by the seedlink server
@@ -126,8 +125,9 @@ Changes:
    * "get_waveforms()" can now be used with '*' and '?' wildcards in any part
      of requested SEED ID, i.e. network, station, location and channel (see
      #2405)
- - obspy.clients.iris:
-   * results of distaz method are now returned as native floats (see #2499)
+ - obspy.clients.seishub:
+   * Properly handle fetching poles and zeros in presence of multiple metadata
+     files for a given station (see #2411)
  - obspy.geodetics:
    * new utility function `inside_geobounds()` to check whether an object is
      inside a geographic bound (see #2515)
@@ -182,19 +182,30 @@ Changes:
  - obspy.io.rg16:
    * implement module to read waveforms and headers from fcnt format (see #2265).
    * Fix reading when start+endtime are inside one data packet (see #2485).
+ - obspy.io.sac:
+   * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
+ - obspy.io.segy:
+   * Raise nicer error messages when header packing fails (see #2194, #2196).
+   * show nice error message when trying to write a trace with too many samples
+     in it (see #2358, #1393)
  - obspy.io.seg2:
    * Handle data format code 3 trace data (#2022, #2385).
    * Improve parsing of free-form entries (#2385).
    * Fix non-native endian data loading (#2385).
- - obspy.io.segy:
-   * show nice error message when trying to write a trace with too many samples
-     in it (see #2358, #1393)
  - obspy.io.seiscomp:
+   * Adding support for SC3ML 0.10 (see #2024).
+   * Update xsl to allow conversion of amplitude picks not associated with
+     origins (see #2273).
    * Very large performance improvement reading large sc3ml inventory files by
      pre-indexing sensors, dataloggers and responses and reducing lxml calls
      (see #2296).
    * When reading StationXML/SC3ML, make sure to properly read empty string
      fields as empty strings instead of "None" (see #2519 and #2527)
+ - obspy.io.sh:
+   * Add read support for SeismicHandler EVT event files (see #2109)
+ - obspy.io.shapefile:
+   * Add possibility to add custom database columns when writing catalog or
+     inventory objects to shapefile (see #2012 and #2305)
  - obspy.io.stationxml:
    * When reading StationXML/SC3ML, make sure to properly read empty string
      fields as empty strings instead of "None" (see #2519 and #2527)
@@ -211,28 +222,18 @@ Changes:
    * Correctly handle QuakeML native namespaces (if they are not matching the
      document root's namespace) as custom namespaces and parse them into
      `.extra` (see #2466)
- - obspy.io.sac:
-   * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
- - obspy.io.segy:
-   * Raise nicer error messages when header packing fails (see #2194, #2196).
- - obspy.io.seiscomp:
-   * Adding support for SC3ML 0.10 (see #2024).
-   * Update xsl to allow conversion of amplitude picks not associated with
-     origins (see #2273).
- - obspy.io.sh:
-   * Add read support for SeismicHandler EVT event files (see #2109)
- - obspy.io.shapefile:
-   * Add possibility to add custom database columns when writing catalog or
-     inventory objects to shapefile (see #2012 and #2305)
  - obspy.io.xseed:
    * Ability to parse SEED files with extra newlines between blockettes
      (see #2383)
- - obspy.signal.trigger:
-    * fix a bug in AR picker (see #2157)
-    * option to return Baer-Kradolfer characteristic function from pk_mbaer
-      function added (see #2341)
- - obspy.signal.polarization:
-   * Fix an issue in selecting Z/N/E traces from given stream (see #2365)
+ - obspy.signal.cross_correlation:
+   * Add new `correlate_template()` function with 'full' normalization option,
+     required for correlations in template-matching
+     (see #2035 and #2042).
+   * 'domain' parameter in correlate function is deprecated in favour of new
+     'method' parameter to be consistent with recent SciPy versions
+     (see #2042).
+   * Add `correlate_stream_template()` and `correlation_detector()`
+     functions to detect events based on template matching (see #2315)
  - obspy.signal.PPSD:
    * Changed numpy-based serialization as to not require pickling (see #2424).
    * Fixed exact trace cutting for PSD segments (see #2040).
@@ -247,15 +248,12 @@ Changes:
      set its default to `False` (see #2457).
    * Added representation of earthquake models from Clinton & Heaton (2002) in
      'plot()' method using option 'show_earthquakes' (see #2455).
- - obspy.signal.cross_correlation:
-   * Add new `correlate_template()` function with 'full' normalization option,
-     required for correlations in template-matching
-     (see #2035 and #2042).
-   * 'domain' parameter in correlate function is deprecated in favour of new
-     'method' parameter to be consistent with recent SciPy versions
-     (see #2042).
-   * Add `correlate_stream_template()` and `correlation_detector()`
-     functions to detect events based on template matching (see #2315)
+ - obspy.signal.polarization:
+   * Fix an issue in selecting Z/N/E traces from given stream (see #2365)
+ - obspy.signal.trigger:
+    * fix a bug in AR picker (see #2157)
+    * option to return Baer-Kradolfer characteristic function from pk_mbaer
+      function added (see #2341)
  - obspy.taup:
    * fix cycling through colors in ray path plots (see #2470, #2478)
    * fix a floating point issue on IBM machines (see #2559, #2560)
