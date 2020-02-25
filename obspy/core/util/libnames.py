@@ -92,6 +92,7 @@ def _load_cdll(name):
     libpath = os.path.join(libdir, libname)
     # resolve parent directory '../' for windows
     libpath = os.path.normpath(libpath)
+    libpath = os.path.abspath(libpath)
     libpath = str(libpath)
     try:
         cdll = ctypes.CDLL(libpath)
