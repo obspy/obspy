@@ -192,7 +192,8 @@ def instantaneous_frequency(data, sampling_rate):
     return instf
 
 
-def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime,adaptive=True):
+def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime,
+                 adaptive=True):
     """
     Adaptive window polarization analysis after [Vidale1986]_ with the
     modification of adapted analysis window estimated by estimating the
@@ -217,8 +218,9 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime,adap
     :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param etime: end time for the analysis
     :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param adaptive: switch for adaptive window estimation defaults to True
-        if set to False the window will be estimated as 3*max(1/(fhigh-flow),1/flow)
+    :param adaptive: switch for adaptive window estimation (defaults to
+        ``True``). If set to ``False``, the window will be estimated as
+        ``3 * max(1/(fhigh-flow), 1/flow)``.
     :type adaptive: bool
     :returns: list of tuples containing azimuth, incidence, rectilinearity,
         planarity, and ellipticity
@@ -241,18 +243,18 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime,adap
     offset = int(3 * fs / flow)
     covmat = np.zeros([3, 3], dtype=np.complex128)
     while True:
-        if adaptive == True:
-            adapt = int(3. * w * fs / (zi[offset] + ni[offset] + ei[offset]))
-        # in order to account for errors in the inst freq estimation
-            if adapt > int(3 * fs / flow):
-                adapt = int(3 * fs / flow)
-            if adapt < int(3 * fs / fhigh):
-                adapt = int(3 * fs / fhigh)
+        if adaptive:
+            adapt = int(3.0 * w * fs / (zi[offset] + ni[offset] + ei[offset]))
+            # in order to account for errors in the inst freq estimation
+            if adapt > int(3.0 * fs / flow):
+                adapt = int(3.0 * fs / flow)
+            elif adapt < int(3.0 * fs / fhigh):
+                adapt = int(3.0 * fs / fhigh)
             # XXX: was adapt /= 2
             adapt //= 2
             adapt = (2 * adapt) + 1
         else:
-            adapt = np.maximum(int(3. * fs/(fhigh-flow )),int(3. * fs/flow))
+            adapt = max(int(3. * fs / (fhigh - flow)), int(3. * fs / flow))
         newstart = stime + offset / fs
         if (newstart + (adapt / 2) / fs) > etime:
             break
@@ -267,7 +269,8 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime,adap
         nx -= nx.mean()
         ex -= ex.mean()
 
-        mask = (stream[0][:] ** 2 + stream[1][:] ** 2 + stream[2][:] ** 2) > noise_thres
+        mask = (stream[0][:] ** 2 + stream[1][:] ** 2 + stream[2][:] ** 2) > \
+            noise_thres
         xx = np.zeros((3, mask.sum()), dtype=np.complex128)
         # East
         xx[0, :] = ea
@@ -438,7 +441,8 @@ def _get_s_point(stream, stime, etime):
 
 
 def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
-                          etime, verbose=False, method="pm", var_noise=0.0,adaptive=True):
+                          etime, verbose=False, method="pm", var_noise=0.0,
+                          adaptive=True):
     """
     Method carrying out polarization analysis with the [Flinn1965b]_,
     [Jurkevics1988]_, ParticleMotion, or [Vidale1986]_ algorithm.
@@ -463,6 +467,10 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     :param method: the method to use. one of ``"pm"``, ``"flinn"`` or
         ``"vidale"``.
     :type method: str
+    :param adaptive: switch for adaptive window estimation (defaults to
+        ``True``). If set to ``False``, the window will be estimated as
+        ``3 * max(1/(fhigh-flow), 1/flow)``.
+    :type adaptive: bool
     :rtype: dict
     :returns: Dictionary with keys ``"timestamp"`` (POSIX timestamp, can be
         used to initialize :class:`~obspy.core.utcdatetime.UTCDateTime`

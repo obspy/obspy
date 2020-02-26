@@ -249,6 +249,8 @@ Changes:
    * Added representation of earthquake models from Clinton & Heaton (2002) in
      'plot()' method using option 'show_earthquakes' (see #2455).
  - obspy.signal.polarization:
+   * Fix an issue with covariance matrix in vidale algorithm and make adaptive
+     windowing opt-out (see #2565)
    * Fix an issue in selecting Z/N/E traces from given stream (see #2365)
  - obspy.signal.trigger:
    * Fix a bug in AR picker (see #2157)
