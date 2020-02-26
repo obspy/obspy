@@ -1,4 +1,4 @@
-1.2.0rc6
+1.2.0rc8
 ========
 
 Work on this release was in parts and among others supported by the following
