@@ -27,11 +27,25 @@ ObsPy is licensed under the GNU Lesser General Public License (LGPL) v3.0.
 
 A one-hour introduction to ObsPy is [available at YouTube](https://www.youtube.com/watch?v=kFwdjfiK4gk).
 
-[Read more](https://github.com/obspy/obspy/wiki)
+#### [Read more](https://github.com/obspy/obspy/wiki)
 
 ### Installation
 
 Installation instructions can be found in the [wiki](https://github.com/obspy/obspy/wiki#installation).
+
+### Getting started
+
+Read about how to get started in the [wiki](https://github.com/obspy/obspy/wiki#getting-started) and in our [**Tutorial** section in the documentation](http://docs.obspy.org/tutorial/).
+
+```python
+from obspy import read
+st = read()  # load example seismogram
+st.filter(type='highpass', freq=3.0)
+st = st.select(component='Z')
+st.plot()
+```
+
+![Example waveform Plot](https://user-images.githubusercontent.com/1842780/75334711-9d88b480-5888-11ea-8bc8-0bfe7021d79e.png)
 
 ### Changelog
 
