@@ -77,7 +77,7 @@ class TemporarySDSDirectory(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
         os.chdir(self.old_dir)
-        shutil.rmtree(self.tempdir)
+        shutil.rmtree(self.tempdir, ignore_errors=True)
 
 
 class SDSTestCase(unittest.TestCase):
