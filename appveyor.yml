@@ -84,10 +84,8 @@ install:
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   - "SET PATH=D:\\BUILD\\miniconda3;D:\\BUILD\\miniconda3\\Scripts;%PATH%"
-
   # Check that we have the expected version and architecture for Python
   - "python -c \"import sys; print(sys.version)\""
-
   - "conda config --add channels conda-forge"
   # add channel twice to move it to the top of the channel priority list
   - "conda config --add channels conda-forge"
