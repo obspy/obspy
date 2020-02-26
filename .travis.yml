@@ -168,6 +168,7 @@ install:
         $GFORTRAN
         codecov
         coverage
+        certifi>=2017.4.17
         decorator
         docopt
         future
