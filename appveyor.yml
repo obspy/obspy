@@ -54,7 +54,7 @@ install:
   # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   # Activate the base environment
-  - %PYTHON%\\Scripts\\activate.bat %PYTHON%
+  - "%PYTHON%\\Scripts\\activate.bat %PYTHON%"
   # Check that we have the expected version and architecture for Python
   - "python -c \"import sys; print(sys.version)\""
   - ps: |
