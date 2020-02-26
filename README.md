@@ -27,7 +27,7 @@ ObsPy is licensed under the GNU Lesser General Public License (LGPL) v3.0.
 
 A one-hour introduction to ObsPy is [available at YouTube](https://www.youtube.com/watch?v=kFwdjfiK4gk).
 
-#### [Read more](https://github.com/obspy/obspy/wiki)
+#### [Read more in our GitHub wiki](https://github.com/obspy/obspy/wiki)
 
 ### Installation
 
@@ -51,9 +51,9 @@ st.plot()
 
 ![Example waveform Plot](https://user-images.githubusercontent.com/1842780/75334711-9d88b480-5888-11ea-8bc8-0bfe7021d79e.png)
 
-### Changelog
+### Documentation and Changelog
 
-The **detailed changelog** is available [here](CHANGELOG.txt).
+The **detailed changelog** is available [here](CHANGELOG.txt), our docs can be found at [docs.obspy.org](http://docs.obspy.org/).
 
 ### Contributing
 
