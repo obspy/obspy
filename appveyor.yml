@@ -84,7 +84,6 @@ install:
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   - "SET PATH=D:\\BUILD\\miniconda3;D:\\BUILD\\miniconda3\\Scripts;%PATH%"
-  - conda activate D:/BUILD/miniconda3
 
   # Check that we have the expected version and architecture for Python
   - "python -c \"import sys; print(sys.version)\""
