@@ -156,7 +156,7 @@ install:
         GFORTRAN=""
       fi
   # proj4 version 5.2.0 has issues with psuedocyl projections (see basemap #433).
-  - conda create -q -n test-environment
+  - conda create -n test-environment
         python=$PYTHON_VERSION
         $NUMPY
         $SCIPY
