@@ -90,11 +90,25 @@ def _load_cdll(name):
     libdir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
                           'lib')
     libpath = os.path.join(libdir, libname)
+    # resolve parent directory '../' for windows
+    libpath = os.path.normpath(libpath)
+    libpath = os.path.abspath(libpath)
+    libpath = str(libpath)
     try:
-        cdll = ctypes.CDLL(str(libpath))
+        cdll = ctypes.CDLL(libpath)
     except Exception as e:
-        msg = 'Could not load shared library "%s" ("%s").\n\n %s' % (
-            libname, str(libpath), str(e))
+        import textwrap
+        dirlisting = textwrap.wrap(
+            ', '.join(sorted(os.path.dirname(libpath))))
+        msg = ['Could not load shared library "%s"' % libname,
+               'Path: %s' % libpath,
+               'Current directory: %s' % os.path.abspath(os.curdir),
+               'ctypes error message: %s' % str(e),
+               'Directory listing of lib directory:',
+               '  ',
+               ]
+        msg = '\n  '.join(msg)
+        msg = msg + '\n    '.join(dirlisting)
         raise ImportError(msg)
     return cdll
 
