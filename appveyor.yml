@@ -79,7 +79,7 @@ install:
 
   # - ECHO "Installed SDKs:"
   # - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
-
+  - "SET ENV_NAME=%APPVEYOR_PULL_REQUEST_NUMBER%-%APPVEYOR_BUILD_NUMBER%-%PYTHON_VERSION%"
   # Prepend Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
@@ -94,7 +94,7 @@ install:
   # Install the build and runtime dependencies of the project.
   - "conda update -q --yes conda"
   # Create a conda environment using the required ObsPy packages.
-  - "conda create -q --yes -n test python=%PYTHON_VERSION%"
+  - "conda create -q --yes -n %ENV_NAME% python=%PYTHON_VERSION%"
   - "activate test"
   # Install default dependencies
   # pip 10.0.1 seems buggy and breaks all our appveyor builds
