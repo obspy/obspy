@@ -59,20 +59,13 @@ install:
   - "python -c \"import sys; print(sys.version)\""
   - ps: |
       If ($env:PYTHON_VERSION -eq "3.8") {
-        SET BASEMAP=""
+        conda create -q --yes -n %ENV_NAME% python=%PYTHON_VERSION%
+        conda activate %ENV_NAME%
+        conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests jsonschema pyshp cryptography proj4 pyimgur future geographiclib
       }else {
-        SET BASEMAP=basemap
+        conda create -n %ENV_NAME% --clone py%PYTHON_VERSION%
+        conda activate %ENV_NAME%
       }
-  # Create a conda environment using the required ObsPy packages.
-  # - "conda create -q --yes -n %ENV_NAME% python=%PYTHON_VERSION%"
-  # Clones the exiting env for this PYTHON_VERSION number
-  - conda create -n %ENV_NAME% --clone py%PYTHON_VERSION%
-  - "conda activate %ENV_NAME%"
-  # Install default dependencies
-  # pip 10.0.1 seems buggy and breaks all our appveyor builds
-
-  # - conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests %BASEMAP% jsonschema pyshp cryptography proj4 pyimgur future geographiclib
-  
   # somehow basemap/pyproj/proj4 can fail when PROJ_LIB is not set correctly
   # for whatever reason, see:
   #  - conda-forge/basemap-feedstock#36
@@ -80,7 +73,7 @@ install:
   #  - https://ci.appveyor.com/project/obspy/obspy/builds/19346925/job/prqqev70hy0qt786#L692
   #  This is really ugly and should ideally reverted at some later point, in
   #  case used paths / env var names change etc
-  # - "SET PROJ_LIB=%CONDA_PREFIX%\\Library\\share"
+  - "SET PROJ_LIB=%CONDA_PREFIX%\\Library\\share"
 
   # list package versions
   - "conda list"
