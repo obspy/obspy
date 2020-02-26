@@ -166,6 +166,7 @@ install:
         $PYPROJ
         $PROJ4
         $GFORTRAN
+        codecov
         coverage
         decorator
         docopt
@@ -195,7 +196,6 @@ install:
   # really avoid installing/updating any other packages
   - conda install -c conda-forge --no-update-deps --no-deps pyshp || pip install pyshp
   # install packages not available via conda
-  - pip install codecov
   - pip install geographiclib
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
