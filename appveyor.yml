@@ -25,24 +25,6 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Miniconda-x64"
-      PYTHON_VERSION: "2.7"
-      PYTHON_ARCH: "64"
-
-    - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "64"
-      SKIP_NOTAG: "true"
-
-    - PYTHON: "C:\\Miniconda35-x64"
-      PYTHON_VERSION: "3.5"
-      PYTHON_ARCH: "64"
-      SKIP_NOTAG: "true"
-
-    - PYTHON: "C:\\Miniconda36-x64"
-      PYTHON_VERSION: "3.6"
-      PYTHON_ARCH: "64"
-
     - PYTHON: "C:\\Miniconda37-x64"
       PYTHON_VERSION: "3.7"
       PYTHON_ARCH: "64"
@@ -51,12 +33,6 @@ environment:
       PYTHON_VERSION: "3.8"
       PYTHON_ARCH: "64"
 
-matrix:
-    allow_failures:
-      - PYTHON_VERSION: "3.5"
-      - PYTHON_VERSION: "3.4"
-    # enable fast fail strategy
-    fast_finish: true
 
 init:
   # If there is a newer build queued for the same PR, cancel this one.
