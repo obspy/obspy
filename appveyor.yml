@@ -95,7 +95,7 @@ install:
   - "conda update -q --yes conda"
   # Create a conda environment using the required ObsPy packages.
   - "conda create -q --yes -n %ENV_NAME% python=%PYTHON_VERSION%"
-  - "activate test"
+  - "conda activate %ENV_NAME%"
   # Install default dependencies
   # pip 10.0.1 seems buggy and breaks all our appveyor builds
   - ps: |
