@@ -57,15 +57,15 @@ install:
   - "%PYTHON%\\Scripts\\activate.bat %PYTHON%"
   # Check that we have the expected version and architecture for Python
   - "python -c \"import sys; print(sys.version)\""
-  - ps: |
-      If ($env:PYTHON_VERSION -eq "3.8") {
+  - IF %PYTHON_VERSION% == 3.8 (
         conda create -q --yes -n %ENV_NAME% python=%PYTHON_VERSION% &&
         conda activate %ENV_NAME% &&
         conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests jsonschema pyshp cryptography proj4 pyimgur future geographiclib
-      }else {
+      )
+    ELSE (
         conda create -n %ENV_NAME% --clone py%PYTHON_VERSION% &&
         conda activate %ENV_NAME%
-      }
+      )
   # somehow basemap/pyproj/proj4 can fail when PROJ_LIB is not set correctly
   # for whatever reason, see:
   #  - conda-forge/basemap-feedstock#36
