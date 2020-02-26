@@ -92,6 +92,7 @@ Changes:
      because a float was being passed down to numpy.linspace as length of array
      (see #2533)
    * Geographic select of inventory/network/station (see #2515)
+   * Select traces in Stream based on an Inventory (see #2531)
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
