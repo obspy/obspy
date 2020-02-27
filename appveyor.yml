@@ -101,4 +101,4 @@ skip_branch_with_pr: true
 on_finish:
   - "conda deactivate"
   - "conda env remove -n %ENV_NAME%"
-  - "rm -rf %PYTHON%\envs\%ENV_NAME%"
+  - "rm -rf %PYTHON%\\envs\\%ENV_NAME%"
