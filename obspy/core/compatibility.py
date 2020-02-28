@@ -8,6 +8,7 @@ it work with various versions of our dependencies.
 from future.utils import PY2
 
 import collections
+import importlib
 import io
 import json
 import sys
@@ -43,7 +44,13 @@ else:
 if PY2:
     collections_abc = collections  # NOQA
 else:
-    collections_abc = collections.abc  # NOQA
+    try:
+        collections_abc = collections.abc  # NOQA
+    except AttributeError:
+        # Python 3.4 compat, see https://bugs.python.org/msg212284
+        # some older Linux distribution (like Debian jessie) are still in LTS,
+        # so be nice, this doesn't hurt and can be removed again later on
+        collections_abc = importlib.import_module("collections.abc")  # NOQA
 
 
 if PY2:
