@@ -25,20 +25,20 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "D:\\BUILD\\miniconda3"
+    - PYTHON: "X:\\BUILD\\miniconda3"
       PYTHON_VERSION: "3.5"
       PYTHON_ARCH: "64"
       SKIP_NOTAG: "true"
 
-    - PYTHON: "D:\\BUILD\\miniconda3"
+    - PYTHON: "X:\\BUILD\\miniconda3"
       PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
 
-    - PYTHON: "D:\\BUILD\\miniconda3"
+    - PYTHON: "X:\\BUILD\\miniconda3"
       PYTHON_VERSION: "3.7"
       PYTHON_ARCH: "64"
 
-    - PYTHON: "D:\\BUILD\\miniconda3"
+    - PYTHON: "X:\\BUILD\\miniconda3"
       PYTHON_VERSION: "3.8"
       PYTHON_ARCH: "64"
 
