@@ -44,6 +44,9 @@ mkdir -p $PACKAGEDIR
 # switch branches
 git config --global user.email "test@obspy.org"
 git config --global user.name "obspy debian packaging"
+# try to avoid problems with git stash replacing linefeeds somehow on some
+# distros
+git config --global core.autocrlf false
 git clone git://github.com/${GITFORK}/obspy.git $GITDIR
 cd $GITDIR
 if [ "$GITFORK" != "obspy" ]
