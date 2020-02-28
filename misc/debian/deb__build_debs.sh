@@ -51,6 +51,9 @@ cd $GITDIR
 git clean -fxd
 git fetch --all
 git checkout -- .
+# seems sometimes there are still changes in tracked files, weird and should
+# not happen but we can get rid of it with a stash command
+git stash save
 if [ "$GITTARGET" != "master" ]
 then
     git checkout $GITTARGET
