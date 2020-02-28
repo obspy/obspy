@@ -37,6 +37,13 @@ GITDIR=$BUILDDIR/git
 # deactivate, else each time all packages are removed
 rm -rf $BUILDDIR
 mkdir -p $PACKAGEDIR
+# sometimes git commands like "stash" fail with:
+#   fatal: unable to auto-detect email address (got 'root@a0b4bf921641.(none)')
+#   Cannot save the current index state
+# so set some bogus address to be able to clean the repo state and properly
+# switch branches
+git config --global user.email "test@obspy.org"
+git config --global user.name "obspy debian packaging"
 git clone git://github.com/${GITFORK}/obspy.git $GITDIR
 cd $GITDIR
 if [ "$GITFORK" != "obspy" ]
