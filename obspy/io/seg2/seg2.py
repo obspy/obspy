@@ -52,9 +52,10 @@ class SEG2InvalidFileError(SEG2BaseError):
 
 class SEG2(object):
     """
-    Class to read and write SEG 2 formatted files. The main reason this is
-    realized as a class is for the ease of passing the various parameters from
-    one function to the next.
+    Class to read SEG 2 formatted files.
+    
+    The main reason this is realized as a class is for the ease of passing
+    the various parameters from one function to the next.
 
     Do not change the file_pointer attribute while using this class. It will
     be used to keep track of which parts have been read yet and which not.
