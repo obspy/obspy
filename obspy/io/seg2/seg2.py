@@ -53,7 +53,7 @@ class SEG2InvalidFileError(SEG2BaseError):
 class SEG2(object):
     """
     Class to read SEG 2 formatted files.
-    
+
     The main reason this is realized as a class is for the ease of passing
     the various parameters from one function to the next.
 
