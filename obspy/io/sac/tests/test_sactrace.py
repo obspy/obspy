@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import os
 import unittest
 import datetime
@@ -449,16 +450,14 @@ class SACTraceTestCase(unittest.TestCase):
             npts=len(dat),
             data=dat
         )
-        with NamedTemporaryFile() as tf:
-            tempfile = tf.name
-        sac.write(tempfile, byteorder='big')
-
-        with open(tempfile, "rb") as fh:
-            str = fh.read()
+        with io.BytesIO() as bio:
+            sac.write(bio, byteorder='big')
+            bio.seek(0)
+            result = bio.read()
         # kstnm is at offset 0x1b8 in the file
-        self.assertEqual(str[0x1b8:(0x1b8+8)], b'TEST    ')
+        self.assertEqual(result[0x1b8:(0x1b8+8)], b'TEST    ')
         # kcmpnm is at offset 0x258 in the file
-        self.assertEqual(str[0x258:(0x258+8)], b'Z       ')
+        self.assertEqual(result[0x258:(0x258+8)], b'Z       ')
 
 
 def suite():
