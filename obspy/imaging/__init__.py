@@ -152,9 +152,9 @@ Draws a beach ball diagram of an earthquake focal mechanism.
     >>> ax.add_collection(beach1) #doctest: +SKIP
     >>> ax.add_collection(beach2) #doctest: +SKIP
     >>> ax.set_aspect("equal")
-    >>> ax.set_xlim((-120, 120))
+    >>> ax.set_xlim((-120, 120))  # doctest: +SKIP
     (-120, 120)
-    >>> ax.set_ylim((-20, 120))
+    >>> ax.set_ylim((-20, 120))  # doctest: +SKIP
     (-20, 120)
 
     .. plot::
