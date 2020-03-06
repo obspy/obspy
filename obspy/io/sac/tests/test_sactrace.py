@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import os
 import unittest
 import datetime
@@ -432,6 +433,31 @@ class SACTraceTestCase(unittest.TestCase):
         for hdr, value in [('depmin', depmin), ('depmen', depmen),
                            ('depmax', depmax), ('npts', npts)]:
             self.assertEqual(getattr(sac, hdr), value)
+
+    def test_char_header_padding(self):
+        """
+        SAC binary file header fields should be padded with blanks, not NULs,
+        or NUL-terminated.
+        """
+
+        dat = np.zeros(8)
+
+        sac = SACTrace(
+            kstnm='TEST',
+            delta=1,
+            kcmpnm='Z',
+            kevnm='Bug test',
+            npts=len(dat),
+            data=dat
+        )
+        with io.BytesIO() as bio:
+            sac.write(bio, byteorder='big')
+            bio.seek(0)
+            result = bio.read()
+        # kstnm is at offset 0x1b8 in the file
+        self.assertEqual(result[0x1b8:(0x1b8+8)], b'TEST    ')
+        # kcmpnm is at offset 0x258 in the file
+        self.assertEqual(result[0x258:(0x258+8)], b'Z       ')
 
 
 def suite():
