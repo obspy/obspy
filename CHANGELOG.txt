@@ -1,5 +1,5 @@
-1.2.0rc9
-========
+1.2.0 (doi: 10.5281/zenodo.3674646)
+===================================
 
 Work on this release was in parts and among others supported by the following
 institutions/companies and grants (in alphabetical order):
