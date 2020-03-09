@@ -8,6 +8,8 @@ Library name handling for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+
+
 class ObsPyDeprecationWarning(UserWarning):
     """
     Make a custom deprecation warning as deprecation warnings or hidden by

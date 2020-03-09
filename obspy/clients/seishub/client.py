@@ -10,7 +10,6 @@ SeisHub database client for ObsPy.
 """
 import os
 import pickle
-import sys
 import time
 import warnings
 from datetime import datetime

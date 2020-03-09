@@ -22,7 +22,6 @@ from .util import (
     _response_plot_label)
 
 
-@python_2_unicode_compatible
 class Network(BaseNode):
     """
     From the StationXML definition:

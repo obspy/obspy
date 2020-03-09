@@ -10,7 +10,6 @@ IRIS Web service client for ObsPy.
 """
 import io
 import platform
-import sys
 import urllib.request as urllib_request
 from lxml import objectify
 from urllib.parse import urlencode

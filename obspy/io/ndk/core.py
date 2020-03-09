@@ -13,7 +13,6 @@ The format is an ASCII format but will internally handled by unicode routines.
 """
 import math
 import re
-import sys
 import traceback
 import uuid
 import warnings

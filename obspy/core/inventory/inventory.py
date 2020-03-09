@@ -94,7 +94,6 @@ def _read(filename, format=None, **kwargs):
     return inventory
 
 
-@python_2_unicode_compatible
 class Inventory(ComparingObject):
     """
     The root object of the Inventory->Network->Station->Channel hierarchy.

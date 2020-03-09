@@ -13,7 +13,6 @@ import collections
 import fnmatch
 import itertools
 import os
-import sys
 from socket import timeout as socket_timeout
 from urllib.error import HTTPError, URLError
 

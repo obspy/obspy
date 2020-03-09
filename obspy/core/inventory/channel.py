@@ -20,7 +20,6 @@ from .util import (Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude,
                    Equipment)
 
 
-@python_2_unicode_compatible
 class Channel(BaseNode):
     """
     From the StationXML definition:

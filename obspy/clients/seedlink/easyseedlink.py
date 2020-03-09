@@ -52,7 +52,6 @@ connection object and cannot be easily influenced. Also, a ``HELLO`` is always
 sent to the server when connecting in order to determine the SeedLink protocol
 version.
 """
-import sys
 from urllib.parse import urlparse
 
 import lxml

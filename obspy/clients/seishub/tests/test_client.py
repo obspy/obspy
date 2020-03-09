@@ -3,7 +3,6 @@
 """
 The obspy.clients.seishub.client test suite.
 """
-import sys
 import unittest
 from urllib.request import urlopen
 

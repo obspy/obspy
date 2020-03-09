@@ -9,7 +9,6 @@ Test suite for the inventory class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import builtins
 import copy
 import io
 import os

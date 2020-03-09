@@ -12,7 +12,6 @@ import contextlib
 import inspect
 import io
 import itertools
-import locale
 import math
 import os
 import shutil

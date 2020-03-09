@@ -24,7 +24,6 @@ from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
                    Longitude, _unified_content_strings, _textwrap, Site)
 
 
-@python_2_unicode_compatible
 class Station(BaseNode):
     """
     From the StationXML definition:

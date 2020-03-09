@@ -17,7 +17,6 @@ import copy
 import fnmatch
 import itertools
 import os
-import sys
 import time
 import timeit
 from itertools import filterfalse

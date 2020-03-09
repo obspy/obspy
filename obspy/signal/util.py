@@ -87,7 +87,7 @@ def next_pow_2(i):
     """
     # do not use NumPy here, math is much faster for single values
     buf = math.ceil(math.log(i) / math.log(2))
-    return native(int(math.pow(2, buf)))
+    return int(math.pow(2, buf))
 
 
 def prev_pow_2(i):

@@ -4,7 +4,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import copy
 import datetime
 import itertools
-import sys
 import unittest
 import warnings
 from functools import partial

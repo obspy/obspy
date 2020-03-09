@@ -4,7 +4,6 @@ The obspy-mopad script test suite.
 """
 import io
 import os
-import sys
 import unittest
 from itertools import product, zip_longest
 

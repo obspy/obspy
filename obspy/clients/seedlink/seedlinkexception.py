@@ -11,6 +11,8 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+
+
 class SeedLinkException(Exception):
     """
     SeedLink error.

@@ -10,11 +10,10 @@ License:
 J. MacCarthy, modified from https://gist.github.com/frxstrem/4487802
 
 """
-from base64 import b64encode
 import socket
-with standard_library.hooks():
-    from urllib.request import getproxies
-    from urllib.parse import urlparse
+from base64 import b64encode
+from urllib.request import getproxies
+from urllib.parse import urlparse
 
 
 def get_proxy_tuple():
