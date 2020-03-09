@@ -130,7 +130,7 @@ class EasySeedLinkClient(object):
 
     def __init__(self, server_url, autoconnect=True):
         # Catch invalid server_url parameters
-        if not isinstance(server_url, (str, native_str)):
+        if not isinstance(server_url, str):
             raise ValueError('Expected string for SeedLink server URL')
         # Allow for sloppy server URLs (e.g. 'geofon.gfz-potsdam.de:18000).
         # (According to RFC 1808 the net_path segment needs to start with '//'

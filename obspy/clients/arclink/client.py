@@ -541,7 +541,7 @@ class Client(object):
                    "'FSEED'")
             raise ArcLinkException(msg)
         # check parameters
-        is_name = isinstance(filename, (str, native_str))
+        is_name = isinstance(filename, str)
         if not is_name and not hasattr(filename, "write"):
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)

@@ -484,7 +484,7 @@ master/seishub/plugins/seismology/waveform.py
 
         # allow time strings in arguments
         for time_ in ["starttime", "endtime"]:
-            if isinstance(kwargs[time_], (str, native_str)):
+            if isinstance(kwargs[time_], str):
                 kwargs[time_] = UTCDateTime(kwargs[time_])
 
         trim_start = kwargs['starttime']

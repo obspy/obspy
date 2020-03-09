@@ -153,7 +153,7 @@ class Client(object):
         # file name is given, create fh, write to file and return nothing
         if hasattr(filename, "write") and callable(filename.write):
             fh = filename
-        elif isinstance(filename, (str, native_str)):
+        elif isinstance(filename, str):
             fh = open(filename, method)
             file_opened = True
         else:

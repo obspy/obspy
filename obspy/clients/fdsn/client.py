@@ -1223,7 +1223,7 @@ class Client(object):
             this_type = service_params[key]["type"]
 
             # Try to decode to be able to work with bytes.
-            if this_type is native_str:
+            if this_type is str:
                 try:
                     value = value.decode()
                 except AttributeError:
@@ -1612,7 +1612,7 @@ def convert_to_string(value):
     >>> print(convert_to_string(False))
     false
     """
-    if isinstance(value, (str, native_str)):
+    if isinstance(value, str):
         return value
     # Boolean test must come before integer check!
     elif isinstance(value, bool):
@@ -1879,7 +1879,7 @@ def get_bulk_string(bulk, arguments):
     # StringIO objects also have __iter__ so check for 'read' as well
     if isinstance(bulk, collections_abc.Iterable) \
             and not hasattr(bulk, "read") \
-            and not isinstance(bulk, (str, native_str)):
+            and not isinstance(bulk, str):
         tmp = ["%s=%s" % (key, convert_to_string(value))
                for key, value in arguments.items() if value is not None]
         # empty location codes have to be represented by two dashes
@@ -1895,7 +1895,7 @@ def get_bulk_string(bulk, arguments):
         # if it has a read method, read data from there
         if hasattr(bulk, "read"):
             bulk = bulk.read()
-        elif isinstance(bulk, (str, native_str)):
+        elif isinstance(bulk, str):
             # check if bulk is a local file
             if "\n" not in bulk and os.path.isfile(bulk):
                 with open(bulk, 'r') as fh:

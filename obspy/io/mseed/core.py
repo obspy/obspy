@@ -301,7 +301,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     info = {'filesize': info['filesize']}
 
     # If it's a file name just read it.
-    if isinstance(mseed_object, (str, native_str)):
+    if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
         bfr_np = np.fromfile(mseed_object, dtype=np.int8)
     elif hasattr(mseed_object, 'read'):
@@ -357,7 +357,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
         if sourcename is not None:
-            if not isinstance(sourcename, (str, native_str)):
+            if not isinstance(sourcename, str):
                 msg = 'sourcename needs to be a string'
                 raise ValueError(msg)
             # libmseed uses underscores as separators and allows filtering

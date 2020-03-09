@@ -52,7 +52,7 @@ def datetime_2_string(dt, compact=False):
     """
     if isinstance(dt, UTCDateTime):
         return dt.format_seed(compact)
-    elif isinstance(dt, (str, native_str)):
+    elif isinstance(dt, str):
         dt = dt.strip()
     if not dt:
         return ""

@@ -1251,7 +1251,7 @@ class PPSD(object):
             return self._get_response_from_parser(tr)
         elif isinstance(self.metadata, dict):
             return self._get_response_from_paz_dict(tr)
-        elif isinstance(self.metadata, (str, native_str)):
+        elif isinstance(self.metadata, str):
             return self._get_response_from_resp(tr)
         else:
             msg = "Unexpected type for `metadata`: %s" % type(self.metadata)

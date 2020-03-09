@@ -236,13 +236,13 @@ class Restrictions(object):
 
         # These must be iterables, but not strings.
         if not isinstance(channel_priorities, collections_abc.Iterable) \
-                or isinstance(channel_priorities, (str, native_str)):
+                or isinstance(channel_priorities, str):
             msg = "'channel_priorities' must be a list or other iterable " \
                   "container."
             raise TypeError(msg)
 
         if not isinstance(location_priorities, collections_abc.Iterable) \
-                or isinstance(location_priorities, (str, native_str)):
+                or isinstance(location_priorities, str):
             msg = "'location_priorities' must be a list or other iterable " \
                   "container."
             raise TypeError(msg)

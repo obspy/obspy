@@ -71,7 +71,7 @@ class Blockette060(Blockette):
         if isinstance(data, bytes):
             length = len(data)
             data = io.BytesIO(data)
-        elif isinstance(data, (str, native_str)):
+        elif isinstance(data, str):
             raise TypeError("data must be bytes, not string")
         new_data = data.read(length)
         new_data = new_data[7:]

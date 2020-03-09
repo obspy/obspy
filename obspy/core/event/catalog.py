@@ -212,7 +212,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, (str, native_str)):
+        if not isinstance(index, str):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)

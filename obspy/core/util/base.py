@@ -408,7 +408,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         if not os.path.exists(filename):
             msg = "[Errno 2] No such file or directory: '{}'".format(
                 filename)
@@ -654,7 +654,7 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
 
 def _generic_reader(pathname_or_url=None, callback_func=None,
                     **kwargs):
-    if not isinstance(pathname_or_url, (str, native_str)):
+    if not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
         try:
             # first try reading directly

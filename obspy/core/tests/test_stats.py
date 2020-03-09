@@ -313,7 +313,7 @@ class StatsTestCase(unittest.TestCase):
             for nslc in self.nslc:
                 with warnings.catch_warnings(record=True):
                     setattr(stats, nslc, a_str)
-                self.assertIsInstance(getattr(stats, nslc), (str, native_str))
+                self.assertIsInstance(getattr(stats, nslc), str)
 
     def test_component(self):
         """

@@ -65,7 +65,7 @@ def unicode_csv_reader(unicode_csv_data, **kwargs):
 
 def utf_8_encoder(unicode_csv_data):
     for line in unicode_csv_data:
-        if isinstance(line, native_str):
+        if isinstance(line, str):
             yield line
         else:
             yield line.encode('utf-8')

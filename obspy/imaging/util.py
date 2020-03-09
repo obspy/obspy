@@ -140,7 +140,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
                 fmt = self.scaled[k]
                 break
 
-        if isinstance(fmt, (str, native_str)):
+        if isinstance(fmt, str):
             self._formatter = DateFormatter(fmt, self._tz)
             return self._formatter(x, pos)
         elif hasattr(fmt, '__call__'):

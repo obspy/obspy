@@ -335,9 +335,9 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
                 child = ElementTree.SubElement(doc, key)
                 _dict2xml(child, value)
             elif value is not None:
-                if isinstance(value, (str, native_str)):
+                if isinstance(value, str):
                     ElementTree.SubElement(doc, key).text = value
-                elif isinstance(value, (str, native_str)):
+                elif isinstance(value, str):
                     ElementTree.SubElement(doc, key).text = str(value, 'utf-8')
                 else:
                     ElementTree.SubElement(doc, key).text = str(value)

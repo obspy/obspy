@@ -65,7 +65,7 @@ class _ResourceKeyDescriptor(object):
     def __set__(self, instance, value):
         # if an object was passed, use the id of the object for hash
         if value is not None:
-            if not isinstance(value, (int, str, native_str)):
+            if not isinstance(value, (int, str)):
                 value = id(value)
             setattr(instance, self.name, _ResourceKey.get_resource_key(value))
 
@@ -633,7 +633,7 @@ class ResourceIdentifier(object):
 
     @prefix.setter
     def prefix(self, value):
-        if not isinstance(value, (str, native_str)):
+        if not isinstance(value, str):
             msg = "prefix id needs to be a string."
             raise TypeError(msg)
         self._prefix = value

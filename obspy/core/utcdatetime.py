@@ -347,7 +347,7 @@ class UTCDateTime(object):
                 self._from_datetime(dt)
                 return
             elif isinstance(value, (bytes, str)):
-                if not isinstance(value, (str, native_str)):
+                if not isinstance(value, str):
                     value = value.decode()
                 # got a string instance
                 value = value.strip()

@@ -51,7 +51,7 @@ def _is_mchedr(filename):
     >>> _is_mchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
-    if not isinstance(filename, (str, native_str)):
+    if not isinstance(filename, str):
         return False
     with open(filename, 'rb') as fh:
         for line in fh.readlines():
@@ -81,7 +81,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        if not isinstance(filename, (str, native_str)):
+        if not isinstance(filename, str):
             raise TypeError('File name must be a string.')
         self.filename = filename
         self.fh = open(filename, 'rb')

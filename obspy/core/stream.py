@@ -3414,7 +3414,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # be nice to users that specify e.g. ``components='ZNE'``..
         # compare http://lists.swapbytes.de/archives/obspy-users/
         # 2018-March/002692.html
-        if isinstance(components, (str, native_str)):
+        if isinstance(components, str):
             components = [components]
 
         for component_pair in components:
@@ -3542,7 +3542,7 @@ def _is_pickle(filename):  # @UnusedVariable
     >>> _is_pickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         try:
             with open(filename, 'rb') as fp:
                 st = pickle.load(fp)
@@ -3577,7 +3577,7 @@ def _read_pickle(filename, **kwargs):  # @UnusedVariable
         # between-some-versions-of-python-2-and-3
         kwargs['encoding'] = "latin-1"
 
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         with open(filename, 'rb') as fp:
             return pickle.load(fp, **kwargs)
     else:
@@ -3604,7 +3604,7 @@ def _write_pickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :type protocol: int, optional
     :param protocol: Pickle protocol, defaults to ``2``.
     """
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         with open(filename, 'wb') as fp:
             pickle.dump(stream, fp, protocol=protocol)
     else:

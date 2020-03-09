@@ -142,7 +142,7 @@ def uncompress_file(func, filename, *args, **kwargs):
     """
     if not kwargs.get('check_compression', True):
         return func(filename, *args, **kwargs)
-    if not isinstance(filename, (str, native_str)):
+    if not isinstance(filename, str):
         return func(filename, *args, **kwargs)
     elif not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -260,7 +260,7 @@ def map_example_filename(arg_kwarg_name):
         prefix = '/path/to/'
         # check kwargs
         if arg_kwarg_name in kwargs:
-            if isinstance(kwargs[arg_kwarg_name], (str, native_str)):
+            if isinstance(kwargs[arg_kwarg_name], str):
                 if re.match(prefix, kwargs[arg_kwarg_name]):
                     try:
                         kwargs[arg_kwarg_name] = \
@@ -282,8 +282,7 @@ def map_example_filename(arg_kwarg_name):
             except ValueError:
                 pass
             else:
-                if ind < len(args) and isinstance(args[ind], (str,
-                                                              native_str)):
+                if ind < len(args) and isinstance(args[ind], str):
                     # need to check length of args from inspect
                     if re.match(prefix, args[ind]):
                         try:

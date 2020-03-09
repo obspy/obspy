@@ -53,7 +53,7 @@ def read_paz(paz_file):
     poles = []
     zeros = []
 
-    if isinstance(paz_file, (str, native_str)):
+    if isinstance(paz_file, str):
         with open(paz_file, 'rt') as fh:
             paz = fh.readlines()
     else:

@@ -97,7 +97,7 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if value == 0 or isinstance(value, (str, native_str)):
+    if value == 0 or isinstance(value, str):
         return True
     return bool(value)
 
@@ -263,7 +263,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
             def get_value_repr(key):
                 value = getattr(self, key)
-                if isinstance(value, (str, native_str)):
+                if isinstance(value, str):
                     value = value
                 repr_str = value.__repr__()
                 # Print any associated errors.

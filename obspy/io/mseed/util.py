@@ -227,7 +227,7 @@ def get_flags(files, starttime=None, endtime=None,
     for file in files:
 
         # If it's a file name just read it.
-        if isinstance(file, (str, native_str)):
+        if isinstance(file, str):
             # Read to NumPy array which is used as a buffer.
             bfr_np = np.fromfile(file, dtype=np.int8)
         elif hasattr(file, 'read'):
@@ -534,7 +534,7 @@ def get_record_information(file_or_file_object, offset=0, endian=None):
     station HGN
     time_correction 0
     """
-    if isinstance(file_or_file_object, (str, native_str)):
+    if isinstance(file_or_file_object, str):
         with open(file_or_file_object, 'rb') as f:
             info = _get_record_information(f, offset=offset, endian=endian)
     else:

@@ -63,7 +63,7 @@ def _write_css(inventory, basename):
             Stores free-form comments that embellish records of other
             relations.
     """
-    if not isinstance(basename, (str, native_str)):
+    if not isinstance(basename, str):
         raise TypeError('Writing an Inventory to a file-like object in CSS '
                         'format is unsupported.')
 
