@@ -242,7 +242,7 @@ class BlocketteTestCase(unittest.TestCase):
                     # For now only check that it contains something and that it
                     # returns bytes.
                     self.assertGreater(len(r), 0)
-                    self.assertTrue(isinstance(r, native_bytes))
+                    self.assertTrue(isinstance(r, bytes))
 
         self.assertGreater(tested_blockettes, 0)
 
