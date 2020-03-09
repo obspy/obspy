@@ -13,12 +13,10 @@ import calendar
 import math
 import operator
 import re
-import sys
 import time
 import warnings
 
 import numpy as np
-from obspy.core.compatibility import py3_round
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 # Regular expression used in the init function of the UTCDateTime objects which
@@ -688,7 +686,7 @@ class UTCDateTime(object):
         """
         # datetime.utcfromtimestamp will cut off but not round
         # avoid through adding timedelta - also avoids the year 2038 problem
-        rounded_ns = py3_round(self._ns, self.precision - 9)
+        rounded_ns = round(self._ns, self.precision - 9)
         dt = datetime.timedelta(seconds=rounded_ns // 10**9,
                                 microseconds=rounded_ns % 10**9 // 1000)
         try:
@@ -921,7 +919,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        ms = int(py3_round(self._ns % 10**9, self.precision - 9) // 1000)
+        ms = int(round(self._ns % 10**9, self.precision - 9) // 1000)
         return ms % 1000000
 
     def _set_microsecond(self, value):
@@ -1051,7 +1049,7 @@ class UTCDateTime(object):
         time_str = YMDHMS_FORMAT % tuple(getattr(dt, x) for x in YMDHMS)
 
         if self.precision > 0:
-            ns = py3_round(self.ns, self.precision - 9)
+            ns = round(self.ns, self.precision - 9)
             ns_str = ('%09d' % (ns % 10 ** 9))[:self.precision]
             time_str += ('.' + ns_str)
         return time_str + 'Z'
@@ -1081,8 +1079,8 @@ class UTCDateTime(object):
                        ' is not defined will raise an Exception in a future'
                        ' version of obspy')
                 warnings.warn(msg, ObsPyDeprecationWarning)
-            a = py3_round(self._ns, ndigits)
-            b = py3_round(other._ns, ndigits)
+            a = round(self._ns, ndigits)
+            b = round(other._ns, ndigits)
             return op_func(a, b)
         else:
             try:

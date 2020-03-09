@@ -6,11 +6,12 @@ import io
 import os
 import unittest
 import warnings
+from unittest import mock
 
 import numpy as np
 
 import obspy
-from obspy.core.compatibility import from_buffer, mock
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile, AttribDict
 from obspy.io.segy.header import (DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
                                   DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS)

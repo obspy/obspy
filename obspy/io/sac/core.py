@@ -8,12 +8,12 @@ SAC bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import io
 import os
 import struct
 
 from obspy import Stream
 
-from obspy.core.compatibility import is_bytes_buffer
 from .sactrace import SACTrace
 
 
@@ -34,7 +34,7 @@ def _is_sac(filename):
     >>> _is_sac(get_example_file('test.mseed'))
     False
     """
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         return _internal_is_sac(filename)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
@@ -127,7 +127,7 @@ def _is_sac_xy(filename):
     >>> _is_sac_xy(get_example_file('test.sac'))
     False
     """
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         return _internal_is_sac_xy(filename)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
@@ -194,7 +194,7 @@ def _read_sac_xy(filename, headonly=False, debug_headers=False,
     >>> from obspy import read
     >>> st = read("/path/to/testxy.sac")
     """
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         return _internal_read_sac_xy(buf=filename, headonly=headonly,
                                      debug_headers=debug_headers, **kwargs)
     else:
@@ -264,7 +264,7 @@ def _write_sac_xy(stream, filename, **kwargs):  # @UnusedVariable
     >>> st.write("testxy.sac", format="SACXY")  #doctest: +SKIP
     """
     # SAC can only store one Trace per file.
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object can only contain "
@@ -335,7 +335,7 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
     >>> st = read("/path/to/test.sac")
     """
     # Only byte buffers for binary SAC.
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         return _internal_read_sac(buf=filename, headonly=headonly,
                                   debug_headers=debug_headers, fsize=fsize,
                                   **kwargs)
@@ -424,7 +424,7 @@ def _write_sac(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     """
     # Bytes buffer are ok, but only if the Stream object contains only one
     # Trace. SAC can only store one Trace per file.
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object can only contain "

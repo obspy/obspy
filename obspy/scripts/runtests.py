@@ -96,12 +96,12 @@ import types
 import unittest
 import warnings
 from argparse import ArgumentParser
+from urllib.parse import urlparse
 
 import numpy as np
 import requests
 
 import obspy
-from obspy.core.compatibility import urlparse
 from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS

@@ -9,11 +9,12 @@ import signal
 import sys
 import unittest
 import warnings
+from unittest import mock
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
-from obspy.core.compatibility import from_buffer, mock
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.testing import WarningsCapture

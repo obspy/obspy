@@ -12,7 +12,6 @@ import unittest
 import uuid
 from unittest import mock
 
-from obspy.core.compatibility import RegExTestCase
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler, _sqlalchemy_version_insufficient
 from obspy import read
@@ -38,7 +37,7 @@ def get_test_client():
 
 @unittest.skipIf(_sqlalchemy_version_insufficient,
                  'TSIndex needs sqlalchemy 1.0.0 or higher')
-class ClientTestCase(RegExTestCase):
+class ClientTestCase(unittest.TestCase):
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -599,7 +598,7 @@ def purge(dir, pattern):
 
 @unittest.skipIf(_sqlalchemy_version_insufficient,
                  'TSIndex needs sqlalchemy 1.0.0 or higher')
-class IndexerTestCase(RegExTestCase):
+class IndexerTestCase(unittest.TestCase):
 
     def test_bad_rootpath(self):
         """
@@ -896,7 +895,7 @@ class IndexerTestCase(RegExTestCase):
 
 @unittest.skipIf(_sqlalchemy_version_insufficient,
                  'TSIndex needs sqlalchemy 1.0.0 or higher')
-class TSIndexDatabaseHandlerTestCase(RegExTestCase):
+class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
 
     def test_bad_sqlitdb_filepath(self):
         """

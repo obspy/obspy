@@ -10,13 +10,12 @@ import unittest
 
 import numpy as np
 
-from obspy.core.compatibility import RegExTestCase
 from obspy.signal.rotate import (rotate_lqt_zne, rotate_ne_rt, rotate_rt_ne,
                                  rotate_zne_lqt, _dip_azimuth2zne_base_vector,
                                  rotate2zne)
 
 
-class RotateTestCase(RegExTestCase):
+class RotateTestCase(unittest.TestCase):
     """
     Test cases for Rotate.
     """

@@ -13,14 +13,14 @@ Client for accessing the Nominal Response Library (http://ds.iris.edu/NRL/).
 import codecs
 import io
 import os
-import sys
 import warnings
+from configparser import ConfigParser
+from urllib.parse import urlparse
 
 import requests
 
 import obspy
-from obspy.core.compatibility import (
-    ConfigParser, get_text_from_response, urlparse)
+from obspy.core.compatibility import get_text_from_response
 from obspy.core.inventory.util import _textwrap
 
 
