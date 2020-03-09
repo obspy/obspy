@@ -604,7 +604,6 @@ class InventoryTestCase(unittest.TestCase):
             break
         else:
             self.fail('unable to get invalid file path')
-        doesnt_exist = native_str(doesnt_exist)
 
         if PY2:
             exception_type = getattr(builtins, 'IOError')

@@ -64,7 +64,7 @@ examples to retrieve various data from the IRIS DMC.
 from .client import Client  # NOQA
 
 
-__all__ = [native_str("Client")]
+__all__ = ["Client"]
 
 
 if __name__ == '__main__':

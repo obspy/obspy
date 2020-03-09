@@ -264,7 +264,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
             def get_value_repr(key):
                 value = getattr(self, key)
                 if isinstance(value, (str, native_str)):
-                    value = native_str(value)
+                    value = value
                 repr_str = value.__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
@@ -405,7 +405,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
         base_class = AbstractEventType
 
     # Set the class type name.
-    setattr(base_class, "__name__", native_str(class_name))
+    setattr(base_class, "__name__", class_name)
     return base_class
 
 

@@ -794,7 +794,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['encoding'] = 5
             elif trace.data.dtype.type == np.int16:
                 trace_attr['encoding'] = 1
-            elif trace.data.dtype.type == np.dtype(native_str('|S1')).type:
+            elif trace.data.dtype.type == np.dtype('|S1').type:
                 trace_attr['encoding'] = 0
             # int64 data not supported; if possible downcast to int32, else
             # create error message. After bumping up to numpy 1.9.0 this check
@@ -881,7 +881,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
             size = C.sizeof(Blkt1001S)
             # Only timing quality matters here, other blockette attributes will
             # be filled by libmseed.msr_normalize_header
-            blkt_value = pack(native_str("BBBB"), trace_attr['timing_quality'],
+            blkt_value = pack("BBBB", trace_attr['timing_quality'],
                               0, 0, 0)
             blkt_ptr = C.create_string_buffer(blkt_value, len(blkt_value))
 

@@ -158,7 +158,7 @@ class Client(WaveformClient, HTTPClient):
             # constructor without catching the error.
             else:
                 value = obspy.UTCDateTime(value)
-            params[key] = native_str(value)
+            params[key] = value
 
         # These all have to be lists of floats. Otherwise it fails.
         source_mecs = ["sourcemomenttensor",

@@ -38,7 +38,7 @@ class Client(object):
         :param debug: Enables verbose output.
         """
         if url:
-            self.engine = create_engine(url, encoding=native_str('utf-8'),
+            self.engine = create_engine(url, encoding='utf-8',
                                         convert_unicode=True)
             Base.metadata.create_all(self.engine,  # @UndefinedVariable
                                      checkfirst=True)

@@ -84,8 +84,8 @@ class FlinnEngdahl(object):
             self.fenums[quad] = fenums
 
         with open(self.numbers_file, 'rt') as csvfile:
-            fe_csv = csv.reader(csvfile, delimiter=native_str(';'),
-                                quotechar=native_str('#'),
+            fe_csv = csv.reader(csvfile, delimiter=';',
+                                quotechar='#',
                                 skipinitialspace=True)
             self.by_number = \
                 {int(row[0]): row[1] for row in fe_csv if len(row) > 1}

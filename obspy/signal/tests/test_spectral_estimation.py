@@ -302,9 +302,9 @@ class PsdTestCase(unittest.TestCase):
         file_data_iris = os.path.join(self.path, 'IRISpdfExample')
         data = np.genfromtxt(
             file_data_iris, comments='#', delimiter=',',
-            dtype=[(native_str("freq"), np.float64),
-                   (native_str("power"), np.int32),
-                   (native_str("hits"), np.int32)])
+            dtype=[("freq", np.float64),
+                   ("power", np.int32),
+                   ("hits", np.int32)])
         freq = data["freq"]
         power = data["power"]
         hits = data["hits"]

@@ -462,10 +462,10 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
                 continue
             # read data
             data = fh_data.read(npts * 4)
-            dtype = native_str(byteorder + 'f4')
+            dtype = byteorder + 'f4'
             data = from_buffer(data, dtype=dtype)
             # convert to system byte order
-            data = np.require(data, native_str('=f4'))
+            data = np.require(data, '=f4')
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
@@ -573,7 +573,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
                 line = "%02d|\n" % ((i + 1 + count_offset) % 100)
                 fh.write(line.encode('ascii', 'strict'))
         # write data in given byte order
-        dtype = native_str(byteorder + 'f4')
+        dtype = byteorder + 'f4'
         data = np.require(trace.data, dtype=dtype)
         fh_data.write(data.data)
     fh.close()

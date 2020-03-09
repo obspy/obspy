@@ -996,7 +996,7 @@ class Client(object):
                     tf.write(data)
                     # force matplotlib to use internal PNG reader. image.imread
                     # will use PIL if available
-                    img = image._png.read_png(native_str(tf.name))
+                    img = image._png.read_png(tf.name)
                 # add image to axis
                 ax.imshow(img)
                 # hide axes

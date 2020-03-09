@@ -32,7 +32,7 @@ else:
 
 clibsegy.ibm2ieee.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int]
 clibsegy.ibm2ieee.restype = C.c_void_p
 

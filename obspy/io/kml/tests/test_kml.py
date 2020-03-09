@@ -22,7 +22,7 @@ class KMLTestCase(unittest.TestCase):
         # write the example inventory to KML and read it into a string
         inv = read_inventory()
         with NamedTemporaryFile(suffix=".kml") as tf:
-            inv.write(native_str(tf.name), format="KML")
+            inv.write(tf.name, format="KML")
             with open(tf.name, "rb") as fh:
                 got = fh.read()
         # read expected result into string
@@ -39,7 +39,7 @@ class KMLTestCase(unittest.TestCase):
         # write the example catalog to KML and read it into a string
         cat = read_events()
         with NamedTemporaryFile(suffix=".kml") as tf:
-            cat.write(native_str(tf.name), format="KML")
+            cat.write(tf.name, format="KML")
             with open(tf.name, "rb") as fh:
                 got = fh.read()
         # read expected result into string

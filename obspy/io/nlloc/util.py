@@ -39,10 +39,10 @@ def read_nlloc_scatter(filename, coordinate_converter=None):
     """
     # omit the first 4 values (header information) and reshape
     dtype = np.dtype([
-        (native_str("x"), native_str("<f4")),
-        (native_str("y"), native_str("<f4")),
-        (native_str("z"), native_str("<f4")),
-        (native_str("pdf"), native_str("<f4"))])
+        ("x", "<f4"),
+        ("y", "<f4"),
+        ("z", "<f4"),
+        ("pdf", "<f4")])
     data = np.fromfile(filename, dtype=dtype)[4:]
     if coordinate_converter:
         data["x"], data["y"], data["z"] = coordinate_converter(

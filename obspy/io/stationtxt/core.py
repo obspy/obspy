@@ -124,7 +124,7 @@ def read_fdsn_station_text_file(path_or_file_object):
     :param path_or_file_object: File name or file like object.
     """
     def _read(obj):
-        r = unicode_csv_reader(obj, delimiter=native_str("|"))
+        r = unicode_csv_reader(obj, delimiter="|")
         header = next(r)
         header[0] = header[0].lstrip("#")
         header = [_i.strip().lower() for _i in header]

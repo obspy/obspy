@@ -1003,11 +1003,11 @@ class PPSD(object):
         # otherwise compute it and store it for subsequent stacks on the
         # same data (has to be recomputed when additional data gets added)
         else:
-            dtype = np.dtype([(native_str('time_of_day'), np.float32),
-                              (native_str('iso_weekday'), np.int8),
-                              (native_str('iso_week'), np.int8),
-                              (native_str('year'), np.int16),
-                              (native_str('month'), np.int8)])
+            dtype = np.dtype([('time_of_day', np.float32),
+                              ('iso_weekday', np.int8),
+                              ('iso_week', np.int8),
+                              ('year', np.int16),
+                              ('month', np.int8)])
             times_all_details = np.empty(shape=len(self._times_processed),
                                          dtype=dtype)
             utc_times_all = [UTCDateTime(ns=t) for t in self._times_processed]

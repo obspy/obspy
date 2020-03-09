@@ -140,8 +140,8 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
     data = fh.read(80 * 12)
     (byteorder, arch, version) = _get_version(data)
     dlen = arch // 8
-    dtype = np.dtype(native_str(byteorder + 'i' + str(dlen)))
-    stype = native_str('=i' + str(dlen))
+    dtype = np.dtype(byteorder + 'i' + str(dlen))
+    stype = '=i' + str(dlen)
 
     def _readline(fh, version=version, dtype=dtype):
         if version >= 7:

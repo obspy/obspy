@@ -810,7 +810,7 @@ def templates_max_similarity(st, time, streams_templates):
                 data_long = tr2.data
             data_short = (data_short - data_short.mean()) / data_short.std()
             data_long = (data_long - data_long.mean()) / data_long.std()
-            tmp = np.correlate(data_long, data_short, native_str("valid"))
+            tmp = np.correlate(data_long, data_short, "valid")
             try:
                 cc += tmp
             except TypeError:

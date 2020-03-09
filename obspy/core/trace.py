@@ -1725,7 +1725,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     raise ValueError(msg)
                 large_w = window
             else:
-                large_w = np.fft.ifftshift(get_window(native_str(window),
+                large_w = np.fft.ifftshift(get_window(window,
                                                       self.stats.npts))
             x_r *= large_w[:self.stats.npts // 2 + 1]
             x_i *= large_w[:self.stats.npts // 2 + 1]

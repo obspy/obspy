@@ -56,39 +56,39 @@ def _internal_is_sac(buf):
     try:
         # read delta (first header float)
         delta_bin = buf.read(4)
-        delta = struct.unpack(native_str('<f'), delta_bin)[0]
+        delta = struct.unpack('<f', delta_bin)[0]
         # read nvhdr (70 header floats, 6 position in header integers)
         buf.seek(starting_pos + 4 * 70 + 4 * 6, 0)
         nvhdr_bin = buf.read(4)
-        nvhdr = struct.unpack(native_str('<i'), nvhdr_bin)[0]
+        nvhdr = struct.unpack('<i', nvhdr_bin)[0]
         # read leven (70 header floats, 35 header integers, 0 position in
         # header bool)
         buf.seek(starting_pos + 4 * 70 + 4 * 35, 0)
         leven_bin = buf.read(4)
-        leven = struct.unpack(native_str('<i'), leven_bin)[0]
+        leven = struct.unpack('<i', leven_bin)[0]
         # read lpspol (70 header floats, 35 header integers, 1 position in
         # header bool)
         buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 1, 0)
         lpspol_bin = buf.read(4)
-        lpspol = struct.unpack(native_str('<i'), lpspol_bin)[0]
+        lpspol = struct.unpack('<i', lpspol_bin)[0]
         # read lovrok (70 header floats, 35 header integers, 2 position in
         # header bool)
         buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 2, 0)
         lovrok_bin = buf.read(4)
-        lovrok = struct.unpack(native_str('<i'), lovrok_bin)[0]
+        lovrok = struct.unpack('<i', lovrok_bin)[0]
         # read lcalda (70 header floats, 35 header integers, 3 position in
         # header bool)
         buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 3, 0)
         lcalda_bin = buf.read(4)
-        lcalda = struct.unpack(native_str('<i'), lcalda_bin)[0]
+        lcalda = struct.unpack('<i', lcalda_bin)[0]
         # check if file is big-endian
         if nvhdr < 0 or nvhdr > 20:
-            nvhdr = struct.unpack(native_str('>i'), nvhdr_bin)[0]
-            delta = struct.unpack(native_str('>f'), delta_bin)[0]
-            leven = struct.unpack(native_str('>i'), leven_bin)[0]
-            lpspol = struct.unpack(native_str('>i'), lpspol_bin)[0]
-            lovrok = struct.unpack(native_str('>i'), lovrok_bin)[0]
-            lcalda = struct.unpack(native_str('>i'), lcalda_bin)[0]
+            nvhdr = struct.unpack('>i', nvhdr_bin)[0]
+            delta = struct.unpack('>f', delta_bin)[0]
+            leven = struct.unpack('>i', leven_bin)[0]
+            lpspol = struct.unpack('>i', lpspol_bin)[0]
+            lovrok = struct.unpack('>i', lovrok_bin)[0]
+            lcalda = struct.unpack('>i', lcalda_bin)[0]
         # check again nvhdr
         if nvhdr < 1 or nvhdr > 20:
             return False

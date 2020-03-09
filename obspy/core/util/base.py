@@ -149,9 +149,6 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
-    # For compatibility with NumPy 1.4
-    if isinstance(dtype, str):
-        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
         # fill with nan if float number and otherwise with a very small number
@@ -200,7 +197,7 @@ def get_example_file(filename):
     for module in ALL_MODULES:
         try:
             mod = __import__("obspy.%s" % module,
-                             fromlist=[native_str("obspy")])
+                             fromlist=["obspy"])
         except ImportError:
             continue
         file_ = os.path.join(mod.__path__[0], "tests", "data", filename)

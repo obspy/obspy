@@ -520,9 +520,8 @@ from .domain import (Domain, RectangularDomain,  # NOQA
                      CircularDomain, GlobalDomain)  # NOQA
 
 
-__all__ = [native_str(i) for i in (
-    'MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
-    'CircularDomain', 'GlobalDomain')]
+__all__ = ['MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
+           'CircularDomain', 'GlobalDomain']
 
 if SCIPY_VERSION < [0, 12]:
     msg = ('At least some parts of FDSN Mass downloader might not '

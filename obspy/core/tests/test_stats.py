@@ -305,7 +305,7 @@ class StatsTestCase(unittest.TestCase):
             nbytes = native_bytes('HHZ', 'utf8')
         except TypeError:  # this works on py 2.7
             nbytes = native_bytes('HHZ')
-        the_strs = [native_str('HHZ'), nbytes, u'HHZ']
+        the_strs = ['HHZ', nbytes, u'HHZ']
 
         stats = Stats()
 

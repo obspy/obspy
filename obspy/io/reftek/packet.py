@@ -38,10 +38,10 @@ PACKET_TYPES = PACKET_TYPES_IMPLEMENTED + PACKET_TYPES_NOT_IMPLEMENTED
 #  - conversion routine (if any)
 #  - dtype after conversion
 PACKET = [
-    ("packet_type", native_str("|S2"), None, native_str("S2")),
+    ("packet_type", "|S2", None, "S2"),
     ("experiment_number", np.uint8, bcd, np.uint8),
     ("year", np.uint8, bcd, np.uint8),
-    ("unit_id", (np.uint8, 2), bcd_hex, native_str("S4")),
+    ("unit_id", (np.uint8, 2), bcd_hex, "S4"),
     ("time", (np.uint8, 6), bcd_julian_day_string_to_nanoseconds_of_year,
      np.int64),
     ("byte_count", (np.uint8, 2), bcd_16bit_int, np.uint16),
@@ -51,7 +51,7 @@ PACKET = [
     ("channel_number", np.uint8, bcd, np.uint8),
     ("number_of_samples", (np.uint8, 2), bcd_16bit_int, np.uint32),
     ("flags", np.uint8, None, np.uint8),
-    ("data_format", np.uint8, bcd_8bit_hex, native_str("S2")),
+    ("data_format", np.uint8, bcd_8bit_hex, "S2"),
     # Temporarily store the payload here.
     ("payload", (np.uint8, 1000), None, (np.uint8, 1000))]
 
@@ -211,11 +211,11 @@ class DTPacket(Packet):
 
 
 PACKET_INITIAL_UNPACK_DTYPE = np.dtype([
-    (native_str(name), dtype_initial)
+    (name, dtype_initial)
     for name, dtype_initial, converter, dtype_final in PACKET])
 
 PACKET_FINAL_DTYPE = np.dtype([
-    (native_str(name), dtype_final)
+    (name, dtype_final)
     for name, dtype_initial, converter, dtype_final in PACKET])
 
 

@@ -137,7 +137,7 @@ class RecordAnalyser(object):
         # Get the year
         year_raw = self.file.read(2)
         try:
-            year = unpack(native_str('>H'), year_raw)[0]
+            year = unpack('>H', year_raw)[0]
         except Exception:
             if len(year_raw) == 0:
                 msg = "Unexpected end of file."
@@ -161,7 +161,7 @@ class RecordAnalyser(object):
         # Read and unpack.
         self.file.seek(self.record_offset, 0)
         fixed_header = self.file.read(48)
-        encoding = native_str('%s20c2H3Bx2H2h4Bl2h' % self.endian)
+        encoding = '%s20c2H3Bx2H2h4Bl2h' % self.endian
         try:
             header_item = unpack(encoding, fixed_header)
         except Exception:
@@ -222,7 +222,7 @@ class RecordAnalyser(object):
             self.file.seek(self.record_offset + cur_blkt_offset, 0)
             # Unpack the first two values. This is always the blockette type
             # and the beginning of the next blockette.
-            encoding = native_str('%s2H' % self.endian)
+            encoding = '%s2H' % self.endian
             _tmp = self.file.read(4)
             try:
                 blkt_type, next_blockette = unpack(encoding, _tmp)
@@ -250,7 +250,7 @@ class RecordAnalyser(object):
         if blkt_type == 100:
             _tmp = self.file.read(8)
             try:
-                unpack_values = unpack(native_str('%sfxxxx' % self.endian),
+                unpack_values = unpack('%sfxxxx' % self.endian,
                                        _tmp)
             except Exception:
                 if len(_tmp) == 0:
@@ -262,8 +262,8 @@ class RecordAnalyser(object):
             # Step calibration blockette
             _tmp = self.file.read(56)
             try:
-                unpack_values = unpack(native_str('%sHHBBBBHBBLLf3sxL12s12s'
-                                                  % self.endian), _tmp)
+                unpack_values = unpack(
+                    '%sHHBBBBHBBLLf3sxL12s12s' % self.endian, _tmp)
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
@@ -300,8 +300,8 @@ class RecordAnalyser(object):
             # Sine calibration blockette
             _tmp = self.file.read(56)
             try:
-                unpack_values = unpack(native_str('%sHHBBBBHBBLff3sxL12s12s'
-                                                  % self.endian), _tmp)
+                unpack_values = unpack(
+                    '%sHHBBBBHBBLff3sxL12s12s' % self.endian, _tmp)
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
@@ -337,8 +337,8 @@ class RecordAnalyser(object):
             # Pseudo-random calibration blockette
             _tmp = self.file.read(60)
             try:
-                unpack_values = unpack(native_str('%sHHBBBBHBBLf3sxL12s12s8s'
-                                                  % self.endian), _tmp)
+                unpack_values = unpack(
+                    '%sHHBBBBHBBLf3sxL12s12s8s' % self.endian, _tmp)
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
@@ -372,7 +372,7 @@ class RecordAnalyser(object):
         elif blkt_type == 1000:
             _tmp = self.file.read(4)
             try:
-                unpack_values = unpack(native_str('%sBBBx' % self.endian),
+                unpack_values = unpack('%sBBBx' % self.endian,
                                        _tmp)
             except Exception:
                 if len(_tmp) == 0:
@@ -385,7 +385,7 @@ class RecordAnalyser(object):
         elif blkt_type == 1001:
             _tmp = self.file.read(4)
             try:
-                unpack_values = unpack(native_str('%sbbxb' % self.endian),
+                unpack_values = unpack('%sbbxb' % self.endian,
                                        _tmp)
             except Exception:
                 if len(_tmp) == 0:

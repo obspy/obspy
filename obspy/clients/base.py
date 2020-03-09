@@ -194,9 +194,9 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         :rtype: :class:`requests.Response`
         """
         if params:
-            params = {k: native_str(v) for k, v in params.items()}
+            params = {k: v for k, v in params.items()}
 
-        _request_args = {"url": native_str(url),
+        _request_args = {"url": url,
                          "headers": {"User-Agent": self._user_agent},
                          "params": params}
 

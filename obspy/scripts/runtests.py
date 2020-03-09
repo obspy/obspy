@@ -273,7 +273,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
         temp = module_.split('.')
         try:
             mod = __import__(module_,
-                             fromlist=[native_str(temp[1:])])
+                             fromlist=[temp[1:]])
         except ImportError:
             version_ = '---'
         else:

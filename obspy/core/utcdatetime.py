@@ -1451,7 +1451,7 @@ class UTCDateTime(object):
         >>> dt.isoformat()
         '2008-10-01T00:00:00'
         """
-        return self.datetime.isoformat(sep=native_str(sep))
+        return self.datetime.isoformat(sep=sep)
 
     def format_fissures(self):
         """

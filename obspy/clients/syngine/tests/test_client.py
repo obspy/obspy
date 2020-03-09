@@ -154,12 +154,12 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
-            "components": native_str("Z"),
-            "endtime": native_str(1800.0),
-            "eventid": native_str("GCMT:M110302J"),
-            "format": native_str("miniseed"),
-            "model": native_str("ak135f_5s"),
-            "network": native_str("_GSN")})
+            "components": "Z",
+            "endtime": 1800.0,
+            "eventid": "GCMT:M110302J",
+            "format": "miniseed",
+            "model": "ak135f_5s",
+            "network": "_GSN"})
         self.assertEqual(p.call_args[1]["headers"],
                          {"User-Agent": DEFAULT_TESTING_USER_AGENT})
 
@@ -180,13 +180,13 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
-            "components": native_str("Z"),
-            "starttime": native_str("P-10"),
-            "endtime": native_str("ScS+60"),
-            "eventid": native_str("GCMT:M110302J"),
-            "format": native_str("miniseed"),
-            "model": native_str("ak135f_5s"),
-            "network": native_str("_GSN")})
+            "components": "Z",
+            "starttime": "P-10",
+            "endtime": "ScS+60",
+            "eventid": "GCMT:M110302J",
+            "format": "miniseed",
+            "model": "ak135f_5s",
+            "network": "_GSN"})
         self.assertEqual(p.call_args[1]["headers"],
                          {"User-Agent": DEFAULT_TESTING_USER_AGENT})
 
@@ -216,8 +216,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
-            "model": native_str("ak135f_5s"),
-            "format": native_str("miniseed"),
+            "model": "ak135f_5s",
+            "format": "miniseed",
             "sourcemomenttensor": "1,2,3,4,5,6"})
 
         with mock.patch("requests.get") as p:
@@ -228,8 +228,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
-            "model": native_str("ak135f_5s"),
-            "format": native_str("miniseed"),
+            "model": "ak135f_5s",
+            "format": "miniseed",
             "sourcedoublecouple": "1,2,3,4"})
 
         with mock.patch("requests.get") as p:
@@ -240,8 +240,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
-            "model": native_str("ak135f_5s"),
-            "format": native_str("miniseed"),
+            "model": "ak135f_5s",
+            "format": "miniseed",
             "sourceforce": "3.32,4.23,5.11"})
 
     def test_error_handling(self):

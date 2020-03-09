@@ -45,7 +45,6 @@ from obspy.core.util.obspy_types import (  # NOQA
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
            "read_events", "Catalog", "read_inventory", "ObsPyException",
            "ObsPyReadingError"]
-__all__ = [native_str(i) for i in __all__]
 
 
 # insert supported read/write format plugin lists dynamically in docstrings

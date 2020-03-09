@@ -44,7 +44,7 @@ def get_numpy_type(tpstr):
     return appropriate numpy.dtype object
     """
     dtypestr = DATATYPE_KEY[tpstr]
-    tp = np.dtype(native_str(dtypestr))
+    tp = np.dtype(dtypestr)
     return tp
 
 
