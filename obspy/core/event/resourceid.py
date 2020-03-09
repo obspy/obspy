@@ -612,8 +612,7 @@ class ResourceIdentifier(object):
     @id.setter
     def id(self, value):
         self.fixed = True
-        # XXX: no idea why I had to add bytes for PY2 here
-        if not isinstance(value, (str, bytes)):
+        if not isinstance(value, str):
             msg = "attribute id needs to be a string."
             raise TypeError(msg)
         if '_resource_key__' in self.__dict__:

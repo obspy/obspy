@@ -605,10 +605,6 @@ class InventoryTestCase(unittest.TestCase):
         else:
             self.fail('unable to get invalid file path')
 
-        if PY2:
-            exception_type = getattr(builtins, 'IOError')
-        else:
-            exception_type = getattr(builtins, 'FileNotFoundError')
         exception_msg = "[Errno 2] No such file or directory: '{}'"
 
         formats = _get_entry_points(
@@ -617,7 +613,7 @@ class InventoryTestCase(unittest.TestCase):
         # plugins and also for filetype autodiscovery
         formats = [None] + list(formats)
         for format in formats[:1]:
-            with self.assertRaises(exception_type) as e:
+            with self.assertRaises(IOError) as e:
                 read_inventory(doesnt_exist, format=format)
             self.assertEqual(
                 str(e.exception), exception_msg.format(doesnt_exist))

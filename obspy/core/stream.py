@@ -3570,12 +3570,11 @@ def _read_pickle(filename, **kwargs):  # @UnusedVariable
     :return: A ObsPy Stream object.
     """
     kwargs = {}
-    if PY3:
-        # see seishub/client.py
-        # https://api.mongodb.org/python/current/\
-        # python3.html#why-can-t-i-share-pickled-objectids-\
-        # between-some-versions-of-python-2-and-3
-        kwargs['encoding'] = "latin-1"
+    # see seishub/client.py
+    # https://api.mongodb.org/python/current/\
+    # python3.html#why-can-t-i-share-pickled-objectids-\
+    # between-some-versions-of-python-2-and-3
+    kwargs['encoding'] = "latin-1"
 
     if isinstance(filename, str):
         with open(filename, 'rb') as fp:

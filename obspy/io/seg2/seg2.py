@@ -291,13 +291,8 @@ class SEG2(object):
 
             # A loop over a bytestring in Python 3 returns integers. This can
             # be solved with a number of imports from the python-future module
-            # and all kinds of subtle changes throughout this file. Separating
-            # the handling for Python 2 and 3 seems the cleaner and simpler
-            # approach.
-            if PY2:
-                return "".join(filter(is_good_char, value)).strip()
-            else:
-                return "".join(map(chr, filter(is_good_char, value))).strip()
+            # and all kinds of subtle changes throughout this file.
+            return "".join(map(chr, filter(is_good_char, value))).strip()
 
         # Separate the strings. Every string starts with a 2-byte offset to the
         # next string, and ends with a terminator. An offset of 0 indicates the

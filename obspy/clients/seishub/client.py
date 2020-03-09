@@ -16,12 +16,8 @@ import warnings
 from datetime import datetime
 from math import log
 
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
+from urllib.parse import urlencode
+import urllib.request as urllib_request
 
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
@@ -45,13 +41,10 @@ KEYWORDS = {'network': 'network_id', 'station': 'station_id',
 
 
 def _unpickle(data):
-    if PY2:
-        obj = pickle.loads(data)
-    else:
-        # https://api.mongodb.org/python/current/\
-        # python3.html#why-can-t-i-share-pickled-objectids-\
-        # between-some-versions-of-python-2-and-3
-        obj = pickle.loads(data, encoding="latin-1")
+    # https://api.mongodb.org/python/current/\
+    # python3.html#why-can-t-i-share-pickled-objectids-\
+    # between-some-versions-of-python-2-and-3
+    obj = pickle.loads(data, encoding="latin-1")
     return obj
 
 

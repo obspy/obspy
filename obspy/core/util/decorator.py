@@ -20,7 +20,6 @@ import zipfile
 
 import numpy as np
 from decorator import decorator
-from future.utils import PY2
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
@@ -44,10 +43,7 @@ def deprecated(warning_msg=None):
             msg = func.__doc__
         elif warning_msg:
             msg = warning_msg
-            if PY2 and inspect.ismethod(func):
-                func.im_func.__doc__ = warning_msg
-            else:
-                func.__doc__ = warning_msg
+            func.__doc__ = warning_msg
         else:
             msg = "Call to deprecated function %s." % func.__name__
         warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)

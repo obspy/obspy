@@ -53,11 +53,7 @@ sent to the server when connecting in order to determine the SeedLink protocol
 version.
 """
 import sys
-
-if sys.version_info.major == 2:
-    from urlparse import urlparse
-else:
-    from urllib.parse import urlparse
+from urllib.parse import urlparse
 
 import lxml
 

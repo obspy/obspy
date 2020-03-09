@@ -313,6 +313,8 @@ def _event_type_class_factory(class_name, class_attributes=[],
             return self.__str__(force_one_line=True)
 
         # called for bool on PY2
+        # may not be needed after PY2 sunset but keep it for backwards
+        # compatibility
         def __nonzero__(self):
             return self.__bool__()
 

@@ -31,14 +31,9 @@ from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      FDSNException, FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
 
-if PY2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-    import Queue as queue  # NOQA
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
-    import queue
+from urllib.parse import urlencode
+import urllib.request as urllib_request
+import queue
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
@@ -1623,8 +1618,6 @@ def convert_to_string(value):
         return str(value)
     elif isinstance(value, UTCDateTime):
         return str(value).replace("Z", "")
-    elif PY2 and isinstance(value, bytes):
-        return value
     else:
         raise TypeError("Unexpected type %s" % repr(value))
 

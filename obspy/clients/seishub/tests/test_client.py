@@ -5,11 +5,7 @@ The obspy.clients.seishub.client test suite.
 """
 import sys
 import unittest
-
-if sys.version_info.major == 2:
-    from urllib2 import urlopen
-else:
-    from urllib.request import urlopen
+from urllib.request import urlopen
 
 import numpy as np
 

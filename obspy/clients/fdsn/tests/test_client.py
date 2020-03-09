@@ -17,10 +17,7 @@ import unittest
 import warnings
 from difflib import Differ
 
-if PY2:
-    import urllib2 as urllib_request
-else:
-    import urllib.request as urllib_request
+import urllib.request as urllib_request
 
 import lxml
 import numpy as np

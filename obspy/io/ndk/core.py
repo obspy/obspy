@@ -17,11 +17,7 @@ import sys
 import traceback
 import uuid
 import warnings
-
-if sys.version_info.major == 2:
-    from itertools import izip_longest as zip_longest
-else:
-    from itertools import zip_longest
+from itertools import zip_longest
 
 from obspy import UTCDateTime
 from obspy.core.event import (Axis, Catalog, Comment, CreationInfo, DataUsed,

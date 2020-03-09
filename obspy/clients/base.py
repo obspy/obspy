@@ -58,11 +58,8 @@ import obspy
 
 
 # Default user agents all HTTP clients should utilize.
-if PY2:
-    platform_ = platform.platform().decode("ascii", "ignore")
-else:
-    encoding = sys.getdefaultencoding() or "UTF-8"
-    platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
+encoding = sys.getdefaultencoding() or "UTF-8"
+platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
 # The default User Agent that will be sent with every request.
 DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (
     obspy.__version__, platform_, platform.python_version())

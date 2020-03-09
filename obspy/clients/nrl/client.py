@@ -274,10 +274,7 @@ class LocalNRL(NRL):
         """
         cp = ConfigParser()
         with codecs.open(path, mode='r', encoding='UTF-8') as f:
-            if sys.version_info.major == 2:  # pragma: no cover
-                cp.readfp(f)
-            else:  # pragma: no cover
-                cp.read_file(f)
+            cp.read_file(f)
         return cp
 
     def _read_resp(self, path):
@@ -315,10 +312,7 @@ class RemoteNRL(NRL):
         '''
         cp = ConfigParser()
         with io.StringIO(self._download(path)) as buf:
-            if sys.version_info.major == 2:  # pragma: no cover
-                cp.readfp(buf)
-            else:  # pragma: no cover
-                cp.read_file(buf)
+            cp.read_file(buf)
         return cp
 
     def _read_resp(self, path):

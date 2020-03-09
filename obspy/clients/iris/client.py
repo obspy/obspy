@@ -11,14 +11,9 @@ IRIS Web service client for ObsPy.
 import io
 import platform
 import sys
+import urllib.request as urllib_request
 from lxml import objectify
-
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
+from urllib.parse import urlencode
 
 from obspy import Stream, UTCDateTime, __version__, read
 from obspy.core.util import NamedTemporaryFile, loadtxt

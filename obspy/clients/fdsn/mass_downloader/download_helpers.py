@@ -16,19 +16,14 @@ import collections
 import copy
 import fnmatch
 import itertools
-import sys
-from multiprocessing.pool import ThreadPool
 import os
+import sys
 import time
 import timeit
-
-if sys.version_info.major == 2:
-    from itertools import ifilterfalse as filterfalse
-else:
-    from itertools import filterfalse
+from itertools import filterfalse
+from multiprocessing.pool import ThreadPool
 
 import numpy as np
-
 from lxml.etree import XMLSyntaxError
 
 import obspy

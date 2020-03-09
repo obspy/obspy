@@ -399,10 +399,6 @@ PROJ4_VERSION = get_proj_version()
 CARTOPY_VERSION = get_dependency_version('cartopy')
 
 
-if PY2:
-    FileNotFoundError = getattr(builtins, 'IOError')
-
-
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
@@ -550,12 +546,8 @@ def _add_format_plugin_table(func, group, method, numspaces=4):
     A function to populate the docstring of func with its plugin table.
     """
     if '%s' in func.__doc__:
-        if PY2 and method == "write":
-            func.im_func.func_doc = func.__doc__ % make_format_plugin_table(
-                group, method, numspaces=numspaces)
-        else:
-            func.__doc__ = func.__doc__ % make_format_plugin_table(
-                group, method, numspaces=numspaces)
+        func.__doc__ = func.__doc__ % make_format_plugin_table(
+            group, method, numspaces=numspaces)
 
 
 class ComparingObject(object):

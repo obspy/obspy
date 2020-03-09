@@ -1281,11 +1281,6 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
-        # See https://bugs.python.org/issue32195
-        # This is an attempt to get consistent behavior across platforms.
-        if sys.version_info.major > 2 and sys.platform.startswith("linux"):
-            format = format.replace("%Y", "%04Y")
-
         try:
             ret = self.datetime.strftime(format)
         # this is trying to work around strftime refusing to work with years

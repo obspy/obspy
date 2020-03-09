@@ -53,13 +53,9 @@ class UtilMiscTestCase(unittest.TestCase):
 
     def test_catch_output_bytes(self):
         with CatchOutput() as out:
-            if PY2:
-                sys.stdout.write(b"test_catch_output_bytes #1")
-                sys.stderr.write(b"test_catch_output_bytes #2")
-            else:
-                # PY3 does not allow to write directly bytes into text streams
-                sys.stdout.buffer.write(b"test_catch_output_bytes #1")
-                sys.stderr.buffer.write(b"test_catch_output_bytes #2")
+            # PY3 does not allow to write directly bytes into text streams
+            sys.stdout.buffer.write(b"test_catch_output_bytes #1")
+            sys.stderr.buffer.write(b"test_catch_output_bytes #2")
         self.assertEqual(out.stdout, 'test_catch_output_bytes #1')
         self.assertEqual(out.stderr, 'test_catch_output_bytes #2')
 
