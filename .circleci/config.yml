@@ -1,10 +1,10 @@
 # CircleCI is used exclusively to test code formatting.
 # Thus ObsPy does not even have to be installed.
-version: 3
+version: 2
 jobs:
   build:
     docker:
-      - image: continuumio/miniconda:latest
+      - image: continuumio/miniconda3:latest
 
     working_directory: ~/repo
 
