@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import inspect
 import io
 import os

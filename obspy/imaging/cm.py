@@ -201,7 +201,9 @@ Colormap defined and used in PQLX (see [McNamara2004]_).
 """
 import glob
 import inspect
+import io
 import os
+from urllib.request import urlopen
 
 import numpy as np
 from matplotlib.cm import get_cmap
@@ -427,10 +429,6 @@ def _colormap_plot_similarity(cmaps):
     :rtype: None
     """
     import matplotlib.pyplot as plt
-    from future import standard_library
-    standard_library.install_aliases()
-    import io
-    from urllib.request import urlopen
 
     url = "https://examples.obspy.org/dissimilarities.npz"
     with io.BytesIO(urlopen(url).read()) as fh, np.load(fh) as data:

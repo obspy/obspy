@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import copy
 import datetime
 import itertools

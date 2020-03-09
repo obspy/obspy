@@ -109,7 +109,7 @@ from obspy.core.util.version import get_git_version
 
 
 HARD_DEPENDENCIES = [
-    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
     "sqlalchemy", "decorator", "requests"]
 OPTIONAL_DEPENDENCIES = [
     "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "shapefile",
@@ -188,9 +188,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     default.
     """
     # import additional libraries here to speed up normal tests
-    from future import standard_library
-    with standard_library.hooks():
-        import urllib.parse
+    import urllib.parse
     import codecs
     from xml.etree import ElementTree
     from xml.sax.saxutils import escape

@@ -46,8 +46,6 @@ class _MSRIterator(object):
 
     .. rubric:: Example
 
-    from future.builtins import *
-
     from msriterator import _MSRIterator
 
     mseedfile = "test.mseed"
