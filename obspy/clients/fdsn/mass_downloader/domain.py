@@ -16,7 +16,7 @@ for an example.
 from abc import ABCMeta, abstractmethod
 
 
-class Domain(with_metaclass(ABCMeta)):
+class Domain(metaclass=ABCMeta):
     """
     Abstract base class defining a domain - subclass it to define a new domain.
 

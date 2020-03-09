@@ -94,7 +94,7 @@ class BaseClient(object):
         self._debug = debug
 
 
-class RemoteBaseClient(with_metaclass(ABCMeta, BaseClient)):
+class RemoteBaseClient(BaseClient, metaclass=ABCMeta):
     def __init__(self, debug=False, timeout=120):
         """
         Base class for all remote mixin classes.
@@ -115,7 +115,7 @@ class RemoteBaseClient(with_metaclass(ABCMeta, BaseClient)):
         pass
 
 
-class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
+class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
     """
     Mix-in class to add HTTP capabilities.
 
@@ -254,7 +254,7 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
                     fh.write(chunk)
 
 
-class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
+class WaveformClient(BaseClient, metaclass=ABCMeta):
     """
     Base class for Clients supporting Stream objects.
     """
@@ -288,7 +288,7 @@ class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
         pass
 
 
-class EventClient(with_metaclass(ABCMeta, BaseClient)):
+class EventClient(BaseClient, metaclass=ABCMeta):
     """
     Base class for Clients supporting Catalog objects.
     """
@@ -347,7 +347,7 @@ class EventClient(with_metaclass(ABCMeta, BaseClient)):
         pass
 
 
-class StationClient(with_metaclass(ABCMeta, BaseClient)):
+class StationClient(BaseClient, metaclass=ABCMeta):
     """
     Base class for Clients supporting Inventory objects.
     """

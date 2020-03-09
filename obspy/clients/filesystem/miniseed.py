@@ -36,7 +36,7 @@ class RequestLimitExceededError(ObsPyClientFileSystemMiniSEEDException):
     pass
 
 
-class _ExtractedDataSegment(with_metaclass(abc.ABCMeta)):
+class _ExtractedDataSegment(metaclass=abc.ABCMeta):
     """
     There are a few different forms that a chunk of extracted data can take,
     so we return a wrapped object that exposes a simple, consistent API
