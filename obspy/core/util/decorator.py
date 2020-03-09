@@ -20,7 +20,7 @@ import zipfile
 
 import numpy as np
 from decorator import decorator
-from future.utils import PY2, native_str
+from future.utils import PY2
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile

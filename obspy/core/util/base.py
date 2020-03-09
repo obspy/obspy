@@ -25,7 +25,6 @@ from collections import OrderedDict
 import numpy as np
 import pkg_resources
 import requests
-from future.utils import native_str
 from pkg_resources import get_entry_info, iter_entry_points
 
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
