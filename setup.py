@@ -565,7 +565,7 @@ def export_symbols(*path):
 
 # adds --with-system-libs command-line option if possible
 def add_features():
-    if 'setuptools' not in sys.modules:
+    if 'setuptools' not in sys.modules or not hasattr(setuptools, 'Feature'):
         return {}
 
     class ExternalLibFeature(setuptools.Feature):
