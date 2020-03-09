@@ -1,6 +1,6 @@
 # CircleCI is used exclusively to test code formatting.
 # Thus ObsPy does not even have to be installed.
-version: 2
+version: 3
 jobs:
   build:
     docker:
