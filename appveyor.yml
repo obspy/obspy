@@ -22,10 +22,6 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Miniconda-x64"
-      PYTHON_VERSION: "2.7"
-      PYTHON_ARCH: "64"
-
     - PYTHON: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.4"
       PYTHON_ARCH: "64"
@@ -111,7 +107,6 @@ install:
   - "SET PROJ_LIB=%CONDA_PREFIX%\\Library\\share"
   # additional dependencies
   - "pip install pyimgur"
-  - "pip install -U future"
   - "pip install geographiclib"
   # list package versions
   - "conda list"

@@ -12,10 +12,7 @@ matrix:
     # do one build run with our minimum dependencies
     # (or, well, at least the lowest version number that is available through
     #  anaconda..)
-    - os: linux
-      env: PYTHON_VERSION=2.7 MINIMUM_DEPENDENCIES="True"
-    - os: linux
-      env: PYTHON_VERSION=2.7
+    # XXX maybe should add minimum dependency build again, if feasible
     - os: linux
       env: PYTHON_VERSION=3.4
     - os: linux
@@ -34,8 +31,6 @@ matrix:
     #         # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
     #         - libstdc++6:i386
     #         - gcc-multilib
-    - os: osx
-      env: PYTHON_VERSION=2.7
     - os: osx
       env: PYTHON_VERSION=3.6
     - os: osx
@@ -73,11 +68,7 @@ install:
   # -     export ARCH="_64"
   # -   fi
   - export ARCH="_64"
-  - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
-    fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
@@ -88,21 +79,21 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
   - |
-      if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
-        NUMPY="numpy=1.8.2"
-        SCIPY="scipy=0.12.0"
-        MATPLOTLIB="matplotlib=1.3.1"
-        BASEMAP="basemap=1.0.7"
-        PYPROJ="pyproj"
-        GFORTRAN="libgfortran=1"
-        PIP="pip"
-        PROJ4="proj4"
-        # ancient matplotlib needs to be turned to AGG before anything else,
-        # otherwise it tries to import incompatible version of Qt as a backend
-        # and hick-ups..
-        mkdir -p $HOME/.matplotlib
-        echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
-      elif [[ "${PYTHON_VERSION}" == '3.4' ]]; then
+      # if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
+      #   NUMPY="numpy=1.8.2"
+      #   SCIPY="scipy=0.12.0"
+      #   MATPLOTLIB="matplotlib=1.3.1"
+      #   BASEMAP="basemap=1.0.7"
+      #   PYPROJ="pyproj"
+      #   GFORTRAN="libgfortran=1"
+      #   PIP="pip"
+      #   PROJ4="proj4"
+      #   # ancient matplotlib needs to be turned to AGG before anything else,
+      #   # otherwise it tries to import incompatible version of Qt as a backend
+      #   # and hick-ups..
+      #   mkdir -p $HOME/.matplotlib
+      #   echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
+      if [[ "${PYTHON_VERSION}" == '3.4' ]]; then
         # 3.4 apparently no longer get's updated packages.
         # Let conda resolve to the latest versions.
         # pip dropped py3.4 support with 12.1
@@ -171,7 +162,6 @@ install:
         certifi>=2017.4.17
         decorator
         docopt
-        future
         jsonschema
         lxml
         mock

@@ -107,7 +107,6 @@ KEYWORDS = [
 # when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
 # and get rid of helper function _np_copy_astype() in obspy/io/mseed/core.py
 INSTALL_REQUIRES = [
-    'future>=0.12.4',
     'numpy>=1.6.1',
     'scipy>=0.9.0',
     'matplotlib>=1.1.0',
@@ -122,9 +121,6 @@ EXTRAS_REQUIRE = {
     'arclink': ['cryptography'],
     'io.shapefile': ['pyshp'],
     }
-# PY2
-if sys.version_info[0] == 2:
-    EXTRAS_REQUIRE['tests'].append('mock')
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -540,16 +536,6 @@ def find_packages():
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    import distutils
-    from distutils.msvc9compiler import MSVCCompiler
-
-    # for Python 2.x only -> support library paths containing spaces
-    if distutils.__version__.startswith('2.'):
-        def _library_dir_option(self, dir):
-            return '/LIBPATH:"%s"' % (dir)
-
-        MSVCCompiler.library_dir_option = _library_dir_option
-
     # remove 'init' entry in exported symbols
     def _get_export_symbols(self, ext):
         return ext.export_symbols
@@ -800,8 +786,6 @@ def setupPackage():
                 'Lesser General Public License (LGPL)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
