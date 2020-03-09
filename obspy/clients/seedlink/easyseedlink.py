@@ -52,11 +52,6 @@ connection object and cannot be easily influenced. Also, a ``HELLO`` is always
 sent to the server when connecting in order to determine the SeedLink protocol
 version.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import sys
 
 if sys.version_info.major == 2:

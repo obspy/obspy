@@ -78,8 +78,4 @@ Channel Response
         Stage 9: CoefficientsTypeResponseStage from COUNTS to COUNTS, gain: 1
         Stage 10: CoefficientsTypeResponseStage from COUNTS to COUNTS, gain: 1
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .client import NRL

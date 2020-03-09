@@ -144,11 +144,6 @@ directory. The name of the index database can be changed by supplying the
 
 """
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copyreg
 import datetime
 import logging

@@ -3,11 +3,6 @@
 """
 Internal TauModel class.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from collections import OrderedDict
 import os
 from copy import deepcopy

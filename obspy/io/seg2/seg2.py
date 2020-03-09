@@ -10,11 +10,6 @@ A file format description is given by [Pullan1990]_.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
 from copy import deepcopy
 from struct import unpack, unpack_from
 import warnings

@@ -26,11 +26,6 @@ mechanisms including format autodetection.
 2025-05-14T15:43:05.280000Z | +40.223,  +10.450 | 1.8 None
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

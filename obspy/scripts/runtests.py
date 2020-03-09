@@ -82,11 +82,6 @@ verbose output and report everything, you would run::
 
         $ obspy-runtests -r -v -x clients.seishub -x io.sh --all
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import copy
 import doctest
 import glob

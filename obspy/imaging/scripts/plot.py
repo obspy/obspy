@@ -3,10 +3,6 @@
 """
 Simple script to plot waveforms in one or more files.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from argparse import ArgumentParser
 
 from obspy import Stream, __version__, read

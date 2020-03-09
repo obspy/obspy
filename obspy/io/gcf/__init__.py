@@ -24,10 +24,6 @@ You can also specify the following keyword arguments that change the
 behavior of reading the file:
 * ``headonly=True``: Read only the header part, not the actual data
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

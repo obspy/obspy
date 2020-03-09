@@ -190,10 +190,6 @@ Common formats are png, svg, pdf or ps.
 >>> st = read()
 >>> st.plot(outfile='graph.png') #doctest: +SKIP
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 # Please do not import any modules using matplotlib - otherwise it will disturb
 # the test suite (running without X11 or any other display)
 # see tests/__init__.py for details

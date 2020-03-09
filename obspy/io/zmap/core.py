@@ -11,10 +11,6 @@ data (see [Wiemer2001]_).
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 
 from obspy.core import UTCDateTime

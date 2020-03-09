@@ -8,10 +8,6 @@ Keyhole Markup Language (KML) output support in ObsPy
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from math import log
 
 from lxml.etree import Element, SubElement, tostring

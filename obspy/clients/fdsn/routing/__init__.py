@@ -12,10 +12,6 @@ obspy.clients.fdsn.routing - Routing services for FDSN web services
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 
 # Extremely ugly way to avoid a race condition the first time strptime is
 # imported which is not thread safe...

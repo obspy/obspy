@@ -46,10 +46,6 @@ using the ``station`` parameter may speed the reading process:
 ETNA.EMFO..Z | 2013-11-14T09:06:00.000000Z - 2013-11-14T09:06:59.990000Z | 100.0 Hz, 6000 samples
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 
 if __name__ == '__main__':
     import doctest

@@ -26,10 +26,6 @@ and Mitigation" under the European Community's Seventh Framework Programme
 activities of the JRA2/WP12 "Tools for real-time seismology, acquisition and
 mining".
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .basic_client import Client  # NOQA
 from .slclient import SLClient  # NOQA
 from .easyseedlink import EasySeedLinkClient  # NOQA

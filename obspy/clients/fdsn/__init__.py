@@ -235,11 +235,6 @@ examples.
 
 .. _FDSN web service definitions: https://www.fdsn.org/webservices/
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
 from .client import Client  # NOQA
 from .routing.routing_client import RoutingClient  # NOQA
 from .header import URL_MAPPINGS  # NOQA

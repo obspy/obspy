@@ -327,11 +327,6 @@ scale      = 1.0
              sac: AttribDict(...)
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import sys
 import warnings
 from copy import deepcopy

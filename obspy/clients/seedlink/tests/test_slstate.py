@@ -2,10 +2,6 @@
 """
 The obspy.clients.seedlink.client.slstate test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import unittest
 
 from obspy.clients.seedlink.client.slstate import SLState

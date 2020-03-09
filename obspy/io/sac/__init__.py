@@ -71,10 +71,6 @@ endianness of the resulting SAC-file. It must be either ``0`` or ``'<'``
 for LSBF or little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
 Defaults to little endian.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .sacpz import attach_paz, attach_resp
 from .util import SacError, SacIOError
 from .sactrace import SACTrace

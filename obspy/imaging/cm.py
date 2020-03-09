@@ -199,10 +199,6 @@ Colormap defined and used in PQLX (see [McNamara2004]_).
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import glob
 import inspect
 import os

@@ -7,11 +7,6 @@ handled. These three packets have more or less the same meaning in the first 8
 bytes of the payload which makes the first 24 bytes the so called extended
 header.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import warnings
 
 import numpy as np

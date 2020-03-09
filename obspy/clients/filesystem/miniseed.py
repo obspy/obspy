@@ -2,11 +2,6 @@
 """
 Data extraction and transfer from miniSEED files
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import with_metaclass
-
 import abc
 import bisect
 import ctypes

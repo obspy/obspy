@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop
 from ..utils import blockette_34_lookup, format_resp

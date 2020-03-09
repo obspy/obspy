@@ -9,11 +9,6 @@ This module defines the ResourceIdentifier class and associated code.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import re
 import warnings
 from contextlib import contextmanager

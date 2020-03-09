@@ -9,10 +9,6 @@ Integration and differentiation routines.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 import scipy.integrate
 import scipy.interpolate

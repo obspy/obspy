@@ -3,10 +3,6 @@
 """
 A command-line program that converts Dataless SEED into XML-SEED files.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import sys
 from argparse import ArgumentParser

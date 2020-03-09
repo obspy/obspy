@@ -2,11 +2,6 @@
 """
 C wrappers for some crucial inner loops of TauPy written in C.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import numpy as np
 

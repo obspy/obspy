@@ -11,10 +11,6 @@ something other than spherical would change the epicentral distance, the change
 in the distance for the ray to pass through each layer has a larger effect.
 We do not make the larger correction.
 """
-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
 import warnings
 
 import numpy as np

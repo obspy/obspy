@@ -141,10 +141,6 @@ some purposes. Refer to the documentation of each for details.
 | :func:`~obspy.io.mseed.util.set_flags_in_fixed_headers`  | Updates a given miniSEED file with some fixed header flags.              |
 +----------------------------------------------------------+--------------------------------------------------------------------------+
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from obspy import ObsPyException, ObsPyReadingError
 
 

@@ -2,11 +2,6 @@
 """
 MSEED bindings to ObsPy core module.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import io
 import os

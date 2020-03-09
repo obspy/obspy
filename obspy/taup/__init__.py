@@ -426,10 +426,6 @@ Building custom models
 Custom models can be built from ``.tvel`` and ``.nd`` files using the
 :func:`~obspy.taup.taup_create.build_taup_model` function.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 # Module wide default settings.
 _DEFAULT_VALUES = {
     # Default depths for a couple of discontinuities in earth. These are

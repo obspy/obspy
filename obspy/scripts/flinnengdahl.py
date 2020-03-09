@@ -3,10 +3,6 @@
 """
 Get the Flinn-Engdahl region name from longitude and latitude.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from argparse import ArgumentParser
 
 from obspy import __version__

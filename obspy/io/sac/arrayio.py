@@ -13,11 +13,6 @@ checking, except for byteorder and header/data array length.  File- and array-
 based checking routines are provided for additional checks where desired.
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.utils import native_str
-from future.builtins import *  # NOQA
-
 import os
 import sys
 import warnings
