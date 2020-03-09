@@ -10,9 +10,9 @@
 import collections
 import unittest
 import warnings
+from unittest import mock
 
 import obspy
-from obspy.core.compatibility import mock
 from obspy.clients.fdsn.header import FDSNNoDataException
 from obspy.clients.fdsn.routing.routing_client import (
     BaseRoutingClient, RoutingClient)

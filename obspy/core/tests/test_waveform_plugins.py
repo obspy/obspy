@@ -7,11 +7,11 @@ import time
 import unittest
 import warnings
 from copy import deepcopy
+from unittest import mock
 
 import numpy as np
 
 from obspy import Trace, read
-from obspy.core.compatibility import mock
 from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,

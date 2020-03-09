@@ -4,11 +4,11 @@ The obspy.clients.syngine test suite.
 """
 import io
 import unittest
+from unittest import mock
 
 import numpy as np
 
 import obspy
-from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.syngine import Client
 from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException

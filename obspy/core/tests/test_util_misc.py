@@ -4,9 +4,9 @@ import sys
 import tempfile
 import unittest
 import warnings
+from unittest import mock
 
 from obspy import UTCDateTime, read
-from obspy.core.compatibility import mock
 from obspy.core.event import ResourceIdentifier as ResId
 from obspy.core.util.misc import CatchOutput, get_window_times, \
     _ENTRY_POINT_CACHE, _yield_obj_parent_attr

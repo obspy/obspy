@@ -10,9 +10,9 @@
 import collections
 from distutils.version import LooseVersion
 import unittest
+from unittest import mock
 
 import obspy
-from obspy.core.compatibility import mock
 from obspy.clients.fdsn.routing.federator_routing_client import \
     FederatorRoutingClient
 

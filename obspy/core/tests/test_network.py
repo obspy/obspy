@@ -13,13 +13,13 @@ import io
 import os
 import unittest
 import warnings
+from unittest import mock
 
 import numpy as np
 from matplotlib import rcParams
 
 import obspy
 from obspy import UTCDateTime, read_inventory
-from obspy.core.compatibility import mock
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.core.util.testing import ImageComparison

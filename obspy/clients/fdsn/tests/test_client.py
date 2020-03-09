@@ -16,6 +16,7 @@ import sys
 import unittest
 import warnings
 from difflib import Differ
+from unittest import mock
 
 import urllib.request as urllib_request
 
@@ -24,7 +25,7 @@ import numpy as np
 import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
-from obspy.core.compatibility import mock, RegExTestCase
+from obspy.core.compatibility import RegExTestCase
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml

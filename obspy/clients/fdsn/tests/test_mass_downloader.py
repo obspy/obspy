@@ -17,11 +17,11 @@ import shutil
 from socket import timeout as socket_timeout
 import tempfile
 import unittest
+from unittest import mock
 
 import numpy as np
 
 import obspy
-from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile, SCIPY_VERSION
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,

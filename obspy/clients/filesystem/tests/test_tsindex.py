@@ -10,8 +10,9 @@ import requests
 import tempfile
 import unittest
 import uuid
+from unittest import mock
 
-from obspy.core.compatibility import mock, RegExTestCase
+from obspy.core.compatibility import RegExTestCase
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler, _sqlalchemy_version_insufficient
 from obspy import read

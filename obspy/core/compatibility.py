@@ -17,13 +17,6 @@ import unittest
 import numpy as np
 
 # optional dependencies
-try:
-    if PY2:
-        import mock  # NOQA
-    else:
-        from unittest import mock  # NOQA
-except ImportError:
-    pass
 
 if PY2:
     from string import maketrans  # NOQA
