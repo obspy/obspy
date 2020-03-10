@@ -99,6 +99,7 @@ class WaveformPlotting(object):
         self.sect_offset_min = kwargs.get('offset_min', None)
         self.sect_offset_max = kwargs.get('offset_max', None)
         self.sect_dist_degree = kwargs.get('dist_degree', False)
+        self.return_ax = kwargs.get('return_ax', False)
         # TODO Event data from class Event()
         self.ev_coord = kwargs.get('ev_coord', None)
         self.alpha = kwargs.get('alpha', 0.5)
@@ -277,18 +278,18 @@ class WaveformPlotting(object):
         else:
             self.plot(*args, **kwargs)
         # Adjust the subplot so there is always a fixed margin on every side
-        if self.type != 'dayplot':
+        if self.type != 'dayplot' and self.return_ax is False:
             fract_y = 60.0 / self.height
             fract_y2 = 40.0 / self.height
             fract_x = 80.0 / self.width
             self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y2,
                                      left=fract_x, right=1.0 - fract_x / 2)
-        if self.type == 'section':
+        if self.type == 'section' and self.return_ax is False:
             self.fig.subplots_adjust(bottom=0.12)
         with warnings.catch_warnings(record=True):
             warnings.filterwarnings("ignore", DATELOCATOR_WARNING_MSG,
                                     UserWarning, "matplotlib.dates")
-            if self.draw:
+            if self.draw and self.return_ax is False:
                 self.fig.canvas.draw()
             # The following just serves as a unified way of saving and
             # displaying the plots.
@@ -1301,7 +1302,11 @@ class WaveformPlotting(object):
         Function initialises plot all the illustration is done by
         self.plot_section()
         """
-        ax = self.fig.gca()
+        if not self.return_ax:
+            ax = self.fig.gca()
+        else:
+            ax = self.fig
+        
         # Matplotlib 1.5.x does not support interpolation on fill_betweenx
         # Should be integrated by version 2.1
         # (see https://github.com/matplotlib/matplotlib/pull/6560)
