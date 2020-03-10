@@ -716,7 +716,7 @@ class Network(BaseNode):
         """
         import matplotlib.pyplot as plt
 
-        if axes:
+        if axes is not None:
             ax1, ax2 = axes
             fig = ax1.figure
         else:
