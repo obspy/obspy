@@ -1,3 +1,11 @@
+1.2.1 (doi: 10.5281/zenodo.3706479)
+===================================
+
+Changes:
+ - fix an installation issue with pip and setuptools version 46 (see #2578)
+ - fix response plots when providing `axes=...` with a numpy array of Axes
+   instances (see #2579)
+
 1.2.0 (doi: 10.5281/zenodo.3674646)
 ===================================
 
