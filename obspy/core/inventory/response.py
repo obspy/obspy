@@ -1811,7 +1811,7 @@ class Response(ComparingObject):
             t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
             end_stage=end_stage)
 
-        if axes:
+        if axes is not None:
             ax1, ax2 = axes
             fig = ax1.figure
         else:
