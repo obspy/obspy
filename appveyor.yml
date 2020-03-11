@@ -22,11 +22,6 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "64"
-      SKIP_NOTAG: "true"
-
     - PYTHON: "C:\\Miniconda35-x64"
       PYTHON_VERSION: "3.5"
       PYTHON_ARCH: "64"
@@ -47,7 +42,6 @@ environment:
 matrix:
     allow_failures:
       - PYTHON_VERSION: "3.5"
-      - PYTHON_VERSION: "3.4"
     # enable fast fail strategy
     fast_finish: true
 

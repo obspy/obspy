@@ -14,8 +14,6 @@ matrix:
     #  anaconda..)
     # XXX maybe should add minimum dependency build again, if feasible
     - os: linux
-      env: PYTHON_VERSION=3.4
-    - os: linux
       env: PYTHON_VERSION=3.5
     - os: linux
       env: PYTHON_VERSION=3.6
@@ -93,18 +91,6 @@ install:
       #   # and hick-ups..
       #   mkdir -p $HOME/.matplotlib
       #   echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
-      if [[ "${PYTHON_VERSION}" == '3.4' ]]; then
-        # 3.4 apparently no longer get's updated packages.
-        # Let conda resolve to the latest versions.
-        # pip dropped py3.4 support with 12.1
-        NUMPY="numpy"
-        SCIPY="scipy"
-        MATPLOTLIB="matplotlib"
-        BASEMAP="basemap"
-        PIP="pip<19.2"
-        PYPROJ="pyproj"
-        PROJ4="proj4"
-        GFORTRAN=""
       # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
       #   # Special packages for 32bit. Also let conda resolve to the latest
       #   # versions.
@@ -114,7 +100,7 @@ install:
       #   BASEMAP="basemap"
       #   PYPROJ="pyproj"
       # For anything else also let conda resolve, but force matplotlib 2.
-      elif [[ "${PYTHON_VERSION}" == '3.6' ]]; then
+      if [[ "${PYTHON_VERSION}" == '3.6' ]]; then
         # Pin proj4 to 4.9.3 for map testing - see basemap #433
         # Let conda resolve to the latest versions otherwise.
         NUMPY="numpy"
