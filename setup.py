@@ -797,6 +797,7 @@ def setupPackage():
         packages=find_packages(),
         namespace_packages=[],
         zip_safe=False,
+        python_requires='>=3.5',
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
         features=add_features(),
