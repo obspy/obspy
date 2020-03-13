@@ -52,7 +52,7 @@ def is_evt(filename_or_object):
                 return False
 
 
-def read_evt(filename_or_object, **kwargs):
+def read_evt(filename_or_object, raw=False, **kwargs):
     """
     Reads a Evt file and returns a Stream object.
 
@@ -62,9 +62,12 @@ def read_evt(filename_or_object, **kwargs):
 
     :type filename_or_object: str or file-like object
     :param filename_or_object: Evt file to be read
+    :type raw: bool
+    :param raw: if True, returns the raw data as saved in the Evt file, if
+        False (by default) returns the data converted to m/s**2.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: Stream object containing header and data
     """
     evt_obj = evt.Evt()
-    stream = evt_obj.read_file(filename_or_object)
+    stream = evt_obj.read_file(filename_or_object, raw=raw)
     return stream

@@ -1,6 +1,10 @@
 master
 ======
 
+Work on this release was in parts and among others supported by the following
+institutions/companies and grants (in alphabetical order):
+ - The Royal Observatory of Belgium
+
 Changes:
  - obspy.core:
    * Fix wrong values in Stats object after deepcopy or pickle of Stats object
@@ -10,6 +14,9 @@ Changes:
      data when requesting an invalid, out-of-epochs time window for a valid
      station (see #2611)
    * update RASPISHAKE URL mapping to use https
+ - obspy.io.kinemetrics:
+   * adds the ``raw`` argument to the ``read_evt`` method to allow obtaining 
+     the raw data bits stored in the evt file (see #2582)
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================
