@@ -60,7 +60,7 @@ install:
   # -   if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
   # -     export ARCH=""
   # -     # OPT is used by setuptools patches contained in newer numpy versions
-  # -     # used by obspy when running pip install --no-deps .
+  # -     # used by obspy when running install --no-deps .
   # -     export OPT="-m32"
   # -     # workaround for sudo dpkg --add-architecture i386
   # -     # be sure multiarch is the only file in this directory
@@ -198,6 +198,9 @@ install:
   - conda install -c conda-forge --no-update-deps --no-deps pyshp || pip install pyshp
   # install packages not available via conda
   - pip install geographiclib
+  
+  - pip install numpy
+  
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
   - pip freeze
@@ -264,6 +267,7 @@ script:
     else
       coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
     fi;
+  
 
 after_script:
   # if coverage file was created, upload data to codecov
