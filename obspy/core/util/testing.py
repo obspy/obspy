@@ -410,7 +410,7 @@ class ImageComparison(NamedTemporaryFile):
                 warnings.warn('Unable to find the ' + default_font + ' font. '
                               'Plotting tests will likely fail.')
         try:
-            rcParams['text.hinting'] = False
+            rcParams['text.hinting'] = 'none'
         except KeyError:
             warnings.warn("could not set rcParams['text.hinting']")
         try:
