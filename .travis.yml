@@ -206,7 +206,8 @@ install:
   - pip freeze
   # XXX quick and dirty workaround for problems with pip wanting to upgrade certifi
   - if [[ "${PYTHON_VERSION}" == '3.5' ]]; then
-      conda remove --offline certifi;
+      #conda remove --offline certifi;
+      
     fi
   - pip install https://github.com/obspy/obspy_github_api/archive/0.7.0.zip
   - conda list
