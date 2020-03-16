@@ -14,10 +14,6 @@ matrix:
     #  anaconda..)
     # XXX maybe should add minimum dependency build again, if feasible
     - os: linux
-      env: PYTHON_VERSION=3.5
-    - os: linux
-      env: PYTHON_VERSION=3.6
-    - os: linux
       env: PYTHON_VERSION=3.7
     - os: linux
       env: PYTHON_VERSION=3.8
@@ -29,8 +25,6 @@ matrix:
     #         # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
     #         - libstdc++6:i386
     #         - gcc-multilib
-    - os: osx
-      env: PYTHON_VERSION=3.6
     - os: osx
       env: PYTHON_VERSION=3.7
     - os: osx
@@ -100,37 +94,18 @@ install:
       #   BASEMAP="basemap"
       #   PYPROJ="pyproj"
       # For anything else also let conda resolve, but force matplotlib 2.
-      if [[ "${PYTHON_VERSION}" == '3.6' ]]; then
-        # Pin proj4 to 4.9.3 for map testing - see basemap #433
-        # Let conda resolve to the latest versions otherwise.
-        NUMPY="numpy"
-        SCIPY="scipy"
-        MATPLOTLIB="matplotlib"
-        BASEMAP="basemap"
-        PIP="pip"
-        PYPROJ="pyproj"
-        PROJ4="proj4=4.9.3"
-        GFORTRAN=""
-      elif [[ "${PYTHON_VERSION}" == '3.7' ]]; then
+      if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
         # Pin proj4 to 4.9.3 for map testing - see basemap #433
         # Let conda resolve to the latest versions otherwise.
         NUMPY="numpy"
         SCIPY="scipy"
         MATPLOTLIB="matplotlib"
         BASEMAP="basemap>=1.2.1"
-        PIP="pip"
-        PYPROJ="pyproj"
-        PROJ4="proj4"
-        GFORTRAN=""
       else
         NUMPY="numpy"
         SCIPY="scipy"
         MATPLOTLIB="matplotlib>=2.0.0"
         BASEMAP="basemap"
-        PIP="pip"
-        PYPROJ="pyproj"
-        PROJ4="proj4"
-        GFORTRAN=""
       fi
   # proj4 version 5.2.0 has issues with psuedocyl projections (see basemap #433).
   - conda create -n test-environment
@@ -139,10 +114,9 @@ install:
         $SCIPY
         $MATPLOTLIB
         $BASEMAP
-        $PIP
-        $PYPROJ
-        $PROJ4
-        $GFORTRAN
+        pip
+        pyproj
+        proj4
         codecov
         coverage
         certifi>=2017.4.17
@@ -150,7 +124,6 @@ install:
         docopt
         jsonschema
         lxml
-        mock
         nose
         requests
         sqlalchemy
@@ -177,10 +150,6 @@ install:
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
   - pip freeze
-  # XXX quick and dirty workaround for problems with pip wanting to upgrade certifi
-  - if [[ "${PYTHON_VERSION}" == '3.5' ]]; then
-      conda remove --offline certifi;
-    fi
   - pip install https://github.com/obspy/obspy_github_api/archive/0.7.0.zip
   - conda list
   # done installing dependencies
