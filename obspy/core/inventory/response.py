@@ -362,7 +362,6 @@ class PolesZerosResponseStage(ResponseStage):
             return None
 
         A0 = 1.0 + (1j * 0.0)
-        # TODO: ensure that this coercion to float is valid
         if self.pz_transfer_function_type == "LAPLACE (HERTZ)":
             s = 1j * float(self.normalization_frequency)
         elif self.pz_transfer_function_type == "LAPLACE (RADIANS/SECOND)":
@@ -1003,8 +1002,8 @@ class Response(ComparingObject):
             stages = self.response_stages[slice(start_stage, end_stage)]
             ref = stages.pop(0).get_response(frequencies=f)
             for stage in stages[1:]:
-                if 'get_response' in dir(stage):
-                    ref *= stage.get_response(frequencies=f)
+                # TODO: fix AttributeError in some stages
+                ref *= stage.get_response(frequencies=f)
             resp *= self.instrument_sensitivity.value / np.abs(ref[0])
 
         # By now the response is in the input units of the first stage.
