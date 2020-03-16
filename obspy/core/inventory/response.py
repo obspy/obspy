@@ -129,15 +129,15 @@ class ResponseStage(ComparingObject):
         self.description = description
         self.decimation_input_sample_rate = \
             Frequency(decimation_input_sample_rate) \
-            if decimation_input_sample_rate is not None else None
+                if decimation_input_sample_rate is not None else None
         self.decimation_factor = decimation_factor
         self.decimation_offset = decimation_offset
         self.decimation_delay = \
             FloatWithUncertaintiesAndUnit(decimation_delay) \
-            if decimation_delay is not None else None
+                if decimation_delay is not None else None
         self.decimation_correction = \
             FloatWithUncertaintiesAndUnit(decimation_correction) \
-            if decimation_correction is not None else None
+                if decimation_correction is not None else None
 
     def __str__(self):
         ret = (
@@ -222,11 +222,18 @@ class PolesZerosResponseStage(ResponseStage):
         # handled by properties.
         self.pz_transfer_function_type = pz_transfer_function_type
         self.normalization_frequency = normalization_frequency
+        for i, x in enumerate(zeros):
+            if not isinstance(x, ComplexWithUncertainties):
+                zeros[i] = ComplexWithUncertainties(x)
+        self._zeros = zeros
+        for i, x in enumerate(poles):
+            if not isinstance(x, ComplexWithUncertainties):
+                poles[i] = ComplexWithUncertainties(x)
+        self._poles = poles
+        # if we don't have a normalization factor, calculate it (needs P/Z set first)
         if normalization_factor is None:
             normalization_factor = self.calc_normalization_factor()
         self.normalization_factor = float(normalization_factor)
-        self.zeros = zeros
-        self.poles = poles
         super(PolesZerosResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
@@ -255,8 +262,8 @@ class PolesZerosResponseStage(ResponseStage):
             transfer_fct_type=self.pz_transfer_function_type,
             norm_fact=self.normalization_factor,
             norm_freq=self.normalization_frequency,
-            poles=", ".join(map(str, self.poles)),
-            zeros=", ".join(map(str, self.zeros)))
+            poles=", ".join(map(str, self._poles)),
+            zeros=", ".join(map(str, self._zeros)))
         return ret
 
     def _repr_pretty_(self, p, cycle):
@@ -333,8 +340,8 @@ class PolesZerosResponseStage(ResponseStage):
         # Has to be imported here for now to avoid circular imports.
         from obspy.signal.invsim import paz_to_freq_resp
         return paz_to_freq_resp(
-            poles=np.array(self.poles, dtype=np.complex128),
-            zeros=np.array(self.zeros, dtype=np.complex128),
+            poles=np.array(self._poles, dtype=np.complex128),
+            zeros=np.array(self._zeros, dtype=np.complex128),
             scale_fac=self.normalization_factor,
             frequencies=frequencies, freq=False) * self.stage_gain
 
@@ -356,17 +363,17 @@ class PolesZerosResponseStage(ResponseStage):
 
         A0 = 1.0 + (1j * 0.0)
         # TODO: ensure that this coercion to float is valid
-        if self.transfer_function_type == "LAPLACE (HERTZ)":
+        if self.pz_transfer_function_type == "LAPLACE (HERTZ)":
             s = 1j * float(self.normalization_frequency)
-        elif self.transfer_function_type == "LAPLACE (RADIANS/SECOND)":
+        elif self.pz_transfer_function_type == "LAPLACE (RADIANS/SECOND)":
             s = 1j * 2 * pi * float(self.normalization_frequency)
         else:
             print("Don't know how to calculate normalization factor "
                   "for z-transform poles and zeros!")
             return False
-        for p in self.poles:
+        for p in self._poles:
             A0 *= (s - p)
-        for z in self.zeros:
+        for z in self._zeros:
             A0 /= (s - z)
 
         return abs(A0)
@@ -433,10 +440,10 @@ class CoefficientsTypeResponseStage(ResponseStage):
         ret += (
             "\n"
             "\tTransfer function type: {transfer_fct_type}\n"
-            "\tContains {num_count} numerators and {den_count} denominators")\
+            "\tContains {num_count} numerators and {den_count} denominators") \
             .format(
-                transfer_fct_type=self.cf_transfer_function_type,
-                num_count=len(self.numerator), den_count=len(self.denominator))
+            transfer_fct_type=self.cf_transfer_function_type,
+            num_count=len(self.numerator), den_count=len(self.denominator))
         return ret
 
     def _repr_pretty_(self, p, cycle):
@@ -1158,7 +1165,7 @@ class Response(ComparingObject):
 
         # Nothing might be set - just return in that case.
         if set(itertools.chain.from_iterable(v.values()
-               for v in sampling_rates.values())) == {None}:
+                                             for v in sampling_rates.values())) == {None}:
             return sampling_rates
 
         # Find the first set input sampling rate. The output sampling rate
@@ -1189,7 +1196,7 @@ class Response(ComparingObject):
                     si["decimation_factor"] = 1
                 else:
                     si["output_sampling_rate"] = si["input_sampling_rate"] / \
-                        float(si["decimation_factor"])
+                                                 float(si["decimation_factor"])
             if not si["decimation_factor"]:
                 si["decimation_factor"] = int(round(
                     si["input_sampling_rate"] / si["output_sampling_rate"]))
@@ -1496,7 +1503,7 @@ class Response(ComparingObject):
                     all_stages[1][0].input_units = \
                         self.instrument_sensitivity.input_units
                     msg = "Set the input units of stage 1 to the overall " \
-                        "input units."
+                          "input units."
                     warnings.warn(msg)
             if not all_stages[1][0].output_units:
                 if max(all_stages.keys()) == 1 and \
@@ -1504,14 +1511,14 @@ class Response(ComparingObject):
                     all_stages[1][0].output_units = \
                         self.instrument_sensitivity.output_units
                     msg = "Set the output units of stage 1 to the overall " \
-                        "output units."
+                          "output units."
                     warnings.warn(msg)
                 if 2 in all_stages and all_stages[2] and \
                         all_stages[2][0].input_units:
                     all_stages[1][0].output_units = \
                         all_stages[2][0].input_units
                     msg = "Set the output units of stage 1 to the input " \
-                        "units of stage 2."
+                          "units of stage 2."
                     warnings.warn(msg)
 
         for stage_number in stage_list:
@@ -1714,11 +1721,11 @@ class Response(ComparingObject):
             if isinstance(blockette, PolesZerosResponseStage) and \
                     blockette.stage_gain and \
                     None in set([
-                        blockette.decimation_correction,
-                        blockette.decimation_delay,
-                        blockette.decimation_factor,
-                        blockette.decimation_input_sample_rate,
-                        blockette.decimation_offset]):
+                blockette.decimation_correction,
+                blockette.decimation_delay,
+                blockette.decimation_factor,
+                blockette.decimation_input_sample_rate,
+                blockette.decimation_offset]):
                 # Don't modify the original object.
                 blockette = copy.deepcopy(blockette)
                 blockette.decimation_correction = 0.0
