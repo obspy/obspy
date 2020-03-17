@@ -638,7 +638,7 @@ class ResponseTestCase(unittest.TestCase):
         inv = read_inventory(os.path.join(self.data_dir, "IM_I53H1_BDF.xml"))
         self.assertEqual(
             0.0 + 0.0j,
-            inv[0][0][0].response.get_evalresp_response_for_frequencies([0.0])[0])
+            inv[0][0][0].response.get_evalresp_response_for_frequencies([0.0]))
         np.testing.assert_allclose(
             inv[0][0][0].response.get_evalresp_response_for_frequencies(
                 [0.1, 1.0, 10.0]),
