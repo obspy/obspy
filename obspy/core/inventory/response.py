@@ -526,19 +526,21 @@ class CoefficientsTypeResponseStage(ResponseStage):
         if not len(self.numerator):
             return np.ones_like(frequencies) * self.stage_gain
 
-        # This is effectively blockette 54. According to the SEED manual
-        # this should never have a denominator. Let's see if this is
-        # actually the case.
-        assert not self.denominator
-
         sr = self.decimation_input_sample_rate
         frequencies = frequencies / sr * np.pi * 2.0
 
+        # While most cases we expect this to represent a Bkt. 54 and
+        # thus not have a denominator, if the transfer function is
+        # digital, this may not be the case
         if self.cf_transfer_function_type == "DIGITAL":
+            if len(self.denominator) == 0:
+                fil_a = [1.0]
+            else:
+                fil_a = self.denominator
             resp = scipy.signal.freqz(
-                b=self.numerator, a=[1.0], worN=frequencies)[1]
+                b=self.numerator, a=fil_a, worN=frequencies)[1]
             gain_freq_amp = np.abs(scipy.signal.freqz(
-                b=self.numerator, a=[1.0],
+                b=self.numerator, a=fil_a,
                 worN=[self.stage_gain_frequency])[1])
         elif self.cf_transfer_function_type == "ANALOG (RADIANS/SECOND)":
             # XXX: Untested so far!
