@@ -947,6 +947,48 @@ class Response(ComparingObject):
         else:
             raise ValueError("Unknown unit '%s'." % unit)
 
+    def get_response_for_window_size(self, t_samp, nfft, output="VEL",
+                                     start_stage=None, end_stage=None):
+        """
+        Returns frequency response and corresponding frequencies for
+        the given sample rate delta and FFT window size
+
+        :type t_samp: float
+        :param t_samp: time resolution (inverse frequency resolution)
+        :type nfft: int
+        :param nfft: Number of FFT points to use
+        :type output: str
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :rtype: tuple of two arrays
+        :returns: frequency response and corresponding frequencies
+        """
+        # Calculate the output frequencies.
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset/ DC of fft
+        # numpy 1.9 introduced a dtype kwarg
+        try:
+            freqs = np.linspace(0, fy, int(nfft // 2) + 1, dtype=np.float64)
+        except Exception:
+            freqs = np.linspace(0, fy, int(nfft // 2) + 1).astype(np.float64)
+
+        response = self.get_response(
+            freqs, output=output, start_stage=start_stage, end_stage=end_stage)
+        return response, freqs
+
     def get_response(self, frequencies, output="velocity", start_stage=None,
                      end_stage=None):
         """
@@ -2101,7 +2143,7 @@ class Response(ComparingObject):
         nyquist = sampling_rate / 2.0
         nfft = int(sampling_rate / min_freq)
 
-        cpx_response, freq = self.get_evalresp_response(
+        cpx_response, freq = self.get_response_for_window_size(
             t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
             end_stage=end_stage)
 

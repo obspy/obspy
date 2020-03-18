@@ -470,7 +470,7 @@ class ResponseTestCase(unittest.TestCase):
                                  stage_gain_frequency=5.0,
                                  normalization_frequency=5.0,
                                  normalization_factor=1.070401)
-        paz_resp = resp.get_evalresp_response(.1, 2**6, output='VEL')
+        paz_resp = resp.get_response_for_window_size(.1, 2 ** 6, output='VEL')
         np.testing.assert_allclose(paz_resp, loaded_resp)
 
     def test_str_method_of_the_polynomial_response_stage(self):

@@ -1268,7 +1268,7 @@ class PPSD(object):
     def _get_response_from_inventory(self, tr):
         inventory = self.metadata
         response = inventory.get_response(self.id, tr.stats.starttime)
-        resp, _ = response.get_evalresp_response(
+        resp, _ = response.get_response_for_window_size(
             t_samp=self.delta, nfft=self.nfft, output="VEL")
         return resp
 

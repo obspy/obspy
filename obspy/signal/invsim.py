@@ -763,7 +763,7 @@ def estimate_wood_anderson_amplitude_using_response(response, amplitude,
     """
     freq = 1.0 / (2 * timespan)
     wa_ampl = amplitude / 2.0  # half peak to peak amplitude
-    response = response.get_evalresp_response_for_frequencies(
+    response = response.get_response(
         [freq], output="VEL", start_stage=None, end_stage=None)[0]
     response_amplitude = np.absolute(response)
     wa_ampl /= response_amplitude
