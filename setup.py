@@ -52,6 +52,16 @@ from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
 
 
+# The minimum python version which can be used to run ObsPy
+MIN_PYTHON_VERSION = (3, 6)
+
+# Fail fast if the user is on an unsupported version of python.
+if sys.version_info < MIN_PYTHON_VERSION:
+    msg = ("ObsPy requires python version >= {}".format(MIN_PYTHON_VERSION) +
+           " you are using python version {}".format(sys.version_info))
+    print(msg, file=sys.stderr)
+    sys.exit(1)
+
 # Directory of the current file in the (hopefully) most reliable way
 # possible, according to krischer
 SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
@@ -795,7 +805,7 @@ def setupPackage():
         packages=find_packages(),
         namespace_packages=[],
         zip_safe=False,
-        python_requires='>=3.7',
+        python_requires=f'>={MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}',
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
         features=add_features(),
