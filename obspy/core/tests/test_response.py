@@ -185,7 +185,7 @@ class ResponseTestCase(unittest.TestCase):
                           "with units", unit)
 
     def test_get_response_per_stage(self):
-        filenames = ["IRIS_single_channel_with_response", "XM.05", "IU_ANMO_00_BHZ"]
+        filenames = ["AU.MEEK", "IRIS_single_channel_with_response", "XM.05", "IU_ANMO_00_BHZ"]
 
         for filename in filenames:
             xml_filename = os.path.join(self.data_dir,
@@ -194,12 +194,12 @@ class ResponseTestCase(unittest.TestCase):
             resp = inv[0][0][0].response
 
             freqs = np.logspace(-2, 2, 1000)
+            print(xml_filename, '\n', resp.response_stages)
             for x in range(1, len(resp.response_stages)):
-                print(xml_filename, '\n', resp.response_stages[x])
                 xml_resp = resp.get_evalresp_response_for_frequencies(
-                    frequencies=freqs, start_stage=x, end_stage=x+1)
+                    frequencies=freqs, start_stage=x, end_stage=x)
                 new_resp = resp.get_response(
-                    frequencies=freqs, start_stage=x, end_stage=x+1)
+                    frequencies=freqs, start_stage=x, end_stage=x)
 
                 np.testing.assert_allclose(np.abs(xml_resp),
                                            np.abs(new_resp), rtol=1E-5)
@@ -210,6 +210,8 @@ class ResponseTestCase(unittest.TestCase):
                     np.unwrap(np.angle(xml_resp))[:800],
                     np.unwrap(np.angle(new_resp))[:800],
                     rtol=1E-2, atol=2E-2)
+
+                print("Succeeded with case for stage no.", x)
 
 
 
