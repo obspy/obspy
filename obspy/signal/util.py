@@ -13,7 +13,7 @@ import ctypes as C  # NOQA
 import math
 
 import numpy as np
-from scipy import fftpack, fix, signal
+from scipy import fftpack, signal
 
 from obspy.core.util.misc import factorize_int
 from obspy.signal.headers import clibsignal
@@ -138,7 +138,7 @@ def enframe(x, win, inc):
     else:
         # length = next_pow_2(nwin)
         length = nwin
-    nf = int(fix((nx - length + inc) // inc))
+    nf = int(np.fix((nx - length + inc) // inc))
     # f = np.zeros((nf, length))
     indf = inc * np.arange(nf)
     inds = np.arange(length) + 1
