@@ -107,9 +107,9 @@ KEYWORDS = [
 # when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
 # and get rid of helper function _np_copy_astype() in obspy/io/mseed/core.py
 INSTALL_REQUIRES = [
-    'numpy>=1.6.1',
-    'scipy>=0.9.0',
-    'matplotlib>=1.1.0',
+    'numpy>=1.15.0',
+    'scipy>=1.0.0',
+    'matplotlib>=3.2.0',
     'lxml',
     'setuptools',
     'sqlalchemy',
