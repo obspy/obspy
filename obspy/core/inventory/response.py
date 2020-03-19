@@ -742,6 +742,19 @@ class FIRResponseStage(ResponseStage):
             new_values.append(x)
         self._coefficients = new_values
 
+    def get_response(self, frequencies):
+        sr = self.decimation_input_sample_rate
+        frequencies = frequencies / sr * np.pi * 2.0
+
+        # if self.cf_transfer_function_type == "DIGITAL":
+        resp = scipy.signal.freqz(
+            b=self.coefficients, a=[1.], worN=frequencies)[1]
+        gain_freq_amp = np.abs(scipy.signal.freqz(
+            b=self.coefficients, a=[1.],
+            worN=[self.stage_gain_frequency])[1])
+        # TODO: what actually do we return here, and what does gain_freq_amp even do
+        return resp
+
 
 class PolynomialResponseStage(ResponseStage):
     """
@@ -1024,28 +1037,35 @@ class Response(ComparingObject):
         else:
             raise ValueError("Unknown output '%s'." % output)
 
-        apply_sens = False
-        if start_stage is None and end_stage is None:
-            apply_sens = True
+        apply_sens = True
         # Convert to 0-based indexing.
+        # (End stage stays the same because it's the exclusive bound)
         if start_stage is None:
             start_stage = 0
         else:
             start_stage -= 1
 
+        # range is implicitly limited to length of this list
         stages = self.response_stages[slice(start_stage, end_stage)]
-        resp = stages.pop(0).get_response(frequencies=frequencies)
+        print(stages)
+        resp = stages[0].get_response(frequencies=frequencies)
         for stage in stages[1:]:
-            resp *= stage.get_response(frequencies=frequencies)
+            try:
+                # TODO: implement get_response for FIR stages
+                resp *= stage.get_response(frequencies=frequencies)
+            except AttributeError:
+                print("Response stage", type(stage).__name__, "has no appropriate method defined!")
+                resp *= np.ones_like(resp)
 
         # For the scaling - run the whole chain once again with the
         # reference frequency.
         if start_stage == 0 and end_stage is None:
             f = np.array([self.instrument_sensitivity.frequency])
             stages = self.response_stages[slice(start_stage, end_stage)]
-            ref = stages.pop(0).get_response(frequencies=f)
+            ref = stages[0].get_response(frequencies=f)
+            print("first stage ref gain", ref)
             for stage in stages[1:]:
-                # TODO: fix AttributeError in some stages
+                # TODO: fix the attribute error as with the above todo
                 ref *= stage.get_response(frequencies=f)
             resp *= self.instrument_sensitivity.value / np.abs(ref[0])
 
