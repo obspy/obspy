@@ -1279,25 +1279,7 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
-        try:
-            ret = self.datetime.strftime(format)
-        # this is trying to work around strftime refusing to work with years
-        # <1900
-        # XXX this problem seems to be specific to Python < 3.2
-        # XXX so this can be removed after dropping Python 2 support
-        except ValueError as e:
-            # some other error? just raise it..
-            if 'the datetime strftime() methods require year' not in str(e):
-                raise
-            # otherwise, try to do replace all strftime '%' commands with
-            # simple string formatting
-            format_ = self._strftime_replacement(format)
-            # if there's still some strftime commands in there, we have a
-            # problem still ('%%' is a %-sign literal)
-            if '%' in format_.replace('%%', ''):
-                raise
-            ret = format_
-        return ret
+        return self.datetime.strftime(format)
 
     def _strftime_replacement(self, strftime_string):
         """
