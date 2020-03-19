@@ -754,8 +754,26 @@ class FIRResponseStage(ResponseStage):
             coefficients = self.coefficients
         resp = scipy.signal.freqz(
             b=coefficients, a=[1.], worN=frequencies)[1]
+        gain_freq_amp = np.abs(scipy.signal.freqz(
+            b=coefficients, a=[1.],
+            worN=[self.stage_gain_frequency])[1])
+        resp = resp.conjugate()
+        # evalresp is a bit funny in how it defines the phase. Here we make
+        # sure that the phase returned is equivalent to evalpres.
+        amp = np.abs(resp)
+        phase = np.radians(np.unwrap(np.angle(resp, deg=False))) / np.pi ** 7
 
-        return resp
+        # Normalize the amplitude with the given sensitivity value and
+        # frequency. I'm not sure this is entirely correct, as the digitizer
+        # will likely just apply the FIR filter and send the data along. But
+        # evalresp does this and thus so do we.
+        # amp *= self.stage_gain / gain_freq_amp
+        amp *= self.stage_gain
+        final_resp = np.empty_like(resp)
+        final_resp.real = amp
+        final_resp.imag = amp * 0.
+
+        return final_resp
 
 
 class PolynomialResponseStage(ResponseStage):
