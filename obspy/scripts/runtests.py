@@ -148,6 +148,8 @@ def _get_suites(verbosity=1, names=[]):
     status = True
     import_failures = {}
     for name in names:
+        if name == 'clients.arclink':
+            continue
         suite = []
         if name in ALL_MODULES:
             # Search for short cuts in tests
