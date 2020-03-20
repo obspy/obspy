@@ -1484,9 +1484,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         t = UTCDateTime(1888, 1, 2, 1, 39, 37)
         self.assertEqual(t.strftime('%Y-%m-%d'), '1888-01-02')
         t = UTCDateTime(998, 11, 9, 1, 39, 37)
-        # Note: sometimes strfmt has a trailing 0, others times not. It
-        # probably doesn't mater so just check for string membership.
-        self.assertIn('998-11-09', t.strftime('%Y-%m-%d'))
+        self.assertEqual('0998-11-09', t.strftime('%Y-%m-%d'))
 
     def test_strftime_replacement(self):
         """

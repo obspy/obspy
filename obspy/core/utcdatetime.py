@@ -13,6 +13,7 @@ import calendar
 import math
 import operator
 import re
+import sys
 import time
 import warnings
 
@@ -1279,6 +1280,11 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
+        # This is an attempt to get consistent behavior across platforms.
+        # See https://bugs.python.org/issue32195
+        if sys.version_info.major > 2 and sys.platform.startswith("linux"):
+            format = format.replace("%Y", "%04Y")
+
         return self.datetime.strftime(format)
 
     def _strftime_replacement(self, strftime_string):
