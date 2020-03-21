@@ -382,11 +382,11 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
         a = [1.0]
     # this turns the paz values into an IIR specification, so we will
     # use the IIR conversion method to produce the response
-    return iir_to_freq_response(b, a, t_samp, nfft, frequencies, freq)
+    return iir_to_freq_resp(b, a, t_samp, nfft, frequencies, freq)
 
 
-def iir_to_freq_response(numer, denom, t_samp=None, nfft=None,
-                         frequencies=None, freq=False):
+def iir_to_freq_resp(numer, denom, t_samp=None, nfft=None,
+                     frequencies=None, freq=False):
     if frequencies is None:
         n = nfft // 2
         fy = 1 / (t_samp * 2.0)
@@ -400,7 +400,7 @@ def iir_to_freq_response(numer, denom, t_samp=None, nfft=None,
     return h
 
 
-def fir_to_freq_response(numer, denom, t_samp=None, nfft=None,
+def fir_to_freq_resp(numer, denom, t_samp=None, nfft=None,
                          frequencies=None, freq=False):
     if frequencies is None:
         n = nfft // 2
