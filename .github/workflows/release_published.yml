@@ -1,0 +1,78 @@
+name: release
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  update_gh_pages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup conda
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          python-version: 3.7
+          activate-environment: test
+          environment-file: .github/test_conda_env.yml
+          condarc-file: .github/test_condarc.yml
+
+      - name: install obsplus
+        shell: bash -l {0}
+        run: |
+          pip install -e .[dev]
+
+      - name: git config
+        shell: bash -l {0}
+        run: |
+          git config --global user.email "donotemailme@example.com"
+          git config --global user.name "GithubActions"
+
+      - name: build docs
+        shell: bash -l {0}
+        run: |
+          python scripts/stage_docs.py --remove-dirty
+
+      - name: push
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          force: true
+          directory: ../obsplus_documentation
+
+  publish_package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup conda
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          python-version: 3.7
+          activate-environment: test
+          environment-file: .github/test_conda_env.yml
+          condarc-file: .github/test_condarc.yml
+
+      - name: install obsplus
+        shell: bash -l {0}
+        run: |
+          pip install -e .[dev]
+
+      - name: create dist
+        shell: bash -l {0}
+        run: |
+          rm -rf build
+          rm -rf dist
+          python setup.py sdist bdist_wheel
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}

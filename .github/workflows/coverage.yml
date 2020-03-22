@@ -1,0 +1,49 @@
+name: calculate coverage
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  calc_coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup conda
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          python-version: 3.7
+          activate-environment: test
+          environment-file: .github/test_conda_env.yml
+          condarc-file: .github/test_condarc.yml
+
+      - name: install obsplus
+        shell: bash -l {0}
+        run: |
+          pip install -e .[dev]
+
+      - name: download test data
+        shell: bash -l {0}
+        run: |
+          if [ ! -d ~/opsdata ]; then
+            git clone https://github.com/d-chambers/opsdata_test
+            mv opsdata_test ~/opsdata
+          fi
+
+      - name: run test suite
+        shell: bash -l {0}
+        run: |
+          pytest -s --cov obsplus --cov-report=xml
+
+      - name: upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          yml: ./codecov.yml
+          fail_ci_if_error: true
