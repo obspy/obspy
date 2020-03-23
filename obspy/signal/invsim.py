@@ -367,9 +367,13 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
     :type t_samp: float
     :param t_samp: Sampling interval in seconds
     :type nfft: int
-    :param nfft: Number of FFT points of signal which needs correction
+    :param nfft: Number of FFT points of signal which needs correction.
+        If not specified, the length of the frequencies parameter will be used.
+        If specified, the value t_samp is required.
+        If the frequencies parameter is specified, both this and t_samp are ignored.
     :type frequencies: list of float
     :param frequencies: Discrete frequencies to get resp values for.
+        If nfft and t_samp are not specified, this value is required.
     :type freq: bool
     :param freq: If true, returns tuple of resp result with freq array input (i.e., x-values)
     :rtype: :class:`numpy.ndarray` complex128
@@ -380,9 +384,17 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
     # strangely returns it as an integer.
     if not isinstance(a, np.ndarray) and a == 1.0:
         a = [1.0]
-    # this turns the paz values into an IIR specification, so we will
-    # use the IIR conversion method to produce the response
-    return digital_filter_to_freq_resp(b, a, t_samp, nfft, frequencies, freq)
+    if frequencies is None:
+        n = nfft // 2
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset / DC of fft
+        f = np.linspace(0, fy, n + 1)
+    else:
+        f = frequencies
+    _w, h = scipy.signal.freqs(b, a, f * 2 * np.pi)
+    if freq:
+        return h, f
+    return h
 
 
 def digital_filter_to_freq_resp(numer, denom, t_samp=None, nfft=None,
@@ -399,13 +411,17 @@ def digital_filter_to_freq_resp(numer, denom, t_samp=None, nfft=None,
     :type t_samp: float
     :param t_samp: Sampling interval in seconds
     :type nfft: int
-    :param nfft: Number of FFT points of signal which needs correction
+    :param nfft: Number of FFT points of signal which needs correction.
+        If not specified, the length of the frequencies parameter will be used.
+        If specified, the value t_samp is required.
+        If the frequencies parameter is specified, both this and t_samp are ignored.
     :type frequencies: list of float
     :param frequencies: Discrete frequencies to get resp values for.
+        If nfft and t_samp are not specified, this value is required.
     :type freq: bool
     :param freq: If true, returns tuple of resp result with freq array input (i.e., x-values)
     :rtype: :class:`numpy.ndarray` complex128
-    :return: Frequency response of PAZ of length nfft
+    :return: Frequency response of filter of length nfft
     """
     if frequencies is None:
         n = nfft // 2

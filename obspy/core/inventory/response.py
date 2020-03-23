@@ -178,8 +178,9 @@ class ResponseStage(ComparingObject):
 
     def get_response(self, frequencies):
         # if a response stage isn't a subclass then it's likely a gain stage.
-        # in that case just return an array of the constant gain
-        return np.ones_like(frequencies) * self.stage_gain
+        # just return a constant 1; the response is scaled so trying to
+        # apply the gain here will cause to be factored out later
+        return 1.
 
 
 class PolesZerosResponseStage(ResponseStage):
@@ -576,7 +577,8 @@ class CoefficientsTypeResponseStage(ResponseStage):
         # frequency. I'm not sure this is entirely correct, as the digitizer
         # will likely just apply the FIR filter and send the data along. But
         # evalresp does this and thus so do we.
-        amp *= self.stage_gain / gain_freq_amp
+        if self.cf_transfer_function_type != 'DIGITAL':
+            amp *= self.stage_gain / gain_freq_amp
         final_resp = np.empty_like(resp)
         final_resp.real = amp * np.cos(phase)
         final_resp.imag = amp * np.sin(phase)
