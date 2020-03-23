@@ -31,7 +31,6 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          Enum)
 
 from .util import Angle, Frequency
-from obspy.signal.invsim import digital_filter_to_freq_resp
 
 class ResponseStage(ComparingObject):
     """
@@ -639,9 +638,9 @@ class ResponseListElement(ComparingObject):
         :type phase: float
         :param phase: The value for the phase response at this frequency.
         """
-        self.frequency = frequency
-        self.amplitude = amplitude
-        self.phase = phase
+        self._frequency = frequency
+        self._amplitude = amplitude
+        self._phase = phase
 
     @property
     def frequency(self):
@@ -703,7 +702,7 @@ class FIRResponseStage(ResponseStage):
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
         self._symmetry = symmetry
-        self.coefficients = coefficients or []
+        self._coefficients = coefficients or []
         super(FIRResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
@@ -749,19 +748,19 @@ class FIRResponseStage(ResponseStage):
         self._coefficients = new_values
 
     def get_response(self, frequencies):
-        from obspy.signal.invsim import fir_to_freq_resp
+        from obspy.signal.invsim import digital_filter_to_freq_resp
         sr = self.decimation_input_sample_rate
         frequencies = frequencies / sr * np.pi * 2.0
+
         if self.symmetry == 'ODD':
-            coefficients = self.coefficients + self.coefficients[::-1][1:]
+            coefficients = self._coefficients + self._coefficients[::-1][1:]
         elif self.symmetry == 'EVEN':
-            coefficients = self.coefficients + self.coefficients[::-1]
+            coefficients = self._coefficients + self._coefficients[::-1]
         else:
             # This is the full case
-            coefficients = self.coefficients
-
-        return fir_to_freq_resp(coefficients, [1.],
-                                frequencies=frequencies) * self.stage_gain
+            coefficients = self._coefficients
+        return digital_filter_to_freq_resp([1.], coefficients,
+                                           frequencies=frequencies) * self.stage_gain
 
 
 class PolynomialResponseStage(ResponseStage):
