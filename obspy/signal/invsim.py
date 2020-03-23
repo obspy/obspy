@@ -382,26 +382,31 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
         a = [1.0]
     # this turns the paz values into an IIR specification, so we will
     # use the IIR conversion method to produce the response
-    return iir_to_freq_resp(b, a, t_samp, nfft, frequencies, freq)
+    return digital_filter_to_freq_resp(b, a, t_samp, nfft, frequencies, freq)
 
 
-def iir_to_freq_resp(numer, denom, t_samp=None, nfft=None,
-                     frequencies=None, freq=False):
-    if frequencies is None:
-        n = nfft // 2
-        fy = 1 / (t_samp * 2.0)
-        # start at zero to get zero for offset / DC of fft
-        f = np.linspace(0, fy, n + 1)
-    else:
-        f = frequencies
-    _w, h = scipy.signal.freqs(numer, denom, f * 2 * np.pi)
-    if freq:
-        return h, f
-    return h
+def digital_filter_to_freq_resp(numer, denom, t_samp=None, nfft=None,
+                                frequencies=None, freq=False):
+    """
+    Convert a digital filter to frequency response.
 
+    The output contains the frequency zero which is the offset of the trace.
 
-def fir_to_freq_resp(numer, denom, t_samp=None, nfft=None,
-                         frequencies=None, freq=False):
+    :type numer: list of complex
+    :param numer: The numerator of a linear filter as coefficients
+    :type denom: list of complex
+    :param denom: The denominator of a linear filter as coefficients
+    :type t_samp: float
+    :param t_samp: Sampling interval in seconds
+    :type nfft: int
+    :param nfft: Number of FFT points of signal which needs correction
+    :type frequencies: list of float
+    :param frequencies: Discrete frequencies to get resp values for.
+    :type freq: bool
+    :param freq: If true, returns tuple of resp result with freq array input (i.e., x-values)
+    :rtype: :class:`numpy.ndarray` complex128
+    :return: Frequency response of PAZ of length nfft
+    """
     if frequencies is None:
         n = nfft // 2
         fy = 1 / (t_samp * 2.0)
