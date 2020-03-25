@@ -145,7 +145,7 @@ class ResponseTestCase(unittest.TestCase):
             print("passed:", xml_filename)
 
     def test_get_response_per_stage(self):
-        filenames = ["AU.MEEK", "IRIS_single_channel_with_response", "XM.05", "IU_ANMO_00_BHZ"]
+        filenames = ["AU.MEEK", "IU_ANMO_00_BHZ", "IRIS_single_channel_with_response", "XM.05"]
         units = ["DISP", "VEL", "ACC"]
 
         for filename in filenames:
@@ -290,6 +290,28 @@ class ResponseTestCase(unittest.TestCase):
                     freqs, output=unit)
                 expected = [seed_response[i_] for i_ in indices]
                 np.testing.assert_allclose(got, expected, rtol=1E-5)
+
+    def test_normalization_calculation(self):
+        zeros = [0, 0,
+                 -4.63100e+02 + 4.63100e+02j,
+                 -4.63100e+02 - 4.63100e+02j,
+                 -8.59502,
+                 -1.59005e+02]
+        poles = [-3.71864e-02 + 3.69685e-02,
+                 -3.71864e-02 - 3.69685e-02,
+                 -3.74800e+02,
+                 -5.20300e+02,
+                 -1.05300e+03 - 1.00500e+03,
+                 -1.05300e+03 + 1.00500e+03,
+                 -1.33000e+04,
+                 -8.96456,
+                 -9.20285e+01 + 3.96113e+02,
+                 -2.50919e+02]
+        stage = PolesZerosResponseStage(stage_sequence_number=1, stage_gain=1.957300e+04,
+                                        stage_gain_frequency=0.2, input_units='M/S', output_units='V',
+                                        pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
+                                        normalization_frequency=2E-2, zeros=zeros, poles=poles)
+        self.assertAlmostEqual(3.471289E+11, stage.normalization_factor, delta=1E6)
 
     def test_pitick2latex(self):
         self.assertEqual(_pitick2latex(3 * pi / 2), r'$\frac{3\pi}{2}$')
