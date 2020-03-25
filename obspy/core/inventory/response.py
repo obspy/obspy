@@ -537,24 +537,29 @@ class CoefficientsTypeResponseStage(ResponseStage):
         # digital, this may not be the case
         if self.cf_transfer_function_type == "DIGITAL":
             if len(self.denominator) == 0:
-                fir = True
                 resp = scipy.signal.freqz(b=self.numerator, a=[1.], worN=frequencies)[1]
 
                 gain_freq_amp = np.abs(scipy.signal.freqz(
                     b=self.numerator, a=[1.], worN=[self.stage_gain_frequency])[1])
             else:
-                resp = np.zeros_like(frequencies) + 0j
-                w = frequencies
+                # evalresp handles this a bit oddly, and we can't just use freqs
+                # or freqz to calculate our terms here. we get the numerator and
+                # denominator and do the math on them in their representation
+                # as magnitude and phase rather than standard complex format
+                w = frequencies  # rename to be concise and match the math conventions
+
+                resp = np.zeros_like(w) + 0j
                 for idx, num in enumerate(self.numerator):
-                    resp += num * (np.cos(-(idx) * w) + np.sin(-idx * w) * 1j)
+                    resp += num * (np.cos(-idx * w) + np.sin(-idx * w) * 1j)
                 amp = abs(resp)
                 phase = np.arctan2(resp.imag, resp.real)
-                resp = np.zeros_like(frequencies) + 0j
+
+                resp = np.zeros_like(w) + 0j
                 for idx, den in enumerate(self.denominator):
                     resp += den * (np.cos(-idx * w) + np.sin(-idx * w) * 1j)
                 amp /= abs(resp)
                 phase -= np.arctan2(resp.imag, resp.real)
-                # return amp
+
                 return amp * np.cos(phase) + amp * np.sin(phase) * 1j
         elif self.cf_transfer_function_type == "ANALOG (RADIANS/SECOND)":
             # XXX: Untested so far!
