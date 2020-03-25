@@ -13,7 +13,6 @@ import calendar
 import math
 import operator
 import re
-import sys
 import time
 import warnings
 
@@ -1282,8 +1281,27 @@ class UTCDateTime(object):
         """
         # This is an attempt to get consistent behavior across platforms.
         # See https://bugs.python.org/issue32195
-        if sys.version_info.major > 2 and sys.platform.startswith("linux"):
-            format = format.replace("%Y", "%04Y")
+        # Only ever do anything if there's a real need
+        if self.year < 1000:
+            try:
+                try:
+                    # replace '%Y' depending on results of previous check if
+                    # possible
+                    if not self.__class__._strftime_four_digit_year_works:
+                        format = format.replace("%Y", "%04Y")
+                except AttributeError:
+                    # this is the first time running into a potentially
+                    # problematic call, so check if something needs to be done
+                    # once now
+                    check = self.__class__(900, 1, 1).datetime.strftime('%Y')
+                    self.__class__._strftime_four_digit_year_works = (
+                        len(check) == 4)
+                    # now delegate again
+                    return self.strftime(format)
+            # just a safety net to not break UTCDateTime.strftime if some
+            # unforeseen problems with the above approach appear
+            except Exception:
+                pass
 
         return self.datetime.strftime(format)
 
