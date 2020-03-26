@@ -32,6 +32,7 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties,
 
 from .util import Angle, Frequency
 
+
 class ResponseStage(ComparingObject):
     """
     From the StationXML Definition:
@@ -128,15 +129,15 @@ class ResponseStage(ComparingObject):
         self.description = description
         self.decimation_input_sample_rate = \
             Frequency(decimation_input_sample_rate) \
-                if decimation_input_sample_rate is not None else None
+            if decimation_input_sample_rate is not None else None
         self.decimation_factor = decimation_factor
         self.decimation_offset = decimation_offset
         self.decimation_delay = \
             FloatWithUncertaintiesAndUnit(decimation_delay) \
-                if decimation_delay is not None else None
+            if decimation_delay is not None else None
         self.decimation_correction = \
             FloatWithUncertaintiesAndUnit(decimation_correction) \
-                if decimation_correction is not None else None
+            if decimation_correction is not None else None
 
     def __str__(self):
         ret = (
@@ -215,8 +216,8 @@ class PolesZerosResponseStage(ResponseStage):
                  stage_gain_frequency, input_units, output_units,
                  pz_transfer_function_type,
                  normalization_frequency, zeros, poles,
-                 normalization_factor=None, resource_id=None, resource_id2=None,
-                 name=None, input_units_description=None,
+                 normalization_factor=None, resource_id=None,
+                 resource_id2=None, name=None, input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
                  decimation_offset=None, decimation_delay=None,
@@ -233,7 +234,8 @@ class PolesZerosResponseStage(ResponseStage):
             if not isinstance(x, ComplexWithUncertainties):
                 poles[i] = ComplexWithUncertainties(x)
         self._poles = poles
-        # if we don't have a normalization factor, calculate it (needs P/Z set first)
+        # if we don't have a normalization factor
+        # calculate it (needs P/Z set first)
         if normalization_factor is None:
             normalization_factor = self.calc_normalization_factor()
         self.normalization_factor = float(normalization_factor)
@@ -520,8 +522,8 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     def get_response(self, frequencies):
         """
-        Produce the response curve from this coefficient response stage for a range
-        of frequencies
+        Produce the response curve from this coefficient
+        response stage for a range of frequencies
         :param frequencies: Frequency range to get resp curve over
         :return: The curve describing this response stage
         """
@@ -537,16 +539,19 @@ class CoefficientsTypeResponseStage(ResponseStage):
         # digital, this may not be the case
         if self.cf_transfer_function_type == "DIGITAL":
             if len(self.denominator) == 0:
-                resp = scipy.signal.freqz(b=self.numerator, a=[1.], worN=frequencies)[1]
+                resp = scipy.signal.freqz(b=self.numerator,
+                                          a=[1.], worN=frequencies)[1]
 
                 gain_freq_amp = np.abs(scipy.signal.freqz(
-                    b=self.numerator, a=[1.], worN=[self.stage_gain_frequency])[1])
+                    b=self.numerator, a=[1.],
+                    worN=[self.stage_gain_frequency])[1])
             else:
-                # evalresp handles this a bit oddly, and we can't just use freqs
-                # or freqz to calculate our terms here. we get the numerator and
-                # denominator and do the math on them in their representation
-                # as magnitude and phase rather than standard complex format
-                w = frequencies  # rename to be concise and match the math conventions
+                # evalresp handles this a bit oddly, and we can't just
+                # use freqs or freqz to calculate our terms here.
+                # we get the numerator and denominator and do the math
+                # on them in their representation as magnitude and
+                # phase rather than standard complex format
+                w = frequencies  # rename to be concise and match conventions
 
                 resp = np.zeros_like(w) + 0j
                 for idx, num in enumerate(self.numerator):
@@ -764,10 +769,10 @@ class FIRResponseStage(ResponseStage):
         self._coefficients = new_values
 
     def get_response(self, frequencies):
-        from obspy.signal.invsim import digital_filter_to_freq_resp
-        sr = self.decimation_input_sample_rate
-        frequencies = frequencies / sr * np.pi * 2.0
-
+        # Decimation blockette, e.g. gain only!
+        if not len(self._coefficients):
+            return np.ones_like(frequencies) * self.stage_gain
+        # We need to correct the coefficients for the different cases
         if self.symmetry == 'ODD':
             coefficients = self._coefficients + self._coefficients[::-1][1:]
         elif self.symmetry == 'EVEN':
@@ -775,8 +780,12 @@ class FIRResponseStage(ResponseStage):
         else:
             # This is the full case
             coefficients = self._coefficients
-        return digital_filter_to_freq_resp([1.], coefficients,
-                                           frequencies=frequencies) * self.stage_gain
+        sr = self.decimation_input_sample_rate
+        frequencies = frequencies / sr * np.pi * 2.0
+        resp = scipy.signal.freqz(b=coefficients, a=[1.], worN=frequencies)[1]
+        # Here we zero the phase (FIR) and return the amplitude
+        amp = np.abs(resp) * self.stage_gain + 0j
+        return amp
 
 
 class PolynomialResponseStage(ResponseStage):
@@ -1060,7 +1069,6 @@ class Response(ComparingObject):
         else:
             raise ValueError("Unknown output '%s'." % output)
 
-        apply_sens = True
         # Convert to 0-based indexing.
         # (End stage stays the same because it's the exclusive bound)
         if start_stage is None:
@@ -1249,7 +1257,7 @@ class Response(ComparingObject):
 
         # Nothing might be set - just return in that case.
         if set(itertools.chain.from_iterable(v.values()
-                                             for v in sampling_rates.values())) == {None}:
+               for v in sampling_rates.values())) == {None}:
             return sampling_rates
 
         # Find the first set input sampling rate. The output sampling rate
@@ -1805,11 +1813,11 @@ class Response(ComparingObject):
             if isinstance(blockette, PolesZerosResponseStage) and \
                     blockette.stage_gain and \
                     None in set([
-                blockette.decimation_correction,
-                blockette.decimation_delay,
-                blockette.decimation_factor,
-                blockette.decimation_input_sample_rate,
-                blockette.decimation_offset]):
+                                blockette.decimation_correction,
+                                blockette.decimation_delay,
+                                blockette.decimation_factor,
+                                blockette.decimation_input_sample_rate,
+                                blockette.decimation_offset]):
                 # Don't modify the original object.
                 blockette = copy.deepcopy(blockette)
                 blockette.decimation_correction = 0.0
