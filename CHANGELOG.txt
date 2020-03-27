@@ -156,6 +156,10 @@ Changes:
  - fix an installation issue with pip and setuptools version 46 (see #2578)
  - fix response plots when providing `axes=...` with a numpy array of Axes
    instances (see #2579)
+ - add methods for calculating responses outside of evalresp -- these methods
+   are part of the Response class and called get_response (which matches the
+   signature of get_evalresp_response_for_frequencies) and
+   get_response_for_window_size (which matches get_evalresp_response).
 
 1.2.0 (doi: 10.5281/zenodo.3674646)
 ===================================
