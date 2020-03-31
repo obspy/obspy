@@ -96,13 +96,15 @@ class TriggerTestCase(unittest.TestCase):
         Test AIC function aganist SAC file
         """
         filename = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC')
-        aic_cf_compare = np.load(os.path.join(self.path,
-                                              'CRLZ.HHZ.10.NZ.AICcf.npy'))
+        # aic_cf_compare = np.load(os.path.join(self.path,
+        #                                       'CRLZ.HHZ.10.NZ.AICcf.npy'))
+        aic_cf_compare = np.loadtxt(os.path.join(self.path,
+                                                 'CRLZ.HHZ.10.NZ.AICcf.txt'))
         tr = read(filename)[0]
         idx, aic_cf = aic(tr.data)
         self.assertEqual(idx, 22690)
         self.assertEqual(len(aic_cf), tr.data.size - 1)
-        np.testing.assert_array_almost_equal(aic_cf, aic_cf_compare)
+        np.testing.assert_array_almost_equal(aic_cf, aic_cf_compare, 4)
 
     def test_ar_pick(self):
         """
