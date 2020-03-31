@@ -93,14 +93,16 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_aic(self):
         """
-        Test AIC function aganist implementation for UNESCO short course
+        Test AIC function aganist SAC file
         """
-        filename = os.path.join(self.path, 'manz_waldk.a01.gz')
-        with gzip.open(filename) as f:
-            data = np.loadtxt(f, dtype=np.float32)
-        idx, aic_cf = aic(data)
-        self.assertEqual(idx, 60868)
-        self.assertEqual(len(aic_cf), 119999)
+        filename = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC')
+        aic_cf_compare = np.load(os.path.join(self.path,
+                                              'CRLZ.HHZ.10.NZ.AICcf.npy'))
+        tr = read(filename)[0]
+        idx, aic_cf = aic(tr.data)
+        self.assertEqual(idx, 22690)
+        self.assertEqual(len(aic_cf), tr.data.size - 1)
+        np.testing.assert_array_almost_equal(aic_cf, aic_cf_compare)
 
     def test_ar_pick(self):
         """

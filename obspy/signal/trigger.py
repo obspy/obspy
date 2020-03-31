@@ -435,17 +435,20 @@ def aic(td):
     Returns P-phase arrival time index and the characteristic function.
     The returned index correspond to the characteristic function's minima.
 
-    :type td: numpy.ndarray
-    :param td: time series as numpy.ndarray float32 data
+    :type td: :class:`numpy.ndarray`
+    :param td: time series values.
     :return: (idx, aic_cf) idx sample number of parrival; aic_cf numpy.ndarray
         containing the values of the characteristic function.
 
     .. seealso:: [Maeda1985]_
     """
-    # --------------------  Creation of the characteristic function
-    aic_cf = np.zeros(td.size-1)
-    for ii in range(1, td.size):
-        with np.errstate(divide='raise'):
+    # --------------------  Initial checks
+    if not isinstance(td, np.ndarray):
+        raise ValueError("Input time series must be a numpy.ndarray instance!")
+    aic_cf = np.zeros(td.size - 1)
+    # --------------------  CF calculation
+    with np.errstate(divide='raise'):
+        for ii in range(1, td.size):
             try:
                 var1 = np.log(np.var(td[0:ii]))
             except FloatingPointError:  # if var==0 --> log is -inf
@@ -455,12 +458,12 @@ def aic(td):
                 var2 = np.log(np.var(td[ii:]))
             except FloatingPointError:  # if var==0 --> log is -inf
                 var2 = 0.00
-        #
-        val1 = ii*var1
-        val2 = (td.size-ii-1)*var2
-        aic_cf[ii-1] = (val1+val2)
+            #
+            val1 = ii * var1
+            val2 = (td.size - ii - 1) * var2
+            aic_cf[ii - 1] = (val1 + val2)
     # --------------------  Index search
-    idx = sorted(range(len(aic_cf)), key=lambda k: aic_cf[k])[0]
+    idx = np.argmin(aic_cf)
     return idx, aic_cf
 
 

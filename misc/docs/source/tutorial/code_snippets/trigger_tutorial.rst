@@ -398,7 +398,7 @@ This gives the output 30.6350002289 and 31.2800006866, meaning that a P pick at
 30.64s and an S pick at 31.28s were identified.
 
 AIC - Akaike Information Criterion
-===========
+==================================
 
 For :func:`~obspy.signal.trigger.aic`, the input is a numpy.ndarray and the
 output is in sample.
@@ -408,11 +408,11 @@ output is in sample.
     >>> trace = read("https://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
     >>> trace_s = trace.slice(UTCDateTime('1970-01-01T01:00:31.6'),
-                              UTCDateTime('1970-01-01T01:00:34.3'))
+    ...                       UTCDateTime('1970-01-01T01:00:34.3'))
     >>> p_idx, aic_f = aic(trace_s.data)
     >>> print(p_idx / df)
     1.62
-    >>> print(UTCDateTime('1970-01-01T01:00:31.6')+(p_idx / df))
+    >>> print(UTCDateTime('1970-01-01T01:00:31.6') + (p_idx / df))
     1970-01-01T01:00:33.220000Z
 
 This yeld the output of 4.225 seconds from the sliced trace start time.
