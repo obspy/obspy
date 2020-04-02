@@ -8,22 +8,15 @@ Module containing a UTC-based datetime class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import datetime
 import calendar
 import math
 import operator
 import re
-import sys
 import time
 import warnings
 
 import numpy as np
-from obspy.core.compatibility import py3_round
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 # Regular expression used in the init function of the UTCDateTime objects which
@@ -352,7 +345,7 @@ class UTCDateTime(object):
                 self._from_datetime(dt)
                 return
             elif isinstance(value, (bytes, str)):
-                if not isinstance(value, (str, native_str)):
+                if not isinstance(value, str):
                     value = value.decode()
                 # got a string instance
                 value = value.strip()
@@ -693,7 +686,7 @@ class UTCDateTime(object):
         """
         # datetime.utcfromtimestamp will cut off but not round
         # avoid through adding timedelta - also avoids the year 2038 problem
-        rounded_ns = py3_round(self._ns, self.precision - 9)
+        rounded_ns = round(self._ns, self.precision - 9)
         dt = datetime.timedelta(seconds=rounded_ns // 10**9,
                                 microseconds=rounded_ns % 10**9 // 1000)
         try:
@@ -926,7 +919,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        ms = int(py3_round(self._ns % 10**9, self.precision - 9) // 1000)
+        ms = int(round(self._ns % 10**9, self.precision - 9) // 1000)
         return ms % 1000000
 
     def _set_microsecond(self, value):
@@ -1056,7 +1049,7 @@ class UTCDateTime(object):
         time_str = YMDHMS_FORMAT % tuple(getattr(dt, x) for x in YMDHMS)
 
         if self.precision > 0:
-            ns = py3_round(self.ns, self.precision - 9)
+            ns = round(self.ns, self.precision - 9)
             ns_str = ('%09d' % (ns % 10 ** 9))[:self.precision]
             time_str += ('.' + ns_str)
         return time_str + 'Z'
@@ -1086,8 +1079,8 @@ class UTCDateTime(object):
                        ' is not defined will raise an Exception in a future'
                        ' version of obspy')
                 warnings.warn(msg, ObsPyDeprecationWarning)
-            a = py3_round(self._ns, ndigits)
-            b = py3_round(other._ns, ndigits)
+            a = round(self._ns, ndigits)
+            b = round(other._ns, ndigits)
             return op_func(a, b)
         else:
             try:
@@ -1286,30 +1279,31 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
-        # See https://bugs.python.org/issue32195
         # This is an attempt to get consistent behavior across platforms.
-        if sys.version_info.major > 2 and sys.platform.startswith("linux"):
-            format = format.replace("%Y", "%04Y")
+        # See https://bugs.python.org/issue32195
+        # Only ever do anything if there's a real need
+        if self.year < 1000:
+            try:
+                try:
+                    # replace '%Y' depending on results of previous check if
+                    # possible
+                    if not self.__class__._strftime_four_digit_year_works:
+                        format = format.replace("%Y", "%04Y")
+                except AttributeError:
+                    # this is the first time running into a potentially
+                    # problematic call, so check if something needs to be done
+                    # once now
+                    check = self.__class__(900, 1, 1).datetime.strftime('%Y')
+                    self.__class__._strftime_four_digit_year_works = (
+                        len(check) == 4)
+                    # now delegate again
+                    return self.strftime(format)
+            # just a safety net to not break UTCDateTime.strftime if some
+            # unforeseen problems with the above approach appear
+            except Exception:
+                pass
 
-        try:
-            ret = self.datetime.strftime(format)
-        # this is trying to work around strftime refusing to work with years
-        # <1900
-        # XXX this problem seems to be specific to Python < 3.2
-        # XXX so this can be removed after dropping Python 2 support
-        except ValueError as e:
-            # some other error? just raise it..
-            if 'the datetime strftime() methods require year' not in str(e):
-                raise
-            # otherwise, try to do replace all strftime '%' commands with
-            # simple string formatting
-            format_ = self._strftime_replacement(format)
-            # if there's still some strftime commands in there, we have a
-            # problem still ('%%' is a %-sign literal)
-            if '%' in format_.replace('%%', ''):
-                raise
-            ret = format_
-        return ret
+        return self.datetime.strftime(format)
 
     def _strftime_replacement(self, strftime_string):
         """
@@ -1456,7 +1450,7 @@ class UTCDateTime(object):
         >>> dt.isoformat()
         '2008-10-01T00:00:00'
         """
-        return self.datetime.isoformat(sep=native_str(sep))
+        return self.datetime.isoformat(sep=sep)
 
     def format_fissures(self):
         """

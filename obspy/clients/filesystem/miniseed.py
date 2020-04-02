@@ -2,11 +2,6 @@
 """
 Data extraction and transfer from miniSEED files
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import with_metaclass
-
 import abc
 import bisect
 import ctypes
@@ -41,7 +36,7 @@ class RequestLimitExceededError(ObsPyClientFileSystemMiniSEEDException):
     pass
 
 
-class _ExtractedDataSegment(with_metaclass(abc.ABCMeta)):
+class _ExtractedDataSegment(metaclass=abc.ABCMeta):
     """
     There are a few different forms that a chunk of extracted data can take,
     so we return a wrapped object that exposes a simple, consistent API

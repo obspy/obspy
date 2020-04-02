@@ -17,11 +17,6 @@ This class hierarchy is closely modelled after the de-facto standard format
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copy
 import warnings
 
@@ -217,7 +212,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, (str, native_str)):
+        if not isinstance(index, str):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)

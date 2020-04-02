@@ -17,11 +17,6 @@ Various Routines Related to Spectral Estimation
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import bisect
 import glob
 import math
@@ -1008,11 +1003,11 @@ class PPSD(object):
         # otherwise compute it and store it for subsequent stacks on the
         # same data (has to be recomputed when additional data gets added)
         else:
-            dtype = np.dtype([(native_str('time_of_day'), np.float32),
-                              (native_str('iso_weekday'), np.int8),
-                              (native_str('iso_week'), np.int8),
-                              (native_str('year'), np.int16),
-                              (native_str('month'), np.int8)])
+            dtype = np.dtype([('time_of_day', np.float32),
+                              ('iso_weekday', np.int8),
+                              ('iso_week', np.int8),
+                              ('year', np.int16),
+                              ('month', np.int8)])
             times_all_details = np.empty(shape=len(self._times_processed),
                                          dtype=dtype)
             utc_times_all = [UTCDateTime(ns=t) for t in self._times_processed]
@@ -1256,7 +1251,7 @@ class PPSD(object):
             return self._get_response_from_parser(tr)
         elif isinstance(self.metadata, dict):
             return self._get_response_from_paz_dict(tr)
-        elif isinstance(self.metadata, (str, native_str)):
+        elif isinstance(self.metadata, str):
             return self._get_response_from_resp(tr)
         else:
             msg = "Unexpected type for `metadata`: %s" % type(self.metadata)

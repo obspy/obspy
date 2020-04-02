@@ -4,10 +4,6 @@ Convenience class for iterating over miniSEED records in a file.
 
 Version 2017.114
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import ctypes as C  # NOQA
 
 from obspy import UTCDateTime
@@ -49,8 +45,6 @@ class _MSRIterator(object):
     _MSRIterator.msr.contents.reclen))
 
     .. rubric:: Example
-
-    from future.builtins import *
 
     from msriterator import _MSRIterator
 

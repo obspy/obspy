@@ -9,11 +9,6 @@ Provides the Channel class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible
-
 import warnings
 
 from obspy.core.util.decorator import deprecated_keywords
@@ -25,7 +20,6 @@ from .util import (Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude,
                    Equipment)
 
 
-@python_2_unicode_compatible
 class Channel(BaseNode):
     """
     From the StationXML definition:

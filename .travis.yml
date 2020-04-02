@@ -12,16 +12,7 @@ matrix:
     # do one build run with our minimum dependencies
     # (or, well, at least the lowest version number that is available through
     #  anaconda..)
-    - os: linux
-      env: PYTHON_VERSION=2.7 MINIMUM_DEPENDENCIES="True"
-    - os: linux
-      env: PYTHON_VERSION=2.7
-    - os: linux
-      env: PYTHON_VERSION=3.4
-    - os: linux
-      env: PYTHON_VERSION=3.5
-    - os: linux
-      env: PYTHON_VERSION=3.6
+    # XXX maybe should add minimum dependency build again, if feasible
     - os: linux
       env: PYTHON_VERSION=3.7
     - os: linux
@@ -34,10 +25,6 @@ matrix:
     #         # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
     #         - libstdc++6:i386
     #         - gcc-multilib
-    - os: osx
-      env: PYTHON_VERSION=2.7
-    - os: osx
-      env: PYTHON_VERSION=3.6
     - os: osx
       env: PYTHON_VERSION=3.7
     - os: osx
@@ -73,11 +60,7 @@ install:
   # -     export ARCH="_64"
   # -   fi
   - export ARCH="_64"
-  - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
-    fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
@@ -88,32 +71,20 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
   - |
-      if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
-        NUMPY="numpy=1.8.2"
-        SCIPY="scipy=0.12.0"
-        MATPLOTLIB="matplotlib=1.3.1"
-        BASEMAP="basemap=1.0.7"
-        PYPROJ="pyproj"
-        GFORTRAN="libgfortran=1"
-        PIP="pip"
-        PROJ4="proj4"
-        # ancient matplotlib needs to be turned to AGG before anything else,
-        # otherwise it tries to import incompatible version of Qt as a backend
-        # and hick-ups..
-        mkdir -p $HOME/.matplotlib
-        echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
-      elif [[ "${PYTHON_VERSION}" == '3.4' ]]; then
-        # 3.4 apparently no longer get's updated packages.
-        # Let conda resolve to the latest versions.
-        # pip dropped py3.4 support with 12.1
-        NUMPY="numpy"
-        SCIPY="scipy"
-        MATPLOTLIB="matplotlib"
-        BASEMAP="basemap"
-        PIP="pip<19.2"
-        PYPROJ="pyproj"
-        PROJ4="proj4"
-        GFORTRAN=""
+      # if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
+      #   NUMPY="numpy=1.8.2"
+      #   SCIPY="scipy=0.12.0"
+      #   MATPLOTLIB="matplotlib=1.3.1"
+      #   BASEMAP="basemap=1.0.7"
+      #   PYPROJ="pyproj"
+      #   GFORTRAN="libgfortran=1"
+      #   PIP="pip"
+      #   PROJ4="proj4"
+      #   # ancient matplotlib needs to be turned to AGG before anything else,
+      #   # otherwise it tries to import incompatible version of Qt as a backend
+      #   # and hick-ups..
+      #   mkdir -p $HOME/.matplotlib
+      #   echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
       # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
       #   # Special packages for 32bit. Also let conda resolve to the latest
       #   # versions.
@@ -123,37 +94,18 @@ install:
       #   BASEMAP="basemap"
       #   PYPROJ="pyproj"
       # For anything else also let conda resolve, but force matplotlib 2.
-      elif [[ "${PYTHON_VERSION}" == '3.6' ]]; then
-        # Pin proj4 to 4.9.3 for map testing - see basemap #433
-        # Let conda resolve to the latest versions otherwise.
-        NUMPY="numpy"
-        SCIPY="scipy"
-        MATPLOTLIB="matplotlib"
-        BASEMAP="basemap"
-        PIP="pip"
-        PYPROJ="pyproj"
-        PROJ4="proj4=4.9.3"
-        GFORTRAN=""
-      elif [[ "${PYTHON_VERSION}" == '3.7' ]]; then
+      if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
         # Pin proj4 to 4.9.3 for map testing - see basemap #433
         # Let conda resolve to the latest versions otherwise.
         NUMPY="numpy"
         SCIPY="scipy"
         MATPLOTLIB="matplotlib"
         BASEMAP="basemap>=1.2.1"
-        PIP="pip"
-        PYPROJ="pyproj"
-        PROJ4="proj4"
-        GFORTRAN=""
       else
         NUMPY="numpy"
         SCIPY="scipy"
         MATPLOTLIB="matplotlib>=2.0.0"
         BASEMAP="basemap"
-        PIP="pip"
-        PYPROJ="pyproj"
-        PROJ4="proj4"
-        GFORTRAN=""
       fi
   # proj4 version 5.2.0 has issues with psuedocyl projections (see basemap #433).
   - conda create -n test-environment
@@ -162,23 +114,23 @@ install:
         $SCIPY
         $MATPLOTLIB
         $BASEMAP
-        $PIP
-        $PYPROJ
-        $PROJ4
-        $GFORTRAN
+        pip
+        pyproj
+        pyshp
+        proj4
         codecov
         coverage
         certifi>=2017.4.17
         decorator
         docopt
-        future
+        geographiclib
         jsonschema
         lxml
-        mock
         nose
         requests
         sqlalchemy
         cryptography
+        pyimgur
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
   # available for all archs. "--no-update-dependencies" keeps other packages at
@@ -189,22 +141,7 @@ install:
   # least our builds work..
   # XXX - conda install --no-update-dependencies m2crypto || true
   # XXX - conda install --no-update-dependencies cartopy || true
-  # pyshp is safe to install, it depends on no other packages and has a noarch
-  # py6 package
-  # not a clue why conda is trying to pull in other packages when doing
-  # "conda install -c conda-forge --no-update-dependencies pyshp", because the
-  # pyshp conda package lists 0 dependencies, anyway, so use "--no-deps" to
-  # really avoid installing/updating any other packages
-  - conda install -c conda-forge --no-update-deps --no-deps pyshp || pip install pyshp
-  # install packages not available via conda
-  - pip install geographiclib
-  # current pyimgur stable release has a py3 incompatibility
-  - pip install https://github.com/megies/PyImgur/archive/py3.zip
   - pip freeze
-  # XXX quick and dirty workaround for problems with pip wanting to upgrade certifi
-  - if [[ "${PYTHON_VERSION}" == '3.5' ]]; then
-      conda remove --offline certifi;
-    fi
   - pip install https://github.com/obspy/obspy_github_api/archive/0.7.0.zip
   - conda list
   # done installing dependencies

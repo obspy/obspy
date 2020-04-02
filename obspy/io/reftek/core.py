@@ -2,11 +2,6 @@
 """
 REFTEK130 read support, core routines.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copy
 import io
 import os
@@ -168,7 +163,7 @@ class Reftek130(object):
             warnings.warn(msg)
             if sort_permuted_package_sequence:
                 self._data.sort(order=[
-                    native_str(key) for key in ("packet_sequence", "time")])
+                    key for key in ("packet_sequence", "time")])
 
     def check_packet_sequence_contiguous(self):
         """

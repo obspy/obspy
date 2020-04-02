@@ -2,11 +2,6 @@
 """
 MSEED bindings to ObsPy core module.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import io
 import os
@@ -306,7 +301,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     info = {'filesize': info['filesize']}
 
     # If it's a file name just read it.
-    if isinstance(mseed_object, (str, native_str)):
+    if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
         bfr_np = np.fromfile(mseed_object, dtype=np.int8)
     elif hasattr(mseed_object, 'read'):
@@ -362,7 +357,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
         if sourcename is not None:
-            if not isinstance(sourcename, (str, native_str)):
+            if not isinstance(sourcename, str):
                 msg = 'sourcename needs to be a string'
                 raise ValueError(msg)
             # libmseed uses underscores as separators and allows filtering
@@ -799,7 +794,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['encoding'] = 5
             elif trace.data.dtype.type == np.int16:
                 trace_attr['encoding'] = 1
-            elif trace.data.dtype.type == np.dtype(native_str('|S1')).type:
+            elif trace.data.dtype.type == np.dtype('|S1').type:
                 trace_attr['encoding'] = 0
             # int64 data not supported; if possible downcast to int32, else
             # create error message. After bumping up to numpy 1.9.0 this check
@@ -886,7 +881,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
             size = C.sizeof(Blkt1001S)
             # Only timing quality matters here, other blockette attributes will
             # be filled by libmseed.msr_normalize_header
-            blkt_value = pack(native_str("BBBB"), trace_attr['timing_quality'],
+            blkt_value = pack("BBBB", trace_attr['timing_quality'],
                               0, 0, 0)
             blkt_ptr = C.create_string_buffer(blkt_value, len(blkt_value))
 

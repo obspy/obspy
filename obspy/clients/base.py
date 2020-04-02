@@ -47,11 +47,6 @@ class MyNewClient(WaveformClient, StationClient):
                                          starttime, endtime)
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import PY2, with_metaclass, native_str
-
 from abc import ABCMeta, abstractmethod
 import io
 import platform
@@ -63,11 +58,8 @@ import obspy
 
 
 # Default user agents all HTTP clients should utilize.
-if PY2:
-    platform_ = platform.platform().decode("ascii", "ignore")
-else:
-    encoding = sys.getdefaultencoding() or "UTF-8"
-    platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
+encoding = sys.getdefaultencoding() or "UTF-8"
+platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
 # The default User Agent that will be sent with every request.
 DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (
     obspy.__version__, platform_, platform.python_version())
@@ -102,7 +94,7 @@ class BaseClient(object):
         self._debug = debug
 
 
-class RemoteBaseClient(with_metaclass(ABCMeta, BaseClient)):
+class RemoteBaseClient(BaseClient, metaclass=ABCMeta):
     def __init__(self, debug=False, timeout=120):
         """
         Base class for all remote mixin classes.
@@ -123,7 +115,7 @@ class RemoteBaseClient(with_metaclass(ABCMeta, BaseClient)):
         pass
 
 
-class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
+class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
     """
     Mix-in class to add HTTP capabilities.
 
@@ -199,9 +191,9 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         :rtype: :class:`requests.Response`
         """
         if params:
-            params = {k: native_str(v) for k, v in params.items()}
+            params = {k: v for k, v in params.items()}
 
-        _request_args = {"url": native_str(url),
+        _request_args = {"url": url,
                          "headers": {"User-Agent": self._user_agent},
                          "params": params}
 
@@ -262,7 +254,7 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
                     fh.write(chunk)
 
 
-class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
+class WaveformClient(BaseClient, metaclass=ABCMeta):
     """
     Base class for Clients supporting Stream objects.
     """
@@ -296,7 +288,7 @@ class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
         pass
 
 
-class EventClient(with_metaclass(ABCMeta, BaseClient)):
+class EventClient(BaseClient, metaclass=ABCMeta):
     """
     Base class for Clients supporting Catalog objects.
     """
@@ -355,7 +347,7 @@ class EventClient(with_metaclass(ABCMeta, BaseClient)):
         pass
 
 
-class StationClient(with_metaclass(ABCMeta, BaseClient)):
+class StationClient(BaseClient, metaclass=ABCMeta):
     """
     Base class for Clients supporting Inventory objects.
     """

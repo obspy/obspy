@@ -9,11 +9,6 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
 import copy
 import gzip
 import io
@@ -24,26 +19,22 @@ import textwrap
 import threading
 import warnings
 from collections import OrderedDict
+from urllib.parse import urlparse
 
 from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
-from obspy.core.compatibility import urlparse, collections_abc
+from obspy.core.compatibility import collections_abc
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_SERVICES,
                      FDSNException, FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
 
-if PY2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-    import Queue as queue  # NOQA
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
-    import queue
+from urllib.parse import urlencode
+import urllib.request as urllib_request
+import queue
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
@@ -1228,7 +1219,7 @@ class Client(object):
             this_type = service_params[key]["type"]
 
             # Try to decode to be able to work with bytes.
-            if this_type is native_str:
+            if this_type is str:
                 try:
                     value = value.decode()
                 except AttributeError:
@@ -1617,7 +1608,7 @@ def convert_to_string(value):
     >>> print(convert_to_string(False))
     false
     """
-    if isinstance(value, (str, native_str)):
+    if isinstance(value, str):
         return value
     # Boolean test must come before integer check!
     elif isinstance(value, bool):
@@ -1628,8 +1619,6 @@ def convert_to_string(value):
         return str(value)
     elif isinstance(value, UTCDateTime):
         return str(value).replace("Z", "")
-    elif PY2 and isinstance(value, bytes):
-        return value
     else:
         raise TypeError("Unexpected type %s" % repr(value))
 
@@ -1884,7 +1873,7 @@ def get_bulk_string(bulk, arguments):
     # StringIO objects also have __iter__ so check for 'read' as well
     if isinstance(bulk, collections_abc.Iterable) \
             and not hasattr(bulk, "read") \
-            and not isinstance(bulk, (str, native_str)):
+            and not isinstance(bulk, str):
         tmp = ["%s=%s" % (key, convert_to_string(value))
                for key, value in arguments.items() if value is not None]
         # empty location codes have to be represented by two dashes
@@ -1900,7 +1889,7 @@ def get_bulk_string(bulk, arguments):
         # if it has a read method, read data from there
         if hasattr(bulk, "read"):
             bulk = bulk.read()
-        elif isinstance(bulk, (str, native_str)):
+        elif isinstance(bulk, str):
             # check if bulk is a local file
             if "\n" not in bulk and os.path.isfile(bulk):
                 with open(bulk, 'r') as fh:

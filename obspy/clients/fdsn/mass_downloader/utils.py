@@ -9,24 +9,16 @@ Utility functions required for the download helpers.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import collections
 import fnmatch
 import itertools
 import os
-import sys
-from lxml import etree
-import numpy as np
-from scipy.spatial import cKDTree
 from socket import timeout as socket_timeout
+from urllib.error import HTTPError, URLError
 
-if sys.version_info.major == 2:
-    from urllib2 import HTTPError, URLError
-else:
-    from urllib.error import HTTPError, URLError
+import numpy as np
+from lxml import etree
+from scipy.spatial import cKDTree
 
 import obspy
 from obspy.core import compatibility
@@ -37,17 +29,7 @@ from obspy.io.mseed.util import get_record_information
 
 # Different types of errors that can happen when downloading data via the
 # FDSN clients.
-ERRORS = [FDSNException, HTTPError, URLError, socket_timeout]
-
-# Python 2 does have special classes for connection errors.
-if sys.version_info.major == 2:
-    # Use the base OS error on Python 2.
-    ERRORS.append(OSError)
-else:
-    # All other connection errors inherit from it.
-    ERRORS.append(ConnectionError)  # NOQA
-
-ERRORS = tuple(ERRORS)
+ERRORS = (FDSNException, HTTPError, URLError, socket_timeout, ConnectionError)
 
 # mean earth radius in meter as defined by the International Union of
 # Geodesy and Geophysics. Used for the spherical kd-tree.

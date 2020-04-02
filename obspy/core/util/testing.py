@@ -8,11 +8,6 @@ Testing utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import difflib
 import doctest
 import glob
@@ -61,14 +56,14 @@ def add_unittests(testsuite, module_name):
     >>> add_unittests(suite, "obspy.core")
     """
     module_tests = __import__(module_name + ".tests",
-                              fromlist=[native_str("obspy")])
+                              fromlist=["obspy"])
     filename_pattern = os.path.join(module_tests.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
     names = (os.path.basename(file).split(".")[0] for file in files)
     module_names = (".".join([module_name, "tests", name]) for name in names)
     for _module_name in module_names:
         _module = __import__(_module_name,
-                             fromlist=[native_str("obspy")])
+                             fromlist=["obspy"])
         testsuite.addTest(_module.suite())
 
 
@@ -90,7 +85,7 @@ def add_doctests(testsuite, module_name):
     >>> suite = unittest.TestSuite()
     >>> add_doctests(suite, "obspy.core")
     """
-    module = __import__(module_name, fromlist=[native_str("obspy")])
+    module = __import__(module_name, fromlist=["obspy"])
     module_path = module.__path__[0]
     module_path_len = len(module_path)
 
@@ -117,7 +112,7 @@ def add_doctests(testsuite, module_name):
             _module_name = ".".join([module_name] + parts + [file[:-3]])
             try:
                 _module = __import__(_module_name,
-                                     fromlist=[native_str("obspy")])
+                                     fromlist=["obspy"])
                 testsuite.addTest(doctest.DocTestSuite(_module))
             except ValueError:
                 pass
@@ -143,15 +138,15 @@ def write_png(arr, filename):
 
     def png_pack(png_tag, data):
         chunk_head = png_tag + data
-        return (struct.pack(native_str("!I"), len(data)) +
+        return (struct.pack("!I", len(data)) +
                 chunk_head +
-                struct.pack(native_str("!I"),
+                struct.pack("!I",
                             0xFFFFFFFF & zlib.crc32(chunk_head)))
 
     with open(filename, "wb") as fh:
         fh.write(b''.join([
             b'\x89PNG\r\n\x1a\n',
-            png_pack(b'IHDR', struct.pack(native_str("!2I5B"),
+            png_pack(b'IHDR', struct.pack("!2I5B",
                      width, height, 8, 6, 0, 0, 0)),
             png_pack(b'IDAT', zlib.compress(raw_data, 9)),
             png_pack(b'IEND', b'')]))
@@ -195,8 +190,8 @@ def compare_images(expected, actual, tol):
         raise IOError('Baseline image %r does not exist.' % expected)
 
     # Open the images. Will be opened as RGBA as float32 ranging from 0 to 1.
-    expected_image = matplotlib.image.imread(native_str(expected))
-    actual_image = matplotlib.image.imread(native_str(actual))
+    expected_image = matplotlib.image.imread(expected)
+    actual_image = matplotlib.image.imread(actual)
     if expected_image.shape != actual_image.shape:
         raise ImageComparisonException(
             "The shape of the received image %s is not equal to the expected "
@@ -389,11 +384,11 @@ class ImageComparison(NamedTemporaryFile):
         import locale
 
         try:
-            locale.setlocale(locale.LC_ALL, native_str('en_US.UTF-8'))
+            locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
         except Exception:
             try:
                 locale.setlocale(locale.LC_ALL,
-                                 native_str('English_United States.1252'))
+                                 'English_United States.1252')
             except Exception:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"
@@ -415,7 +410,7 @@ class ImageComparison(NamedTemporaryFile):
                 warnings.warn('Unable to find the ' + default_font + ' font. '
                               'Plotting tests will likely fail.')
         try:
-            rcParams['text.hinting'] = False
+            rcParams['text.hinting'] = 'none'
         except KeyError:
             warnings.warn("could not set rcParams['text.hinting']")
         try:

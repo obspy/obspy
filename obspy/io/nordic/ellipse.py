@@ -16,11 +16,6 @@ Routines for error ellipses in seismological coordinates (N=0, W=90)
 .. note:
  TODO: ellipsoids (3D ellipses)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
-
 import numpy as np
 import copy
 import io

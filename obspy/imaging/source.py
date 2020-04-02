@@ -13,10 +13,6 @@ Functions to compute and plot radiation patterns
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import numpy as np
 from matplotlib.cm import get_cmap
 

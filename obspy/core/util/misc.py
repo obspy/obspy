@@ -8,16 +8,10 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
 import contextlib
 import inspect
 import io
 import itertools
-import locale
 import math
 import os
 import shutil
@@ -272,16 +266,13 @@ def get_untracked_files_from_git():
     return files
 
 
-if PY2:
-    from cStringIO import StringIO as CaptureIO
-else:
-    class CaptureIO(io.TextIOWrapper):
-        def __init__(self):
-            super(CaptureIO, self).__init__(io.BytesIO(), encoding='utf-8',
-                                            newline='\n', write_through=True)
+class CaptureIO(io.TextIOWrapper):
+    def __init__(self):
+        super(CaptureIO, self).__init__(io.BytesIO(), encoding='utf-8',
+                                        newline='\n', write_through=True)
 
-        def getvalue(self):
-            return self.buffer.getvalue().decode('utf-8')
+    def getvalue(self):
+        return self.buffer.getvalue().decode('utf-8')
 
 
 @contextlib.contextmanager
@@ -326,16 +317,6 @@ def CatchOutput():  # NOQA
         if WIN32:
             out.stdout = out.stdout.replace('\r', '')
             out.stderr = out.stderr.replace('\r', '')
-        # remove encoding for PY2 -> we always want PY2 unicode/PY3 str
-        if PY2:
-            if sys.stdout.isatty():
-                out.stdout.decode(sys.stdout.encoding)
-            else:
-                out.stdout.decode(locale.getpreferredencoding())
-            if sys.stderr.isatty():
-                out.stderr.decode(sys.stderr.encoding)
-            else:
-                out.stderr.decode(locale.getpreferredencoding())
 
     if raised:
         raise SystemExit(out.stderr)

@@ -16,11 +16,6 @@ WAV bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import os
 import wave
 
@@ -33,9 +28,9 @@ from obspy.core.compatibility import from_buffer
 # WAVE data format is unsigned char up to 8bit, and signed int
 # for the remaining.
 WIDTH2DTYPE = {
-    1: native_str('<u1'),  # unsigned char
-    2: native_str('<i2'),  # signed short int
-    4: native_str('<i4'),  # signed int (int32)
+    1: '<u1',  # unsigned char
+    2: '<i2',  # signed short int
+    4: '<i4',  # signed int (int32)
 }
 
 

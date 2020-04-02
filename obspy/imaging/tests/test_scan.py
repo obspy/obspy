@@ -2,10 +2,6 @@
 """
 The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import shutil
 import unittest

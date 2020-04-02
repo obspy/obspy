@@ -3,11 +3,6 @@
 """
 Objects and functions dealing with seismic phases.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import raise_from
-
 from itertools import count
 import math
 import re
@@ -215,8 +210,9 @@ class SeismicPhase(object):
                     s_layer_num, is_p_wave_previous)
                 self.max_ray_param = layer['top_p']
             except SlownessModelError as e:
-                raise_from(RuntimeError('Please contact the developers. This '
-                                        'error should not occur.'), e)
+                msg = ('Please contact the developers. This error should not '
+                       'occur.')
+                raise RuntimeError(msg) from e
             self.max_ray_param = tau_model.get_tau_branch(
                 tau_model.source_branch, is_p_wave).max_ray_param
         elif current_leg in ("p", "s") or (
@@ -231,8 +227,9 @@ class SeismicPhase(object):
                     s_layer_num, is_p_wave_previous)
                 self.max_ray_param = layer['bot_p']
             except SlownessModelError as e:
-                raise_from(RuntimeError('Please contact the developers. This '
-                                        'error should not occur.'), e)
+                msg = ('Please contact the developers. This error should not '
+                       'occur.')
+                raise RuntimeError(msg) from e
             if tau_model.source_branch != 0:
                 self.current_branch = tau_model.source_branch - 1
             else:
@@ -1323,8 +1320,8 @@ class SeismicPhase(object):
                                                 search_dist, tolerance,
                                                 recursion_limit - 1)
         except (IndexError, LookupError, SlownessModelError) as e:
-            raise_from(RuntimeError('Please contact the developers. This '
-                                    'error should not occur.'), e)
+            msg = 'Please contact the developers. This error should not occur.'
+            raise RuntimeError(msg) from e
 
     def shoot_ray(self, degrees, ray_param):
         if (any(phase in self.name
@@ -1417,8 +1414,8 @@ class SeismicPhase(object):
                 takeoff_velocity = v_mod.evaluate_above(self.source_depth,
                                                         self.name[0])
         except (IndexError, LookupError) as e:
-            raise_from(RuntimeError('Please contact the developers. This '
-                                    'error should not occur.'), e)
+            msg = 'Please contact the developers. This error should not occur.'
+            raise RuntimeError(msg) from e
 
         return ((self.tau_model.radius_of_planet - self.source_depth) *
                 math.sin(np.radians(takeoff_degree)) / takeoff_velocity)
@@ -1436,8 +1433,8 @@ class SeismicPhase(object):
                 takeoff_velocity = v_mod.evaluate_above(self.source_depth,
                                                         self.name[0])
         except (IndexError, LookupError) as e:
-            raise_from(RuntimeError('Please contact the developers. This '
-                                    'error should not occur.'), e)
+            msg = 'Please contact the developers. This error should not occur.'
+            raise RuntimeError(msg) from e
 
         takeoff_angle = np.degrees(math.asin(np.clip(
             takeoff_velocity * ray_param /
@@ -1463,8 +1460,8 @@ class SeismicPhase(object):
                 incident_velocity = v_mod.evaluate_below(self.receiver_depth,
                                                          last_leg)
         except (IndexError, LookupError) as e:
-            raise_from(RuntimeError('Please contact the developers. This '
-                                    'error should not occur.'), e)
+            msg = 'Please contact the developers. This error should not occur.'
+            raise RuntimeError(msg) from e
 
         incident_angle = np.degrees(math.asin(np.clip(
             incident_velocity * ray_param /

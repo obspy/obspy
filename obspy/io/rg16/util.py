@@ -1,8 +1,3 @@
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str as nstr
-
 from codecs import encode
 import copy
 import decorator
@@ -162,9 +157,9 @@ def _trace_list_to_rec_array(traces):
     """
     # get the id, starttime, endtime into a recarray
     # rec array column names must be native strings due to numpy issue 2407
-    dtype1 = [(nstr('id'), np.object), (nstr('starttime'), float),
-              (nstr('endtime'), float)]
-    dtype2 = [(nstr('data'), np.object), (nstr('stats'), np.object)]
+    dtype1 = [('id', np.object), ('starttime', float),
+              ('endtime', float)]
+    dtype2 = [('data', np.object), ('stats', np.object)]
     data1 = [(tr.id, tr.stats.starttime.timestamp, tr.stats.endtime.timestamp)
              for tr in traces]
     data2 = [(tr.data, tr.stats) for tr in traces]

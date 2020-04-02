@@ -82,11 +82,6 @@ verbose output and report everything, you would run::
 
         $ obspy-runtests -r -v -x clients.seishub -x io.sh --all
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import copy
 import doctest
 import glob
@@ -101,12 +96,12 @@ import types
 import unittest
 import warnings
 from argparse import ArgumentParser
+from urllib.parse import urlparse
 
 import numpy as np
 import requests
 
 import obspy
-from obspy.core.compatibility import urlparse
 from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
@@ -114,7 +109,7 @@ from obspy.core.util.version import get_git_version
 
 
 HARD_DEPENDENCIES = [
-    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
     "sqlalchemy", "decorator", "requests"]
 OPTIONAL_DEPENDENCIES = [
     "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "shapefile",
@@ -153,6 +148,8 @@ def _get_suites(verbosity=1, names=[]):
     status = True
     import_failures = {}
     for name in names:
+        if name == 'clients.arclink':
+            continue
         suite = []
         if name in ALL_MODULES:
             # Search for short cuts in tests
@@ -193,9 +190,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     default.
     """
     # import additional libraries here to speed up normal tests
-    from future import standard_library
-    with standard_library.hooks():
-        import urllib.parse
+    import urllib.parse
     import codecs
     from xml.etree import ElementTree
     from xml.sax.saxutils import escape
@@ -278,7 +273,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
         temp = module_.split('.')
         try:
             mod = __import__(module_,
-                             fromlist=[native_str(temp[1:])])
+                             fromlist=temp[1:])
         except ImportError:
             version_ = '---'
         else:
@@ -340,9 +335,9 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
                 child = ElementTree.SubElement(doc, key)
                 _dict2xml(child, value)
             elif value is not None:
-                if isinstance(value, (str, native_str)):
+                if isinstance(value, str):
                     ElementTree.SubElement(doc, key).text = value
-                elif isinstance(value, (str, native_str)):
+                elif isinstance(value, str):
                     ElementTree.SubElement(doc, key).text = str(value, 'utf-8')
                 else:
                     ElementTree.SubElement(doc, key).text = str(value)

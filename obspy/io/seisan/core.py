@@ -8,11 +8,6 @@ SEISAN bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import numpy as np
 import warnings
 
@@ -145,8 +140,8 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
     data = fh.read(80 * 12)
     (byteorder, arch, version) = _get_version(data)
     dlen = arch // 8
-    dtype = np.dtype(native_str(byteorder + 'i' + str(dlen)))
-    stype = native_str('=i' + str(dlen))
+    dtype = np.dtype(byteorder + 'i' + str(dlen))
+    stype = '=i' + str(dlen)
 
     def _readline(fh, version=version, dtype=dtype):
         if version >= 7:

@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import copy
 import datetime
 import itertools
-import sys
 import unittest
 import warnings
 from functools import partial
@@ -1490,15 +1484,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         t = UTCDateTime(1888, 1, 2, 1, 39, 37)
         self.assertEqual(t.strftime('%Y-%m-%d'), '1888-01-02')
         t = UTCDateTime(998, 11, 9, 1, 39, 37)
-        self.assertEqual(t.strftime('%Y-%m-%d'), '0998-11-09')
-        # some things we can't easily fix by string formatting alone..
-        # (but it only fails on Python <3.2, i.e. for us that means Python 2.7)
-        if sys.version_info.major == 2:
-            with self.assertRaises(ValueError) as context:
-                t.strftime('%Y-%m-%d %A')
-                self.assertTrue(
-                    "the datetime strftime() methods require year >= 1900" in
-                    str(context.exception))
+        self.assertEqual('0998-11-09', t.strftime('%Y-%m-%d'))
 
     def test_strftime_replacement(self):
         """

@@ -9,11 +9,6 @@ The obspy.clients.fdsn.download_helpers test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import collections
 import copy
 import logging
@@ -22,11 +17,11 @@ import shutil
 from socket import timeout as socket_timeout
 import tempfile
 import unittest
+from unittest import mock
 
 import numpy as np
 
 import obspy
-from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile, SCIPY_VERSION
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,
@@ -138,14 +133,14 @@ class RestrictionsTestCase(unittest.TestCase):
 
         with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
-                         channel_priorities=native_str("HHE"))
+                         channel_priorities="HHE")
         self.assertEqual(e.exception.args[0],
                          "'channel_priorities' must be a list or other "
                          "iterable container.")
 
         with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
-                         channel_priorities=(native_str("HHE")))
+                         channel_priorities="HHE")
         self.assertEqual(e.exception.args[0],
                          "'channel_priorities' must be a list or other "
                          "iterable container.")
@@ -167,14 +162,14 @@ class RestrictionsTestCase(unittest.TestCase):
 
         with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
-                         location_priorities=native_str("00"))
+                         location_priorities="00")
         self.assertEqual(e.exception.args[0],
                          "'location_priorities' must be a list or other "
                          "iterable container.")
 
         with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
-                         location_priorities=(native_str("00")))
+                         location_priorities=("00"))
         self.assertEqual(e.exception.args[0],
                          "'location_priorities' must be a list or other "
                          "iterable container.")
@@ -189,15 +184,15 @@ class RestrictionsTestCase(unittest.TestCase):
         Restrictions(starttime=start, endtime=end,
                      channel_priorities=["HHE", "BHE"])
         Restrictions(starttime=start, endtime=end,
-                     channel_priorities=(native_str("HHE"),))
+                     channel_priorities=("HHE",))
         Restrictions(starttime=start, endtime=end,
-                     channel_priorities=[native_str("HHE")])
+                     channel_priorities=["HHE"])
         Restrictions(starttime=start, endtime=end,
-                     channel_priorities=(native_str("HHE"),
-                                         native_str("BHE")))
+                     channel_priorities=("HHE",
+                                         "BHE"))
         Restrictions(starttime=start, endtime=end,
-                     channel_priorities=[native_str("HHE"),
-                                         native_str("BHE")])
+                     channel_priorities=["HHE",
+                                         "BHE"])
         Restrictions(starttime=start, endtime=end,
                      location_priorities=("00",))
         Restrictions(starttime=start, endtime=end,
@@ -207,15 +202,15 @@ class RestrictionsTestCase(unittest.TestCase):
         Restrictions(starttime=start, endtime=end,
                      location_priorities=["00", "10"])
         Restrictions(starttime=start, endtime=end,
-                     location_priorities=(native_str("00"),))
+                     location_priorities=("00",))
         Restrictions(starttime=start, endtime=end,
-                     location_priorities=[native_str("00")])
+                     location_priorities=["00"])
         Restrictions(starttime=start, endtime=end,
-                     location_priorities=(native_str("00"),
-                                          native_str("10")))
+                     location_priorities=("00",
+                                          "10"))
         Restrictions(starttime=start, endtime=end,
-                     location_priorities=[native_str("00"),
-                                          native_str("10")])
+                     location_priorities=["00",
+                                          "10"])
 
     def test_restrictions_object(self):
         """

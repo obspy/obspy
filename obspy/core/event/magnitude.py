@@ -17,10 +17,6 @@ This class hierarchy is closely modelled after the de-facto standard format
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from obspy import UTCDateTime
 from obspy.core.event.base import (
     _event_type_class_factory, CreationInfo,

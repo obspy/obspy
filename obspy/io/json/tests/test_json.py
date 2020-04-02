@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import io
 import json
 import os
@@ -29,7 +24,7 @@ class JSONTestCase(unittest.TestCase):
 
     def verify_json(self, s):
         """Test an output is a string and is JSON"""
-        self.assertTrue(isinstance(s, (str, native_str)))
+        self.assertTrue(isinstance(s, str))
         j = json.loads(s)
         self.assertTrue(isinstance(j, dict))
 

@@ -106,11 +106,6 @@ To see all events call 'print(CatalogObject.__str__(print_all=True))'
 .. figure:: /_images/expensive_plots/GCMT_Catalog_1976-2010.png
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

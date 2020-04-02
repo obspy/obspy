@@ -3,11 +3,6 @@
 """
 The psd test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import gzip
 import io
 import os
@@ -307,9 +302,9 @@ class PsdTestCase(unittest.TestCase):
         file_data_iris = os.path.join(self.path, 'IRISpdfExample')
         data = np.genfromtxt(
             file_data_iris, comments='#', delimiter=',',
-            dtype=[(native_str("freq"), np.float64),
-                   (native_str("power"), np.int32),
-                   (native_str("hits"), np.int32)])
+            dtype=[("freq", np.float64),
+                   ("power", np.int32),
+                   ("hits", np.int32)])
         freq = data["freq"]
         power = data["power"]
         hits = data["hits"]

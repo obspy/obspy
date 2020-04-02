@@ -8,11 +8,6 @@ Client for a database created by obspy.db.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import os
 
 from sqlalchemy import and_, create_engine, func, or_
@@ -43,7 +38,7 @@ class Client(object):
         :param debug: Enables verbose output.
         """
         if url:
-            self.engine = create_engine(url, encoding=native_str('utf-8'),
+            self.engine = create_engine(url, encoding='utf-8',
                                         convert_unicode=True)
             Base.metadata.create_all(self.engine,  # @UndefinedVariable
                                      checkfirst=True)

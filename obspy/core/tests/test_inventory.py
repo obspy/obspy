@@ -9,24 +9,18 @@ Test suite for the inventory class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
-import builtins
 import copy
 import io
 import os
 import unittest
 import warnings
+from unittest import mock
 
 import numpy as np
 from matplotlib import rcParams
 
 import obspy
 from obspy import UTCDateTime, read_inventory, read_events
-from obspy.core.compatibility import mock
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.core.util.base import _get_entry_points
@@ -609,12 +603,7 @@ class InventoryTestCase(unittest.TestCase):
             break
         else:
             self.fail('unable to get invalid file path')
-        doesnt_exist = native_str(doesnt_exist)
 
-        if PY2:
-            exception_type = getattr(builtins, 'IOError')
-        else:
-            exception_type = getattr(builtins, 'FileNotFoundError')
         exception_msg = "[Errno 2] No such file or directory: '{}'"
 
         formats = _get_entry_points(
@@ -623,7 +612,7 @@ class InventoryTestCase(unittest.TestCase):
         # plugins and also for filetype autodiscovery
         formats = [None] + list(formats)
         for format in formats[:1]:
-            with self.assertRaises(exception_type) as e:
+            with self.assertRaises(IOError) as e:
                 read_inventory(doesnt_exist, format=format)
             self.assertEqual(
                 str(e.exception), exception_msg.format(doesnt_exist))

@@ -9,11 +9,6 @@ Provides the Inventory class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible
-
 import copy
 import fnmatch
 import textwrap
@@ -99,7 +94,6 @@ def _read(filename, format=None, **kwargs):
     return inventory
 
 
-@python_2_unicode_compatible
 class Inventory(ComparingObject):
     """
     The root object of the Inventory->Network->Station->Channel hierarchy.

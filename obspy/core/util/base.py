@@ -8,12 +8,6 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
-import builtins
 import doctest
 import glob
 import importlib
@@ -30,7 +24,6 @@ from collections import OrderedDict
 import numpy as np
 import pkg_resources
 import requests
-from future.utils import native_str
 from pkg_resources import get_entry_info, iter_entry_points
 
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
@@ -154,9 +147,6 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
-    # For compatibility with NumPy 1.4
-    if isinstance(dtype, str):
-        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
         # fill with nan if float number and otherwise with a very small number
@@ -205,7 +195,7 @@ def get_example_file(filename):
     for module in ALL_MODULES:
         try:
             mod = __import__("obspy.%s" % module,
-                             fromlist=[native_str("obspy")])
+                             fromlist=["obspy"])
         except ImportError:
             continue
         file_ = os.path.join(mod.__path__[0], "tests", "data", filename)
@@ -408,15 +398,11 @@ PROJ4_VERSION = get_proj_version()
 CARTOPY_VERSION = get_dependency_version('cartopy')
 
 
-if PY2:
-    FileNotFoundError = getattr(builtins, 'IOError')
-
-
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         if not os.path.exists(filename):
             msg = "[Errno 2] No such file or directory: '{}'".format(
                 filename)
@@ -559,12 +545,8 @@ def _add_format_plugin_table(func, group, method, numspaces=4):
     A function to populate the docstring of func with its plugin table.
     """
     if '%s' in func.__doc__:
-        if PY2 and method == "write":
-            func.im_func.func_doc = func.__doc__ % make_format_plugin_table(
-                group, method, numspaces=numspaces)
-        else:
-            func.__doc__ = func.__doc__ % make_format_plugin_table(
-                group, method, numspaces=numspaces)
+        func.__doc__ = func.__doc__ % make_format_plugin_table(
+            group, method, numspaces=numspaces)
 
 
 class ComparingObject(object):
@@ -662,7 +644,7 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
 
 def _generic_reader(pathname_or_url=None, callback_func=None,
                     **kwargs):
-    if not isinstance(pathname_or_url, (str, native_str)):
+    if not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
         try:
             # first try reading directly

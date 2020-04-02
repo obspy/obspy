@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
 import os
 import sys
 import tempfile
 import unittest
 import warnings
+from unittest import mock
 
 from obspy import UTCDateTime, read
-from obspy.core.compatibility import mock
 from obspy.core.event import ResourceIdentifier as ResId
 from obspy.core.util.misc import CatchOutput, get_window_times, \
     _ENTRY_POINT_CACHE, _yield_obj_parent_attr
@@ -58,13 +53,9 @@ class UtilMiscTestCase(unittest.TestCase):
 
     def test_catch_output_bytes(self):
         with CatchOutput() as out:
-            if PY2:
-                sys.stdout.write(b"test_catch_output_bytes #1")
-                sys.stderr.write(b"test_catch_output_bytes #2")
-            else:
-                # PY3 does not allow to write directly bytes into text streams
-                sys.stdout.buffer.write(b"test_catch_output_bytes #1")
-                sys.stderr.buffer.write(b"test_catch_output_bytes #2")
+            # PY3 does not allow to write directly bytes into text streams
+            sys.stdout.buffer.write(b"test_catch_output_bytes #1")
+            sys.stderr.buffer.write(b"test_catch_output_bytes #2")
         self.assertEqual(out.stdout, 'test_catch_output_bytes #1')
         self.assertEqual(out.stderr, 'test_catch_output_bytes #2')
 

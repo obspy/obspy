@@ -52,17 +52,7 @@ connection object and cannot be easily influenced. Also, a ``HELLO`` is always
 sent to the server when connecting in order to determine the SeedLink protocol
 version.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-import sys
-
-if sys.version_info.major == 2:
-    from urlparse import urlparse
-else:
-    from urllib.parse import urlparse
+from urllib.parse import urlparse
 
 import lxml
 
@@ -135,7 +125,7 @@ class EasySeedLinkClient(object):
 
     def __init__(self, server_url, autoconnect=True):
         # Catch invalid server_url parameters
-        if not isinstance(server_url, (str, native_str)):
+        if not isinstance(server_url, str):
             raise ValueError('Expected string for SeedLink server URL')
         # Allow for sloppy server URLs (e.g. 'geofon.gfz-potsdam.de:18000).
         # (According to RFC 1808 the net_path segment needs to start with '//'

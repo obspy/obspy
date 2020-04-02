@@ -9,11 +9,6 @@ This module defines the ResourceIdentifier class and associated code.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import re
 import warnings
 from contextlib import contextmanager
@@ -70,7 +65,7 @@ class _ResourceKeyDescriptor(object):
     def __set__(self, instance, value):
         # if an object was passed, use the id of the object for hash
         if value is not None:
-            if not isinstance(value, (int, str, native_str)):
+            if not isinstance(value, (int, str)):
                 value = id(value)
             setattr(instance, self.name, _ResourceKey.get_resource_key(value))
 
@@ -617,8 +612,7 @@ class ResourceIdentifier(object):
     @id.setter
     def id(self, value):
         self.fixed = True
-        # XXX: no idea why I had to add bytes for PY2 here
-        if not isinstance(value, (str, bytes)):
+        if not isinstance(value, str):
             msg = "attribute id needs to be a string."
             raise TypeError(msg)
         if '_resource_key__' in self.__dict__:
@@ -638,7 +632,7 @@ class ResourceIdentifier(object):
 
     @prefix.setter
     def prefix(self, value):
-        if not isinstance(value, (str, native_str)):
+        if not isinstance(value, str):
             msg = "prefix id needs to be a string."
             raise TypeError(msg)
         self._prefix = value

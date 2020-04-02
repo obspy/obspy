@@ -3,11 +3,6 @@
 """
 Functionality for dealing with a single velocity layer.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import numpy as np
 
 
@@ -27,18 +22,18 @@ import numpy as np
 #: * ``top_qs``: The S wave attenuation at the top.
 #: * ``bot_qs``: The S wave attenuation at the bottom.
 VelocityLayer = np.dtype([
-    (native_str('top_depth'), np.float_),
-    (native_str('bot_depth'), np.float_),
-    (native_str('top_p_velocity'), np.float_),
-    (native_str('bot_p_velocity'), np.float_),
-    (native_str('top_s_velocity'), np.float_),
-    (native_str('bot_s_velocity'), np.float_),
-    (native_str('top_density'), np.float_),
-    (native_str('bot_density'), np.float_),
-    (native_str('top_qp'), np.float_),
-    (native_str('bot_qp'), np.float_),
-    (native_str('top_qs'), np.float_),
-    (native_str('bot_qs'), np.float_),
+    ('top_depth', np.float_),
+    ('bot_depth', np.float_),
+    ('top_p_velocity', np.float_),
+    ('bot_p_velocity', np.float_),
+    ('top_s_velocity', np.float_),
+    ('bot_s_velocity', np.float_),
+    ('top_density', np.float_),
+    ('bot_density', np.float_),
+    ('top_qp', np.float_),
+    ('bot_qp', np.float_),
+    ('top_qs', np.float_),
+    ('bot_qs', np.float_),
 ])
 
 

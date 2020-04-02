@@ -19,11 +19,6 @@ This class hierarchy is closely modelled after the de-facto standard format
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copy
 import warnings
 
@@ -102,7 +97,7 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if value == 0 or isinstance(value, (str, native_str)):
+    if value == 0 or isinstance(value, str):
         return True
     return bool(value)
 
@@ -268,8 +263,8 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
             def get_value_repr(key):
                 value = getattr(self, key)
-                if isinstance(value, (str, native_str)):
-                    value = native_str(value)
+                if isinstance(value, str):
+                    value = value
                 repr_str = value.__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
@@ -318,6 +313,8 @@ def _event_type_class_factory(class_name, class_attributes=[],
             return self.__str__(force_one_line=True)
 
         # called for bool on PY2
+        # may not be needed after PY2 sunset but keep it for backwards
+        # compatibility
         def __nonzero__(self):
             return self.__bool__()
 
@@ -410,7 +407,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
         base_class = AbstractEventType
 
     # Set the class type name.
-    setattr(base_class, "__name__", native_str(class_name))
+    setattr(base_class, "__name__", class_name)
     return base_class
 
 

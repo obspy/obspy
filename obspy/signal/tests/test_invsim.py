@@ -3,11 +3,6 @@
 """
 The InvSim test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import gzip
 import io
@@ -490,13 +485,13 @@ class InvSimTestCase(unittest.TestCase):
         clibevresp.evr_spline.argtypes = [
             C.c_int,  # num_points
             np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                                   flags=native_str('C_CONTIGUOUS')),
+                                   flags='C_CONTIGUOUS'),
             np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                                   flags=native_str('C_CONTIGUOUS')),
+                                   flags='C_CONTIGUOUS'),
             C.c_double,  # tension
             C.c_double,  # k
             np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                                   flags=native_str('C_CONTIGUOUS')),
+                                   flags='C_CONTIGUOUS'),
             C.c_int,  # num_xvals
             C.POINTER(C.POINTER(C.c_double)),
             C.POINTER(C.c_int)

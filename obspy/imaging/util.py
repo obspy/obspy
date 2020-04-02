@@ -8,11 +8,6 @@ Waveform plotting utilities.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import re
 from dateutil.rrule import MINUTELY, SECONDLY
 
@@ -145,7 +140,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
                 fmt = self.scaled[k]
                 break
 
-        if isinstance(fmt, (str, native_str)):
+        if isinstance(fmt, str):
             self._formatter = DateFormatter(fmt, self._tz)
             return self._formatter(x, pos)
         elif hasattr(fmt, '__call__'):

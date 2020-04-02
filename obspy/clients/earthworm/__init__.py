@@ -40,10 +40,6 @@ Basic Usage
         st = client.get_waveforms('AV', 'ACH', '', 'BH*', t + 100, t + 130)
         st.plot()
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from obspy.clients.earthworm.client import Client  # NOQA
 
 

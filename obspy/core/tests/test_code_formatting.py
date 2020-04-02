@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import codecs
 import fnmatch
 import os
@@ -118,57 +114,6 @@ class CodeFormattingTestCase(unittest.TestCase):
         self.assertEqual(len(failures), 0, "\n" + "\n".join(failures))
 
 
-class FutureUsageTestCase(unittest.TestCase):
-    @unittest.skipIf(CLEAN_VERSION_NUMBER,
-                     "No code formatting tests for release builds")
-    def test_future_imports_in_every_file(self):
-        """
-        Tests that every single Python file includes the appropriate future
-        headers to enforce consistent behavior.
-        """
-        # There are currently only three exceptions. Two files are imported
-        # during installation and thus cannot contain future imports. The
-        # third file is the compatibility layer which naturally also does
-        # not want to import future.
-        exceptions = [
-            os.path.join('core', 'util', 'libnames.py'),
-            os.path.join('core', 'util', 'version.py'),
-            os.path.join('core', 'compatibility.py'),
-            os.path.join('lib', '*'),
-        ]
-        exceptions = [os.path.join("*", "obspy", i) for i in exceptions]
-
-        future_import_line = (
-            "from __future__ import (absolute_import, division, "
-            "print_function, unicode_literals)")
-        builtins_line = "from future.builtins import *  # NOQA"
-
-        future_imports_pattern = re.compile(
-            r"^from __future__ import \(absolute_import,\s*"
-            r"division,\s*print_function,\s*unicode_literals\)$",
-            flags=re.MULTILINE)
-
-        builtin_pattern = re.compile(
-            r"^from future\.builtins import \*  # NOQA",
-            flags=re.MULTILINE)
-
-        failures = []
-        for filename in get_all_py_files():
-            if _match_exceptions(filename, exceptions):
-                continue
-            with codecs.open(filename, "r", encoding="utf-8") as fh:
-                content = fh.read()
-
-            if re.search(future_imports_pattern, content) is None:
-                failures.append("File '%s' misses imports: %s" %
-                                (filename, future_import_line))
-
-            if re.search(builtin_pattern, content) is None:
-                failures.append("File '%s' misses imports: %s" %
-                                (filename, builtins_line))
-        self.assertEqual(len(failures), 0, "\n" + "\n".join(failures))
-
-
 class MatplotlibBackendUsageTestCase(unittest.TestCase):
     patterns = (
         r" *from pylab import",
@@ -279,7 +224,6 @@ class MatplotlibBackendUsageTestCase(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CodeFormattingTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(FutureUsageTestCase, 'test'))
     suite.addTest(unittest.makeSuite(MatplotlibBackendUsageTestCase, 'test'))
     return suite
 

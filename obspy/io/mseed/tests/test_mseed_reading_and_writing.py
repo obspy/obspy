@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copy
 import glob
 import io
@@ -132,7 +127,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     this_stream = copy.deepcopy(stream)
                     this_stream[0].data = \
                         np.require(this_stream[0].data,
-                                   dtype=native_str(encoding_values[encoding]))
+                                   dtype=encoding_values[encoding])
                     with NamedTemporaryFile() as tf:
                         temp_file = tf.name
                         _write_mseed(this_stream, temp_file, encoding=encoding,
@@ -696,7 +691,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Special handling for ASCII encoded files.
         for value in ENCODINGS.values():
             if value[0] == 'ASCII':
-                np_encodings[value[0]] = np.dtype(native_str("|S1"))
+                np_encodings[value[0]] = np.dtype("|S1")
             else:
                 np_encodings[value[0]] = value[2]
         st = Stream([Trace(data=data)])
@@ -778,7 +773,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         for byteorder, btype in byteorders.items():
             for encoding, dtype in encodings.items():
                 # Convert data to floats and write them again
-                st[0].data = data_copy.astype(native_str(dtype))
+                st[0].data = data_copy.astype(dtype)
                 with NamedTemporaryFile() as tf:
                     tempfile = tf.name
                     st.write(tempfile, format="MSEED", encoding=encoding,
@@ -788,7 +783,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     with open(tempfile, "rb") as fp:
                         s = fp.read()
                     data = from_buffer(s[56:256],
-                                       dtype=native_str(btype + dtype))
+                                       dtype=btype + dtype)
                     np.testing.assert_array_equal(data, st[0].data[:len(data)])
                     # Read the binary chunk of data with ObsPy
                     st2 = read(tempfile)
@@ -799,7 +794,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests writing small ASCII strings.
         """
         st = Stream()
-        st.append(Trace(data=from_buffer("A" * 8, native_str("|S1"))))
+        st.append(Trace(data=from_buffer("A" * 8, "|S1")))
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             st.write(tempfile, format="MSEED")
@@ -814,7 +809,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             data = np.random.randint(-1000, 1000, 500)
             for dtype in ["i2", "i4", "f4", "f8", "S1"]:
                 for enc in ["<", ">", "="]:
-                    typed_data = data.astype(np.dtype(native_str(enc + dtype)))
+                    typed_data = data.astype(np.dtype(enc + dtype))
                     st1.append(Trace(data=typed_data))
             # this will raise a UserWarning - ignoring for test
             with warnings.catch_warnings(record=True):
@@ -829,7 +824,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                          str(tr.dtype.itemsize),
                                          dtype)
                         # byte order is always native (=)
-                        typed_data = data.astype(native_str("=" + dtype))
+                        typed_data = data.astype("=" + dtype)
                         np.testing.assert_array_equal(tr, typed_data)
 
     def test_enforce_steim2_with_steim1_as_encoding(self):
@@ -859,15 +854,15 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         def_content = np.arange(1, 51, dtype=np.int32)
         files = {
             os.path.join(path, "smallASCII.mseed"):
-            (native_str('|S1'), 'a', 0,
-             from_buffer('ABCDEFGH', dtype=native_str('|S1'))),
+            ('|S1', 'a', 0,
+             from_buffer('ABCDEFGH', dtype='|S1')),
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed"):
-            (native_str('|S1'), 'a', 0, from_buffer(
+            ('|S1', 'a', 0, from_buffer(
                 r""" !"#$%&'()*+,-./""" +
                 r"""0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
                 r"""abcdefghijklmnopqrstuvwxyz{|}~""",
-                dtype=native_str('|S1'))),
+                dtype='|S1')),
             # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed"):
             (np.int32, 'i', 1, def_content.astype(np.int16)),
@@ -1070,7 +1065,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # default dtype of numpy.string_ from "|S1" to "|S32". Enforce
             # "|S1|" here to be consistent across NumPy versions.
             if encoding == 0:
-                seed_dtype = native_str("|S1")
+                seed_dtype = "|S1"
             with NamedTemporaryFile() as tf:
                 tempfile = tf.name
                 # Write it once with the encoding key and once with the value.
@@ -1131,8 +1126,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'timingquality.mseed')
         st = read(filename, details=True)
-        dt = np.dtype([(native_str('npts'), native_str('i4')),
-                       (native_str('qual'), native_str('i4'))])
+        dt = np.dtype([('npts', 'i4'),
+                       ('qual', 'i4')])
         res = np.array([(tr.stats.npts, tr.stats.mseed.blkt1001.timing_quality)
                         for tr in st], dtype=dt)
         one_big_st = read(filename)  # do not read timing quality info
@@ -1307,17 +1302,17 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             for recnum in range(0, 3):
                 rec_start = 512 * recnum
                 tf.seek(rec_start + 46, os.SEEK_SET)
-                next_blockette = unpack(native_str(">H"), tf.read(2))[0]
+                next_blockette = unpack(">H", tf.read(2))[0]
                 while next_blockette != 0:
                     tf.seek(rec_start + next_blockette, os.SEEK_SET)
-                    blkt_nbr = unpack(native_str(">H"), tf.read(2))[0]
+                    blkt_nbr = unpack(">H", tf.read(2))[0]
                     if blkt_nbr == 1001:
                         tf.seek(2, os.SEEK_CUR)
-                        timing_qual = unpack(native_str("B"), tf.read(1))[0]
+                        timing_qual = unpack("B", tf.read(1))[0]
                         self.assertEqual(timing_qual, 63, "timing_qual")
                         break
                     else:
-                        next_blockette = unpack(native_str(">H"),
+                        next_blockette = unpack(">H",
                                                 tf.read(2))[0]
 
         # Test invalid data: string

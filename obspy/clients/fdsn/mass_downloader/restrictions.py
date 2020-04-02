@@ -9,11 +9,6 @@ Non-geographical restrictions and constraints for the mass downloader.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from obspy.core.compatibility import collections_abc
 
 import obspy
@@ -241,13 +236,13 @@ class Restrictions(object):
 
         # These must be iterables, but not strings.
         if not isinstance(channel_priorities, collections_abc.Iterable) \
-                or isinstance(channel_priorities, (str, native_str)):
+                or isinstance(channel_priorities, str):
             msg = "'channel_priorities' must be a list or other iterable " \
                   "container."
             raise TypeError(msg)
 
         if not isinstance(location_priorities, collections_abc.Iterable) \
-                or isinstance(location_priorities, (str, native_str)):
+                or isinstance(location_priorities, str):
             msg = "'location_priorities' must be a list or other iterable " \
                   "container."
             raise TypeError(msg)

@@ -24,21 +24,12 @@ A command-line program that indexes seismogram files into a database.
 
        ./obspy-indexer -v -i0.0 --run-once --check-duplicates -n1 -u$DB -d$DATA
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
+import http.server as http_server
 import logging
 import multiprocessing
 import select
 import sys
 from argparse import ArgumentParser
-
-if sys.version_info.major == 2:
-    import BaseHTTPServer as http_server  # NOQA
-else:
-    import http.server as http_server
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
@@ -144,7 +135,7 @@ def _run_indexer(options):
             p.daemon = True
             p.start()
         # connect to database
-        engine = create_engine(options.db_uri, encoding=native_str('utf-8'),
+        engine = create_engine(options.db_uri, encoding='utf-8',
                                convert_unicode=True)
         metadata = Base.metadata
         # recreate database

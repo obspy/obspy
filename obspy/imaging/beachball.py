@@ -25,10 +25,6 @@ Most source code provided here are adopted from
 .. _`Generic Mapping Tools (GMT)`: https://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import io
 import warnings
 

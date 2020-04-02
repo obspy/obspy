@@ -12,11 +12,6 @@ Only supports file format revision of February 24, 2004.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from datetime import timedelta
 import io
 import math
@@ -56,7 +51,7 @@ def _is_mchedr(filename):
     >>> _is_mchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
-    if not isinstance(filename, (str, native_str)):
+    if not isinstance(filename, str):
         return False
     with open(filename, 'rb') as fh:
         for line in fh.readlines():
@@ -86,7 +81,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        if not isinstance(filename, (str, native_str)):
+        if not isinstance(filename, str):
             raise TypeError('File name must be a string.')
         self.filename = filename
         self.fh = open(filename, 'rb')

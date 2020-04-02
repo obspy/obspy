@@ -9,11 +9,6 @@ The obspy.clients.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
 import io
 import os
 import re
@@ -21,18 +16,15 @@ import sys
 import unittest
 import warnings
 from difflib import Differ
+from unittest import mock
 
-if PY2:
-    import urllib2 as urllib_request
-else:
-    import urllib.request as urllib_request
+import urllib.request as urllib_request
 
 import lxml
 import numpy as np
 import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
-from obspy.core.compatibility import mock, RegExTestCase
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
@@ -93,7 +85,7 @@ def normalize_version_number(string):
     return [l.strip() for l in repl.splitlines()]
 
 
-class ClientTestCase(RegExTestCase):
+class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """

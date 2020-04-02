@@ -3,11 +3,6 @@
 """
 Internal TauModel class.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from collections import OrderedDict
 import os
 from copy import deepcopy
@@ -490,17 +485,17 @@ class TauModel(object):
                 arrays[key] = self.tau_branches[i_][j_]._to_array()
 
         # c) handle simple contents of .s_mod
-        dtypes = [(native_str('debug'), np.bool_),
-                  (native_str('p_wave'), np.bool_),
-                  (native_str('s_wave'), np.bool_),
-                  (native_str('allow_inner_core_s'), np.bool_),
-                  (native_str('max_delta_p'), np.float_),
-                  (native_str('max_depth_interval'), np.float_),
-                  (native_str('max_interp_error'), np.float_),
-                  (native_str('max_range_interval'), np.float_),
-                  (native_str('min_delta_p'), np.float_),
-                  (native_str('radius_of_planet'), np.float_),
-                  (native_str('slowness_tolerance'), np.float_)]
+        dtypes = [('debug', np.bool_),
+                  ('p_wave', np.bool_),
+                  ('s_wave', np.bool_),
+                  ('allow_inner_core_s', np.bool_),
+                  ('max_delta_p', np.float_),
+                  ('max_depth_interval', np.float_),
+                  ('max_interp_error', np.float_),
+                  ('max_range_interval', np.float_),
+                  ('min_delta_p', np.float_),
+                  ('radius_of_planet', np.float_),
+                  ('slowness_tolerance', np.float_)]
         slowness_model = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]
@@ -521,15 +516,15 @@ class TauModel(object):
             arrays['s_mod.' + key] = arr_
 
         # e) handle .s_mod.v_mod
-        dtypes = [(native_str('cmb_depth'), np.float_),
-                  (native_str('iocb_depth'), np.float_),
-                  (native_str('is_spherical'), np.bool_),
-                  (native_str('max_radius'), np.float_),
-                  (native_str('min_radius'), np.int_),
-                  (native_str('model_name'), np.str_,
+        dtypes = [('cmb_depth', np.float_),
+                  ('iocb_depth', np.float_),
+                  ('is_spherical', np.bool_),
+                  ('max_radius', np.float_),
+                  ('min_radius', np.int_),
+                  ('model_name', np.str_,
                    len(self.s_mod.v_mod.model_name)),
-                  (native_str('moho_depth'), np.float_),
-                  (native_str('radius_of_planet'), np.float_)]
+                  ('moho_depth', np.float_),
+                  ('radius_of_planet', np.float_)]
         velocity_model = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]
@@ -611,7 +606,7 @@ class TauModel(object):
 
             # e) handle .s_mod.v_mod
             velocity_model = VelocityModel(
-                model_name=native_str(npz["v_mod"]["model_name"]),
+                model_name=npz["v_mod"]["model_name"],
                 radius_of_planet=float(npz["v_mod"]["radius_of_planet"]),
                 min_radius=float(npz["v_mod"]["min_radius"]),
                 max_radius=float(npz["v_mod"]["max_radius"]),

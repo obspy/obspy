@@ -8,17 +8,12 @@ SAC bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
+import io
 import os
 import struct
 
 from obspy import Stream
 
-from obspy.core.compatibility import is_bytes_buffer
 from .sactrace import SACTrace
 
 
@@ -39,7 +34,7 @@ def _is_sac(filename):
     >>> _is_sac(get_example_file('test.mseed'))
     False
     """
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         return _internal_is_sac(filename)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
@@ -61,39 +56,39 @@ def _internal_is_sac(buf):
     try:
         # read delta (first header float)
         delta_bin = buf.read(4)
-        delta = struct.unpack(native_str('<f'), delta_bin)[0]
+        delta = struct.unpack('<f', delta_bin)[0]
         # read nvhdr (70 header floats, 6 position in header integers)
         buf.seek(starting_pos + 4 * 70 + 4 * 6, 0)
         nvhdr_bin = buf.read(4)
-        nvhdr = struct.unpack(native_str('<i'), nvhdr_bin)[0]
+        nvhdr = struct.unpack('<i', nvhdr_bin)[0]
         # read leven (70 header floats, 35 header integers, 0 position in
         # header bool)
         buf.seek(starting_pos + 4 * 70 + 4 * 35, 0)
         leven_bin = buf.read(4)
-        leven = struct.unpack(native_str('<i'), leven_bin)[0]
+        leven = struct.unpack('<i', leven_bin)[0]
         # read lpspol (70 header floats, 35 header integers, 1 position in
         # header bool)
         buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 1, 0)
         lpspol_bin = buf.read(4)
-        lpspol = struct.unpack(native_str('<i'), lpspol_bin)[0]
+        lpspol = struct.unpack('<i', lpspol_bin)[0]
         # read lovrok (70 header floats, 35 header integers, 2 position in
         # header bool)
         buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 2, 0)
         lovrok_bin = buf.read(4)
-        lovrok = struct.unpack(native_str('<i'), lovrok_bin)[0]
+        lovrok = struct.unpack('<i', lovrok_bin)[0]
         # read lcalda (70 header floats, 35 header integers, 3 position in
         # header bool)
         buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 3, 0)
         lcalda_bin = buf.read(4)
-        lcalda = struct.unpack(native_str('<i'), lcalda_bin)[0]
+        lcalda = struct.unpack('<i', lcalda_bin)[0]
         # check if file is big-endian
         if nvhdr < 0 or nvhdr > 20:
-            nvhdr = struct.unpack(native_str('>i'), nvhdr_bin)[0]
-            delta = struct.unpack(native_str('>f'), delta_bin)[0]
-            leven = struct.unpack(native_str('>i'), leven_bin)[0]
-            lpspol = struct.unpack(native_str('>i'), lpspol_bin)[0]
-            lovrok = struct.unpack(native_str('>i'), lovrok_bin)[0]
-            lcalda = struct.unpack(native_str('>i'), lcalda_bin)[0]
+            nvhdr = struct.unpack('>i', nvhdr_bin)[0]
+            delta = struct.unpack('>f', delta_bin)[0]
+            leven = struct.unpack('>i', leven_bin)[0]
+            lpspol = struct.unpack('>i', lpspol_bin)[0]
+            lovrok = struct.unpack('>i', lovrok_bin)[0]
+            lcalda = struct.unpack('>i', lcalda_bin)[0]
         # check again nvhdr
         if nvhdr < 1 or nvhdr > 20:
             return False
@@ -132,7 +127,7 @@ def _is_sac_xy(filename):
     >>> _is_sac_xy(get_example_file('test.sac'))
     False
     """
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         return _internal_is_sac_xy(filename)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
@@ -199,7 +194,7 @@ def _read_sac_xy(filename, headonly=False, debug_headers=False,
     >>> from obspy import read
     >>> st = read("/path/to/testxy.sac")
     """
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         return _internal_read_sac_xy(buf=filename, headonly=headonly,
                                      debug_headers=debug_headers, **kwargs)
     else:
@@ -269,7 +264,7 @@ def _write_sac_xy(stream, filename, **kwargs):  # @UnusedVariable
     >>> st.write("testxy.sac", format="SACXY")  #doctest: +SKIP
     """
     # SAC can only store one Trace per file.
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object can only contain "
@@ -340,7 +335,7 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
     >>> st = read("/path/to/test.sac")
     """
     # Only byte buffers for binary SAC.
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         return _internal_read_sac(buf=filename, headonly=headonly,
                                   debug_headers=debug_headers, fsize=fsize,
                                   **kwargs)
@@ -429,7 +424,7 @@ def _write_sac(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     """
     # Bytes buffer are ok, but only if the Stream object contains only one
     # Trace. SAC can only store one Trace per file.
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object can only contain "

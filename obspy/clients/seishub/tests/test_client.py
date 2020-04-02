@@ -3,17 +3,8 @@
 """
 The obspy.clients.seishub.client test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import sys
 import unittest
-
-if sys.version_info.major == 2:
-    from urllib2 import urlopen
-else:
-    from urllib.request import urlopen
+from urllib.request import urlopen
 
 import numpy as np
 

@@ -7,16 +7,12 @@
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import collections
 import unittest
 import warnings
+from unittest import mock
 
 import obspy
-from obspy.core.compatibility import mock
 from obspy.clients.fdsn.header import FDSNNoDataException
 from obspy.clients.fdsn.routing.routing_client import (
     BaseRoutingClient, RoutingClient)

@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import copy
 import shutil
 import unittest
+from unittest import mock
 
-from obspy.core.compatibility import mock
 from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
                                   download_to_file, sanitize_filename,
                                   create_empty_data_chunk, ComparingObject)

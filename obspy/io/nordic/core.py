@@ -21,10 +21,6 @@ Nordic file format support for ObsPy
     incorrectly stored in a comment. From version 1.2.0 this is now stored
     in `origin.quality.used_station_count`
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import warnings
 import datetime
 import os

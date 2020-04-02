@@ -22,24 +22,6 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Miniconda-x64"
-      PYTHON_VERSION: "2.7"
-      PYTHON_ARCH: "64"
-
-    - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "64"
-      SKIP_NOTAG: "true"
-
-    - PYTHON: "C:\\Miniconda35-x64"
-      PYTHON_VERSION: "3.5"
-      PYTHON_ARCH: "64"
-      SKIP_NOTAG: "true"
-
-    - PYTHON: "C:\\Miniconda36-x64"
-      PYTHON_VERSION: "3.6"
-      PYTHON_ARCH: "64"
-
     - PYTHON: "C:\\Miniconda37-x64"
       PYTHON_VERSION: "3.7"
       PYTHON_ARCH: "64"
@@ -49,9 +31,8 @@ environment:
       PYTHON_ARCH: "64"
 
 matrix:
-    allow_failures:
-      - PYTHON_VERSION: "3.5"
-      - PYTHON_VERSION: "3.4"
+    # allow_failures:
+    #   - PYTHON_VERSION: "3.5"
     # enable fast fail strategy
     fast_finish: true
 
@@ -97,9 +78,9 @@ install:
   # pip 10.0.1 seems buggy and breaks all our appveyor builds
   - ps: |
       If ($env:PYTHON_VERSION -eq "3.8") {
-          conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests jsonschema cryptography proj4
+          conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy nose gdal decorator requests jsonschema cryptography proj4 pyimgur geographiclib
       }else {
-          conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema pyshp cryptography proj4
+          conda install -q --yes "pip>10.0.1" numpy scipy matplotlib lxml sqlalchemy nose gdal decorator requests jsonschema cryptography proj4 pyimgur geographiclib basemap pyshp
       }
   # somehow basemap/pyproj/proj4 can fail when PROJ_LIB is not set correctly
   # for whatever reason, see:
@@ -109,10 +90,6 @@ install:
   #  This is really ugly and should ideally reverted at some later point, in
   #  case used paths / env var names change etc
   - "SET PROJ_LIB=%CONDA_PREFIX%\\Library\\share"
-  # additional dependencies
-  - "pip install pyimgur"
-  - "pip install -U future"
-  - "pip install geographiclib"
   # list package versions
   - "conda list"
 

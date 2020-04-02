@@ -118,14 +118,9 @@ method should be used to retrieve information about a specific model.
 >>> print(db_info.period)
 5.125
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from .client import Client  # NOQA
 
-__all__ = [native_str("Client")]
+__all__ = ["Client"]
 
 
 if __name__ == '__main__':

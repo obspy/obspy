@@ -9,10 +9,6 @@ Routing client for the EIDAWS routing service.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import collections
 
 from ..client import get_bulk_string

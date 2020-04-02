@@ -29,10 +29,6 @@ Screenshot of resulting html page (cut off at the bottom):
 .. image:: /_static/sds_report.png
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 

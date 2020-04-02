@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str, native_bytes
-
 import copy
 import io
 import pickle
@@ -305,12 +300,8 @@ class StatsTestCase(unittest.TestCase):
         Test the various types of strings found in the wild get converted to
         native_str type.
         """
-        # get native bytes
-        try:  # this is required on python 3
-            nbytes = native_bytes('HHZ', 'utf8')
-        except TypeError:  # this works on py 2.7
-            nbytes = native_bytes('HHZ')
-        the_strs = [native_str('HHZ'), nbytes, u'HHZ']
+        nbytes = bytes('HHZ', 'utf8')
+        the_strs = ['HHZ', nbytes, u'HHZ']
 
         stats = Stats()
 
@@ -318,7 +309,7 @@ class StatsTestCase(unittest.TestCase):
             for nslc in self.nslc:
                 with warnings.catch_warnings(record=True):
                     setattr(stats, nslc, a_str)
-                self.assertIsInstance(getattr(stats, nslc), (str, native_str))
+                self.assertIsInstance(getattr(stats, nslc), str)
 
     def test_component(self):
         """

@@ -3,11 +3,6 @@
 """
 Object dealing with branches in the model.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import warnings
 
 import numpy as np
@@ -450,16 +445,16 @@ class TauBranch(object):
         """
         Store all attributes for serialization in a structured array.
         """
-        dtypes = [(native_str('debug'), np.bool_),
-                  (native_str('bot_depth'), np.float_),
-                  (native_str('dist'), np.float_, self.dist.shape),
-                  (native_str('is_p_wave'), np.bool_),
-                  (native_str('max_ray_param'), np.float_),
-                  (native_str('min_ray_param'), np.float_),
-                  (native_str('min_turn_ray_param'), np.float_),
-                  (native_str('tau'), np.float_, self.tau.shape),
-                  (native_str('time'), np.float_, self.time.shape),
-                  (native_str('top_depth'), np.float_)]
+        dtypes = [('debug', np.bool_),
+                  ('bot_depth', np.float_),
+                  ('dist', np.float_, self.dist.shape),
+                  ('is_p_wave', np.bool_),
+                  ('max_ray_param', np.float_),
+                  ('min_ray_param', np.float_),
+                  ('min_turn_ray_param', np.float_),
+                  ('tau', np.float_, self.tau.shape),
+                  ('time', np.float_, self.time.shape),
+                  ('top_depth', np.float_)]
         arr = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]

@@ -11,11 +11,6 @@
 Functions that will all take a file pointer and the sample count and return a
 NumPy array with the unpacked values.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import os
 import sys
@@ -37,7 +32,7 @@ else:
 
 clibsegy.ibm2ieee.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int]
 clibsegy.ibm2ieee.restype = C.c_void_p
 

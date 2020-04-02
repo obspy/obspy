@@ -8,11 +8,6 @@ Module for handling ObsPy Stream objects.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY3, native_str
-
 import collections
 import copy
 import fnmatch
@@ -236,9 +231,6 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         st._rtrim(endtime, nearest_sample=nearest_sample)
     # convert to dtype if given
     if dtype:
-        # For compatibility with NumPy 1.4
-        if isinstance(dtype, str):
-            dtype = native_str(dtype)
         for tr in st:
             tr.data = np.require(tr.data, dtype)
     # applies calibration factor
@@ -2332,7 +2324,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
         """
         for tr in self:
-            tr.resample(sampling_rate, window=native_str(window),
+            tr.resample(sampling_rate, window=window,
                         no_filter=no_filter, strict_length=strict_length)
         return self
 
@@ -3422,7 +3414,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # be nice to users that specify e.g. ``components='ZNE'``..
         # compare http://lists.swapbytes.de/archives/obspy-users/
         # 2018-March/002692.html
-        if isinstance(components, (str, native_str)):
+        if isinstance(components, str):
             components = [components]
 
         for component_pair in components:
@@ -3550,7 +3542,7 @@ def _is_pickle(filename):  # @UnusedVariable
     >>> _is_pickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         try:
             with open(filename, 'rb') as fp:
                 st = pickle.load(fp)
@@ -3578,14 +3570,13 @@ def _read_pickle(filename, **kwargs):  # @UnusedVariable
     :return: A ObsPy Stream object.
     """
     kwargs = {}
-    if PY3:
-        # see seishub/client.py
-        # https://api.mongodb.org/python/current/\
-        # python3.html#why-can-t-i-share-pickled-objectids-\
-        # between-some-versions-of-python-2-and-3
-        kwargs['encoding'] = "latin-1"
+    # see seishub/client.py
+    # https://api.mongodb.org/python/current/\
+    # python3.html#why-can-t-i-share-pickled-objectids-\
+    # between-some-versions-of-python-2-and-3
+    kwargs['encoding'] = "latin-1"
 
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         with open(filename, 'rb') as fp:
             return pickle.load(fp, **kwargs)
     else:
@@ -3612,7 +3603,7 @@ def _write_pickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :type protocol: int, optional
     :param protocol: Pickle protocol, defaults to ``2``.
     """
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         with open(filename, 'wb') as fp:
             pickle.dump(stream, fp, protocol=protocol)
     else:

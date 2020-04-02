@@ -8,22 +8,11 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import io
 import platform
-import sys
+import urllib.request as urllib_request
 from lxml import objectify
-
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
+from urllib.parse import urlencode
 
 from obspy import Stream, UTCDateTime, __version__, read
 from obspy.core.util import NamedTemporaryFile, loadtxt
@@ -158,7 +147,7 @@ class Client(object):
         # file name is given, create fh, write to file and return nothing
         if hasattr(filename, "write") and callable(filename.write):
             fh = filename
-        elif isinstance(filename, (str, native_str)):
+        elif isinstance(filename, str):
             fh = open(filename, method)
             file_opened = True
         else:
@@ -1001,7 +990,7 @@ class Client(object):
                     tf.write(data)
                     # force matplotlib to use internal PNG reader. image.imread
                     # will use PIL if available
-                    img = image._png.read_png(native_str(tf.name))
+                    img = image._png.read_png(tf.name)
                 # add image to axis
                 ax.imshow(img)
                 # hide axes

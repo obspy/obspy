@@ -8,11 +8,6 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import inspect
 import math
 import warnings
@@ -163,10 +158,10 @@ class Stats(AttribDict):
     _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
     # dict of required types for certain attrs
     _types = {
-        'network': (str, native_str),
-        'station': (str, native_str),
-        'location': (str, native_str),
-        'channel': (str, native_str),
+        'network': str,
+        'station': str,
+        'location': str,
+        'channel': str,
     }
 
     def __init__(self, header={}):
@@ -262,10 +257,10 @@ def _add_processing_info(func, *args, **kwargs):
         function=func.__name__)
     arguments = []
     arguments += \
-        ["%s=%s" % (k, repr(v)) if not isinstance(v, native_str) else
+        ["%s=%s" % (k, repr(v)) if not isinstance(v, str) else
          "%s='%s'" % (k, v) for k, v in callargs.items()]
     arguments += \
-        ["%s=%s" % (k, repr(v)) if not isinstance(v, native_str) else
+        ["%s=%s" % (k, repr(v)) if not isinstance(v, str) else
          "%s='%s'" % (k, v) for k, v in kwargs_.items()]
     arguments.sort()
     info = info % "::".join(arguments)
@@ -1730,7 +1725,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     raise ValueError(msg)
                 large_w = window
             else:
-                large_w = np.fft.ifftshift(get_window(native_str(window),
+                large_w = np.fft.ifftshift(get_window(window,
                                                       self.stats.npts))
             x_r *= large_w[:self.stats.npts // 2 + 1]
             x_i *= large_w[:self.stats.npts // 2 + 1]
@@ -2595,7 +2590,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if isinstance(inventories, Inventory) or \
            isinstance(inventories, Network):
             inventories = [inventories]
-        elif isinstance(inventories, (str, native_str)):
+        elif isinstance(inventories, str):
             inventories = [read_inventory(inventories)]
         responses = []
         for inv in inventories:

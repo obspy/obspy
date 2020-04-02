@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import datetime
 import re
 import warnings
@@ -329,8 +324,6 @@ def _add_field(writer, name, type_, width, precision):
     elif type_ == 'L':
         width = 1
         precision = 0
-    type_ = native_str(type_)
-    name = native_str(name)
     kwargs = dict(fieldType=type_, size=width, decimal=precision)
     # remove None's because shapefile.Writer.field() doesn't use None as
     # placeholder but the default values directly
@@ -365,8 +358,6 @@ def _add_record(writer, feature):
                 # fields for value of `None`
                 if value is None:
                     value = 'None'
-                else:
-                    value = native_str(value)
             # older pyshp is not correctly writing dates as used nowadays
             # '%Y%m%d' (8 chars), work around this
             elif type_ == 'D':

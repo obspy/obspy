@@ -8,25 +8,15 @@ SeisHub database client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
 import os
 import pickle
-import sys
 import time
 import warnings
 from datetime import datetime
 from math import log
 
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
+from urllib.parse import urlencode
+import urllib.request as urllib_request
 
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
@@ -50,13 +40,10 @@ KEYWORDS = {'network': 'network_id', 'station': 'station_id',
 
 
 def _unpickle(data):
-    if PY2:
-        obj = pickle.loads(data)
-    else:
-        # https://api.mongodb.org/python/current/\
-        # python3.html#why-can-t-i-share-pickled-objectids-\
-        # between-some-versions-of-python-2-and-3
-        obj = pickle.loads(data, encoding="latin-1")
+    # https://api.mongodb.org/python/current/\
+    # python3.html#why-can-t-i-share-pickled-objectids-\
+    # between-some-versions-of-python-2-and-3
+    obj = pickle.loads(data, encoding="latin-1")
     return obj
 
 
@@ -489,7 +476,7 @@ master/seishub/plugins/seismology/waveform.py
 
         # allow time strings in arguments
         for time_ in ["starttime", "endtime"]:
-            if isinstance(kwargs[time_], (str, native_str)):
+            if isinstance(kwargs[time_], str):
                 kwargs[time_] = UTCDateTime(kwargs[time_])
 
         trim_start = kwargs['starttime']

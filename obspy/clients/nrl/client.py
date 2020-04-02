@@ -10,21 +10,17 @@ Client for accessing the Nominal Response Library (http://ds.iris.edu/NRL/).
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import codecs
 import io
 import os
-import sys
 import warnings
+from configparser import ConfigParser
+from urllib.parse import urlparse
 
 import requests
 
 import obspy
-from obspy.core.compatibility import (
-    ConfigParser, get_text_from_response, urlparse)
+from obspy.core.compatibility import get_text_from_response
 from obspy.core.inventory.util import _textwrap
 
 
@@ -278,10 +274,7 @@ class LocalNRL(NRL):
         """
         cp = ConfigParser()
         with codecs.open(path, mode='r', encoding='UTF-8') as f:
-            if sys.version_info.major == 2:  # pragma: no cover
-                cp.readfp(f)
-            else:  # pragma: no cover
-                cp.read_file(f)
+            cp.read_file(f)
         return cp
 
     def _read_resp(self, path):
@@ -319,10 +312,7 @@ class RemoteNRL(NRL):
         '''
         cp = ConfigParser()
         with io.StringIO(self._download(path)) as buf:
-            if sys.version_info.major == 2:  # pragma: no cover
-                cp.readfp(buf)
-            else:  # pragma: no cover
-                cp.read_file(buf)
+            cp.read_file(buf)
         return cp
 
     def _read_resp(self, path):

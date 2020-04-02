@@ -11,10 +11,6 @@ Base class for all FDSN routers.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
@@ -22,9 +18,9 @@ import io
 import sys
 import traceback
 import warnings
+from urllib.parse import urlparse
 
-from obspy.core.compatibility import (urlparse, string_types,
-                                      get_reason_from_response)
+from obspy.core.compatibility import get_reason_from_response
 import obspy
 
 from ...base import HTTPClient
@@ -212,7 +208,7 @@ class BaseRoutingClient(HTTPClient):
     def _expand_providers(self, providers):
         if providers is None:
             providers = []
-        elif isinstance(providers, string_types):
+        elif isinstance(providers, str):
             providers = [providers]
         return [_strip_protocol(URL_MAPPINGS[_i])
                 if _i in URL_MAPPINGS

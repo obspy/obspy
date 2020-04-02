@@ -8,11 +8,6 @@ Header files for the FDSN webservice.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
 import platform
 import sys
 
@@ -66,11 +61,8 @@ URL_MAPPINGS = {
 
 FDSNWS = ("dataselect", "event", "station")
 
-if PY2:
-    platform_ = platform.platform().decode("ascii", "ignore")
-else:
-    encoding = sys.getdefaultencoding() or "UTF-8"
-    platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
+encoding = sys.getdefaultencoding() or "UTF-8"
+platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
 # The default User Agent that will be sent with every request.
 DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (
     __version__, platform_, platform.python_version())

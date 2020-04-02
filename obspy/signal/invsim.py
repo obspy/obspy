@@ -19,11 +19,6 @@ to m/s.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import math
 import os
@@ -248,7 +243,7 @@ def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
     :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response from SEED RESP-file for given frequencies
     """
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, str):
         with open(filename, 'rb') as fh:
             data = fh.read()
     elif hasattr(filename, 'read'):

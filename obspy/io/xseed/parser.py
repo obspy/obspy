@@ -8,11 +8,6 @@ Main module containing XML-SEED, dataless SEED and RESP parser.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import collections
 import copy
 import datetime
@@ -176,7 +171,7 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into BytesIO object
-        if isinstance(data, (str, native_str)):
+        if isinstance(data, str):
             if re.search(r"://", data) is not None:
                 url = data
                 data = io.BytesIO()
@@ -1900,7 +1895,7 @@ class Parser(object):
                 if blkt.id == 50:
                     current_network = blkt.network_code.strip()
                     network_id = blkt.network_identifier_code
-                    if isinstance(network_id, (str, native_str)):
+                    if isinstance(network_id, str):
                         new_id = ""
                         for _i in network_id:
                             if _i.isdigit():

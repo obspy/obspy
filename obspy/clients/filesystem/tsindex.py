@@ -144,11 +144,6 @@ directory. The name of the index database can be changed by supplying the
 
 """
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copyreg
 import datetime
 import logging
@@ -233,7 +228,7 @@ class Client(object):
         logger.setLevel(numeric_level)
 
         # setup handler for database
-        if isinstance(database, (str, native_str)):
+        if isinstance(database, str):
             self.request_handler = TSIndexDatabaseHandler(
                 os.path.normpath(database),
                 loglevel=loglevel)
@@ -976,7 +971,7 @@ class Indexer(object):
         self.parallel = parallel
 
         # setup handler for database
-        if isinstance(database, (str, native_str)):
+        if isinstance(database, str):
             self.request_handler = TSIndexDatabaseHandler(database,
                                                           loglevel=loglevel)
         elif isinstance(database, TSIndexDatabaseHandler):
@@ -1296,7 +1291,7 @@ class TSIndexDatabaseHandler(object):
             self.session = session
             self.engine = session().get_bind()
         elif database:
-            if isinstance(database, (str, native_str)):
+            if isinstance(database, str):
                 self.database = os.path.abspath(database)
                 db_dirpath = os.path.dirname(self.database)
                 if not os.path.exists(db_dirpath):

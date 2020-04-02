@@ -27,13 +27,9 @@ for seismology.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
-import warnings
 import requests
+import sys
+import warnings
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
@@ -50,7 +46,6 @@ from obspy.core.util.obspy_types import (  # NOQA
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
            "read_events", "Catalog", "read_inventory", "ObsPyException",
            "ObsPyReadingError"]
-__all__ = [native_str(i) for i in __all__]
 
 
 # insert supported read/write format plugin lists dynamically in docstrings
@@ -70,6 +65,24 @@ if requests.__version__ in ('2.12.0', '2.12.1', '2.12.2'):
            "github issue #1599). Please consider updating module 'requests' "
            "to a newer version.").format(requests.__version__)
     warnings.warn(msg)
+
+if int(sys.version[0]) < 3:
+    raise ImportError("""You are running ObsPy >= 2.0 on Python 2
+
+ObsPy version 2.0 and above is not compatible with Python 2, and you still 
+ended up with this version installed. This should not have happened. 
+Make sure you have pip >= 9.0 and setuptools >= 24.2:
+
+ $ pip install pip setuptools --upgrade
+
+Your choices:
+
+- Upgrade to Python 3.
+
+- Install an older version of ObsPy:
+
+ $ pip install 'obspy<2.0'
+""")
 
 
 if __name__ == '__main__':

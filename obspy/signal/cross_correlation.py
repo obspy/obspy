@@ -16,11 +16,6 @@ Signal processing routines based on cross correlation techniques.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from bisect import bisect_left
 from copy import copy
 import ctypes as C  # NOQA
@@ -815,7 +810,7 @@ def templates_max_similarity(st, time, streams_templates):
                 data_long = tr2.data
             data_short = (data_short - data_short.mean()) / data_short.std()
             data_long = (data_long - data_long.mean()) / data_long.std()
-            tmp = np.correlate(data_long, data_short, native_str("valid"))
+            tmp = np.correlate(data_long, data_short, "valid")
             try:
                 cc += tmp
             except TypeError:

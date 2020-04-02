@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_bytes
-
 import importlib
 import io
 import os
@@ -247,7 +242,7 @@ class BlocketteTestCase(unittest.TestCase):
                     # For now only check that it contains something and that it
                     # returns bytes.
                     self.assertGreater(len(r), 0)
-                    self.assertTrue(isinstance(r, native_bytes))
+                    self.assertTrue(isinstance(r, bytes))
 
         self.assertGreater(tested_blockettes, 0)
 

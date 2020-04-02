@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
-import builtins
 import io
 import os
 import threading
@@ -12,11 +6,11 @@ import time
 import unittest
 import warnings
 from copy import deepcopy
+from unittest import mock
 
 import numpy as np
 
 from obspy import Trace, read
-from obspy.core.compatibility import mock
 from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
@@ -545,12 +539,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             break
         else:
             self.fail('unable to get invalid file path')
-        doesnt_exist = native_str(doesnt_exist)
 
-        if PY2:
-            exception_type = getattr(builtins, 'IOError')
-        else:
-            exception_type = getattr(builtins, 'FileNotFoundError')
         exception_msg = "[Errno 2] No such file or directory: '{}'"
 
         formats = _get_entry_points(
@@ -559,7 +548,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         # plugins and also for filetype autodiscovery
         formats = [None] + list(formats)
         for format in formats:
-            with self.assertRaises(exception_type) as e:
+            with self.assertRaises(FileNotFoundError) as e:
                 read(doesnt_exist, format=format)
             self.assertEqual(
                 str(e.exception), exception_msg.format(doesnt_exist))

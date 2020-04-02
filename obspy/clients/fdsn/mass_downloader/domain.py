@@ -13,15 +13,10 @@ for an example.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import with_metaclass
-
 from abc import ABCMeta, abstractmethod
 
 
-class Domain(with_metaclass(ABCMeta)):
+class Domain(metaclass=ABCMeta):
     """
     Abstract base class defining a domain - subclass it to define a new domain.
 

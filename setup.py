@@ -52,6 +52,16 @@ from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
 
 
+# The minimum python version which can be used to run ObsPy
+MIN_PYTHON_VERSION = (3, 6)
+
+# Fail fast if the user is on an unsupported version of python.
+if sys.version_info < MIN_PYTHON_VERSION:
+    msg = ("ObsPy requires python version >= {}".format(MIN_PYTHON_VERSION) +
+           " you are using python version {}".format(sys.version_info))
+    print(msg, file=sys.stderr)
+    sys.exit(1)
+
 # Directory of the current file in the (hopefully) most reliable way
 # possible, according to krischer
 SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
@@ -107,10 +117,9 @@ KEYWORDS = [
 # when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
 # and get rid of helper function _np_copy_astype() in obspy/io/mseed/core.py
 INSTALL_REQUIRES = [
-    'future>=0.12.4',
-    'numpy>=1.6.1',
-    'scipy>=0.9.0',
-    'matplotlib>=1.1.0',
+    'numpy>=1.15.0',
+    'scipy>=1.0.0',
+    'matplotlib>=3.2.0',
     'lxml',
     'setuptools',
     'sqlalchemy',
@@ -122,9 +131,6 @@ EXTRAS_REQUIRE = {
     'arclink': ['cryptography'],
     'io.shapefile': ['pyshp'],
     }
-# PY2
-if sys.version_info[0] == 2:
-    EXTRAS_REQUIRE['tests'].append('mock')
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -540,16 +546,6 @@ def find_packages():
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    import distutils
-    from distutils.msvc9compiler import MSVCCompiler
-
-    # for Python 2.x only -> support library paths containing spaces
-    if distutils.__version__.startswith('2.'):
-        def _library_dir_option(self, dir):
-            return '/LIBPATH:"%s"' % (dir)
-
-        MSVCCompiler.library_dir_option = _library_dir_option
-
     # remove 'init' entry in exported symbols
     def _get_export_symbols(self, ext):
         return ext.export_symbols
@@ -800,12 +796,7 @@ def setupPackage():
                 'Lesser General Public License (LGPL)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.4',
-            'Programming Language :: Python :: 3.5',
-            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
             'Topic :: Scientific/Engineering',
@@ -814,6 +805,7 @@ def setupPackage():
         packages=find_packages(),
         namespace_packages=[],
         zip_safe=False,
+        python_requires=f'>={MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}',
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
         features=add_features(),

@@ -2,20 +2,10 @@
 """
 The obspy-mopad script test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import io
 import os
-import sys
 import unittest
-from itertools import product
-
-if sys.version_info.major == 2:
-    from itertools import izip_longest as zip_longest
-else:
-    from itertools import zip_longest
+from itertools import product, zip_longest
 
 import numpy as np
 
@@ -34,17 +24,6 @@ class MopadTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'images')
         self.mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
-    def _normalized_assert_equal(self, expected, result):
-        """
-        PY2 console uses ASCII as default encoding and writing '°' to stdout
-        raises an exception which is handled by mopad replacing it with 'deg'
-        here we normalize it across Python versions - can be removed once
-        PY2 support is dropped
-        """
-        result = result.replace('°', ' deg')
-        expected = expected.replace('°', ' deg')
-        return self.assertEqual(expected, result)
-
     #
     # obspy-mopad convert
     #
@@ -58,7 +37,7 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
         result = out.stdout[:-1]
-        self._normalized_assert_equal(expected, result)
+        self.assertEqual(expected, result)
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -147,7 +126,7 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
         result = out.stdout[:-1]
-        self._normalized_assert_equal(expected, result)
+        self.assertEqual(expected, result)
 
     #
     # obspy-mopad gmt

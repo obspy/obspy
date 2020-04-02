@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 import os
 import pickle
 import unittest
 from copy import deepcopy
 import warnings
+from unittest import mock
 
 import numpy as np
 import numpy.ma as ma
 
 from obspy import Stream, Trace, UTCDateTime, __version__, read, read_inventory
 from obspy.core import Stats
-from obspy.core.compatibility import mock
 from obspy.core.util.testing import ImageComparison
 from obspy.io.xseed import Parser
 

@@ -13,11 +13,6 @@ checking, except for byteorder and header/data array length.  File- and array-
 based checking routines are provided for additional checks where desired.
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.utils import native_str
-from future.builtins import *  # NOQA
-
 import os
 import sys
 import warnings
@@ -51,12 +46,12 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
     for itype in arrays:
         if itype == 'float':
             # null float header array
-            hf = np.empty(70, dtype=native_str(byteorder + 'f4'))
+            hf = np.empty(70, dtype=byteorder + 'f4')
             hf.fill(HD.FNULL)
             out.append(hf)
         elif itype == 'int':
             # null integer header array
-            hi = np.empty(40, dtype=native_str(byteorder + 'i4'))
+            hi = np.empty(40, dtype=byteorder + 'i4')
             hi.fill(HD.INULL)
             # set logicals to 0, not -1234whatever
             for i, hdr in enumerate(HD.INTHDRS):
@@ -69,7 +64,7 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
             out.append(hi)
         elif itype == 'str':
             # null string header array
-            hs = np.empty(24, dtype=native_str('|S8'))
+            hs = np.empty(24, dtype='|S8')
             hs.fill(HD.SNULL)
             out.append(hs)
         else:
@@ -132,9 +127,9 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     #    in strings. Store them in array (and convert the char to a
     #    list). That's a total of 632 bytes.
     # --------------------------------------------------------------
-    hf = from_buffer(f.read(4 * 70), dtype=native_str(endian_str + 'f4'))
-    hi = from_buffer(f.read(4 * 40), dtype=native_str(endian_str + 'i4'))
-    hs = from_buffer(f.read(24 * 8), dtype=native_str('|S8'))
+    hf = from_buffer(f.read(4 * 70), dtype=endian_str + 'f4')
+    hi = from_buffer(f.read(4 * 40), dtype=endian_str + 'i4')
+    hs = from_buffer(f.read(24 * 8), dtype='|S8')
 
     if not is_valid_byteorder(hi):
         if is_byteorder_specified:
@@ -183,7 +178,7 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
         data = None
     else:
         data = from_buffer(f.read(int(npts) * 4),
-                           dtype=native_str(endian_str + 'f4'))
+                           dtype=endian_str + 'f4')
 
         if len(data) != npts:
             if is_file_name:
@@ -240,10 +235,10 @@ def read_sac_ascii(source, headonly=False):
     # read in the float values
     # TODO: use native '=' dtype byteorder instead of forcing little endian?
     hf = np.array([i.split() for i in contents[:14]],
-                  dtype=native_str('<f4')).ravel()
+                  dtype='<f4').ravel()
     # read in the int values
     hi = np.array([i.split() for i in contents[14: 14 + 8]],
-                  dtype=native_str('<i4')).ravel()
+                  dtype='<i4').ravel()
     # reading in the string part is a bit more complicated
     # because every string field has to be 8 characters long
     # apart from the second field which is 16 characters long
@@ -251,7 +246,7 @@ def read_sac_ascii(source, headonly=False):
     hs, = init_header_arrays(arrays=('str',))
     for i, j in enumerate(range(0, 24, 3)):
         line = contents[14 + 8 + i]
-        hs[j:j + 3] = from_buffer(line[:24], dtype=native_str('|S8'))
+        hs[j:j + 3] = from_buffer(line[:24], dtype='|S8')
     # --------------------------------------------------------------
     # read in the seismogram points
     # --------------------------------------------------------------
@@ -259,7 +254,7 @@ def read_sac_ascii(source, headonly=False):
         data = None
     else:
         data = np.array([i.split() for i in contents[30:]],
-                        dtype=native_str('<f4')).ravel()
+                        dtype='<f4').ravel()
 
         npts = hi[HD.INTHDRS.index('npts')]
         if len(data) != npts:
@@ -315,10 +310,10 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         else:
             raise ValueError("Unrecognized byteorder. Use {'little', 'big'}")
 
-        hf = hf.astype(native_str(endian_str + 'f4'))
-        hi = hi.astype(native_str(endian_str + 'i4'))
+        hf = hf.astype(endian_str + 'f4')
+        hi = hi.astype(endian_str + 'i4')
         if data is not None:
-            data = data.astype(native_str(endian_str + 'f4'))
+            data = data.astype(endian_str + 'f4')
 
     # TODO: make sure all arrays have same byte order
 
@@ -396,12 +391,12 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
         is_file_name = False
 
     try:
-        np.savetxt(f, np.reshape(hf, (14, 5)), fmt=native_str("%#15.7g"),
+        np.savetxt(f, np.reshape(hf, (14, 5)), fmt="%#15.7g",
                    delimiter='')
-        np.savetxt(f, np.reshape(hi, (8, 5)), fmt=native_str("%10d"),
+        np.savetxt(f, np.reshape(hi, (8, 5)), fmt="%10d",
                    delimiter='')
         np.savetxt(f, np.reshape(hs, (8, 3)).astype('|U8'),
-                   fmt=native_str('%-8s'), delimiter='')
+                   fmt='%-8s', delimiter='')
     except Exception as e:
         if is_file_name:
             f.close()
@@ -416,7 +411,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
         try:
             rows = npts // 5
             np.savetxt(f, np.reshape(data[0:5 * rows], (rows, 5)),
-                       fmt=native_str("%#15.7g"), delimiter='')
+                       fmt="%#15.7g", delimiter='')
             np.savetxt(f, data[5 * rows:], delimiter=b'\t')
         except Exception:
             if is_file_name:

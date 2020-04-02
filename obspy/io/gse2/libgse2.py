@@ -23,11 +23,6 @@ See: http://www.orfeus-eu.org/software/seismo_softwarelibrary.html#gse
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import doctest
 import warnings
@@ -44,31 +39,31 @@ clibgse2 = _load_cdll("gse2")
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p), C.c_void_p]
 clibgse2.decomp_6b_buffer.restype = C.c_int
 
 clibgse2.rem_2nd_diff.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int]
 clibgse2.rem_2nd_diff.restype = C.c_int
 
 clibgse2.check_sum.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_int32]
 clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
 
 clibgse2.diff_2nd.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_int]
 clibgse2.diff_2nd.restype = C.c_void_p
 
 clibgse2.compress_6b_buffer.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int,
     C.CFUNCTYPE(C.c_int, C.c_char)]
 clibgse2.compress_6b_buffer.restype = C.c_int
@@ -278,7 +273,7 @@ def compress_cm6(data):
     n = len(data)
     count = [0]  # closure, must be container
     # 4 character bytes per int32_t
-    carr = np.zeros(n * 4, dtype=native_str('c'))
+    carr = np.zeros(n * 4, dtype='c')
 
     def writer(char):
         carr[count[0]] = char
@@ -291,9 +286,9 @@ def compress_cm6(data):
         raise GSEUtiError(msg % ierr)
     cnt = count[0]
     if cnt < 80:
-        return carr[:cnt].view(native_str('|S%d' % cnt))
+        return carr[:cnt].view('|S%d' % cnt)
     else:
-        return carr[:(cnt // 80 + 1) * 80].view(native_str('|S80'))
+        return carr[:(cnt // 80 + 1) * 80].view('|S80')
 
 
 def verify_checksum(fh, data, version=2):

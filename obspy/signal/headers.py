@@ -2,11 +2,6 @@
 """
 Defines the libsignal and evalresp structures and blockettes.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 
 import numpy as np
@@ -22,21 +17,21 @@ clibevresp = _load_cdll("evresp")
 clibsignal.calcSteer.argtypes = [
     C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_float,
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=3,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.complex128, ndim=4,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
 ]
 clibsignal.calcSteer.restype = C.c_void_p
 
 clibsignal.generalizedBeamformer.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=2,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=2,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.complex128, ndim=4,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.complex128, ndim=3,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
     C.c_double,
     C.c_int,
@@ -45,37 +40,37 @@ clibsignal.generalizedBeamformer.restype = C.c_int
 
 clibsignal.X_corr.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_int, C.c_int,
     C.POINTER(C.c_int), C.POINTER(C.c_double)]
 clibsignal.X_corr.restype = C.c_int
 
 clibsignal.recstalta.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_int, C.c_int]
 clibsignal.recstalta.restype = C.c_void_p
 
 clibsignal.ppick.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.POINTER(C.c_int), C.c_char_p, C.c_float, C.c_int, C.c_int,
     C.c_float, C.c_float, C.c_int, C.c_int]
 clibsignal.ppick.restype = C.c_int
 
 clibsignal.ar_picker.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_float, C.c_float, C.c_float, C.c_float, C.c_float,
     C.c_float, C.c_float, C.c_int, C.c_int, C.POINTER(C.c_float),
     C.POINTER(C.c_float), C.c_double, C.c_double, C.c_int]
@@ -87,40 +82,40 @@ clibsignal.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
 clibsignal.utl_geo_km.restype = C.c_void_p
 
 head_stalta_t = np.dtype([
-    (native_str('N'), np.uint32),
-    (native_str('nsta'), np.uint32),
-    (native_str('nlta'), np.uint32),
+    ('N', np.uint32),
+    ('nsta', np.uint32),
+    ('nlta', np.uint32),
 ], align=True)
 
 clibsignal.stalta.argtypes = [
     np.ctypeslib.ndpointer(dtype=head_stalta_t, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
 ]
 clibsignal.stalta.restype = C.c_int
 
 clibsignal.hermite_interpolation.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_int, C.c_double, C.c_double]
 clibsignal.hermite_interpolation.restype = C.c_void_p
 
 clibsignal.lanczos_resample.argtypes = [
     # y_in
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     # y_out
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     # dt
     C.c_double,
     # offset
@@ -138,10 +133,10 @@ clibsignal.lanczos_resample.restype = None
 clibsignal.calculate_kernel.argtypes = [
     # double *x
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     # double *y
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     # int len
     C.c_int,
     # int a,
@@ -186,7 +181,7 @@ clibevresp.evresp.argtypes = [
     C.c_char_p,
     np.ctypeslib.ndpointer(dtype=np.float64,
                            ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int,
     C.c_char_p,
     C.c_char_p,

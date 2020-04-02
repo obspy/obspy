@@ -3,11 +3,6 @@
 """
 Holds various helper classes to keep the file number manageable.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from collections import namedtuple
 
 import numpy as np
@@ -22,10 +17,10 @@ class TauModelError(Exception):
 
 
 SlownessLayer = np.dtype([
-    (native_str('top_p'), np.float_),
-    (native_str('top_depth'), np.float_),
-    (native_str('bot_p'), np.float_),
-    (native_str('bot_depth'), np.float_),
+    ('top_p', np.float_),
+    ('top_depth', np.float_),
+    ('bot_p', np.float_),
+    ('bot_depth', np.float_),
 ])
 
 
@@ -34,10 +29,10 @@ Holds the ray parameter, time and distance increments, and optionally a
 depth, for a ray passing through some layer.
 """
 TimeDist = np.dtype([
-    (native_str('p'), np.float_),
-    (native_str('time'), np.float_),
-    (native_str('dist'), np.float_),
-    (native_str('depth'), np.float_),
+    ('p', np.float_),
+    ('time', np.float_),
+    ('dist', np.float_),
+    ('depth', np.float_),
 ])
 
 
@@ -46,12 +41,12 @@ Holds the ray parameter, time and distance increments, and optionally a
 depth, latitude and longitude for a ray passing through some layer.
 """
 TimeDistGeo = np.dtype([
-    (native_str('p'), np.float_),
-    (native_str('time'), np.float_),
-    (native_str('dist'), np.float_),
-    (native_str('depth'), np.float_),
-    (native_str('lat'), np.float_),
-    (native_str('lon'), np.float_)
+    ('p', np.float_),
+    ('time', np.float_),
+    ('dist', np.float_),
+    ('depth', np.float_),
+    ('lat', np.float_),
+    ('lon', np.float_)
 ])
 
 
@@ -60,10 +55,10 @@ Tracks critical points (discontinuities or reversals in slowness gradient)
 within slowness and velocity models.
 """
 CriticalDepth = np.dtype([
-    (native_str('depth'), np.float_),
-    (native_str('vel_layer_num'), np.int_),
-    (native_str('p_layer_num'), np.int_),
-    (native_str('s_layer_num'), np.int_),
+    ('depth', np.float_),
+    ('vel_layer_num', np.int_),
+    ('p_layer_num', np.int_),
+    ('s_layer_num', np.int_),
 ])
 
 

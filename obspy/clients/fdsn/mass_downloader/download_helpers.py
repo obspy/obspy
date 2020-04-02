@@ -12,27 +12,17 @@ it understandable in the first place.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import collections
 import copy
 import fnmatch
 import itertools
-import sys
-from multiprocessing.pool import ThreadPool
 import os
 import time
 import timeit
-
-if sys.version_info.major == 2:
-    from itertools import ifilterfalse as filterfalse
-else:
-    from itertools import filterfalse
+from itertools import filterfalse
+from multiprocessing.pool import ThreadPool
 
 import numpy as np
-
 from lxml.etree import XMLSyntaxError
 
 import obspy

@@ -8,10 +8,6 @@ Decorator used in ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import functools
 import inspect
 import os
@@ -24,7 +20,6 @@ import zipfile
 
 import numpy as np
 from decorator import decorator
-from future.utils import PY2, native_str
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
@@ -48,10 +43,7 @@ def deprecated(warning_msg=None):
             msg = func.__doc__
         elif warning_msg:
             msg = warning_msg
-            if PY2 and inspect.ismethod(func):
-                func.im_func.__doc__ = warning_msg
-            else:
-                func.__doc__ = warning_msg
+            func.__doc__ = warning_msg
         else:
             msg = "Call to deprecated function %s." % func.__name__
         warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
@@ -146,7 +138,7 @@ def uncompress_file(func, filename, *args, **kwargs):
     """
     if not kwargs.get('check_compression', True):
         return func(filename, *args, **kwargs)
-    if not isinstance(filename, (str, native_str)):
+    if not isinstance(filename, str):
         return func(filename, *args, **kwargs)
     elif not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -264,7 +256,7 @@ def map_example_filename(arg_kwarg_name):
         prefix = '/path/to/'
         # check kwargs
         if arg_kwarg_name in kwargs:
-            if isinstance(kwargs[arg_kwarg_name], (str, native_str)):
+            if isinstance(kwargs[arg_kwarg_name], str):
                 if re.match(prefix, kwargs[arg_kwarg_name]):
                     try:
                         kwargs[arg_kwarg_name] = \
@@ -286,8 +278,7 @@ def map_example_filename(arg_kwarg_name):
             except ValueError:
                 pass
             else:
-                if ind < len(args) and isinstance(args[ind], (str,
-                                                              native_str)):
+                if ind < len(args) and isinstance(args[ind], str):
                     # need to check length of args from inspect
                     if re.match(prefix, args[ind]):
                         try:

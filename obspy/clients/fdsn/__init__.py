@@ -235,11 +235,6 @@ examples.
 
 .. _FDSN web service definitions: https://www.fdsn.org/webservices/
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
 from .client import Client  # NOQA
 from .routing.routing_client import RoutingClient  # NOQA
 from .header import URL_MAPPINGS  # NOQA
@@ -248,16 +243,11 @@ from .header import URL_MAPPINGS  # NOQA
 # insert supported URL mapping list dynamically in docstring
 # we need an if clause because add_doctests() executes the file once again
 if r"%s" in Client.__init__.__doc__:
-    if PY2:
-        Client.__init__.__func__.__doc__ = \
-            Client.__init__.__doc__ % \
-            str(sorted(URL_MAPPINGS.keys())).strip("[]")
-    else:
-        Client.__init__.__doc__ = \
-            Client.__init__.__doc__ % \
-            str(sorted(URL_MAPPINGS.keys())).strip("[]")
+    Client.__init__.__doc__ = \
+        Client.__init__.__doc__ % \
+        str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
-__all__ = [native_str(x) for x in ("Client", "RoutingClient")]
+__all__ = ["Client", "RoutingClient"]
 
 
 if __name__ == '__main__':

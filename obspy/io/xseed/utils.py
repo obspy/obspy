@@ -8,11 +8,6 @@ Various additional utilities for ObsPy xseed.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import warnings
 
 from obspy import UTCDateTime
@@ -57,7 +52,7 @@ def datetime_2_string(dt, compact=False):
     """
     if isinstance(dt, UTCDateTime):
         return dt.format_seed(compact)
-    elif isinstance(dt, (str, native_str)):
+    elif isinstance(dt, str):
         dt = dt.strip()
     if not dt:
         return ""

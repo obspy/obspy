@@ -8,11 +8,6 @@ Tools for creating and merging previews.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from copy import copy
 
 import numpy as np
@@ -129,7 +124,7 @@ def merge_previews(stream):
             raise Exception(msg)
         delta = value[0].stats.delta
         # Check dtype.
-        dtypes = {native_str(tr.data.dtype) for tr in value}
+        dtypes = {tr.data.dtype for tr in value}
         if len(dtypes) > 1:
             msg = 'Different dtypes for traces with id %s' % value[0].id
             raise Exception(msg)

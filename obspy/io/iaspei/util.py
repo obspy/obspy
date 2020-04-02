@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
-
 HEADER_STARTS = {
     'origins': ['date', 'time', 'err', 'rms'],
     'bibliography': ['year', 'volume', 'page1', 'page2'],

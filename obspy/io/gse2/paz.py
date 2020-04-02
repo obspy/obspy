@@ -19,11 +19,6 @@ The read in PAZ information can be used with
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import doctest
 
 import numpy as np
@@ -58,7 +53,7 @@ def read_paz(paz_file):
     poles = []
     zeros = []
 
-    if isinstance(paz_file, (str, native_str)):
+    if isinstance(paz_file, str):
         with open(paz_file, 'rt') as fh:
             paz = fh.readlines()
     else:

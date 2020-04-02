@@ -9,11 +9,6 @@ Provides the Station class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible
-
 import copy
 import fnmatch
 import warnings
@@ -29,7 +24,6 @@ from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
                    Longitude, _unified_content_strings, _textwrap, Site)
 
 
-@python_2_unicode_compatible
 class Station(BaseNode):
     """
     From the StationXML definition:

@@ -4,7 +4,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: continuumio/miniconda:latest
+      - image: continuumio/miniconda3:latest
 
     working_directory: ~/repo
 

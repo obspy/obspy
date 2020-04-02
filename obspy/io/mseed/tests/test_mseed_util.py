@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copy
 import io
 import os
@@ -922,7 +917,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 read_bytes = util._search_flag_in_blockette(
                     file_desc, 48, 1001, 4, 1)
                 self.assertFalse(read_bytes is None)
-                self.assertEqual(unpack(native_str(">B"), read_bytes)[0], 63)
+                self.assertEqual(unpack(">B", read_bytes)[0], 63)
 
                 # Test from middle of a record header
                 file_desc.seek(14, os.SEEK_CUR)
@@ -930,7 +925,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 read_bytes = util._search_flag_in_blockette(
                     file_desc, 34, 1000, 6, 1)
                 self.assertFalse(read_bytes is None)
-                self.assertEqual(unpack(native_str(">B"), read_bytes)[0], 9)
+                self.assertEqual(unpack(">B", read_bytes)[0], 9)
                 # Check that file_desc position has not changed
                 self.assertEqual(file_desc.tell(), file_pos)
 
@@ -939,14 +934,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 read_bytes = util._search_flag_in_blockette(
                     file_desc, -26, 1001, 5, 1)
                 self.assertFalse(read_bytes is None)
-                self.assertEqual(unpack(native_str(">B"), read_bytes)[0], 42)
+                self.assertEqual(unpack(">B", read_bytes)[0], 42)
 
                 # Test another record. There is at least 3 records in a
                 # mseed with 2000 data points and 512 bytes record length
                 file_desc.seek(1040, os.SEEK_SET)
                 read_bytes = util._search_flag_in_blockette(file_desc,
                                                             32, 1001, 4, 1)
-                self.assertEqual(unpack(native_str(">B"), read_bytes)[0], 63)
+                self.assertEqual(unpack(">B", read_bytes)[0], 63)
 
                 # Test missing blockette
                 read_bytes = util._search_flag_in_blockette(file_desc,
@@ -1061,9 +1056,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                  'glitches_detected': True,
                                  'time_tag_questionable': True}}
 
-            expected_classic = pack(native_str('BBB'), 0x15, 0x28, 0x88)
-            expected_leap_mod = pack(native_str('BBB'), 0x05, 0x28, 0x88)
-            expected_glitch_mod = pack(native_str('BBB'), 0x15, 0x28, 0x88)
+            expected_classic = pack('BBB', 0x15, 0x28, 0x88)
+            expected_leap_mod = pack('BBB', 0x05, 0x28, 0x88)
+            expected_glitch_mod = pack('BBB', 0x15, 0x28, 0x88)
 
             # Test update all traces
             all_traces = {'...': copy.deepcopy(classic_flags)}
@@ -1150,10 +1145,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                   datetime(2012, 8, 1, 12, 13, 20, 0)]},
                 'negative_leap': False}}
 
-            expected_first = pack(native_str('BBB'), 0x11, 0x00, 0x00)
-            expected_second = pack(native_str('BBB'), 0x10, 0x00, 0x00)
-            expected_fourth = pack(native_str('BBB'), 0x14, 0x00, 0x00)
-            expected_afterfourth = pack(native_str('BBB'), 0x00, 0x00, 0x00)
+            expected_first = pack('BBB', 0x11, 0x00, 0x00)
+            expected_second = pack('BBB', 0x10, 0x00, 0x00)
+            expected_fourth = pack('BBB', 0x14, 0x00, 0x00)
+            expected_afterfourth = pack('BBB', 0x00, 0x00, 0x00)
             # Test update all traces
             dated_traces = {'NE.STATI.LO.CHA': copy.deepcopy(dated_flags)}
             set_flags_in_fixed_headers(file_name, dated_traces)

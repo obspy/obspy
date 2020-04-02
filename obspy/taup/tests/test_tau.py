@@ -3,11 +3,6 @@
 """
 Tests the high level obspy.taup.tau interface.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import collections
 import inspect
 import os
@@ -57,15 +52,15 @@ class TauPyModelTestCase(unittest.TestCase):
             output = np.genfromtxt(
                 fh,
                 usecols=[0, 1, 2, 3, 4, 5, 6, 7, 9],
-                dtype=[(native_str('distance'), np.float_),
-                       (native_str('depth'), np.float_),
-                       (native_str('name'), (np.str_, 10)),
-                       (native_str('time'), np.float_),
-                       (native_str('ray_param_sec_degree'), np.float_),
-                       (native_str('takeoff_angle'), np.float_),
-                       (native_str('incident_angle'), np.float_),
-                       (native_str('purist_distance'), np.float_),
-                       (native_str('purist_name'), (np.str_, 10))])
+                dtype=[('distance', np.float_),
+                       ('depth', np.float_),
+                       ('name', (np.str_, 10)),
+                       ('time', np.float_),
+                       ('ray_param_sec_degree', np.float_),
+                       ('takeoff_angle', np.float_),
+                       ('incident_angle', np.float_),
+                       ('purist_distance', np.float_),
+                       ('purist_name', (np.str_, 10))])
 
         output = np.atleast_1d(output)
         return output
@@ -691,10 +686,10 @@ class TauPyModelTestCase(unittest.TestCase):
         time = time[:, ::2] * 60.0 + time[:, 1::2]
 
         values = np.empty(np.size(ray_param),
-                          dtype=[(native_str('depth'), np.float_),
-                                 (native_str('dist'), np.float_),
-                                 (native_str('ray_param'), np.float_),
-                                 (native_str('time'), np.float_)])
+                          dtype=[('depth', np.float_),
+                                 ('dist', np.float_),
+                                 ('ray_param', np.float_),
+                                 ('time', np.float_)])
 
         values['depth'] = np.tile(depths, len(dist))
         values['dist'] = np.repeat(dist, len(depths))

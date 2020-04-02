@@ -327,11 +327,6 @@ scale      = 1.0
              sac: AttribDict(...)
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import sys
 import warnings
 from copy import deepcopy
@@ -889,7 +884,7 @@ class SACTrace(object):
             else:
                 # Only copy the data if they are not of the required type
                 # XXX: why require little endian instead of native byte order?
-                # data = np.require(data, native_str('<f4'))
+                # data = np.require(data, '<f4')
                 pass
 
         # --------------------------- HEADER ARRAYS ---------------------------
@@ -1092,7 +1087,7 @@ class SACTrace(object):
             for i, val in enumerate(hs):
                 val = _ut._clean_str(val.decode(encoding, 'replace'),
                                      strip_whitespace=False)
-                if val.startswith(native_str('-12345')):
+                if val.startswith('-12345'):
                     val = HD.SNULL
                 hs[i] = val.encode(encoding, 'replace')
 
@@ -1486,7 +1481,7 @@ class SACTrace(object):
 
         """
         # XXX: do I really care which byte order it is?
-        # self.data = np.require(self.data, native_str('<f4'))
+        # self.data = np.require(self.data, '<f4')
         self._hi[HD.INTHDRS.index('npts')] = self.npts
         self._hf[HD.FLOATHDRS.index('e')] = self.e
         self._hf[HD.FLOATHDRS.index('depmin')] = self.depmin

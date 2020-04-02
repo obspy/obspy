@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 
 import numpy as np
@@ -239,11 +234,11 @@ clibevresp._obspy_calc_resp.argtypes = [
     C.POINTER(Channel),
     np.ctypeslib.ndpointer(dtype=np.float64,  # freqs
                            ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int,
     np.ctypeslib.ndpointer(dtype=np.complex128,  # output
                            ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_char_p,
     C.c_int,
     C.c_int,
