@@ -12,9 +12,6 @@ Routines for error ellipses in seismological coordinates (N=0, W=90)
 - See if a point is inside or on an ellipse
 - Calculate the angle subtended by an ellipse (for back-azimuth uncertainty)
 - Plot an ellipse
-
-.. note:
- TODO: ellipsoids (3D ellipses)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -172,6 +169,29 @@ class Ellipse:
             s += ', ({:.3g},{:.3g})'.format(self.x, self.y)
         s += ')'
         return s
+
+    def __eq__(self, other):
+        """
+        Returns true if two Ellipses are equal
+        
+        :param other: second Ellipse
+        :type other:  :class: `~ellipsoid.Ellipse`
+        :return: equal
+        :rtype: bool
+        """
+        eps=1e-5
+        if not abs((self.a - other.a) / self.a) < eps:
+            return False
+        if not abs((self.b - other.b) / self.b) < eps:
+            return False
+        if not self.x == other.x:
+            return False
+        if not self.y == other.y:
+            return False
+        theta_diff = (self.theta - other.theta) % 180
+        if not (abs(theta_diff) < eps or abs(theta_diff-180) < eps):
+            return False
+        return True
 
     def to_cov(self):
         """Convert to covariance matrix notation
