@@ -92,8 +92,9 @@ class Ellipse:
         if np.any(evals < 0):
             cov_factor = cov[0][1]
             cov_base = cov/cov_factor
-            warnings.warn("Can't make data ellipse because cov matrix not pos "
-                          "definite: {:g}x[{:.2f} {:g}][{:g} {:.2f}]. ".format(
+            warnings.warn("Can't make data ellipse because covariance matrix "
+                          "is not positive definite: "
+                          "{:g}x[{:.2f} {:g}][{:g} {:.2f}]. ".format(
                             cov_factor, cov_base[0][0], cov_base[0][1],
                             cov_base[1][0], cov_base[1][1]))
             # return cls(None, None, None, center)
@@ -173,13 +174,13 @@ class Ellipse:
     def __eq__(self, other):
         """
         Returns true if two Ellipses are equal
-        
+
         :param other: second Ellipse
         :type other:  :class: `~ellipsoid.Ellipse`
         :return: equal
         :rtype: bool
         """
-        eps=1e-5
+        eps = 1e-5
         if not abs((self.a - other.a) / self.a) < eps:
             return False
         if not abs((self.b - other.b) / self.b) < eps:
