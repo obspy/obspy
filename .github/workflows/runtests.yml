@@ -1,32 +1,64 @@
 name: validate
-on: [push]
+on: pull_request
+
+# Set globally scoped environmental variables.
+env:
+  ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+  PR_URL: github.com/d-chambers/obspy/pull/${{ github.event.pull_request.number }}
+  CI_URL: github.com/d-chambers/obspy/actions/runs/${{ github.run_id }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 jobs:
-  # Simply applies flake8 to the codebase
+
+  # Parse the comments from the PR and uploads a json with selected options
+  get_ci_config:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.x'
+
+      - name: create ci config
+        shell: bash -l {0}
+        run: |
+          pip install git+https://github.com/d-chambers/obspy_github_api@gh-actions
+          python -c "from obspy_github_api import make_ci_json_config; make_ci_json_config(issue_number=${ISSUE_NUMBER}, path='ci_conf.json', token='${GITHUB_TOKEN}')"
+
+      - name: upload ci config
+        uses: actions/upload-artifact@v1
+        with:
+          name: ci_config
+          path: ci_conf.json
+
+  # Simply applies flake8 to the codebase.
   lint_code:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
 
-      - name: Setup conda
-        uses: s-weigand/setup-conda@v1
+      - uses: actions/setup-python@v1
         with:
-          python-version: 3.7
-
-      - name: install linting packages
-        run: pip install flake8
+          python-version: '3.x'
 
       - name: flake8
-        run: flake8 .
+        run: |
+          pip install wheel
+          pip install flake8
+          python -m flake8 obspy
 
   # Runs the tests on combinations of the supported python/os matrix.
   test_code:
     runs-on: ${{ matrix.os }}
+    needs: get_ci_config
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7]
+        python-version: [3.7, 3.8]
 
     steps:
       - uses: actions/checkout@v1
@@ -40,7 +72,7 @@ jobs:
           environment-file: .github/test_conda_env.yml
           condarc-file: .github/test_condarc.yml
 
-      - name: install obsplus
+      - name: install obspy in dev mode
         shell: bash -l {0}
         run: |
           pip install -e .
@@ -51,15 +83,26 @@ jobs:
           conda info -a
           conda list
 
-      # Runs test suite and calculates coverage
+      - name: download test config
+        uses: actions/download-artifact@v1
+        with:
+          name: ci_config
+
       - name: run test suite
         shell: bash -l {0}
         run: |
-          obspy-runtests
-
+          export MODULELIST=`python -c "import json; json.loads(open(ci_config/ci_conf.json).read())['module_list']"`
+          export MODULELISTSPACES=`python -c "import json; json.loads(open(ci_config/ci_conf.json).read())['module_list_spaces']"`
+          coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES;
 
 
 # This is a very useful step for debugging, it allows you to ssh into the CI
-# machine (https://github.com/marketplace/actions/debugging-with-tmate)
+# machine (https://github.com/marketplace/actions/debugging-with-tmate).
+# Make sure to open the log before the job starts else you cant see the tmate
+# url. See https://github.com/mxschmitt/action-tmate/issues/1.
+# Also, the CI machine will close on a non-zero exit code (annoying). This can
+# be overcome by coalescing the null command like so:
+# $ some-command-that-can-fail || :
+#
 #- name: Setup tmate session
 #  uses: mxschmitt/action-tmate@v1
