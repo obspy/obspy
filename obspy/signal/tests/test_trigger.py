@@ -99,8 +99,11 @@ class TriggerTestCase(unittest.TestCase):
         aic_cf_compare = np.load(os.path.join(self.path,
                                               'CRLZ.HHZ.10.NZ.AICcf.npy'))
         tr = read(filename)[0]
+        tr.filter('lowpass', freq=2, corners=4)
+        tr.trim(tr.stats.starttime + 150)
+        tr.decimate(10, no_filter=True)
         idx, aic_cf = aic(tr.data)
-        self.assertEqual(idx, 22690)
+        self.assertEqual(idx, 836)
         self.assertEqual(len(aic_cf), tr.data.size - 1)
         np.testing.assert_allclose(aic_cf, aic_cf_compare)
 
