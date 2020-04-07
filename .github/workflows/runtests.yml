@@ -4,13 +4,12 @@ on: pull_request
 # Set globally scoped environmental variables.
 env:
   ISSUE_NUMBER: ${{ github.event.pull_request.number }}
-  PR_URL: github.com/d-chambers/obspy/pull/${{ github.event.pull_request.number }}
-  CI_URL: github.com/d-chambers/obspy/actions/runs/${{ github.run_id }}
+  PR_URL: github.com/obspy/obspy/pull/${{ github.event.pull_request.number }}
+  CI_URL: github.com/obspy/obspy/actions/runs/${{ github.run_id }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
 jobs:
-
   # Parse the comments from the PR and uploads a json with selected options
   get_ci_config:
     runs-on: ubuntu-latest
