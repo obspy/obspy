@@ -319,7 +319,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         phase = str(line[4])
         arrival.phase = phase
         arrival.distance = kilometer2degrees(float(line[21]))
-        arrival.azimuth = float(line[23])
+        arrival.azimuth = float(line[22])
         arrival.takeoff_angle = float(line[24])
         arrival.time_residual = float(line[16])
         arrival.time_weight = float(line[17])
