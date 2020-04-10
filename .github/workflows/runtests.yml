@@ -6,6 +6,7 @@ env:
   ISSUE_NUMBER: ${{ github.event.pull_request.number }}
   PR_URL: https://github.com/obspy/obspy/pull/${{ github.event.pull_request.number }}
   CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
+  CONFIG_PATH: 'obspy_ci_config/conf.json'
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
@@ -25,13 +26,13 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install git+https://github.com/d-chambers/obspy_github_api@gh-actions
-          python -c "from obspy_github_api import make_ci_json_config; make_ci_json_config(issue_number=${ISSUE_NUMBER}, path='ci_conf.json', token='${GITHUB_TOKEN}')"
+          obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token='${GITHUB_TOKEN}
 
       - name: upload ci config
         uses: actions/upload-artifact@v1
         with:
-          name: ci_config
-          path: ci_conf.json
+          name: obspy_ci_config
+          path: conf.json
 
   # Simply applies flake8 to the codebase.
   lint_code:
@@ -85,13 +86,13 @@ jobs:
       - name: download test config
         uses: actions/download-artifact@v1
         with:
-          name: ci_config
+          name: obspy_ci_config
 
       - name: run test suite
         shell: bash -l {0}
         run: |
-          export MODULELIST=`python -c "import json; json.loads(open(ci_config/ci_conf.json).read())['module_list']"`
-          export MODULELISTSPACES=`python -c "import json; json.loads(open(ci_config/ci_conf.json).read())['module_list_spaces']"`
+          export MODULELIST=`obshub get_config_value module_list --path=${CONFIG_PATH}`
+          export MODULELISTSPACES=`obshub get_config_value module_list_spaces --path=${CONFIG_PATH}`
           coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES;
 
 
