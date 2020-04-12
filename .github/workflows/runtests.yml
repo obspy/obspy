@@ -6,7 +6,7 @@ env:
   ISSUE_NUMBER: ${{ github.event.pull_request.number }}
   PR_URL: https://github.com/obspy/obspy/pull/${{ github.event.pull_request.number }}
   CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
-  CONFIG_PATH: 'obspy_ci_config/conf.json'
+  CONFIG_PATH: obspy_ci_config/conf.json
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
@@ -26,13 +26,13 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install git+https://github.com/d-chambers/obspy_github_api@gh-actions
-          obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token='${GITHUB_TOKEN}
+          obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token=${GITHUB_TOKEN}
 
       - name: upload ci config
         uses: actions/upload-artifact@v1
         with:
           name: obspy_ci_config
-          path: conf.json
+          path: ${{ env.CONFIG_PATH }}
 
   # Simply applies flake8 to the codebase.
   lint_code:
@@ -70,7 +70,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           activate-environment: test
           environment-file: .github/test_conda_env.yml
-          condarc-file: .github/test_condarc.yml
 
       - name: install obspy in dev mode
         shell: bash -l {0}
