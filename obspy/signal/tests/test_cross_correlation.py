@@ -9,7 +9,6 @@ import unittest
 import warnings
 
 from obspy import UTCDateTime, read, Trace
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (
@@ -33,20 +32,6 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.a = np.sin(np.linspace(0, 10, 101))
         self.b = 5 * np.roll(self.a, 5)
         self.c = 5 * np.roll(self.a[:81], 5)
-
-    def test_correlate_deprecated_domain_keyword(self):
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always", category=ObsPyDeprecationWarning)
-            a = [1, 2, 3]
-            b = [1, 2]
-            correlate(a, b, 5, domain='freq')
-            correlate(a, b, 5, domain='time')
-        # on py37, scipy 1.1.0 this also catch FutureWarning from scipy
-        # internals, so we need to filter the warning messages
-        domain_warn = [x for x in w if 'keyword of correlate function'
-                       in str(x.message)]
-        self.assertEqual(len(domain_warn), 2)
 
     def test_correlate_normalize_true_false(self):
         a = read()[0].data[500:]

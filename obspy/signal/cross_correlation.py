@@ -81,8 +81,7 @@ def _xcorr_slice(a, b, shift, method):
     return cc[mid - shift:mid + shift + len(cc) % 2]
 
 
-def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
-              domain=None):
+def correlate(a, b, shift, demean=True, normalize='naive', method='auto'):
     """
     Cross-correlation of two signals up to a specified maximal shift.
 
@@ -115,7 +114,6 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
          ``'auto'`` Automatically chooses direct or Fourier method based on an
          estimate of which is faster. (Only availlable for SciPy versions >=
          0.19. For older Scipy version method defaults to ``'fft'``.)
-    :param str domain: Deprecated. Please use the method argument.
 
     :return: cross-correlation function.
 
@@ -163,16 +161,6 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
         normalize = None
     if normalize is True:
         normalize = 'naive'
-    if domain is not None:
-        if domain == 'freq':
-            method = 'fft'
-        elif domain == 'time':
-            method = 'direct'
-        from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-        msg = ("'domain' keyword of correlate function is deprecated and will "
-               "be removed in a subsequent ObsPy release. "
-               "Please use the 'method' keyword.")
-        warnings.warn(msg, ObsPyDeprecationWarning)
     # if we get Trace objects, use their data arrays
     if isinstance(a, Trace):
         a = a.data
