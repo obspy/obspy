@@ -253,7 +253,6 @@ class Stats(AttribDict):
         # trigger refreshing
         self.__setitem__('sampling_rate', state['sampling_rate'])
 
-
 @decorator
 def _add_processing_info(func, *args, **kwargs):
     """

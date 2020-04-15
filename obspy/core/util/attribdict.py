@@ -131,11 +131,6 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
     def copy(self):
         return copy.deepcopy(self)
 
-    def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable
-        ad = self.__class__()
-        ad.update(copy.deepcopy(self.__dict__))
-        return ad
-
     def update(self, adict={}):
         for (key, value) in adict.items():
             if key in self.readonly:
