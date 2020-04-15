@@ -2795,6 +2795,16 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(np.sum(np.abs(st4[0].data[same_sign]) <=
                                 np.abs(st2[0].data[same_sign])), npts)
 
+    def test_deepcopy_issue2600(self):
+        """
+        Tests correct deepcopy of Stream, Trace and Stats objects, issue 2600
+        """
+        tr = Trace(data=np.ones(100000), header={'sampling_rate': 1e5})
+        sr1 = tr.stats.sampling_rate
+        sr2 = tr.copy().stats.sampling_rate
+        self.assertEqual(sr1, 1e5)
+        self.assertEqual(sr2, sr1)
+
 
 def suite():
     suite = unittest.TestSuite()
