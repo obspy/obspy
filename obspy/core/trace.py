@@ -242,18 +242,14 @@ class Stats(AttribDict):
         p.text(str(self))
 
     def __getstate__(self):
-        # Copy the object's state from self.__dict__ which contains
-        # all our instance attributes. Always use the dict.copy()
-        # method to avoid modifying the original state.
         state = self.__dict__.copy()
-        # Remove the unneeded entries.
+        # Remove the unneeded entries
         del state['delta']
         del state['endtime']
         return state
 
     def __setstate__(self, state):
-        # Restore instance attributes
-        self.__dict__.update(state)
+        super(Stats, self).__setstate__(state)
         # trigger refreshing
         self.__setitem__('sampling_rate', state['sampling_rate'])
 
