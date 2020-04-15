@@ -249,7 +249,7 @@ class Stats(AttribDict):
         return state
 
     def __setstate__(self, state):
-        super(Stats, self).__setstate__(state)
+        self.__dict__.update(state)
         # trigger refreshing
         self.__setitem__('sampling_rate', state['sampling_rate'])
 

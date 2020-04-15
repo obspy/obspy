@@ -106,15 +106,6 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
     def __delitem__(self, name):
         del self.__dict__[name]
 
-    def __getstate__(self):
-        return self.__dict__
-
-    def __setstate__(self, adict):
-        # set default values
-        self.__dict__.update(self.defaults)
-        # update with pickle dictionary
-        self.update(adict)
-
     def __getattr__(self, name, default=None):
         """
         Py3k hasattr() expects an AttributeError no KeyError to be
