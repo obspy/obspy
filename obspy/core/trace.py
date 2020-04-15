@@ -244,8 +244,8 @@ class Stats(AttribDict):
     def __getstate__(self):
         state = self.__dict__.copy()
         # Remove the unneeded entries
-        del state['delta']
-        del state['endtime']
+        state.pop('delta', None)
+        state.pop('endtime', None)
         return state
 
     def __setstate__(self, state):
