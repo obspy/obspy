@@ -18,7 +18,6 @@ Signal processing routines based on cross correlation techniques.
 """
 from bisect import bisect_left
 from copy import copy
-import ctypes as C  # NOQA
 from distutils.version import LooseVersion
 import warnings
 
