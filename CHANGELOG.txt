@@ -23,6 +23,9 @@ Changes:
      encountered (see #2668)
  - obspy.clients.fdsn:
    * introduce fine-grained FDSN client exceptions (see #2653)
+ - obspy.signal.cross_correlation:
+   * Remove deprecated xcorr function, remove deprecated domain keyword
+     argument in correlate function (see #1979)
 
 maintenance_1.2.x
 =================
