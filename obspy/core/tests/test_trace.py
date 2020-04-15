@@ -2754,6 +2754,17 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(sr1, 1e5)
         self.assertEqual(sr2, sr1)
 
+    def test_pickle_issue2600(self):
+        """
+        Tests correct pickle of Trace and Stats objects, issue 2600
+        """
+        tr = Trace(data=np.ones(2), header={'sampling_rate': 1e5})
+        sr1 = tr.stats.sampling_rate
+        tr_pickled = pickle.loads(pickle.dumps(tr, protocol=2))
+        sr2 = tr_pickled.stats.sampling_rate
+        self.assertEqual(sr1, 1e5)
+        self.assertEqual(sr2, sr1)
+
 
 def suite():
     suite = unittest.TestSuite()
