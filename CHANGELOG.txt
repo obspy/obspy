@@ -1,3 +1,10 @@
+1.2.2 (doi: )
+===================================
+
+Changes:
+ - obspy.clients.fdsn:
+   * update RASPISHAKE URL mapping to use https
+
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================
 
