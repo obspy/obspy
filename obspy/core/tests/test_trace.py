@@ -2744,6 +2744,16 @@ class TraceTestCase(unittest.TestCase):
         tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=2))
         self.assertEqual(tr_orig, tr_pickled)
 
+    def test_deepcopy_issue2600(self):
+        """
+        Tests correct deepcopy of Trace and Stats objects, issue 2600
+        """
+        tr = Trace(data=np.ones(2), header={'sampling_rate': 1e5})
+        sr1 = tr.stats.sampling_rate
+        sr2 = tr.copy().stats.sampling_rate
+        self.assertEqual(sr1, 1e5)
+        self.assertEqual(sr2, sr1)
+
 
 def suite():
     suite = unittest.TestSuite()
