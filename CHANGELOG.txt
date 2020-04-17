@@ -1,3 +1,11 @@
+2.0.0 (master)
+==============
+
+Changes:
+ - obspy.core:
+   * Fix wrong values in Stats object after deepcopy or pickle of Stats object
+     for edge cases (see #2601)
+
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================
 
