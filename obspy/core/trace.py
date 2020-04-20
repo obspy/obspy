@@ -241,6 +241,18 @@ class Stats(AttribDict):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove the unneeded entries
+        state.pop('delta', None)
+        state.pop('endtime', None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # trigger refreshing
+        self.__setitem__('sampling_rate', state['sampling_rate'])
+
 
 @decorator
 def _add_processing_info(func, *args, **kwargs):
