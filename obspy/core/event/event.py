@@ -291,7 +291,7 @@ class Event(__Event):
         return result
 
     def __setstate__(self, state_dict):
-        super(Event, self).__setstate__(state_dict)
+        self.__dict__.update(state_dict)
         self.scope_resource_ids()
 
     def write(self, filename, format, **kwargs):

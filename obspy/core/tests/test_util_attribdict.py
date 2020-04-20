@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+import pickle
 import unittest
 import warnings
 
 from obspy.core import AttribDict
+
+
+class DefaultTestAttribDict(AttribDict):
+    defaults = {'test': 1}
 
 
 class AttribDictTestCase(unittest.TestCase):
@@ -247,18 +252,20 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.test, 1)
         self.assertRaises(AttributeError, ad.__setitem__, 'test', 1)
 
-    def test_deepcopy(self):
+    def test_deepcopy_and_pickle(self):
         """
-        Tests __deepcopy__ method of AttribDict.
+        Tests deepcopy and pickle of AttribDict.
         """
-        class MyAttribDict(AttribDict):
-            defaults = {'test': 1}
-
-        ad = MyAttribDict()
+        ad = DefaultTestAttribDict()
         ad.muh = 2
-        ad2 = ad.__deepcopy__()
+        ad2 = ad.copy()
         self.assertEqual(ad2.test, 1)
         self.assertEqual(ad2.muh, 2)
+        self.assertEqual(ad2, ad)
+        ad3 = pickle.loads(pickle.dumps(ad, protocol=2))
+        self.assertEqual(ad3.test, 1)
+        self.assertEqual(ad3.muh, 2)
+        self.assertEqual(ad3, ad)
 
     def test_compare_with_dict(self):
         """

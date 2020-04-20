@@ -2,6 +2,9 @@ master
 ======
 
 Changes:
+ - obspy.core:
+   * Fix wrong values in Stats object after deepcopy or pickle of Stats object
+     for edge cases (see #2601)
  - obspy.clients.fdsn:
    * update RASPISHAKE URL mapping to use https
 
