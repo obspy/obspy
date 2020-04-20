@@ -1,10 +1,12 @@
-2.0.0 (master)
-==============
+master
+======
 
 Changes:
  - obspy.core:
    * Fix wrong values in Stats object after deepcopy or pickle of Stats object
      for edge cases (see #2601)
+ - obspy.clients.fdsn:
+   * update RASPISHAKE URL mapping to use https
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================

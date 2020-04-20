@@ -53,7 +53,7 @@ URL_MAPPINGS = {
     "ODC": "http://www.orfeus-eu.org",
     "ORFEUS": "http://www.orfeus-eu.org",
     "RESIF": "http://ws.resif.fr",
-    "RASPISHAKE": "http://fdsnws.raspberryshakedata.com",
+    "RASPISHAKE": "https://fdsnws.raspberryshakedata.com",
     "SCEDC": "http://service.scedc.caltech.edu",
     "TEXNET": "http://rtserve.beg.utexas.edu",
     "USGS": "http://earthquake.usgs.gov",
