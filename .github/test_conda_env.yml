@@ -5,7 +5,7 @@ channels:
 dependencies:
   - numpy
   - scipy
-  - matplotlib
+  - matplotlib>3.2.0
   - basemap>=1.2.1
   - pip
   - pyproj
@@ -23,3 +23,6 @@ dependencies:
   - requests
   - sqlalchemy
   - cryptography
+  - pip:
+      - pyimgur
+      - -e..

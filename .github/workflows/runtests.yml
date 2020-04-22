@@ -71,11 +71,6 @@ jobs:
           activate-environment: test
           environment-file: .github/test_conda_env.yml
 
-      - name: install obspy in dev mode
-        shell: bash -l {0}
-        run: |
-          pip install -e .
-
       - name: print package info
         shell: bash -l {0}
         run: |
