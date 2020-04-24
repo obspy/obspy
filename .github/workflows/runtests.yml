@@ -89,6 +89,14 @@ jobs:
           export MODULELISTSPACES=`obshub get_config_value module_list_spaces --path=${CONFIG_PATH}`
           coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES;
 
+      - name: upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: .coverage
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
 
 # This is a very useful step for debugging, it allows you to ssh into the CI
 # machine (https://github.com/marketplace/actions/debugging-with-tmate).
