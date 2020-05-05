@@ -25,8 +25,10 @@ from socket import timeout as socket_timeout
 
 if sys.version_info.major == 2:
     from urllib2 import HTTPError, URLError
+    from httplib import HTTPException
 else:
     from urllib.error import HTTPError, URLError
+    from http.client import HTTPException
 
 import obspy
 from obspy.core import compatibility
@@ -37,7 +39,7 @@ from obspy.io.mseed.util import get_record_information
 
 # Different types of errors that can happen when downloading data via the
 # FDSN clients.
-ERRORS = [FDSNException, HTTPError, URLError, socket_timeout]
+ERRORS = [FDSNException, HTTPException, HTTPError, URLError, socket_timeout]
 
 # Python 2 does have special classes for connection errors.
 if sys.version_info.major == 2:
