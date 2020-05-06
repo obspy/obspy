@@ -1869,6 +1869,10 @@ def parse_simple_xml(xml_string):
 
 
 def get_bulk_string(bulk, arguments):
+    if not bulk:
+        msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
+               "of all available data")
+        raise FDSNException(msg)
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
     if isinstance(bulk, collections_abc.Iterable) \

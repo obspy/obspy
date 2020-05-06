@@ -6,6 +6,9 @@ Changes:
    * Fix wrong values in Stats object after deepcopy or pickle of Stats object
      for edge cases (see #2601)
  - obspy.clients.fdsn:
+   * EIDA routing client: fix an issue that leaded to a request of *all* EIDA
+     data when requesting an invalid, out-of-epochs time window for a valid
+     station (see #2611)
    * update RASPISHAKE URL mapping to use https
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
