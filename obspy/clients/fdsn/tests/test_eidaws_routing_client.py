@@ -358,6 +358,23 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         # But the get_contents() method should be safe enough.
         self.assertEqual(inv.get_contents(), inv2.get_contents())
 
+    def test_proper_no_data_exception_on_out_of_epoch_dates(self):
+        """
+        Test for #2611 (EIDA/userfeedback#56) which was leading to bulk request
+        of *all* EIDA data when querying a legit station but an out-of-epoch
+        time window for which no data exists.
+        """
+        # this time window is before the requested station was installed
+        t1 = obspy.UTCDateTime('2012-01-01')
+        t2 = t1 + 2
+        msg = ('No data available for request (requested time window '
+               'might be out of bounds of valid station epochs).')
+        with self.assertRaises(FDSNNoDataException) as e:
+            self.client.get_waveforms(
+                network='OE', station='UNNA', channel='HHZ', location='*',
+                starttime=t1, endtime=t2)
+        self.assertEqual(e.exception.args[0], msg)
+
 
 def suite():  # pragma: no cover
     return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')
