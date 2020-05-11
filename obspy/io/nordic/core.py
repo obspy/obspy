@@ -1292,40 +1292,41 @@ def _write_hyp_error_line(origin):
     error_line[5:8] = str(int(origin.quality['azimuthal_gap'])).ljust(3)
     error_line[14:20] = (_str_conv(
         origin.quality['standard_error'], 2)).rjust(6)
-    try:
-        errors = origin.origin_uncertainty[
-            'confidence_ellipsoid'].confidence_ellipsoid_to_xyz()
-    except AttributeError:
+    # try:
+    errors = dict()
+    if hasattr(origin, 'origin_uncertainty'):
+        # Following will work once Ellipsoid class added
+        # if hasattr(origin.origin_uncertainty, 'confidence_ellipsoid'):
+        #     cov = Ellipsoid.from_confidence_ellipsoid(
+        #         origin.origin_uncertainty['confidence_ellipsoid']).to_cov()
+        #     errors['x_err'] = m.sqrt(cov(0, 0)) / 1000.0
+        #     errors['y_err'] = m.sqrt(cov(1, 1)) / 1000.0
+        #     errors['z_err'] = m.sqrt(cov(2, 2)) / 1000.0
+        #     # xy_, xz_, then yz_cov fields
+        #     error_line[43:55] = ("%.4e" % (cov(0, 1) / 1.e06)).rjust(12)
+        #     error_line[55:67] = ("%.4e" % (cov(0, 2) / 1.e06)).rjust(12)
+        #     error_line[67:79] = ("%.4e" % (cov(1, 2) / 1.e06)).rjust(12)
+        # else:
+        cov = Ellipse.from_origin_uncertainty(origin.origin_uncertainty).\
+              to_cov()
+        errors['x_err'] = m.sqrt(cov(0, 0)) / 1000.0
+        errors['y_err'] = m.sqrt(cov(1, 1)) / 1000.0
+        errors['z_err'] = origin.depth_errors / 1000.0
+        # xy covariance field
+        error_line[43:55] = ("%.4e" % (cov(0, 1) / 1.e06)).rjust(12)
+    else:
         try:
-            cov = Ellipse.from_origin_uncertainty(origin.origin_uncertainty).\
-                  to_cov()
-            errors['x_err'] = m.sqrt(cov(0, 0)) / 1000.0
-            errors['y_err'] = m.sqrt(cov(1, 1)) / 1000.0
-            errors['xy_cov'] = cov(0, 1) / 1.e06
-            errors['z_err'] = origin.depth_errors / 1000.0
-            error_line[24:30] = (_str_conv(errors['y_err'], 1)).rjust(6)
-            error_line[32:38] = (_str_conv(errors['x_err'], 1)).rjust(6)
-            error_line[38:43] = (_str_conv(errors['z_err'], 1)).rjust(6)
-            error_line[43:55] = ("%.4e" % (errors['xy_cov'])).rjust(12)
+            errors['x_err'] = origin.longitude_errors.uncertainty / \
+                              _km_to_deg_lon(1.0, origin.latitude)
+            errors['y_err'] = origin.latitude_errors.uncertainty / \
+                _km_to_deg_lat(1.0)
+            errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
         except AttributeError:
-            try:
-                errors['x_err'] = origin.longitude_errors.uncertainty / \
-                                  _km_to_deg_lon(1.0, origin.latitude)
-                errors['y_err'] = origin.latitude_errors.uncertainty / \
-                    _km_to_deg_lat(1.0)
-                errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
-                error_line[24:30] = (_str_conv(errors['y_err'], 1)).rjust(6)
-                error_line[32:38] = (_str_conv(errors['x_err'], 1)).rjust(6)
-                error_line[38:43] = (_str_conv(errors['z_err'], 1)).rjust(6)
-            except AttributeError:
-                return ''.join(error_line)
+            return ''.join(error_line)
 
-    error_line[24:30] = (_str_conv(errors['y_err'] / 1000.0, 1)).rjust(6)
-    error_line[32:38] = (_str_conv(errors['x_err'] / 1000.0, 1)).rjust(6)
-    error_line[38:43] = (_str_conv(errors['z_err'] / 1000.0, 1)).rjust(5)
-    error_line[43:55] = ("%.4e" % (errors['xy_cov'] / 1E06)).rjust(12)
-    error_line[55:67] = ("%.4e" % (errors['xz_cov'] / 1E06)).rjust(12)
-    error_line[67:79] = ("%.4e" % (errors['yz_cov'] / 1E06)).rjust(12)
+    error_line[24:30] = (_str_conv(errors['y_err'], 1)).rjust(6)
+    error_line[32:38] = (_str_conv(errors['x_err'], 1)).rjust(6)
+    error_line[38:43] = (_str_conv(errors['z_err'], 1)).rjust(5)
     return ''.join(error_line)
 
 

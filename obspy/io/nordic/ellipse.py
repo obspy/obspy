@@ -51,6 +51,7 @@ class Ellipse:
         self.theta = theta
         self.x = center[0]
         self.y = center[1]
+        self.rtol = 1e-5    # tolerance for __eq__ method
 
     @classmethod
     def from_origin_uncertainty(cls, uncert, center=(0, 0)):
@@ -180,17 +181,17 @@ class Ellipse:
         :return: equal
         :rtype: bool
         """
-        eps = 1e-5
-        if not abs((self.a - other.a) / self.a) < eps:
+        if not abs((self.a - other.a) / self.a) < self.rtol:
             return False
-        if not abs((self.b - other.b) / self.b) < eps:
+        if not abs((self.b - other.b) / self.b) < self.rtol:
             return False
         if not self.x == other.x:
             return False
         if not self.y == other.y:
             return False
         theta_diff = (self.theta - other.theta) % 180
-        if not (abs(theta_diff) < eps or abs(theta_diff-180) < eps):
+        if not ((abs(theta_diff) < self.rtol)
+                or (abs(theta_diff-180) < self.rtol)):
             return False
         return True
 
