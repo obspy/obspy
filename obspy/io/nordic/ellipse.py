@@ -191,7 +191,7 @@ class Ellipse:
             return False
         theta_diff = (self.theta - other.theta) % 180
         if not ((abs(theta_diff) < self.rtol)
-                or (abs(theta_diff-180) < self.rtol)):
+                or (abs(theta_diff - 180) < self.rtol)):
             return False
         return True
 
