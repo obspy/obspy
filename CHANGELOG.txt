@@ -5,6 +5,10 @@ Changes:
  - obspy.core:
    * Fix wrong values in Stats object after deepcopy or pickle of Stats object
      for edge cases (see #2601)
+   * when calling evalresp with a ResponseList type response that does not
+     cover the full frequency range, show a meaningful warning instead of
+     raising an exception and continue nevertheless with extrapolated values
+     (see #2614)
  - obspy.clients.fdsn:
    * EIDA routing client: fix an issue that leaded to a request of *all* EIDA
      data when requesting an invalid, out-of-epochs time window for a valid

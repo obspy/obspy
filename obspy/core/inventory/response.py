@@ -1374,12 +1374,15 @@ class Response(ComparingObject):
 
                 if min_f < min_f_avail or max_f > max_f_avail:
                     msg = (
-                        "Cannot calculate the response as it contains a "
+                        "The response contains a "
                         "response list stage with frequencies only from "
                         "%.4f - %.4f Hz. You are requesting a response from "
-                        "%.4f - %.4f Hz.")
-                    raise ValueError(msg % (min_f_avail, max_f_avail, min_f,
-                                            max_f))
+                        "%.4f - %.4f Hz. A spline will be used for inter- "
+                        "and extrapolation. Make sure to use appropriate "
+                        "means to stabilize the deconvolution (e.g. "
+                        "'pre_filt' to above frequency range.)")
+                    warnings.warn(
+                        msg % (min_f_avail, max_f_avail, min_f, max_f))
 
                 amp = scipy.interpolate.InterpolatedUnivariateSpline(
                     f, amp, k=3)(frequencies)
