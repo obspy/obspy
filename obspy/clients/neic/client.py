@@ -194,7 +194,6 @@ class Client(object):
                     s.connect((self.host, self.port))
 
                 with io.BytesIO() as tf:
-                    s.setblocking(0)
                     s.send(line.encode('ascii', 'strict'))
                     if self.debug:
                         print(ascdate(), asctime(), "Connected - start reads")
