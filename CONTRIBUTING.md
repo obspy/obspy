@@ -24,7 +24,7 @@ We love pull requests! Here's a quick guide:
 First, if the pull request (PR) is directly related to an already existing issue (which is no PR yet), drop us a note in that issue before opening the PR. We can convert existing issues into a PR, which avoids duplicated tickets. Otherwise, please follow the ObsPy [branching model](https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model). If it is unclear what base branch is appropriate for your code changes, please contact us on gitter, the users mailing list or by opening an issue to discuss the PR first.
 
  1. Fork the repo.
- 2. Make a new branch. For feature additions/changes base your new branch at `master`, for pure bugfixes base your new branch at e.g. `maintenance_1.0.x` .
+ 2. Make a new branch. For feature additions/changes base your new branch at `master`, for pure bugfixes base your new branch at e.g. `maintenance_1.2.x` .
  3. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding functionality or fixing a bug, we need a test!
  4. Make the test pass (call `obspy-runtests` or run individual tests using e.g. [pytest](https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests))
  5. Push to your fork and submit a pull request.
