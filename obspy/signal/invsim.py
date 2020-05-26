@@ -26,6 +26,7 @@ import warnings
 
 import numpy as np
 import scipy.signal
+import scipy.spatial
 
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
@@ -761,6 +762,76 @@ def estimate_wood_anderson_amplitude_using_response(response, amplitude,
         WOODANDERSON['sensitivity']
     wa_ampl *= 1000  # convert to mm
     return wa_ampl
+
+
+def _paz_to_freq_resp(freqs, zeros, poles, scale_fac):
+    b, a = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
+    if not isinstance(a, np.ndarray) and a == 1.0:
+        a = [1.0]
+    return scipy.signal.freqs(b, a, freqs * 2 * np.pi)[1]
+
+
+def _unpack_paz(x, numpoles, numzeros):
+    poles_real = np.array(x[:numpoles * 2:2])
+    poles_imag = np.array(x[1:numpoles * 2:2])
+    poles = poles_real + 1j * poles_imag
+    zeros_real = np.array(x[numzeros * 2:numzeros * 2 + numzeros * 2:2])
+    zeros_imag = np.array(x[numzeros * 2 + 1:numzeros * 2 + numzeros * 2:2])
+    zeros = zeros_real + 1j * zeros_imag
+    scale_fac = x[-1]
+    return poles, zeros, scale_fac
+
+
+def _response_misfit(reference, other):
+    """
+    Calculate a misfit measure from two complex response vectors
+    """
+    # just the simple euclidean distance for now. tweaking this might improve
+    # the fitting maybe..
+    misfit = scipy.spatial.distance.euclidean(reference, other)
+    return misfit
+
+
+def optimize_paz(frequencies, response, numpoles, numzeros, num_tries=3,
+                 maxiter=100000, eps=1e-12):
+    frequencies = np.array(frequencies)
+    response = np.array(response)
+
+    def minimize(_var):
+        poles, zeros, scale_fac = _unpack_paz(
+            _var, numpoles=numpoles, numzeros=numzeros)
+        new_response = _paz_to_freq_resp(
+            freqs=frequencies, zeros=zeros, poles=poles, scale_fac=scale_fac)
+        misfit = _response_misfit(response, new_response)
+        return misfit
+
+    results = []
+    for i in range(num_tries):
+        out = scipy.optimize.minimize(
+            fun=minimize,
+            method="BFGS",
+            x0=np.random.random(numpoles * 2 + numzeros * 2 + 1),
+            options={"eps": eps, "maxiter": maxiter})
+        results.append(out)
+
+    misfit = np.inf
+    for result in results:
+        _poles, _zeros, _scale_fac = _unpack_paz(
+            result.x, numpoles=numpoles, numzeros=numzeros)
+
+        _inverted_response = _paz_to_freq_resp(
+            freqs=frequencies, zeros=_zeros, poles=_poles,
+            scale_fac=_scale_fac)
+
+        _misfit = _response_misfit(response, _inverted_response)
+        if _misfit < misfit:
+            poles = _poles
+            zeros = _zeros
+            scale_fac = _scale_fac
+            misfit = _misfit
+            inverted_response = _inverted_response
+
+    return poles, zeros, scale_fac, inverted_response, misfit
 
 
 if __name__ == '__main__':
