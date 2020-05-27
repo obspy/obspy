@@ -1,5 +1,9 @@
+maintenance_1.2.x
+=================
+
+Changes:
  - obspy.clients.neic:
-   * Remove neic client socket setblocking(0) call
+   * Make client socket blocking (see #2617)
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================
