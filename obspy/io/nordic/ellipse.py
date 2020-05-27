@@ -12,9 +12,6 @@ Routines for error ellipses in seismological coordinates (N=0, W=90)
 - See if a point is inside or on an ellipse
 - Calculate the angle subtended by an ellipse (for back-azimuth uncertainty)
 - Plot an ellipse
-
-.. note:
- TODO: ellipsoids (3D ellipses)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -54,6 +51,23 @@ class Ellipse:
         self.theta = theta
         self.x = center[0]
         self.y = center[1]
+        self.rtol = 1e-5    # tolerance for __eq__ method
+
+    @classmethod
+    def from_origin_uncertainty(cls, uncert, center=(0, 0)):
+        """Set Ellipse from obspy origin_uncertainty
+
+        :param uncert: obspy origin_uncertainty
+        :type uncert: :class: `~obspy.origin.origin_uncertainty`
+        :param center: center position (x,y)
+        :type center: 2-tuple of numeric
+        :return: ellipse
+        :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
+        """
+        a = uncert.max_horizontal_uncertainty
+        b = uncert.min_horizontal_uncertainty
+        theta = uncert.azimuth_max_horizontal_uncertainty
+        return cls(a, b, theta, center)
 
     @classmethod
     def from_cov(cls, cov, center=(0, 0)):
@@ -72,12 +86,20 @@ class Ellipse:
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
+        cov = np.array(cov)
         if _almost_good_cov(cov):
             cov = _fix_cov(cov)
         evals, evecs = np.linalg.eig(cov)
         if np.any(evals < 0):
-            warnings.warn('Bad covariance matrix, no ellipse calculated')
-            return cls(None, None, None, center)
+            cov_factor = cov[0][1]
+            cov_base = cov/cov_factor
+            warnings.warn("Can not make data ellipse because covariance "
+                          "matrix is not positive definite: "
+                          "{:g}x[{:.2f} {:g}][{:g} {:.2f}]. ".format(
+                            cov_factor, cov_base[0][0], cov_base[0][1],
+                            cov_base[1][0], cov_base[1][1]))
+            # return cls(None, None, None, center)
+            return None
         # Sort eigenvalues in decreasing order
         sort_indices = np.argsort(evals)[::-1]
         # Select semi-major and semi-minor axes
@@ -149,6 +171,29 @@ class Ellipse:
             s += ', ({:.3g},{:.3g})'.format(self.x, self.y)
         s += ')'
         return s
+
+    def __eq__(self, other):
+        """
+        Returns true if two Ellipses are equal
+
+        :param other: second Ellipse
+        :type other:  :class: `~ellipsoid.Ellipse`
+        :return: equal
+        :rtype: bool
+        """
+        if not abs((self.a - other.a) / self.a) < self.rtol:
+            return False
+        if not abs((self.b - other.b) / self.b) < self.rtol:
+            return False
+        if not self.x == other.x:
+            return False
+        if not self.y == other.y:
+            return False
+        theta_diff = (self.theta - other.theta) % 180
+        if not ((abs(theta_diff) < self.rtol)
+                or (abs(theta_diff - 180) < self.rtol)):
+            return False
+        return True
 
     def to_cov(self):
         """Convert to covariance matrix notation
