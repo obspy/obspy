@@ -4,6 +4,9 @@ maintenance_1.2.x
 Changes:
  - obspy.clients.neic:
    * Make client socket blocking (see #2617)
+ - obspy.io.nordic:
+   * Fixed a bug raising an exception when reading a nordic file with a non
+     positive-definite covariance matrix (see #2593)
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================
