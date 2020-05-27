@@ -93,8 +93,8 @@ class Ellipse:
         if np.any(evals < 0):
             cov_factor = cov[0][1]
             cov_base = cov/cov_factor
-            warnings.warn("Can't make data ellipse because covariance matrix "
-                          "is not positive definite: "
+            warnings.warn("Can not make data ellipse because covariance "
+                          "matrix is not positive definite: "
                           "{:g}x[{:.2f} {:g}][{:g} {:.2f}]. ".format(
                             cov_factor, cov_base[0][0], cov_base[0][1],
                             cov_base[1][0], cov_base[1][1]))
