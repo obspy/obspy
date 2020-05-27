@@ -29,7 +29,7 @@ import warnings
 import datetime
 import os
 import io
-import math as m
+from math import sqrt
 
 from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
@@ -1299,9 +1299,9 @@ def _write_hyp_error_line(origin):
         # if hasattr(origin.origin_uncertainty, 'confidence_ellipsoid'):
         #     cov = Ellipsoid.from_confidence_ellipsoid(
         #         origin.origin_uncertainty['confidence_ellipsoid']).to_cov()
-        #     errors['x_err'] = m.sqrt(cov(0, 0)) / 1000.0
-        #     errors['y_err'] = m.sqrt(cov(1, 1)) / 1000.0
-        #     errors['z_err'] = m.sqrt(cov(2, 2)) / 1000.0
+        #     errors['x_err'] = sqrt(cov(0, 0)) / 1000.0
+        #     errors['y_err'] = sqrt(cov(1, 1)) / 1000.0
+        #     errors['z_err'] = sqrt(cov(2, 2)) / 1000.0
         #     # xy_, xz_, then yz_cov fields
         #     error_line[43:55] = ("%.4e" % (cov(0, 1) / 1.e06)).rjust(12)
         #     error_line[55:67] = ("%.4e" % (cov(0, 2) / 1.e06)).rjust(12)
@@ -1309,8 +1309,8 @@ def _write_hyp_error_line(origin):
         # else:
         cov = Ellipse.from_origin_uncertainty(origin.origin_uncertainty).\
               to_cov()
-        errors['x_err'] = m.sqrt(cov(0, 0)) / 1000.0
-        errors['y_err'] = m.sqrt(cov(1, 1)) / 1000.0
+        errors['x_err'] = sqrt(cov(0, 0)) / 1000.0
+        errors['y_err'] = sqrt(cov(1, 1)) / 1000.0
         errors['z_err'] = origin.depth_errors / 1000.0
         # xy covariance field
         error_line[43:55] = ("%.4e" % (cov(0, 1) / 1.e06)).rjust(12)
