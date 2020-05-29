@@ -42,7 +42,7 @@ import warnings
 from datetime import timedelta
 
 import numpy as np
-# This is a test comment
+
 from obspy import Stream, read, UTCDateTime
 from obspy.core.stream import _headonly_warning_msg
 from obspy.core.util.misc import BAND_CODE
