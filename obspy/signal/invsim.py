@@ -792,7 +792,8 @@ def _response_misfit(reference, other):
     return misfit
 
 
-def optimize_paz(frequencies, response, numpoles, numzeros, num_tries=3,
+def optimize_paz(frequencies, response, numpoles, numzeros, initial_poles=None,
+                 initial_zeros=None, force_stable=True, num_tries=3,
                  maxiter=100000, eps=1e-12):
     frequencies = np.array(frequencies)
     response = np.array(response)
@@ -806,11 +807,28 @@ def optimize_paz(frequencies, response, numpoles, numzeros, num_tries=3,
         return misfit
 
     results = []
+    if initial_poles is None:
+        guess = np.random.random(numpoles * 2)
+    else:
+        guess = initial_poles
+    if initial_zeros is None:
+        guess = np.append(guess, np.random.random(numzeros * 2))
+    else:
+        guess = np.append(initial_zeros)
+    # Create bounds for the poles
+    if force_stable:
+        ups = ([0.] * (numpoles * 2)) + ([np.inf] * (numzeros * 2))
+    else:
+        ups = [np.inf] * ((numpoles + numzeros) * 2)
+    lbs = [-np.inf] * ((numpoles + numzeros) * 2)
+    bounds = scipy.optimize.Bounds(lbs, ups)
+
     for i in range(num_tries):
         out = scipy.optimize.minimize(
             fun=minimize,
-            method="BFGS",
-            x0=np.random.random(numpoles * 2 + numzeros * 2 + 1),
+            method="L-BFGS-B",
+            x0=guess,
+            bounds=bounds,
             options={"eps": eps, "maxiter": maxiter})
         results.append(out)
 
