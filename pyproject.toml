@@ -1,0 +1,11 @@
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = [
+    'numpy>=1.15.0',
+    'scipy>=1.0.0',
+    'matplotlib>=3.2.0',
+    'lxml',
+    'setuptools',
+    'sqlalchemy',
+    'decorator',
+    'requests']
