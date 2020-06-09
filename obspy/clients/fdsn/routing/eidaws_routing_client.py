@@ -16,6 +16,7 @@ from future.builtins import *  # NOQA
 import collections
 
 from ..client import get_bulk_string
+from ..header import FDSNNoDataException
 from .routing_client import (
     BaseRoutingClient, _assert_attach_response_not_in_kwargs,
     _assert_filename_not_in_kwargs)
@@ -105,6 +106,12 @@ class EIDAWSRoutingClient(BaseRoutingClient):
             for c in sorted(set(inv.get_contents()["channels"])):
                 new_bulk.append(c.split("."))
                 new_bulk[-1].extend(t)
+
+        # no available data, show appropriate error message and raise
+        if not new_bulk:
+            msg = ('No data available for request (requested time window '
+                   'might be out of bounds of valid station epochs).')
+            raise FDSNNoDataException(msg)
 
         # Finally get the waveforms by getting the routes and downloading
         # everytyhing. Don't directly pass in the initializer as the order
