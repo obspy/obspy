@@ -194,6 +194,20 @@ class Client(object):
             st.merge(merge)
         return st
 
+    def get_waveforms_bulk(self, bulk):
+        """
+        Reads bulk data from a local SeisComP Data Structure (SDS) directory tree.
+
+        Returns a stream object with with the data requested from the local directory.
+
+        :type bulk: list of tuples
+        :param bulk: Information about the requested data.
+        """
+        st = Stream()
+        for bulk_string in bulk:
+            st += self.get_waveforms(*bulk_string)
+        return st
+
     def _get_filenames(self, network, station, location, channel, starttime,
                        endtime, sds_type=None):
         """
