@@ -5,3 +5,4 @@ requires = [
     'numpy>=1.6.1',
     'setuptools'
     ]
+build-backend = "setuptools.build_meta"
