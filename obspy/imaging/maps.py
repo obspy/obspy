@@ -727,14 +727,14 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         with map_ax.hold_limits():
             for name, xpt, ypt, _colorpt in zip(labels, lons, lats, color):
                 map_ax.text(xpt, ypt, name, weight="heavy", color="k",
-                            zorder=100, transform=ccrs.Geodetic(),
+                            zorder=100, transform=ccrs.PlateCarree(),
                             path_effects=[
                                 patheffects.withStroke(linewidth=3,
                                                        foreground="white")])
 
     scatter = map_ax.scatter(lons, lats, marker=marker, s=size, c=color,
                              zorder=10, cmap=colormap,
-                             transform=ccrs.Geodetic())
+                             transform=ccrs.PlateCarree())
 
     if title:
         plt.suptitle(title)
