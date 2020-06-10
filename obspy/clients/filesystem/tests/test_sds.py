@@ -222,6 +222,39 @@ class SDSTestCase(unittest.TestCase):
             if failed:
                 raise Exception
 
+    def test_get_waveforms_bulk(self):
+        """
+        Test get_waveforms_bulk method.
+        """
+        for year, doy in ((2015, 123), (2015, 1), (2012, 1)):
+            t = UTCDateTime("%d-%03dT00:00:00" % (year, doy))
+            with TemporarySDSDirectory(year=year, doy=doy) as temp_sds:
+                chunks = [
+                    ["BW", "ALTM", "", "EHE", t,
+                    t + 20, os.path.join(temp_sds.tempdir, "file_1.mseed")],
+                    ["BW", "ALTM", "", "EHE", t + 20,
+                    t + 40, os.path.join(temp_sds.tempdir, "file_2.mseed")],
+                    ["BW", "ALTM", "", "EHE", t + 40,
+                    t + 60, os.path.join(temp_sds.tempdir, "file_3.mseed")],
+                    ["BW", "ALTM", "", "EHE", t + 60,
+                    t + 80, os.path.join(temp_sds.tempdir, "file_4.mseed")],
+                    ["BW", "ALTM", "", "EHE", t + 80,
+                    t + 100, os.path.join(temp_sds.tempdir, "file_5.mseed")],
+                    ["BW", "ALTM", "", "EHE", t + 120,
+                    t + 140, os.path.join(temp_sds.tempdir, "file_6.mseed")]
+                ]
+                client = Client(temp_sds.tempdir)
+                ret_val = client.get_waveforms_bulk(chunks)
+                contents = [("file_1.mseed", "BW.ALTM..EHE"),
+                        ("file_2.mseed", "BW.ALTM..EHE"),
+                        ("file_3.mseed", "BW.ALTM..EHE"),
+                        ("file_4.mseed", "BW.ALTM..EHE"),
+                        ("file_5.mseed", "BW.ALTM..EHE"),
+                        ("file_6.mseed", "BW.ALTM..EHE")]
+                self.assertEqual(ret_val,
+                             sorted([os.path.join(temp_sds.tempdir, _i[0])
+                                     for _i in contents]))
+
     def test_get_all_stations_and_nslc(self):
         """
         Test `get_all_stations` and `get_all_nslc` methods
