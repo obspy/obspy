@@ -226,31 +226,31 @@ class SDSTestCase(unittest.TestCase):
         """
         Test get_waveforms_bulk method.
         """
-        for year, doy in ((2015, 123), (2015, 1), (2012, 1)):
+        for year, doy in ((2015, 213), (2015, 1), (2012, 1)):
             t = UTCDateTime("%d-%03dT00:00:00" % (year, doy))
             with TemporarySDSDirectory(year=year, doy=doy) as temp_sds:
                 chunks = [
-                    ["BW", "ALTM", "", "EHE", t,
+                    ["AB", "XYZ", "", "HHZ", t,
                     t + 20, os.path.join(temp_sds.tempdir, "file_1.mseed")],
-                    ["BW", "ALTM", "", "EHE", t + 20,
+                    ["AB", "XYZ", "", "HHN", t + 20,
                     t + 40, os.path.join(temp_sds.tempdir, "file_2.mseed")],
-                    ["BW", "ALTM", "", "EHE", t + 40,
+                    ["AB", "XYZ", "", "HHE", t + 40,
                     t + 60, os.path.join(temp_sds.tempdir, "file_3.mseed")],
-                    ["BW", "ALTM", "", "EHE", t + 60,
+                    ["CD", "ZZZ3", "00", "BHZ", t + 60,
                     t + 80, os.path.join(temp_sds.tempdir, "file_4.mseed")],
-                    ["BW", "ALTM", "", "EHE", t + 80,
+                    ["CD", "ZZZ3", "00", "BHN", t + 80,
                     t + 100, os.path.join(temp_sds.tempdir, "file_5.mseed")],
-                    ["BW", "ALTM", "", "EHE", t + 120,
+                    ["CD", "ZZZ3", "00", "BHE", t + 120,
                     t + 140, os.path.join(temp_sds.tempdir, "file_6.mseed")]
                 ]
                 client = Client(temp_sds.tempdir)
                 ret_val = client.get_waveforms_bulk(chunks)
-                contents = [("file_1.mseed", "BW.ALTM..EHE"),
-                        ("file_2.mseed", "BW.ALTM..EHE"),
-                        ("file_3.mseed", "BW.ALTM..EHE"),
-                        ("file_4.mseed", "BW.ALTM..EHE"),
-                        ("file_5.mseed", "BW.ALTM..EHE"),
-                        ("file_6.mseed", "BW.ALTM..EHE")]
+                contents = [("file_1.mseed", "AB.XYZ..HHZ"),
+                        ("file_2.mseed", "AB.XYZ..HHN"),
+                        ("file_3.mseed", "AB.XYZ..HHE"),
+                        ("file_4.mseed", "CD.ZZZ3.00.BHZ"),
+                        ("file_5.mseed", "CD.ZZZ3.00.BHN"),
+                        ("file_6.mseed", "CD.ZZZ3.00.BHE")]
                 self.assertEqual(ret_val,
                              sorted([os.path.join(temp_sds.tempdir, _i[0])
                                      for _i in contents]))
