@@ -463,7 +463,7 @@ def _write_radiation_pattern_vtk(
         vtk_file.write('VECTORS s_radiation float\n')
         for x, y, z in np.transpose(disps):
             vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
-        vtk_file.write('VECTORS p_radiation float\n'.format(npoints))
+        vtk_file.write('VECTORS p_radiation float\n')
         for x, y, z in np.transpose(dispp):
             vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
 

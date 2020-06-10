@@ -19,5 +19,8 @@ hang-closing = True
 # E704: multiple statements on one line (def)
 # W503: line break before binary operator
 # W504: line break after binary operator
-ignore = E121, E123, E126, E133, E24, E226, E402, E704, W503, W504, 
+# E741: ambiguous variable name 'l'
+#   we mostly use it in some for loops and most people working with code use
+#   truetype fonts anyway
+ignore = E121, E123, E126, E133, E24, E226, E402, E704, W503, W504, E741
 exclude = __init__.py
