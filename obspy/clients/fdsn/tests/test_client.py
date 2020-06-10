@@ -35,7 +35,8 @@ from obspy import UTCDateTime, read, read_inventory, Stream, Trace
 from obspy.core.compatibility import mock, RegExTestCase
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client, RoutingClient
-from obspy.clients.fdsn.client import build_url, parse_simple_xml
+from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
+                                       get_bulk_string)
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
                                        FDSNNoDataException, DEFAULT_SERVICES)
@@ -106,6 +107,18 @@ class ClientTestCase(RegExTestCase):
         cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
+
+    def test_empty_bulk_string(self):
+        """
+        Makes sure an exception is raised if an empty bulk string would be
+        produced (e.g. empty list as input for `get_bulk_string()`)
+        """
+        msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
+               "of all available data")
+        for bad_input in [[], '', None]:
+            with self.assertRaises(FDSNException) as e:
+                get_bulk_string(bulk=bad_input, arguments={})
+            self.assertEqual(e.exception.args[0], msg)
 
     def test_validate_base_url(self):
         """
