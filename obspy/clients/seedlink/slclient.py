@@ -353,5 +353,9 @@ class SLClient(object):
             traceback.print_exc()
 
 
-if __name__ == '__main__':
+def main():
     SLClient.main(sys.argv)
+
+
+if __name__ == '__main__':
+    main()

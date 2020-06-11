@@ -10,6 +10,8 @@ Changes:
      data when requesting an invalid, out-of-epochs time window for a valid
      station (see #2611)
    * update RASPISHAKE URL mapping to use https
+- obspy.scripts:
+   * add seedlink client script (obspy-slclient, see #2625)
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================
