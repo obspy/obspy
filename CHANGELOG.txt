@@ -10,8 +10,6 @@ Changes:
      data when requesting an invalid, out-of-epochs time window for a valid
      station (see #2611)
    * update RASPISHAKE URL mapping to use https
-- obspy.clients.fdsn:
-   * remove default logging configuration in SLClient (see #2625)
 - obspy.scripts:
    * add seedlink client script (obspy-slclient, see #2625)
 

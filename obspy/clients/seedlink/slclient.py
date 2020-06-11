@@ -110,6 +110,7 @@ class SLClient(object):
         numeric_level = getattr(logging, loglevel.upper(), None)
         if not isinstance(numeric_level, int):
             raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
         logger.setLevel(numeric_level)
 
         self.verbose = 0
@@ -353,7 +354,6 @@ class SLClient(object):
 
 
 def main():
-    logging.basicConfig()
     SLClient.main(sys.argv)
 
 
