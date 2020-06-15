@@ -808,7 +808,10 @@ class FIRResponseStage(ResponseStage):
             new_values.append(x)
         self._coefficients = new_values
 
-    def get_response(self, frequencies):
+    def get_response(self, frequencies, fast=True):
+        """
+        Given Computes the 
+        """
         # Decimation blockette, e.g. gain only!
         if not len(self._coefficients):
             return np.ones_like(frequencies) * self.stage_gain
