@@ -246,35 +246,23 @@ class SDSTestCase(unittest.TestCase):
                 client = Client(temp_sds.tempdir)
                 ret_val = client.get_waveforms_bulk(chunks)
 
-                self.assertEqual(ret_val[0].stats.network, "AB")
-                self.assertEqual(ret_val[0].stats.station, "XYZ")
-                self.assertEqual(ret_val[0].stats.location, "")
+                for _i in range(6):
+                    if _i <= 2 :
+                        self.assertEqual(ret_val[_i].stats.network, "AB")
+                        self.assertEqual(ret_val[_i].stats.station, "XYZ")
+                        self.assertEqual(ret_val[_i].stats.location, "")
+                    elif _i >= 2 :
+                        self.assertEqual(ret_val[_i].stats.network, "CD")
+                        self.assertEqual(ret_val[_i].stats.station, "ZZZ3")
+                        self.assertEqual(ret_val[_i].stats.location, "00")
+
                 self.assertEqual(ret_val[0].stats.channel, "HHZ")
-
-                self.assertEqual(ret_val[1].stats.network, "AB")
-                self.assertEqual(ret_val[1].stats.station, "XYZ")
-                self.assertEqual(ret_val[1].stats.location, "")
                 self.assertEqual(ret_val[1].stats.channel, "HHN")
-
-                self.assertEqual(ret_val[2].stats.network, "AB")
-                self.assertEqual(ret_val[2].stats.station, "XYZ")
-                self.assertEqual(ret_val[2].stats.location, "")
                 self.assertEqual(ret_val[2].stats.channel, "HHE")
-
-                self.assertEqual(ret_val[3].stats.network, "CD")
-                self.assertEqual(ret_val[3].stats.station, "ZZZ3")
-                self.assertEqual(ret_val[3].stats.location, "00")
                 self.assertEqual(ret_val[3].stats.channel, "BHZ")
-
-                self.assertEqual(ret_val[4].stats.network, "CD")
-                self.assertEqual(ret_val[4].stats.station, "ZZZ3")
-                self.assertEqual(ret_val[4].stats.location, "00")
                 self.assertEqual(ret_val[4].stats.channel, "BHN")
-
-                self.assertEqual(ret_val[5].stats.network, "CD")
-                self.assertEqual(ret_val[5].stats.station, "ZZZ3")
-                self.assertEqual(ret_val[5].stats.location, "00")
                 self.assertEqual(ret_val[5].stats.channel, "BHE")
+
 
     def test_get_all_stations_and_nslc(self):
         """
