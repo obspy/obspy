@@ -2,6 +2,10 @@ master
 ======
 
 Changes:
+
+maintenance_1.2.x
+=================
+
  - obspy.core:
    * Fix wrong values in Stats object after deepcopy or pickle of Stats object
      for edge cases (see #2601)
@@ -10,6 +14,11 @@ Changes:
      data when requesting an invalid, out-of-epochs time window for a valid
      station (see #2611)
    * update RASPISHAKE URL mapping to use https
+ - obspy.clients.neic:
+   * Make client socket blocking (see #2617)
+ - obspy.io.nordic:
+   * Fixed a bug raising an exception when reading a nordic file with a non
+     positive-definite covariance matrix (see #2593)
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================

@@ -838,6 +838,16 @@ class TestNordicMethods(unittest.TestCase):
             self.assertEqual(len(pick), 1)
             self.assertEqual(pick[0].time, value)
 
+    def test_read_bad_covariance(self):
+        """
+        Verify graceful exit if covariance matrix is not positive-definite
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_bad_covariance"))
+        self.assertIs(cat[0].origins[0].origin_uncertainty, None)
+
     def test_read_high_accuracy(self):
         """
         Verify that high-accuracy locations are read, if present
