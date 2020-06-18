@@ -573,7 +573,7 @@ class Client(object):
             try:
                 network = dict_["network"]
                 station = dict_["station"]
-            except KeyError as e:
+            except (TypeError,KeyError) as e:
                 msg = (
                     "Failed to extract key from pattern '{}' in path "
                     "'{}': {}").format(pattern_, file_, e)
