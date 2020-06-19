@@ -20,8 +20,14 @@ import logging
 import os
 import shutil
 from socket import timeout as socket_timeout
+import sys
 import tempfile
 import unittest
+
+if sys.version_info.major == 2:
+    from httplib import HTTPException
+else:
+    from http.client import HTTPException
 
 import numpy as np
 
@@ -2162,6 +2168,21 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         # The error logger should not have been called  as no data available
         # is just an info message.
         self.assertEqual(c.logger.error.call_count, 0)
+
+        patch_check_data.reset_mock()
+        patch_download_mseed.reset_mock()
+        c = self._init_client()
+        c.stations = {
+            ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels))
+        }
+
+        patch_download_mseed.side_effect = HTTPException("disconnected")
+
+        c.download_mseed()
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertEqual(patch_download_mseed.call_count, 1)
+        # The error logger should have been called once
+        self.assertEqual(c.logger.error.call_count, 1)
 
     @mock.patch("obspy.clients.fdsn.mass_downloader."
                 "utils.download_stationxml")
