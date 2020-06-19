@@ -226,42 +226,37 @@ class SDSTestCase(unittest.TestCase):
         """
         Test get_waveforms_bulk method.
         """
-        for year, doy in ((2015, 213), (2015, 1), (2012, 1)):
-            t = UTCDateTime("%d-%03dT00:00:00" % (year, doy))
-            with TemporarySDSDirectory(year=year, doy=doy) as temp_sds:
-                chunks = [
-                    ["AB", "XYZ", "", "HHZ", t,
-                    t + 20, os.path.join(temp_sds.tempdir, "file_1.mseed")],
-                    ["AB", "XYZ", "", "HHN", t + 20,
-                    t + 40, os.path.join(temp_sds.tempdir, "file_2.mseed")],
-                    ["AB", "XYZ", "", "HHE", t + 40,
-                    t + 60, os.path.join(temp_sds.tempdir, "file_3.mseed")],
-                    ["CD", "ZZZ3", "00", "BHZ", t + 60,
-                    t + 80, os.path.join(temp_sds.tempdir, "file_4.mseed")],
-                    ["CD", "ZZZ3", "00", "BHN", t + 80,
-                    t + 100, os.path.join(temp_sds.tempdir, "file_5.mseed")],
-                    ["CD", "ZZZ3", "00", "BHE", t + 120,
-                    t + 140, os.path.join(temp_sds.tempdir, "file_6.mseed")]
-                ]
-                client = Client(temp_sds.tempdir)
-                ret_val = client.get_waveforms_bulk(chunks)
+        year = 2015
+        doy = 247
+        t = UTCDateTime("%d-%03dT00:00:00" % (year, doy))
+        with TemporarySDSDirectory(year=year, doy=doy) as temp_sds:
+            chunks = [
+                ["AB", "XYZ", "", "HHZ", t, t + 20],
+                ["AB", "XYZ", "", "HHN", t + 20,t + 40],
+                ["AB", "XYZ", "", "HHE", t + 40,t + 60],
+                ["CD", "ZZZ3", "00", "BHZ", t + 60,t + 80],
+                ["CD", "ZZZ3", "00", "BHN", t + 80,t + 100],
+                ["CD", "ZZZ3", "00", "BHE", t + 120,t + 140]
+            ]
+            st = Client(temp_sds.tempdir)
+            ret_val = st.get_waveforms_bulk(chunks)
 
-                for _i in range(6):
-                    if _i <= 2 :
-                        self.assertEqual(ret_val[_i].stats.network, "AB")
-                        self.assertEqual(ret_val[_i].stats.station, "XYZ")
-                        self.assertEqual(ret_val[_i].stats.location, "")
-                    elif _i >= 2 :
-                        self.assertEqual(ret_val[_i].stats.network, "CD")
-                        self.assertEqual(ret_val[_i].stats.station, "ZZZ3")
-                        self.assertEqual(ret_val[_i].stats.location, "00")
+            for _i in range(6):
+                if _i <= 2 :
+                    self.assertEqual(ret_val[_i].stats.network, "AB")
+                    self.assertEqual(ret_val[_i].stats.station, "XYZ")
+                    self.assertEqual(ret_val[_i].stats.location, "")
+                elif _i >= 2 :
+                    self.assertEqual(ret_val[_i].stats.network, "CD")
+                    self.assertEqual(ret_val[_i].stats.station, "ZZZ3")
+                    self.assertEqual(ret_val[_i].stats.location, "00")
 
-                self.assertEqual(ret_val[0].stats.channel, "HHZ")
-                self.assertEqual(ret_val[1].stats.channel, "HHN")
-                self.assertEqual(ret_val[2].stats.channel, "HHE")
-                self.assertEqual(ret_val[3].stats.channel, "BHZ")
-                self.assertEqual(ret_val[4].stats.channel, "BHN")
-                self.assertEqual(ret_val[5].stats.channel, "BHE")
+            self.assertEqual(ret_val[0].stats.channel, "HHZ")
+            self.assertEqual(ret_val[1].stats.channel, "HHN")
+            self.assertEqual(ret_val[2].stats.channel, "HHE")
+            self.assertEqual(ret_val[3].stats.channel, "BHZ")
+            self.assertEqual(ret_val[4].stats.channel, "BHN")
+            self.assertEqual(ret_val[5].stats.channel, "BHE")
 
 
     def test_get_all_stations_and_nslc(self):
