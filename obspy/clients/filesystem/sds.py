@@ -196,9 +196,11 @@ class Client(object):
 
     def get_waveforms_bulk(self, bulk):
         """
-        Reads bulk data from a local SeisComP Data Structure (SDS) directory tree.
+        Reads bulk data from a local SeisComP Data Structure (SDS) directory
+        tree.
 
-        Returns a stream object with with the data requested from the local directory.
+        Returns a stream object with with the data requested from the local
+        directory.
 
         :type bulk: list of tuples
         :param bulk: Information about the requested data.
