@@ -222,6 +222,41 @@ class SDSTestCase(unittest.TestCase):
             if failed:
                 raise Exception
 
+    def test_get_waveforms_bulk(self):
+        """
+        Test get_waveforms_bulk method.
+        """
+        year = 2015
+        doy = 247
+        t = UTCDateTime("%d-%03dT00:00:00" % (year, doy))
+        with TemporarySDSDirectory(year=year, doy=doy) as temp_sds:
+            chunks = [
+                ["AB", "XYZ", "", "HHZ", t, t + 20],
+                ["AB", "XYZ", "", "HHN", t + 20, t + 40],
+                ["AB", "XYZ", "", "HHE", t + 40, t + 60],
+                ["CD", "ZZZ3", "00", "BHZ", t + 60, t + 80],
+                ["CD", "ZZZ3", "00", "BHN", t + 80, t + 100],
+                ["CD", "ZZZ3", "00", "BHE", t + 120, t + 140]
+            ]
+            client = Client(temp_sds.tempdir)
+            st = client.get_waveforms_bulk(chunks)
+            for _i in range(6):
+                if _i <= 2:
+                    self.assertEqual(st[_i].stats.network, "AB")
+                    self.assertEqual(st[_i].stats.station, "XYZ")
+                    self.assertEqual(st[_i].stats.location, "")
+                elif _i >= 2:
+                    self.assertEqual(st[_i].stats.network, "CD")
+                    self.assertEqual(st[_i].stats.station, "ZZZ3")
+                    self.assertEqual(st[_i].stats.location, "00")
+            self.assertEqual(st[0].stats.channel, "HHZ")
+            self.assertEqual(st[1].stats.channel, "HHN")
+            self.assertEqual(st[2].stats.channel, "HHE")
+            self.assertEqual(st[3].stats.channel, "BHZ")
+            self.assertEqual(st[4].stats.channel, "BHN")
+            self.assertEqual(st[5].stats.channel, "BHE")
+
+
     def test_get_all_stations_and_nslc(self):
         """
         Test `get_all_stations` and `get_all_nslc` methods

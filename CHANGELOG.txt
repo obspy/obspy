@@ -2,6 +2,8 @@ master
 ======
 
 Changes:
+ - obspy.clients.filesystem:
+   * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
 
 maintenance_1.2.x
 =================
