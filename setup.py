@@ -43,8 +43,9 @@ import os
 import sys
 import platform
 from distutils.util import change_root
+from distutils.errors import DistutilsSetupError
 
-from numpy.distutils.core import DistutilsSetupError, setup
+from numpy.distutils.core import setup
 from numpy.distutils.ccompiler import get_default_compiler
 from numpy.distutils.command.build import build
 from numpy.distutils.command.install import install
