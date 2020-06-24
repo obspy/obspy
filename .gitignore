@@ -23,11 +23,9 @@ coverage.xml
 dist/
 distribute-*.egg
 distribute-*.tar.gz
-misc/docs/source/packages/autogen/
+misc/docs/source/packages/autogen
 misc/docs/source/credits.rst
 misc/docs/source/citations.rst
-misc/docs/node_modules/
-misc/docs/package-lock.json
 misc/docs/build/
 misc/docker/logs/
 obspy/lib/*.pyd

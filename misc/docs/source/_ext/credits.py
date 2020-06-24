@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Directive for creating credits.rst page listing contributors, funds and quotes.
-"""
 
 import os
 
@@ -18,25 +15,22 @@ it is. These people have helped by writing code and documentation, and by
 testing. They have created and maintained this product, its associated
 libraries and applications, our build tools and our web sites.
 
-Hall of Fame
-------------
+.. rubric:: Hall of Fame
 
 .. hlist::
-    :columns: 2
+    :columns: 3
 
 """
 
 TEMPLATE_FUNDS = """
-Funds
------
+.. rubric:: Funds
 
 ObsPy was partially funded by the
 
 """
 
 TEMPLATE_QUOTES = """
-Quotes
-------
+.. rubric:: Quotes
 
 """
 
@@ -84,11 +78,9 @@ def create_credits_page(app):
 
     for item in funds:
         item = item.split('---')
-        # quote
-        fh.write("\n\n    %s" % (item[0].strip()))
-        # attribution, if given
+        fh.write("\nepigraph::\n    %s" % (item[0]))
         try:
-            fh.write("\n\n    -- %s" % (item[1]))
+            fh.write("\n\n-- %s" % (item[1]))
         except IndexError:
             pass
     fh.close()
