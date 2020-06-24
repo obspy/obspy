@@ -528,13 +528,12 @@ def _read_initial_headers(filename):
     Extract all the information contained in the headers located before data,
     at the beginning of the rg16 file object.
 
-    :param filename : a path to a rg16 file or a rg16 file object.
+    :param filename: a path to a rg16 file or a rg16 file object.
     :type filename: str, buffer
-    :return: a dictionnary containing all the information of the initial
-        headers
+    :return: a dictionary containing all the information of the initial headers
 
-    Frequencies are expressed in hertz and time is expressed in second
-    (except for the date).
+    Frequencies are expressed in hertz and time is expressed in second (except
+    for the date).
     """
     headers_content = dict(
         general_header_1=_read_general_header_1(filename),

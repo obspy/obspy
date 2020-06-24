@@ -94,7 +94,7 @@ def read_ppm_header(fh):
 
 # DRY
 fps_str = '%f' % (FPS, )
-logo = os.path.join(os.pardir, 'docs', 'source', '_static', 'obspy-logo.png')
+logo = os.path.join(os.pardir, 'docs', 'source', '_static', 'obspy_logo.png')
 
 # Prepare avatar images
 fetch_avatar()

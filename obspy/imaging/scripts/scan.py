@@ -227,6 +227,7 @@ class Scanner(object):
 
         import os
         import obspy
+        from obspy.imaging.scripts.scan import Scanner
         directory = os.path.join(os.path.dirname(obspy.__file__),
                                  "io", "gse2", "tests", "data")
         scanner = Scanner()
@@ -295,8 +296,8 @@ class Scanner(object):
         :type fig: :class:`matplotlib.figure.Figure`
         :param fig: Figure instance to reuse.
         :type plot_x: bool
-        :param plot_x: Whether to plot "X" markers at start of all parsed
-            ``Trace``s.
+        :param plot_x: Whether to plot "X" markers at start of all
+            parsed :class:`~obspy.core.trace.Trace`s.
         :type plot_gaps: bool
         :param plot_gaps: Whether to plot filled rectangles at data gaps (red)
             and overlaps (blue).

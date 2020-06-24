@@ -1,7 +1,8 @@
 .. _changelog:
 
-ChangeLog
-=========
+*********
+Changelog
+*********
 
 For better reproducibility, specific versions of ObsPy can be cited using the
 `DOIs assigned to releases of ObsPy
@@ -10,6 +11,4 @@ For better reproducibility, specific versions of ObsPy can be cited using the
 <https://doi.org/10.5281/zenodo.1040769>`_
 (see `Zenodo FAQ <http://help.zenodo.org/#versioning>`_).
 
-.. include:: ../../../CHANGELOG.txt
-   :literal:
-
+.. mdinclude:: ../../../CHANGELOG.md

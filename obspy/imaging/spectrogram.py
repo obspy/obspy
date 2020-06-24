@@ -16,6 +16,7 @@ Plotting spectrogram of seismograms.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import os
 import math
 
 import numpy as np
@@ -50,7 +51,7 @@ def _nearest_pow_2(x):
 def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
                 outfile=None, fmt=None, axes=None, dbscale=False,
                 mult=8.0, cmap=obspy_sequential, zorder=None, title=None,
-                show=True, sphinx=False, clip=[0.0, 1.0]):
+                show=True, clip=[0.0, 1.0]):
     """
     Computes and plots spectrogram of the input data.
 
@@ -92,8 +93,6 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :type show: bool
     :param show: Do not call `plt.show()` at end of routine. That way, further
         modifications can be done to the figure before showing it.
-    :type sphinx: bool
-    :param sphinx: Internal flag used for API doc generation, default False
     :type clip: [float, float]
     :param clip: adjust colormap to clip at lower and/or upper end. The given
         percentages of the amplitude range (linear or logarithmic depending
@@ -191,7 +190,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     if title:
         ax.set_title(title)
 
-    if not sphinx:
+    if not os.environ.get('SPHINXBUILD'):
         # ignoring all NumPy warnings during plot
         with np.errstate(all='ignore'):
             plt.draw()

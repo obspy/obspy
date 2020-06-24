@@ -957,7 +957,7 @@ class Trace(object):
             from obspy import read
             st = read()
             tr = st[0]
-            tr.spectrogram(sphinx=True)
+            tr.spectrogram()
         """
         # set some default values
         if 'samp_rate' not in kwargs:

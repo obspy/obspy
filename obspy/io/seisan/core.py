@@ -45,16 +45,11 @@ def _get_version(data):
     """
     Extracts SEISAN version from given data chunk.
 
-    Parameters
-    ----------
-    data : string
-        Data chunk.
-
-    Returns
-    -------
-    tuple, ([ '<' | '>' ], [ 32 | 64 ], [ 6 | 7 ])
-        Byte order (little endian '<' or big endian '>'), architecture (32 or
-        64) and SEISAN version (6 or 7).
+    :type data: str
+    :param data: Data chunk.
+    :rtype: tuple, ([ '<' | '>' ], [ 32 | 64 ], [ 6 | 7 ])
+    :returns: Byte order (little endian '<' or big endian '>'), architecture
+        (32 or 64) and SEISAN version (6 or 7).
 
     From the SEISAN documentation::
 

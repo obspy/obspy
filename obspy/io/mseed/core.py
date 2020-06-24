@@ -159,8 +159,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         read the headers.
     :type sourcename: str
     :param sourcename: Only read data with matching SEED ID (can contain
-        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z"). Defaults to
-        ``None``.
+        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z").
+        Defaults to ``None``.
     :param reclen: If it is None, it will be automatically determined for every
         record. If it is known, just set it to the record length in bytes which
         will increase the reading speed slightly.

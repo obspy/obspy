@@ -1,33 +1,10 @@
-# this file is set up according to pip requirements file format
-# http://www.pip-installer.org/en/latest/requirements.html
-
-# General
-sphinx>=1.1
-
-sphinx-bootstrap-theme
-
-## for 'make coverage' only:
-coverage==3.5
-## for 'make citations' only:
-pybtex>=0.16,<0.22
-## for 'make docset' only:
-doc2dash
-
-# ObsPy Library
-## obspy.*
-future
-decorator
-requests
-
-lxml
-numpy
-scipy
+sphinx>=3.1.1
+m2r==dev  # due to https://github.com/miyakogi/m2r/issues/51
+pybtex>=0.22.2
+sphinx_rtd_theme
 matplotlib
-## for obspy.db:
-sqlalchemy
+obspy
 
-# Tutorial
-https://github.com/obspy/wheelhouse/raw/master/basemap-1.0.7-cp27-none-linux_x86_64.whl
-https://github.com/obspy/wheelhouse/raw/master/mlpy-3.5.0-cp27-none-linux_x86_64.whl
-## doctests only:
-pyproj
+# deps used in tutorial but not working anymore
+# basemap
+# mlpy

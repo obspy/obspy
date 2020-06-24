@@ -151,9 +151,10 @@ def readheader(sfile, encoding='latin-1'):
 def _readheader(head_lines):
     """
     Internal header reader.
+
     :type head_lines: list
-    :param head_lines:
-        List of tuples of (strings, line-number) of the header lines.
+    :param head_lines: List of tuples of (strings, line-number) of the header
+        lines.
 
     :returns: :class:`~obspy.core.event.event.Event`
     """

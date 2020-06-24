@@ -1,6 +1,6 @@
-=======================
-ObsPy Library Reference
-=======================
+============
+API Overview
+============
 
 ObsPy's functionality is provided through the following packages.
 

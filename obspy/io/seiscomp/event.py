@@ -31,10 +31,11 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     catalog is then generated using the QuakeML module.
 
     .. warning::
-    This function should NOT be called directly, it registers via the
-    the :meth:`~obspy.core.event.catalog.Catalog.write` method of an
-    ObsPy :class:`~obspy.core.event.catalog.Catalog` object, call this
-    instead.
+
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.event.catalog.Catalog.write` method of an
+        ObsPy :class:`~obspy.core.event.catalog.Catalog` object, call this
+        instead.
 
     :type filename: str
     :param filename: SC3ML file to be read.

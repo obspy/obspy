@@ -8,165 +8,165 @@ Gallery
 
 .. raw:: html
 
-    <div class="row">
+    <div class="gallery">
 
-.. gallery-plot:: tutorial/code_snippets/reading_seismograms.py
+.. plot:: tutorial/code_snippets/reading_seismograms.py
     :target: tutorial/code_snippets/reading_seismograms.html
     :alt: Reading Seismograms
 
-.. gallery-plot:: tutorial/code_snippets/waveform_plotting_tutorial_1.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_1.py
     :target: tutorial/code_snippets/waveform_plotting_tutorial.html
     :alt: Basic Plotting
 
-.. gallery-plot:: tutorial/code_snippets/waveform_plotting_tutorial_2.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_2.py
     :target: tutorial/code_snippets/waveform_plotting_tutorial.html#customized-plots
     :alt: Customized Plots
 
-.. gallery-plot:: tutorial/code_snippets/waveform_plotting_tutorial_3.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_3.py
     :target: tutorial/code_snippets/waveform_plotting_tutorial.html#plotting-multiple-channels
     :alt: Plotting multiple Channels
 
-.. gallery-plot:: tutorial/code_snippets/waveform_plotting_tutorial_4.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_4.py
     :target: tutorial/code_snippets/waveform_plotting_tutorial.html#creating-a-one-day-plot
     :alt: Creating a One-Day Plot
 
-.. gallery-plot:: tutorial/code_snippets/waveform_plotting_tutorial_6.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_6.py
     :target: tutorial/code_snippets/waveform_plotting_tutorial.html#plotting-a-record-section
     :alt: Plotting a Record Section
 
-.. gallery-plot:: tutorial/code_snippets/filtering_seismograms.py
+.. plot:: tutorial/code_snippets/filtering_seismograms.py
     :target: tutorial/code_snippets/filtering_seismograms.html
     :alt: Filtering Seismograms
 
-.. gallery-plot:: tutorial/code_snippets/downsampling_seismograms.py
+.. plot:: tutorial/code_snippets/downsampling_seismograms.py
     :target: tutorial/code_snippets/downsampling_seismograms.html
     :alt: Downsampling Seismograms
 
-.. gallery-plot:: tutorial/code_snippets/seismogram_envelopes.py
+.. plot:: tutorial/code_snippets/seismogram_envelopes.py
     :target: tutorial/code_snippets/seismogram_envelopes.html
     :alt: Seismogram Envelopes
 
-.. gallery-plot:: tutorial/code_snippets/seismometer_correction_simulation_1.py
+.. plot:: tutorial/code_snippets/seismometer_correction_simulation_1.py
     :target: tutorial/code_snippets/seismometer_correction_simulation.html
     :alt: Seismometer Correction/Simulation
 
-.. gallery-plot:: tutorial/code_snippets/seismometer_correction_simulation_5.py
+.. plot:: tutorial/code_snippets/seismometer_correction_simulation_5.py
     :target: tutorial/code_snippets/seismometer_correction_simulation.html
     :alt: Seismometer Correction/Simulation
 
-.. gallery-plot:: tutorial/code_snippets/plotting_spectrograms.py
+.. plot:: tutorial/code_snippets/plotting_spectrograms.py
     :target: tutorial/code_snippets/plotting_spectrograms.html
     :alt: Plotting Spectrograms
 
-.. gallery-plot:: tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
     :target: tutorial/code_snippets/trigger_tutorial.html#trigger-examples
     :alt: Classic Sta Lta
 
-.. gallery-plot:: tutorial/code_snippets/trigger_tutorial_z_detect.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_z_detect.py
     :target: tutorial/code_snippets/trigger_tutorial.html#trigger-examples
     :alt: Z-Detect
 
-.. gallery-plot:: tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
     :target: tutorial/code_snippets/trigger_tutorial.html#trigger-examples
     :alt: Recursive Sta Lta
 
-.. gallery-plot:: tutorial/code_snippets/frequency_response.py
+.. plot:: tutorial/code_snippets/frequency_response.py
     :target: tutorial/code_snippets/frequency_response.html
     :alt: Poles and Zeros, Frequency Response
 
-.. gallery-plot:: tutorial/code_snippets/beachball_plot.py
+.. plot:: tutorial/code_snippets/beachball_plot.py
     :target: tutorial/code_snippets/beachball_plot.html
     :alt: Beachball Plot
 
-.. gallery-plot:: tutorial/code_snippets/basemap_plot_with_beachballs.py
+.. plot:: tutorial/code_snippets/basemap_plot_with_beachballs.py
     :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
     :alt: Basemap Plot with Beachballs
 
-.. gallery-plot:: tutorial/code_snippets/basemap_plot_with_beachballs2.py
+.. plot:: tutorial/code_snippets/basemap_plot_with_beachballs2.py
     :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
     :alt: Second Basemap Plot with Beachballs
 
-.. gallery-plot:: tutorial/code_snippets/basemap_with_beachball_read_events.py
+.. plot:: tutorial/code_snippets/basemap_with_beachball_read_events.py
     :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
     :alt: Basemap Plot with Beachball read_events
 
-.. gallery-plot:: tutorial/code_snippets/merging_seismograms.py
+.. plot:: tutorial/code_snippets/merging_seismograms.py
     :target: tutorial/code_snippets/merging_seismograms.html
     :alt: Merging Seismograms
 
-.. gallery-plot:: tutorial/code_snippets/beamforming_fk_analysis_1.py
+.. plot:: tutorial/code_snippets/beamforming_fk_analysis_1.py
     :target: tutorial/code_snippets/beamforming_fk_analysis.html
     :alt: Beamforming - FK Analysis
 
-.. gallery-plot:: tutorial/code_snippets/beamforming_fk_analysis_2.py
+.. plot:: tutorial/code_snippets/beamforming_fk_analysis_2.py
     :target: tutorial/code_snippets/beamforming_fk_analysis.html
     :alt: Beamforming - FK Analysis
 
-.. gallery-plot:: tutorial/code_snippets/hierarchical_clustering.py
+.. plot:: tutorial/code_snippets/hierarchical_clustering.py
     :target: tutorial/code_snippets/hierarchical_clustering.html
     :alt: Hierarchical Clustering
 
-.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density.py
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density.py
     :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
-.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density3.py
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density3.py
     :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
-.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density4.py
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density4.py
     :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
-.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density5.py
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density5.py
     :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
-.. gallery-plot:: tutorial/code_snippets/array_response_function.py
+.. plot:: tutorial/code_snippets/array_response_function.py
     :target: tutorial/code_snippets/array_response_function.html
     :alt: Array Response Function
 
-.. gallery-plot:: tutorial/code_snippets/continuous_wavelet_transform_obspy.py
+.. plot:: tutorial/code_snippets/continuous_wavelet_transform_obspy.py
     :target: tutorial/code_snippets/continuous_wavelet_transform.html
     :alt: Continuous Wavelet Transform (ObsPy)
 
-.. gallery-plot:: tutorial/code_snippets/continuous_wavelet_transform_mlpy.py
+.. plot:: tutorial/code_snippets/continuous_wavelet_transform_mlpy.py
     :target: tutorial/code_snippets/continuous_wavelet_transform.html
     :alt: Continuous Wavelet Transform (MLPY)
 
-.. gallery-plot:: tutorial/code_snippets/time_frequency_misfit_ex1.py
+.. plot:: tutorial/code_snippets/time_frequency_misfit_ex1.py
     :target: tutorial/code_snippets/time_frequency_misfit.html#plot-the-time-frequency-representation
     :alt: Plot the Time Frequency Representation
 
-.. gallery-plot:: tutorial/code_snippets/time_frequency_misfit_ex2.py
+.. plot:: tutorial/code_snippets/time_frequency_misfit_ex2.py
     :target: tutorial/code_snippets/time_frequency_misfit.html#plot-the-time-frequency-misfits
     :alt: Time Frequency Misfit
 
-.. gallery-plot:: tutorial/code_snippets/plot_travel_times.py
+.. plot:: tutorial/code_snippets/plot_travel_times.py
     :target: tutorial/code_snippets/travel_time.html#travel-time-plot
     :alt: Travel Time Plot
 
-.. gallery-plot:: tutorial/code_snippets/travel_time_cartesian_raypath.py
+.. plot:: tutorial/code_snippets/travel_time_cartesian_raypath.py
     :target: tutorial/code_snippets/travel_time.html#cartesian-ray-paths
     :alt: Cartesian Ray Paths
 
-.. gallery-plot:: tutorial/code_snippets/travel_time_spherical_raypath.py
+.. plot:: tutorial/code_snippets/travel_time_spherical_raypath.py
     :target: tutorial/code_snippets/travel_time.html#spherical-ray-paths
     :alt: Spherical Ray Paths
 
-.. gallery-plot:: tutorial/code_snippets/plot_ray_paths.py
+.. plot:: tutorial/code_snippets/plot_ray_paths.py
     :target: tutorial/code_snippets/travel_time.html#ray-path-plot
     :alt: Ray Path Plot
 
-.. gallery-plot:: tutorial/code_snippets/travel_time_body_waves.py
+.. plot:: tutorial/code_snippets/travel_time_body_waves.py
     :target: tutorial/code_snippets/travel_time.html#travel-time-body-waves
     :alt: Body Wave Ray Paths
 
-.. gallery-plot:: tutorial/code_snippets/xcorr_pick_correction.py
+.. plot:: tutorial/code_snippets/xcorr_pick_correction.py
     :target: tutorial/code_snippets/xcorr_pick_correction.html
     :alt: Cross-Correlation Pick Correction
 
-.. gallery-plot::
+.. plot::
     :target: tutorial/code_snippets/xcorr_detector.html
     :alt: Cross-Correlation Detector
 
@@ -187,7 +187,7 @@ Gallery
     template_names = ['1st template', '2nd template']
     detections, sims = correlation_detector(stream, templates, height, distance, plot=stream, template_names=template_names)
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
     :alt: Basemap preview plot of Inventory class
 
@@ -195,7 +195,7 @@ Gallery
     inv = read_inventory()
     inv.plot(projection="local", color_per_network={'GR': 'blue', 'BW': 'green'})
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.inventory.network.Network.plot.html
     :alt: Basemap preview plot of Network class
 
@@ -203,7 +203,7 @@ Gallery
     net = read_inventory()[0]
     net.plot(projection="ortho")
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.event.catalog.Catalog.plot.html
     :alt: Basemap preview plot of Catalog class
 
@@ -211,7 +211,7 @@ Gallery
     cat = read_events()
     cat.plot()
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
     :alt: Bode plot of Inventory class
 
@@ -219,7 +219,7 @@ Gallery
     inv = read_inventory()
     inv.plot_response(0.001, station="RJOB")
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
     :alt: Bode plot of Inventory indicating different epochs
 
@@ -228,7 +228,7 @@ Gallery
     inv = inv.select(station='RJOB', channel='EHZ')
     inv.plot_response(0.001, label_epoch_dates=True)
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.inventory.response.Response.plot.html
     :alt: Bode plot of Response class
 
@@ -236,7 +236,7 @@ Gallery
     resp = read_inventory()[0][0][0].response
     resp.plot(0.001, output="VEL")
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.signal.interpolation.plot_lanczos_windows.html
     :alt: Plot the Lanczos windows.
 
@@ -246,7 +246,7 @@ Gallery
     from obspy.signal.interpolation import plot_lanczos_windows
     plot_lanczos_windows(a=20)
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
     :alt: Basemap plot of station and event data together
 
@@ -256,7 +256,7 @@ Gallery
     fig = inv.plot(show=False)
     cat.plot(fig=fig)
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.signal.detrend.polynomial.html
     :alt: Polynomial detrending
 
@@ -269,7 +269,7 @@ Gallery
 
     polynomial(tr.data, order=3, plot=True)
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.event.event.Event.plot.html
     :alt: Event plot
 
@@ -277,7 +277,7 @@ Gallery
     event = read_events("/path/to/CMTSOLUTION")[0]
     event.plot()
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.core.event.event.Event.plot.html
     :alt: Event plot
 
@@ -285,22 +285,29 @@ Gallery
     event = read_events("/path/to/CMTSOLUTION")[0]
     event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
 
-.. image:: /_static/sds_report.png
+.. figure:: /_images/sds_report.png
     :target: packages/autogen/obspy.scripts.sds_html_report.html
     :alt: SDS html report
-    :scale: 50%
 
-Colormap comparison
-===================
+.. raw:: html
 
-.. gallery-plot::
+    </div>
+
+
+**Colormap comparison**
+
+.. raw:: html
+
+    <div class="gallery">
+
+.. plot::
     :target: packages/autogen/obspy.imaging.cm.html
     :alt: Colormap comparisons
 
     from obspy.imaging.cm import _colormap_plot_overview
     _colormap_plot_overview()
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.imaging.cm.html
     :alt: Colormap comparisons
 
@@ -308,7 +315,7 @@ Colormap comparison
     from obspy.imaging.cm import _colormap_plot_cwt
     _colormap_plot_cwt([viridis, viridis_r, viridis_white, viridis_white_r])
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.imaging.cm.html
     :alt: Colormap comparisons
 
@@ -316,7 +323,7 @@ Colormap comparison
     from obspy.imaging.cm import _colormap_plot_array_response
     _colormap_plot_array_response([viridis, viridis_r, viridis_white, viridis_white_r])
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.imaging.cm.html
     :alt: Colormap comparisons
 
@@ -324,7 +331,7 @@ Colormap comparison
     from obspy.imaging.cm import _colormap_plot_similarity
     _colormap_plot_similarity([viridis, viridis_r, viridis_white, viridis_white_r])
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.imaging.cm.html
     :alt: Colormap comparisons
 
@@ -332,7 +339,7 @@ Colormap comparison
     from obspy.imaging.cm import _colormap_plot_beamforming_time
     _colormap_plot_beamforming_time([viridis, viridis_r, viridis_white, viridis_white_r])
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.imaging.cm.html
     :alt: Colormap comparisons
 
@@ -340,7 +347,7 @@ Colormap comparison
     from obspy.imaging.cm import _colormap_plot_beamforming_polar
     _colormap_plot_beamforming_polar([viridis, viridis_r, viridis_white, viridis_white_r])
 
-.. gallery-plot::
+.. plot::
     :target: packages/autogen/obspy.imaging.cm.html
     :alt: Colormap comparisons
 

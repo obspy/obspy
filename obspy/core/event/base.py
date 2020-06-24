@@ -618,7 +618,7 @@ class WaveformStreamID(__WaveformStreamID):
     :type channel_code: str, optional
     :param channel_code: Channel code.
     :type resource_uri:
-    :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_uri: Resource identifier for the waveform stream.
     :type seed_string: str, optional
     :param seed_string: Provides an alternative initialization way by passing a

@@ -28,26 +28,28 @@ WIN32 = sys.platform.startswith('win32')
 
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
-# to: SEED MANUAL p.124
+# to SEED MANUAL p.124
 # We use this e.g. in seishub.client.getWaveform to request two samples more on
 # both start and end to cut to the samples that really are nearest to requested
 # start/end time afterwards.
-BAND_CODE = {'F': 1000.0,
-             'G': 1000.0,
-             'D': 250.0,
-             'C': 250.0,
-             'E': 80.0,
-             'S': 10.0,
-             'H': 80.0,
-             'B': 10.0,
-             'M': 1.0,
-             'L': 1.0,
-             'V': 0.1,
-             'U': 0.01,
-             'R': 0.0001,
-             'P': 0.000001,
-             'T': 0.0000001,
-             'Q': 0.00000001}
+BAND_CODE = {
+    'F': 1000.0,
+    'G': 1000.0,
+    'D': 250.0,
+    'C': 250.0,
+    'E': 80.0,
+    'S': 10.0,
+    'H': 80.0,
+    'B': 10.0,
+    'M': 1.0,
+    'L': 1.0,
+    'V': 0.1,
+    'U': 0.01,
+    'R': 0.0001,
+    'P': 0.000001,
+    'T': 0.0000001,
+    'Q': 0.00000001
+}
 
 # Dict that stores results from load entry points
 _ENTRY_POINT_CACHE = {}

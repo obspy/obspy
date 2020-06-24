@@ -22,8 +22,8 @@
        ~misc.to_int_or_zero
        ~obspy_types.Enum
 
-
     .. comment to end block
+
 
     Modules
     -------

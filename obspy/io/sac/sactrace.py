@@ -327,6 +327,7 @@ scale      = 1.0
              sac: AttribDict(...)
 
 """
+import os
 import sys
 import warnings
 from copy import deepcopy
@@ -469,7 +470,9 @@ class EnumHeader(IntHeader):
             msg = """Unrecognized enumerated value {} for header "{}".
                      See .header for allowed values.""".format(value,
                                                                self.name)
-            warnings.warn(msg)
+            # suppress warning on docs build
+            if not os.environ.get('SPHINXBUILD'):
+                warnings.warn(msg)
             name = None
         return name
 
@@ -856,7 +859,7 @@ class SACTrace(object):
         # The Plan:
         # 1. Build the default header dictionary and update with provided
         #    values.
-        # 2. Convert header dict to arrays (util.dict_to_header_arrays
+        # 2. Convert header dict to arrays (.arrayio.dict_to_header_arrays)
         #    initializes the arrays and fills in without checking.
         # 3. set the _h[fis] and data arrays on self.
 
@@ -1050,7 +1053,7 @@ class SACTrace(object):
             are instead passed without modification.  Good for debugging.
         :type debug_strings: bool
         :param encoding: Encoding string that passes the user specified
-        encoding scheme.
+            encoding scheme.
         :type encoding: str
 
         :raises: :class:`SacIOError` if checksize failed, byteorder was wrong,
@@ -1251,7 +1254,7 @@ class SACTrace(object):
             Trace.stats.sac dictionary.
         :type debug_headers: bool
         :param encoding: Encoding string that passes the user specified
-        encoding scheme.
+            encoding scheme.
         :type encoding: str
 
         .. rubric:: Example
@@ -1299,16 +1302,18 @@ class SACTrace(object):
         Check validity of loaded SAC file content, such as header/data
         consistency.
 
-        :param tests: One or more of the following validity tests:
-            'delta' : Time step "delta" is positive.
-            'logicals' : Logical values are 0, 1, or null
-            'data_hdrs' : Length, min, mean, max of data array match header
-                values.
-            'enums' : Check validity of enumerated values.
-            'reftime' : Reference time values in header are all set.
-            'reltime' : Relative time values in header are absolutely
-                referenced.
-            'all' : Do all tests.
+        :param tests: One or more of the following validity
+            tests:
+
+            - 'delta' : Time step "delta" is positive.
+            - 'logicals' : Logical values are 0, 1, or null
+            - 'data_hdrs' : Length, min, mean, max of data array match
+              header values.
+            - 'enums' : Check validity of enumerated values.
+            - 'reftime' : Reference time values in header are all set.
+            - 'reltime' : Relative time values in header are absolutely
+              referenced.
+            - 'all' : Do all tests.
         :type tests: str
 
         :raises: :class:`SacInvalidContentError` if any of the specified tests
@@ -1494,8 +1499,8 @@ class SACTrace(object):
 
         Similar to SAC's "chnhdr allt".
 
-        Note
-        ----
+        **Note**
+
         This method is triggered by setting an instance's iztype or changing
         its reference time, which is the most likely use case for this
         functionality.  If what you're trying to do is set an origin time and

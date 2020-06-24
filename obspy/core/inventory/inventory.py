@@ -944,13 +944,13 @@ class Inventory(ComparingObject):
                      color_per_network={'GR': 'blue',
                                         'BW': 'green'})
 
-        Combining a station and event plot (uses basemap):
+        Combining a station and event plot:
 
         >>> from obspy import read_inventory, read_events
         >>> inv = read_inventory()
         >>> cat = read_events()
-        >>> fig = inv.plot(method="basemap", show=False)  # doctest:+SKIP
-        >>> cat.plot(method="basemap", fig=fig)  # doctest:+SKIP
+        >>> fig = inv.plot(show=False)  # doctest:+SKIP
+        >>> cat.plot(fig=fig)  # doctest:+SKIP
 
         .. plot::
 
