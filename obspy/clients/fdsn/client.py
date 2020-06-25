@@ -1453,7 +1453,7 @@ class Client(object):
                     try:
                         code, data = download_url(
                             url, opener=opener, headers=headers,
-                            debug=debug)
+                            debug=debug, timeout=self.timeout)
                         if code == 200:
                             wadl_queue.put((url, data))
                         # Pass on the redirect exception.
