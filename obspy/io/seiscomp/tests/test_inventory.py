@@ -297,6 +297,18 @@ class SC3MLTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             _parse_list_of_complex_string(complex_string)
 
+    def test_stage_empty_poles_and_zeros(self):
+        """
+        Tests for a case where the poles and zeros are empty see #2633
+        """
+        sc3ml_mbar_path = os.path.join(self.data_dir, "zero_poles_and_zeros.sc3ml")
+        sc3ml_inv = read_inventory(sc3ml_mbar_path)
+        response = sc3ml_inv[0][0][0].response
+        zeros = response.response_stages[1].zeros
+        poles = response.response_stages[1].poles
+        self.assertEqual(zeros, [])
+        self.assertEqual(poles, [])
+
 
 def suite():
     return unittest.makeSuite(SC3MLTestCase, "test")
