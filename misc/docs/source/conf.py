@@ -8,6 +8,7 @@
 #
 
 import datetime
+import glob
 import obspy
 import os
 import sys
@@ -26,15 +27,15 @@ matplotlib.use("agg")
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-sys.path.insert(0, os.path.abspath('.') + os.sep + '_ext')
+sys.path.append(os.path.abspath('_ext'))
 
 
 # -- Project information -----------------------------------------------------
 project = 'ObsPy'
 author = 'The ObsPy Development Team (devs@obspy.org)'
 year = datetime.date.today().year
-copyright = '%d, The ObsPy Development Team (devs@obspy.org)' % (year)
-version = ".".join(obspy.__version__.split(".")[:2])
+copyright = '2012-{}, The ObsPy Development Team (devs@obspy.org)'.format(year)
+version = ".".join(obspy.__version__.split(".")[:3])
 release = obspy.__version__
 
 
@@ -50,16 +51,14 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
-    'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx.ext.autosummary',
-    'sphinx.ext.graphviz',
-    'sphinx.ext.inheritance_diagram',
     'sphinx.ext.coverage',
     'sphinx.ext.duration',
     'sphinx.ext.todo',
     # theme
+    'm2r',
     'sphinx_rtd_theme',
     # custom extensions
     'plot_directive',
@@ -67,17 +66,38 @@ extensions = [
     'citations',
 ]
 
+# The file extensions of source files. Sphinx considers the files with this
+# suffix as sources. The value can be a dictionary mapping file extensions to
+# file types.
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+# The master toctree document.
+master_doc = 'index'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = [
+    '_ext', '_images', '_static', '_templates', 'bibliography', 'credits']
 
 # Warn about all references where the target cannot be found.
 nitpicky = True
-nitpick_ignore = ['norm_resp']
+nitpick_ignore = [
+    ('py:class', 'list of str'),
+    ('py:class', 'optional'),
+    ('py:class', 'file'),
+]
+
+# suppress built-in types by default in nitpick
+import builtins
+for name in dir(builtins):
+    nitpick_ignore += [('py:class', name)]
 
 # configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
@@ -86,17 +106,27 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'sqlalchemy': ('https://docs.sqlalchemy.org/en/latest/', None),
+    'pip': ('https://pip.pypa.io/en/stable/', None),
 }
+
+# A boolean that decides whether module names are prepended to all object names
+# (for object types where a “module” of some kind is defined).
+add_module_names = False
+
+# A list of ignored prefixes for module index sorting.
+modindex_common_prefix = ['obspy.']
+
+# These values determine how to format the current date.
+today_fmt = "%B %d %H o'clock, %Y"
 
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
 html_theme = "sphinx_rtd_theme"
 
-html_logo = '_static/images/obspy_logo_no_text.svg'
+html_logo = '_static/obspy_logo_no_text.svg'
 html_favicon = '_static/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -107,5 +137,94 @@ html_static_path = ['_static']
 # These paths are either relative to html_static_path 
 # or fully qualified paths (eg. https://...)
 html_css_files = [
-    'css/custom.css',
+    'css/custom.min.css',
 ]
+
+# Additional templates that should be rendered to pages, maps page names to
+# template names.
+html_additional_pages = {
+}
+
+# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# using the given strftime format.
+html_last_updated_fmt = '%Y-%m-%dT%H:%M:%S'
+
+
+# If true, a list all whose items consist of a single paragraph and/or a
+# sub-list all whose items etc… (recursive definition) will not use the <p>
+# element for any of its items.
+html_compact_lists = True
+
+
+# -- Options for LaTeX output -------------------------------------------------
+
+# The paper size ('letter' or 'a4').
+#latex_paper_size = 'letter'
+
+# The font size ('10pt', '11pt' or '12pt').
+#latex_font_size = '10pt'
+
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title, author, documentclass [howto/manual])
+latex_documents = [
+  ('tutorial/index', 'ObsPyTutorial.tex', u'ObsPy Tutorial',
+   u'The ObsPy Development Team (devs@obspy.org)', 'manual'),
+]
+
+# The name of an image file (relative to this directory) to place at the top of
+# the title page.
+#latex_logo = None
+
+# For "manual" documents, if this is true, then toplevel headings are parts,
+# not chapters.
+#latex_use_parts = False
+
+# If true, show page references after internal links.
+#latex_show_pagerefs = False
+
+# If true, show URL addresses after external links.
+#latex_show_urls = False
+
+# Additional stuff for the LaTeX preamble.
+#latex_preamble = ''
+
+# Documents to append as an appendix to all manuals.
+#latex_appendices = []
+
+# If false, no module index is generated.
+#latex_domain_indices = True
+
+
+# -- Options for manual page output -------------------------------------------
+
+# One entry per manual page. List of tuples
+# (source start file, name, description, authors, manual section).
+man_pages = [
+    ('index', 'obspydocumentation', u'ObsPy Documentation',
+     [u'The ObsPy Development Team (devs@obspy.org)'], 1)
+]
+
+
+# -- Options for autodoc / autosummary exensions -----------------------------
+
+# Don't merge __init__ method in auoclass content
+autoclass_content = 'class'
+
+# generate automatically stubs
+autosummary_generate = True
+
+# If true, autosummary already overwrites stub files by generated contents.
+autosummary_generate_overwrite = False
+
+# Don't merge __init__ method in auoclass content
+autoclass_content = 'class'
+
+
+# -- Options for linkcheck exension ------------------------------------------
+linkcheck_timeout = 5
+linkcheck_workers = 10
+
+
+# -- Options for matplotlib plot directive -----------------------------------
+# File formats to generate.
+plot_formats = [('png', 110), ('hires.png', 200), ('pdf', 200)]
