@@ -11,6 +11,9 @@ Changes:
      station (see #2611)
    * update RASPISHAKE URL mapping to use https
    * fix a bug of not handling HTTPException in mass_downloader (see #2606)
+ - obspy.clients.filesystem:
+   * sds: continue get_all_stations() even if encountering an invalid channel
+     code (see #2636)
  - obspy.clients.neic:
    * Make client socket blocking (see #2617)
  - obspy.io.nordic:
