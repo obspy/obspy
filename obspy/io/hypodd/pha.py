@@ -72,7 +72,8 @@ def _is_pha(filename):
         assert line.startswith(b'#')
         assert len(line.split()) == 15
         yr, mo, dy, hr, mn, sc = line.split()[1:7]
-        UTCDateTime(int(yr), int(mo), int(dy), int(hr), int(mn), float(sc))
+        UTCDateTime(int(yr), int(mo), int(dy), int(hr), int(mn), float(sc),
+                    strict=False)
     except Exception:
         return False
     else:
