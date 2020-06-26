@@ -1453,7 +1453,7 @@ class Client(object):
                     try:
                         code, data = download_url(
                             url, opener=opener, headers=headers,
-                            debug=debug)
+                            debug=debug, timeout=self._timeout)
                         if code == 200:
                             wadl_queue.put((url, data))
                         # Pass on the redirect exception.
@@ -1471,7 +1471,9 @@ class Client(object):
                         wadl_queue.put((url, "timeout"))
                     except socket_timeout:
                         wadl_queue.put((url, "timeout"))
-            return ThreadURL()
+            threadurl = ThreadURL()
+            threadurl._timeout = self.timeout
+            return threadurl
 
         threads = list(map(get_download_thread, urls))
         for thread in threads:
