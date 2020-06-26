@@ -52,6 +52,11 @@ class PHATestCase(unittest.TestCase):
             self.assertEqual(arr.time_weight, target[sta][1])
             self.assertEqual(arr.phase, target[sta][2])
             self.assertEqual(arr.phase, pick.phase_hint)
+        event = cat[1]
+        self.assertEqual(len(event.origins), 1)
+        self.assertEqual(len(event.magnitudes), 0)
+        ori = event.preferred_origin()
+        self.assertEqual(str(ori.time), '2025-05-14T15:44:00.000000Z')
 
     def test_populate_waveform_id(self):
         inv = read_inventory()

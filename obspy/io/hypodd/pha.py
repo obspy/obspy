@@ -49,13 +49,19 @@ def _block2event(block, seed_map, id_default, ph2comp):
                     longitude=float(lo),
                     depth=1000 * float(dp),
                     time=time)
-    magnitude = Magnitude(mag=mg, resource_id="smi:local/magnitude/" + id_)
+    if mg.lower() == 'nan':
+        magnitudes = []
+        preferred_magnitude_id = None
+    else:
+        magnitude = Magnitude(mag=mg, resource_id="smi:local/magnitude/" + id_)
+        magnitudes = [magnitude]
+        preferred_magnitude_id = magnitude.resource_id
     event = Event(resource_id="smi:local/event/" + id_,
                   picks=picks,
                   origins=[origin],
-                  magnitudes=[magnitude],
+                  magnitudes=magnitudes,
                   preferred_origin_id=origin.resource_id,
-                  preferred_magnitude_id=magnitude.resource_id)
+                  preferred_magnitude_id=preferred_magnitude_id)
     return event
 
 
