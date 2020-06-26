@@ -56,6 +56,7 @@ RASPISHAKE  http://fdsnws.raspberryshakedata.com
 RESIF       http://ws.resif.fr
 SCEDC       http://service.scedc.caltech.edu
 TEXNET      http://rtserve.beg.utexas.edu
+UIB-NORSAR  http://eida.geo.uib.no
 USGS        http://earthquake.usgs.gov
 USP         http://sismo.iag.usp.br
 
