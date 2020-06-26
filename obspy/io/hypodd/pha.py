@@ -26,7 +26,8 @@ def _block2event(block, seed_map, id_default, ph2comp):
     """
     lines = block.strip().splitlines()
     yr, mo, dy, hr, mn, sc, la, lo, dp, mg, eh, ez, rms, id_ = lines[0].split()
-    time = UTCDateTime(int(yr), int(mo), int(dy), int(hr), int(mn), float(sc))
+    time = UTCDateTime(int(yr), int(mo), int(dy), int(hr), int(mn), float(sc),
+                       strict=False)
     picks = []
     arrivals = []
     for line in lines[1:]:
