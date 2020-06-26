@@ -91,18 +91,24 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
 
     The optional parameters all deal with the problem, that the PHA format
     only stores station names for the picks, but the Pick object expects
-    a SEED id.
+    a SEED id. A SEED id template is retrieved for each station by the
+    following procedure:
+
+    1. look at id_map for a direct station name match and use the specified
+       template
+    2. if 1 did not succeed, look if the station is present in inventory and
+       use its first channel as template
+    3. if 1 and 2 did not succeed, use specified default template (id_default)
 
     :param str filename: File or file-like object in text mode.
     :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Inventory used to retrieve network code, location code
         and channel code of stations (SEED id).
-    :param dict id_map: If channel information was not found in inventory,
-        it will be looked up in this dictionary
+    :param dict id_map: Default templates for each station
         (example: `id_map={'MOX': 'GR.{}..HH{}'`).
         The values must contain three dots and two `{}` which are
         substituted by station code and component.
-    :param str id_default: Default SEED id expression.
+    :param str id_default: Default SEED id template.
         The value must contain three dots and two `{}` which are
         substituted by station code and component.
     :param dict ph2comp: mapping of phases to components
