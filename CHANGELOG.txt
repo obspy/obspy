@@ -20,6 +20,9 @@ Changes:
  - obspy.io.nordic:
    * Fixed a bug raising an exception when reading a nordic file with a non
      positive-definite covariance matrix (see #2593)
+ - obspy.io.nordic:
+   * Allow 60.0 seconds in the second field of origin times, allow NaN in
+     the magnitude field (see #2627)
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================

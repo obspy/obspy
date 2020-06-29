@@ -19,6 +19,7 @@ class PHATestCase(unittest.TestCase):
     def setUp(self):
         self.path = os.path.dirname(__file__)
         self.fname = os.path.join(self.path, 'data', 'example.pha')
+        self.fname2 = os.path.join(self.path, 'data', '60s_nan.pha')
 
     def test_is_pha(self):
         self.assertEqual(pha._is_pha(self.fname), True)
@@ -52,6 +53,20 @@ class PHATestCase(unittest.TestCase):
             self.assertEqual(arr.time_weight, target[sta][1])
             self.assertEqual(arr.phase, target[sta][2])
             self.assertEqual(arr.phase, pick.phase_hint)
+
+    def test_60s_nan(self):
+        """
+        issue 2627
+        """
+        cat = read_events(self.fname2)
+        event = cat[0]
+        self.assertEqual(len(event.origins), 1)
+        self.assertEqual(len(event.magnitudes), 1)
+        ori = event.preferred_origin()
+        self.assertEqual(str(ori.time), '2025-05-14T14:36:00.000000Z')
+        event = cat[1]
+        self.assertEqual(len(event.origins), 1)
+        self.assertEqual(len(event.magnitudes), 0)
 
     def test_populate_waveform_id(self):
         inv = read_inventory()
