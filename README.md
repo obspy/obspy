@@ -11,7 +11,7 @@
 [![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
 
 [![PyPI Version](https://img.shields.io/pypi/v/obspy.svg)](https://pypi.python.org/pypi/obspy)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3706479.svg)](http://dx.doi.org/10.5281/zenodo.3706479)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3921997.svg)](http://dx.doi.org/10.5281/zenodo.3921997)
 [![Depsy](http://depsy.org/api/package/pypi/obspy/badge.svg)](http://depsy.org/package/python/obspy)
 ![Conda](https://img.shields.io/conda/dn/conda-forge/obspy?label=conda%20downloads)
 
