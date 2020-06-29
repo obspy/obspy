@@ -301,7 +301,8 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Tests for a case where the poles and zeros are empty see #2633
         """
-        sc3ml_mbar_path = os.path.join(self.data_dir, "zero_poles_and_zeros.sc3ml")
+        sc3ml_mbar_path = os.path.join(
+            self.data_dir, "zero_poles_and_zeros.sc3ml")
         sc3ml_inv = read_inventory(sc3ml_mbar_path)
         response = sc3ml_inv[0][0][0].response
         zeros = response.response_stages[1].zeros
