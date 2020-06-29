@@ -807,17 +807,19 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
                    "(rad)") % pz_transfer_function_type
             warnings.warn(msg)
             pz_transfer_function_type = 'LAPLACE (RADIANS/SECOND)'
+        number_of_zeros = _tag2obj(stage, _ns("numberOfZeros"), int)
+        number_of_poles = _tag2obj(stage, _ns("numberOfPoles"), int)
 
         # Parse string of poles and zeros
         # paz are stored as a string in sc3ml
         # e.g. (-0.01234,0.01234) (-0.01234,-0.01234)
-        zeros_array = stage.find(_ns("zeros")).text
-        poles_array = stage.find(_ns("poles")).text
-        if zeros_array is not None:
+        if number_of_zeros > 0:
+            zeros_array = stage.find(_ns("zeros")).text
             zeros_array = _parse_list_of_complex_string(zeros_array)
         else:
             zeros_array = []
-        if poles_array is not None:
+        if number_of_poles > 0:
+            poles_array = stage.find(_ns("poles")).text
             poles_array = _parse_list_of_complex_string(poles_array)
         else:
             poles_array = []

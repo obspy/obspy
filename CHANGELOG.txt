@@ -5,9 +5,10 @@ Changes:
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
 
-maintenance_1.2.x
-=================
+1.2.2 (doi: 10.5281/zenodo.3921997)
+===================================
 
+Changes:
  - obspy.core:
    * Fix wrong values in Stats object after deepcopy or pickle of Stats object
      for edge cases (see #2601)
@@ -16,11 +17,21 @@ maintenance_1.2.x
      data when requesting an invalid, out-of-epochs time window for a valid
      station (see #2611)
    * update RASPISHAKE URL mapping to use https
+   * fix a bug of not handling HTTPException in mass_downloader (see #2606)
+   * use the client's set timeout in service discovery, too (see #2656)
+   * add URL mapping for FDSNWS at UIB-NORSAR (see #2659)
+ - obspy.clients.filesystem:
+   * sds: continue get_all_stations() even if encountering an invalid channel
+     code (see #2636)
  - obspy.clients.neic:
    * Make client socket blocking (see #2617)
  - obspy.io.nordic:
    * Fixed a bug raising an exception when reading a nordic file with a non
      positive-definite covariance matrix (see #2593)
+   * Allow 60.0 seconds in the second field of origin times, allow NaN in
+     the magnitude field (see #2627)
+ - obspy.io.seiscomp:
+   * Fixed an issue where a response has zero zeros or poles (see #2633)
 
 1.2.1 (doi: 10.5281/zenodo.3706479)
 ===================================

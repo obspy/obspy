@@ -2088,7 +2088,7 @@ class PPSD(object):
 
         if "colorbar" not in fig.ppsd:
             cb = plt.colorbar(ppsd, ax=ax)
-            cb.set_clim(*fig.ppsd.color_limits)
+            cb.mappable.set_clim(*fig.ppsd.color_limits)
             cb.set_label(fig.ppsd.label)
             fig.ppsd.colorbar = cb
 

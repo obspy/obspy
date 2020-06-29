@@ -20,13 +20,14 @@
        :toctree: autogen
        :nosignatures:
 
-       spectrogram
        beachball
        cm
-       waveform
-       mopad_wrapper
        maps
+       mopad_wrapper
        source
+       spectrogram
+       util
+       waveform
 
     .. comment to end block
 
