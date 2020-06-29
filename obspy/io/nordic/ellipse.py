@@ -17,7 +17,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-
+from math import sin, cos, radians
 import numpy as np
 import copy
 import io
@@ -153,8 +153,8 @@ class Ellipse:
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
-        x = viewpoint[0] + dist * np.sin(np.radians(baz))
-        y = viewpoint[1] + dist * np.cos(np.radians(baz))
+        x = viewpoint[0] + dist * sin(radians(baz))
+        y = viewpoint[1] + dist * cos(radians(baz))
         return cls.from_uncerts(x_err, y_err, c_xy, (x, y))
 
     def __repr__(self):
@@ -206,8 +206,8 @@ class Ellipse:
                  center_position (x,y)
         :rtype: 2-tuple
         """
-        sin_theta = np.sin(np.radians(self.theta))
-        cos_theta = np.cos(np.radians(self.theta))
+        sin_theta = sin(radians(self.theta))
+        cos_theta = cos(radians(self.theta))
         # The following is BACKWARDs from math standard
         # but consistent with geographic notation
         c_yy = self.a**2 * cos_theta**2 + self.b**2 * sin_theta**2
@@ -522,13 +522,13 @@ class Ellipse:
 
 def _rot_ccw(theta):
     """counter-clockwise rotation matrix for theta in DEGREES"""
-    c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
+    c, s = cos(radians(theta)), sin(radians(theta))
     return np.array(((c, -s), (s, c)))
 
 
 def _rot_cw(theta):
     """clockwise rotation matrix for theta in DEGREES"""
-    c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
+    c, s = cos(radians(theta)), sin(radians(theta))
     return np.array(((c, s), (-s, c)))
 
 
