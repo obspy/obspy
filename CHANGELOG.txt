@@ -12,6 +12,7 @@ Changes:
    * update RASPISHAKE URL mapping to use https
    * fix a bug of not handling HTTPException in mass_downloader (see #2606)
    * use the client's set timeout in service discovery, too (see #2656)
+   * add URL mapping for FDSNWS at UIB-NORSAR (see #2659)
  - obspy.clients.filesystem:
    * sds: continue get_all_stations() even if encountering an invalid channel
      code (see #2636)
