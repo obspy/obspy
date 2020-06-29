@@ -1,5 +1,5 @@
-maintenance_1.2.x
-=================
+1.2.2rc1
+========
 
 Changes:
  - obspy.core:
