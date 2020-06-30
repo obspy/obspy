@@ -18,11 +18,12 @@ Changes:
      code (see #2636)
  - obspy.clients.neic:
    * Make client socket blocking (see #2617)
+ - obspy.io.hypodd:
+   * Allow 60.0 seconds in the second field of origin times, allow NaN in
+     the magnitude field for pha format (see #2627)
  - obspy.io.nordic:
    * Fixed a bug raising an exception when reading a nordic file with a non
      positive-definite covariance matrix (see #2593)
-   * Allow 60.0 seconds in the second field of origin times, allow NaN in
-     the magnitude field (see #2627)
  - obspy.io.seiscomp:
    * Fixed an issue where a response has zero zeros or poles (see #2633)
 
