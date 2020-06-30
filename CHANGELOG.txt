@@ -2,6 +2,9 @@ master
 ======
 
 Changes:
+ - obspy.clients.arclink:
+   * submodule removed completely, since ArcLink was deactivated on all big
+     datacenters (see #2660)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
 

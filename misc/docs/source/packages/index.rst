@@ -55,7 +55,6 @@ categories.*
     :toctree: .
     :nosignatures:
 
-    obspy.clients.arclink
     obspy.clients.earthworm
     obspy.clients.fdsn
     obspy.clients.filesystem

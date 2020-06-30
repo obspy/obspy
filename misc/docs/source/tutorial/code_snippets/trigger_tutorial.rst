@@ -400,7 +400,7 @@ This gives the output 30.6350002289 and 31.2800006866, meaning that a P pick at
 Advanced Example
 ----------------
 
-A more complicated example, where the data are retrieved via ArcLink and
+A more complicated example, where the data are retrieved via FDSNWS and
 results are plotted step by step, is shown here:
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_advanced.py

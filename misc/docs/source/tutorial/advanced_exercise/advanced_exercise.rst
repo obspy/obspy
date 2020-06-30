@@ -3,6 +3,13 @@
 Advanced Exercise
 -----------------
 
+.. note::
+
+    Please note that this exercise is several years old and outdated in terms
+    of recommended use of obspy, e.g. in terms of higher-level
+    functionality like the Inventory object, and that ArcLink has been
+    deactivated by data centers and the arclink client removed from obspy.
+
 This practical intends to demonstrate how ObsPy can be used to develop
 workflows for data processing and analysis that have a short, easy to read and
 extensible source code. The overall task is to automatically estimate local
