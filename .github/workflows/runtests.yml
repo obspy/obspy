@@ -25,7 +25,7 @@ jobs:
       - name: create ci config
         shell: bash -l {0}
         run: |
-          pip install git+https://github.com/d-chambers/obspy_github_api@gh-actions
+          pip install git+https://github.com/obspy/obspy_github_api@release_0.8.0
           obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token=${GITHUB_TOKEN}
 
       - name: upload ci config
