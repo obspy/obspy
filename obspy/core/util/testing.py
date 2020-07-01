@@ -321,13 +321,8 @@ class ImageComparison(NamedTemporaryFile):
         self.plt_close_all_exit = plt_close_all_exit
         self.no_uploads = no_uploads
 
-        if (MATPLOTLIB_VERSION < [1, 4, 0] or
-                (MATPLOTLIB_VERSION[:2] == [1, 4] and style is None)):
-            # No good style support.
-            self.style = None
-        else:
-            import matplotlib.style as mstyle
-            self.style = mstyle.context(style or 'classic')
+        import matplotlib.style as mstyle
+        self.style = mstyle.context(style or 'classic')
 
         # Adjust the tolerance based on the matplotlib version. This works
         # well enough and otherwise testing is just a pain.
@@ -337,30 +332,7 @@ class ImageComparison(NamedTemporaryFile):
         # has been fixed.
         #
         # Thus test images should accurate for matplotlib >= 2.0.1 anf
-        # fairly accurate for matplotlib 1.5.x.
         if adjust_tolerance:
-            # Really old versions.
-            if MATPLOTLIB_VERSION < [1, 3, 0]:
-                self.tol *= 30
-            # 1.3 + 1.4 have slightly different text positioning mostly.
-            elif [1, 3, 0] <= MATPLOTLIB_VERSION < [1, 5, 0]:
-                self.tol *= 15
-            # A few plots with mpl 1.5 have ticks and axis slightl shifted.
-            # This is especially true for ticks with exponential numbers.
-            # Thus the tolerance also has to be a bit higher here.
-            elif [1, 5, 0] <= MATPLOTLIB_VERSION < [2, 0, 0]:
-                self.tol *= 5.0
-            # Matplotlib 2.0.0 has a bug with the tick placement. This is
-            # fixed in 2.0.1 but the tolerance for 2.0.0 has to be much
-            # higher. 12 is an empiric value. The tick placement potentially
-            # influences the axis locations and then the misfit is really
-            # quite high.
-            elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
-                self.tol *= 12
-            # Some section waveform plots made on 2.2.2 have offset ticks on
-            # 2.0.2, so up tolerance a bit (see #2493)
-            elif MATPLOTLIB_VERSION < [2, 1]:
-                self.tol *= 5
 
             # One last pass depending on the freetype version.
             # XXX: Should eventually be handled differently!
@@ -398,10 +370,7 @@ class ImageComparison(NamedTemporaryFile):
         rcdefaults()
         if self.style is not None:
             self.style.__enter__()
-        if MATPLOTLIB_VERSION >= [2, 0, 0]:
-            default_font = 'DejaVu Sans'
-        else:
-            default_font = 'Bitstream Vera Sans'
+        default_font = 'DejaVu Sans'
         rcParams['font.family'] = default_font
         with warnings.catch_warnings(record=True) as w:
             warnings.filterwarnings('always', 'findfont:.*')

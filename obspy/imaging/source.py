@@ -268,9 +268,6 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
     :param type: 'P' or 'S' (P or S wave).
     """
     import matplotlib.pyplot as plt
-    if MATPLOTLIB_VERSION < [1, 4]:
-        msg = ("Matplotlib 3D quiver plot needs matplotlib version >= 1.4.")
-        raise ImportError(msg)
 
     type = type.upper()
     if type not in ("P", "S"):

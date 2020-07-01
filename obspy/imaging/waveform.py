@@ -1291,13 +1291,6 @@ class WaveformPlotting(object):
         # Should be integrated by version 2.1
         # (see https://github.com/matplotlib/matplotlib/pull/6560)
         fill_kwargs = {"lw": 0}
-        # There's a strange problem with matplotlib 1.4.1 and 1.4.2.
-        # It seems to not render the filled PolyCollection
-        # objects if linewidth is set to 0 (see http://tests.obspy.org/48219/,
-        # #1502). To circumvent this, use a line color with alpha 0 (and a very
-        # small linewidth).
-        if [1, 4, 1] <= MATPLOTLIB_VERSION < [1, 4, 3]:
-            fill_kwargs = {"edgecolor": (0, 0, 0, 0), "lw": 0.01}
 
         if self.sect_orientation == 'vertical':
             self.fillfun = functools.partial(ax.fill_betweenx, **fill_kwargs)

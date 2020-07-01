@@ -179,11 +179,7 @@ class InventoryTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        # Bug in matplotlib 1.4.0 - 1.4.x:
-        # See https://github.com/matplotlib/matplotlib/issues/4012
         reltol = 1.0
-        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 5, 0]:
-            reltol = 2.0
 
         inv = read_inventory()
         t = UTCDateTime(2008, 7, 1)

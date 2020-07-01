@@ -97,10 +97,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
         # class prior to matplotlib version 1.2
-        if MATPLOTLIB_VERSION < [1, 2, 0]:
-            AutoDateFormatter.__init__(self, *args, **kwargs)
-        else:
-            super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
+        super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
         # Reset the scale to make it reproducible across matplotlib versions.
         self.scaled = {}
         self.scaled[1.0] = '%b %d %Y'

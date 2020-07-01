@@ -423,10 +423,7 @@ def _plot_basemap_into_axes(
             raise ValueError(msg)
 
         # draw coast lines, country boundaries, fill continents.
-        if MATPLOTLIB_VERSION >= [2, 0, 0]:
-            ax.set_facecolor(water_fill_color)
-        else:
-            ax.set_axis_bgcolor(water_fill_color)
+        ax.set_facecolor(water_fill_color)
         # newer matplotlib errors out if called with empty coastline data (no
         # coast on map)
         if np.size(getattr(bmap, 'coastsegs', [])):
@@ -701,10 +698,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         _CARTOPY_FEATURES[resolution] = (borders, land, ocean)
 
     # Draw coast lines, country boundaries, fill continents.
-    if MATPLOTLIB_VERSION >= [2, 0, 0]:
-        map_ax.set_facecolor(water_fill_color)
-    else:
-        map_ax.set_axis_bgcolor(water_fill_color)
+    map_ax.set_facecolor(water_fill_color)
     map_ax.add_feature(ocean, facecolor=water_fill_color)
     map_ax.add_feature(land, facecolor=continent_fill_color)
     map_ax.add_feature(borders, edgecolor='0.75')

@@ -478,11 +478,7 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(selection_got, expected_selection)
 
         # test one particular selection as an image test
-        # mpl < 2.2 has slightly offset ticks/ticklabels, so needs a higher
-        # tolerance (see e.g. http://tests.obspy.org/102260)
         reltol = 1.5
-        if MATPLOTLIB_VERSION < [2, 2]:
-            reltol = 5
         plot_kwargs = dict(max_percentage=15, xaxis_frequency=True,
                            period_lim=(0.01, 50))
         ppsd.calculate_histogram(**stack_criteria_list[1])
@@ -526,8 +522,6 @@ class PsdTestCase(unittest.TestCase):
                                  plt_close_all_exit=False) as ic:
                 # rms of the valid comparison above is ~31,
                 # rms of the invalid comparison we test here is ~36
-                if MATPLOTLIB_VERSION == [1, 1, 1]:
-                    ic.tol = 33
                 ppsd._plot_histogram(fig=fig, draw=True)
                 with np.errstate(under='ignore'):
                     fig.savefig(ic.name)

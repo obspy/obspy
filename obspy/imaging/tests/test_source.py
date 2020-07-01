@@ -19,8 +19,6 @@ class RadPatternTestCase(unittest.TestCase):
         self.path = path
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
-    @unittest.skipIf(MATPLOTLIB_VERSION < [1, 4],
-                     'matplotlib >= 1.4 needed for 3D quiver plot.')
     def test_farfield_with_quiver(self):
         """
         Tests to plot P/S wave farfield radiation pattern
