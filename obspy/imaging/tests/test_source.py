@@ -6,7 +6,6 @@ import os
 import unittest
 
 from obspy.imaging.source import plot_radiation_pattern
-from obspy.core.util.base import MATPLOTLIB_VERSION
 
 
 class RadPatternTestCase(unittest.TestCase):

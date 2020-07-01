@@ -17,7 +17,6 @@ import warnings
 import numpy as np
 from matplotlib import rcParams
 
-from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.testing import ImageComparison
 from obspy import read_inventory
 from obspy.core.inventory import Channel, Equipment

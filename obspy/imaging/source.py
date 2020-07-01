@@ -16,7 +16,6 @@ Functions to compute and plot radiation patterns
 import numpy as np
 from matplotlib.cm import get_cmap
 
-from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import beach

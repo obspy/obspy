@@ -8,7 +8,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from obspy.core.util.testing import ImageComparison, MATPLOTLIB_VERSION
+from obspy.core.util.testing import ImageComparison
 from obspy.signal.tests.test_spectral_estimation import _get_ppsd
 
 

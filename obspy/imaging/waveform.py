@@ -32,7 +32,7 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import create_empty_data_chunk, MATPLOTLIB_VERSION
+from obspy.core.util import create_empty_data_chunk
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
 from obspy.imaging.util import (_set_xaxis_obspy_dates, _id_key, _timestring)
 

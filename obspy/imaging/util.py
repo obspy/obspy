@@ -16,7 +16,6 @@ from matplotlib.dates import (
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
-from obspy.core.util import MATPLOTLIB_VERSION
 
 
 def _seconds_to_days(sec):

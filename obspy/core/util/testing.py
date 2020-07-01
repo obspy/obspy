@@ -23,7 +23,7 @@ from distutils.version import LooseVersion
 import numpy as np
 from lxml import etree
 
-from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import MatplotlibBackend
 
 # this dictionary contains the locations of checker routines that determine
