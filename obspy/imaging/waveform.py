@@ -374,12 +374,7 @@ class WaveformPlotting(object):
                 sharex = None
             else:
                 sharex = self.axis[0]
-            # TODO remove once minimum required matplotlib version reaches 2.0
-            # see matplotlib/matplotlib#5501
-            if MATPLOTLIB_VERSION < [2, 0]:
-                axis_facecolor_kwargs = dict(axisbg=self.background_color)
-            else:
-                axis_facecolor_kwargs = dict(facecolor=self.background_color)
+            axis_facecolor_kwargs = dict(facecolor=self.background_color)
             ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
                                       sharex=sharex, **axis_facecolor_kwargs)
             self.axis.append(ax)
@@ -441,12 +436,7 @@ class WaveformPlotting(object):
                 self.repeat = intervals
         # Create axis to plot on.
         if self.background_color:
-            # TODO remove once minimum required matplotlib version reaches 2.0
-            # see matplotlib/matplotlib#5501
-            if MATPLOTLIB_VERSION < [2, 0]:
-                axis_facecolor_kwargs = dict(axisbg=self.background_color)
-            else:
-                axis_facecolor_kwargs = dict(facecolor=self.background_color)
+            axis_facecolor_kwargs = dict(facecolor=self.background_color)
             ax = self.fig.add_subplot(1, 1, 1, **axis_facecolor_kwargs)
         else:
             ax = self.fig.add_subplot(1, 1, 1)
