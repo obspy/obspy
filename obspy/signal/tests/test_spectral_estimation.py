@@ -11,15 +11,14 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
 from obspy.core.inventory import Response
 from obspy.core.util import NUMPY_VERSION
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import (
-    ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
+    ImageComparison, ImageComparisonException)
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
 from obspy.signal.spectral_estimation import earthquake_models
