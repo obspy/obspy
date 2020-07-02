@@ -8,6 +8,7 @@ env:
   CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
   CONFIG_PATH: obspy_ci_config/conf.json
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  OBSPY_GITHUB_BRANCH: release_0.9.0
 
 
 jobs:
@@ -25,7 +26,7 @@ jobs:
       - name: create ci config
         shell: bash -l {0}
         run: |
-          pip install git+https://github.com/obspy/obspy_github_api@release_0.8.0
+          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
           obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token=${GITHUB_TOKEN}
 
       - name: upload ci config
@@ -82,19 +83,28 @@ jobs:
         with:
           name: obspy_ci_config
 
+      - name: install obspy github api
+        shell: bash -l {0}
+        run : |
+          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+
+
       - name: run test suite
         shell: bash -l {0}
         run: |
-          export MODULELIST=`obshub get_config_value module_list --path=${CONFIG_PATH}`
-          export MODULELISTSPACES=`obshub get_config_value module_list_spaces --path=${CONFIG_PATH}`
-          coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES;
+          export MODULELIST=`obshub read-config-value module_list --path=${CONFIG_PATH}`
+          export MODULELISTSPACES=`obshub read-config-value module_list_spaces --path=${CONFIG_PATH}`
+          coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
+          coverage xml -o coverage.xml
 
       - name: upload coverage
         uses: codecov/codecov-action@v1
         with:
           flags: unittests
+          token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-umbrella
           fail_ci_if_error: false
+          file: coverage.xml
 
 
 # This is a very useful step for debugging, it allows you to ssh into the CI

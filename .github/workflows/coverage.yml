@@ -28,14 +28,14 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          obspy-runtests
+          coverage run --rcfile=.coveragerc -m obspy.scripts.runtests --no-flake8 -n gh-actions -r
+          coverage xml -o coverage.xml
 
       - name: upload coverage
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
+          file: coverage.xml
           flags: unittests
           name: codecov-umbrella
-          yml: ./codecov.yml
           fail_ci_if_error: true
