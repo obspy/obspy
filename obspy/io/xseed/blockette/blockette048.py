@@ -52,13 +52,13 @@ class Blockette048(Blockette):
             string += \
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n'
-            for _i in range(self.number_of_history_values):
-                string += \
-                    'B048F08-09   %2s %13s %13s %s\n' \
-                    % (format_resp(self.sensitivity_for_calibration[_i], 6),
-                       format_resp(
-                           self.frequency_of_calibration_sensitivity[_i], 6),
-                       self.time_of_above_calibration[_i].format_seed())
+            for i in range(self.number_of_history_values):
+                string += 'B048F08-09   %2s %13s %13s %s\n' % (
+                    i,
+                    format_resp(self.sensitivity_for_calibration[i], 6),
+                    format_resp(
+                        self.frequency_of_calibration_sensitivity[i], 6),
+                    self.time_of_above_calibration[i].format_seed())
         elif self.number_of_history_values == 1:
             string += \
                 '#\t\tCalibrations:\n' + \
