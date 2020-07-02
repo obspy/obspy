@@ -669,7 +669,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
               "correlation: %s" % num_samples
         warnings.warn(msg)
     # quadratic fit for small subwindow
-    coeffs, residual = scipy.polyfit(
+    coeffs, residual = np.polyfit(
         cc_t[first_sample:last_sample + 1],
         cc[first_sample:last_sample + 1], deg=2, full=True)[:2]
     # check results of fit
@@ -718,7 +718,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
                      label="used for fitting")
             tmp_t = np.linspace(cc_t[first_sample], cc_t[last_sample],
                                 num_samples * 10)
-            ax2.plot(tmp_t, scipy.polyval(coeffs, tmp_t), "b", label="fit")
+            ax2.plot(tmp_t, np.polyval(coeffs, tmp_t), "b", label="fit")
             ax2.axvline(-dt, color="g", label="vertex")
             ax2.axhline(coeff, color="g")
             ax2.set_xlabel("%.2f at %.3f seconds correction" % (coeff, -dt))
