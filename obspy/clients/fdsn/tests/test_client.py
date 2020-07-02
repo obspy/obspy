@@ -31,7 +31,13 @@ from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
                                        get_bulk_string)
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
-                                       FDSNNoDataException, DEFAULT_SERVICES)
+                                       FDSNNoDataException,
+                                       FDSNRequestTooLargeException,
+                                       FDSNBadRequestException,
+                                       FDSNAuthenticationException,
+                                       FDSNTimeoutException,
+                                       FDSNNoServiceException,
+                                       DEFAULT_SERVICES)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
@@ -108,7 +114,7 @@ class ClientTestCase(unittest.TestCase):
         msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
                "of all available data")
         for bad_input in [[], '', None]:
-            with self.assertRaises(FDSNException) as e:
+            with self.assertRaises(FDSNBadRequestException) as e:
                 get_bulk_string(bulk=bad_input, arguments={})
             self.assertEqual(e.exception.args[0], msg)
 
@@ -1448,7 +1454,7 @@ class ClientTestCase(unittest.TestCase):
             url_parts = url.replace(url_base, '').split("&")
             self.assertIn('{}='.format(key), url_parts)
 
-    def test_no_data(self):
+    def test_no_data_exception(self):
         """
         Verify that a request returning no data raises an identifiable
         exception
@@ -1457,6 +1463,49 @@ class ClientTestCase(unittest.TestCase):
                           starttime=UTCDateTime("2001-01-07T01:00:00"),
                           endtime=UTCDateTime("2001-01-07T01:01:00"),
                           minmagnitude=8)
+
+    def test_request_too_large_exception(self):
+        """
+        Verify that a request returning too much data raises an identifiable
+        exception
+        """
+        client = Client("GFZ")
+        self.assertRaises(FDSNRequestTooLargeException, client.get_stations)
+
+    def test_authentication_exception(self):
+        """
+        Verify that a request with missing authentication raises an
+        identifiable exception
+        """
+        client = Client("GFZ",
+                        user="nobody",
+                        password="wrong_password")
+        self.assertRaises(FDSNAuthenticationException, client.get_waveforms,
+                          'IA', '*', '*', '*',
+                          UTCDateTime("2010-01-01T00:00:00"),
+                          UTCDateTime("2010-01-01T00:01:00"))
+
+    def test_timeout_exception(self):
+        """
+        Verify that a request timing out raises an identifiable exception
+        """
+        client = Client("IRIS", timeout=0.0001)
+        self.assertRaises(FDSNTimeoutException, client.get_stations)
+
+    def test_no_service_exception(self):
+        """
+        Verify that opening a client to a provider without FDSN servide raises
+        an identifiable exception
+        """
+        self.assertRaises(FDSNNoServiceException, Client,
+                          "http://nofdsnservice.org")
+
+    def test_bad_request_exception(self):
+        """
+        Verify that a bad request raises an identifiable exception
+        """
+        self.assertRaises(FDSNBadRequestException, self.client.get_stations,
+                          station='&')
 
     def test_eida_token_resolution(self):
         """

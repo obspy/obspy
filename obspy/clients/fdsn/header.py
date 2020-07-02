@@ -30,6 +30,34 @@ class FDSNNoDataException(FDSNException):
     pass
 
 
+class FDSNRequestTooLargeException(FDSNException):
+    pass
+
+
+class FDSNTooManyRequestsException(FDSNException):
+    pass
+
+
+class FDSNTimeoutException(FDSNException):
+    pass
+
+
+class FDSNAuthenticationException(FDSNException):
+    pass
+
+
+class FDSNBadRequestException(FDSNException):
+    pass
+
+
+class FDSNNoServiceException(FDSNException):
+    pass
+
+
+class FDSNServerException(FDSNException):
+    pass
+
+
 # A curated list collecting some implementations:
 # https://www.fdsn.org/webservices/datacenters/
 # https://www.orfeus-eu.org/data/eida/nodes/
