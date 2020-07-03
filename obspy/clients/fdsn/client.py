@@ -272,7 +272,7 @@ class Client(object):
             if user is not None or password is not None:
                 msg = ("EIDA authentication token provided, but "
                        "user and password are also given.")
-                raise FDSNException(msg)
+                raise FDSNAuthenticationException(msg)
             self.set_eida_token(eida_token)
 
     @property
