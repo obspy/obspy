@@ -803,7 +803,7 @@ class ClientTestCase(unittest.TestCase):
     def test_conflicting_params(self):
         """
         """
-        self.assertRaises(FDSNException, self.client.get_stations,
+        self.assertRaises(FDSNBadRequestException, self.client.get_stations,
                           network="IU", net="IU")
 
     def test_help_function_with_iris(self):
