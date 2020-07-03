@@ -477,6 +477,8 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(selection_got, expected_selection)
 
         # test one particular selection as an image test
+        # mpl < 2.2 has slightly offset ticks/ticklabels, so needs a higher
+        # `reltol` tolerance (see e.g. http://tests.obspy.org/102260)
         reltol = 1.5
         plot_kwargs = dict(max_percentage=15, xaxis_frequency=True,
                            period_lim=(0.01, 50))

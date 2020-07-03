@@ -331,10 +331,9 @@ class ImageComparison(NamedTemporaryFile):
         # which is after https://github.com/matplotlib/matplotlib/issues/7905
         # has been fixed.
         #
-        # Thus test images should accurate for matplotlib >= 2.0.1 anf
+        # Thus test images should accurate for matplotlib >= 2.0.1.
         if adjust_tolerance:
-
-            # One last pass depending on the freetype version.
+            # Adjusts tolerance depending on the freetype version.
             # XXX: Should eventually be handled differently!
             try:
                 from matplotlib import ft2font

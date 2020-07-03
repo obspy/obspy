@@ -28,6 +28,9 @@ class PPSDTestCase(unittest.TestCase):
         # Catch underflow warnings due to plotting on log-scale.
         with np.errstate(all='ignore'):
             with ImageComparison(self.path, 'ppsd.png', reltol=1.5) as ic:
+                # mpl < 2.2 has slightly offset ticks/ticklabels, so it needs
+                # a higher `reltol` tolerance
+                # (see e.g. http://tests.obspy.org/102260)
                 self.ppsd.plot(
                     show=False, show_coverage=True, show_histogram=True,
                     show_percentiles=True, percentiles=[75, 90],
