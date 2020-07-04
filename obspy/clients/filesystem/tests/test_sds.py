@@ -256,7 +256,6 @@ class SDSTestCase(unittest.TestCase):
             self.assertEqual(st[4].stats.channel, "BHN")
             self.assertEqual(st[5].stats.channel, "BHE")
 
-
     def test_get_all_stations_and_nslc(self):
         """
         Test `get_all_stations` and `get_all_nslc` methods
