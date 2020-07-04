@@ -4,6 +4,9 @@ master
 Changes:
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
+ - obspy.io.xseed:
+   * fix a bug reading SEED blockettes 48 and 58 which was likely never
+     encountered (see #2668)
 
 1.2.2 (doi: 10.5281/zenodo.3921997)
 ===================================
