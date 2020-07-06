@@ -65,7 +65,7 @@ EH_PAYLOAD = {
     "station_name": (36, 4, _decode_ascii),
     "stream_name": (40, 16, _decode_ascii),
     "_reserved_2": (56, 8, _decode_ascii),
-    "sampling_rate": (64, 4, int),
+    "sampling_rate": (64, 4, float),
     "trigger_type": (68, 4, _decode_ascii),
     "trigger_time": (72, 16, _parse_long_time),
     "first_sample_time": (88, 16, _parse_long_time),
@@ -154,7 +154,7 @@ class EHPacket(Packet):
             sta = (self.station_name.strip() +
                    self.station_name_extension.strip())
             info = ("{:04d} {:2s} {:4s} {:2d} {:4d} {:4d} {:2d} {:2s} "
-                    "{:5s} {:4d}         {!s}").format(
+                    "{:5s} {:4f}         {!s}").format(
                         self.packet_sequence, self.type.decode(),
                         self.unit_id.decode(), self.experiment_number,
                         self.byte_count, self.event_number,

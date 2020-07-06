@@ -255,10 +255,6 @@ class Reftek130(object):
             elif eh.data_format == b"C2":
                 encoding = 'C2'
             elif eh.data_format == b"16":
-                msg = ("Reftek130 encoding '16' is implemented but untested, "
-                       "please provide example data for testing at "
-                       "https://github.com/obspy/obspy/issues/new.")
-                warnings.warn(msg)
                 encoding = '16'
             elif eh.data_format == b"32":
                 encoding = '32'
@@ -319,8 +315,21 @@ class Reftek130(object):
                             sample_data = np.require(
                                 packets_['payload'],
                                 requirements=['C_CONTIGUOUS'])
+                            # account for number of samples
+                            sample_bytes = sample_data.shape[1]
+                            sample_data = sample_data.flatten()
+                            bytes_ = int(encoding) // 8
+                            nbr_samples_max = sample_bytes // bytes_
+                            inds_ = [ind for ind, p in
+                                     enumerate(packets_["number_of_samples"])
+                                     if p != nbr_samples_max]
+                            for ind in inds_[::-1]:
+                                start = ind * sample_bytes + bytes_ * packets_["number_of_samples"][ind]  # noqa: E501
+                                end = (ind + 1) * sample_bytes
+                                sample_data = np.delete(sample_data,
+                                                        np.arange(start, end))
                             # either int16 or int32
-                            sample_data = sample_data.flatten().view(dtype)
+                            sample_data = sample_data.view(dtype)
                             # switch endianness, rt130 stores in big endian
                             sample_data = sample_data.byteswap()
                         npts = len(sample_data)
