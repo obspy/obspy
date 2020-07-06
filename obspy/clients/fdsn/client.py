@@ -30,10 +30,16 @@ from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_SERVICES,
                      FDSNException, FDSNRedirectException, FDSNNoDataException,
-                     FDSNTimeoutException, FDSNAuthenticationException,
+                     FDSNTimeoutException,
+                     FDSNNoAuthenticationServiceException,
                      FDSNBadRequestException, FDSNNoServiceException,
-                     FDSNServerException, FDSNTooManyRequestsException,
-                     FDSNRequestTooLargeException)
+                     FDSNInternalServerException, FDSNTooManyRequestsException,
+                     FDSNRequestTooLargeException,
+                     FDSNServiceUnavailableException,
+                     FDSNUnauthorizedException,
+                     FDSNForbiddenException,
+                     FDSNDoubleAuthenticationException,
+                     FDSNInvalidRequestException)
 from .wadl_parser import WADLParser
 
 from urllib.parse import urlencode
@@ -272,7 +278,7 @@ class Client(object):
             if user is not None or password is not None:
                 msg = ("EIDA authentication token provided, but "
                        "user and password are also given.")
-                raise FDSNAuthenticationException(msg)
+                raise FDSNDoubleAuthenticationException(msg)
             self.set_eida_token(eida_token)
 
     @property
@@ -348,7 +354,7 @@ class Client(object):
             msg = ("EIDA token authentication requested but service at '{}' "
                    "does not specify /dataselect/auth in the "
                    "dataselect/application.wadl.").format(self.base_url)
-            raise FDSNAuthenticationException(msg)
+            raise FDSNNoAuthenticationServiceException(msg)
 
         token_file = None
         # check if there's a local file that matches the provided string
@@ -1716,19 +1722,15 @@ def raise_on_error(code, data):
         raise FDSNNoDataException("No data available for request.",
                                   server_info)
     elif code == 400:
-        if "token is expired" in server_info:
-            raise FDSNAuthenticationException('Token is expired',
-                                              server_info)
-        else:
-            msg = ("Bad request. If you think your request was valid "
-                   "please contact the developers.")
-            raise FDSNBadRequestException(msg, server_info)
+        msg = ("Bad request. If you think your request was valid "
+               "please contact the developers.")
+        raise FDSNBadRequestException(msg, server_info)
     elif code == 401:
-        raise FDSNAuthenticationException("Unauthorized, authentication "
-                                          "required.", server_info)
+        raise FDSNUnauthorizedException("Unauthorized, authentication "
+                                        "required.", server_info)
     elif code == 403:
-        raise FDSNAuthenticationException("Authentication failed.",
-                                          server_info)
+        raise FDSNForbiddenException("Authentication failed.",
+                                     server_info)
     elif code == 413:
         raise FDSNRequestTooLargeException("Request would result in too much "
                                            "data. Denied by the datacenter. "
@@ -1744,11 +1746,12 @@ def raise_on_error(code, data):
                "limiting'). Wait before making a new request.", server_info)
         raise FDSNTooManyRequestsException(msg, server_info)
     elif code == 500:
-        raise FDSNServerException("Service responds: Internal server error",
-                                  server_info)
+        raise FDSNInternalServerException("Service responds: Internal server "
+                                          "error", server_info)
     elif code == 503:
-        raise FDSNNoServiceException("Service temporarily unavailable",
-                                     server_info)
+        raise FDSNServiceUnavailableException("Service temporarily "
+                                              "unavailable",
+                                              server_info)
     elif code is None:
         if "timeout" in str(data).lower() or "timed out" in str(data).lower():
             raise FDSNTimeoutException("Timed Out")
@@ -1836,7 +1839,7 @@ def setup_query_dict(service, locs, kwargs):
             if locs[PARAMETER_ALIASES[key]] is not None:
                 msg = ("two parameters were provided for the same option: "
                        "%s, %s" % (key, PARAMETER_ALIASES[key]))
-                raise FDSNBadRequestException(msg)
+                raise FDSNInvalidRequestException(msg)
     # short aliases are not mentioned in the downloaded WADLs, so we have
     # to map it here according to the official FDSN WS documentation
     for key in list(kwargs.keys()):
@@ -1886,7 +1889,7 @@ def get_bulk_string(bulk, arguments):
     if not bulk:
         msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
                "of all available data")
-        raise FDSNBadRequestException(msg)
+        raise FDSNInvalidRequestException(msg)
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
     if isinstance(bulk, collections_abc.Iterable) \

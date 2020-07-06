@@ -34,11 +34,16 @@ from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNNoDataException,
                                        FDSNRequestTooLargeException,
                                        FDSNBadRequestException,
-                                       FDSNAuthenticationException,
+                                       FDSNNoAuthenticationServiceException,
                                        FDSNTimeoutException,
                                        FDSNNoServiceException,
-                                       FDSNServerException,
+                                       FDSNInternalServerException,
                                        FDSNTooManyRequestsException,
+                                       FDSNServiceUnavailableException,
+                                       FDSNUnauthorizedException,
+                                       FDSNForbiddenException,
+                                       FDSNDoubleAuthenticationException,
+                                       FDSNInvalidRequestException,
                                        DEFAULT_SERVICES)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
@@ -116,7 +121,7 @@ class ClientTestCase(unittest.TestCase):
         msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
                "of all available data")
         for bad_input in [[], '', None]:
-            with self.assertRaises(FDSNBadRequestException) as e:
+            with self.assertRaises(FDSNInvalidRequestException) as e:
                 get_bulk_string(bulk=bad_input, arguments={})
             self.assertEqual(e.exception.args[0], msg)
 
@@ -805,7 +810,8 @@ class ClientTestCase(unittest.TestCase):
     def test_conflicting_params(self):
         """
         """
-        self.assertRaises(FDSNBadRequestException, self.client.get_stations,
+        self.assertRaises(FDSNInvalidRequestException,
+                          self.client.get_stations,
                           network="IU", net="IU")
 
     def test_help_function_with_iris(self):
@@ -1476,7 +1482,7 @@ class ClientTestCase(unittest.TestCase):
                           self.client.get_stations)
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_authentication_exception(self, download_url_mock):
+    def test_authentication_exceptions(self, download_url_mock):
         """
         Verify that a request with missing authentication raises an
         identifiable exception
@@ -1484,22 +1490,18 @@ class ClientTestCase(unittest.TestCase):
         with mock.patch("obspy.clients.fdsn.client.Client._has_eida_auth",
                         new_callable=mock.PropertyMock,
                         return_value=False):
-            self.assertRaises(FDSNAuthenticationException, Client,
+            self.assertRaises(FDSNNoAuthenticationServiceException, Client,
                               eida_token="TEST")
 
-        self.assertRaises(FDSNAuthenticationException, Client, "IRIS",
+        self.assertRaises(FDSNDoubleAuthenticationException, Client, "IRIS",
                           eida_token="TEST", user="TEST")
 
-        download_url_mock.return_value = (400, io.BytesIO(b"token is expired"))
-        self.assertRaises(FDSNAuthenticationException,
-                          self.client.get_stations)
-
         download_url_mock.return_value = (401, None)
-        self.assertRaises(FDSNAuthenticationException,
+        self.assertRaises(FDSNUnauthorizedException,
                           self.client.get_stations)
 
         download_url_mock.return_value = (403, None)
-        self.assertRaises(FDSNAuthenticationException,
+        self.assertRaises(FDSNForbiddenException,
                           self.client.get_stations)
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
@@ -1510,17 +1512,23 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.return_value = (None, "timeout")
         self.assertRaises(FDSNTimeoutException, self.client.get_stations)
 
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_no_service_exception(self, download_url_mock):
+    def test_no_service_exception(self):
         """
-        Verify that opening a client to a provider without FDSN service or
-        a service temporarily unavailable raises an identifiable exception
+        Verify that opening a client to a provider without FDSN service raises
+        an identifiable exception
         """
         self.assertRaises(FDSNNoServiceException, Client,
                           "http://nofdsnservice.org")
 
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_service_unavailable_exception(self, download_url_mock):
+        """
+        Verify that opening a client to a service temporarily unavailable
+        raises an identifiable exception
+        """
         download_url_mock.return_value = (503, None)
-        self.assertRaises(FDSNNoServiceException, self.client.get_stations)
+        self.assertRaises(FDSNServiceUnavailableException,
+                          self.client.get_stations)
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_bad_request_exception(self, download_url_mock):
@@ -1536,7 +1544,8 @@ class ClientTestCase(unittest.TestCase):
         Verify that a server error raises an identifiable exception
         """
         download_url_mock.return_value = (500, None)
-        self.assertRaises(FDSNServerException, self.client.get_stations)
+        self.assertRaises(FDSNInternalServerException,
+                          self.client.get_stations)
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_too_many_requests_exception(self, download_url_mock):

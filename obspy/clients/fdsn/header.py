@@ -15,46 +15,76 @@ from obspy import UTCDateTime, __version__
 
 
 class FDSNException(Exception):
+    status_code = None
+
     def __init__(self, value, server_info=None):
         if server_info is not None:
-            value = "\n".join([value, "Detailed response of server:", "",
-                               server_info])
+            if self.status_code is None:
+                value = "\n".join([value, "Detailed response of server:", "",
+                                   server_info])
+            else:
+                value = "\n".join([value,
+                                   "HTTP Status code: {}"
+                                   .format(self.status_code),
+                                   "Detailed response of server:",
+                                   "",
+                                   server_info])
         super(FDSNException, self).__init__(value)
 
 
-class FDSNRedirectException(FDSNException):
-    pass
-
-
 class FDSNNoDataException(FDSNException):
-    pass
+    status_code = 204
+
+
+class FDSNBadRequestException(FDSNException):
+    status_code = 400
+
+
+class FDSNUnauthorizedException(FDSNException):
+    status_code = 401
+
+
+class FDSNForbiddenException(FDSNException):
+    status_code = 403
 
 
 class FDSNRequestTooLargeException(FDSNException):
-    pass
+    status_code = 413
 
 
 class FDSNTooManyRequestsException(FDSNException):
-    pass
+    status_code = 429
+
+
+class FDSNInternalServerException(FDSNException):
+    status_code = 500
+
+
+class FDSNServiceUnavailableException(FDSNException):
+    status_code = 503
 
 
 class FDSNTimeoutException(FDSNException):
     pass
 
 
-class FDSNAuthenticationException(FDSNException):
+class FDSNRedirectException(FDSNException):
     pass
 
 
-class FDSNBadRequestException(FDSNException):
+class FDSNNoAuthenticationServiceException(FDSNException):
+    pass
+
+
+class FDSNDoubleAuthenticationException(FDSNException):
+    pass
+
+
+class FDSNInvalidRequestException(FDSNException):
     pass
 
 
 class FDSNNoServiceException(FDSNException):
-    pass
-
-
-class FDSNServerException(FDSNException):
     pass
 
 
