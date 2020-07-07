@@ -29,7 +29,17 @@ from obspy.core.compatibility import collections_abc
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_SERVICES,
-                     FDSNException, FDSNRedirectException, FDSNNoDataException)
+                     FDSNException, FDSNRedirectException, FDSNNoDataException,
+                     FDSNTimeoutException,
+                     FDSNNoAuthenticationServiceException,
+                     FDSNBadRequestException, FDSNNoServiceException,
+                     FDSNInternalServerException, FDSNTooManyRequestsException,
+                     FDSNRequestTooLargeException,
+                     FDSNServiceUnavailableException,
+                     FDSNUnauthorizedException,
+                     FDSNForbiddenException,
+                     FDSNDoubleAuthenticationException,
+                     FDSNInvalidRequestException)
 from .wadl_parser import WADLParser
 
 from urllib.parse import urlencode
@@ -268,7 +278,7 @@ class Client(object):
             if user is not None or password is not None:
                 msg = ("EIDA authentication token provided, but "
                        "user and password are also given.")
-                raise FDSNException(msg)
+                raise FDSNDoubleAuthenticationException(msg)
             self.set_eida_token(eida_token)
 
     @property
@@ -344,7 +354,7 @@ class Client(object):
             msg = ("EIDA token authentication requested but service at '{}' "
                    "does not specify /dataselect/auth in the "
                    "dataselect/application.wadl.").format(self.base_url)
-            raise FDSNException(msg)
+            raise FDSNNoAuthenticationServiceException(msg)
 
         token_file = None
         # check if there's a local file that matches the provided string
@@ -1494,7 +1504,8 @@ class Client(object):
                 redirect_messages.add(str(wadl))
                 continue
             elif decoded_wadl == "timeout":
-                raise FDSNException("Timeout while requesting '%s'." % url)
+                raise FDSNTimeoutException("Timeout while requesting '%s'."
+                                           % url)
 
             if "dataselect" in url:
                 wadl_parser = WADLParser(wadl)
@@ -1537,7 +1548,7 @@ class Client(object):
             msg = ("No FDSN services could be discovered at '%s'. This could "
                    "be due to a temporary service outage or an invalid FDSN "
                    "service address." % self.base_url)
-            raise FDSNException(msg)
+            raise FDSNNoServiceException(msg)
 
         # Cache.
         if self.debug is True:
@@ -1713,16 +1724,18 @@ def raise_on_error(code, data):
     elif code == 400:
         msg = ("Bad request. If you think your request was valid "
                "please contact the developers.")
-        raise FDSNException(msg, server_info)
+        raise FDSNBadRequestException(msg, server_info)
     elif code == 401:
-        raise FDSNException("Unauthorized, authentication required.",
-                            server_info)
+        raise FDSNUnauthorizedException("Unauthorized, authentication "
+                                        "required.", server_info)
     elif code == 403:
-        raise FDSNException("Authentication failed.", server_info)
+        raise FDSNForbiddenException("Authentication failed.",
+                                     server_info)
     elif code == 413:
-        raise FDSNException("Request would result in too much data. "
-                            "Denied by the datacenter. Split the request "
-                            "in smaller parts", server_info)
+        raise FDSNRequestTooLargeException("Request would result in too much "
+                                           "data. Denied by the datacenter. "
+                                           "Split the request in smaller "
+                                           "parts", server_info)
     # Request URI too large.
     elif code == 414:
         msg = ("The request URI is too large. Please contact the ObsPy "
@@ -1731,15 +1744,17 @@ def raise_on_error(code, data):
     elif code == 429:
         msg = ("Sent too many requests in a given amount of time ('rate "
                "limiting'). Wait before making a new request.", server_info)
-        raise FDSNException(msg, server_info)
+        raise FDSNTooManyRequestsException(msg, server_info)
     elif code == 500:
-        raise FDSNException("Service responds: Internal server error",
-                            server_info)
+        raise FDSNInternalServerException("Service responds: Internal server "
+                                          "error", server_info)
     elif code == 503:
-        raise FDSNException("Service temporarily unavailable", server_info)
+        raise FDSNServiceUnavailableException("Service temporarily "
+                                              "unavailable",
+                                              server_info)
     elif code is None:
-        if "timeout" in str(data).lower():
-            raise FDSNException("Timed Out")
+        if "timeout" in str(data).lower() or "timed out" in str(data).lower():
+            raise FDSNTimeoutException("Timed Out")
         else:
             raise FDSNException("Unknown Error (%s): %s" % (
                 (str(data.__class__.__name__), str(data))))
@@ -1824,7 +1839,7 @@ def setup_query_dict(service, locs, kwargs):
             if locs[PARAMETER_ALIASES[key]] is not None:
                 msg = ("two parameters were provided for the same option: "
                        "%s, %s" % (key, PARAMETER_ALIASES[key]))
-                raise FDSNException(msg)
+                raise FDSNInvalidRequestException(msg)
     # short aliases are not mentioned in the downloaded WADLs, so we have
     # to map it here according to the official FDSN WS documentation
     for key in list(kwargs.keys()):
@@ -1874,7 +1889,7 @@ def get_bulk_string(bulk, arguments):
     if not bulk:
         msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
                "of all available data")
-        raise FDSNException(msg)
+        raise FDSNInvalidRequestException(msg)
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
     if isinstance(bulk, collections_abc.Iterable) \
