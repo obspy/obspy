@@ -448,7 +448,7 @@ class ReftekTestCase(unittest.TestCase):
             "  | Packet Type   |  Event #  | Station | Channel #         |",
             "  |   |  Unit ID  |    | Data Stream #  |   |  # of samples |",
             "  |   |   |  Exper.#   |   |  |  |      |   |    |          |",
-            "0000 EH AE4C  0  416  427  0 C0 KW1    200         "
+            "0000 EH AE4C  0  416  427  0 C0 KW1   200.0        "
             "2015-10-09T22:50:51.000000Z",
             "0001 DT AE4C  0 1024  427  0 C0             0  549 "
             "2015-10-09T22:50:51.000000Z",
@@ -504,7 +504,7 @@ class ReftekTestCase(unittest.TestCase):
             "2015-10-09T22:51:21.595000Z",
             "0027 DT AE4C  0 1024  427  0 C0             0   67 "
             "2015-10-09T22:51:25.055000Z",
-            "0028 ET AE4C  0  416  427  0 C0 KW1    200         "
+            "0028 ET AE4C  0  416  427  0 C0 KW1   200.0        "
             "2015-10-09T22:50:51.000000Z",
             "(detailed packet information with: "
             "'print(Reftek130.__str__(compact=False))')"]
@@ -617,6 +617,7 @@ class ReftekTestCase(unittest.TestCase):
         self.assertEqual(len(st[2]), 2090)
         for tr, (_, expected) in zip(st, sorted(npz.items())):
             np.testing.assert_array_equal(expected, tr.data)
+
 
 def suite():
     return unittest.makeSuite(ReftekTestCase, "test")
