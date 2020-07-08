@@ -30,4 +30,4 @@ coverage:
         enabled: no
 
 # no comments in PRs
-comment: off
+comment: false

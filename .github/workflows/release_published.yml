@@ -1,0 +1,40 @@
+name: release
+on:
+  release:
+    types:
+      - published
+
+jobs:
+
+  publish_package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup conda
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          python-version: 3.7
+          activate-environment: test
+          environment-file: .github/test_conda_env.yml
+          condarc-file: .github/test_condarc.yml
+
+      - name: install obpsy
+        shell: bash -l {0}
+        run: |
+          pip install -e .
+
+      - name: create dist
+        shell: bash -l {0}
+        run: |
+          rm -rf build
+          rm -rf dist
+          python setup.py sdist bdist_wheel
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}

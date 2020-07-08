@@ -1,0 +1,41 @@
+name: calculate coverage
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  calc_coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup conda
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          python-version: 3.7
+          activate-environment: test
+          environment-file: .github/test_conda_env.yml
+          condarc-file: .github/test_condarc.yml
+
+      - name: install obspy
+        shell: bash -l {0}
+        run: |
+          pip install -e .
+
+      - name: run test suite
+        shell: bash -l {0}
+        run: |
+          coverage run --rcfile=.coveragerc -m obspy.scripts.runtests --no-flake8 -n gh-actions -r
+          coverage xml -o coverage.xml
+
+      - name: upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
