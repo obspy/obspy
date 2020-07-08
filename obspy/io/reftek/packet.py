@@ -154,7 +154,7 @@ class EHPacket(Packet):
             sta = (self.station_name.strip() +
                    self.station_name_extension.strip())
             info = ("{:04d} {:2s} {:4s} {:2d} {:4d} {:4d} {:2d} {:2s} "
-                    "{:5s} {:4f}         {!s}").format(
+                    "{:5s} {:4.1f}        {!s}").format(
                         self.packet_sequence, self.type.decode(),
                         self.unit_id.decode(), self.experiment_number,
                         self.byte_count, self.event_number,
