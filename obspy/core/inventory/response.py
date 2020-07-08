@@ -1627,11 +1627,11 @@ class Response(ComparingObject):
         :rtype: :class:`numpy.ndarray`
         :returns: frequency response at requested frequencies
         """
+        hsmw = hide_sensitivity_mismatch_warning  # PEP8
         output, chan = self._call_eval_resp_for_frequencies(
             frequencies, output=output, start_stage=start_stage,
             end_stage=end_stage,
-            hide_sensitivity_mismatch_warning=
-            hide_sensitivity_mismatch_warning)
+            hide_sensitivity_mismatch_warning=hsmw)
         return output
 
     def get_evalresp_response(self, t_samp, nfft, output="VEL",
@@ -1676,10 +1676,10 @@ class Response(ComparingObject):
         except Exception:
             freqs = np.linspace(0, fy, int(nfft // 2) + 1).astype(np.float64)
 
+        hsmw = hide_sensitivity_mismatch_warning  # PEP8
         response = self.get_evalresp_response_for_frequencies(
             freqs, output=output, start_stage=start_stage, end_stage=end_stage,
-            hide_sensitivity_mismatch_warning=
-            hide_sensitivity_mismatch_warning)
+            hide_sensitivity_mismatch_warning=hsmw)
         return response, freqs
 
     def __str__(self):
