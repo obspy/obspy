@@ -1116,6 +1116,10 @@ class Response(ComparingObject):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
+        :type fast: bool
+        :param fast: When set to True (default), then the calculation of the
+            response for a large number of frequencies is sped up through
+            interpolation. Relevant for traces with >10000 samples.
         :rtype: :class:`numpy.ndarray`
         :returns: frequency response at requested frequencies
         """
@@ -1140,10 +1144,10 @@ class Response(ComparingObject):
         stages = self.response_stages[slice(start_stage, end_stage)]
         # map 0j here to ensure the curve is complex values
         # which it may not be if we start on a gain stage
-        resp = stages[0].get_response(frequencies=frequencies) + 0j
+        resp = stages[0].get_response(frequencies=frequencies, fast=fast) + 0j
         for stage in stages[1:]:
             try:
-                resp *= stage.get_response(frequencies=frequencies)
+                resp *= stage.get_response(frequencies=frequencies, fast=fast)
             except AttributeError:
                 raise NotImplementedError
 
@@ -1152,9 +1156,9 @@ class Response(ComparingObject):
         if start_stage == 0 and end_stage is None:
             f = np.array([self.instrument_sensitivity.frequency])
             stages = self.response_stages[slice(start_stage, end_stage)]
-            ref = stages[0].get_response(frequencies=f)
+            ref = stages[0].get_response(frequencies=f, fast=fast)
             for stage in stages[1:]:
-                ref *= stage.get_response(frequencies=f)
+                ref *= stage.get_response(frequencies=f, fast=fast)
             resp *= self.instrument_sensitivity.value / np.abs(ref[0])
 
         # By now the response is in the input units of the first stage.
