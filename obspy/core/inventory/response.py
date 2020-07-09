@@ -335,7 +335,7 @@ class PolesZerosResponseStage(ResponseStage):
         else:
             raise ValueError(msg)
 
-    def get_response(self, frequencies):
+    def get_response(self, frequencies, fast=True):
         """
         Produce the response curve from this stage's data for a given
         range of frequencies
@@ -344,11 +344,33 @@ class PolesZerosResponseStage(ResponseStage):
         """
         # Has to be imported here for now to avoid circular imports.
         from obspy.signal.invsim import paz_to_freq_resp
-        return paz_to_freq_resp(
+        if len(frequencies) > 10000 and fast:
+            resp_frequencies = np.linspace(frequencies[0], frequencies[-1],
+                                           10000, dtype=np.float64)
+        else:
+            resp_frequencies = frequencies
+            
+        resp = paz_to_freq_resp(
             poles=np.array(self._poles, dtype=np.complex128),
             zeros=np.array(self._zeros, dtype=np.complex128),
             scale_fac=self.normalization_factor,
-            frequencies=frequencies, freq=False) * self.stage_gain
+            frequencies=resp_frequencies, freq=False) * self.stage_gain
+        
+        # If required, do interpolation of amplitude and phase of the response
+        if len(frequencies) > 10000 and fast:
+            amp = np.abs(resp)
+            phase = np.radians(np.unwrap(np.angle(resp, deg=False))) / np.pi
+            amp = scipy.interpolate.InterpolatedUnivariateSpline(
+                    resp_frequencies, amp, k=2)(frequencies)
+            phase = scipy.interpolate.InterpolatedUnivariateSpline(
+                    resp_frequencies, phase, k=2)(frequencies)
+            final_resp = np.zeros_like(frequencies) + 0j
+            final_resp.real = amp * np.cos(phase)
+            final_resp.imag = amp * np.sin(phase)
+        else:
+            final_resp = resp
+        
+        return final_resp
 
     def calc_normalization_factor(self):
         """
@@ -520,7 +542,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
         else:
             raise ValueError(msg)
 
-    def get_response(self, frequencies):
+    def get_response(self, frequencies, fast=True):
         """
         Produce the response curve from this coefficient
         response stage for a range of frequencies
@@ -533,6 +555,13 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
         sr = self.decimation_input_sample_rate
         frequencies = frequencies / sr * np.pi * 2.0
+        
+        # Check if interpolation is required so save time for long traces.
+        if len(frequencies) > 10000 and fast:
+            resp_frequencies = np.linspace(frequencies[0], frequencies[-1],
+                                           10000, dtype=np.float64)
+        else:
+            resp_frequencies = frequencies
 
         # While most cases we expect this to represent a Bkt. 54 and
         # thus not have a denominator, if the transfer function is
@@ -540,7 +569,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
         if self.cf_transfer_function_type == "DIGITAL":
             if len(self.denominator) == 0:
                 resp = scipy.signal.freqz(b=self.numerator,
-                                          a=[1.], worN=frequencies)[1]
+                                          a=[1.], worN=resp_frequencies)[1]
 
                 gain_freq_amp = np.abs(scipy.signal.freqz(
                     b=self.numerator, a=[1.],
@@ -551,7 +580,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 # we get the numerator and denominator and do the math
                 # on them in their representation as magnitude and
                 # phase rather than standard complex format
-                w = frequencies  # rename to be concise and match conventions
+                w = resp_frequencies  # rename to be concise and match conventions
 
                 resp = np.zeros_like(w) + 0j
                 for idx, num in enumerate(self.numerator):
@@ -569,14 +598,15 @@ class CoefficientsTypeResponseStage(ResponseStage):
         elif self.cf_transfer_function_type == "ANALOG (RADIANS/SECOND)":
             # XXX: Untested so far!
             resp = scipy.signal.freqs(
-                b=self.numerator, a=[1.0], worN=frequencies / (np.pi * 2.0))[1]
+                b=self.numerator, a=[1.0], worN=resp_frequencies\
+                    / (np.pi * 2.0))[1]
             gain_freq_amp = np.abs(scipy.signal.freqs(
                 b=self.numerator, a=[1.0],
                 worN=[self.stage_gain_frequency / (np.pi * 2.0)])[1])
         elif self.cf_transfer_function_type == "ANALOG (HERTZ)":
             # XXX: Untested so far!
             resp = scipy.signal.freqs(
-                b=self.numerator, a=[1.0], worN=frequencies)[1]
+                b=self.numerator, a=[1.0], worN=resp_frequencies)[1]
             gain_freq_amp = np.abs(scipy.signal.freqs(
                 b=self.numerator, a=[1.0],
                 worN=[self.stage_gain_frequency])[1])
@@ -598,7 +628,17 @@ class CoefficientsTypeResponseStage(ResponseStage):
         # evalresp does this and thus so do we.
         if self.cf_transfer_function_type != 'DIGITAL':
             amp *= self.stage_gain / gain_freq_amp
-        final_resp = np.empty_like(resp)
+        
+        # If "fast", then interpolate the amplitude and phase onto the
+        # originally requested frequencies.
+        if len(frequencies) > 10000 and fast:
+            amp = scipy.interpolate.InterpolatedUnivariateSpline(
+                    resp_frequencies, amp, k=2)(frequencies)
+            phase = scipy.interpolate.InterpolatedUnivariateSpline(
+                    resp_frequencies, phase, k=2)(frequencies)
+            final_resp = np.zeros_like(frequencies) + 0j
+        else:
+            final_resp = np.empty_like(resp)
         final_resp.real = amp * np.cos(phase)
         final_resp.imag = amp * np.sin(phase)
 
@@ -782,9 +822,23 @@ class FIRResponseStage(ResponseStage):
             coefficients = self._coefficients
         sr = self.decimation_input_sample_rate
         frequencies = frequencies / sr * np.pi * 2.0
-        resp = scipy.signal.freqz(b=coefficients, a=[1.], worN=frequencies)[1]
-        # Here we zero the phase (FIR) and return the amplitude
-        amp = np.abs(resp) * self.stage_gain + 0j
+        # Compute response for a limited number of frequencies and interpolate
+        # inbetween - 10000 appears fine for high precision and speed.
+        if len(frequencies) > 10000 and fast:
+            resp_frequencies = np.linspace(frequencies[0], frequencies[-1],
+                                           10000, dtype=np.float64)
+            resp = scipy.signal.freqz(b=coefficients, a=[1.],
+                                      worN=resp_frequencies)[1]
+            amp = np.abs(resp) * self.stage_gain + 0j
+            amp = amp.real
+            amp = scipy.interpolate.InterpolatedUnivariateSpline(
+                    resp_frequencies, amp, k=2)(frequencies)
+        else:
+            resp = scipy.signal.freqz(b=coefficients, a=[1.],
+                                      worN=frequencies)[1]
+            # Here we zero the phase (FIR) and return the amplitude
+            amp = np.abs(resp) * self.stage_gain + 0j
+            amp = amp.real
         return amp
 
 
@@ -1040,7 +1094,7 @@ class Response(ComparingObject):
         return response, freqs
 
     def get_response(self, frequencies, output="velocity", start_stage=None,
-                     end_stage=None):
+                     end_stage=None, fast=True):
         """
         Returns the frequency response for given frequencies.
         :type frequencies: list of float
@@ -1749,9 +1803,9 @@ class Response(ComparingObject):
                                             max_f))
 
                 amp = scipy.interpolate.InterpolatedUnivariateSpline(
-                    f, amp, k=3)(frequencies)
+                    f, amp, k=2)(frequencies)
                 phase = scipy.interpolate.InterpolatedUnivariateSpline(
-                    f, phase, k=3)(frequencies)
+                    f, phase, k=2)(frequencies)
 
                 # Set static offset to zero.
                 amp[amp == 0] = 0
