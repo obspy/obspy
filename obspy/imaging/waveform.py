@@ -32,7 +32,7 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import create_empty_data_chunk, MATPLOTLIB_VERSION
+from obspy.core.util import create_empty_data_chunk
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
 from obspy.imaging.util import (_set_xaxis_obspy_dates, _id_key, _timestring)
 
@@ -374,12 +374,7 @@ class WaveformPlotting(object):
                 sharex = None
             else:
                 sharex = self.axis[0]
-            # TODO remove once minimum required matplotlib version reaches 2.0
-            # see matplotlib/matplotlib#5501
-            if MATPLOTLIB_VERSION < [2, 0]:
-                axis_facecolor_kwargs = dict(axisbg=self.background_color)
-            else:
-                axis_facecolor_kwargs = dict(facecolor=self.background_color)
+            axis_facecolor_kwargs = dict(facecolor=self.background_color)
             ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
                                       sharex=sharex, **axis_facecolor_kwargs)
             self.axis.append(ax)
@@ -441,12 +436,7 @@ class WaveformPlotting(object):
                 self.repeat = intervals
         # Create axis to plot on.
         if self.background_color:
-            # TODO remove once minimum required matplotlib version reaches 2.0
-            # see matplotlib/matplotlib#5501
-            if MATPLOTLIB_VERSION < [2, 0]:
-                axis_facecolor_kwargs = dict(axisbg=self.background_color)
-            else:
-                axis_facecolor_kwargs = dict(facecolor=self.background_color)
+            axis_facecolor_kwargs = dict(facecolor=self.background_color)
             ax = self.fig.add_subplot(1, 1, 1, **axis_facecolor_kwargs)
         else:
             ax = self.fig.add_subplot(1, 1, 1)
@@ -1301,13 +1291,6 @@ class WaveformPlotting(object):
         # Should be integrated by version 2.1
         # (see https://github.com/matplotlib/matplotlib/pull/6560)
         fill_kwargs = {"lw": 0}
-        # There's a strange problem with matplotlib 1.4.1 and 1.4.2.
-        # It seems to not render the filled PolyCollection
-        # objects if linewidth is set to 0 (see http://tests.obspy.org/48219/,
-        # #1502). To circumvent this, use a line color with alpha 0 (and a very
-        # small linewidth).
-        if [1, 4, 1] <= MATPLOTLIB_VERSION < [1, 4, 3]:
-            fill_kwargs = {"edgecolor": (0, 0, 0, 0), "lw": 0.01}
 
         if self.sect_orientation == 'vertical':
             self.fillfun = functools.partial(ax.fill_betweenx, **fill_kwargs)

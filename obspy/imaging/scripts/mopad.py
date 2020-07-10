@@ -2368,12 +2368,7 @@ class BeachBall:
         size = min(width, height)
 
         fig = plt.figure(34, figsize=(size, size))
-        # TODO remove once minimum required matplotlib version reaches 2.0
-        # see matplotlib/matplotlib#5501
-        if MATPLOTLIB_VERSION < [2, 0]:
-            axis_facecolor_kwargs = dict(axisbg='#d5de9c')
-        else:
-            axis_facecolor_kwargs = dict(facecolor='#d5de9c')
+        axis_facecolor_kwargs = dict(facecolor='#d5de9c')
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True,
                           **axis_facecolor_kwargs)
 

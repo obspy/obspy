@@ -11,15 +11,14 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
 from obspy.core.inventory import Response
 from obspy.core.util import NUMPY_VERSION
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import (
-    ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
+    ImageComparison, ImageComparisonException)
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
 from obspy.signal.spectral_estimation import earthquake_models
@@ -479,10 +478,8 @@ class PsdTestCase(unittest.TestCase):
 
         # test one particular selection as an image test
         # mpl < 2.2 has slightly offset ticks/ticklabels, so needs a higher
-        # tolerance (see e.g. http://tests.obspy.org/102260)
+        # `reltol` tolerance (see e.g. http://tests.obspy.org/102260)
         reltol = 1.5
-        if MATPLOTLIB_VERSION < [2, 2]:
-            reltol = 5
         plot_kwargs = dict(max_percentage=15, xaxis_frequency=True,
                            period_lim=(0.01, 50))
         ppsd.calculate_histogram(**stack_criteria_list[1])
@@ -526,8 +523,6 @@ class PsdTestCase(unittest.TestCase):
                                  plt_close_all_exit=False) as ic:
                 # rms of the valid comparison above is ~31,
                 # rms of the invalid comparison we test here is ~36
-                if MATPLOTLIB_VERSION == [1, 1, 1]:
-                    ic.tol = 33
                 ppsd._plot_histogram(fig=fig, draw=True)
                 with np.errstate(under='ignore'):
                     fig.savefig(ic.name)

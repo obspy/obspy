@@ -179,18 +179,12 @@ class InventoryTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        # Bug in matplotlib 1.4.0 - 1.4.x:
-        # See https://github.com/matplotlib/matplotlib/issues/4012
-        reltol = 1.0
-        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 5, 0]:
-            reltol = 2.0
-
         inv = read_inventory()
         t = UTCDateTime(2008, 7, 1)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "inventory_response.png",
-                                 reltol=reltol) as ic:
+            with ImageComparison(self.image_dir,
+                                 "inventory_response.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 inv.plot_response(0.01, output="ACC", channel="*N",
                                   station="[WR]*", time=t, outfile=ic.name)
