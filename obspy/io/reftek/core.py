@@ -311,6 +311,7 @@ class Reftek130(object):
                                                              encoding)
                         elif encoding in ('16', '32'):
                             dtype = {'16': np.int16, '32': np.int32}[encoding]
+                            bytes_ = {'16': 2, '32': 4}[encoding]
                             # just fix endianness and use correct dtype
                             sample_data = np.require(
                                 packets_['payload'],
@@ -318,7 +319,6 @@ class Reftek130(object):
                             # account for number of samples
                             sample_bytes = sample_data.shape[1]
                             sample_data = sample_data.flatten()
-                            bytes_ = int(encoding) // 8
                             nbr_samples_max = sample_bytes // bytes_
                             inds_ = [ind for ind, p in
                                      enumerate(packets_["number_of_samples"])
