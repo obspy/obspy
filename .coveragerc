@@ -1,5 +1,7 @@
 [run]
-omit = "*/data/*","*/docs/*"
+omit = 
+       */data/*
+       */docs/*
 source = obspy/*
 
 [report]
