@@ -179,14 +179,12 @@ class InventoryTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        reltol = 1.0
-
         inv = read_inventory()
         t = UTCDateTime(2008, 7, 1)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "inventory_response.png",
-                                 reltol=reltol) as ic:
+            with ImageComparison(self.image_dir,
+                                 "inventory_response.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 inv.plot_response(0.01, output="ACC", channel="*N",
                                   station="[WR]*", time=t, outfile=ic.name)

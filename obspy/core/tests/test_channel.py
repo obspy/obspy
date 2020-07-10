@@ -41,13 +41,10 @@ class ChannelTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        reltol = 1.0
-
         cha = read_inventory()[0][0][0]
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "channel_response.png",
-                                 reltol=reltol) as ic:
+            with ImageComparison(self.image_dir, "channel_response.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 cha.plot(0.005, outfile=ic.name)
 

@@ -36,13 +36,10 @@ class StationTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        reltol = 1.0
-
         sta = read_inventory()[0][0]
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "station_response.png",
-                                 reltol=reltol) as ic:
+            with ImageComparison(self.image_dir, "station_response.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 sta.plot(0.05, channel="*[NE]", outfile=ic.name)
 
@@ -50,14 +47,11 @@ class StationTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        reltol = 1.0
-
         sta = read_inventory()[0][0]
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             with ImageComparison(self.image_dir,
-                                 "station_response_degrees.png",
-                                 reltol=reltol) as ic:
+                                 "station_response_degrees.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 sta.plot(0.05, channel="*[NE]", plot_degrees=True,
                          outfile=ic.name)

@@ -125,13 +125,11 @@ class ResponseTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        reltol = 1.0
-
         resp = read_inventory()[0][0][0].response
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "response_response.png",
-                                 reltol=reltol) as ic:
+            with ImageComparison(self.image_dir,
+                                 "response_response.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                           outfile=ic.name)
@@ -140,14 +138,11 @@ class ResponseTestCase(unittest.TestCase):
         """
         Tests the response plot in degrees.
         """
-        reltol = 1.0
-
         resp = read_inventory()[0][0][0].response
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             with ImageComparison(self.image_dir,
-                                 "response_response_degrees.png",
-                                 reltol=reltol) as ic:
+                                 "response_response_degrees.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                           plot_degrees=True, outfile=ic.name)

@@ -126,14 +126,11 @@ class NetworkTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        reltol = 1.0
-
         net = read_inventory()[0]
         t = UTCDateTime(2008, 7, 1)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "network_response.png",
-                                 reltol=reltol) as ic:
+            with ImageComparison(self.image_dir, "network_response.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 net.plot_response(0.002, output="DISP", channel="B*E",
                                   time=t, outfile=ic.name)
