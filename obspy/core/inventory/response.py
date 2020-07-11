@@ -1663,7 +1663,7 @@ class Response(ComparingObject):
             used (disregarding all later stages).
         :type hide_sensitivity_mismatch_warning: bool
         :param hide_sensitivity_mismatch_warning: Hide the evalresp warning
-            that computed and reported sensitivities don't match.
+            that computed and reported sensitivities do not match.
         :rtype: tuple of two arrays
         :returns: frequency response and corresponding frequencies
         """
