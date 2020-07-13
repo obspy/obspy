@@ -909,7 +909,8 @@ class Response(ComparingObject):
     """
     # The various types of units.
     core_unit_enum = Enum(["displacement", "velocity", "acceleration",
-                           "volts", "counts", "tesla", "pressure"])
+                           "volts", "counts", "tesla", "pressure",
+                           "temperature"])
 
     def __init__(self, resource_id=None, instrument_sensitivity=None,
                  instrument_polynomial=None, response_stages=None):
@@ -991,6 +992,8 @@ class Response(ComparingObject):
             return self.core_unit_enum.tesla
         elif unit in ("PA", "MBAR"):
             return self.core_unit_enum.pressure
+        elif unit in ("CELSIUS",):
+            return self.core_unit_enum.temperature
         else:
             raise ValueError("Unknown unit '%s'." % unit)
 
@@ -1099,9 +1102,14 @@ class Response(ComparingObject):
 
         # By now the response is in the input units of the first stage.
         diff_and_int_map = {
+            # Displacement -> velocity - acceleration.
             self.core_unit_enum.displacement: 0,
             self.core_unit_enum.velocity: 1,
-            self.core_unit_enum.acceleration: 2}
+            self.core_unit_enum.acceleration: 2,
+            # XXX: Kind of strange but evalresp does the same for these.
+            self.core_unit_enum.volts: 1,
+            self.core_unit_enum.temperature: 0,
+            }
         unit_type = self._get_unit_type(self.response_stages[0].input_units)
         if unit_type not in diff_and_int_map:
             raise ValueError("Cannot convert %s to %s." % (unit_type, output))
