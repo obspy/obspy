@@ -2,6 +2,9 @@ master
 ======
 
 Changes:
+ - obspy.core:
+   * add option to suppress evalresp sensitivity mismatch warning when removing
+     instrument response (see #2677)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.io.xseed:
