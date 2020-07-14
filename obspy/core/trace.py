@@ -2679,7 +2679,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             Any additional kwargs will be passed on to
             :meth:`obspy.core.inventory.response.Response.get_evalresp_response`,
             see documentation of that method for further customization (e.g.
-            start/stop stage).
+            start/stop stage and hiding overall sensitivity mismatch warning).
 
         .. note::
 
