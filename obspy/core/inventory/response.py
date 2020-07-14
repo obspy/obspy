@@ -177,7 +177,13 @@ class ResponseStage(ComparingObject):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
-    def get_response(self, frequencies):
+    def get_response(self, frequencies, fast=True):
+        """
+        :param frequencies: Frequency range to get resp curve over
+        :param fast: Dummy argument to make function similar to
+                     get_response-functions for other stage-types.
+        :return: The curve describing this response stage
+        """
         # if a response stage isn't a subclass then it's likely a gain stage.
         return np.ones_like(frequencies) * self.stage_gain
 
