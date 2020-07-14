@@ -351,13 +351,13 @@ class PolesZerosResponseStage(ResponseStage):
                                            10000, dtype=np.float64)
         else:
             resp_frequencies = frequencies
-            
+
         resp = paz_to_freq_resp(
             poles=np.array(self._poles, dtype=np.complex128),
             zeros=np.array(self._zeros, dtype=np.complex128),
             scale_fac=self.normalization_factor,
             frequencies=resp_frequencies, freq=False) * self.stage_gain
-        
+
         # If required, do interpolation of amplitude and phase of the response
         if len(frequencies) > 10000 and fast:
             amp = np.abs(resp)
@@ -371,7 +371,7 @@ class PolesZerosResponseStage(ResponseStage):
             final_resp.imag = amp * np.sin(phase)
         else:
             final_resp = resp
-        
+
         return final_resp
 
     def calc_normalization_factor(self):
@@ -559,7 +559,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
         sr = self.decimation_input_sample_rate
         frequencies = frequencies / sr * np.pi * 2.0
-        
+
         # Check if interpolation is required so save time for long traces.
         if len(frequencies) > 10000 and fast:
             resp_frequencies = np.linspace(frequencies[0], frequencies[-1],
@@ -584,7 +584,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 # we get the numerator and denominator and do the math
                 # on them in their representation as magnitude and
                 # phase rather than standard complex format
-                
+
                 # rename to be concise and match conventions
                 w = resp_frequencies
 
@@ -604,8 +604,8 @@ class CoefficientsTypeResponseStage(ResponseStage):
         elif self.cf_transfer_function_type == "ANALOG (RADIANS/SECOND)":
             # XXX: Untested so far!
             resp = scipy.signal.freqs(
-                b=self.numerator, a=[1.0], worN=resp_frequencies\
-                    / (np.pi * 2.0))[1]
+                b=self.numerator, a=[1.0], worN=resp_frequencies
+                / (np.pi * 2.0))[1]
             gain_freq_amp = np.abs(scipy.signal.freqs(
                 b=self.numerator, a=[1.0],
                 worN=[self.stage_gain_frequency / (np.pi * 2.0)])[1])
@@ -634,7 +634,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
         # evalresp does this and thus so do we.
         if self.cf_transfer_function_type != 'DIGITAL':
             amp *= self.stage_gain / gain_freq_amp
-        
+
         # If "fast", then interpolate the amplitude and phase onto the
         # originally requested frequencies.
         if len(frequencies) > 10000 and fast:
@@ -817,7 +817,7 @@ class FIRResponseStage(ResponseStage):
     def get_response(self, frequencies, fast=True):
         """
         Given Computes the
-        :param frequencies: Discrete frequencies to calculate response for. 
+        :param frequencies: Discrete frequencies to calculate response for.
         :param fast: Indicates whether to speed up calculation through
             interpolation.
         """
