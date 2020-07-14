@@ -1070,7 +1070,8 @@ class Response(ComparingObject):
             raise ValueError("Unknown unit '%s'." % unit)
 
     def get_response_for_window_size(self, t_samp, nfft, output="VEL",
-                                     start_stage=None, end_stage=None):
+                                     start_stage=None, end_stage=None,
+                                     fast=True):
         """
         Returns frequency response and corresponding frequencies for
         the given sample rate delta and FFT window size
@@ -1108,7 +1109,8 @@ class Response(ComparingObject):
             freqs = np.linspace(0, fy, int(nfft // 2) + 1).astype(np.float64)
 
         response = self.get_response(
-            freqs, output=output, start_stage=start_stage, end_stage=end_stage)
+            freqs, output=output, start_stage=start_stage, end_stage=end_stage,
+            fast=fast)
         return response, freqs
 
     def get_response(self, frequencies, output="velocity", start_stage=None,
