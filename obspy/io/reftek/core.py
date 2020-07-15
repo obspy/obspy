@@ -340,8 +340,7 @@ class Reftek130(object):
                                     start_of_packet + number_of_samples_max
                                 sample_data = np.delete(
                                     sample_data,
-                                    np.arange(start_empty_part,
-                                              end_empty_part))
+                                    slice(start_empty_part, end_empty_part))
                             # switch endianness, rt130 stores in big endian
                             sample_data = sample_data.byteswap()
                         npts = len(sample_data)
