@@ -320,11 +320,11 @@ class Reftek130(object):
                             sample_bytes = sample_data.shape[1]
                             sample_data = sample_data.flatten()
                             nbr_samples_max = sample_bytes // bytes_
-                            inds_ = [ind for ind, p in
-                                     enumerate(packets_["number_of_samples"])
-                                     if p != nbr_samples_max]
-                            for ind in inds_[::-1]:
-                                start = ind * sample_bytes + bytes_ * packets_["number_of_samples"][ind]  # noqa: E501
+                            for ind, num_samps in reversed([
+                                    (ind, num_samps) for ind, num_samps in
+                                    enumerate(packets_["number_of_samples"])
+                                    if num_samps != nbr_samples_max]):
+                                start = ind * sample_bytes + bytes_ * num_samps
                                 end = (ind + 1) * sample_bytes
                                 sample_data = np.delete(sample_data,
                                                         np.arange(start, end))
