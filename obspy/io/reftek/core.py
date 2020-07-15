@@ -320,7 +320,7 @@ class Reftek130(object):
                             # account for number of samples, i.e. some packets
                             # might not use the full payload size but have
                             # empty parts at the end that need to be cut away
-                            nbr_samples_max = sample_data.shape[1]
+                            number_of_samples_max = sample_data.shape[1]
                             sample_data = sample_data.flatten()
                             # go through packets starting at the back,
                             # otherwise indices of later packets would change
@@ -328,11 +328,20 @@ class Reftek130(object):
                             for ind, num_samps in reversed([
                                     (ind, num_samps) for ind, num_samps in
                                     enumerate(packets_["number_of_samples"])
-                                    if num_samps != nbr_samples_max]):
-                                start = ind * nbr_samples_max + num_samps
-                                end = (ind + 1) * nbr_samples_max
-                                sample_data = np.delete(sample_data,
-                                                        np.arange(start, end))
+                                    if num_samps != number_of_samples_max]):
+                                # looping backwards we can easily find the
+                                # start of each packet, since the earlier
+                                # packets are still untouched and at maximum
+                                # sample length in our big array with all
+                                # packets
+                                start_of_packet = ind * number_of_samples_max
+                                start_empty_part = start_of_packet + num_samps
+                                end_empty_part = \
+                                    start_of_packet + number_of_samples_max
+                                sample_data = np.delete(
+                                    sample_data,
+                                    np.arange(start_empty_part,
+                                              end_empty_part))
                             # switch endianness, rt130 stores in big endian
                             sample_data = sample_data.byteswap()
                         npts = len(sample_data)
