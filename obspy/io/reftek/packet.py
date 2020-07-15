@@ -7,6 +7,7 @@ handled. These three packets have more or less the same meaning in the first 8
 bytes of the payload which makes the first 24 bytes the so called extended
 header.
 """
+import sys
 import warnings
 
 import numpy as np
@@ -87,6 +88,13 @@ EH_PAYLOAD = {
     "digital_filter_list": (878, 16, _decode_ascii),
     "position": (894, 26, _decode_ascii),
     "reftek_120": (920, 80, None)}
+
+
+# mseed steim compression is big endian
+if sys.byteorder == 'little':
+    SWAPFLAG = 1
+else:
+    SWAPFLAG = 0
 
 
 class Packet(object):
@@ -338,7 +346,7 @@ def _unpack_C0_C2_data_fast(packets, encoding):  # noqa
     for _npts in packets["number_of_samples"]:
         decode_steim(
             s, 960, _npts, unpacked_data[pos:], _npts, None,
-            1)
+            SWAPFLAG)
         pos += _npts
         s += offset
     return unpacked_data
@@ -376,7 +384,7 @@ def _unpack_C0_C2_data_safe(packets, encoding):  # noqa
         _npts = p["number_of_samples"]
         decode_steim(
             p["payload"][40:].ctypes.data, 960, _npts,
-            unpacked_data[pos:], _npts, None, 1)
+            unpacked_data[pos:], _npts, None, SWAPFLAG)
         pos += _npts
     return unpacked_data
 

@@ -310,7 +310,8 @@ class Reftek130(object):
                             sample_data = _unpack_C0_C2_data(packets_,
                                                              encoding)
                         elif encoding in ('16', '32'):
-                            dtype = {'16': np.int16, '32': np.int32}[encoding]
+                            # rt130 stores in big endian
+                            dtype = {'16': '>i2', '32': '>i4'}[encoding]
                             # just fix endianness and use correct dtype
                             sample_data = np.require(
                                 packets_['payload'],
@@ -341,8 +342,6 @@ class Reftek130(object):
                                 sample_data = np.delete(
                                     sample_data,
                                     slice(start_empty_part, end_empty_part))
-                            # switch endianness, rt130 stores in big endian
-                            sample_data = sample_data.byteswap()
                         npts = len(sample_data)
 
                     tr = Trace(data=sample_data, header=copy.deepcopy(header))

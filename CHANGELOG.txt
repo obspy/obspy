@@ -10,6 +10,8 @@ Changes:
    * fix reading data in '16' and '32' encodings, when packets do not use
      the fixed maximum amount of available number of samples per data packet
      (see #2678)
+   * properly take into account native system byteorder, should fix reading
+     rt130 data on big endian systems (see #2678)
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
