@@ -5,9 +5,11 @@ Changes:
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.io.reftek:
-   * store samples per second as a float (see #2678)
-   * allow for packets that are not filling the fixed amount of data space in
-     the packet when upacking data with '16' and '32' encodings (see #2678)
+   * enable reading data with floating point sampling rates like low sampling
+     rate state-of-health channels (see #2678)
+   * fix reading data in '16' and '32' encodings, when packets do not use
+     the fixed maximum amount of available number of samples per data packet
+     (see #2678)
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
