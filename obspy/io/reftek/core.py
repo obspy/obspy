@@ -311,25 +311,28 @@ class Reftek130(object):
                                                              encoding)
                         elif encoding in ('16', '32'):
                             dtype = {'16': np.int16, '32': np.int32}[encoding]
-                            bytes_ = {'16': 2, '32': 4}[encoding]
                             # just fix endianness and use correct dtype
                             sample_data = np.require(
                                 packets_['payload'],
                                 requirements=['C_CONTIGUOUS'])
-                            # account for number of samples
-                            sample_bytes = sample_data.shape[1]
+                            # either int16 or int32
+                            sample_data = sample_data.view(dtype)
+                            # account for number of samples, i.e. some packets
+                            # might not use the full payload size but have
+                            # empty parts at the end that need to be cut away
+                            nbr_samples_max = sample_data.shape[1]
                             sample_data = sample_data.flatten()
-                            nbr_samples_max = sample_bytes // bytes_
+                            # go through packets starting at the back,
+                            # otherwise indices of later packets would change
+                            # while looping
                             for ind, num_samps in reversed([
                                     (ind, num_samps) for ind, num_samps in
                                     enumerate(packets_["number_of_samples"])
                                     if num_samps != nbr_samples_max]):
-                                start = ind * sample_bytes + bytes_ * num_samps
-                                end = (ind + 1) * sample_bytes
+                                start = ind * nbr_samples_max + num_samps
+                                end = (ind + 1) * nbr_samples_max
                                 sample_data = np.delete(sample_data,
                                                         np.arange(start, end))
-                            # either int16 or int32
-                            sample_data = sample_data.view(dtype)
                             # switch endianness, rt130 stores in big endian
                             sample_data = sample_data.byteswap()
                         npts = len(sample_data)
