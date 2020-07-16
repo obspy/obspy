@@ -337,8 +337,8 @@ class Reftek130(object):
                                 # packets
                                 start_of_packet = ind * number_of_samples_max
                                 start_empty_part = start_of_packet + num_samps
-                                end_empty_part = \
-                                    start_of_packet + number_of_samples_max
+                                end_empty_part = (start_of_packet +
+                                                  number_of_samples_max)
                                 sample_data = np.delete(
                                     sample_data,
                                     slice(start_empty_part, end_empty_part))
