@@ -40,6 +40,10 @@ class ReftekTestCase(unittest.TestCase):
         self.reftek_file = os.path.join(self.datapath, self.reftek_filename)
         self.reftek_file_steim2 = os.path.join(self.datapath,
                                                '104800000_000093F8')
+        self.reftek_file_16 = os.path.join(
+            self.datapath, '065520000_013EE8A0.rt130')
+        self.reftek_file_16_npz = os.path.join(
+            self.datapath, '065520000_013EE8A0.npz')
         self.reftek_file_32 = os.path.join(
             self.datapath, '230000005_0036EE80_cropped.rt130')
         self.reftek_file_32_npz = os.path.join(
@@ -444,7 +448,7 @@ class ReftekTestCase(unittest.TestCase):
             "  | Packet Type   |  Event #  | Station | Channel #         |",
             "  |   |  Unit ID  |    | Data Stream #  |   |  # of samples |",
             "  |   |   |  Exper.#   |   |  |  |      |   |    |          |",
-            "0000 EH AE4C  0  416  427  0 C0 KW1    200         "
+            "0000 EH AE4C  0  416  427  0 C0 KW1    200.        "
             "2015-10-09T22:50:51.000000Z",
             "0001 DT AE4C  0 1024  427  0 C0             0  549 "
             "2015-10-09T22:50:51.000000Z",
@@ -500,7 +504,7 @@ class ReftekTestCase(unittest.TestCase):
             "2015-10-09T22:51:21.595000Z",
             "0027 DT AE4C  0 1024  427  0 C0             0   67 "
             "2015-10-09T22:51:25.055000Z",
-            "0028 ET AE4C  0  416  427  0 C0 KW1    200         "
+            "0028 ET AE4C  0  416  427  0 C0 KW1    200.        "
             "2015-10-09T22:50:51.000000Z",
             "(detailed packet information with: "
             "'print(Reftek130.__str__(compact=False))')"]
@@ -591,6 +595,26 @@ class ReftekTestCase(unittest.TestCase):
         npz = np.load(self.reftek_file_32_npz)
         # compare it
         self.assertEqual(len(st), 3)
+        for tr, (_, expected) in zip(st, sorted(npz.items())):
+            np.testing.assert_array_equal(expected, tr.data)
+
+    def test_reading_file_with_encoding_16(self):
+        """
+        Test reading a file with encoding '16' (uncompressed 16 bit integer)
+
+        Only tests unpacked sample data, everything else should be covered by
+        existing tests.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            st = _read_reftek130(self.reftek_file_16)
+        # read expected data
+        npz = np.load(self.reftek_file_16_npz)
+        # compare it
+        self.assertEqual(len(st), 3)
+        self.assertEqual(len(st[0]), 2090)
+        self.assertEqual(len(st[1]), 2090)
+        self.assertEqual(len(st[2]), 2090)
         for tr, (_, expected) in zip(st, sorted(npz.items())):
             np.testing.assert_array_equal(expected, tr.data)
 

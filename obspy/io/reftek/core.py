@@ -255,10 +255,6 @@ class Reftek130(object):
             elif eh.data_format == b"C2":
                 encoding = 'C2'
             elif eh.data_format == b"16":
-                msg = ("Reftek130 encoding '16' is implemented but untested, "
-                       "please provide example data for testing at "
-                       "https://github.com/obspy/obspy/issues/new.")
-                warnings.warn(msg)
                 encoding = '16'
             elif eh.data_format == b"32":
                 encoding = '32'
@@ -314,15 +310,38 @@ class Reftek130(object):
                             sample_data = _unpack_C0_C2_data(packets_,
                                                              encoding)
                         elif encoding in ('16', '32'):
-                            dtype = {'16': np.int16, '32': np.int32}[encoding]
+                            # rt130 stores in big endian
+                            dtype = {'16': '>i2', '32': '>i4'}[encoding]
                             # just fix endianness and use correct dtype
                             sample_data = np.require(
                                 packets_['payload'],
                                 requirements=['C_CONTIGUOUS'])
                             # either int16 or int32
-                            sample_data = sample_data.flatten().view(dtype)
-                            # switch endianness, rt130 stores in big endian
-                            sample_data = sample_data.byteswap()
+                            sample_data = sample_data.view(dtype)
+                            # account for number of samples, i.e. some packets
+                            # might not use the full payload size but have
+                            # empty parts at the end that need to be cut away
+                            number_of_samples_max = sample_data.shape[1]
+                            sample_data = sample_data.flatten()
+                            # go through packets starting at the back,
+                            # otherwise indices of later packets would change
+                            # while looping
+                            for ind, num_samps in reversed([
+                                    (ind, num_samps) for ind, num_samps in
+                                    enumerate(packets_["number_of_samples"])
+                                    if num_samps != number_of_samples_max]):
+                                # looping backwards we can easily find the
+                                # start of each packet, since the earlier
+                                # packets are still untouched and at maximum
+                                # sample length in our big array with all
+                                # packets
+                                start_of_packet = ind * number_of_samples_max
+                                start_empty_part = start_of_packet + num_samps
+                                end_empty_part = (start_of_packet +
+                                                  number_of_samples_max)
+                                sample_data = np.delete(
+                                    sample_data,
+                                    slice(start_empty_part, end_empty_part))
                         npts = len(sample_data)
 
                     tr = Trace(data=sample_data, header=copy.deepcopy(header))

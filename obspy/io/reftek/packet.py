@@ -7,6 +7,7 @@ handled. These three packets have more or less the same meaning in the first 8
 bytes of the payload which makes the first 24 bytes the so called extended
 header.
 """
+import sys
 import warnings
 
 import numpy as np
@@ -65,7 +66,7 @@ EH_PAYLOAD = {
     "station_name": (36, 4, _decode_ascii),
     "stream_name": (40, 16, _decode_ascii),
     "_reserved_2": (56, 8, _decode_ascii),
-    "sampling_rate": (64, 4, int),
+    "sampling_rate": (64, 4, float),
     "trigger_type": (68, 4, _decode_ascii),
     "trigger_time": (72, 16, _parse_long_time),
     "first_sample_time": (88, 16, _parse_long_time),
@@ -87,6 +88,13 @@ EH_PAYLOAD = {
     "digital_filter_list": (878, 16, _decode_ascii),
     "position": (894, 26, _decode_ascii),
     "reftek_120": (920, 80, None)}
+
+
+# mseed steim compression is big endian
+if sys.byteorder == 'little':
+    SWAPFLAG = 1
+else:
+    SWAPFLAG = 0
 
 
 class Packet(object):
@@ -154,12 +162,12 @@ class EHPacket(Packet):
             sta = (self.station_name.strip() +
                    self.station_name_extension.strip())
             info = ("{:04d} {:2s} {:4s} {:2d} {:4d} {:4d} {:2d} {:2s} "
-                    "{:5s} {:4d}         {!s}").format(
+                    "{:5s}  {:4s}        {!s}").format(
                         self.packet_sequence, self.type.decode(),
                         self.unit_id.decode(), self.experiment_number,
                         self.byte_count, self.event_number,
                         self.data_stream_number, self.data_format.decode(),
-                        sta, self.sampling_rate, self.time)
+                        sta, str(self.sampling_rate)[:4], self.time)
         else:
             info = []
             for key in self._headers:
@@ -338,7 +346,7 @@ def _unpack_C0_C2_data_fast(packets, encoding):  # noqa
     for _npts in packets["number_of_samples"]:
         decode_steim(
             s, 960, _npts, unpacked_data[pos:], _npts, None,
-            1)
+            SWAPFLAG)
         pos += _npts
         s += offset
     return unpacked_data
@@ -376,7 +384,7 @@ def _unpack_C0_C2_data_safe(packets, encoding):  # noqa
         _npts = p["number_of_samples"]
         decode_steim(
             p["payload"][40:].ctypes.data, 960, _npts,
-            unpacked_data[pos:], _npts, None, 1)
+            unpacked_data[pos:], _npts, None, SWAPFLAG)
         pos += _npts
     return unpacked_data
 
