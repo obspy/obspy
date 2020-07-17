@@ -457,7 +457,7 @@ Changes:
    * UTCDateTime is now based on nanoseconds (long) instead of a unix
      timestamp in microseconds (float) - resulting in higher precision and
      support for years 1-9999 (see #1325)
-   * Ensure that Trace.data is always C-contiguous in memory (see #1732)
+   * Ensure that Trace.data is always C-contiguous in memory (see #1704)
    * Event/ResourceIdentifier is now object aware, meaning even if two
      objects share a resource_id the distinct objects will be returned with
      the get_referred_object method provided both are still in scope. If one
