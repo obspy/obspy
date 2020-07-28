@@ -1598,7 +1598,8 @@ class Response(ComparingObject):
         return output, chan
 
     def get_evalresp_response_for_frequencies(
-            self, frequencies, output="VEL", start_stage=None, end_stage=None):
+            self, frequencies, output="VEL", start_stage=None, end_stage=None,
+            hide_sensitivity_mismatch_warning=False):
         """
         Returns frequency response for given frequencies using evalresp.
 
@@ -1620,16 +1621,22 @@ class Response(ComparingObject):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
+        :type hide_sensitivity_mismatch_warning: bool
+        :param hide_sensitivity_mismatch_warning: Hide the evalresp warning
+            that computed and reported sensitivities do not match.
         :rtype: :class:`numpy.ndarray`
         :returns: frequency response at requested frequencies
         """
+        hsmw = hide_sensitivity_mismatch_warning  # PEP8
         output, chan = self._call_eval_resp_for_frequencies(
             frequencies, output=output, start_stage=start_stage,
-            end_stage=end_stage)
+            end_stage=end_stage,
+            hide_sensitivity_mismatch_warning=hsmw)
         return output
 
     def get_evalresp_response(self, t_samp, nfft, output="VEL",
-                              start_stage=None, end_stage=None):
+                              start_stage=None, end_stage=None,
+                              hide_sensitivity_mismatch_warning=False):
         """
         Returns frequency response and corresponding frequencies using
         evalresp.
@@ -1654,6 +1661,9 @@ class Response(ComparingObject):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
+        :type hide_sensitivity_mismatch_warning: bool
+        :param hide_sensitivity_mismatch_warning: Hide the evalresp warning
+            that computed and reported sensitivities do not match.
         :rtype: tuple of two arrays
         :returns: frequency response and corresponding frequencies
         """
@@ -1666,8 +1676,10 @@ class Response(ComparingObject):
         except Exception:
             freqs = np.linspace(0, fy, int(nfft // 2) + 1).astype(np.float64)
 
+        hsmw = hide_sensitivity_mismatch_warning  # PEP8
         response = self.get_evalresp_response_for_frequencies(
-            freqs, output=output, start_stage=start_stage, end_stage=end_stage)
+            freqs, output=output, start_stage=start_stage, end_stage=end_stage,
+            hide_sensitivity_mismatch_warning=hsmw)
         return response, freqs
 
     def __str__(self):
