@@ -95,6 +95,27 @@ class PHATestCase(unittest.TestCase):
         self.assertIn('BLB.UBR.00.BHZ', waveform_ids)
         self.assertIn('BLA.WERD.11.DH', waveform_ids)
 
+    def test_eventid_map(self):
+        cat = read_events(self.fname) + read_events(self.fname2)
+        cat[0].resource_id = 'X'
+        cat[1].resource_id = '1000f'
+        cat[2].resource_id = 'Y'
+        cat[3].resource_id = '1234567890Z'
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            with self.assertWarnsRegex(UserWarning, 'Missing mag'):
+                eventid_map = cat.write(tempfile, 'HYPODDPHA')
+            cat2 = read_events(tempfile, eventid_map=eventid_map)
+            cat3 = read_events(tempfile)
+        self.assertEqual(cat2[0].resource_id.id.split('/')[-1], 'X')
+        self.assertEqual(cat2[1].resource_id.id.split('/')[-1], '1000f')
+        self.assertEqual(cat2[2].resource_id.id.split('/')[-1], 'Y')
+        self.assertEqual(cat2[3].resource_id.id.split('/')[-1], '1234567890Z')
+        self.assertEqual(cat3[0].resource_id.id.split('/')[-1], '1000')
+        self.assertEqual(cat3[1].resource_id.id.split('/')[-1], '1001')
+        self.assertEqual(cat3[2].resource_id.id.split('/')[-1], '1002')
+        self.assertEqual(cat3[3].resource_id.id.split('/')[-1], '123456789')
+
     def test_write_pha(self):
         with open(self.fname) as f:
             filedata = f.read()

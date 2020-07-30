@@ -23,12 +23,14 @@ from obspy.core.util.misc import _seed_id_map
 DEG2KM = 111.2
 
 
-def _block2event(block, seed_map, id_default, ph2comp):
+def _block2event(block, seed_map, id_default, ph2comp, eventid_map):
     """
     Read HypoDD event block
     """
     lines = block.strip().splitlines()
     yr, mo, dy, hr, mn, sc, la, lo, dp, mg, eh, ez, rms, id_ = lines[0].split()
+    if eventid_map is not None and id_ in eventid_map:
+        id_ = eventid_map[id_]
     time = UTCDateTime(int(yr), int(mo), int(dy), int(hr), int(mn), float(sc),
                        strict=False)
     laterr = None if float(eh) == 0 else float(eh) / DEG2KM
@@ -92,7 +94,8 @@ def _is_pha(filename):
 
 
 def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
-              ph2comp={'P': 'Z', 'S': 'N'}, encoding='utf-8'):
+              ph2comp={'P': 'Z', 'S': 'N'}, eventid_map=None,
+              encoding='utf-8'):
     """
     Read a HypoDD PHA file and returns an ObsPy Catalog object.
 
@@ -130,10 +133,12 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
     """
+    if eventid_map is not None:
+        eventid_map = {v: k for k, v in eventid_map.items()}
     seed_map = _seed_id_map(inventory, id_map)
     with io.open(filename, 'r', encoding=encoding) as f:
         text = f.read()
-    events = [_block2event(block, seed_map, id_default, ph2comp)
+    events = [_block2event(block, seed_map, id_default, ph2comp, eventid_map)
               for block in text.split('#')[1:]]
     return Catalog(events)
 
@@ -145,8 +150,30 @@ PHA1 = ('#  {o.time.year}    {o.time.month}   {o.time.day}    {o.time.hour}   '
 PHA2 = '{p.waveform_id.station_code}  {relt:.4f}  {weight}  {p.phase_hint}\n'
 
 
-def _write_pha(catalog, filename,
-               **kwargs):  # @UnusedVariable,
+def _map_eventid(evid, eventid_map, used_ids, counter):
+    idpha = evid
+    if evid in eventid_map:
+        idpha = eventid_map[evid]
+        if not idpha.isdigit() or len(idpha) > 9:
+            msg = ('Invalid value in eventid_map, pha event id has to be '
+                   'digit with max 9 digits')
+            raise ValueError(msg)
+        return idpha
+    if not idpha.isdigit():
+        idpha = ''.join(char for char in idpha if char.isdigit())
+    if len(idpha) > 9:
+        idpha = idpha[:9]
+    while idpha == '' or idpha in used_ids:
+        idpha = str(counter[0])
+        counter[0] += 1
+    if idpha != evid:
+        eventid_map[evid] = idpha
+    used_ids.add(idpha)
+    return idpha, eventid_map
+
+
+def _write_pha(catalog, filename, eventid_map=None,
+               **kwargs):  # @UnusedVariable
     """
     Write a HypoDD PHA file.
 
@@ -161,6 +188,9 @@ def _write_pha(catalog, filename,
     :param filename: Filename to write or open file-like object.
     """
     lines = []
+    if eventid_map is None:
+        eventid_map = {}
+    args_map_eventid = (eventid_map, set(eventid_map.values()), [1000])
     for event in catalog:
         try:
             ori = event.preferred_origin() or event.origins[0]
@@ -174,7 +204,9 @@ def _write_pha(catalog, filename,
             mag = 0.
         else:
             mag = mag.mag
-        evid = event.resource_id.id.split('/')[-1]
+        evid = event.resource_id.id
+        evid = evid.split('/')[-1] if '/' in evid else evid
+        evid, eventid_map = _map_eventid(evid, *args_map_eventid)
         rms = ori.quality.standard_error
         rms = rms if rms is not None else 0.0
         he1 = ori.latitude_errors.uncertainty
@@ -202,6 +234,7 @@ def _write_pha(catalog, filename,
             fh.write(data)
     except TypeError:
         filename.write(data)
+    return None if len(eventid_map) == 0 else eventid_map
 
 
 if __name__ == '__main__':
