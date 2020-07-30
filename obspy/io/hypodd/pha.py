@@ -124,6 +124,56 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
     return Catalog(events)
 
 
+PHA1 = ('#  {o.time.year}    {o.time.month}   {o.time.day}    {o.time.hour}   '
+        '{o.time.minute}   {o.time.second}.{o.time.microsecond:06d}   '
+        '{o.latitude}   {o.longitude}   {depth}   {mag}  0.0   0.0   {rms}'
+        '       {evid}\n')
+PHA2 = '{p.waveform_id.station_code}  {reltime:.4f}  1.0  {p.phase_hint}\n'
+
+
+def _write_pha(catalog, filename,
+               **kwargs):  # @UnusedVariable,
+    """
+    Write a HypoDD PHA file.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.event.Catalog.write` method of an
+        ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
+
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
+    :param catalog: The ObsPy Catalog object to write.
+    :type filename: str or file
+    :param filename: Filename to write or open file-like object.
+    """
+    lines = []
+    for event in catalog:
+        try:
+            ori = event.preferred_origin() or event.origins[0]
+        except IndexError:
+            continue
+        try:
+            mag = event.preferred_magnitude() or event.magnitudes[0]
+        except IndexError:
+            continue
+        else:
+            mag = mag.mag
+        rms = ori.quality if ori.quality is not None else 0.0
+        evid = event.resource_id.id.split('/')[-1]
+        line = PHA1.format(o=ori, depth=ori.depth / 1000, mag=mag, rms=rms,
+                           evid=evid)
+        lines.append(line)
+        for pick in event.picks:
+            line = PHA2.format(p=pick, reltime=pick.time - ori.time)
+            lines.append(line)
+    data = ''.join(lines)
+    try:
+        with open(filename, 'w') as fh:
+            fh.write(data)
+    except TypeError:
+        filename.write(data)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
