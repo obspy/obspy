@@ -104,7 +104,7 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
         ObsPy :func:`~obspy.core.event.read_events` function, call this
         instead.
 
-    The optional parameters all deal with the problem, that the PHA format
+    Most optional parameters deal with the problem, that the PHA format
     only stores station names for the picks, but the Pick object expects
     a SEED id. A SEED id template is retrieved for each station by the
     following procedure:
@@ -128,6 +128,10 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
         substituted by station code and component.
     :param dict ph2comp: mapping of phases to components
         (default: {'P': 'Z', 'S': 'N'})
+    :param dict eventid_map: Desired mapping of hypodd event ids (dict values)
+        to event resource ids (dict keys).
+        The returned dictionary of the HYPODDPHA writing operation can be used.
+        By default, ids are not mapped.
     :param str encoding: encoding used (default: utf-8)
 
     :rtype: :class:`~obspy.core.event.Catalog`
@@ -186,6 +190,16 @@ def _write_pha(catalog, filename, eventid_map=None,
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
+    :param dict eventid_map: Desired mapping of event resource ids (dict keys)
+        to hypodd event ids (dict values).
+        HYPODD expects integer event ids with maximal 9 digits. If the event
+        resource id is not present in the mapping,
+        the event resource id is stripped of all non-digit characters and
+        truncated to a length of 9 chars. If this method does not generate a
+        valid hypodd event id, a counter starting at 1000 is used.
+
+    :returns: Dictionary eventid_map with mapping of event resource id to
+        hypodd event id. Items are only present if both ids are different.
     """
     lines = []
     if eventid_map is None:
