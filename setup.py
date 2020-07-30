@@ -402,6 +402,7 @@ ENTRY_POINTS = {
     'obspy.plugin.event.HYPODDPHA': [
         'isFormat = obspy.io.hypodd.pha:_is_pha',
         'readFormat = obspy.io.hypodd.pha:_read_pha',
+        'writeFormat = obspy.io.hypodd.pha:_write_pha',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
