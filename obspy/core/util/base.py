@@ -479,6 +479,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     ======... ===========... ========================================...
     CMTSOLUTION  :mod:`...io.cmtsolution` :func:`..._write_cmtsolution`
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
+    HYPODDPHA :mod:`...io.hypodd`    :func:`obspy.io.hypodd.pha._write_pha`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     KML       :mod:`obspy.io.kml` :func:`obspy.io.kml.core._write_kml`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
