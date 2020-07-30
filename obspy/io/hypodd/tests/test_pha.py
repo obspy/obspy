@@ -4,6 +4,7 @@ import unittest
 import warnings
 
 from obspy import read_events, read_inventory
+from obspy.core.util import NamedTemporaryFile
 from obspy.io.hypodd import pha
 
 
@@ -45,7 +46,7 @@ class PHATestCase(unittest.TestCase):
             pick = arr.pick_id.get_referred_object()
             sta = pick.waveform_id.station_code
             reltime = pick.time - ori.time
-            self.assertAlmostEqual(reltime, target[sta][0], 6)
+            self.assertAlmostEqual(reltime, target[sta][0], 4)
             self.assertEqual(arr.time_weight, target[sta][1])
             self.assertEqual(arr.phase, target[sta][2])
             self.assertEqual(arr.phase, pick.phase_hint)
@@ -85,6 +86,17 @@ class PHATestCase(unittest.TestCase):
         self.assertIn('BLA.WET.11.DHN', waveform_ids)
         self.assertIn('BLB.UBR.00.BHZ', waveform_ids)
         self.assertIn('BLA.WERD.11.DH', waveform_ids)
+
+    def test_write_pha(self):
+        with open(self.fname) as f:
+            filedata = f.read()
+        cat = read_events(self.fname)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            cat.write(tempfile, 'HYPODDPHA')
+            with open(tempfile) as f:
+                filedata2 = f.read()
+        self.assertEqual(filedata2.replace(' ', ''), filedata.replace(' ', ''))
 
 
 def suite():
