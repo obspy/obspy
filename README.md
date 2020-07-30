@@ -16,6 +16,7 @@
 
 [![Discourse status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.obspy.org)](https://discourse.obspy.org)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Announcements Mailing List](https://img.shields.io/badge/mailing%20list-announcements-blue)](https://mail.python.org/mailman3/lists/obspy.python.org/)
 [![Twitter Follow](https://img.shields.io/twitter/follow/obspy?style=social)](https://twitter.com/obspy/)
 [![Liberapay patrons](https://img.shields.io/liberapay/patrons/obspy?style=social)](https://liberapay.com/ObsPy/)
 
