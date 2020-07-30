@@ -11,6 +11,7 @@ HypoDD PHA read support.
 import io
 from math import cos
 from numpy import deg2rad
+from warnings import warn
 
 from obspy import UTCDateTime
 from obspy.core.event import (
@@ -139,9 +140,9 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
 
 PHA1 = ('#  {o.time.year}    {o.time.month}   {o.time.day}    {o.time.hour}   '
         '{o.time.minute}   {o.time.second}.{o.time.microsecond:06d}   '
-        '{o.latitude}   {o.longitude}   {depth}   {mag}  0.0   0.0   {rms}'
+        '{o.latitude}   {o.longitude}   {depth}   {mag}  {he}   {ve}   {rms}'
         '       {evid}\n')
-PHA2 = '{p.waveform_id.station_code}  {reltime:.4f}  1.0  {p.phase_hint}\n'
+PHA2 = '{p.waveform_id.station_code}  {relt:.4f}  {weight}  {p.phase_hint}\n'
 
 
 def _write_pha(catalog, filename,
@@ -164,20 +165,36 @@ def _write_pha(catalog, filename,
         try:
             ori = event.preferred_origin() or event.origins[0]
         except IndexError:
+            warn('Skip writing events with missing origin')
             continue
         try:
             mag = event.preferred_magnitude() or event.magnitudes[0]
         except IndexError:
-            continue
+            warn('Missing magnitude will be set to 0.0')
+            mag = 0.
         else:
             mag = mag.mag
-        rms = ori.quality if ori.quality is not None else 0.0
         evid = event.resource_id.id.split('/')[-1]
-        line = PHA1.format(o=ori, depth=ori.depth / 1000, mag=mag, rms=rms,
+        rms = ori.quality.standard_error
+        rms = rms if rms is not None else 0.0
+        he1 = ori.latitude_errors.uncertainty
+        he2 = ori.longitude_errors.uncertainty
+        shortening = cos(deg2rad(ori.latitude))
+        he = max(0. if he1 is None else he1 * DEG2KM,
+                 0. if he2 is None else he2 * DEG2KM * shortening)
+        ve = ori.depth_errors.uncertainty
+        ve = 0. if ve is None else ve / 1000
+        line = PHA1.format(o=ori, depth=ori.depth / 1000, mag=mag,
+                           he=he, ve=ve, rms=rms,
                            evid=evid)
         lines.append(line)
+        weights = {}
+        for arrival in ori.arrivals:
+            weights[str(arrival.pick_id)] = arrival.time_weight
         for pick in event.picks:
-            line = PHA2.format(p=pick, reltime=pick.time - ori.time)
+            weight = weights.get(str(pick.resource_id), 1.)
+            line = PHA2.format(p=pick, relt=pick.time - ori.time,
+                               weight=weight)
             lines.append(line)
     data = ''.join(lines)
     try:
