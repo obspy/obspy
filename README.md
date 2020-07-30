@@ -15,6 +15,7 @@
 [![Depsy](http://depsy.org/api/package/pypi/obspy/badge.svg)](http://depsy.org/package/python/obspy)
 ![Conda](https://img.shields.io/conda/dn/conda-forge/obspy?label=conda%20downloads)
 
+![Discourse status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.obspy.org)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![Twitter Follow](https://img.shields.io/twitter/follow/obspy?label=Follow%20%40obspy&style=social)
 
