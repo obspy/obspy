@@ -50,6 +50,14 @@ class PHATestCase(unittest.TestCase):
             self.assertEqual(arr.time_weight, target[sta][1])
             self.assertEqual(arr.phase, target[sta][2])
             self.assertEqual(arr.phase, pick.phase_hint)
+        event = cat[1]
+        ori = event.preferred_origin()
+        self.assertAlmostEqual(ori.latitude_errors.uncertainty, 0.0045, 5)
+        self.assertLess(ori.latitude_errors.uncertainty,
+                        ori.longitude_errors.uncertainty)
+        self.assertEqual(ori.depth_errors.uncertainty, 400)
+        self.assertEqual(ori.quality.standard_error, 0.3)
+        self.assertEqual(ori.quality.associated_phase_count, 2)
 
     def test_60s_nan(self):
         """

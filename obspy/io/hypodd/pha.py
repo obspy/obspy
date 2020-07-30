@@ -9,12 +9,17 @@ HypoDD PHA read support.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
+from math import cos
+from numpy import deg2rad
 
 from obspy import UTCDateTime
 from obspy.core.event import (
     Catalog, Event, Origin, Magnitude, Pick, WaveformStreamID, Arrival,
     OriginQuality)
 from obspy.core.util.misc import _seed_id_map
+
+
+DEG2KM = 111.2
 
 
 def _block2event(block, seed_map, id_default, ph2comp):
@@ -25,6 +30,11 @@ def _block2event(block, seed_map, id_default, ph2comp):
     yr, mo, dy, hr, mn, sc, la, lo, dp, mg, eh, ez, rms, id_ = lines[0].split()
     time = UTCDateTime(int(yr), int(mo), int(dy), int(hr), int(mn), float(sc),
                        strict=False)
+    laterr = None if float(eh) == 0 else float(eh) / DEG2KM
+    lonerr = (None if laterr is None or float(la) > 89 else
+              laterr / cos(deg2rad(float(la))))
+    ez = None if float(ez) == 0 else float(ez) * 1000
+    rms = None if float(rms) == 0 else float(rms)
     picks = []
     arrivals = []
     for line in lines[1:]:
@@ -38,13 +48,16 @@ def _block2event(block, seed_map, id_default, ph2comp):
                           time_weight=float(weight))
         picks.append(pick)
         arrivals.append(arrival)
-    qu = None if rms == '0.0' else OriginQuality(standard_error=float(rms))
+    qu = OriginQuality(associated_phase_count=len(picks), standard_error=rms)
     origin = Origin(arrivals=arrivals,
                     resource_id="smi:local/origin/" + id_,
                     quality=qu,
                     latitude=float(la),
                     longitude=float(lo),
                     depth=1000 * float(dp),
+                    latitude_errors=laterr,
+                    longitude_errors=lonerr,
+                    depth_errors=ez,
                     time=time)
     if mg.lower() == 'nan':
         magnitudes = []

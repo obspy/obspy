@@ -9,6 +9,7 @@ Changes:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.io.hypodd
    * add PHA write support
+   * add read support for horizontal and vertical origin uncertainty
  - obspy.io.reftek:
    * enable reading data with floating point sampling rates like low sampling
      rate state-of-health channels (see #2678)
