@@ -13,7 +13,7 @@ env:
   CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
   CONFIG_PATH: obspy_ci_config/conf.json
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  OBSPY_GITHUB_BRANCH: gh-actions
+  OBSPY_GITHUB_BRANCH: release_0.10.0
 
 
 jobs:

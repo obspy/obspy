@@ -8,7 +8,7 @@ on:
 
 # Set globally scoped environmental variables.
 env:
-  OBSPY_GITHUB_BRANCH: gh-actions
+  OBSPY_GITHUB_BRANCH: release_0.10.0
 
 jobs:
   run_tests:
