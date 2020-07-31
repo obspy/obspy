@@ -1,0 +1,63 @@
+# This workflow runs anytime new commits are added to master branch.
+# It simply runs all of ObsPy's default tests on all support OS/python versions
+name: master_default_tests
+on:
+  push:
+    branches:
+      - master
+
+# Set globally scoped environmental variables.
+env:
+  OBSPY_GITHUB_BRANCH: release_0.10.0
+
+jobs:
+  run_tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup conda
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          python-version: ${{ matrix.python-version }}
+          activate-environment: test
+          environment-file: .github/test_conda_env.yml
+
+      - name: print package info
+        shell: bash -l {0}
+        run: |
+          conda info -a
+          conda list
+
+      - name: install obspy
+        shell: bash -l {0}
+        run: |
+          pip install -e .
+
+      - name: install obspy github api
+        shell: bash -l {0}
+        run: |
+          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+
+      - name: run test suite
+        shell: bash -l {0}
+        run: |
+          export MODULELIST=`obshub get-module-list --group default --sep ','`
+          export MODULELISTSPACES=`obshub get-module-list --group default --sep ' '`
+          coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" $MODULELISTSPACES
+          coverage xml -o coverage.xml
+
+      - name: upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          flags: unittests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          file: coverage.xml

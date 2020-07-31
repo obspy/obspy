@@ -1,4 +1,9 @@
-name: validate
+# This workflow runs on all pull requests. It has the following functions:
+#   1. Apply flake8 to the codebase for linting
+#   2. Run either the default test suite, or specific tests if specified in
+#      the PR comments, on all supported python versions and operating systems.
+
+name: pull_request_tests
 on: pull_request
 
 # Set globally scoped environmental variables.
@@ -8,7 +13,7 @@ env:
   CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
   CONFIG_PATH: obspy_ci_config/conf.json
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  OBSPY_GITHUB_BRANCH: gh-actions
+  OBSPY_GITHUB_BRANCH: release_0.10.0
 
 
 jobs:
@@ -83,11 +88,15 @@ jobs:
         with:
           name: obspy_ci_config
 
+      - name: install obspy
+        shell: bash -l {0}
+        run: |
+          pip install -e .
+
       - name: install obspy github api
         shell: bash -l {0}
         run : |
           pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
-
 
       - name: run test suite
         shell: bash -l {0}
