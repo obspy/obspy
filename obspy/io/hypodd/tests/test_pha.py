@@ -120,6 +120,7 @@ class PHATestCase(unittest.TestCase):
         with open(self.fname) as f:
             filedata = f.read()
         cat = read_events(self.fname)
+        cat[0].origins[0].arrivals[0].time_weight = None
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             cat.write(tempfile, 'HYPODDPHA')
