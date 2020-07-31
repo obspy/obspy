@@ -147,11 +147,11 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
     return Catalog(events)
 
 
-PHA1 = ('#  {o.time.year}    {o.time.month}   {o.time.day}    {o.time.hour}   '
-        '{o.time.minute}   {o.time.second}.{o.time.microsecond:06d}   '
-        '{o.latitude}   {o.longitude}   {depth}   {mag}  {he}   {ve}   {rms}'
-        '       {evid}\n')
-PHA2 = '{p.waveform_id.station_code}  {relt:.4f}  {weight}  {p.phase_hint}\n'
+PHA1 = ('# {o.time.year} {o.time.month:>2} {o.time.day:>2} {o.time.hour:>2}'
+        ' {o.time.minute:>2} {o.time.second:>2}.{o.time.microsecond:06d}  '
+        '{o.latitude} {o.longitude} {depth}  {mag}  {he} {ve} {rms}'
+        '   {evid:>9}\n')
+PHA2 = '{p.waveform_id.station_code:6}  {relt:.4f}  {weight}  {p.phase_hint}\n'
 
 
 def _map_eventid(evid, eventid_map, used_ids, counter):
