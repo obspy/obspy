@@ -40,8 +40,9 @@ jobs:
         shell: bash -l {0}
         run: |
           export MODULELIST=`obshub get-module-list --group all --sep ','`
-          export MODULELISTSPACES=`obshub get-module-list --group all --sep ' '`
-          coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" $MODULELISTSPACES
+          export MODULELISTSPACES=`obshub get-module-list --group default --sep ' '`
+          export MODULES=${MODULELISTSPACES//obspy.}
+          coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" $MODULELS
           coverage xml -o coverage.xml
 
       - name: upload coverage
