@@ -3,7 +3,8 @@ import os
 import unittest
 import warnings
 
-from obspy import read_events, read_inventory
+from obspy import read_events, read_inventory, UTCDateTime as UTC
+from obspy.core.event import Catalog, Event, Origin, Pick, WaveformStreamID
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.hypodd import pha
 
@@ -131,6 +132,22 @@ class PHATestCase(unittest.TestCase):
             with open(tempfile) as f:
                 filedata2 = f.read()
         self.assertEqual(filedata2.replace(' ', ''), filedata.replace(' ', ''))
+
+    def test_write_pha_minimal(self):
+        ori = Origin(time=UTC(0), latitude=42, longitude=43, depth=10000)
+        pick = Pick(time=UTC(10), phase_hint='S',
+                    waveform_id=WaveformStreamID(station_code='STA'))
+        del ori.latitude_errors
+        del ori.longitude_errors
+        del ori.depth_errors
+        cat = Catalog([Event(origins=[ori], picks=[pick])])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            with self.assertWarnsRegex(UserWarning, 'Missing mag'):
+                cat.write(tempfile, 'HYPODDPHA')
+            cat2 = read_events(tempfile)
+        self.assertEqual(len(cat2), 1)
+        self.assertEqual(len(cat2[0].picks), 1)
 
 
 def suite():

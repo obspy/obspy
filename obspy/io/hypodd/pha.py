@@ -224,14 +224,16 @@ def _write_pha(catalog, filename, eventid_map=None,
         evid = event.resource_id.id
         evid = evid.split('/')[-1] if '/' in evid else evid
         evid = _map_eventid(evid, *args_map_eventid)
-        rms = ori.quality.standard_error
+        rms = (ori.quality.standard_error if 'quality' in ori and ori.quality
+               else None)
         rms = rms if rms is not None else 0.0
-        he1 = ori.latitude_errors.uncertainty
-        he2 = ori.longitude_errors.uncertainty
+        he1 = ori.latitude_errors.uncertainty if ori.latitude_errors else None
+        he2 = (ori.longitude_errors.uncertainty if ori.longitude_errors
+               else None)
         shortening = cos(deg2rad(ori.latitude))
         he = max(0. if he1 is None else he1 * DEG2KM,
                  0. if he2 is None else he2 * DEG2KM * shortening)
-        ve = ori.depth_errors.uncertainty
+        ve = ori.depth_errors.uncertainty if ori.depth_errors else None
         ve = 0. if ve is None else ve / 1000
         line = PHA1.format(o=ori, depth=ori.depth / 1000, mag=mag,
                            he=he, ve=ve, rms=rms,
