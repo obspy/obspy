@@ -98,7 +98,7 @@ class PHATestCase(unittest.TestCase):
     def test_eventid_map(self):
         cat = read_events(self.fname) + read_events(self.fname2)
         cat[0].resource_id = 'X'
-        cat[1].resource_id = '1000f'
+        cat[1].resource_id = '2f'
         cat[2].resource_id = 'Y'
         cat[3].resource_id = '1234567890Z'
         with NamedTemporaryFile() as tf:
@@ -111,12 +111,12 @@ class PHATestCase(unittest.TestCase):
                 eventid_map2 = cat.write(tempfile, 'HYPODDPHA',
                                          eventid_map=eventid_map)
         self.assertEqual(cat2[0].resource_id.id.split('/')[-1], 'X')
-        self.assertEqual(cat2[1].resource_id.id.split('/')[-1], '1000f')
+        self.assertEqual(cat2[1].resource_id.id.split('/')[-1], '2f')
         self.assertEqual(cat2[2].resource_id.id.split('/')[-1], 'Y')
         self.assertEqual(cat2[3].resource_id.id.split('/')[-1], '1234567890Z')
-        self.assertEqual(cat3[0].resource_id.id.split('/')[-1], '1000')
-        self.assertEqual(cat3[1].resource_id.id.split('/')[-1], '1001')
-        self.assertEqual(cat3[2].resource_id.id.split('/')[-1], '1002')
+        self.assertEqual(cat3[0].resource_id.id.split('/')[-1], '1')
+        self.assertEqual(cat3[1].resource_id.id.split('/')[-1], '2')
+        self.assertEqual(cat3[2].resource_id.id.split('/')[-1], '3')
         self.assertEqual(cat3[3].resource_id.id.split('/')[-1], '123456789')
         self.assertEqual(eventid_map2, eventid_map)
 

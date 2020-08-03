@@ -207,7 +207,7 @@ def _write_pha(catalog, filename, eventid_map=None,
     lines = []
     if eventid_map is None:
         eventid_map = {}
-    args_map_eventid = (eventid_map, set(eventid_map.values()), [1000])
+    args_map_eventid = (eventid_map, set(eventid_map.values()), [1])
     for event in catalog:
         try:
             ori = event.preferred_origin() or event.origins[0]
