@@ -670,20 +670,26 @@ class InventoryTestCase(unittest.TestCase):
 
         # __add__ creates two deep copies
         inv_sum = inv1 + inv2
-        self.assertEqual(len({id(net) for net in inv_sum} & {id(net) for net in inv1}), 0)
-        self.assertEqual(len({id(net) for net in inv_sum} & {id(net) for net in inv2}), 0)
+        self.assertEqual(len({id(net) for net in inv_sum} &
+                             {id(net) for net in inv1}), 0)
+        self.assertEqual(len({id(net) for net in inv_sum} &
+                             {id(net) for net in inv2}), 0)
 
         # __iadd__ creates a deep copy of other but keeps self
         ids1 = {id(net) for net in inv1}
         inv1 += inv2
-        self.assertEqual(len({id(net) for net in inv1} & {id(net) for net in inv2}), 0)
-        self.assertEqual({id(net) for net in inv1} & ids1, ids1)
+        self.assertEqual(len({id(net) for net in inv1} &
+                             {id(net) for net in inv2}), 0)
+        self.assertEqual({id(net) for net in inv1} &
+                         ids1, ids1)
 
         # __add__ with a network creates two deep copies
         net1 = Network('N1')
         inv_sum = inv1 + net1
-        self.assertEqual(len({id(net) for net in inv_sum} & {id(net) for net in inv1}), 0)
-        self.assertEqual(len({id(net) for net in inv_sum} & {id(net1)}), 0)
+        self.assertEqual(len({id(net) for net in inv_sum} &
+                             {id(net) for net in inv1}), 0)
+        self.assertEqual(len({id(net) for net in inv_sum} &
+                             {id(net1)}), 0)
 
         # __iadd__ with a network creates a deep copy of other but keeps self
         net1 = Network('N1')
