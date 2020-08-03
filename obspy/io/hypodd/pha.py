@@ -201,6 +201,9 @@ def _write_pha(catalog, filename, eventid_map=None,
     :returns: Dictionary eventid_map with mapping of event resource id to
         hypodd event id. Items are only present if both ids are different.
     """
+    if len(catalog) >= 10**10:
+        warn('Writing a very large catalog will use event ids that might not '
+             'be readable by HypoDD.')
     lines = []
     if eventid_map is None:
         eventid_map = {}
