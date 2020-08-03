@@ -107,6 +107,9 @@ class PHATestCase(unittest.TestCase):
                 eventid_map = cat.write(tempfile, 'HYPODDPHA')
             cat2 = read_events(tempfile, eventid_map=eventid_map)
             cat3 = read_events(tempfile)
+            with self.assertWarnsRegex(UserWarning, 'Missing mag'):
+                eventid_map2 = cat.write(tempfile, 'HYPODDPHA',
+                                         eventid_map=eventid_map)
         self.assertEqual(cat2[0].resource_id.id.split('/')[-1], 'X')
         self.assertEqual(cat2[1].resource_id.id.split('/')[-1], '1000f')
         self.assertEqual(cat2[2].resource_id.id.split('/')[-1], 'Y')
@@ -115,6 +118,7 @@ class PHATestCase(unittest.TestCase):
         self.assertEqual(cat3[1].resource_id.id.split('/')[-1], '1001')
         self.assertEqual(cat3[2].resource_id.id.split('/')[-1], '1002')
         self.assertEqual(cat3[3].resource_id.id.split('/')[-1], '123456789')
+        self.assertEqual(eventid_map2, eventid_map)
 
     def test_write_pha(self):
         with open(self.fname) as f:
