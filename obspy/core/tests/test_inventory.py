@@ -661,6 +661,37 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(inv2[0][0][0].latitude, original_latitude + 1)
         self.assertNotEqual(inv[0][0][0].latitude, inv2[0][0][0].latitude)
 
+    def test_add(self):
+        """
+        Test deep and shallow copies for inventory addition
+        """
+        inv1 = read_inventory()
+        inv2 = read_inventory()
+
+        # __add__ creates two deep copies
+        inv_sum = inv1 + inv2
+        self.assertEqual(len({id(net) for net in inv_sum} & {id(net) for net in inv1}), 0)
+        self.assertEqual(len({id(net) for net in inv_sum} & {id(net) for net in inv2}), 0)
+
+        # __iadd__ creates a deep copy of other but keeps self
+        ids1 = {id(net) for net in inv1}
+        inv1 += inv2
+        self.assertEqual(len({id(net) for net in inv1} & {id(net) for net in inv2}), 0)
+        self.assertEqual({id(net) for net in inv1} & ids1, ids1)
+
+        # __add__ with a network creates two deep copies
+        net1 = Network('N1')
+        inv_sum = inv1 + net1
+        self.assertEqual(len({id(net) for net in inv_sum} & {id(net) for net in inv1}), 0)
+        self.assertEqual(len({id(net) for net in inv_sum} & {id(net1)}), 0)
+
+        # __iadd__ with a network creates a deep copy of other but keeps self
+        net1 = Network('N1')
+        ids1 = {id(net) for net in inv1}
+        inv1 += net1
+        self.assertEqual(len({id(net) for net in inv1} & {id(net1)}), 0)
+        self.assertEqual({id(net) for net in inv1} & ids1, ids1)
+
     def test_read_inventory_with_wildcard(self):
         """
         Tests the read_inventory() function with a filename wild card.

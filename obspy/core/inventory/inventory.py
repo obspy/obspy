@@ -178,10 +178,12 @@ class Inventory(ComparingObject):
 
     def __iadd__(self, other):
         if isinstance(other, Inventory):
+            other = copy.deepcopy(other)
             self.networks.extend(other.networks)
             # This is a straight inventory merge.
             self.__copy_inventory_metadata(other)
         elif isinstance(other, Network):
+            other = copy.deepcopy(other)
             self.networks.append(other)
         else:
             msg = ("Only Inventory and Network objects can be added to "
