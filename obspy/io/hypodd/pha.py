@@ -173,7 +173,7 @@ def _map_eventid(evid, eventid_map, used_ids, counter):
     if idpha != evid:
         eventid_map[evid] = idpha
     used_ids.add(idpha)
-    return idpha, eventid_map
+    return idpha
 
 
 def _write_pha(catalog, filename, eventid_map=None,
@@ -220,7 +220,7 @@ def _write_pha(catalog, filename, eventid_map=None,
             mag = mag.mag
         evid = event.resource_id.id
         evid = evid.split('/')[-1] if '/' in evid else evid
-        evid, eventid_map = _map_eventid(evid, *args_map_eventid)
+        evid = _map_eventid(evid, *args_map_eventid)
         rms = ori.quality.standard_error
         rms = rms if rms is not None else 0.0
         he1 = ori.latitude_errors.uncertainty
