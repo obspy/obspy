@@ -209,7 +209,7 @@ def _write_pha(catalog, filename, eventid_map=None,
         try:
             ori = event.preferred_origin() or event.origins[0]
         except IndexError:
-            warn('Skip writing events with missing origin')
+            warn(f'Skipping writing event with missing origin: {event}')
             continue
         try:
             mag = event.preferred_magnitude() or event.magnitudes[0]
