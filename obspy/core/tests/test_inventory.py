@@ -692,6 +692,18 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(len({id(net) for net in inv1} & {id(net1)}), 0)
         self.assertEqual({id(net) for net in inv1} & ids1, ids1)
 
+    def test_extend_metadata(self):
+        """
+        Test that extend merges the metadata of the Inventories
+        """
+        inv1 = Inventory([], source='S1', sender='T1')
+        inv2 = Inventory([], source='S2', sender='T2')
+
+        inv1.extend(inv2)
+
+        self.assertEqual(inv1.source, 'S1,S2')
+        self.assertEqual(inv1.sender, 'T1,T2')
+
     def test_read_inventory_with_wildcard(self):
         """
         Tests the read_inventory() function with a filename wild card.

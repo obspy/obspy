@@ -315,6 +315,7 @@ class Inventory(ComparingObject):
             self.networks.extend(network_list)
         elif isinstance(network_list, Inventory):
             self.networks.extend(network_list.networks)
+            self.__copy_inventory_metadata(network_list)
         else:
             msg = 'Extend only supports a list of Network objects as argument.'
             raise TypeError(msg)
