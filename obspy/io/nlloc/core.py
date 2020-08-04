@@ -341,7 +341,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
             net, sta, loc, cha = resolve_seed_id(
                 station=station, channel=channel, time=t, inventory=inventory)
         else:
-            net, sta, loc, cha = None, station, None, channel
+            net, sta, loc, cha = "", station, None, channel
         wid = WaveformStreamID(network_code=net, station_code=sta,
                                location_code=loc, channel_code=cha)
         pick.waveform_id = wid
