@@ -1073,6 +1073,27 @@ def _warn_on_invalid_uri(uri):
         warnings.warn(msg)
 
 
+def _seed_id_map(
+        inventory=None, user_id_map=None, key='{sta.code}',
+        seed_factory='{net.code}.{{}}.{cha.location_code}.{cha.code:.2}{{}}'):
+    """
+    Return mapping between station code and seed id expressions
+    """
+    id_map = {}
+    if inventory is not None:
+        msg = 'Multiple seed ids found for station {}. Use first.'
+        for net in inventory:
+            for sta in net:
+                for cha in sta:
+                    k = key.format(net=net, sta=sta, cha=cha)
+                    v = seed_factory.format(net=net, sta=sta, cha=cha)
+                    if id_map.setdefault(k, v) != v:
+                        warnings.warn(msg.format(k))
+    if user_id_map is not None:
+        id_map.update(user_id_map)
+    return id_map
+
+
 def resolve_seed_id(station, channel, inventory, time=None, network=None,
                     location=None, warn=True):
     """

@@ -17,7 +17,7 @@ from obspy import UTCDateTime
 from obspy.core.event import (
     Catalog, Event, Origin, Magnitude, Pick, WaveformStreamID, Arrival,
     OriginQuality)
-from obspy.core.util.misc import _seed_id_map
+from obspy.core.inventory.util import _seed_id_map
 
 
 DEG2KM = 111.2
