@@ -333,7 +333,8 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         # when reading the .hyp file.. if an inventory is provided, a lookup
         # is done
         net, sta, loc, cha = _resolve_seedid(
-            station=station, component=channel, time=t, **kwargs)
+            station=station, component=channel, time=t, unused_kwargs=True,
+            **kwargs)
         wid = WaveformStreamID(network_code=net, station_code=sta,
                                location_code=loc, channel_code=cha)
         pick.waveform_id = wid

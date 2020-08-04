@@ -1127,7 +1127,10 @@ def _seed_id_map(
 
 def _resolve_seedid(station, component, inventory=None,
         time=None, seedid_map=None, seedid_default=None,
-        key='{sta.code}', id_map=None, id_default=None):
+        key='{sta.code}', id_map=None, id_default=None,
+        unused_kwargs=False, **kwargs):
+    if not unused_kwargs and len(kwargs) > 0:
+        raise ValueError(f'Unexpected arguments: {kwargs}')
     if id_map is not None:  # backwards compatibility
         seedid_map = id_map
     if id_default is not None:  # backwards compatibility
@@ -1148,7 +1151,7 @@ def _resolve_seedid(station, component, inventory=None,
 
 def _resolve_seedid_from_inventory(
         station, component, inventory, time=None, network=None,
-        location=None, warn=True, **kwargs):
+        location=None, warn=True):
     """
     Return a (Network, Station, Location, Channel) tuple.
 
@@ -1199,7 +1202,7 @@ def _resolve_seedid_from_inventory(
             msg = 'No matching metadata found.'
             warnings.warn(msg)
         return
-    if len(seedids) > 1 and warn:
+    if len(set(seedids)) > 1 and warn:
         msg = f'Multiple SEED ids found for station {station}. Use first.'
         warnings.warn(msg)
     return seedids.pop(0)
