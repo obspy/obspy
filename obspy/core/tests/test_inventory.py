@@ -729,7 +729,7 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(
                 ('', 'FUR', '', 'HHZ'),
                 _resolve_seedid('FUR', 'HHZ', time=t_invalid,
-                                seedid_default='.{}..{}'))
+                                default_seedid='.{}..{}'))
         with self.assertWarnsRegex(UserWarning, 'No matching'):
             self.assertEqual(
                     (None, 'FUR', None, 'HHZ'),

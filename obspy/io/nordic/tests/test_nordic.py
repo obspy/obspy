@@ -1158,7 +1158,7 @@ class TestNordicMethods(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
             seedid = 'XX.{}.00.H{}'
-            event = read_nordic(testing_path, seedid_default=seedid)[0]
+            event = read_nordic(testing_path, default_seedid=seedid)[0]
         self.assertEqual(len(event.origins), 2)
         self.assertEqual(len(event.picks), 17)
         self.assertEqual(event.picks[0].waveform_id.network_code, 'XX')

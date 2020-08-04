@@ -1085,7 +1085,7 @@ def _add_resolve_seedid_doc(func):
     2. if 1 did not succeed, look if the station is present in inventory and
        use its first channel as template
     3. if 1 and 2 did not succeed, use specified default template
-       (seedid_default)
+       (default_seedid)
 
     :param str filename: File or file-like object in text mode.
     :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
@@ -1095,7 +1095,7 @@ def _add_resolve_seedid_doc(func):
         (example: `seedid_map={'MOX': 'GR.{}..HH{}'`).
         The values must contain three dots and two `{}` which are
         substituted by station code and component.
-    :param str seedid_default: Default SEED id template.
+    :param str default_seedid: Default SEED id template.
         The value must contain three dots and two `{}` which are
         substituted by station code and component.
     """
@@ -1126,7 +1126,7 @@ def _seed_id_map(
 
 
 def _resolve_seedid(station, component, inventory=None,
-        time=None, seedid_map=None, seedid_default=None,
+        time=None, seedid_map=None, default_seedid=None,
         key='{sta.code}', id_map=None, id_default=None,
         unused_kwargs=False, **kwargs):
     if not unused_kwargs and len(kwargs) > 0:
@@ -1134,15 +1134,15 @@ def _resolve_seedid(station, component, inventory=None,
     if id_map is not None:  # backwards compatibility
         seedid_map = id_map
     if id_default is not None:  # backwards compatibility
-        seedid_default = id_default
+        default_seedid = id_default
     seedid = None
     if seedid_map is not None and station in seedid_map:
         seedid = seedid_map[station].format(station, component)
     elif inventory is not None:
         seedid = _resolve_seedid_from_inventory(
                 station, component, inventory, time=time, warn=True)
-    if seedid is None and seedid_default is not None:
-        seedid = seedid_default.format(station, component)
+    if seedid is None and default_seedid is not None:
+        seedid = default_seedid.format(station, component)
     if seedid is None:
         return None, station, None, component
     else:
