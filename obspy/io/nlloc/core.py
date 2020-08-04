@@ -332,11 +332,10 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         # network codes are not used by NonLinLoc, so they can not be known
         # when reading the .hyp file.. if an inventory is provided, a lookup
         # is done
-        net, sta, loc, cha = _resolve_seedid(
+        widargs = _resolve_seedid(
             station=station, component=channel, time=t, unused_kwargs=True,
             **kwargs)
-        wid = WaveformStreamID(network_code=net, station_code=sta,
-                               location_code=loc, channel_code=cha)
+        wid = WaveformStreamID(*widargs)
         pick.waveform_id = wid
         pick.time_errors.uncertainty = float(line[10])
         pick.phase_hint = phase
