@@ -1197,6 +1197,7 @@ def _resolve_seedid_from_inventory(
     net = inv.networks[0]
     seedids = [f'{net.code}.{station}.{cha.location_code}.{cha.code}'
                for cha in net.stations[0] if cha.is_active(time=time)]
+    seedids = [id_[:len(id_) - len(component)] + component for id_ in seedids]
     if len(seedids) == 0:
         if warn:
             msg = 'No matching metadata found.'

@@ -716,12 +716,14 @@ class InventoryTestCase(unittest.TestCase):
         inv = read_inventory()
         self.assertEqual(('GR', 'FUR', '', 'HHZ'),
                          _resolve_seedid('FUR', 'HHZ', inv))
-        self.assertEqual(('GR', 'FUR', '', 'HHZ'),
-                         _resolve_seedid('FUR', 'HZ', inv))
-        self.assertEqual(('GR', 'FUR', '', 'HHZ'),
-                         _resolve_seedid('FUR', 'Z', inv))
-        self.assertEqual(('GR', 'FUR', '', 'HHZ'),
-                         _resolve_seedid('FUR', '?', inv))
+        with self.assertWarnsRegex(UserWarning, 'Multiple'):
+            self.assertEqual(('GR', 'FUR', '', 'HHZ'),
+                             _resolve_seedid('FUR', 'HZ', inv))
+        with self.assertWarnsRegex(UserWarning, 'Multiple'):
+            self.assertEqual(('GR', 'FUR', '', 'HHZ'),
+                             _resolve_seedid('FUR', 'Z', inv))
+        self.assertEqual(('GR', 'FUR', '', 'HH?'),
+                         _resolve_seedid('FUR', 'HH?', inv))
         self.assertEqual(('GR', 'FUR', '', 'HHZ'),
                          _resolve_seedid('FUR', 'HHZ', inv, time=t_valid))
         self.assertEqual(
