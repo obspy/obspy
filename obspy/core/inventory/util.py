@@ -1098,6 +1098,8 @@ def _add_resolve_seedid_doc(func):
     :param str default_seedid: Default SEED id template.
         The value must contain three dots and two `{}` which are
         substituted by station code and component.
+    :param bool warn: Whether or not to warn on failed look ups
+       (no matching data found or ambiguous results) in the inventory
     """
     func.__doc__ = func.__doc__ + __doc__
     return func
@@ -1128,7 +1130,7 @@ def _seed_id_map(
 def _resolve_seedid(station, component, inventory=None,
         time=None, seedid_map=None, default_seedid=None,
         key='{sta.code}', id_map=None, id_default=None,
-        unused_kwargs=False, **kwargs):
+        unused_kwargs=False, warn=True, **kwargs):
     if not unused_kwargs and len(kwargs) > 0:
         raise ValueError(f'Unexpected arguments: {kwargs}')
     if id_map is not None:  # backwards compatibility
@@ -1140,7 +1142,7 @@ def _resolve_seedid(station, component, inventory=None,
         seedid = seedid_map[station].format(station, component)
     elif inventory is not None:
         seedid = _resolve_seedid_from_inventory(
-                station, component, inventory, time=time, warn=True)
+                station, component, inventory, time=time, warn=warn)
     if seedid is None and default_seedid is not None:
         seedid = default_seedid.format(station, component)
     if seedid is None:
@@ -1191,7 +1193,8 @@ def _resolve_seedid_from_inventory(
                            keep_empty=False)
     if len(inv.networks) != 1 or len(inv.networks[0].stations) == 0:
         if warn:
-            msg = 'No matching metadata found.'
+            msg = ('No matching metadata found for station '
+                   f'{station}, component {component}.')
             warnings.warn(msg)
         return
     net = inv.networks[0]
@@ -1200,11 +1203,13 @@ def _resolve_seedid_from_inventory(
     seedids = [id_[:len(id_) - len(component)] + component for id_ in seedids]
     if len(seedids) == 0:
         if warn:
-            msg = 'No matching metadata found.'
+            msg = ('No matching metadata found for station '
+                   f'{station}, component {component}.')
             warnings.warn(msg)
         return
     if len(set(seedids)) > 1 and warn:
-        msg = f'Multiple SEED ids found for station {station}. Use first.'
+        msg = ('Multiple SEED ids found for station '
+               f'{station}, component {component}. Use first.')
         warnings.warn(msg)
     return seedids.pop(0)
 

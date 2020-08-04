@@ -17,13 +17,13 @@ from obspy import UTCDateTime
 from obspy.core.event import (
     Catalog, Event, Origin, Magnitude, Pick, WaveformStreamID, Arrival,
     OriginQuality)
-from obspy.core.inventory.util import _seed_id_map
+from obspy.core.inventory.util import _add_resolve_seedid_doc, _resolve_seedid
 
 
 DEG2KM = 111.2
 
 
-def _block2event(block, seed_map, id_default, ph2comp, eventid_map):
+def _block2event(block, ph2comp, eventid_map, **kwargs):
     """
     Read HypoDD event block
     """
@@ -43,9 +43,9 @@ def _block2event(block, seed_map, id_default, ph2comp, eventid_map):
     for line in lines[1:]:
         sta, reltime, weight, phase = line.split()
         comp = ph2comp.get(phase, '')
-        wid = seed_map.get(sta, id_default)
-        _waveform_id = WaveformStreamID(seed_string=wid.format(sta, comp))
-        pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
+        widargs = _resolve_seedid(sta, comp, time=time, **kwargs)
+        wid = WaveformStreamID(*widargs)
+        pick = Pick(waveform_id=wid, phase_hint=phase,
                     time=time + float(reltime))
         arrival = Arrival(phase=phase, pick_id=pick.resource_id,
                           time_weight=float(weight))
@@ -93,9 +93,9 @@ def _is_pha(filename):
         return True
 
 
-def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
-              ph2comp={'P': 'Z', 'S': 'N'}, eventid_map=None,
-              encoding='utf-8'):
+@_add_resolve_seedid_doc
+def _read_pha(filename, ph2comp={'P': 'Z', 'S': 'N'}, eventid_map=None,
+              encoding='utf-8', **kwargs):
     """
     Read a HypoDD PHA file and returns an ObsPy Catalog object.
 
@@ -104,28 +104,7 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
         ObsPy :func:`~obspy.core.event.read_events` function, call this
         instead.
 
-    Most optional parameters deal with the problem, that the PHA format
-    only stores station names for the picks, but the Pick object expects
-    a SEED id. A SEED id template is retrieved for each station by the
-    following procedure:
-
-    1. look at id_map for a direct station name match and use the specified
-       template
-    2. if 1 did not succeed, look if the station is present in inventory and
-       use its first channel as template
-    3. if 1 and 2 did not succeed, use specified default template (id_default)
-
     :param str filename: File or file-like object in text mode.
-    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
-    :param inventory: Inventory used to retrieve network code, location code
-        and channel code of stations (SEED id).
-    :param dict id_map: Default templates for each station
-        (example: `id_map={'MOX': 'GR.{}..HH{}'`).
-        The values must contain three dots and two `{}` which are
-        substituted by station code and component.
-    :param str id_default: Default SEED id template.
-        The value must contain three dots and two `{}` which are
-        substituted by station code and component.
     :param dict ph2comp: mapping of phases to components
         (default: {'P': 'Z', 'S': 'N'})
     :param dict eventid_map: Desired mapping of hypodd event ids (dict values)
@@ -139,10 +118,9 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
     """
     if eventid_map is not None:
         eventid_map = {v: k for k, v in eventid_map.items()}
-    seed_map = _seed_id_map(inventory, id_map)
     with io.open(filename, 'r', encoding=encoding) as f:
         text = f.read()
-    events = [_block2event(block, seed_map, id_default, ph2comp, eventid_map)
+    events = [_block2event(block, ph2comp, eventid_map, **kwargs)
               for block in text.split('#')[1:]]
     return Catalog(events)
 
