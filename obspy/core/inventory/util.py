@@ -1073,6 +1073,37 @@ def _warn_on_invalid_uri(uri):
         warnings.warn(msg)
 
 
+def _add_resolve_seedid_doc(func):
+    """
+    The following parameters deal with the problem, that the format
+    only stores station names for the picks, but the Pick object expects
+    a SEED id. The SEED id is looked up for every pick by the
+    following procedure:
+
+    1. look at seedid_map for a direct station name match and use the specified
+       template
+    2. if 1 did not succeed, look if the station is present in inventory and
+       use its first channel as template
+    3. if 1 and 2 did not succeed, use specified default template
+       (seedid_default)
+
+    :param str filename: File or file-like object in text mode.
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+    :param inventory: Inventory used to retrieve network code, location code
+        and channel code of stations (SEED id).
+    :param dict seedid_map: Default templates for each station
+        (example: `seedid_map={'MOX': 'GR.{}..HH{}'`).
+        The values must contain three dots and two `{}` which are
+        substituted by station code and component.
+    :param str seedid_default: Default SEED id template.
+        The value must contain three dots and two `{}` which are
+        substituted by station code and component.
+    """
+    func.__doc__ = func.__doc__ + __doc__
+    return func
+
+
+
 def _seed_id_map(
         inventory=None, user_id_map=None, key='{sta.code}',
         seed_factory='{net.code}.{{}}.{cha.location_code}.{cha.code:.2}{{}}'):
@@ -1094,8 +1125,30 @@ def _seed_id_map(
     return id_map
 
 
-def resolve_seed_id(station, channel, inventory, time=None, network=None,
-                    location=None, warn=True):
+def _resolve_seedid(station, component, inventory=None,
+        time=None, seedid_map=None, seedid_default=None,
+        key='{sta.code}', id_map=None, id_default=None):
+    if id_map is not None:  # backwards compatibility
+        seedid_map = id_map
+    if id_default is not None:  # backwards compatibility
+        seedid_default = id_default
+    seedid = None
+    if seedid_map is not None and station in seedid_map:
+        seedid = seedid_map[station].format(station, component)
+    elif inventory is not None:
+        seedid = _resolve_seedid_from_inventory(
+                station, component, inventory, time=time, warn=True)
+    if seedid is None and seedid_default is not None:
+        seedid = seedid_default.format(station, component)
+    if seedid is None:
+        return None, station, None, component
+    else:
+        return tuple(seedid.split('.'))
+
+
+def _resolve_seedid_from_inventory(
+        station, component, inventory, time=None, network=None,
+        location=None, warn=True, **kwargs):
     """
     Return a (Network, Station, Location, Channel) tuple.
 
@@ -1127,51 +1180,29 @@ def resolve_seed_id(station, channel, inventory, time=None, network=None,
     :type warn: bool
     :param warn: Whether or not to warn on failed look ups (no matching data
         found or ambiguous results) that return some ``None``s.
-    :rtype: tuple of str
-    :returns: (Network, Station, Location, Channel) tuple. Network and/or
-        location code can be ``None`` (see above).
+    :rtype: str
+    :returns: SEED id string
     """
-    inv = inventory.select(station=station, channel=channel, time=time,
+    inv = inventory.select(station=station, channel='*' + component, time=time,
                            network=network, location=location,
                            keep_empty=False)
-    found_network = set()
-    found_location = set()
-    for net in inv:
-        for sta in net:
-            if sta.code != station:
-                # this should not happen
-                raise NotImplementedError()
-            found_network.add(net.code)
-            for cha in sta:
-                if cha.code != channel:
-                    # this should not happen
-                    raise NotImplementedError()
-                found_location.add(cha.location_code)
-    if not found_network:
+    if len(inv.networks) != 1 or len(inv.networks[0].stations) == 0:
         if warn:
-            msg = 'No matching metadata found for network code.'
+            msg = 'No matching metadata found.'
             warnings.warn(msg)
-        return (None, station, None, channel)
-    elif len(found_network) > 1:
+        return
+    net = inv.networks[0]
+    seedids = [f'{net.code}.{station}.{cha.location_code}.{cha.code}'
+               for cha in net.stations[0] if cha.is_active(time=time)]
+    if len(seedids) == 0:
         if warn:
-            msg = 'Metadata lookup for network code is ambiguous.'
+            msg = 'No matching metadata found.'
             warnings.warn(msg)
-        return (None, station, None, channel)
-    # exactly one item in set, get it
-    network = found_network.pop()
-    if not found_location:
-        if warn:
-            msg = 'No matching metadata found for location code.'
-            warnings.warn(msg)
-        return (network, station, None, channel)
-    elif len(found_location) > 1:
-        if warn:
-            msg = 'Metadata lookup for location code is ambiguous.'
-            warnings.warn(msg)
-        return (network, station, None, channel)
-    # exactly one item in set, get it
-    location = found_location.pop()
-    return (network, station, location, channel)
+        return
+    if len(seedids) > 1 and warn:
+        msg = f'Multiple SEED ids found for station {station}. Use first.'
+        warnings.warn(msg)
+    return seedids.pop(0)
 
 
 if __name__ == '__main__':

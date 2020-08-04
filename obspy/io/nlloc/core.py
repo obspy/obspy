@@ -17,7 +17,7 @@ from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
                               WaveformStreamID)
-from obspy.core.inventory.util import resolve_seed_id
+from obspy.core.inventory.util import _resolve_seedid, _add_resolve_seedid_doc
 from obspy.geodetics import kilometer2degrees
 
 
@@ -41,8 +41,8 @@ def is_nlloc_hyp(filename):
     return True
 
 
-def read_nlloc_hyp(filename, coordinate_converter=None, picks=None,
-                   inventory=None, **kwargs):
+@_add_resolve_seedid_doc
+def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     """
     Reads a NonLinLoc Hypocenter-Phase file to a
     :class:`~obspy.core.event.Catalog` object.
@@ -75,11 +75,6 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None,
         ``pick_id`` attribute). If not provided, the output event will include
         (the rather basic) pick information that can be reconstructed from the
         NonLinLoc hypocenter-phase file.
-    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
-    :param inventory: Station metadata to use for look up of missing parts of
-        the full SEED ID when reading phases from the NonLinLoc
-        hypocenter-phase file. It should not be necessary to provide the
-        station metadata if the original picks are provided.
     :rtype: :class:`~obspy.core.event.Catalog`
     """
     if not hasattr(filename, "read"):
@@ -128,7 +123,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None,
     for start, end in zip(lines_start, lines_end):
         event = _read_single_hypocenter(
             lines[start:end + 1], coordinate_converter=coordinate_converter,
-            original_picks=original_picks, inventory=inventory)
+            original_picks=original_picks, **kwargs)
         cat.append(event)
     cat.creation_info.creation_time = UTCDateTime()
     cat.creation_info.version = "ObsPy %s" % __version__
@@ -136,7 +131,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None,
 
 
 def _read_single_hypocenter(lines, coordinate_converter, original_picks,
-                            inventory=None):
+                            **kwargs):
     """
     Given a list of lines (starting with a 'NLLOC' line and ending with a
     'END_NLLOC' line), parse them into an Event.
@@ -337,11 +332,8 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         # network codes are not used by NonLinLoc, so they can not be known
         # when reading the .hyp file.. if an inventory is provided, a lookup
         # is done
-        if inventory is not None:
-            net, sta, loc, cha = resolve_seed_id(
-                station=station, channel=channel, time=t, inventory=inventory)
-        else:
-            net, sta, loc, cha = "", station, None, channel
+        net, sta, loc, cha = _resolve_seedid(
+            station=station, component=channel, time=t, **kwargs)
         wid = WaveformStreamID(network_code=net, station_code=sta,
                                location_code=loc, channel_code=cha)
         pick.waveform_id = wid
