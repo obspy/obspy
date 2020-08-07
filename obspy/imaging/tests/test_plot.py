@@ -2,10 +2,6 @@
 """
 The obspy.imaging.scripts.plot / obspy-plot test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import shutil
 import unittest
@@ -43,7 +39,7 @@ class PlotTestCase(unittest.TestCase):
             with ImageComparison(self.path, 'plot.png') as ic:
                 obspy_plot(['--outfile', ic.name] + all_files)
 
-    def test_plotNoMerge(self):
+    def test_plot_no_merge(self):
         """
         Run obspy-plot without trace merging
         """

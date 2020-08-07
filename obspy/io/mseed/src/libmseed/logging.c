@@ -9,22 +9,21 @@
  * modified: 2014.197
  ***************************************************************************/
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 
 #include "libmseed.h"
 
 void ms_loginit_main (MSLogParam *logp,
-		      void (*log_print)(char*), const char *logprefix,
-		      void (*diag_print)(char*), const char *errprefix);
+                      void (*log_print) (char *), const char *logprefix,
+                      void (*diag_print) (char *), const char *errprefix);
 
 int ms_log_main (MSLogParam *logp, int level, va_list *varlist);
 
 /* Initialize the global logging parameters */
 MSLogParam gMSLogParam = {NULL, NULL, NULL, NULL};
-
 
 /***************************************************************************
  * ms_loginit:
@@ -34,12 +33,11 @@ MSLogParam gMSLogParam = {NULL, NULL, NULL, NULL};
  * See ms_loginit_main() description for usage.
  ***************************************************************************/
 void
-ms_loginit (void (*log_print)(char*), const char *logprefix,
-	    void (*diag_print)(char*), const char *errprefix)
+ms_loginit (void (*log_print) (char *), const char *logprefix,
+            void (*diag_print) (char *), const char *errprefix)
 {
-  ms_loginit_main(&gMSLogParam, log_print, logprefix, diag_print, errprefix);
-}  /* End of ms_loginit() */
-
+  ms_loginit_main (&gMSLogParam, log_print, logprefix, diag_print, errprefix);
+} /* End of ms_loginit() */
 
 /***************************************************************************
  * ms_loginit_l:
@@ -55,36 +53,35 @@ ms_loginit (void (*log_print)(char*), const char *logprefix,
  ***************************************************************************/
 MSLogParam *
 ms_loginit_l (MSLogParam *logp,
-	      void (*log_print)(char*), const char *logprefix,
-	      void (*diag_print)(char*), const char *errprefix)
+              void (*log_print) (char *), const char *logprefix,
+              void (*diag_print) (char *), const char *errprefix)
 {
   MSLogParam *llog;
-  
-  if ( logp == NULL )
+
+  if (logp == NULL)
+  {
+    llog = (MSLogParam *)malloc (sizeof (MSLogParam));
+
+    if (llog == NULL)
     {
-      llog = (MSLogParam *) malloc (sizeof(MSLogParam));
-      
-      if ( llog == NULL )
-        {
-          ms_log (2, "ms_loginit_l(): Cannot allocate memory\n");
-          return NULL;
-        }
-      
-      llog->log_print = NULL;
-      llog->logprefix = NULL;
-      llog->diag_print = NULL;
-      llog->errprefix = NULL;
+      ms_log (2, "ms_loginit_l(): Cannot allocate memory\n");
+      return NULL;
     }
+
+    llog->log_print  = NULL;
+    llog->logprefix  = NULL;
+    llog->diag_print = NULL;
+    llog->errprefix  = NULL;
+  }
   else
-    {
-      llog = logp;
-    }
-  
+  {
+    llog = logp;
+  }
+
   ms_loginit_main (llog, log_print, logprefix, diag_print, errprefix);
 
   return llog;
-}  /* End of ms_loginit_l() */
-
+} /* End of ms_loginit_l() */
 
 /***************************************************************************
  * ms_loginit_main:
@@ -110,45 +107,44 @@ ms_loginit_l (MSLogParam *logp,
  ***************************************************************************/
 void
 ms_loginit_main (MSLogParam *logp,
-		 void (*log_print)(char*), const char *logprefix,
-		 void (*diag_print)(char*), const char *errprefix)
+                 void (*log_print) (char *), const char *logprefix,
+                 void (*diag_print) (char *), const char *errprefix)
 {
-  if ( ! logp )
+  if (!logp)
     return;
 
-  if ( log_print )
+  if (log_print)
     logp->log_print = log_print;
-  
-  if ( logprefix )
-    {
-      if ( strlen(logprefix) >= MAX_LOG_MSG_LENGTH )
-	{
-	  ms_log_l (logp, 2, 0, "log message prefix is too large\n");
-	}
-      else
-	{
-	  logp->logprefix = logprefix;
-	}
-    }
-  
-  if ( diag_print )
-    logp->diag_print = diag_print;
-  
-  if ( errprefix )
-    {
-      if ( strlen(errprefix) >= MAX_LOG_MSG_LENGTH )
-	{
-	  ms_log_l (logp, 2, 0, "error message prefix is too large\n");
-	}
-      else
-	{
-	  logp->errprefix = errprefix;
-	}
-    }
-  
-  return;
-}  /* End of ms_loginit_main() */
 
+  if (logprefix)
+  {
+    if (strlen (logprefix) >= MAX_LOG_MSG_LENGTH)
+    {
+      ms_log_l (logp, 2, 0, "log message prefix is too large\n");
+    }
+    else
+    {
+      logp->logprefix = logprefix;
+    }
+  }
+
+  if (diag_print)
+    logp->diag_print = diag_print;
+
+  if (errprefix)
+  {
+    if (strlen (errprefix) >= MAX_LOG_MSG_LENGTH)
+    {
+      ms_log_l (logp, 2, 0, "error message prefix is too large\n");
+    }
+    else
+    {
+      logp->errprefix = errprefix;
+    }
+  }
+
+  return;
+} /* End of ms_loginit_main() */
 
 /***************************************************************************
  * ms_log:
@@ -162,7 +158,7 @@ ms_log (int level, ...)
 {
   int retval;
   va_list varlist;
-  
+
   va_start (varlist, level);
 
   retval = ms_log_main (&gMSLogParam, level, &varlist);
@@ -170,8 +166,7 @@ ms_log (int level, ...)
   va_end (varlist);
 
   return retval;
-}  /* End of ms_log() */
-
+} /* End of ms_log() */
 
 /***************************************************************************
  * ms_log_l:
@@ -189,20 +184,19 @@ ms_log_l (MSLogParam *logp, int level, ...)
   va_list varlist;
   MSLogParam *llog;
 
-  if ( ! logp )
+  if (!logp)
     llog = &gMSLogParam;
   else
     llog = logp;
-  
+
   va_start (varlist, level);
-  
+
   retval = ms_log_main (llog, level, &varlist);
 
   va_end (varlist);
 
   return retval;
-}  /* End of ms_log_l() */
-
+} /* End of ms_log_l() */
 
 /***************************************************************************
  * ms_log_main:
@@ -211,9 +205,9 @@ ms_log_l (MSLogParam *logp, int level, ...)
  *
  * The function uses logging parameters specified in the supplied
  * MSLogParam.
- * 
+ *
  * This function expects 2+ arguments: message level, fprintf format,
- * and fprintf arguments. 
+ * and fprintf arguments.
  *
  * Three levels are recognized:
  * 0  : Normal log messages, printed using log_print with logprefix
@@ -242,93 +236,93 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
   int retvalue = 0;
   int presize;
   const char *format;
-  
-  if ( ! logp )
-    {
-      fprintf(stderr, "ms_log_main() called without specifying log parameters");
-      return -1;
-    }
-  
+
+  if (!logp)
+  {
+    fprintf (stderr, "ms_log_main() called without specifying log parameters");
+    return -1;
+  }
+
   message[0] = '\0';
 
   format = va_arg (*varlist, const char *);
 
-  if ( level >= 2 )  /* Error message */
+  if (level >= 2) /* Error message */
+  {
+    if (logp->errprefix != NULL)
     {
-      if ( logp->errprefix != NULL )
-        {
-          strncpy (message, logp->errprefix, MAX_LOG_MSG_LENGTH);
-          message[MAX_LOG_MSG_LENGTH - 1] = '\0';
-        }
-      else
-        {
-          strncpy (message, "Error: ", MAX_LOG_MSG_LENGTH);
-        }
-      
-      presize = strlen(message);
-      retvalue = vsnprintf (&message[presize],
-   			    MAX_LOG_MSG_LENGTH - presize,
-			    format, *varlist);
-      
+      strncpy (message, logp->errprefix, MAX_LOG_MSG_LENGTH);
       message[MAX_LOG_MSG_LENGTH - 1] = '\0';
+    }
+    else
+    {
+      strncpy (message, "Error: ", MAX_LOG_MSG_LENGTH);
+    }
 
-      if ( logp->diag_print != NULL )
-        {
-          logp->diag_print (message);
-        }
-      else
-        {
-          fprintf(stderr, "%s", message);
-        }
-    }
-  else if ( level == 1 )  /* Diagnostic message */
+    presize  = strlen (message);
+    retvalue = vsnprintf (&message[presize],
+                          MAX_LOG_MSG_LENGTH - presize,
+                          format, *varlist);
+
+    message[MAX_LOG_MSG_LENGTH - 1] = '\0';
+
+    if (logp->diag_print != NULL)
     {
-      if ( logp->logprefix != NULL )
-        {
-          strncpy (message, logp->logprefix, MAX_LOG_MSG_LENGTH);
-          message[MAX_LOG_MSG_LENGTH - 1] = '\0';
-        }
-      
-      presize = strlen(message);
-      retvalue = vsnprintf (&message[presize],
-		            MAX_LOG_MSG_LENGTH - presize,
-			    format, *varlist);
-      
-      message[MAX_LOG_MSG_LENGTH - 1] = '\0';
-      
-      if ( logp->diag_print != NULL )
-        {
-          logp->diag_print (message);
-        }
-      else
-        {
-          fprintf(stderr, "%s", message);
-        }
+      logp->diag_print (message);
     }
-  else if ( level == 0 )  /* Normal log message */
+    else
     {
-      if ( logp->logprefix != NULL )
-        {
-          strncpy (message, logp->logprefix, MAX_LOG_MSG_LENGTH);
-          message[MAX_LOG_MSG_LENGTH - 1] = '\0';
-        }
-      
-      presize = strlen(message);
-      retvalue = vsnprintf (&message[presize],
-			    MAX_LOG_MSG_LENGTH - presize,
-			    format, *varlist);
-      
-      message[MAX_LOG_MSG_LENGTH - 1] = '\0';
-      
-      if ( logp->log_print != NULL )
-	{
-           logp->log_print (message);
-	}
-      else
-	{
-	  fprintf(stdout, "%s", message);
-	}
+      fprintf (stderr, "%s", message);
     }
-  
+  }
+  else if (level == 1) /* Diagnostic message */
+  {
+    if (logp->logprefix != NULL)
+    {
+      strncpy (message, logp->logprefix, MAX_LOG_MSG_LENGTH);
+      message[MAX_LOG_MSG_LENGTH - 1] = '\0';
+    }
+
+    presize  = strlen (message);
+    retvalue = vsnprintf (&message[presize],
+                          MAX_LOG_MSG_LENGTH - presize,
+                          format, *varlist);
+
+    message[MAX_LOG_MSG_LENGTH - 1] = '\0';
+
+    if (logp->diag_print != NULL)
+    {
+      logp->diag_print (message);
+    }
+    else
+    {
+      fprintf (stderr, "%s", message);
+    }
+  }
+  else if (level == 0) /* Normal log message */
+  {
+    if (logp->logprefix != NULL)
+    {
+      strncpy (message, logp->logprefix, MAX_LOG_MSG_LENGTH);
+      message[MAX_LOG_MSG_LENGTH - 1] = '\0';
+    }
+
+    presize  = strlen (message);
+    retvalue = vsnprintf (&message[presize],
+                          MAX_LOG_MSG_LENGTH - presize,
+                          format, *varlist);
+
+    message[MAX_LOG_MSG_LENGTH - 1] = '\0';
+
+    if (logp->log_print != NULL)
+    {
+      logp->log_print (message);
+    }
+    else
+    {
+      fprintf (stdout, "%s", message);
+    }
+  }
+
   return retvalue;
-}  /* End of ms_log_main() */
+} /* End of ms_log_main() */

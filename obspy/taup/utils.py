@@ -3,10 +3,6 @@
 """
 Misc functionality.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import inspect
 import os
 
@@ -21,10 +17,10 @@ def parse_phase_list(phase_list):
     replacing e.g. ``"ttall"`` with the relevant phases.
     """
     phase_names = []
-    for phaseName in phase_list:
-        phase_names += get_phase_names(phaseName)
+    for phase_name in phase_list:
+        phase_names += get_phase_names(phase_name)
     # Remove duplicates.
-    return list(set(phase_names))
+    return sorted(list(set(phase_names)))
 
 
 def get_phase_names(phase_name):

@@ -86,6 +86,10 @@ Gallery
     :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
     :alt: Second Basemap Plot with Beachballs
 
+.. gallery-plot:: tutorial/code_snippets/basemap_with_beachball_read_events.py
+    :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
+    :alt: Basemap Plot with Beachball read_events
+
 .. gallery-plot:: tutorial/code_snippets/merging_seismograms.py
     :target: tutorial/code_snippets/merging_seismograms.html
     :alt: Merging Seismograms
@@ -110,6 +114,14 @@ Gallery
     :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
+.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density4.py
+    :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
+    :alt: Visualizing Probabilistic Power Spectral Densities
+
+.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density5.py
+    :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
+    :alt: Visualizing Probabilistic Power Spectral Densities
+
 .. gallery-plot:: tutorial/code_snippets/array_response_function.py
     :target: tutorial/code_snippets/array_response_function.html
     :alt: Array Response Function
@@ -130,7 +142,7 @@ Gallery
     :target: tutorial/code_snippets/time_frequency_misfit.html#plot-the-time-frequency-misfits
     :alt: Time Frequency Misfit
 
-.. gallery-plot:: tutorial/code_snippets/travel_time_plot.py
+.. gallery-plot:: tutorial/code_snippets/plot_travel_times.py
     :target: tutorial/code_snippets/travel_time.html#travel-time-plot
     :alt: Travel Time Plot
 
@@ -142,13 +154,38 @@ Gallery
     :target: tutorial/code_snippets/travel_time.html#spherical-ray-paths
     :alt: Spherical Ray Paths
 
+.. gallery-plot:: tutorial/code_snippets/plot_ray_paths.py
+    :target: tutorial/code_snippets/travel_time.html#ray-path-plot
+    :alt: Ray Path Plot
+
 .. gallery-plot:: tutorial/code_snippets/travel_time_body_waves.py
-    :target: tutorial/code_snippets/travel_time.html#body-wave-ray-paths
+    :target: tutorial/code_snippets/travel_time.html#travel-time-body-waves
     :alt: Body Wave Ray Paths
 
 .. gallery-plot:: tutorial/code_snippets/xcorr_pick_correction.py
     :target: tutorial/code_snippets/xcorr_pick_correction.html
-    :alt: Cross Correlation Pick Correction
+    :alt: Cross-Correlation Pick Correction
+
+.. gallery-plot::
+    :target: tutorial/code_snippets/xcorr_detector.html
+    :alt: Cross-Correlation Detector
+
+    from obspy import read, Trace, UTCDateTime as UTC
+    from obspy.signal.cross_correlation import correlation_detector
+
+    stream = read('https://examples.obspy.org/NKC_PLN_ROHR.HHZ.2018.130.mseed')
+    stream.filter('highpass', freq=1, zerophase=True)
+    otimes = [UTC('2018-05-10 14:24:50'), UTC('2018-05-10 19:42:08')]
+    templates = []
+    for otime in otimes:
+        template = stream.select(station='NKC').slice(otime + 2, otime + 7)
+        template += stream.select(station='ROHR').slice(otime + 2, otime + 7)
+        template += stream.select(station='PLN').slice(otime + 6, otime + 12)
+        templates.append(template)
+    height = 0.5  # similarity threshold
+    distance = 10  # distance between detections in seconds
+    template_names = ['1st template', '2nd template']
+    detections, sims = correlation_detector(stream, templates, height, distance, plot=stream, template_names=template_names)
 
 .. gallery-plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
@@ -167,7 +204,7 @@ Gallery
     net.plot(projection="ortho")
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.core.event.Catalog.plot.html
+    :target: packages/autogen/obspy.core.event.catalog.Catalog.plot.html
     :alt: Basemap preview plot of Catalog class
 
     from obspy import read_events
@@ -181,6 +218,15 @@ Gallery
     from obspy import read_inventory
     inv = read_inventory()
     inv.plot_response(0.001, station="RJOB")
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
+    :alt: Bode plot of Inventory indicating different epochs
+
+    from obspy import read_inventory
+    inv = read_inventory()
+    inv = inv.select(station='RJOB', channel='EHZ')
+    inv.plot_response(0.001, label_epoch_dates=True)
 
 .. gallery-plot::
     :target: packages/autogen/obspy.core.inventory.response.Response.plot.html
@@ -222,6 +268,85 @@ Gallery
         0.00001 * tr.times() ** 5
 
     polynomial(tr.data, order=3, plot=True)
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.event.event.Event.plot.html
+    :alt: Event plot
+
+    from obspy import read_events
+    event = read_events("/path/to/CMTSOLUTION")[0]
+    event.plot()
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.event.event.Event.plot.html
+    :alt: Event plot
+
+    from obspy import read_events
+    event = read_events("/path/to/CMTSOLUTION")[0]
+    event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
+
+.. image:: /_static/sds_report.png
+    :target: packages/autogen/obspy.scripts.sds_html_report.html
+    :alt: SDS html report
+    :scale: 50%
+
+Colormap comparison
+===================
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import _colormap_plot_overview
+    _colormap_plot_overview()
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_cwt
+    _colormap_plot_cwt([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_array_response
+    _colormap_plot_array_response([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_similarity
+    _colormap_plot_similarity([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_beamforming_time
+    _colormap_plot_beamforming_time([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_beamforming_polar
+    _colormap_plot_beamforming_polar([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r, pqlx
+    from obspy.imaging.cm import _colormap_plot_ppsd
+    _colormap_plot_ppsd([viridis, viridis_r, viridis_white, viridis_white_r, pqlx])
 
 .. raw:: html
 

@@ -19,6 +19,7 @@
        :toctree: autogen
        :nosignatures:
 
+       core
        fields
        parser
        utils

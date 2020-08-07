@@ -6,12 +6,8 @@ Keyhole Markup Language (KML) output support in ObsPy
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from math import log
 
 from lxml.etree import Element, SubElement, tostring
@@ -308,7 +304,7 @@ def _rgba_tuple_to_kml_color_code(rgba):
     """
     try:
         r, g, b, a = rgba
-    except:
+    except Exception:
         r, g, b = rgba
         a = 1.0
     return "".join(["%02x" % int(x * 255) for x in (a, b, g, r)])

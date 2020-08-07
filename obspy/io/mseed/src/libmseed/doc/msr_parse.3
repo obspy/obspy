@@ -1,6 +1,6 @@
 .TH MSR_PARSE 3 2013/01/07 "Libmseed API"
-.SH DESCRIPTION
-Detect and parse a SEED data record from a memory buffer
+.SH NAME
+msr_parse - Detect and parse a SEED data record from a memory buffer
 
 .SH SYNOPSIS
 .nf
@@ -101,7 +101,7 @@ The following example illustrates the intended usage:
           if ( verbose && offset < recbuflen )
           ms_log (2, "Error parsing record at offset %"PRId64"\n", offset);
         }
-      else /* Succesfully found and parsed record */
+      else /* Successfully found and parsed record */
         {
           /* Do something with the record, for example print the details */
           msr_print (msr, verbose);

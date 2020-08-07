@@ -3,7 +3,7 @@
 """
 A command-line program that runs all ObsPy tests.
 
-For documentation see file obspy/core/scripts/runtests.py.
+For documentation see file obspy/scripts/runtests.py.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

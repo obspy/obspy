@@ -3,11 +3,6 @@
 """
 Holds various helper classes to keep the file number manageable.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from collections import namedtuple
 
 import numpy as np
@@ -22,10 +17,10 @@ class TauModelError(Exception):
 
 
 SlownessLayer = np.dtype([
-    (native_str('topP'), np.float_),
-    (native_str('topDepth'), np.float_),
-    (native_str('botP'), np.float_),
-    (native_str('botDepth'), np.float_),
+    ('top_p', np.float_),
+    ('top_depth', np.float_),
+    ('bot_p', np.float_),
+    ('bot_depth', np.float_),
 ])
 
 
@@ -34,10 +29,10 @@ Holds the ray parameter, time and distance increments, and optionally a
 depth, for a ray passing through some layer.
 """
 TimeDist = np.dtype([
-    (native_str('p'), np.float_),
-    (native_str('time'), np.float_),
-    (native_str('dist'), np.float_),
-    (native_str('depth'), np.float_),
+    ('p', np.float_),
+    ('time', np.float_),
+    ('dist', np.float_),
+    ('depth', np.float_),
 ])
 
 
@@ -46,12 +41,12 @@ Holds the ray parameter, time and distance increments, and optionally a
 depth, latitude and longitude for a ray passing through some layer.
 """
 TimeDistGeo = np.dtype([
-    (native_str('p'), np.float_),
-    (native_str('time'), np.float_),
-    (native_str('dist'), np.float_),
-    (native_str('depth'), np.float_),
-    (native_str('lat'), np.float_),
-    (native_str('lon'), np.float_)
+    ('p', np.float_),
+    ('time', np.float_),
+    ('dist', np.float_),
+    ('depth', np.float_),
+    ('lat', np.float_),
+    ('lon', np.float_)
 ])
 
 
@@ -60,10 +55,10 @@ Tracks critical points (discontinuities or reversals in slowness gradient)
 within slowness and velocity models.
 """
 CriticalDepth = np.dtype([
-    (native_str('depth'), np.float_),
-    (native_str('velLayerNum'), np.int_),
-    (native_str('pLayerNum'), np.int_),
-    (native_str('sLayerNum'), np.int_),
+    ('depth', np.float_),
+    ('vel_layer_num', np.int_),
+    ('p_layer_num', np.int_),
+    ('s_layer_num', np.int_),
 ])
 
 
@@ -72,9 +67,9 @@ class DepthRange:
     Convenience class for storing a depth range. It has a top and a bottom and
     can have an associated ray parameter.
     """
-    def __init__(self, topDepth=None, botDepth=None, ray_param=-1):
-        self.topDepth = topDepth
-        self.botDepth = botDepth
+    def __init__(self, top_depth=None, bot_depth=None, ray_param=-1):
+        self.top_depth = top_depth
+        self.bot_depth = bot_depth
         self.ray_param = ray_param
 
     def _to_array(self):
@@ -82,8 +77,8 @@ class DepthRange:
         Store all attributes for serialization in a structured array.
         """
         arr = np.empty(3, dtype=np.float_)
-        arr[0] = self.topDepth
-        arr[1] = self.botDepth
+        arr[0] = self.top_depth
+        arr[1] = self.bot_depth
         arr[2] = self.ray_param
         return arr
 
@@ -93,15 +88,15 @@ class DepthRange:
         Create instance object from a structured array used in serialization.
         """
         depth_range = DepthRange()
-        depth_range.topDepth = arr[0]
-        depth_range.botDepth = arr[1]
+        depth_range.top_depth = arr[0]
+        depth_range.bot_depth = arr[1]
         depth_range.ray_param = arr[2]
         return depth_range
 
 
 SplitLayerInfo = namedtuple(
     'SplitLayerInfo',
-    ['sMod', 'neededSplit', 'movedSample', 'ray_param']
+    ['s_mod', 'needed_split', 'moved_sample', 'ray_param']
 )
 
 
@@ -137,7 +132,13 @@ class Arrival(object):
     """
     def __init__(self, phase, distance, time, purist_dist, ray_param,
                  ray_param_index, name, purist_name, source_depth,
-                 takeoff_angle, incident_angle):
+                 receiver_depth, takeoff_angle=None, incident_angle=None):
+        if np.isnan(time):
+            raise ValueError('Time cannot be NaN')
+        if ray_param_index < 0:
+            raise ValueError(
+                'ray_param_index cannot be negative: %d' % (ray_param_index, ))
+
         self.phase = phase
         self.distance = distance
         self.time = time
@@ -147,8 +148,15 @@ class Arrival(object):
         self.name = name
         self.purist_name = purist_name
         self.source_depth = source_depth
-        self.incident_angle = incident_angle
-        self.takeoff_angle = takeoff_angle
+        self.receiver_depth = receiver_depth
+        if takeoff_angle is None:
+            self.takeoff_angle = phase.calc_takeoff_angle(ray_param)
+        else:
+            self.takeoff_angle = takeoff_angle
+        if incident_angle is None:
+            self.incident_angle = phase.calc_incident_angle(ray_param)
+        else:
+            self.incident_angle = incident_angle
         self.pierce = None
         self.path = None
 

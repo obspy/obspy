@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import unittest
 
 from obspy.db.util import parse_mapping_data
@@ -13,7 +9,7 @@ class UtilTestCase(unittest.TestCase):
     Test suite for obspy.db.util.
     """
 
-    def test_parseMappingData(self):
+    def test_parse_mapping(self):
         """
         Tests for function parse_mapping_data.
         """

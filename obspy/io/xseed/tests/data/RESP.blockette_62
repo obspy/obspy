@@ -1,0 +1,144 @@
+#		<< obspy, Version 1.0.3.post0+1387.gaa7dd7ea78.dirty >>
+#
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     DR01
+B050F16     Network:     XH
+B052F03     Location:    30
+B052F04     Channel:     LDO
+B052F22     Start date:  2014,324
+B052F23     End date:    2016,315,23:59:59.0000
+#		=======================================
+#		+              +---------------------------------------+                      +
+#		+              |   Polynomial response,  DR01 ch LDO   |                      +
+#		+              +---------------------------------------+                      +
+#
+B062F03     Transfer function type:                P [Polynomial]
+B062F04     Stage sequence number:                 1
+B062F05     Response in units lookup:              PA - Pascals
+B062F06     Response out units lookup:             COUNTS - digital counts
+B062F07     Polynomial Approximation Type:         M [MacLaurin]
+B062F08     Valid Frequency Units:                 B [Hz]
+B062F09     Lower Valid Frequency Bound:           0.001
+B062F10     Upper Valid Frequency Bound:           10
+B062F11     Lower Bound of Approximation:          600
+B062F12     Upper Bound of Approximation:          1100
+B062F13     Maximum Absolute Error:                0
+B062F14     Number of coefficients:                2
+#		Polynomial coefficients:
+#		  i, coefficient,  error
+B062F15-16    0  8.000000E+02  0.000000E+00
+B062F15-16    1  1.500000E-04  0.000000E+00
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  DR01 ch LDO      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  1.00
+B058F05     Frequency of gain:                     2.000000E-03 HZ
+B058F06     Number of calibrations:                0
+#
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  DR01 ch LDO   |                 +
+#		+               +-------------------------------------------+                 +
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 2
+B054F05     Response in units lookup:              V - emf in volts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  DR01 ch LDO   |                       +
+#		+                      +------------------------------+                       +
+#
+B057F03     Stage sequence number:                 2
+B057F04     Input sample rate:                     1.000000E+00
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             0.000000E+00
+B057F08     Correction applied (seconds):          0.000000E+00
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  DR01 ch LDO      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 2
+B058F04     Gain:                                  4.194300E+05
+B058F05     Frequency of gain:                     2.000000E-03 HZ
+B058F06     Number of calibrations:                0
+#
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  DR01 ch LDO   |                 +
+#		+               +-------------------------------------------+                 +
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 3
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  31
+B054F10     Number of denominators:                0
+#		Numerator coefficients:
+#		  i, coefficient,  error
+B054F08-09    0 -1.220040E-16  0.000000E+00
+B054F08-09    1  3.372780E-11  0.000000E+00
+B054F08-09    2 -3.190940E-07  0.000000E+00
+B054F08-09    3  1.263130E-06  0.000000E+00
+B054F08-09    4 -1.484910E-05  0.000000E+00
+B054F08-09    5  3.321990E-03  0.000000E+00
+B054F08-09    6  1.083230E-03  0.000000E+00
+B054F08-09    7 -6.240460E-03  0.000000E+00
+B054F08-09    8  1.265660E-02  0.000000E+00
+B054F08-09    9 -1.576630E-02  0.000000E+00
+B054F08-09   10  9.567620E-03  0.000000E+00
+B054F08-09   11  1.071100E-02  0.000000E+00
+B054F08-09   12 -4.564250E-02  0.000000E+00
+B054F08-09   13  8.975230E-02  0.000000E+00
+B054F08-09   14 -1.324370E-01  0.000000E+00
+B054F08-09   15  1.552890E-01  0.000000E+00
+B054F08-09   16  8.123710E-01  0.000000E+00
+B054F08-09   17  1.854150E-01  0.000000E+00
+B054F08-09   18 -1.406090E-01  0.000000E+00
+B054F08-09   19  8.970830E-02  0.000000E+00
+B054F08-09   20 -4.243970E-02  0.000000E+00
+B054F08-09   21  7.140010E-03  0.000000E+00
+B054F08-09   22  1.210510E-02  0.000000E+00
+B054F08-09   23 -1.693070E-02  0.000000E+00
+B054F08-09   24  1.277350E-02  0.000000E+00
+B054F08-09   25 -5.864240E-03  0.000000E+00
+B054F08-09   26  6.451770E-04  0.000000E+00
+B054F08-09   27  3.487130E-03  0.000000E+00
+B054F08-09   28 -8.530580E-05  0.000000E+00
+B054F08-09   29  2.297130E-06  0.000000E+00
+B054F08-09   30 -2.258300E-07  0.000000E+00
+#
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  DR01 ch LDO   |                       +
+#		+                      +------------------------------+                       +
+#
+B057F03     Stage sequence number:                 3
+B057F04     Input sample rate:                     1.000000E+00
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             1.600000E+01
+B057F08     Correction applied (seconds):          1.600000E+01
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  DR01 ch LDO      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 3
+B058F04     Gain:                                  1.000000E+00
+B058F05     Frequency of gain:                     2.000000E-03 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,  DR01 ch LDO   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           6.990510E+03
+B058F05     Frequency of sensitivity:              2.000000E-03 HZ
+B058F06     Number of calibrations:                0
+#

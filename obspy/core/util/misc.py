@@ -6,28 +6,25 @@ Various additional utilities for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
+import contextlib
 import inspect
+import io
 import itertools
 import math
 import os
-import platform
 import shutil
 import sys
 import tempfile
 import warnings
-from contextlib import contextmanager
 from subprocess import STDOUT, CalledProcessError, check_output
 
+
 import numpy as np
+from pkg_resources import load_entry_point
 
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-
+WIN32 = sys.platform.startswith('win32')
 
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
@@ -35,7 +32,6 @@ from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 # We use this e.g. in seishub.client.getWaveform to request two samples more on
 # both start and end to cut to the samples that really are nearest to requested
 # start/end time afterwards.
-
 BAND_CODE = {'F': 1000.0,
              'G': 1000.0,
              'D': 250.0,
@@ -52,6 +48,12 @@ BAND_CODE = {'F': 1000.0,
              'P': 0.000001,
              'T': 0.0000001,
              'Q': 0.00000001}
+
+# Dict that stores results from load entry points
+_ENTRY_POINT_CACHE = {}
+
+# The kwargs used by load_entry_point function
+_LOAD_ENTRY_POINT_KEYS = ('dist', 'group', 'name')
 
 
 def guess_delta(channel):
@@ -76,7 +78,7 @@ def guess_delta(channel):
     """
     try:
         return 1. / BAND_CODE[channel[0]]
-    except:
+    except Exception:
         msg = "No or unknown channel id provided. Specifying a channel id " + \
               "could lead to better selection of first/last samples of " + \
               "fetched traces."
@@ -155,7 +157,7 @@ def flat_not_masked_contiguous(a):
         if not k:
             result.append(slice(i, i + n))
         i += n
-    return result or None
+    return result
 
 
 def complexify_string(line):
@@ -250,7 +252,7 @@ def get_untracked_files_from_git():
         git_root_dir = p.decode().strip()
         if git_root_dir:
             git_root_dir = os.path.abspath(git_root_dir)
-        if git_root_dir != dir_:
+        if os.path.normcase(git_root_dir) != os.path.normcase(dir_):
             raise ValueError('Git root directory (%s) does not match expected '
                              'path (%s).' % (git_root_dir, dir_))
         p = check_output(['git', 'status', '-u', '--porcelain'],
@@ -264,189 +266,147 @@ def get_untracked_files_from_git():
     return files
 
 
-def wrap_long_string(string, line_length=79, prefix="",
-                     special_first_prefix=None, assumed_tab_width=8,
-                     sloppy=False):
+class CaptureIO(io.TextIOWrapper):
+    def __init__(self):
+        super(CaptureIO, self).__init__(io.BytesIO(), encoding='utf-8',
+                                        newline='\n', write_through=True)
+
+    def getvalue(self):
+        return self.buffer.getvalue().decode('utf-8')
+
+
+@contextlib.contextmanager
+def CatchOutput():  # NOQA
     """
-    Reformat a long string, wrapping it to a specified length.
-
-    :type string: str
-    :param string: Input string to wrap
-    :type line_length: int
-    :param line_length: total target length of each line, including the
-        prefix if specified
-    :type prefix: str, optional
-    :param prefix: common prefix used to start the line (e.g. some spaces,
-        tabs for indentation)
-    :type special_first_prefix: str, optional
-    :param special_first_prefix: special prefix to use on the first line,
-        instead of the general prefix
-    :type assumed_tab_width: int
-    :param assumed_tab_width: if the prefix strings include tabs the line
-        length can not be computed exactly. assume a tab in general is
-        equivalent to this many spaces.
-    :type sloppy: bool
-    :param sloppy: Controls the behavior when a single word without spaces is
-        to long to fit on a single line. Default (False) is to allow a single
-        line to be longer than the specified line length. If set to True,
-        Long words will be force-hyphenated to fit the line.
-
-    .. deprecated:: 0.10.0
-        The wrap_long_string function is deprecated. Please use the textwrap
-        module from the standard library instead.
-
-    .. rubric:: Examples
-
-    >>> string = ("Retrieve an event based on the unique origin "
-    ...           "ID numbers assigned by the IRIS DMC")
-    >>> print(wrap_long_string(string, prefix="\t*\t > ",
-    ...                        line_length=50))  # doctest: +SKIP
-            *        > Retrieve an event based on
-            *        > the unique origin ID numbers
-            *        > assigned by the IRIS DMC
-    >>> print(wrap_long_string(string, prefix="\t* ",
-    ...                        line_length=70))  # doctest: +SKIP
-            * Retrieve an event based on the unique origin ID
-            * numbers assigned by the IRIS DMC
-    >>> print(wrap_long_string(string, prefix="\t \t  > ",
-    ...                        special_first_prefix="\t*\t",
-    ...                        line_length=50))  # doctest: +SKIP
-            *        Retrieve an event based on
-                     > the unique origin ID numbers
-                     > assigned by the IRIS DMC
-    >>> problem_string = ("Retrieve_an_event_based_on_the_unique "
-    ...                   "origin ID numbers assigned by the IRIS DMC")
-    >>> print(wrap_long_string(problem_string, prefix="\t\t",
-    ...                        line_length=40, sloppy=True))  # doctest: +SKIP
-                    Retrieve_an_event_based_on_the_unique
-                    origin ID
-                    numbers
-                    assigned by
-                    the IRIS DMC
-    >>> print(wrap_long_string(problem_string, prefix="\t\t",
-    ...                        line_length=40))  # doctest: +SKIP
-                    Retrieve_an_event_base\
-                    d_on_the_unique origin
-                    ID numbers assigned by
-                    the IRIS DMC
-    """
-
-    warnings.warn('The wrap_long_string function is deprecated. Please use '
-                  'the textwrap module from the standard library instead.',
-                  ObsPyDeprecationWarning)
-
-    def text_width_for_prefix(line_length, prefix):
-        text_width = line_length - len(prefix) - \
-            (assumed_tab_width - 1) * prefix.count("\t")
-        return text_width
-
-    lines = []
-    if special_first_prefix is not None:
-        text_width = text_width_for_prefix(line_length, special_first_prefix)
-    else:
-        text_width = text_width_for_prefix(line_length, prefix)
-
-    while len(string) > text_width:
-        ind = string.rfind(" ", 0, text_width)
-        # no suitable place to split found
-        if ind < 1:
-            # sloppy: search to right for space to split at
-            if sloppy:
-                ind = string.find(" ", text_width)
-                if ind == -1:
-                    ind = len(string) - 1
-                part = string[:ind]
-                string = string[ind + 1:]
-            # not sloppy: force hyphenate
-            else:
-                ind = text_width - 2
-                part = string[:ind] + "\\"
-                string = string[ind:]
-        # found a suitable place to split
-        else:
-            part = string[:ind]
-            string = string[ind + 1:]
-        # need to use special first line prefix?
-        if special_first_prefix is not None and not lines:
-            line = special_first_prefix + part
-        else:
-            line = prefix + part
-        lines.append(line)
-        # need to set default text width, just in case we had a different
-        # text width for the first line
-        text_width = text_width_for_prefix(line_length, prefix)
-    lines.append(prefix + string)
-    return "\n".join(lines)
-
-
-@contextmanager
-def CatchOutput():
-    """
-    A context manager that catches stdout/stderr/exit() for its scope.
+    A context manager that captures input to stdout/stderr. Python level only!
 
     Always use with "with" statement. Does nothing otherwise.
 
-    Based on: http://bugs.python.org/msg184312
-
     >>> with CatchOutput() as out:  # doctest: +SKIP
-    ...    os.system('echo "mystdout"')
-    ...    os.system('echo "mystderr" >&2')
+    ...    sys.stdout.write("mystdout")
+    ...    sys.stderr.write("mystderr")
     >>> print(out.stdout)  # doctest: +SKIP
     mystdout
     >>> print(out.stderr)  # doctest: +SKIP
     mystderr
     """
-
     # Dummy class to transport the output.
     class Output():
-        pass
+        stdout = ''
+        stderr = ''
     out = Output()
-    out.stdout = ''
-    out.stderr = ''
 
-    stdout_fd = sys.stdout.fileno()
-    stderr_fd = sys.stderr.fileno()
-    with tempfile.TemporaryFile(prefix='obspy-') as tmp_stdout:
-        with tempfile.TemporaryFile(prefix='obspy-') as tmp_stderr:
-            stdout_copy = os.dup(stdout_fd)
-            stderr_copy = os.dup(stderr_fd)
+    # set current stdout/stderr to in-memory text streams
+    sys.stdout = stdout_result = CaptureIO()
+    sys.stderr = stderr_result = CaptureIO()
 
-            try:
+    try:
+        raised = False
+        yield out
+    except SystemExit:
+        raised = True
+    finally:
+        out.stdout = stdout_result.getvalue()
+        out.stderr = stderr_result.getvalue()
+
+        # reset to original stdout/stderr
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        # normalize line breaks
+        if WIN32:
+            out.stdout = out.stdout.replace('\r', '')
+            out.stderr = out.stderr.replace('\r', '')
+
+    if raised:
+        raise SystemExit(out.stderr)
+
+
+def _py36_windowsconsoleio_workaround():
+    """
+    This monkey patch prevents crashing Py3.6 under Windows while using
+    the SuppressOutput context manager.
+
+    Python 3.6 implemented unicode console handling for Windows. This works
+    by reading/writing to the raw console handle using
+    ``{Read,Write}ConsoleW``.
+    The problem is that we are going to ``dup2`` over the stdio file
+    descriptors when doing ``FDCapture`` and this will ``CloseHandle`` the
+    handles used by Python to write to the console. Though there is still some
+    weirdness and the console handle seems to only be closed randomly and not
+    on the first call to ``CloseHandle``, or maybe it gets reopened with the
+    same handle value when we suspend capturing.
+    The workaround in this case will reopen stdio with a different fd which
+    also means a different handle by replicating the logic in
+    "Py_lifecycle.c:initstdio/create_stdio".
+    See https://github.com/pytest-dev/py/issues/103
+
+    See http://bugs.python.org/issue30555
+    """
+    if not WIN32 or sys.version_info[:2] < (3, 6):
+        return
+    if not hasattr(sys.stdout, 'buffer'):
+        return
+    buffered = hasattr(sys.stdout.buffer, 'raw')
+    raw_stdout = sys.stdout.buffer.raw if buffered else sys.stdout.buffer
+
+    if not isinstance(raw_stdout, io._WindowsConsoleIO):
+        return
+
+    def _reopen_stdio(f, mode):
+        if not buffered and mode[0] == 'w':
+            buffering = 0
+        else:
+            buffering = -1
+
+        return io.TextIOWrapper(
+            open(os.dup(f.fileno()), mode, buffering),
+            f.encoding,
+            f.errors,
+            f.newlines,
+            f.line_buffering)
+
+    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
+    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
+    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')
+
+
+_py36_windowsconsoleio_workaround()
+
+
+@contextlib.contextmanager
+def SuppressOutput():  # noqa
+    """
+    A context manager that suppresses output to stdout/stderr.
+    Always use with "with" statement. Does nothing otherwise.
+    >>> with SuppressOutput():  # doctest: +SKIP
+    ...    os.system('echo "mystdout"')
+    ...    os.system('echo "mystderr" >&2')
+
+    Note: Does not work reliably for Windows Python 3.6 under Windows - see
+    function definition of _py36_windowsconsoleio_workaround().
+    """
+    with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
+        with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
+            with open(os.devnull, 'wb') as to_file:
                 sys.stdout.flush()
-                os.dup2(tmp_stdout.fileno(), stdout_fd)
-
                 sys.stderr.flush()
-                os.dup2(tmp_stderr.fileno(), stderr_fd)
-
-                raised = False
-                yield out
-
-            except SystemExit:
-                raised = True
-
-            finally:
-                sys.stdout.flush()
-                os.dup2(stdout_copy, stdout_fd)
-                os.close(stdout_copy)
-                tmp_stdout.seek(0)
-                out.stdout = tmp_stdout.read()
-
-                sys.stderr.flush()
-                os.dup2(stderr_copy, stderr_fd)
-                os.close(stderr_copy)
-                tmp_stderr.seek(0)
-                out.stderr = tmp_stderr.read()
-
-                if platform.system() == "Windows":
-                    out.stdout = out.stdout.replace(b'\r', b'')
-                    out.stderr = out.stderr.replace(b'\r', b'')
-
-                if raised:
-                    raise SystemExit(out.stderr)
+                os.dup2(to_file.fileno(), 1)
+                os.dup2(to_file.fileno(), 2)
+                try:
+                    yield
+                finally:
+                    sys.stdout.flush()
+                    sys.stderr.flush()
+                    os.dup2(tmp_stdout.fileno(), 1)
+                    os.dup2(tmp_stderr.fileno(), 2)
+    # reset to original stdout/stderr
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
 
 
-@contextmanager
-def TemporaryWorkingDirectory():
+@contextlib.contextmanager
+def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
     """
     A context manager that changes to a temporary working directory.
 
@@ -462,7 +422,13 @@ def TemporaryWorkingDirectory():
         yield
     finally:
         os.chdir(old_dir)
-        shutil.rmtree(tempdir)
+        try:
+            shutil.rmtree(tempdir)
+        # Windows on appveyor is having issues with removing these temporary
+        # directories (e.g. https://ci.appveyor.com/project/obspy/obspy/builds
+        # /20718605/job/0vuja1b95rv5a0s2).
+        except Exception as e:
+            warnings.warn(e.__repr__())
 
 
 def factorize_int(x):
@@ -472,8 +438,7 @@ def factorize_int(x):
     Could be done faster but faster algorithm have much more lines of code and
     this is fast enough for our purposes.
 
-    http://stackoverflow.com/questions/14550794/\
-    python-integer-factorization-into-primes
+    https://stackoverflow.com/q/14550794
 
     >>> factorize_int(1800004)
     [2, 2, 450001]
@@ -559,12 +524,17 @@ class MatplotlibBackend(object):
         successfully. If ``False``, additionally tries to use
         :func:`matplotlib.use` first and also shows a warning if the backend
         was not switched successfully.
+    :type close: bool
+    :param close: Whether to close all matplotlib figures when exiting the
+        context manager.
     """
-    def __init__(self, backend, sloppy=True):
+
+    def __init__(self, backend, sloppy=True, close=False):
         self.temporary_backend = backend
         self.sloppy = sloppy
         import matplotlib
         self.previous_backend = matplotlib.get_backend()
+        self.close = close
 
     def __enter__(self):
         if self.temporary_backend is None:
@@ -572,6 +542,9 @@ class MatplotlibBackend(object):
         self.switch_backend(backend=self.temporary_backend, sloppy=self.sloppy)
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        if self.close:
+            import matplotlib.pyplot as plt
+            plt.close('all')
         if self.temporary_backend is None:
             return
         self.switch_backend(backend=self.previous_backend, sloppy=self.sloppy)
@@ -609,7 +582,180 @@ class MatplotlibBackend(object):
             # show a warning if not
             if matplotlib.get_backend().upper() != backend.upper():
                 msg = "Unable to change matplotlib backend to '%s'" % backend
-                warnings.warn(msg)
+                raise Exception(msg)
+
+
+def limit_numpy_fft_cache(max_size_in_mb_per_cache=100):
+    """
+    NumPy's FFT implementation utilizes caches to speedup subsequent FFTs of
+    the same size. This accumulates memory when run for various length FFTs
+    as can readily happen in seismology.
+
+    This utility function clears both, full and real-only caches if their
+    size is above the given threshold.
+
+    The default 100 MB is fairly generous but we still want to profit from
+    the cache where applicable.
+    """
+    for cache in ["_fft_cache", "_real_fft_cache"]:
+        # Guard against different numpy versions just to be safe.
+        if not hasattr(np.fft.fftpack, cache):
+            continue
+        cache = getattr(np.fft.fftpack, cache)
+        # Check type directly and don't use isinstance() as future numpy
+        # versions might use some subclass or what not.
+        if type(cache) is not dict:
+            continue
+        # Its a dictionary with list's of arrays as the values. Wrap in
+        # try/except to guard against future numpy changes.
+        try:
+            total_size = sum([_j.nbytes for _i in cache.values() for _j in _i])
+        except Exception:
+            continue
+        if total_size > max_size_in_mb_per_cache * 1024 * 1024:
+            cache.clear()
+
+
+def buffered_load_entry_point(dist, group, name):
+    """
+    Return `name` entry point of `group` for `dist` or raise ImportError
+    :type dist: str
+    :param dist: The name of the distribution containing the entry point.
+    :type group: str
+    :param group: The name of the group containing the entry point.
+    :type name: str
+    :param name: The name of the entry point.
+    :return: The loaded entry point
+    """
+    hash_str = '/'.join([dist, group, name])
+    if hash_str not in _ENTRY_POINT_CACHE:
+        _ENTRY_POINT_CACHE[hash_str] = load_entry_point(dist, group, name)
+    return _ENTRY_POINT_CACHE[hash_str]
+
+
+def _yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
+    """
+    Recurse an object, yield a tuple of object, parent, attr.
+
+    Can be used, for example, to yield all ResourceIdentifier instances
+    contained in any obspy.core.event class instances and attached instances,
+    as well as the objects they are attached to (parents) and the attribute
+    name in which they are stored (attr).
+
+    :param obj:
+        The object to recurse through attributes of lists, tuples, and other
+        instances.
+    :param cls:
+        Only return instances of cls if not None, else return all instances.
+    :param is_attr:
+        Only return objects stored as attr_name, if None return all.
+    :param has_attr:
+        Only return objects that have attribute has_attr, if None return all.
+
+    .. rubric:: General Usage
+
+    Get a list of all resource_ids contained in an event, the objects they
+    are attached to, and the attribute name on the parent object.
+
+    >>> import obspy
+    >>> from obspy.core.event import ResourceIdentifier
+    >>> cat = obspy.read_events()
+    >>> resource_tuple = list(_yield_obj_parent_attr(cat, ResourceIdentifier))
+    """
+    ids = set()  # id cache to avoid circular references
+
+    def func(obj, attr=None, parent=None):
+        id_tuple = (id(obj), id(parent))
+
+        # If object/parent combo have not been yielded continue.
+        if id_tuple not in ids:
+            ids.add(id_tuple)
+            # Check if this object is stored as the desired attribute.
+            is_attribute = is_attr is None or attr == is_attr
+            # Check if the object has the desired attribute.
+            has_attribute = has_attr is None or hasattr(obj, has_attr)
+            # Check if isinstance of desired class.
+            is_instance = cls is None or isinstance(obj, cls)
+            # Yield object, parent, and attr if desired conditions are met.
+            if is_attribute and has_attribute and is_instance:
+                yield (obj, parent, attr)
+            # Iterate through basic built-in types.
+            if isinstance(obj, (list, tuple)):
+                for val in obj:
+                    for out in func(val, attr=attr, parent=obj):
+                        yield out
+            elif isinstance(obj, dict):
+                for item, val in obj.items():
+                    for out in func(val, attr=item, parent=obj):
+                        yield out
+            # Iterate through non built-in object attributes.
+            elif hasattr(obj, '__slots__'):
+                for attr in obj.__slots__:
+                    val = getattr(obj, attr)
+                    for out in func(val, attr=attr, parent=obj):
+                        yield out
+            elif hasattr(obj, '__dict__'):
+                for item, val in obj.__dict__.items():
+                    for out in func(val, attr=item, parent=obj):
+                        yield out
+
+    return func(obj)
+
+
+def _yield_resource_id_parent_attr(obj):
+    """
+    Specialized form of _yield_obj_parent_attr for getting ResourceIdentifiers.
+
+    This function makes some assumptions because only resource_identifiers are
+    being sought in order to improve efficiency.
+    """
+    from obspy.core.event import ResourceIdentifier
+
+    ids = set()  # id cache to avoid circular references
+
+    def func(obj, parent=None, attr=None):
+        if obj is None or not (hasattr(obj, '__dict__') or
+                               isinstance(obj, (list, tuple))):
+            return  # stop iteration
+        id_tuple = (id(obj), id(parent))
+        if id_tuple not in ids:
+            ids.add(id_tuple)
+            # Yield object, parent, and attr if desired conditions are met
+            if isinstance(obj, ResourceIdentifier):
+                yield (obj, parent, attr)
+            # Iterate through basic built-in types.
+            elif isinstance(obj, (list, tuple)):
+                for val in obj:
+                    for out in func(val, obj, attr):
+                        yield out
+            # Iterate through non built-in object attributes.
+            elif hasattr(obj, '__dict__'):
+                for item, val in obj.__dict__.items():
+                    for out in func(val, obj, item):
+                        yield out
+
+    return func(obj)
+
+
+def _seed_id_map(
+        inventory=None, user_id_map=None, key='{sta.code}',
+        seed_factory='{net.code}.{{}}.{cha.location_code}.{cha.code:.2}{{}}'):
+    """
+    Return mapping between station code and seed id expressions
+    """
+    id_map = {}
+    if inventory is not None:
+        msg = 'Multiple seed ids found for station {}. Use first.'
+        for net in inventory:
+            for sta in net:
+                for cha in sta:
+                    k = key.format(net=net, sta=sta, cha=cha)
+                    v = seed_factory.format(net=net, sta=sta, cha=cha)
+                    if id_map.setdefault(k, v) != v:
+                        warnings.warn(msg.format(k))
+    if user_id_map is not None:
+        id_map.update(user_id_map)
+    return id_map
 
 
 if __name__ == '__main__':

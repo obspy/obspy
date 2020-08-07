@@ -7,12 +7,8 @@ The obspy.clients.fdsn.client test suite.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import io
 import os
 import re
@@ -20,18 +16,51 @@ import sys
 import unittest
 import warnings
 from difflib import Differ
+from unittest import mock
 
-from obspy import UTCDateTime, read, read_inventory, read_events
-from obspy.core.compatibility import mock
+import urllib.request as urllib_request
+
+import lxml
+import numpy as np
+import requests
+
+from obspy import UTCDateTime, read, read_inventory, Stream, Trace
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.clients.fdsn import Client
-from obspy.clients.fdsn.client import build_url, parse_simple_xml
-from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, FDSNException,
-                                       FDSNRedirectException)
+from obspy.clients.fdsn import Client, RoutingClient
+from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
+                                       get_bulk_string)
+from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
+                                       FDSNException, FDSNRedirectException,
+                                       FDSNNoDataException,
+                                       FDSNRequestTooLargeException,
+                                       FDSNBadRequestException,
+                                       FDSNNoAuthenticationServiceException,
+                                       FDSNTimeoutException,
+                                       FDSNNoServiceException,
+                                       FDSNInternalServerException,
+                                       FDSNTooManyRequestsException,
+                                       FDSNServiceUnavailableException,
+                                       FDSNUnauthorizedException,
+                                       FDSNForbiddenException,
+                                       FDSNDoubleAuthenticationException,
+                                       FDSNInvalidRequestException,
+                                       DEFAULT_SERVICES)
 from obspy.core.inventory import Response
+from obspy.geodetics import locations2degrees
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
+
+
+def _normalize_stats(obj):
+    if isinstance(obj, Stream):
+        for tr in obj:
+            _normalize_stats(tr)
+    else:
+        if "processing" in obj.stats:
+            del obj.stats["processing"]
+        if "_fdsnws_dataselect_url" in obj.stats:
+            del obj.stats._fdsnws_dataselect_url
 
 
 def failmsg(got, expected, ignore_lines=[]):
@@ -65,9 +94,9 @@ def normalize_version_number(string):
     Due to Py3k arbitrary dictionary ordering it also sorts word wise the
     input string, independent of commas and newlines.
     """
-    repl = re.sub('v[0-9]+\.[0-9]+\.[0-9]+', "vX.X.X", string).replace(",", "")
-    return " ".join(
-        sorted(s.strip() for l in repl.splitlines() for s in l.split(" ")))
+    match = r'v[0-9]+\.[0-9]+\.[0-9]+'
+    repl = re.sub(match, "vX.X.X", string).replace(",", "")
+    return [l.strip() for l in repl.splitlines()]
 
 
 class ClientTestCase(unittest.TestCase):
@@ -83,6 +112,60 @@ class ClientTestCase(unittest.TestCase):
         cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
+
+    def test_empty_bulk_string(self):
+        """
+        Makes sure an exception is raised if an empty bulk string would be
+        produced (e.g. empty list as input for `get_bulk_string()`)
+        """
+        msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
+               "of all available data")
+        for bad_input in [[], '', None]:
+            with self.assertRaises(FDSNInvalidRequestException) as e:
+                get_bulk_string(bulk=bad_input, arguments={})
+            self.assertEqual(e.exception.args[0], msg)
+
+    def test_validate_base_url(self):
+        """
+        Tests the _validate_base_url() method.
+        """
+
+        test_urls_valid = list(URL_MAPPINGS.values())
+        test_urls_valid += [
+            "http://arclink.ethz.ch",
+            "http://example.org",
+            "https://webservices.rm.ingv.it",
+            "http://localhost:8080/test/",
+            "http://93.63.40.85/",
+            "http://[::1]:80/test/",
+            "http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]",
+            "http://[2001:db8::ff00:42:8329]",
+            "http://[::ffff:192.168.89.9]",
+            "http://jane",
+            "http://localhost"]
+
+        test_urls_fails = [
+            "http://",
+            "http://127.0.1",
+            "http://127.=.0.1",
+            "http://127.0.0.0.1"]
+        test_urls_fails += [
+            "http://[]",
+            "http://[1]",
+            "http://[1:2]",
+            "http://[1::2::3]",
+            "http://[1::2:3::4]",
+            "http://[1:2:2:4:5:6:7]"]
+
+        for url in test_urls_valid:
+            self.assertEqual(
+                self.client._validate_base_url(url),
+                True)
+
+        for url in test_urls_fails:
+            self.assertEqual(
+                self.client._validate_base_url(url),
+                False)
 
     def test_url_building(self):
         """
@@ -185,6 +268,33 @@ class ClientTestCase(unittest.TestCase):
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=AA%2CBB%2C--")
 
+        # The location parameter is also passed through the
+        # _create_url_from_parameters() method and thus has to survive it!
+        # This guards against a regression where all empty location codes
+        # where removed by this function!
+        for service in ["station", "dataselect"]:
+            for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                        u"", u" ", u"  ", u"--"]:
+                self.assertIn(
+                    "location=--",
+                    self.client._create_url_from_parameters(
+                        service, [],
+                        {"location": loc, "starttime": 0, "endtime": 1}))
+
+        # Also check the full call with a mock test.
+        for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                    u"", u" ", u"  ", u"--"]:
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                self.client.get_stations(0, 0, location=loc,
+                                         filename=mock.Mock())
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                self.client.get_waveforms(1, 2, loc, 4, 0, 0,
+                                          filename=mock.Mock())
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+
     def test_url_building_with_auth(self):
         """
         Tests the Client._build_url() method with authentication.
@@ -201,6 +311,41 @@ class ClientTestCase(unittest.TestCase):
         expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
                     "queryauth?net=BW")
         self.assertEqual(got, expected)
+
+    def test_set_credentials(self):
+        """
+        Test for issue #2146
+
+        When setting credentials not during `__init__` but using
+        `set_credentials`, waveform queries should still properly go to
+        "queryauth" endpoint.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        user = "nobody@iris.edu"
+        password = "anonymous"
+        client.set_credentials(user=user, password=password)
+        got = client._build_url("dataselect", "query", {'net': "BW"})
+        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
+                    "queryauth?net=BW")
+        self.assertEqual(got, expected)
+        # more basic test: check that set_credentials has set Client.user
+        # (which is tested when checking which endpoint to use, query or
+        # queryauth)
+        self.assertEqual(client.user, user)
+
+    def test_trim_stream_after_get_waveform(self):
+        """
+        Tests that stream is properly trimmed to user requested times after
+        fetching from datacenter, see #1887
+        """
+        c = Client(
+            service_mappings={'dataselect':
+                              'http://ws.ipgp.fr/fdsnws/dataselect/1'})
+        starttime = UTCDateTime('2016-11-01T00:00:00')
+        endtime = UTCDateTime('2016-11-01T00:00:10')
+        stream = c.get_waveforms('G', 'PEL', '*', 'LHZ', starttime, endtime)
+        self.assertEqual(starttime, stream[0].stats.starttime)
+        self.assertEqual(endtime, stream[0].stats.endtime)
 
     def test_service_discovery_iris(self):
         """
@@ -253,26 +398,39 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(minradius["type"], float)
         self.assertEqual(minradius["options"], [])
 
-    def test_IRIS_event_catalog_availability(self):
+    def test_iris_event_catalog_availability(self):
         """
         Tests the parsing of the available event catalogs.
         """
         self.assertEqual(set(self.client.services["available_event_catalogs"]),
-                         set(("ANF", "GCMT", "TEST", "ISC", "UofW",
-                              "NEIC PDE")))
+                         set(("GCMT", "ISC", "NEIC PDE")))
 
-    def test_IRIS_event_contributors_availability(self):
+    def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
         """
-        self.assertEqual(set(
-                         self.client.services["available_event_contributors"]),
-                         set(("University of Washington", "ANF", "GCMT",
-                              "GCMT-Q", "ISC", "NEIC ALERT", "NEIC PDE-W",
-                              "UNKNOWN", "NEIC PDE-M", "NEIC COMCAT",
-                              "NEIC PDE-Q")))
+        response = requests.get(
+            'http://service.iris.edu/fdsnws/event/1/contributors')
+        xml = lxml.etree.fromstring(response.content)
+        expected = {
+            elem.text for elem in xml.xpath('/Contributors/Contributor')}
+        # check that we have some values in there
+        self.assertTrue(len(expected) > 5)
+        self.assertEqual(
+            set(self.client.services["available_event_contributors"]),
+            expected)
 
-    def test_simple_XML_parser(self):
+    def test_discover_services_defaults(self):
+        """
+        A Client initialized with _discover_services=False shouldn't perform
+        any services/WADL queries on the endpoint, and should show only the
+        default service parameters.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        _discover_services=False)
+        self.assertEqual(client.services, DEFAULT_SERVICES)
+
+    def test_simple_xml_parser(self):
         """
         Tests the simple XML parsing helper function.
         """
@@ -291,97 +449,128 @@ class ClientTestCase(unittest.TestCase):
                                                      "ISC", "UofW",
                                                      "NEIC PDE"))})
 
-    def test_IRIS_example_queries_event(self):
+    def test_iris_example_queries_event(self):
         """
         Tests the (sometimes modified) example queries given on the IRIS
         web page.
+
+        Used to be tested against files but that was not maintainable. It
+        now tests if the queries return what was asked for.
         """
         client = self.client
 
-        queries = [
-            dict(eventid=609301),
-            dict(starttime=UTCDateTime("2001-01-07T01:00:00"),
-                 endtime=UTCDateTime("2001-01-07T01:05:00"),
-                 catalog="ISC"),
-            dict(starttime=UTCDateTime("2001-01-07T14:00:00"),
-                 endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
-                 maxlatitude=40, minlongitude=-170, maxlongitude=170,
-                 includeallmagnitudes=True, minmagnitude=4,
-                 orderby="magnitude"),
-        ]
-        result_files = ["events_by_eventid.xml",
-                        "events_by_time.xml",
-                        "events_by_misc.xml",
-                        ]
-        for query, filename in zip(queries, result_files):
-            file_ = os.path.join(self.datapath, filename)
-            # query["filename"] = file_
-            got = client.get_events(**query)
-            expected = read_events(file_)
-            self.assertEqual(got, expected, failmsg(got, expected))
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_events(filename=tf.name, **query)
-                with open(tf.name, 'rb') as fh:
-                    got = fh.read()
-                with open(file_, 'rb') as fh:
-                    expected = fh.read()
-            self.assertEqual(got, expected,
-                             filename + '\n' + failmsg(got, expected))
+        # Event id query.
+        cat = client.get_events(eventid=609301)
+        self.assertEqual(len(cat), 1)
+        self.assertIn("609301", cat[0].resource_id.id)
 
-    def test_IRIS_example_queries_station(self):
+        # Temporal query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T01:00:00"),
+            endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertEqual(event.origins[0].extra.catalog.value, "ISC")
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T01:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-07T01:05:00"),
+                               event.origins[0].time)
+
+        # Misc query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T14:00:00"),
+            endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
+            maxlatitude=40, minlongitude=-170, maxlongitude=170,
+            includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T14:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-08T00:00:00"),
+                               event.origins[0].time)
+            self.assertGreater(event.origins[0].latitude, 14.9)
+            self.assertGreater(40.1, event.origins[0].latitude)
+            self.assertGreater(event.origins[0].latitude, -170.1)
+            self.assertGreater(170.1, event.origins[0].latitude)
+            # events returned by FDSNWS can contain many magnitudes with a wide
+            # range, and currently (at least for IRIS) the magnitude threshold
+            # sent to the server checks if at least one magnitude matches, it
+            # does not only check the preferred magnitude..
+            self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
+
+    def test_iris_example_queries_station(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
+
+        This test used to download files but that is almost impossible to
+        keep up to date - thus it is now a bit smarter and tests the
+        returned inventory in different ways.
         """
         client = self.client
 
-        queries = [
-            dict(latitude=-56.1, longitude=-26.7, maxradius=15),
-            dict(startafter=UTCDateTime("2003-01-07"),
-                 endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
-                 maxlatitude=55, minlongitude=170, maxlongitude=-170,
-                 network="IM"),
-            dict(starttime=UTCDateTime("2000-01-01"),
-                 endtime=UTCDateTime("2001-01-01"), net="IU",
-                 sta="ANMO"),
-            dict(starttime=UTCDateTime("2000-01-01"),
-                 endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
-                 location="00"),
-        ]
-        result_files = ["stations_by_latlon.xml",
-                        "stations_by_misc.xml",
-                        "stations_by_station.xml",
-                        "stations_by_station_wildcard.xml",
-                        ]
-        for query, filename in zip(queries, result_files):
-            file_ = os.path.join(self.datapath, filename)
-            # query["filename"] = file_
-            got = client.get_stations(**query)
-            expected = read_inventory(file_, format="STATIONXML")
-            # delete both creating times and modules before comparing objects.
-            got.created = None
-            expected.created = None
-            got.module = None
-            expected.module = None
+        # Radial query.
+        inv = client.get_stations(latitude=-56.1, longitude=-26.7,
+                                  maxradius=15)
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                dist = locations2degrees(sta.latitude, sta.longitude,
+                                         -56.1, -26.7)
+                # small tolerance for WGS84.
+                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
+                                                          sta.code))
 
-            # XXX Py3k: the objects differ in direct comparison, however,
-            # the strings of them are equal
-            self.assertEqual(str(got), str(expected), failmsg(got, expected))
+        # Misc query.
+        inv = client.get_stations(
+            startafter=UTCDateTime("2003-01-07"),
+            endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
+            maxlatitude=55, minlongitude=170, maxlongitude=-170, network="IM")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                msg = "%s.%s" % (net.code, sta.code)
+                self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
+                                   msg)
+                if sta.end_date is not None:
+                    self.assertGreater(UTCDateTime("2011-02-07"), sta.end_date,
+                                       msg)
+                self.assertGreater(sta.latitude, 14.9, msg)
+                self.assertGreater(55.1, sta.latitude, msg)
+                self.assertFalse(-170.1 <= sta.longitude <= 170.1, msg)
+                self.assertEqual(net.code, "IM", msg)
 
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_stations(filename=tf.name, **query)
-                with open(tf.name, 'rb') as fh:
-                    got = fh.read()
-                with open(file_, 'rb') as fh:
-                    expected = fh.read()
-            ignore_lines = ['<Created>', '<TotalNumberStations>',
-                            '<Module>', '<ModuleURI>']
-            msg = failmsg(got.decode(), expected.decode(),
-                          ignore_lines=ignore_lines)
-            self.assertEqual(msg, "", filename + '\n' + msg)
+        # Simple query
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"), net="IU", sta="ANMO")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2001-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertEqual(sta.code, "ANMO")
 
-    def test_IRIS_example_queries_dataselect(self):
+        # Station wildcard query.
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
+            location="00")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2002-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertTrue(sta.code.startswith("A"))
+
+    def test_iris_example_queries_dataselect(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
@@ -405,8 +594,18 @@ class ClientTestCase(unittest.TestCase):
         for query, filename in zip(queries, result_files):
             # test output to stream
             got = client.get_waveforms(*query)
+            # Assert that the meta-information about the provider is stored.
+            for tr in got:
+                self.assertEqual(
+                    tr.stats._fdsnws_dataselect_url,
+                    client.base_url + "/fdsnws/dataselect/1/query")
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
+            # The client trims by default.
+            _normalize_stats(got)
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
                              repr(query))
             # test output to file
@@ -432,15 +631,190 @@ class ClientTestCase(unittest.TestCase):
         got = client.get_waveforms(*query)
         file_ = os.path.join(self.datapath, filename)
         expected = read(file_)
+        _normalize_stats(got)
         self.assertEqual(got, expected, failmsg(got, expected))
+
+    def test_iris_example_queries_event_discover_services_false(self):
+        """
+        Tests the (sometimes modified) example queries given on the IRIS
+        web page, without service discovery.
+
+        Used to be tested against files but that was not maintainable. It
+        now tests if the queries return what was asked for.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        _discover_services=False)
+
+        # Event id query.
+        cat = client.get_events(eventid=609301)
+        self.assertEqual(len(cat), 1)
+        self.assertIn("609301", cat[0].resource_id.id)
+
+        # Temporal query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T01:00:00"),
+            endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertEqual(event.origins[0].extra.catalog.value, "ISC")
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T01:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-07T01:05:00"),
+                               event.origins[0].time)
+
+        # Misc query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T14:00:00"),
+            endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
+            maxlatitude=40, minlongitude=-170, maxlongitude=170,
+            includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T14:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-08T00:00:00"),
+                               event.origins[0].time)
+            self.assertGreater(event.origins[0].latitude, 14.9)
+            self.assertGreater(40.1, event.origins[0].latitude)
+            self.assertGreater(event.origins[0].latitude, -170.1)
+            self.assertGreater(170.1, event.origins[0].latitude)
+            # events returned by FDSNWS can contain many magnitudes with a wide
+            # range, and currently (at least for IRIS) the magnitude threshold
+            # sent to the server checks if at least one magnitude matches, it
+            # does not only check the preferred magnitude..
+            self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
+
+    def test_iris_example_queries_station_discover_services_false(self):
+        """
+        Tests the (sometimes modified) example queries given on IRIS webpage,
+        without service discovery.
+
+        This test used to download files but that is almost impossible to
+        keep up to date - thus it is now a bit smarter and tests the
+        returned inventory in different ways.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        _discover_services=False)
+
+        # Radial query.
+        inv = client.get_stations(latitude=-56.1, longitude=-26.7,
+                                  maxradius=15)
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                dist = locations2degrees(sta.latitude, sta.longitude,
+                                         -56.1, -26.7)
+                # small tolerance for WGS84.
+                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
+                                                          sta.code))
+
+        # Misc query.
+        inv = client.get_stations(
+            startafter=UTCDateTime("2003-01-07"),
+            endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
+            maxlatitude=55, minlongitude=170, maxlongitude=-170, network="IM")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                msg = "%s.%s" % (net.code, sta.code)
+                self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
+                                   msg)
+                if sta.end_date is not None:
+                    self.assertGreater(UTCDateTime("2011-02-07"), sta.end_date,
+                                       msg)
+                self.assertGreater(sta.latitude, 14.9, msg)
+                self.assertGreater(55.1, sta.latitude, msg)
+                self.assertFalse(-170.1 <= sta.longitude <= 170.1, msg)
+                self.assertEqual(net.code, "IM", msg)
+
+        # Simple query
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"), net="IU", sta="ANMO")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2001-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertEqual(sta.code, "ANMO")
+
+        # Station wildcard query.
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
+            location="00")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2002-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertTrue(sta.code.startswith("A"))
+
+    def test_iris_example_queries_dataselect_discover_services_false(self):
+        """
+        Tests the (sometimes modified) example queries given on IRIS webpage,
+        without discovering services first.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        _discover_services=False)
+
+        queries = [
+            ("IU", "ANMO", "00", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:40:00.000")),
+            ("IU", "A*", "*", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:31:00.000")),
+            ("IU", "A??", "*0", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:31:00.000")),
+        ]
+        result_files = ["dataselect_example.mseed",
+                        "dataselect_example_wildcards.mseed",
+                        "dataselect_example_mixed_wildcards.mseed",
+                        ]
+        for query, filename in zip(queries, result_files):
+            # test output to stream
+            got = client.get_waveforms(*query)
+            # Assert that the meta-information about the provider is stored.
+            for tr in got:
+                self.assertEqual(
+                    tr.stats._fdsnws_dataselect_url,
+                    client.base_url + "/fdsnws/dataselect/1/query")
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
+            file_ = os.path.join(self.datapath, filename)
+            expected = read(file_)
+            _normalize_stats(got)
+            self.assertEqual(got, expected, "Dataselect failed for query %s" %
+                             repr(query))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_waveforms(*query, filename=tf.name)
+                with open(tf.name, 'rb') as fh:
+                    got = fh.read()
+                with open(file_, 'rb') as fh:
+                    expected = fh.read()
+            self.assertEqual(got, expected, "Dataselect failed for query %s" %
+                             repr(query))
 
     def test_conflicting_params(self):
         """
         """
-        self.assertRaises(FDSNException, self.client.get_stations,
+        self.assertRaises(FDSNInvalidRequestException,
+                          self.client.get_stations,
                           network="IU", net="IU")
 
-    def test_help_function_with_IRIS(self):
+    def test_help_function_with_iris(self):
         """
         Tests the help function with the IRIS example.
 
@@ -462,10 +836,15 @@ class ClientTestCase(unittest.TestCase):
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
             # allow for changes in version number..
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            # catalogs/contributors are checked in separate tests
+            self.assertTrue(got[-2].startswith('Available catalogs:'))
+            self.assertTrue(got[-1].startswith('Available contributors:'))
+            got = got[:-2]
+            expected = expected[:-2]
+            for line_got, line_expected in zip(got, expected):
+                self.assertEqual(line_got, line_expected)
 
             # Reset. Creating a new one is faster then clearing the old one.
             tmp = io.StringIO()
@@ -479,10 +858,9 @@ class ClientTestCase(unittest.TestCase):
             filename = "station_helpstring.txt"
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            self.assertEqual(got, expected, failmsg(got, expected))
 
             # Reset.
             tmp = io.StringIO()
@@ -496,10 +874,9 @@ class ClientTestCase(unittest.TestCase):
             filename = "dataselect_helpstring.txt"
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            self.assertEqual(got, expected, failmsg(got, expected))
 
         finally:
             sys.stdout = sys.__stdout__
@@ -509,16 +886,15 @@ class ClientTestCase(unittest.TestCase):
         expected = (
             "FDSN Webservice Client (base url: http://service.iris.edu)\n"
             "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
-            "'station' (v1.0.7), 'available_event_contributors', "
-            "'available_event_catalogs'\n\n"
+            "'station' (v1.0.7), 'available_event_catalogs', "
+            "'available_event_contributors'\n\n"
             "Use e.g. client.help('dataselect') for the\n"
             "parameter description of the individual services\n"
             "or client.help() for parameter description of\n"
             "all webservices.")
-        self.assertEqual(normalize_version_number(got),
-                         normalize_version_number(expected),
-                         failmsg(normalize_version_number(got),
-                                 normalize_version_number(expected)))
+        got = normalize_version_number(got)
+        expected = normalize_version_number(expected)
+        self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_dataselect_bulk(self):
         """
@@ -529,19 +905,25 @@ class ClientTestCase(unittest.TestCase):
         file = os.path.join(self.datapath, "bulk.mseed")
         expected = read(file)
         # test cases for providing lists of lists
+        # Deliberately requesting data that overlap the end-time of a channel.
+        # TA.A25A..BHZ ends at 2011-07-22T14:50:25.5
         bulk = (("TA", "A25A", "", "BHZ",
-                 UTCDateTime("2010-03-25T00:00:00"),
-                 UTCDateTime("2010-03-25T00:00:04")),
+                 UTCDateTime("2011-07-22T14:50:23"),
+                 UTCDateTime("2011-07-22T14:50:29")),
                 ("TA", "A25A", "", "BHE",
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:06")),
                 ("IU", "ANMO", "*", "HHZ",
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:08")))
+        # As of 03 December 2018, it looks like IRIS is ignoring minimumlength?
         params = dict(quality="B", longestonly=False, minimumlength=5)
         for client in clients:
             # test output to stream
             got = client.get_waveforms_bulk(bulk, **params)
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
@@ -558,6 +940,19 @@ class ClientTestCase(unittest.TestCase):
         for client in clients:
             # test output to stream
             got = client.get_waveforms_bulk(bulk)
+            # Assert that the meta-information about the provider is stored.
+            for tr in got:
+                if client.user:
+                    self.assertEqual(
+                        tr.stats._fdsnws_dataselect_url,
+                        client.base_url + "/fdsnws/dataselect/1/queryauth")
+                else:
+                    self.assertEqual(
+                        tr.stats._fdsnws_dataselect_url,
+                        client.base_url + "/fdsnws/dataselect/1/query")
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
@@ -570,10 +965,16 @@ class ClientTestCase(unittest.TestCase):
                 with open(tf.name, "wt") as fh:
                     fh.write(bulk)
                 got = client.get_waveforms_bulk(bulk)
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
         # test cases for providing a file-like object
         for client in clients:
             got = client.get_waveforms_bulk(io.StringIO(bulk))
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_station_bulk(self):
@@ -871,7 +1272,7 @@ class ClientTestCase(unittest.TestCase):
         try:
             c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
                             UTCDateTime())
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_ds in download_url_mock.call_args_list[0][0][0])
@@ -882,7 +1283,7 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.return_value = 404, None
         try:
             c.get_stations()
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_station in download_url_mock.call_args_list[0][0][0])
@@ -893,7 +1294,7 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.return_value = 404, None
         try:
             c.get_events()
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_event in download_url_mock.call_args_list[0][0][0])
@@ -1030,6 +1431,259 @@ class ClientTestCase(unittest.TestCase):
         inv = c_auth.get_stations_bulk(bulk, level="network")
         # Just make sure something is being downloaded.
         self.assertTrue(bool(len(inv.networks)))
+
+    def test_get_waveforms_empty_seed_codes(self):
+        """
+        Make sure that network, station, and channel codes specified as empty
+        strings are not omitted in `get_waveforms(...)` when building the url
+        (which results in default values '*' (wildcards) at the server,
+        see #1578).
+        """
+        t = UTCDateTime(2000, 1, 1)
+        url_base = "http://service.iris.edu/fdsnws/dataselect/1/query?"
+        kwargs = dict(network='IU', station='ANMO', location='00',
+                      channel='HHZ', starttime=t, endtime=t)
+
+        for key in ('network', 'station', 'channel'):
+            kwargs_ = kwargs.copy()
+            # set empty SEED code for given key
+            kwargs_.update(((key, ''),))
+
+            # use a mock object and check what URL would have been downloaded
+            with mock.patch.object(
+                    self.client, '_download') as m:
+                try:
+                    self.client.get_waveforms(**kwargs_)
+                except Exception:
+                    # Mocking returns something different.
+                    continue
+                # URL downloading comes before the error and can be checked now
+                url = m.call_args[0][0]
+            url_parts = url.replace(url_base, '').split("&")
+            self.assertIn('{}='.format(key), url_parts)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_no_data_exception(self, download_url_mock):
+        """
+        Verify that a request returning no data raises an identifiable
+        exception
+        """
+        download_url_mock.return_value = (204, None)
+        self.assertRaises(FDSNNoDataException, self.client.get_stations)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_request_too_large_exception(self, download_url_mock):
+        """
+        Verify that a request returning too much data raises an identifiable
+        exception
+        """
+        download_url_mock.return_value = (413, None)
+        self.assertRaises(FDSNRequestTooLargeException,
+                          self.client.get_stations)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_authentication_exceptions(self, download_url_mock):
+        """
+        Verify that a request with missing authentication raises an
+        identifiable exception
+        """
+        with mock.patch("obspy.clients.fdsn.client.Client._has_eida_auth",
+                        new_callable=mock.PropertyMock,
+                        return_value=False):
+            self.assertRaises(FDSNNoAuthenticationServiceException, Client,
+                              eida_token="TEST")
+
+        self.assertRaises(FDSNDoubleAuthenticationException, Client, "IRIS",
+                          eida_token="TEST", user="TEST")
+
+        download_url_mock.return_value = (401, None)
+        self.assertRaises(FDSNUnauthorizedException,
+                          self.client.get_stations)
+
+        download_url_mock.return_value = (403, None)
+        self.assertRaises(FDSNForbiddenException,
+                          self.client.get_stations)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_timeout_exception(self, download_url_mock):
+        """
+        Verify that a request timing out raises an identifiable exception
+        """
+        download_url_mock.return_value = (None, "timeout")
+        self.assertRaises(FDSNTimeoutException, self.client.get_stations)
+
+    def test_no_service_exception(self):
+        """
+        Verify that opening a client to a provider without FDSN service raises
+        an identifiable exception
+        """
+        self.assertRaises(FDSNNoServiceException, Client,
+                          "http://nofdsnservice.org")
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_service_unavailable_exception(self, download_url_mock):
+        """
+        Verify that opening a client to a service temporarily unavailable
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (503, None)
+        self.assertRaises(FDSNServiceUnavailableException,
+                          self.client.get_stations)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_bad_request_exception(self, download_url_mock):
+        """
+        Verify that a bad request raises an identifiable exception
+        """
+        download_url_mock.return_value = (400, io.BytesIO(b""))
+        self.assertRaises(FDSNBadRequestException, self.client.get_stations)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_server_exception(self, download_url_mock):
+        """
+        Verify that a server error raises an identifiable exception
+        """
+        download_url_mock.return_value = (500, None)
+        self.assertRaises(FDSNInternalServerException,
+                          self.client.get_stations)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_too_many_requests_exception(self, download_url_mock):
+        """
+        Verify that too many requests raise an identifiable exception
+        """
+        download_url_mock.return_value = (429, None)
+        self.assertRaises(FDSNTooManyRequestsException,
+                          self.client.get_stations)
+
+    def test_eida_token_resolution(self):
+        """
+        Tests that EIDA tokens are resolved correctly and new credentials get
+        installed with the opener of the Client.
+        """
+        token = os.path.join(self.datapath, 'eida_token.txt')
+        with open(token, 'rb') as fh:
+            token_data = fh.read().decode()
+
+        def _assert_eida_user_and_password(user, password):
+            # user/pass is not static for the static test token
+            for value in user, password:
+                # seems safe to assume both user and password are at least 10
+                # chars long
+                # example user/password:
+                # wWGgJnH4GvdVY7gDMH21xEpb wDnzlpljqdaCXlP2
+                re.match('^[a-zA-Z0-9]{10,}$', value)
+
+        def _get_http_digest_auth_handler(client):
+            handlers = [h for h in client._url_opener.handlers
+                        if isinstance(h, urllib_request.HTTPDigestAuthHandler)]
+            self.assertLessEqual(len(handlers), 1)
+            return handlers and handlers[0] or None
+
+        def _assert_credentials(client, user, password):
+            handler = _get_http_digest_auth_handler(client)
+            self.assertIsInstance(handler,
+                                  urllib_request.HTTPDigestAuthHandler)
+            for user_, password_ in handler.passwd.passwd[None].values():
+                self.assertEqual(user, user_)
+                self.assertEqual(password, password_)
+
+        client = Client('GFZ')
+        # this is a plain client, so it should not have http digest auth
+        self.assertEqual(_get_http_digest_auth_handler(client), None)
+        # now, if we set new user/password, we should get a http digest auth
+        # handler
+        user, password = ("spam", "eggs")
+        client._set_opener(user=user, password=password)
+        _assert_credentials(client, user, password)
+        # now, if we resolve the EIDA token, the http digest auth handler
+        # should change
+        user, password = client._resolve_eida_token(token=token)
+        _assert_eida_user_and_password(user, password)
+        client._set_opener(user=user, password=password)
+        _assert_credentials(client, user, password)
+        # do it again, now providing the token data directly as a string (first
+        # change the authentication again to dummy user/password
+        client._set_opener(user="foo", password="bar")
+        _assert_credentials(client, "foo", "bar")
+        user, password = client._resolve_eida_token(token=token_data)
+        _assert_eida_user_and_password(user, password)
+        client.set_eida_token(token_data)
+        _assert_credentials(client, user, password)
+
+        # Raise if token and user/pw are given.
+        with self.assertRaises(FDSNException) as err:
+            Client('GFZ', eida_token=token, user="foo", password="bar")
+        self.assertEqual(
+            err.exception.args[0],
+            "EIDA authentication token provided, but user and password are "
+            "also given.")
+
+        # now lets test the RoutingClient with credentials..
+        credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}
+        credentials_mapping_ = {'GFZ': {'eida_token': token}}
+        global_eida_credentials_ = {'EIDA_TOKEN': token}
+        for credentials, should_have_credentials in zip(
+                (None, credentials_, credentials_mapping_,
+                 global_eida_credentials_), (False, True, True, True)):
+            def side_effect(self_, *args, **kwargs):
+                """
+                This mocks out Client.get_waveforms_bulk which gets called by
+                the routing client, checks authentication handlers and returns
+                a dummy stream.
+                """
+                # check that we're at the expected FDSN WS server
+                self.assertEqual('http://geofon.gfz-potsdam.de',
+                                 self_.base_url)
+                # check if credentials were used
+                # eida auth availability should be positive in all cases
+                self.assertTrue(self_._has_eida_auth)
+                # depending on whether we specified credentials, the
+                # underlying FDSN client should have EIDA authentication
+                # flag and should also have a HTTP digest handler with
+                # appropriate user/password
+                handler = _get_http_digest_auth_handler(self_)
+                if should_have_credentials:
+                    for user, password in handler.passwd.passwd[None].values():
+                        _assert_eida_user_and_password(user, password)
+                else:
+                    self.assertEqual(handler, None)
+                # just always return some dummy stream, we're not
+                # interested in checking the data downloading which
+                # succeeds regardless if auth is used or not as it's public
+                # data
+                return Stream([Trace(data=np.ones(2))])
+
+            with mock.patch(
+                    'obspy.clients.fdsn.client.Client.get_waveforms_bulk',
+                    autospec=True) as p:
+
+                p.side_effect = side_effect
+
+                routing_client = RoutingClient('eida-routing',
+                                               credentials=credentials)
+                # do a waveform request on the routing client which internally
+                # connects to the GFZ FDSNWS. this should be done using the
+                # above supplied credentials, i.e. should use the given EIDA
+                # token to resolve user/password for the normal FDSN queryauth
+                # mechanism
+                routing_client.get_waveforms(
+                    network="GE", station="KMBO", location="00", channel="BHZ",
+                    starttime=UTCDateTime("2010-02-27T06:30:00.000"),
+                    endtime=UTCDateTime("2010-02-27T06:40:00.000"))
+
+        # test invalid token/token file
+        with self.assertRaisesRegex(
+                ValueError,
+                'EIDA token does not seem to be a valid PGP message'):
+            client = Client('GFZ', eida_token="spam")
+        with self.assertRaisesRegex(
+                ValueError,
+                "Read EIDA token from file '[^']*event_helpstring.txt' but it "
+                "does not seem to contain a valid PGP message."):
+            client = Client(
+                'GFZ', eida_token=os.path.join(self.datapath,
+                                               'event_helpstring.txt'))
 
 
 def suite():

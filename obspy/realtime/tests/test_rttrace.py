@@ -2,11 +2,6 @@
 """
 The obspy.realtime.rttrace test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import unittest
 import warnings
 
@@ -16,7 +11,7 @@ from obspy import Trace
 from obspy.core.stream import read
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory
-from obspy import signal
+import obspy.signal.filter
 
 
 class RtTraceTestCase(unittest.TestCase):
@@ -47,7 +42,7 @@ class RtTraceTestCase(unittest.TestCase):
         self.assertFalse(tr2 != tr3)
         self.assertFalse(tr2.__ne__(tr3))
 
-    def test_registerRtProcess(self):
+    def test_register_rt_process(self):
         """
         Testing register_rt_process method.
         """
@@ -84,7 +79,7 @@ class RtTraceTestCase(unittest.TestCase):
         # check kwargs
         self.assertIn("maeh", tr.stats.processing[1])
 
-    def test_appendSanityChecks(self):
+    def test_append_sanity_checks(self):
         """
         Testing sanity checks of append method.
         """
@@ -116,7 +111,7 @@ class RtTraceTestCase(unittest.TestCase):
         self.assertRaises(TypeError, rtr.append, 1)
         self.assertRaises(TypeError, rtr.append, "2323")
 
-    def test_appendOverlap(self):
+    def test_append_overlap(self):
         """
         Appending overlapping traces should raise a UserWarning/TypeError
         """
@@ -130,7 +125,7 @@ class RtTraceTestCase(unittest.TestCase):
         # append with gap_overlap_check=True will raise a TypeError
         self.assertRaises(TypeError, rtr.append, tr, gap_overlap_check=True)
 
-    def test_appendGap(self):
+    def test_append_gap(self):
         """
         Appending a traces with a time gap should raise a UserWarning/TypeError
         """
@@ -156,25 +151,25 @@ class RtTraceTestCase(unittest.TestCase):
         rtr.register_rt_process('integrate', test=1, muh='maeh')
         rtr.copy()
         # register ObsPy function call
-        rtr.register_rt_process(signal.filter.bandpass, freqmin=0, freqmax=1,
-                                df=0.1)
+        rtr.register_rt_process(obspy.signal.filter.bandpass, freqmin=0,
+                                freqmax=1, df=0.1)
         rtr.copy()
         # register NumPy function call
         rtr.register_rt_process(np.square)
         rtr.copy()
 
-    def test_appendNotFloat32(self):
+    def test_append_not_float32(self):
         """
         Test for not using float32.
         """
         tr = read()[0]
-        tr.data = np.require(tr.data, dtype=native_str('>f4'))
+        tr.data = np.require(tr.data, dtype='>f4')
         traces = tr / 3
         rtr = RtTrace()
         for trace in traces:
             rtr.append(trace)
 
-    def test_missingOrWrongArgumentInRtProcess(self):
+    def test_missing_or_wrong_argument_in_rt_process(self):
         """
         Tests handling of missing/wrong arguments.
         """

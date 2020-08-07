@@ -1,0 +1,26 @@
+[flake8]
+# hang-closing allows valid indented closing brackets, see https://github.com/PyCQA/pycodestyle/issues/103#issuecomment-17366719
+hang-closing = True
+
+# NOTE: Keep consistent between..
+#   - obspy/core/tests/test_code_formatting.py FLAKE8_IGNORE_CODES
+#   - .flake8 --ignore
+# E121: continuation line under-indented for hanging indent
+# E123: closing bracket does not match indentation of opening bracket’s line
+# E126: continuation line over-indented for hanging indent
+# E133: closing bracket is missing indentation
+#   this is an Error shown for one alternative form of closing bracket,
+#   closing it without indentation with regard to opening line. This gets
+#   raised when --hang-closing is selected to allow the form with 4 spaces
+#   as indent (which is valid according to PEP8 but raised by pycodestyle)
+# E24: multiple spaces after ‘,’
+# E226: missing whitespace around arithmetic operator
+# E402: module level import not at top of file
+# E704: multiple statements on one line (def)
+# W503: line break before binary operator
+# W504: line break after binary operator
+# E741: ambiguous variable name 'l'
+#   we mostly use it in some for loops and most people working with code use
+#   monospace fonts anyway
+ignore = E121, E123, E126, E133, E24, E226, E402, E704, W503, W504, E741
+exclude = __init__.py

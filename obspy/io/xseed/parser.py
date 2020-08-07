@@ -1,30 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-Main module containing XML-SEED parser.
+Main module containing XML-SEED, dataless SEED and RESP parser.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future import standard_library
-from future.utils import native_str
-
+import collections
 import copy
 import datetime
 import io
+import itertools
 import math
 import os
 import re
 import warnings
 import zipfile
-
-with standard_library.hooks():
-    import urllib.request  # @UnresolvedImport
 
 from lxml import etree
 from lxml.etree import parse as xmlparse
@@ -32,15 +25,29 @@ from lxml.etree import Element, SubElement, tostring
 import numpy as np
 
 from obspy import Stream, Trace, __version__
+from obspy.core.inventory import (Response,
+                                  PolesZerosResponseStage,
+                                  CoefficientsTypeResponseStage,
+                                  InstrumentSensitivity,
+                                  ResponseStage,
+                                  FIRResponseStage,
+                                  ResponseListResponseStage,
+                                  PolynomialResponseStage)
+from obspy.core.inventory.response import ResponseListElement
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import map_example_filename, deprecated
-from . import DEFAULT_XSEED_VERSION, blockette
-from .utils import IGNORE_ATTR, SEEDParserException, to_tag
+from obspy.core.util.base import download_to_file
+from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.obspy_types import ComplexWithUncertainties
+from . import DEFAULT_XSEED_VERSION, blockette, InvalidResponseError
+from .blockette import (Blockette053, Blockette054, Blockette057, Blockette058,
+                        Blockette061)
+from .utils import (IGNORE_ATTR, SEEDParserException, to_tag)
+from .fields import Loop, VariableString
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
 HEADERS = ['V', 'A', 'S']
-# @see: http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf, p. 24-26
+# @see: https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf, p. 24-26
 HEADER_INFO = {
     'V': {'name': 'Volume Index Control Header',
           'blockettes': [10, 11, 12]},
@@ -64,23 +71,25 @@ INDEX_FIELDS = {30: 'data_format_identifier_code',
 
 class Parser(object):
     """
-    The XML-SEED parser class parses dataless or full SEED volumes.
+    Class parsing dataless and full SEED, X-SEED, and RESP files.
 
     .. seealso::
 
         The SEED file format description can be found at
-        http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
+        https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
 
         The XML-SEED format was proposed in [Tsuboi2004]_.
-    """
 
-    def __init__(self, data=None, debug=False, strict=False,
-                 compact=False):
+        The IRIS RESP format can be found at
+        http://ds.iris.edu/ds/nodes/dmc/data/formats/resp/
+
+    """
+    def __init__(self, data=None, debug=False, strict=False, compact=False):
         """
         Initializes the SEED parser.
 
         :type data: str, bytes, io.BytesIO or file
-        :param data: Filename, URL, XSEED/SEED string, file pointer or
+        :param data: Filename, URL, XSEED/SEED/RESP string, file pointer or
             BytesIO.
         :type debug: bool
         :param debug: Enables a verbose debug log during parsing of SEED file.
@@ -114,7 +123,7 @@ class Parser(object):
         try:
             if len(self.stations) == 0:
                 return 'No data'
-        except:
+        except Exception:
             return 'No data'
         ret_str = ""
         inv = self.get_inventory()
@@ -149,54 +158,69 @@ class Parser(object):
     @map_example_filename("data")
     def read(self, data):
         """
-        General parser method for XML-SEED and Dataless SEED files.
+        General parser method for XML-SEED, Dataless SEED, and RESP files.
 
         :type data: str, bytes, io.BytesIO or file
-        :param data: Filename, URL or XSEED/SEED string as file pointer or
+        :param data: Filename, URL or XSEED/SEED/RESP string as file pointer or
             BytesIO.
         """
+        # Import here to avoid circular imports.
+        from .core import _is_resp
+
         if getattr(self, "_format", None):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into BytesIO object
-        if isinstance(data, (str, native_str)):
+        if isinstance(data, str):
             if re.search(r"://", data) is not None:
-                # some URL
-                data = urllib.request.urlopen(data).read()
-                data = io.BytesIO(data)
+                url = data
+                data = io.BytesIO()
+                download_to_file(url=url, filename_or_buffer=data)
+                data.seek(0, 0)
             elif os.path.isfile(data):
-                # looks like a file - read it
-                with open(data, 'rb') as f:
-                    data = f.read()
-                data = io.BytesIO(data)
+                if _is_resp(data):
+                    # RESP filename
+                    with open(data, 'r') as f:
+                        data = f.read()
+                    self._parse_resp(data)
+                    return
+                else:
+                    with open(data, 'rb') as f:
+                        data = f.read()
+                    data = io.BytesIO(data)
+            elif data.startswith('#'):
+                # RESP data
+                self._parse_resp(data)
+                return
             else:
                 try:
                     data = data.encode()
-                except:
+                except Exception:
                     pass
                 try:
                     data = io.BytesIO(data)
-                except:
+                except Exception:
                     raise IOError("data is neither filename nor valid URL")
         # but could also be a big string with data
         elif isinstance(data, bytes):
             data = io.BytesIO(data)
         elif not hasattr(data, "read"):
             raise TypeError
+
         # check first byte of data BytesIO object
         first_byte = data.read(1)
         data.seek(0)
         if first_byte.isdigit():
             # SEED volumes starts with a number
-            self._parse_SEED(data)
+            self._parse_seed(data)
             self._format = 'SEED'
         elif first_byte == b'<':
             # XML files should always starts with an '<'
             try:
-                self._parse_XSEED(data)
+                self._parse_xseed(data)
             except Exception as e:
                 # if it looks like the XML is not XSEED, tell the user
-                if not is_XSEED(data):
+                if not is_xseed(data):
                     msg = ("Encountered an error during parsing XSEED file "
                            "(%s: %s). Note that the XSEED parser can not "
                            "parse StationXML. Please contact developers if "
@@ -207,12 +231,7 @@ class Parser(object):
         else:
             raise IOError("First byte of data must be in [0-9<]")
 
-    @deprecated("'getXSEED' has been renamed to 'get_XSEED'. "
-                "Use that instead.")
-    def getXSEED(self, *args, **kwargs):
-        return self.get_XSEED(*args, **kwargs)
-
-    def get_XSEED(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
+    def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
         Returns a XSEED representation of the current Parser object.
 
@@ -244,7 +263,7 @@ class Parser(object):
         # Volume header:
         sub = SubElement(doc, to_tag('Volume Index Control Header'))
         for blkt in self.volume:
-            sub.append(blkt.get_XML(xseed_version=version))
+            sub.append(blkt.get_xml(xseed_version=version))
         # Delete blockettes 11 and 12 if necessary.
         if version == '1.0':
             self._delete_blockettes_11_and_12()
@@ -252,13 +271,13 @@ class Parser(object):
         sub = SubElement(
             doc, to_tag('Abbreviation Dictionary Control Header'))
         for blkt in self.abbreviations:
-            sub.append(blkt.get_XML(xseed_version=version))
+            sub.append(blkt.get_xml(xseed_version=version))
         if not split_stations:
             # Don't split stations
             for station in self.stations:
                 sub = SubElement(doc, to_tag('Station Control Header'))
                 for blkt in station:
-                    sub.append(blkt.get_XML(xseed_version=version))
+                    sub.append(blkt.get_xml(xseed_version=version))
             if version == '1.0':
                 # To pass the XSD schema test an empty time span control header
                 # is added to the end of the file.
@@ -275,7 +294,7 @@ class Parser(object):
                 cdoc = copy.copy(doc)
                 sub = SubElement(cdoc, to_tag('Station Control Header'))
                 for blkt in station:
-                    sub.append(blkt.get_XML(xseed_version=version))
+                    sub.append(blkt.get_xml(xseed_version=version))
                 if version == '1.0':
                     # To pass the XSD schema test an empty time span control
                     # header is added to the end of the file.
@@ -290,16 +309,11 @@ class Parser(object):
                                       xml_declaration=True, encoding='UTF-8')
             return result
 
-    @deprecated("'writeXSEED' has been renamed to 'write_XSEED'. "
-                "Use that instead.")
-    def writeXSEED(self, *args, **kwargs):
-        return self.write_XSEED(*args, **kwargs)
-
-    def write_XSEED(self, filename, *args, **kwargs):
+    def write_xseed(self, filename, *args, **kwargs):
         """
         Writes a XML-SEED file with given name.
         """
-        result = self.get_XSEED(*args, **kwargs)
+        result = self.get_xseed(*args, **kwargs)
         if isinstance(result, bytes):
             with open(filename, 'wb') as f:
                 f.write(result)
@@ -319,12 +333,7 @@ class Parser(object):
         else:
             raise TypeError
 
-    @deprecated("'get_SEED' has been renamed to 'get_SEED'. "
-                "Use that instead.")
-    def getSEED(self, *args, **kwargs):
-        return self.get_SEED(*args, **kwargs)
-
-    def get_SEED(self, compact=False):
+    def get_seed(self, compact=False):
         """
         Returns a SEED representation of the current Parser object.
         """
@@ -362,25 +371,15 @@ class Parser(object):
                 cur_count += 1
         return seed_string
 
-    @deprecated("'writeSEED' has been renamed to 'write_SEED'. "
-                "Use that instead.")
-    def writeSEED(self, *args, **kwargs):
-        return self.write_SEED(*args, **kwargs)
-
-    def write_SEED(self, filename, *args, **kwargs):
+    def write_seed(self, filename, *args, **kwargs):
         """
         Writes a dataless SEED file with given name.
         """
         fh = open(filename, 'wb')
-        fh.write(self.get_SEED(*args, **kwargs))
+        fh.write(self.get_seed(*args, **kwargs))
         fh.close()
 
-    @deprecated("'getRESP' has been renamed to 'get_RESP'. "
-                "Use that instead.")
-    def getRESP(self, *args, **kwargs):
-        return self.get_RESP(*args, **kwargs)
-
-    def get_RESP(self):
+    def get_resp(self):
         """
         Returns a RESP representation of the current Parser object.
 
@@ -413,7 +412,7 @@ class Parser(object):
                     resp.seek(_pos)
                     if _len != 0:
                         # Send the blockettes to the parser and append to list.
-                        self._get_RESP_string(resp, blockettes, cur_station)
+                        self._get_resp_string(resp, blockettes, cur_station)
                         resp_list.append([filename, resp])
                     # Create the file name.
                     filename = 'RESP.%s.%s.%s.%s' \
@@ -436,7 +435,7 @@ class Parser(object):
             # It might happen that no blockette 52 is specified,
             if len(blockettes) != 0:
                 # One last time for the last channel.
-                self._get_RESP_string(resp, blockettes, cur_station)
+                self._get_resp_string(resp, blockettes, cur_station)
                 resp_list.append([filename, resp])
         # Combine multiple channels.
         new_resp_list = []
@@ -461,7 +460,7 @@ class Parser(object):
         # parse blockettes if not SEED. Needed for XSEED to be initialized.
         # XXX: Should potentially be fixed at some point.
         if self._format != 'SEED':
-            self.__init__(self.get_SEED())
+            self.__init__(self.get_seed())
         if old_format == "XSEED":
             self._format = "XSEED"
         # split id
@@ -513,12 +512,7 @@ class Parser(object):
             raise SEEDParserException(msg % (seed_id))
         return blockettes
 
-    @deprecated("'getPAZ' has been renamed to 'get_PAZ'. "
-                "Use that instead.")
-    def getPAZ(self, *args, **kwargs):
-        return self.get_PAZ(*args, **kwargs)
-
-    def get_PAZ(self, seed_id, datetime=None):
+    def get_paz(self, seed_id, datetime=None):
         """
         Return PAZ.
 
@@ -547,7 +541,19 @@ class Parser(object):
                     data['seismometer_gain'] = blkt.sensitivity_gain
                 elif blkt.stage_sequence_number == 2:
                     data['digitizer_gain'] = blkt.sensitivity_gain
+                elif blkt.stage_sequence_number == 3:
+                    if 'digitizer_gain' in data:
+                        data['digitizer_gain'] *= blkt.sensitivity_gain
+                    else:
+                        data['digitizer_gain'] = blkt.sensitivity_gain
             elif blkt.id == 53 or blkt.id == 60:
+                # If we get a blockette 53 or 60 we should add these
+                if 'zeros' not in data:
+                    data['zeros'] = []
+                if 'poles' not in data:
+                    data['poles'] = []
+                if 'gain' not in data:
+                    data['gain'] = 1.
                 if blkt.id == 60:
                     abbreviation = blkt.stages[0][1]
                     data['seismometer_gain'] = \
@@ -570,51 +576,42 @@ class Parser(object):
                     warnings.warn(msg, UserWarning)
                     continue
                 # A0_normalization_factor
-                data['gain'] = resp.A0_normalization_factor
+                data['gain'] *= resp.A0_normalization_factor
                 # Poles
-                data['poles'] = []
                 for i in range(resp.number_of_complex_poles):
                     try:
                         p = complex(resp.real_pole[i], resp.imaginary_pole[i])
                     except TypeError:
                         p = complex(resp.real_pole, resp.imaginary_pole)
+                    # Do conversion to Laplace poles
+                    if getattr(resp, label) == "B":
+                        p *= 2. * np.pi
+                        data['gain'] *= 2. * np.pi
                     data['poles'].append(p)
                 # Zeros
-                data['zeros'] = []
                 for i in range(resp.number_of_complex_zeros):
                     try:
                         z = complex(resp.real_zero[i], resp.imaginary_zero[i])
                     except TypeError:
                         z = complex(resp.real_zero, resp.imaginary_zero)
+                    # Do conversion to Laplace zeros
+                    if getattr(resp, label) == "B":
+                        z *= 2. * np.pi
+                        data['gain'] *= 1.0 / (2.0 * np.pi)
                     data['zeros'].append(z)
-                # force conversion from Hz to Laplace
-                if getattr(resp, label) == "B":
-                    def x2pi(x):
-                        return x * 2 * np.pi
-
-                    data['poles'] = list(map(x2pi, data['poles']))
-                    data['zeros'] = list(map(x2pi, data['zeros']))
-                    data['gain'] = resp.A0_normalization_factor * \
-                        (2 * np.pi) ** \
-                        (len(data['poles']) - len(data['zeros']))
         return data
-
-    @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. "
-                "Use that instead.")
-    def getCoordinates(self, *args, **kwargs):
-        return self.get_coordinates(*args, **kwargs)
 
     def get_coordinates(self, seed_id, datetime=None):
         """
-        Return Coordinates (from blockette 52)
+        Return coordinates (from blockette 52) of a channel.
 
         :type seed_id: str
         :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
             ``"EHE"``.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param datetime: Timestamp of requested PAZ values
-        :return: Dictionary containing Coordinates (latitude, longitude,
-            elevation)
+        :return: Dictionary containing coordinates (latitude, longitude,
+            elevation, local_depth, dip, azimuth)
         """
         blockettes = self._select(seed_id, datetime)
         data = {}
@@ -624,15 +621,12 @@ class Parser(object):
                 data['longitude'] = blkt.longitude
                 data['elevation'] = blkt.elevation
                 data['local_depth'] = blkt.local_depth
+                data['dip'] = blkt.dip
+                data['azimuth'] = blkt.azimuth
                 break
         return data
 
-    @deprecated("'writeRESP' has been renamed to 'write_RESP'. "
-                "Use that instead.")
-    def writeRESP(self, *args, **kwargs):
-        return self.write_RESP(*args, **kwargs)
-
-    def write_RESP(self, folder, zipped=False):
+    def write_resp(self, folder, zipped=False):
         """
         Writes for each channel a RESP file within a given folder.
 
@@ -640,7 +634,7 @@ class Parser(object):
         :param zipped: Compresses all files into a single ZIP archive named by
             the folder name extended with the extension '.zip'.
         """
-        new_resp_list = self.get_RESP()
+        new_resp_list = self.get_resp()
         # Check if channel information could be found.
         if len(new_resp_list) == 0:
             msg = ("No channel information could be found. The SEED file "
@@ -664,7 +658,1158 @@ class Parser(object):
                 zip_file.writestr(response[0], response[1].read())
             zip_file.close()
 
-    def _parse_SEED(self, data):
+    def _parse_resp(self, data):
+        """
+        Reads RESP files.
+
+        Reads IRIS RESP formatted data as produced with
+        'rdseed -f seed.test -R'.
+
+        :type data: file or io.BytesIO
+        """
+        def record_type_from_blocketteid(bid):
+            for voltype in HEADER_INFO:
+                if bid in HEADER_INFO[voltype]['blockettes']:
+                    return voltype
+
+        # First parse the data into a list of Blockettes
+        blockettelist = []
+        # List of fields
+        blockettefieldlist = []
+
+        # Pre-compile as called a lot.
+        pattern = re.compile(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)")
+        field_pattern = re.compile(r":\s*(\S*)")
+        comment_pattern = re.compile(r"^#.*\+")
+
+        last_blockette_id = None
+        # No fields with number 0 exist.
+        last_field_number = 0
+        for line in data.splitlines():
+            m = re.match(pattern, line)
+            if m:
+                # g contains the following:
+                #
+                # g[0]: Blockette number as a string with leading 0.
+                # g[1]: Field number as a string
+                # g[2]: End field number for two multi field lines,
+                #       e.g. B053F15-18
+                # g[3]: Everything afterwards.
+                g = m.groups()
+                blockette_number = g[0]
+                field_number = int(g[1])
+                # A new blockette is starting.
+                # Either
+                # * when the blockette number increases or
+                # * (for blockette 58) when the field number suddenly decreases
+                # to 3 again.
+                # This catches a rare issue where blockette 58 is repeated
+                # twice (gain for a channel + total sensitivity) and the
+                # comments don't contain any `+` which would alternatively
+                # trigger a new blockette to be created.
+                if (blockette_number != last_blockette_id) or \
+                        ((blockette_number == "058") and
+                         (field_number == 3) and
+                         (field_number < last_field_number)):
+                    if len(blockettefieldlist) > 0:
+                        blockettelist.append(blockettefieldlist)
+                        blockettefieldlist = list()
+                    last_blockette_id = blockette_number
+                    last_field_number = 0
+                # Single field lines.
+                if not g[2]:
+                    # Units of blkts 41 and 61 are normal.
+                    if blockette_number not in ["041", "061"] \
+                            or "units lookup" in g[3]:
+                        value = re.search(field_pattern, g[3]).groups()[0]
+                    # Blockette 61 has the FIR coefficients which are a bit
+                    # different.
+                    else:
+                        value = g[3].strip().split()[-1]
+                    blockettefieldlist.append((blockette_number, g[1], value))
+                    last_field_number = field_number
+                # Multiple field lines.
+                else:
+                    first_field = int(g[1])
+                    last_field = int(g[2])
+                    _fields = g[3].split()
+                    values = _fields[-(last_field - first_field + 1):]
+                    for i, value in enumerate(values):
+                        blockettefieldlist.append(
+                            (blockette_number, first_field + i, value))
+                    last_field_number = field_number
+            elif re.match(comment_pattern, line):
+                # Comment line with a + in it means blockette is
+                # finished start a new one
+                if len(blockettefieldlist) > 0:
+                    blockettelist.append(blockettefieldlist)
+                    blockettefieldlist = list()
+                    last_blockette_id = blockette_number
+                    last_field_number = 0
+        # Add last blockette
+        if len(blockettefieldlist) > 0:
+            blockettelist.append(blockettefieldlist)
+
+        # Now popule the parser object from the list.
+        self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
+        # Make an empty blockette 10
+        self.temp['volume'].append(blockette.Blockette010(
+            debug=self.debug, strict=False, compact=False, record_type='V'))
+
+        # Collect all required lookups here so they can later be written to
+        # blockettes 34.
+        unit_lookups = {}
+
+        # Each loop will have all the fields for a single blockette.
+        for blkt in blockettelist:
+            # Split on new station.
+            if blkt[0][0] == "050":
+                self.temp["stations"].append([])
+
+            class_name = 'Blockette%s' % blkt[0][0]
+            blockette_class = getattr(blockette, class_name)
+            record_type = record_type_from_blocketteid(blockette_class.id)
+            blockette_obj = blockette_class(debug=self.debug,
+                                            strict=False,
+                                            compact=False,
+                                            record_type=record_type)
+            blockette_fields = (blockette_obj.default_fields +
+                                blockette_obj.get_fields())
+            unrolled_blockette_fields = []
+
+            for bf in blockette_fields:
+                if isinstance(bf, Loop):
+                    for df in bf.data_fields:
+                        unrolled_blockette_fields.append(df)
+                else:
+                    unrolled_blockette_fields.append(bf)
+            blockette_fields = copy.deepcopy(unrolled_blockette_fields)
+
+            # List of fields with fields used removed,
+            # so unused can be set to default after
+            unused_fields = blockette_fields[:]
+
+            for (_, field_number, resp_value) in blkt:
+                for bfield in blockette_fields:
+                    if bfield.id != int(field_number):
+                        continue
+                    if isinstance(bfield, VariableString):
+                        # Variable string needs terminator '~'
+                        resp_value += '~'
+
+                    # Units need to be put into the abbreviations. Luckily
+                    # they all have "unit" in their field names.
+                    if "unit" in bfield.field_name:
+                        resp_value = resp_value.upper()
+                        if resp_value not in unit_lookups:
+                            unit_lookups[resp_value] = \
+                                str(len(unit_lookups) + 1)
+                        resp_value = unit_lookups[resp_value]
+                    resp_data = io.BytesIO(resp_value.encode('utf-8'))
+
+                    if (hasattr(bfield, 'length') and
+                            bfield.length < len(resp_value)):
+                        # RESP does not use the same length for floats
+                        # as SEED does
+                        bfield.length = len(resp_value)
+                    bfield.parse_seed(blockette_obj, resp_data)
+                    if bfield in unused_fields:
+                        unused_fields.remove(bfield)
+                    break
+
+            default_field_names = [_i.field_name
+                                   for _i in blockette_obj.default_fields]
+            for bfield in unused_fields:
+                # Only set the unused fields to default values that are part
+                # of the default fields. Anything else is potentially wrong.
+                if bfield.field_name not in default_field_names:
+                    continue
+                bfield.parse_seed(blockette_obj, None)
+
+            # Collect all blockettes.
+            self.temp["stations"][-1].append(blockette_obj)
+            # Also collect all blockettes here.
+            self.blockettes.setdefault(blockette_obj.id,
+                                       []).append(blockette_obj)
+
+        self.stations = self.temp["stations"]
+        self.volume = self.temp["volume"]
+
+        # We have to do another pass - Blockette 52 has the output unit of
+        # the signal response which should be the same as the input unit of
+        # the first filter stage. An awkward loop will follow!
+        for station in self.stations:
+            blkt52 = None
+            for blkt in station:
+                if blkt.id == 52:
+                    blkt52 = blkt
+                # Either take a 5X blockette with a stage sequence number of
+                # one or take the first 4x blockette and assume its stages
+                # sequence number is one.
+                elif blkt52 and ((hasattr(blkt, "stage_sequence_number") and
+                                  blkt.stage_sequence_number == 1) or
+                                 blkt.id in list(range(41, 50))):
+                    if hasattr(blkt, "stage_signal_input_units"):
+                        key = "stage_signal_input_units"
+                    elif hasattr(blkt, "signal_input_units"):
+                        key = "signal_input_units"
+                    else:
+                        continue
+                    blkt52.units_of_signal_response = getattr(blkt, key)
+                    # Reset so each channel only gets the first.
+                    blkt52 = None
+
+        # One more to try to find the sampling rate of the last digitizer in
+        # the chain.
+        for station in self.stations:
+            blkt52 = None
+            for blkt in station:
+                if blkt.id == 52:
+                    blkt52 = blkt
+                elif blkt.id in [47, 57]:
+                    # Set it all the time - the last one will stick.
+                    blkt52.sample_rate = \
+                        int(round(blkt.input_sample_rate /
+                                  blkt.decimation_factor))
+
+        # Write all the abbreviations.
+        mappings = {
+            "COUNTS": "Digital Counts",
+            "COUNTS/V": "Counts per Volt",
+            "M": "Displacement in Meters",
+            "M/S": "Velocity in Meters per Second",
+            "M/S**2": "Acceleration in Meters Per Second Per Second",
+            "M**3/M**3": "Volumetric Strain",
+            "V": "Volts",
+            "A": "Amperes"}
+        for unit_name, lookup_key in unit_lookups.items():
+            blkt = blockette.Blockette034()
+            blkt.blockette_type = 34
+            blkt.unit_lookup_code = int(lookup_key)
+            blkt.unit_name = unit_name
+            if unit_name in mappings:
+                blkt.unit_description = mappings[unit_name]
+            self.temp['abbreviations'].append(blkt)
+            self.blockettes.setdefault(34, []).append(blkt)
+
+        # Keep track of all used response lookup keys so they are not
+        # duplicated.
+        response_lookup_keys = set()
+
+        # Reconstruct blockette 60 and move all the 4X blockettes to the
+        # abbreviations. Another awkward and hard to understand loop.
+        def _finalize_blkt60(stages):
+            key = max(response_lookup_keys) if response_lookup_keys else 0
+            stage_numbers = sorted(stages.keys())
+            assert stage_numbers == list(range(min(stage_numbers),
+                                               max(stage_numbers) + 1))
+            stage_list = []
+            for _i in stage_numbers:
+                lookup_keys = []
+                for s in stages[_i]:
+                    key += 1
+                    response_lookup_keys.add(key)
+                    lookup_keys.append(key)
+                    s.response_lookup_key = key
+                    self.temp["abbreviations"].append(s)
+                stage_list.append(lookup_keys)
+            b = blockette.Blockette060()
+            b.stages = stage_list
+            return b
+
+        new_stations = []
+        for station in self.stations:
+            blkts = []
+            in_blkt_60 = False
+            cur_blkt_stage = None
+            cur_blkt_60_stages = collections.defaultdict(list)
+            for b in station:
+                if 40 <= b.id <= 49:
+                    if not in_blkt_60:
+                        msg = "4X blockette encountered outside of " \
+                            "blockette 60"
+                        raise ValueError(msg)
+                    cur_blkt_60_stages[cur_blkt_stage].append(b)
+                    continue
+                # Otherwise.
+                elif b.id == 60:
+                    in_blkt_60 = True
+                    # Always set in blockette 60 for RESP files.
+                    cur_blkt_stage = b.stage_sequence_number
+                    continue
+                # Now assemble the new Blockette 60 if any.
+                if in_blkt_60:
+                    blkts.append(_finalize_blkt60(cur_blkt_60_stages))
+                    in_blkt_60 = False
+                    cur_blkt_stage = None
+                    cur_blkt_60_stages = []
+                # Just append all other blockettes.
+                blkts.append(b)
+            # Might still have one left.
+            if in_blkt_60:
+                blkts.append(_finalize_blkt60(cur_blkt_60_stages))
+                in_blkt_60 = False
+                cur_blkt_stage = None
+                cur_blkt_60_stages = []
+            new_stations.append(blkts)
+        self.stations = new_stations
+
+        self.abbreviations = self.temp["abbreviations"]
+
+    def resolve_abbreviation(self, abbreviation_blockette_number, lookup_code):
+        if abbreviation_blockette_number not in self.blockettes or \
+                not self.blockettes[abbreviation_blockette_number]:
+            raise ValueError("No blockettes %i available." %
+                             abbreviation_blockette_number)
+
+        if abbreviation_blockette_number == 31:
+            key = "comment_code_key"
+        elif abbreviation_blockette_number == 33:
+            key = "abbreviation_lookup_code"
+        elif abbreviation_blockette_number == 34:
+            key = "unit_lookup_code"
+        elif abbreviation_blockette_number in (41, 42, 43, 44, 45, 46, 47, 48,
+                                               49):
+            key = "response_lookup_key"
+        else:
+            raise NotImplementedError(str(abbreviation_blockette_number))
+
+        blkts = [b for b in self.blockettes[abbreviation_blockette_number]
+                 if int(getattr(b, key)) == int(lookup_code)]
+        if len(blkts) > 1:
+            msg = ("Found multiple blockettes %i with lookup code %i. Will "
+                   "use the first one." % (abbreviation_blockette_number,
+                                           lookup_code))
+            warnings.warn(msg)
+            blkts = blkts[:1]
+        if not blkts:
+            raise ValueError("Could not find a blockette %i with lookup code "
+                             "%i." % (abbreviation_blockette_number,
+                                      lookup_code))
+        return blkts[0]
+
+    def get_response_for_channel(self, blockettes_for_channel, epoch_str):
+        """
+        Create an ObsPy response object from all blockettes of a channel.
+
+        This is a method instead of function as it needs to access the
+        abbreviation dictionary.
+
+        :param blockettes_for_channel: The blockettes for the channel to
+            calculate the response for.
+        :type blockettes_for_channel: List[Blockette]
+        :param epoch_str: A string representing the epoch. Used for nice
+            warning and error message.
+        :type epoch_str: str
+
+        :rtype: :class:`obspy.core.inventory.response.Response`
+        :returns: Inventory response object.
+        """
+        # Function generating more descriptive warning and error messages.
+        def _epoch_warn_msg(msg):
+            return "Epoch %s: %s" % (epoch_str, msg)
+
+        # Return if there is not response.
+        if set(_i.id for _i in blockettes_for_channel).issubset({52, 59}):
+            return None
+
+        transform_map = {'A': 'LAPLACE (RADIANS/SECOND)',
+                         'B': 'LAPLACE (HERTZ)',
+                         'D': 'DIGITAL (Z-TRANSFORM)'}
+
+        transfer_map = {'A': 'ANALOG (RADIANS/SECOND',
+                        'B': 'ANALOG (HERTZ)',
+                        'D': 'DIGITAL'}
+
+        # Parse blockette 60 and convert all the dictionary to their real
+        # blockette counterparts. Who ever thought blockette 60 was a good
+        # idea???
+        _blockettes = []
+
+        # Define the mappings for blockette 60. The key is the dictionary
+        # blockette, the value a tuple of the corresponding blockette class and
+        # another dictionary with the key being the name of the field in the
+        # actual blockette mapped to the one in the dictionary. If a key is not
+        # present, the same name is assumed.
+        mappings = {
+            41: (Blockette061, {
+                "mappings": {
+                    "number_of_coefficients": "number_of_factors"},
+                "might_be_empty": ["FIR_coefficient"]
+            }),
+            43: (Blockette053, {
+                "mappings": {
+                    "transfer_function_types": "response_type"},
+                "might_be_empty": ["real_zero", "real_pole", "imaginary_zero",
+                                   "imaginary_pole", "real_zero_error",
+                                   "real_pole_error", "imaginary_zero_error",
+                                   "imaginary_pole_error"]
+            }),
+            44: (Blockette054, {
+                "mappings": {},
+                "might_be_empty": ["numerator_coefficient", "numerator_error",
+                                   "denominator_coefficient",
+                                   "denominator_error"]
+            }),
+            47: (Blockette057, {
+                "mappings": {},
+                "might_be_empty": []
+            }),
+            48: (Blockette058, {
+                "mappings": {},
+                "might_be_empty": ["sensitivity_for_calibration",
+                                   "frequency_of_calibration_sensitivity",
+                                   "time_of_above_calibration"]
+            })
+        }
+        ignore_fields = ["stage_sequence_number", "response_name"]
+
+        # Some preprocessing - mainly filter out comment blockettes and
+        # translate all blockettes in blockette 60 to their full blockette
+        # counterparts.
+        for b in blockettes_for_channel:
+            # Filter out comments.
+            if b.id != 60:
+                # Comments are irrelevant for the response.
+                if b.id == 59:
+                    continue
+                _blockettes.append(b)
+                continue
+            # Translate blockette 60 to their true blockette counterparts.
+            for _i, lookup_codes in enumerate(b.stages):
+                stage_sequence_number = _i + 1
+                for code in lookup_codes:
+                    possible_dicts = []
+                    for _j in (41, 42, 43, 44, 45, 46, 47, 48, 49):
+                        try:
+                            possible_dicts.append(
+                                self.resolve_abbreviation(_j, code))
+                        except ValueError:
+                            continue
+                    if not possible_dicts:
+                        raise ValueError(_epoch_warn_msg(
+                            "Failed to find dictionary response for key %i." %
+                            code))
+                    elif len(possible_dicts) > 1:
+                        raise ValueError(_epoch_warn_msg(
+                            "Found multiple dictionary responses for key %i." %
+                            code))
+                    _d = possible_dicts[0]
+                    # Now it starts to get really ugly...
+                    _m = mappings[_d.id]
+                    _b = _m[0]()
+                    _m = _m[1]
+
+                    # Parse out the loop fields.
+                    fields = []
+                    for f in _b.get_fields():
+                        if not isinstance(f, Loop):
+                            fields.append(f)
+                            continue
+                        fields.extend(f.data_fields)
+
+                    for field in fields:
+                        if field.attribute_name in ignore_fields:
+                            continue
+                        elif field.attribute_name in _m["mappings"]:
+                            key = _m["mappings"][field.attribute_name]
+                        else:
+                            key = field.attribute_name
+
+                        # Some keys might not be set.
+                        has_it = hasattr(_d, key)
+                        if not has_it and key in _m["might_be_empty"]:
+                            continue
+
+                        setattr(_b, field.attribute_name, getattr(_d, key))
+                    _b.stage_sequence_number = stage_sequence_number
+                    _blockettes.append(_b)
+        blockettes_for_channel = _blockettes
+
+        # Get blockette 52.
+        blkt52 = [_i for _i in blockettes_for_channel if _i.id == 52]
+        if len(blkt52) != 1:
+            raise InvalidResponseError("Must have exactly one blockette 52.")
+        blkt52 = blkt52[0]
+
+        # Sort the rest into stages.
+        stages = collections.defaultdict(list)
+        for b in blockettes_for_channel:
+            # Blockette 52 does not belong to any particular stage.
+            if b.id == 52:
+                continue
+            stages[b.stage_sequence_number].append(b)
+        # Convert to a normal dictionary to not get any surprises like
+        # automatically generated stages when testing if something is there.
+        stages = dict(stages)
+
+        # Get input units from blockette 52.
+        if hasattr(blkt52, "units_of_signal_response"):
+            try:
+                input_units = self.resolve_abbreviation(
+                    34, blkt52.units_of_signal_response)
+            except ValueError:
+                msg = ("Failed to resolve units of signal abbreviation in "
+                       "blockette 52.")
+                warnings.warn(_epoch_warn_msg(msg))
+                input_units = None
+        # Alternatively stage 0 might be blkt 62 which might also the full
+        # units.
+        else:
+            if 0 in stages and stages[0] and stages[0][0].id == 62:
+                try:
+                    input_units = self.resolve_abbreviation(
+                        34, stages[0][0].stage_signal_in_units)
+                except ValueError:
+                    msg = ("Failed to resolve units of signal abbreviation "
+                           "in blockette 62.")
+                    warnings.warn(_epoch_warn_msg(msg))
+                    input_units = None
+            else:
+                input_units = None
+
+        # Alternatively get them from the first stage that claims to have them.
+        stage_x_output_units = None
+        for _stage in list(range(1, max(stages.keys()) + 1)) + [0]:
+            if _stage not in stages:
+                continue
+            _s = stages[_stage][0]
+            for _attr in dir(_s):
+                if "unit" in _attr and \
+                        ("input" in _attr or "in unit" in _attr):
+                    try:
+                        stage_x_output_units = getattr(_s, _attr)
+                        stage_x_output_units = \
+                            self.resolve_abbreviation(
+                                34, stage_x_output_units)
+                    except ValueError:
+                        pass
+                    break
+
+        # If both are None -> raise a warning.
+        if input_units is None and stage_x_output_units is None:
+            msg = "Could not determine input units."
+            warnings.warn(_epoch_warn_msg(msg))
+        # Prefer the input units from blockette 52, otherwise use the ones
+        # from the first stage that has them.
+        elif input_units is None:
+            input_units = stage_x_output_units
+
+        # If the input units are still unresolved for some reason, resolve
+        # them now.
+        if isinstance(input_units, int):
+            try:
+                input_units = self.resolve_abbreviation(34, input_units)
+            except ValueError:
+                msg = "Failed to resolve the input units abbreviation."
+                warnings.warn(_epoch_warn_msg(msg))
+                input_units = None
+
+        # Find the output units by looping over the stages in reverse order
+        # and finding the first stage whose first blockette has an output
+        # unit set.
+        unit_lookup_key = None
+        for _s in reversed(sorted(stages.keys())):
+            _s = stages[_s][0]
+            for attr in dir(_s):
+                if "unit" in attr and "out" in attr and "__" not in attr:
+                    unit_lookup_key = getattr(_s, attr)
+                    break
+            else:
+                continue
+            break
+        # Output units are the outputs of the final stage.
+        if unit_lookup_key is None:
+            msg = "Could not determine output units."
+            warnings.warn(_epoch_warn_msg(msg))
+            output_units = None
+        else:
+            try:
+                output_units = self.resolve_abbreviation(34, unit_lookup_key)
+            except ValueError:
+                msg = "Could not resolve the output units abbreviation."
+                warnings.warn(_epoch_warn_msg(msg))
+                output_units = None
+
+        # The remaining logic assumes that the stages list for blockette 0 at
+        # least exists.
+        if 0 not in stages:
+            stages[0] = []
+
+        # Stage zero usually only contains a single blockette (58 or 62).
+        # Deal with cases where this is not true.
+        if len(stages[0]) > 1:
+            _blkts58 = [_i for _i in stages[0] if _i.id == 58]
+            # Attempt to fix it - only works if there is a blockette 58 in
+            # it and the rest of the stages are empty.
+            if list(stages.keys()) == [0] and len(_blkts58) == 1:
+                stages[1] = stages[0]
+                stages[0] = _blkts58
+            else:
+                # Check if they are all identical - if they are, just choose
+                # the first one.
+                first = _blkts58[0]
+                all_identical = True
+                for _b in _blkts58[1:]:
+                    if _b != first:
+                        all_identical = False
+                        break
+                if not all_identical:
+                    msg = ("Channel has multiple different blockettes "
+                           "58 for stage 0. The last one will be chosen - "
+                           "this is a faulty file - try to fix it!")
+                    warnings.warn(_epoch_warn_msg(msg))
+                    stages[0] = _blkts58[:-1]
+                else:
+                    msg = ("Channel has multiple (but identical) blockettes "
+                           "58 for stage 0. Only one will be used.")
+                    warnings.warn(_epoch_warn_msg(msg))
+                    stages[0] = _blkts58[:1]
+
+        # If there is no stage zero and exactly one other stages, use it to
+        # reconstruct stage zero by just copying its stage 58.
+        # 2nd condition: Make sure there is exactly one stage not zero.
+        # 3rd condition: Make sure that stage has a blockette 58.
+        if not len(stages[0]) and \
+                len(set(stages.keys()).difference({0})) == 1 and \
+                58 in [b.id for b in stages[sorted(stages.keys())[-1]]]:
+            b = [b for b in stages[sorted(stages.keys())[-1]]
+                 if b.id == 58][0]
+            b = copy.deepcopy(b)
+            b.stage_sequence_number = 0
+            stages[0].append(b)
+
+        # If still no stage 0, try to reconstruct it from all other
+        # blockettes 58.
+        if not stages[0]:
+            _blkts58 = []
+            for number in sorted(stages.keys()):
+                _blkts58.extend([_i for _i in stages[number] if _i.id == 58])
+            if not _blkts58:
+                msg = "File has no stage 0 and no other blockettes 58. " \
+                    "This is very likely just an invalid response."
+                raise InvalidResponseError(msg)
+            # Just multiply all gains - this appears to be what evalresp is
+            # also doing.
+            gain = 1.0
+            for _b in _blkts58:
+                if hasattr(_b, "sensitivity_gain") and \
+                        _b.sensitivity_gain:
+                    gain *= _b.sensitivity_gain
+            stages[0] = [Blockette058()]
+            # Use the last found frequency. If none is found, just set it to
+            # one.
+            all_frequencies = [_b.frequency for _b in _blkts58 if _b.frequency]
+            if all_frequencies:
+                stages[0][0].frequency = all_frequencies[-1]
+            else:
+                stages[0][0].frequency = 1.0
+            stages[0][0].sensitivity_gain = gain
+            stages[0][0].stage_sequency_number = 0
+            stages[0][0].record_type = 'S'
+
+        # The final stage 0 blockette must be a blockette 58 or 62.
+        if stages[0][0].id not in (58, 62):
+            msg = "Stage 0 must be a blockette 58 or 62."
+            raise InvalidResponseError(msg)
+
+        # Cannot have both, blockettes 53 and 54, in one stage.
+        for stage, blkts in stages.items():
+            _i = {b.id for b in blkts}.intersection({53, 54})
+            if len(_i) > 1:
+                msg = ("Stage %i has both, blockette 53 and 54. This is not "
+                       "valid.") % stage
+                raise InvalidResponseError(msg)
+
+        # Assemble the total instrument sensitivity.
+        if stages[0][0].id == 58:
+            instrument_sensitivity = InstrumentSensitivity(
+                value=stages[0][0].sensitivity_gain,
+                frequency=stages[0][0].frequency,
+                input_units=input_units.unit_name if input_units else None,
+                output_units=output_units.unit_name
+                if output_units is not None else None,
+                input_units_description=input_units.unit_description
+                if (input_units and hasattr(input_units, "unit_description"))
+                else None,
+                output_units_description=output_units.unit_description
+                if (output_units and hasattr(output_units, "unit_description"))
+                else None)
+        # Does not exist if it is a single blockette 62.
+        else:
+            instrument_sensitivity = None
+
+        # Trying to fit blockette 62 in stage 0 into the inventory object.
+        if stages[0][0].id == 62:
+            if len(stages[0]) != 1:
+                msg = "If blockette 62 is in stage 0 it must be " \
+                    "the only blockette in stage 0."
+                raise InvalidResponseError(msg)
+            # If blockette 62 is set for stage 0 and other stages are
+            # present it should just be a summary of all the other stages
+            # and can thus be removed.
+            if len(stages.keys()) != 1:
+                del stages[0]
+            # Otherwise (62 is still stage 0, but not other stages exist) it
+            # is the only stage describing the full response. Moving it to
+            # stage 1 should trigger the rest of the logic to work correctly.
+            else:
+                # Just move it to stage 1 and it should be covered by the rest
+                # of the logic.
+                stages[1] = stages[0]
+                del stages[0]
+
+        # Afterwards loop over all other stages and assemble them in one list.
+        response_stages = []
+        for _i in sorted(set(stages.keys()).difference({0})):
+            # Some SEED files have blockettes in the wrong order - sort them
+            # to fix it.
+            # The sorting is kind of awkward - essentially sort by id,
+            # but make sure 57 + 58 are at the end.
+            blkts = sorted(stages[_i], key=lambda x: int(x.blockette_id))
+
+            b_a = [b_ for b_ in blkts if b_.blockette_id not in ("057", "058")]
+            b_b57 = [b_ for b_ in blkts if b_.blockette_id in ("057")]
+            b_b58 = [b_ for b_ in blkts if b_.blockette_id in ("058")]
+            if len(b_b58) > 1:
+                msg = ("Stage %i has %i blockettes 58. Only the last one "
+                       "will be used." % (_i, len(b_b58)))
+                warnings.warn(_epoch_warn_msg(msg))
+                b_b58 = b_b58[-1:]
+            blkts = b_a + b_b57 + b_b58
+
+            # A bit undefined if it does not end with blockette 58 I think.
+            # Not needed for blockette 62.
+            if blkts[-1].id == 58:
+                b58 = blkts[-1]
+            elif blkts[-1].id != 58 and blkts[0].id != 62:
+                msg = ("Response stage %i does not end with blockette 58. "
+                       "Proceed at your own risk." % _i)
+                warnings.warn(_epoch_warn_msg(msg))
+                b58 = None
+            else:
+                b58 = None
+
+            def _list(value):
+                if hasattr(value, '__iter__'):
+                    return value
+                else:
+                    return [value]
+
+            # Poles and Zeros stage.
+            if blkts[0].id == 53:
+                # Must be 53 and 58.
+                _blkt_set = {b_.id for b_ in blkts}
+                if not _blkt_set.issubset({53, 57, 58}):
+                    extra_blkts = _blkt_set.difference({53, 57, 58})
+                    msg = "Stage %i: " \
+                        "A stage with blockette 53 may only contain " \
+                        "additional blockettes 57 and 58. This stage has " \
+                        "the following additional blockettes: %s" % (
+                            _i,
+                            ", ".join(str(_i) for _i in sorted(extra_blkts)))
+                    raise InvalidResponseError(msg)
+                blkts53 = [b_ for b_ in blkts if b_.id == 53]
+                blkts57 = [b_ for b_ in blkts if b_.id == 57]
+                b53 = blkts53[-1]
+
+                if len(blkts53) > 1:
+                    msg = ("Stage %i has %i blockettes 53. Only the last one "
+                           "will be used." % (_i, len(blkts53)))
+                    warnings.warn(_epoch_warn_msg(msg))
+                if len(blkts57) > 1:
+                    msg = ("Stage %i has %i blockettes 57. Only the last one "
+                           "will be used." % (_i, len(blkts57)))
+                    warnings.warn(_epoch_warn_msg(msg))
+                if blkts57:
+                    b57 = blkts57[-1]
+                else:
+                    b57 = None
+
+                zeros = []
+                # Might not have zeros.
+                if hasattr(b53, "real_zero"):
+                    for r, i, r_err, i_err in zip(
+                            _list(b53.real_zero), _list(b53.imaginary_zero),
+                            _list(b53.real_zero_error),
+                            _list(b53.imaginary_zero_error)):
+                        z = ComplexWithUncertainties(r, i)
+                        err = ComplexWithUncertainties(r_err, i_err)
+                        z.lower_uncertainty = z - err
+                        z.upper_uncertainty = z + err
+                        zeros.append(z)
+                poles = []
+                # Might somehow also not have zeros.
+                if hasattr(b53, "real_pole"):
+                    for r, i, r_err, i_err in zip(
+                            _list(b53.real_pole), _list(b53.imaginary_pole),
+                            _list(b53.real_pole_error),
+                            _list(b53.imaginary_pole_error)):
+                        p = ComplexWithUncertainties(r, i)
+                        err = ComplexWithUncertainties(r_err, i_err)
+                        p.lower_uncertainty = p - err
+                        p.upper_uncertainty = p + err
+                        poles.append(p)
+
+                try:
+                    i_u = self.resolve_abbreviation(
+                        34, b53.stage_signal_input_units)
+                except ValueError:
+                    msg = "Stage %i: Failed to resolve the stage signal " \
+                        "input units abbreivation for blockette 53." % _i
+                    warnings.warn(_epoch_warn_msg(msg))
+                    i_u = None
+                try:
+                    o_u = self.resolve_abbreviation(
+                        34, b53.stage_signal_output_units)
+                except ValueError:
+                    msg = "Stage %i: Failed to resolve the stage signal " \
+                        "output units abbreviation for blockette 53." % _i
+                    warnings.warn(_epoch_warn_msg(msg))
+                    o_u = None
+
+                response_stages.append(PolesZerosResponseStage(
+                    stage_sequence_number=b53.stage_sequence_number,
+                    stage_gain=getattr(b58, "sensitivity_gain", None)
+                    if b58 else None,
+                    stage_gain_frequency=getattr(b58, "frequency", None)
+                    if b58 else None,
+                    input_units=i_u.unit_name if i_u else None,
+                    output_units=o_u.unit_name if o_u else None,
+                    input_units_description=i_u.unit_description
+                    if (i_u and hasattr(i_u, "unit_description")) else None,
+                    output_units_description=o_u.unit_description
+                    if (o_u and hasattr(o_u, "unit_description")) else None,
+                    pz_transfer_function_type=transform_map[
+                        b53.transfer_function_types],
+                    normalization_frequency=b53.normalization_frequency,
+                    zeros=zeros,
+                    poles=poles,
+                    normalization_factor=b53.A0_normalization_factor,
+                    decimation_input_sample_rate=b57.input_sample_rate
+                    if b57 else None,
+                    decimation_factor=b57.decimation_factor
+                    if b57 else None,
+                    decimation_offset=b57.decimation_offset
+                    if b57 else None,
+                    decimation_delay=b57.estimated_delay
+                    if b57 else None,
+                    decimation_correction=b57.correction_applied
+                    if b57 else None))
+            # Response coefficients stage.
+            elif blkts[0].id == 54:
+                _blkts = [b_.id for b_ in blkts]
+                if 57 not in _blkts:
+                    msg = ("Stage %i: "
+                           "Invalid response specification. A blockette 54 "
+                           "must always be followed by a blockette 57 "
+                           "which is missing.") % _i
+                    raise InvalidResponseError(msg)
+                # There can be multiple blockettes 54 in sequence in which
+                # case numerators or denominators are chained from all of them.
+                blkts54 = [b_ for b_ in blkts if b_.id == 54]
+                blkts57 = [b_ for b_ in blkts if b_.id == 57]
+
+                if len(blkts57) > 1:
+                    msg = ("Stage %i has %i blockettes 57. Only the last one "
+                           "will be used." % (_i, len(blkts57)))
+                    warnings.warn(_epoch_warn_msg(msg))
+                b57 = blkts57[-1]
+
+                # Choose the first one as a reference.
+                b54 = blkts54[0]
+                # Use all of them for the coefficients.
+                numerator = []
+                denominator = []
+                for b in blkts54:
+                    if hasattr(b, "numerator_coefficient"):
+                        _t = b.numerator_coefficient
+                        if not hasattr(_t, "__iter__"):
+                            _t = [_t]
+                        numerator.extend(_t)
+                    if hasattr(b, "denominator_coefficient"):
+                        _t = b.denominator_coefficient
+                        if not hasattr(_t, "__iter__"):
+                            _t = [_t]
+                        denominator.extend(_t)
+
+                try:
+                    i_u = self.resolve_abbreviation(
+                        34, b54.signal_input_units)
+                except ValueError:
+                    msg = "Stage %i: Failed to resolve the signal input " \
+                        "units abbreviation for blockette 54." % _i
+                    warnings.warn(_epoch_warn_msg(msg))
+                    i_u = None
+                try:
+                    o_u = self.resolve_abbreviation(
+                        34, b54.signal_output_units)
+                except ValueError:
+                    msg = "Stage %i: Failed to resolve the signal output " \
+                        "units abbreviation for blockette 54." % _i
+                    warnings.warn(_epoch_warn_msg(msg))
+                    o_u = None
+
+                response_stages.append(CoefficientsTypeResponseStage(
+                    stage_sequence_number=b54.stage_sequence_number,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units=i_u.unit_name if i_u else None,
+                    output_units=o_u.unit_name if o_u else None,
+                    input_units_description=i_u.unit_description
+                    if (i_u and hasattr(i_u, "unit_description")) else None,
+                    output_units_description=o_u.unit_description
+                    if (o_u and hasattr(o_u, "unit_description")) else None,
+                    cf_transfer_function_type=transfer_map[b54.response_type],
+                    numerator=numerator,
+                    denominator=denominator,
+                    decimation_input_sample_rate=b57.input_sample_rate,
+                    decimation_factor=b57.decimation_factor,
+                    decimation_offset=b57.decimation_offset,
+                    decimation_delay=b57.estimated_delay,
+                    decimation_correction=b57.correction_applied))
+            # Response list stage.
+            elif blkts[0].id == 55:
+                assert set(b_.id for b_ in blkts).issubset({55, 57, 58})
+                b57 = [_i for _i in blkts if _i.id == 57]
+                if len(b57):
+                    b57 = b57[0]
+                else:
+                    b57 = None
+
+                b55 = blkts[0]
+                i_u = self.resolve_abbreviation(
+                    34, b55.stage_input_units)
+                o_u = self.resolve_abbreviation(
+                    34, b55.stage_output_units)
+                response_list = [
+                    ResponseListElement(f, a, p) for f, a, p in
+                    zip(b55.frequency, b55.amplitude, b55.phase_angle)]
+                response_stages.append(ResponseListResponseStage(
+                    stage_sequence_number=b55.stage_sequence_number,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units=i_u.unit_name,
+                    output_units=o_u.unit_name,
+                    input_units_description=i_u.unit_description
+                    if hasattr(i_u, "unit_description") else None,
+                    output_units_description=o_u.unit_description,
+                    response_list_elements=response_list,
+                    decimation_input_sample_rate=b57.input_sample_rate
+                    if b57 else None,
+                    decimation_factor=b57.decimation_factor if b57 else None,
+                    decimation_offset=b57.decimation_offset if b57 else None,
+                    decimation_delay=b57.estimated_delay if b57 else None,
+                    decimation_correction=b57.correction_applied
+                    if b57 else None))
+            # Decimation stage.
+            elif blkts[0].id == 57:
+                if {b_.id for b_ in blkts} != {57, 58}:
+                    msg = "Stage %i: A decimation stage with blockette 57 " \
+                        "must be followed by a blockette 58 which is " \
+                        "missing here." % _i
+                    raise InvalidResponseError(msg)
+                b57 = blkts[0]
+                # Cannot assign units yet - will be added at the end in a
+                # final pass by inferring it from the units of previous and
+                # subsequent stages.
+                response_stages.append(ResponseStage(
+                    stage_sequence_number=b58.stage_sequence_number
+                    if b58 else None,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units="",
+                    output_units="",
+                    decimation_input_sample_rate=b57.input_sample_rate,
+                    decimation_factor=b57.decimation_factor,
+                    decimation_offset=b57.decimation_offset,
+                    decimation_delay=b57.estimated_delay,
+                    decimation_correction=b57.correction_applied))
+            # Gain only stage.
+            elif blkts[0].id == 58:
+                assert [b_.id for b_ in blkts] == [58]
+                # Cannot assign units yet - will be added at the end in a
+                # final pass by inferring it from the units of previous and
+                # subsequent stages.
+                response_stages.append(ResponseStage(
+                    stage_sequence_number=b58.stage_sequence_number
+                    if b58 else None,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units="",
+                    output_units=""))
+            # FIR stage.
+            elif blkts[0].id == 61:
+                _blkt_set = {b_.id for b_ in blkts}
+                if not _blkt_set.issubset({61, 57, 58}):
+                    extra_blkts = _blkt_set.difference({61, 57, 58})
+                    msg = "Stage %i: " \
+                        "A stage with blockette 61 may only contain " \
+                        "additional blockettes 57 and 58. This stage has " \
+                        "the following additional blockettes: %s" % (
+                            _i,
+                            ", ".join(str(_i) for _i in sorted(extra_blkts)))
+                    raise InvalidResponseError(msg)
+
+                blkts61 = [b_ for b_ in blkts if b_.id == 61]
+
+                # Blockette 57.
+                blkts57 = [b_ for b_ in blkts if b_.id == 57]
+                if len(blkts57) > 1:
+                    msg = ("Stage %i: "
+                           "Multiple blockettes 57 found after blockette 61! "
+                           "Will use the last one. This is an invalid file "
+                           "- please check it!") % _i
+                    warnings.warn(_epoch_warn_msg(msg))
+                if blkts57:
+                    b57 = blkts57[-1]
+                else:
+                    b57 = None
+
+                # Use first blkt 61 as a reference.
+                b61 = blkts61[0]
+
+                # Use all of them for the coefficients.
+                coefficients = []
+                for b in blkts61:
+                    if hasattr(b, "FIR_coefficient"):
+                        _t = b.FIR_coefficient
+                        if not hasattr(_t, "__iter__"):
+                            _t = [_t]
+                        coefficients.extend(_t)
+
+                i_u = self.resolve_abbreviation(
+                    34, b61.signal_in_units)
+                o_u = self.resolve_abbreviation(
+                    34, b61.signal_out_units)
+
+                symmetry_map = {"A": "NONE", "B": "ODD", "C": "EVEN"}
+
+                response_stages.append(FIRResponseStage(
+                    stage_sequence_number=b61.stage_sequence_number,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units=i_u.unit_name,
+                    output_units=o_u.unit_name,
+                    input_units_description=i_u.unit_description
+                    if (i_u and hasattr(i_u, "unit_description")) else None,
+                    output_units_description=o_u.unit_description
+                    if (o_u and hasattr(o_u, "unit_description")) else None,
+                    symmetry=symmetry_map[b61.symmetry_code],
+                    coefficients=coefficients,
+                    decimation_input_sample_rate=b57.input_sample_rate
+                    if b57 else None,
+                    decimation_factor=b57.decimation_factor
+                    if b57 else None,
+                    decimation_offset=b57.decimation_offset
+                    if b57 else None,
+                    decimation_delay=b57.estimated_delay
+                    if b57 else None,
+                    decimation_correction=b57.correction_applied
+                    if b57 else None))
+            elif blkts[0].id == 62:
+                b62 = blkts[0]
+                ids = {b_.id for b_ in blkts}
+                assert ids.issubset({62, 57, 58})
+
+                if 57 in ids:
+                    b57 = [b_ for b_ in blkts if b_.id == 57][0]
+                else:
+                    b57 = None
+
+                # Try to get the units.
+                try:
+                    i_u = self.resolve_abbreviation(
+                        34, b62.stage_signal_in_units)
+                except ValueError:
+                    msg = "Stage %i: Failed to resolve the stage signal in " \
+                          "units abbreivation for blockette 62." % _i
+                    warnings.warn(_epoch_warn_msg(msg))
+                    i_u = None
+                try:
+                    o_u = self.resolve_abbreviation(
+                        34, b62.stage_signal_out_units)
+                except ValueError:
+                    msg = "Stage %i: Failed to resolve the stage signal out " \
+                        "units abbreviation for blockette 62." % _i
+                    warnings.warn(_epoch_warn_msg(msg))
+                    o_u = None
+
+                if getattr(b62, "polynomial_approximation_type", "M").upper() \
+                        != "M":
+                    msg = "Stage _i: Only the MACLAURIN polynomial " \
+                        "approximation type is currently supported." % _i
+                    raise InvalidResponseError(msg)
+
+                # Get the coefficients.
+                coefficients = []
+                if hasattr(b62, "polynomial_coefficient"):
+                    _t = b62.polynomial_coefficient
+                    if not hasattr(_t, "__iter__"):
+                        _t = [_t]
+                    coefficients.extend(_t)
+
+                response_stages.append(PolynomialResponseStage(
+                    stage_sequence_number=b62.stage_sequence_number,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units=i_u.unit_name if i_u else None,
+                    output_units=o_u.unit_name if o_u else None,
+                    input_units_description=i_u.unit_description
+                    if (i_u and hasattr(i_u, "unit_description")) else None,
+                    output_units_description=o_u.unit_description
+                    if (o_u and hasattr(o_u, "unit_description")) else None,
+                    frequency_lower_bound=getattr(
+                        b62, "lower_valid_frequency_bound", None),
+                    frequency_upper_bound=getattr(
+                        b62, "upper_valid_frequency_bound", None),
+                    # Always MACLAURIN - this is tested above.
+                    approximation_type='MACLAURIN',
+                    approximation_lower_bound=getattr(
+                        b62, "lower_bound_of_approximation", None),
+                    approximation_upper_bound=getattr(
+                        b62, "upper_bound_of_approximation", None),
+                    maximum_error=getattr(
+                        b62, "maximum_absolute_error", None),
+                    coefficients=coefficients,
+                    decimation_input_sample_rate=b57.input_sample_rate
+                    if b57 else None,
+                    decimation_factor=b57.decimation_factor
+                    if b57 else None,
+                    decimation_offset=b57.decimation_offset
+                    if b57 else None,
+                    decimation_delay=b57.estimated_delay
+                    if b57 else None,
+                    decimation_correction=b57.correction_applied
+                    if b57 else None))
+            else:
+                raise NotImplementedError(_epoch_warn_msg(
+                    "Stage %i has the following blockettes: %s" % (
+                        _i, ", ".join(b_.id for b_ in blkts))))
+
+        # Do one last pass over the response stages to fill in missing units.
+        for _i in range(len(response_stages)):
+            s = response_stages[_i]
+            if not s.input_units and _i != 0:
+                s.input_units = response_stages[_i - 1].output_units
+            if not s.output_units and (_i + 1) < len(response_stages):
+                s.output_units = response_stages[_i + 1].input_units
+
+        # If the first stage does not have an input unit but the instrument
+        # sensitivity has, set that.
+        if response_stages and \
+                not getattr(response_stages[0], "input_units", None) and \
+                getattr(instrument_sensitivity, "input_units", None):
+            response_stages[0].input_units = instrument_sensitivity.input_units
+            response_stages[0].input_units_description = \
+                instrument_sensitivity.input_units_description
+
+        # Create response object.
+        return Response(instrument_sensitivity=instrument_sensitivity,
+                        instrument_polynomial=None,
+                        response_stages=response_stages)
+
+    def _parse_seed(self, data):
         """
         Parses through a whole SEED volume.
 
@@ -735,12 +1880,7 @@ class Parser(object):
         # Use parse once again.
         self._parse_merged_data(merged_data.strip(), record_type)
         # Update the internal structure to finish parsing.
-        self._update_internal_SEED_structure()
-
-    @deprecated("'getInventory' has been renamed to 'get_inventory'. "
-                "Use that instead.")
-    def getInventory(self, *args, **kwargs):
-        return self.get_inventory(*args, **kwargs)
+        self._update_internal_seed_structure()
 
     def get_inventory(self):
         """
@@ -755,7 +1895,7 @@ class Parser(object):
                 if blkt.id == 50:
                     current_network = blkt.network_code.strip()
                     network_id = blkt.network_identifier_code
-                    if isinstance(network_id, (str, native_str)):
+                    if isinstance(network_id, str):
                         new_id = ""
                         for _i in network_id:
                             if _i.isdigit():
@@ -807,7 +1947,7 @@ class Parser(object):
             return blkt.abbreviation_description
         return ""
 
-    def _parse_XSEED(self, data):
+    def _parse_xseed(self, data):
         """
         Parse a XML-SEED string.
 
@@ -822,12 +1962,12 @@ class Parser(object):
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
         self.temp['volume'].append(
-            self._parse_XML_blockette(headers[0].getchildren()[0], 'V',
+            self._parse_xml_blockette(headers[0].getchildren()[0], 'V',
                                       xseed_version))
         # Append all abbreviations.
         for blkt in headers[1].getchildren():
             self.temp['abbreviations'].append(
-                self._parse_XML_blockette(blkt, 'A', xseed_version))
+                self._parse_xml_blockette(blkt, 'A', xseed_version))
         # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
@@ -835,11 +1975,15 @@ class Parser(object):
             self.temp['stations'].append([])
             for blkt in control_header.getchildren():
                 self.temp['stations'][-1].append(
-                    self._parse_XML_blockette(blkt, 'S', xseed_version))
+                    self._parse_xml_blockette(blkt, 'S', xseed_version))
         # Update internal values.
-        self._update_internal_SEED_structure()
+        self._update_internal_seed_structure()
+        # Write the self.blockettes dictionary.
+        for b in itertools.chain.from_iterable(self.stations +
+                                               [self.abbreviations]):
+            self.blockettes.setdefault(b.id, []).append(b)
 
-    def _get_RESP_string(self, resp, blockettes, station):
+    def _get_resp_string(self, resp, blockettes, station):
         """
         Takes a file like object and a list of blockettes containing all
         blockettes for one channel and writes them RESP like to the BytesIO.
@@ -865,8 +2009,8 @@ class Parser(object):
             'B052F04     Channel:     %s\n' % channel_info['Channel'] +
             'B052F22     Start date:  %s\n' % channel_info['Start date'] +
             'B052F23     End date:    %s\n' % channel_info['End date'] +
-            '#\t\t=======================================\n'
-            ).encode('ascii', 'strict'))
+            '#\t\t=======================================\n').encode(
+            'ascii', 'strict'))
         # Write all other blockettes. Sort by stage number (0 at the end) and
         # the specified blockette id order.
         order = [53, 54, 55, 56, 60, 61, 62, 57, 58, 59]
@@ -881,18 +2025,18 @@ class Parser(object):
             if blkt.id not in RESP_BLOCKETTES:
                 continue
             try:
-                resp.write(blkt.get_RESP(
+                resp.write(blkt.get_resp(
                     station, channel_info['Channel'], self.abbreviations))
             except AttributeError:
                 msg = 'RESP output for blockette %s not implemented yet.'
                 raise AttributeError(msg % blkt.id)
 
-    def _parse_XML_blockette(self, XML_blockette, record_type, xseed_version):
+    def _parse_xml_blockette(self, xml_blockette, record_type, xseed_version):
         """
         Takes the lxml tree of any blockette and returns a blockette object.
         """
         # Get blockette number.
-        blockette_id = int(XML_blockette.values()[0])
+        blockette_id = int(xml_blockette.values()[0])
         if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
             class_name = 'Blockette%03d' % blockette_id
             if not hasattr(blockette, class_name):
@@ -905,7 +2049,7 @@ class Parser(object):
                                             version=self.version,
                                             record_type=record_type,
                                             xseed_version=xseed_version)
-            blockette_obj.parse_XML(XML_blockette)
+            blockette_obj.parse_xml(xml_blockette)
             return blockette_obj
         elif blockette_id != 0:
             msg = "Unknown blockette type %d found" % blockette_id
@@ -940,7 +2084,7 @@ class Parser(object):
                 return_records.append(record)
                 record = b''
                 rec_len = 0
-            blockette_str = blockette_.get_SEED()
+            blockette_str = blockette_.get_seed()
             # Calculate how much of the blockette is too long.
             overhead = rec_len + len(blockette_str) - length
             # If negative overhead: Write blockette.
@@ -1005,7 +2149,7 @@ class Parser(object):
                 return False
         return True
 
-    def _update_internal_SEED_structure(self):
+    def _update_internal_seed_structure(self):
         """
         Takes everything in the self.temp dictionary and writes it into the
         volume, abbreviations and stations attributes of the class.
@@ -1087,7 +2231,7 @@ class Parser(object):
             for blkt in station:
                 try:
                     fields = blockettes[blkt.blockette_type]
-                except:
+                except Exception:
                     continue
                 for field in fields:
                     setattr(blkt, blkt.get_fields()[field - 2].field_name,
@@ -1129,14 +2273,15 @@ class Parser(object):
             root_attribute = self.temp['abbreviations']
         # Loop over all blockettes in data.
         while blockette_id != 0:
-            # remove spaces between blockettes
-            while data.read(1) == b' ':
+            # remove spaces between blockettes. In some cases these might be
+            # newlines.
+            while data.read(1) in [b' ', b'\n']:
                 continue
             data.seek(data.tell() - 1)
             try:
                 blockette_id = int(data.read(3))
                 blockette_length = int(data.read(4))
-            except:
+            except Exception:
                 break
             data.seek(data.tell() - 7)
             if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
@@ -1150,7 +2295,7 @@ class Parser(object):
                                                 compact=self.compact,
                                                 version=self.version,
                                                 record_type=record_type)
-                blockette_obj.parse_SEED(data, blockette_length)
+                blockette_obj.parse_seed(data, blockette_length)
                 root_attribute.append(blockette_obj)
                 self.blockettes.setdefault(blockette_id,
                                            []).append(blockette_obj)
@@ -1219,7 +2364,7 @@ class Parser(object):
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
 
-    def rotate_to_ZNE(self, stream):
+    def rotate_to_zne(self, stream):
         """
         Rotates the three components of a Stream to ZNE.
 
@@ -1232,7 +2377,7 @@ class Parser(object):
             components, all the same length and timespan. Furthermore all
             components need to be described in the Parser object.
         """
-        from obspy.signal.rotate import rotate2ZNE
+        from obspy.signal.rotate import rotate2zne
 
         if len(stream) != 3:
             msg = "Stream needs to have three components."
@@ -1266,7 +2411,7 @@ class Parser(object):
             all_arguments.extend([np.asarray(tr.data, dtype=np.float64),
                                   azimuth, dip])
         # Now rotate all three traces.
-        z, n, e = rotate2ZNE(*all_arguments)
+        z, n, e = rotate2zne(*all_arguments)
 
         # Assemble a new Stream object.
         common_header = {
@@ -1289,7 +2434,7 @@ class Parser(object):
         return Stream(traces=[tr_z, tr_n, tr_e])
 
 
-def is_XSEED(path_or_file_object):
+def is_xseed(path_or_file_object):
     """
     Simple function checking if the passed object contains a XML-SEED file.
     Returns True of False. Only checks the name of the root tag, which should
@@ -1297,10 +2442,10 @@ def is_XSEED(path_or_file_object):
 
     >>> from obspy.core.util import get_example_file
     >>> xseed_file = get_example_file("dataless.seed.BW_FURT.xml")
-    >>> is_XSEED(xseed_file)
+    >>> is_xseed(xseed_file)
     True
     >>> stationxml_file = get_example_file("IU_ANMO_00_BHZ.xml")
-    >>> is_XSEED(stationxml_file)
+    >>> is_xseed(stationxml_file)
     False
 
     :param path_or_file_object: File name or file like object.
@@ -1314,12 +2459,12 @@ def is_XSEED(path_or_file_object):
             return False
     try:
         root = xmldoc.getroot()
-    except:
+    except Exception:
         return False
     # check tag of root element
     try:
         assert root.tag == "xseed"
-    except:
+    except Exception:
         return False
     return True
 

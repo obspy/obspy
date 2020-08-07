@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import copy
+import io
 import os
-import sys
+import pickle
 import unittest
 import warnings
 
-from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
-                              Pick, ResourceIdentifier, WaveformStreamID,
-                              read_events)
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
+from matplotlib import rcParams
+import numpy as np
+
+from obspy import UTCDateTime, read_events
+from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
+                              FocalMechanism, Magnitude, Origin, Pick,
+                              ResourceIdentifier, WaveformStreamID)
+from obspy.core.event.source import farfield
+from obspy.core.util import (
+    BASEMAP_VERSION, CARTOPY_VERSION, PROJ4_VERSION, MATPLOTLIB_VERSION)
+from obspy.core.util.base import _get_entry_points
+from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import ImageComparison
+from obspy.core.event.base import QuantityError
 
-BASEMAP_VERSION = get_basemap_version()
-if BASEMAP_VERSION:
-    from matplotlib import rcParams
 
-CARTOPY_VERSION = get_cartopy_version()
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     HAS_CARTOPY = True
 else:
@@ -32,11 +32,15 @@ class EventTestCase(unittest.TestCase):
     Test suite for obspy.core.event.Event
     """
     def setUp(self):
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+        """
+        Setup code to run before each test. Temporary replaces the state on
+        the ResourceIdentifier class level to reset the ResourceID mechanisms
+        before each run.
+        """
+        # directory where the test files are located
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
     def test_str(self):
         """
@@ -46,6 +50,16 @@ class EventTestCase(unittest.TestCase):
         s = event.short_str()
         self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
                          " | 4.3 ML | manual", s)
+
+    def test_str_empty_origin(self):
+        """
+        Ensure an event with an empty origin returns a str without raising a
+        TypeError (#2119).
+        """
+        event = Event(origins=[Origin()])
+        out = event.short_str()
+        self.assertIsInstance(out, str)
+        self.assertEqual(out, 'None | None, None')
 
     def test_eq(self):
         """
@@ -91,8 +105,12 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual(p.phase_hint, "p")
         # Add some more random attributes. These should disappear upon
         # cleaning.
-        p.test_1 = "a"
-        p.test_2 = "b"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            p.test_1 = "a"
+            p.test_2 = "b"
+            # two warnings should have been issued by setting non-default keys
+            self.assertEqual(len(w), 2)
         self.assertEqual(p.test_1, "a")
         self.assertEqual(p.test_2, "b")
         p.clear()
@@ -101,49 +119,47 @@ class EventTestCase(unittest.TestCase):
         self.assertFalse(hasattr(p, "test_1"))
         self.assertFalse(hasattr(p, "test_2"))
 
-    def test_event_copying_does_not_raise_duplicate_resource_id_warnings(self):
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @unittest.skipIf(
+        BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+        'matplotlib 3.0.1 is not compatible with basemap')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
+    def test_plot_farfield_without_quiver_with_maps(self):
         """
-        Tests that copying an event does not raise a duplicate resource id
-        warning.
+        Tests to plot P/S wave farfield radiation pattern, also with beachball
+        and some map plots.
         """
-        ev = read_events()[0]
+        ev = read_events("/path/to/CMTSOLUTION", format="CMTSOLUTION")[0]
+        with ImageComparison(self.image_dir, 'event.png') as ic:
+            ev.plot(kind=[['global'], ['ortho', 'beachball'],
+                          ['p_sphere', 's_sphere']], outfile=ic.name)
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            ev2 = copy.copy(ev)
-            self.assertEqual(len(w), 0)
-            ev3 = copy.deepcopy(ev)
-            self.assertEqual(len(w), 0)
-
-        # The two events should compare equal.
-        self.assertEqual(ev, ev2)
-        self.assertEqual(ev, ev3)
-
-        # A shallow copy should just use the exact same resource identifier,
-        # while a deep copy should not.
-        self.assertIs(ev.resource_id, ev2.resource_id)
-        self.assertIsNot(ev.resource_id, ev3.resource_id)
-        self.assertEqual(ev.resource_id, ev3.resource_id)
-
-        # But all should point to the same object.
-        self.assertIs(ev.resource_id.get_referred_object(),
-                      ev2.resource_id.get_referred_object())
-        self.assertIs(ev.resource_id.get_referred_object(),
-                      ev3.resource_id.get_referred_object())
+    def test_farfield_2xn_input(self):
+        """
+        Tests to compute P/S wave farfield radiation pattern using (theta,phi)
+        pairs as input
+        """
+        # Peru 2001/6/23 20:34:23:
+        #  RTP system: [2.245, -0.547, -1.698, 1.339, -3.728, 1.444]
+        #  NED system: [-0.547, -1.698, 2.245, -1.444, 1.339, 3.728]
+        mt = [-0.547, -1.698, 2.245, -1.444, 1.339, 3.728]
+        theta = np.arange(0, 360, 60)
+        phi = np.zeros(len(theta))
+        rays = np.array([theta, phi]) * np.pi / 180.0
+        result = farfield(mt, rays, 'P')
+        ref = np.array([[0., 1.13501984, -0.873480164, 2.749332e-16,
+                        -1.13501984, 0.873480164], [0, 0, -0, 0, -0, 0],
+                        [2.245, 0.655304008, 0.504304008, -2.245,
+                         -0.655304008, -0.504304008]])
+        np.testing.assert_allclose(result, ref, rtol=1e-5, atol=1e-8)
 
 
 class OriginTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.Origin
     """
-    def setUp(self):
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
-
-    def test_creationInfo(self):
+    def test_creation_info(self):
         # 1 - empty Origin class will set creation_info to None
         orig = Origin()
         self.assertEqual(orig.creation_info, None)
@@ -163,7 +179,7 @@ class OriginTestCase(unittest.TestCase):
         self.assertEqual(orig.creation_info.agency_id, 'muh')
         self.assertEqual(orig['creation_info']['agency_id'], 'muh')
 
-    def test_multipleOrigins(self):
+    def test_multiple_origins(self):
         """
         Parameters of multiple origins should not interfere with each other.
         """
@@ -201,13 +217,35 @@ class CatalogTestCase(unittest.TestCase):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
-    def test_creationInfo(self):
+    def test_read_invalid_filename(self):
+        """
+        Tests that we get a sane error message when calling read_events()
+        with a filename that doesn't exist
+        """
+        doesnt_exist = 'dsfhjkfs'
+        for i in range(10):
+            if os.path.exists(doesnt_exist):
+                doesnt_exist += doesnt_exist
+                continue
+            break
+        else:
+            self.fail('unable to get invalid file path')
+
+        exception_msg = "[Errno 2] No such file or directory: '{}'"
+
+        formats = _get_entry_points(
+            'obspy.plugin.catalog', 'readFormat').keys()
+        # try read_inventory() with invalid filename for all registered read
+        # plugins and also for filetype autodiscovery
+        formats = [None] + list(formats)
+        for format in formats:
+            with self.assertRaises(FileNotFoundError) as e:
+                read_events(doesnt_exist, format=format)
+            self.assertEqual(
+                str(e.exception), exception_msg.format(doesnt_exist))
+
+    def test_creation_info(self):
         cat = Catalog()
         cat.creation_info = CreationInfo(author='test2')
         self.assertTrue(isinstance(cat.creation_info, CreationInfo))
@@ -325,7 +363,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertRaises(TypeError, catalog.__iadd__, (event1, event2))
         self.assertRaises(TypeError, catalog.__iadd__, [event1, event2])
 
-    def test_countAndLen(self):
+    def test_count_and_len(self):
         """
         Tests the count and __len__ methods of the Catalog object.
         """
@@ -338,7 +376,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 3)
         self.assertEqual(catalog.count(), 3)
 
-    def test_getitem(self):
+    def test_get_item(self):
         """
         Tests the __getitem__ method of the Catalog object.
         """
@@ -363,7 +401,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertTrue(isinstance(new_catalog, Catalog))
         self.assertEqual(len(new_catalog), 2)
 
-    def test_slicingWithStep(self):
+    def test_slicing_with_step(self):
         """
         Tests the __getslice__ method of the Catalog object with step.
         """
@@ -441,8 +479,36 @@ class CatalogTestCase(unittest.TestCase):
         cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
+    def test_can_pickle(self):
+        """
+        Ensure a catalog can be pickled and unpickled and that the results are
+        equal.
+        """
+        cat = read_events()
+        cat_bytes = pickle.dumps(cat)
+        cat2 = pickle.loads(cat_bytes)
+        self.assertEqual(cat, cat2)
+
+    def test_issue_2173(self):
+        """
+        Ensure events with empty origins are equal after round-trip to disk.
+        See #2173.
+        """
+        # create event and save to disk
+        origin = Origin(time=UTCDateTime('2016-01-01'))
+        event1 = Event(origins=[origin])
+        bio = io.BytesIO()
+        event1.write(bio, 'quakeml')
+        # read from disk
+        event2 = read_events(bio)[0]
+        # saved and loaded event should be equal
+        self.assertEqual(event1, event2)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+@unittest.skipIf(
+    BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    'matplotlib 3.0.1 is not compatible with basemap')
 class CatalogBasemapTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.Catalog.plot with Basemap
@@ -450,12 +516,9 @@ class CatalogBasemapTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Basemap.
@@ -475,11 +538,26 @@ class CatalogBasemapTestCase(unittest.TestCase):
         parameters, using Basemap.
         """
         cat = read_events()
-        with ImageComparison(self.image_dir, 'catalog-basemap2.png') as ic:
+        with ImageComparison(self.image_dir, 'catalog-basemap2.png',
+                             reltol=1.3) as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(method='basemap', outfile=ic.name, projection='ortho',
                      resolution='c', water_fill_color='#98b7e2', label=None,
                      color='date')
+
+    def test_catalog_plot_ortho_longitude_wrap(self):
+        """
+        Tests the catalog preview plot, ortho projection, some non-default
+        parameters, using Basemap, with longitudes that need the mean to be
+        computed in a circular fashion.
+        """
+        cat = read_events('/path/to/events_longitude_wrap.zmap', format='ZMAP')
+        with ImageComparison(self.image_dir, 'catalog-basemap_long-wrap.png',
+                             reltol=1.1) as ic:
+            rcParams['savefig.dpi'] = 40
+            cat.plot(method='basemap', outfile=ic.name, projection='ortho',
+                     resolution='c', label=None, title='', colorbar=False,
+                     water_fill_color='b')
 
     def test_catalog_plot_local(self):
         """
@@ -496,8 +574,23 @@ class CatalogBasemapTestCase(unittest.TestCase):
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(method='basemap', outfile=ic.name, projection='local',
-                     resolution='i', continent_fill_color='0.3',
+                     resolution='l', continent_fill_color='0.3',
                      color='date', colormap='gist_heat')
+
+    def test_plot_catalog_before_1900(self):
+        """
+        Tests plotting events with origin times before 1900
+        """
+        cat = read_events()
+        cat[1].origins[0].time = UTCDateTime(813, 2, 4, 14, 13)
+
+        # just checking this runs without error is fine, no need to check
+        # content
+        with MatplotlibBackend("AGG", sloppy=True):
+            cat.plot(outfile=io.BytesIO(), method='basemap')
+            # also test with just a single event
+            cat.events = [cat[1]]
+            cat.plot(outfile=io.BytesIO(), method='basemap')
 
 
 @unittest.skipIf(not HAS_CARTOPY, 'Cartopy not installed or too old')
@@ -508,11 +601,6 @@ class CatalogCartopyTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
     def test_catalog_plot_global(self):
         """
@@ -534,6 +622,20 @@ class CatalogCartopyTestCase(unittest.TestCase):
             cat.plot(method='cartopy', outfile=ic.name, projection='ortho',
                      resolution='c', water_fill_color='#98b7e2', label=None,
                      color='date')
+
+    def test_catalog_plot_ortho_longitude_wrap(self):
+        """
+        Tests the catalog preview plot, ortho projection, some non-default
+        parameters, using Cartopy, with longitudes that need the mean to be
+        computed in a circular fashion.
+        """
+        cat = read_events('/path/to/events_longitude_wrap.zmap', format='ZMAP')
+        with ImageComparison(self.image_dir,
+                             'catalog-cartopy_long-wrap.png') as ic:
+            rcParams['savefig.dpi'] = 40
+            cat.plot(method='cartopy', outfile=ic.name, projection='ortho',
+                     resolution='c', label=None, title='', colorbar=False,
+                     water_fill_color='b')
 
     def test_catalog_plot_local(self):
         """
@@ -581,9 +683,6 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         """
         Test initialization with an invalid seed string. Should raise a
         warning.
-
-        Skipped for Python 2.5 because it does not have the catch_warnings
-        context manager.
         """
         # An invalid SEED string will issue a warning and fill the object with
         # the default values.
@@ -599,239 +698,84 @@ class WaveformStreamIDTestCase(unittest.TestCase):
             self.assertEqual(waveform_id.location_code, None)
             self.assertEqual(waveform_id.channel_code, None)
 
+    def test_id_property(self):
+        """
+        Enure the `id` property of WaveformStreamID returns the same as
+        `get_seed_string`"
+        """
+        waveform_id = WaveformStreamID(seed_string="BW.FUR.01.EHZ")
+        self.assertEqual(waveform_id.id, waveform_id.get_seed_string())
 
-class ResourceIdentifierTestCase(unittest.TestCase):
+
+class BaseTestCase(unittest.TestCase):
     """
-    Test suite for obspy.core.event.ResourceIdentifier.
+    Test suite for obspy.core.event.base.
     """
-    def setUp(self):
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+    def test_quantity_error_warn_on_non_default_key(self):
+        """
+        """
+        err = QuantityError()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            err.uncertainty = 0.01
+            err.lower_uncertainty = 0.1
+            err.upper_uncertainty = 0.02
+            err.confidence_level = 80
+            self.assertEqual(len(w), 0)
+            # setting a typoed or custom field should warn!
+            err.confidence_levle = 80
+            self.assertEqual(len(w), 1)
 
-    def test_same_resource_id_different_referred_object(self):
+    def test_quantity_error_equality(self):
         """
-        Tests the handling of the case that different ResourceIdentifier
-        instances are created that have the same resource id but different
-        objects. This should not happen and thus a warning should be emitted.
+        Comparisons between empty quantity errors and None should return True.
+        Non-empty quantity errors should return False.
         """
-        object_a = UTCDateTime(1000)
-        object_b = UTCDateTime(1001)
-        self.assertEqual(object_a is object_b, False)
-        id = 'obspy.org/tests/test_resource'
-        res_a = ResourceIdentifier(id=id,
-                                   referred_object=object_a)
-        # Now create a new resource with the same id but a different object.
-        # This will raise a warning.
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('error', UserWarning)
-            self.assertRaises(UserWarning, ResourceIdentifier,
-                              id=id,
-                              referred_object=object_b)
-            # Now ignore the warning and actually create the new
-            # ResourceIdentifier.
-            warnings.simplefilter('ignore', UserWarning)
-            res_b = ResourceIdentifier(id=id,
-                                       referred_object=object_b)
-        # Object b was the last to added, thus all resource identifiers will
-        # now point to it.
-        self.assertEqual(object_b is res_a.get_referred_object(), True)
-        self.assertEqual(object_b is res_b.get_referred_object(), True)
+        err1 = QuantityError()
+        self.assertEqual(err1, None)
+        err2 = QuantityError(uncertainty=10)
+        self.assertNotEqual(err2, None)
+        self.assertNotEqual(err2, err1)
+        err3 = QuantityError(uncertainty=10)
+        self.assertEqual(err3, err2)
 
-    def test_objects_garbage_collection(self):
+    def test_event_type_objects_warn_on_non_default_key(self):
         """
-        Test that the ResourceIdentifier class does not mess with the garbage
-        collection of the attached objects.
         """
-        object_a = UTCDateTime()
-        ref_count = sys.getrefcount(object_a)
-        _res_id = ResourceIdentifier(referred_object=object_a)
-        self.assertEqual(sys.getrefcount(object_a), ref_count)
-        self.assertTrue(bool(_res_id))
+        for cls in (Event, Origin, Pick, Magnitude, FocalMechanism):
+            obj = cls()
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                # setting a typoed or custom field should warn!
+                obj.some_custom_non_default_crazy_key = "my_text_here"
+                self.assertEqual(len(w), 1)
 
-    def test_id_without_reference_not_in_global_list(self):
+    def test_setting_nans_or_inf_fails(self):
         """
-        This tests some internal workings of the ResourceIdentifier class.
-        NEVER modify the __resource_id_weak_dict!
+        Tests that settings NaNs or infs as floating point values fails.
+        """
+        o = Origin()
 
-        Only those ResourceIdentifiers that have a reference to an object that
-        is referred to somewhere else should stay in the dictionary.
-        """
-        r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        _r1 = ResourceIdentifier()  # NOQA
-        self.assertEqual(len(list(r_dict.keys())), 0)
-        # Adding a ResourceIdentifier with an object that has a reference
-        # somewhere will have no effect because it gets garbage collected
-        # pretty much immediately.
-        _r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
-        self.assertEqual(len(list(r_dict.keys())), 0)
-        # Give it a reference and it will stick around.
-        obj = UTCDateTime()
-        _r3 = ResourceIdentifier(referred_object=obj)  # NOQA
-        self.assertEqual(len(list(r_dict.keys())), 1)
-
-    def test_adding_a_referred_object_after_creation(self):
-        """
-        Check that the referred objects can also be made available after the
-        ResourceIdentifier instances have been created.
-        """
-        obj = UTCDateTime()
-        obj_id = id(obj)
-        res_id = "obspy.org/time/test"
-        ref_a = ResourceIdentifier(res_id)
-        ref_b = ResourceIdentifier(res_id)
-        ref_c = ResourceIdentifier(res_id)
-        # All three will have no resource attached.
-        self.assertEqual(ref_a.get_referred_object(), None)
-        self.assertEqual(ref_b.get_referred_object(), None)
-        self.assertEqual(ref_c.get_referred_object(), None)
-        # Setting the object for one will make it available to all other
-        # instances.
-        ref_b.set_referred_object(obj)
-        self.assertEqual(id(ref_a.get_referred_object()), obj_id)
-        self.assertEqual(id(ref_b.get_referred_object()), obj_id)
-        self.assertEqual(id(ref_c.get_referred_object()), obj_id)
-
-    def test_resources_in_global_dict_get_garbage_collected(self):
-        """
-        Tests that the ResourceIdentifiers in the class level resource dict get
-        deleted if they have no other reference and the object they refer to
-        goes out of scope.
-        """
-        obj_a = UTCDateTime()
-        obj_b = UTCDateTime()
-        res1 = ResourceIdentifier(referred_object=obj_a)
-        res2 = ResourceIdentifier(referred_object=obj_b)
-        # Now two keys should be in the global dict.
-        rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        self.assertEqual(len(list(rdict.keys())), 2)
-        # Deleting the objects should also remove the from the dictionary.
-        del obj_a, obj_b
-        self.assertEqual(len(list(rdict.keys())), 0)
-        # references are still around but no longer have associates objects.
-        self.assertEqual(res1.get_referred_object(), None)
-        self.assertEqual(res2.get_referred_object(), None)
-
-    def test_quakeml_regex(self):
-        """
-        Tests that regex used to check for QuakeML validatity actually works.
-        """
-        # This one contains all valid characters. It should pass the
-        # validation.
-        res_id = (
-            "smi:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            "1234567890-.*()_~'/abcdefghijklmnopqrstuvwxyzABCDEFGHIKLMNOPQR"
-            "STUVWXYZ0123456789-.*()_~'+?=,;&")
-        res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.get_quakeml_uri())
-        # The id has to valid from start to end. Due to the spaces this cannot
-        # automatically be converted to a correct one.
-        res_id = ("something_before smi:local/something  something_after")
-        res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
-        # A colon is an invalid character.
-        res_id = ("smi:local/hello:yea")
-        res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
-        # Space as well
-        res_id = ("smi:local/hello yea")
-        res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
-        # Dots are fine
-        res_id = ("smi:local/hello....yea")
-        res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.get_quakeml_uri())
-        # Hats not
-        res_id = ("smi:local/hello^^yea")
-        res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
-
-    def test_resource_id_valid_quakemluri(self):
-        """
-        Test that a resource identifier per default (i.e. no arguments to
-        __init__()) gets set up with a QUAKEML conform ID.
-        """
-        rid = ResourceIdentifier()
-        self.assertEqual(rid.id, rid.get_quakeml_uri())
-
-    def test_resource_id_tracking(self):
-        """
-        The class keeps track of all instances.
-        """
-        # Create a couple of lightweight objects for testing purposes.
-        t1 = UTCDateTime(2013, 1, 1)
-        t2 = UTCDateTime(2013, 1, 2)
-        t3 = UTCDateTime(2013, 1, 3)
-
-        # First assert, that all ResourceIds are tracked correctly.
-        r1 = ResourceIdentifier("a", referred_object=t1)
-        r2 = ResourceIdentifier("b", referred_object=t2)
-        r3 = ResourceIdentifier("c", referred_object=t3)
-
+        with self.assertRaises(ValueError) as e:
+            o.latitude = float('nan')
         self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 1, "b": 1, "c": 1})
+            e.exception.args[0],
+            "On Origin object: Value 'nan' for 'latitude' is not a finite "
+            "floating point value.")
 
-        # Create a new instance, similar to the first one.
-        r4 = ResourceIdentifier("a", referred_object=t1)
+        with self.assertRaises(ValueError) as e:
+            o.latitude = float('inf')
         self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 2, "b": 1, "c": 1})
+            e.exception.args[0],
+            "On Origin object: Value 'inf' for 'latitude' is not a finite "
+            "floating point value.")
 
-        # Now delete r2 and r4. They should not be tracked anymore.
-        del r2
-        del r4
+        with self.assertRaises(ValueError) as e:
+            o.latitude = float('-inf')
         self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 1, "c": 1})
-
-        # Delete the two others. Nothing should be tracked any more.
-        del r1
-        del r3
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker, {})
-
-    def test_automatic_dereferring_if_resource_id_goes_out_of_scope(self):
-        """
-        Tests that objects that have no more referrer are no longer stored in
-        the reference dictionary.
-        """
-        t1 = UTCDateTime(2010, 1, 1)
-
-        # Create object and assert the reference has been created.
-        r1 = ResourceIdentifier("a", referred_object=t1)
-        self.assertEqual(
-            dict(
-                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
-            {"a": t1})
-        # Deleting the object should remove the reference.
-        del r1
-        self.assertEqual(
-            dict(
-                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
-            {})
-
-        # Now create two equal references.
-        r1 = ResourceIdentifier("a", referred_object=t1)
-        r2 = ResourceIdentifier("a", referred_object=t1)
-        self.assertEqual(
-            dict(
-                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
-            {"a": t1})
-        # Deleting one should not remove the reference.
-        del r1
-        self.assertEqual(
-            dict(
-                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
-            {"a": t1})
-        # Deleting the second one should
-        del r2
-        self.assertEqual(
-            dict(
-                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
-            {})
+            e.exception.args[0],
+            "On Origin object: Value '-inf' for 'latitude' is "
+            "not a finite floating point value.")
 
 
 def suite():
@@ -842,7 +786,7 @@ def suite():
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
     suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(BaseTestCase, 'test'))
     return suite
 
 

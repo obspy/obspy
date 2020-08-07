@@ -1,0 +1,17 @@
+{
+  global:
+      ms_*;
+      msr_*;
+      mst_*;
+      mstl_*;
+      packheaderbyteorder;
+      packdatabyteorder;
+      unpackheaderbyteorder;
+      unpackdatabyteorder;
+      unpackencodingformat;
+      unpackencodingfallback;
+      LM_SIZEOF_OFF_T;
+
+  local:
+      *;
+};

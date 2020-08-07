@@ -23,7 +23,7 @@ files.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Waveform Data
 -------------
@@ -55,8 +55,9 @@ Example
 A :class:`~obspy.core.stream.Stream` with an example seismogram can be created
 by calling :func:`~obspy.core.stream.read()` without any arguments.
 Local files can be read by specifying the filename, files stored on http
-servers (e.g. at http://examples.obspy.org) can be read by specifying their
-URL. For details see the documentation of :func:`~obspy.core.stream.read`.
+servers (e.g. at https://examples.obspy.org) can be read by specifying their
+URL. For details and supported formats see the documentation of
+:func:`~obspy.core.stream.read`.
 
 >>> from obspy import read
 >>> st = read()
@@ -92,7 +93,10 @@ Event Metadata
 Event metadata are handled in a hierarchy of classes closely modelled after the
 de-facto standard format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
 See the IPython notebooks mentioned in the :ref:`ObsPy Tutorial <tutorial>` for
-more detailed usage examples.
+more detailed usage examples. See
+:func:`~obspy.core.event.catalog.read_events()` and
+:meth:`Catalog.write() <obspy.core.event.catalog.Catalog.write>` for supported
+formats.
 
 .. figure:: /_images/Event.png
 
@@ -101,38 +105,23 @@ Station Metadata
 
 Station metadata are handled in a hierarchy of classes closely modelled after
 the de-facto standard format
-`FDSN StationXML <http://www.fdsn.org/xml/station/>`_ which was developed as a
+`FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was developed as a
 human readable XML replacement for Dataless SEED.
-See :mod:`obspy.core.inventory` for more details.
+See :mod:`obspy.core.inventory` for more details. See
+:func:`~obspy.core.inventory.inventory.read_inventory()` and
+:meth:`Inventory.write() <obspy.core.inventory.inventory.Inventory.write>` for
+supported formats.
 
 .. figure:: /_images/Inventory.png
 
 .. _NumPy: http://www.numpy.org
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import sys
-
 # don't change order
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import DynamicAttributeImportRerouteModule
-from obspy.core.util.attribdict import AttribDict
-from obspy.core.trace import Stats, Trace
-from obspy.core.stream import Stream, read
-from obspy.scripts.runtests import run_tests
-
-
-# Remove once 0.11 has been released!
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    # Remap everything but ascii. On Python 2, ascii is a built-in function
-    # so it would require significant additional logic to implement and this
-    # is probably not worth it here.
-    import_map={"stationxml": "obspy.io.stationxml.core",
-                "quakeml": "obspy.io.quakeml.core",
-                "json": "obspy.io.json.core"})
+from obspy.core.utcdatetime import UTCDateTime  # NOQA
+from obspy.core.util.attribdict import AttribDict  # NOQA
+from obspy.core.trace import Stats, Trace  # NOQA
+from obspy.core.stream import Stream, read  # NOQA
+from obspy.scripts.runtests import run_tests  # NOQA
 
 
 if __name__ == '__main__':

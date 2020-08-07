@@ -6,17 +6,15 @@ AttribDict class for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
-import collections
 import copy
+import warnings
+
+from .. import compatibility
 
 
-class AttribDict(collections.MutableMapping):
+class AttribDict(compatibility.collections_abc.MutableMapping):
     """
     A class which behaves like a dictionary.
 
@@ -43,6 +41,9 @@ class AttribDict(collections.MutableMapping):
     """
     defaults = {}
     readonly = []
+    warn_on_non_default_key = False
+    do_not_warn_on = []
+    _types = {}
 
     def __init__(self, *args, **kwargs):
         """
@@ -80,24 +81,30 @@ class AttribDict(collections.MutableMapping):
         if key in self.readonly:
             msg = 'Attribute "%s" in %s object is read only!'
             raise AttributeError(msg % (key, self.__class__.__name__))
+        if self.warn_on_non_default_key and key not in self.defaults:
+            # issue warning if not a default key
+            # (and not in the list of exceptions)
+            if key in self.do_not_warn_on:
+                pass
+            else:
+                msg = ('Setting attribute "{}" which is not a default '
+                       'attribute ("{}").').format(
+                    key, '", "'.join(self.defaults.keys()))
+                warnings.warn(msg)
+        # Type checking/warnings
+        if key in self._types and not isinstance(value, self._types[key]):
+            value = self._cast_type(key, value)
 
-        if isinstance(value, collections.Mapping) and \
-           not isinstance(value, AttribDict):
+        mapping_instance = isinstance(value,
+                                      compatibility.collections_abc.Mapping)
+        attr_dict_instance = isinstance(value, AttribDict)
+        if mapping_instance and not attr_dict_instance:
             self.__dict__[key] = AttribDict(value)
         else:
             self.__dict__[key] = value
 
     def __delitem__(self, name):
         del self.__dict__[name]
-
-    def __getstate__(self):
-        return self.__dict__
-
-    def __setstate__(self, adict):
-        # set default values
-        self.__dict__.update(self.defaults)
-        # update with pickle dictionary
-        self.update(adict)
 
     def __getattr__(self, name, default=None):
         """
@@ -114,11 +121,6 @@ class AttribDict(collections.MutableMapping):
 
     def copy(self):
         return copy.deepcopy(self)
-
-    def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable
-        ad = self.__class__()
-        ad.update(copy.deepcopy(self.__dict__))
-        return ad
 
     def update(self, adict={}):
         for (key, value) in adict.items():
@@ -153,6 +155,24 @@ class AttribDict(collections.MutableMapping):
         keys = priorized_keys + sorted(other_keys)
         head = [pattern % (k, self.__dict__[k]) for k in keys]
         return "\n".join(head)
+
+    def _cast_type(self, key, value):
+        """
+        Cast type of value to type required in _types dict.
+
+        :type key: str
+        :param key: The key from __setattr__.
+        :param value: The value being set to key.
+        :return: value cast to correct type.
+        """
+        typ = self._types[key]
+        new_type = (
+            typ[0] if isinstance(typ, compatibility.collections_abc.Sequence)
+            else typ)
+        msg = ('Attribute "%s" must be of type %s, not %s. Attempting to '
+               'cast %s to %s') % (key, typ, type(value), value, new_type)
+        warnings.warn(msg)
+        return new_type(value)
 
     def __iter__(self):
         return iter(self.__dict__)

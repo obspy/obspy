@@ -11,7 +11,7 @@ Research Institute for Earth Science and Disaster Prevention in Japan
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Example
 -------
@@ -29,12 +29,16 @@ The event will contain a couple of origins and magnitudes.
 >>> print(cat[0])  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
 Event:  2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 8.7 Mw
 <BLANKLINE>
-              resource_id: ResourceIdentifier(id="...")
-               event_type: 'earthquake'
-        ---------
-         focal_mechanisms: 1 Elements
-                  origins: 2 Elements
-               magnitudes: 2 Elements
+                   resource_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/event")
+                    event_type: 'earthquake'
+           preferred_origin_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/origin#MT")
+        preferred_magnitude_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/magnitude#MT")
+  preferred_focal_mechanism_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/focal_mechanism")
+                          ---------
+              focal_mechanisms: 1 Elements
+                       origins: 2 Elements
+                    magnitudes: 2 Elements
+
 
 obspy.io.nied.knet - K-NET and KiK-net ASCII format support for ObsPy
 =====================================================================
@@ -73,7 +77,7 @@ conventions:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Example
 -------
@@ -141,12 +145,6 @@ The meaning of the entries in the 'knet' dictionary is as follows:
     ==================== ==================================================
 
 """
-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

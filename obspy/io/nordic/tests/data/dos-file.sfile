@@ -1,0 +1,45 @@
+ 1990 1213 1109 19.8 LE 60.328   5.167  0.0F BER  6 1.3 5.9CBER                1
+ GAP=206        1.77       4.6    18.6  0.0  0.5629E+02  0.2265E+03  0.1983E+02E
+ 1990 1213 1108      LE                      MDT                               1
+ 1990 1213 1108      LE                      MDT                             E13
+ CHARGE(T):    0.200 MDT     MDT/FKS TURØY, west of SOTRA                    EC3
+ SPEC AVERAGE  MO 14.0 ST 27.7 OM  1.7 f0 4.28 R0.3118 AL 2.84 WI  9.9 MW  3.3 3
+ SPEC SD       MO  0.4 ST 39.1 OM  0.9 f0 1.07 R0.0721 AL      WI      MW  0.2 3
+ GAP=152        3.03       4.0    12.7  0.0 -0.1627E+02  0.0000E+00  0.0000E+00E
+ 1999  529 0031 43.6 L                       BER        3.3WBER                1
+ SPEC MOR8S  Z MO 13.6 ST  7.9 OM  0.9 f0 4.52 R0.2788 AL 3.41 WI  5.6 MW  3.0 3
+ SPEC MOR8S  Z T 03310 K 0.000 GD  651 VP 6.20 DE 3.00 Q0440.0 QA 0.70 VS 3.60 3
+ SPEC TRONS  N MO 13.9 ST 15.8 OM  1.5 f0 4.52 R0.2788 AL 2.55 WI  6.6 MW  3.2 3
+ SPEC TRONS  N T 03233 K 0.000 GD  329 VP 6.20 DE 3.00 Q0440.0 QA 0.70 VS 3.60 3
+ SPEC TRO S  Z MO 13.8 ST  4.2 OM  0.9 f0 3.13 R0.4026 AL 2.23 WI 11.0 MW  3.1 3
+ SPEC TRO S  Z T 03356 K 0.000 GD 1050 VP 6.20 DE 3.00 Q0440.0 QA 0.70 VS 3.60 3
+ SPEC NSS S  Z MO 13.7 ST  8.5 OM  1.2 f0 4.17 R0.3022 AL 2.95 WI 11.5 MW  3.1 3
+ SPEC NSS S  Z T 03246 K 0.000 GD  451 VP 6.20 DE 3.00 Q0440.0 QA 0.70 VS 3.60 3
+ SPEC LOF S  Z MO 13.7 ST 10.8 OM  0.9 f0 4.72 R0.2669 AL 3.36 WI  5.5 MW  3.1 3
+ SPEC LOF S  Z T 03322 K 0.000 GD  782 VP 6.20 DE 3.00 Q0440.0 QA 0.70 VS 3.60 3
+ SPEC EGD S  Z MO 14.3 ST129.7 OM  2.1 f0 6.59 R0.1912 AL 3.87 WI 13.6 MW  3.5 3
+ SPEC EGD S  Z T 03212 K 0.000 GD  218 VP 6.20 DE 3.00 Q0440.0 QA 0.70 VS 3.60 3
+ SPEC RUNDB  Z MO 14.2 ST 17.5 OM  2.9 f0 3.63 R0.3471 AL 2.21 WI 13.9 MW  3.4 3
+ SPEC RUNDB  Z T 03230 K 0.000 GD  142 VS 3.60 DE 3.00 Q0440.0 QA 0.70 VS 3.60 3
+ SPEC ODD1S  Z MO 14.7 ST 27.5 OM  3.3 f0 2.95 R0.4271 AL 2.16 WI 11.3 MW  3.7 3
+ SPEC ODD1S  Z T 03254 K 0.000 GD  166 VS 3.60 DE 3.00 Q0440.0 QA 0.70 VS 3.60 3
+ ACTION:UPD 10-04-27 14:28 OP:jh   STATUS:               ID:19901213110919 L   I
+                 7.1    49.2    51.7    0.0                                    5
+ SOUTHERN NORWAY  (AN 1)                                                       3
+   90 1213 11 8 51.4 LE                                                        1
+ 90121311.0851W41                                                              6
+ MDT/FKS  TUR\Y, VEST AV SOTRA CA. 220KG                                       3
+ STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU VELO AIN AR TRES W  DIS CAZ7
+ SUE  SZ EP       11 9 33.27   47                         90   -0.1310 84.2 345 
+ SUE  SZ ESG      11 9 44.19                              90    0.7410 84.2 345 
+ ODD1 SZ EP       11 9 34.41   40                         90   -0.5110 93.6 119 
+ HYA  SZ EP       11 9 36.21   58                         90   -1.1110  108  30 
+ HYA  SZ ESG      11 9 51.69                              90    1.4310  108  30 
+ BLS2 SZ IP       11 9 44.53   50                         70    0.3110  152 139 
+ BLS2 SZ ISG      1110  3.18                              90    0.7610  152 139 
+ NRA0     PN  3   1110  5.20                  267.3  7.1  50  2-3.92 2  353  80 
+ NRA0     P   3   1110 12.10                  272.2  7.7  50  7 2.98 2  353  80 
+ NRA0     SG  3   1110 53.90                  271.0  4.3  90  6-4.94 2  353  80 
+ ASK  SZ IPG    C 11 9 21.88   29                         90   -0.5410 16.1   7 
+ ASK  SZ ESG      11 9 23.75                              90   -0.5910 16.1   7 
+

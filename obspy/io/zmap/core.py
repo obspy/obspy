@@ -9,12 +9,8 @@ data (see [Wiemer2001]_).
     The ObsPy Development Team (devs@obspy.org), Lukas Heiniger
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 
 from obspy.core import UTCDateTime
@@ -91,7 +87,7 @@ class Pickler(object):
             if lat_err is None or lon_err is None:
                 return None
             d_lat = lat_err
-            d_lon = lon_err * math.cos(origin.latitude * math.pi/180.0)
+            d_lon = lon_err * math.cos(origin.latitude * math.pi / 180.0)
             h_err = km_per_deg * math.hypot(d_lat, d_lon)
             return h_err
 
@@ -135,29 +131,33 @@ class Pickler(object):
             strings = dict.fromkeys(self.zmap_columns, 'NaN')
             # origin
             origin = ev.preferred_origin()
+            if origin is None and ev.origins:
+                origin = ev.origins[0]
             if origin:
                 dec_year = self._decimal_year(origin.time)
                 dec_second = origin.time.second + \
                     origin.time.microsecond / 1e6
                 strings.update({
-                    'depth':   self._num2str(origin.depth/1000.0),  # m to km
-                    'z_err':   self._num2str(self._depth_error(origin)),
-                    'lat':     self._num2str(origin.latitude),
-                    'lon':     self._num2str(origin.longitude),
-                    'h_err':   self._num2str(self._hz_error(origin)),
-                    'year':    self._num2str(dec_year, 12),
-                    'month':   self._num2str(origin.time.month, 0),
-                    'day':     self._num2str(origin.time.day, 0),
-                    'hour':    self._num2str(origin.time.hour, 0),
-                    'minute':  self._num2str(origin.time.minute, 0),
-                    'second':  str(dec_second)
+                    'depth': self._num2str(origin.depth / 1000.0),  # m to km
+                    'z_err': self._num2str(self._depth_error(origin)),
+                    'lat': self._num2str(origin.latitude),
+                    'lon': self._num2str(origin.longitude),
+                    'h_err': self._num2str(self._hz_error(origin)),
+                    'year': self._num2str(dec_year, 12),
+                    'month': self._num2str(origin.time.month, 0),
+                    'day': self._num2str(origin.time.day, 0),
+                    'hour': self._num2str(origin.time.hour, 0),
+                    'minute': self._num2str(origin.time.minute, 0),
+                    'second': str(dec_second)
                 })
             # magnitude
             magnitude = ev.preferred_magnitude()
+            if magnitude is None and ev.magnitudes:
+                magnitude = ev.magnitudes[0]
             if magnitude:
                 strings.update({
-                    'mag':     self._num2str(magnitude.mag),
-                    'm_err':   self._num2str(magnitude.mag_errors.uncertainty)
+                    'mag': self._num2str(magnitude.mag),
+                    'm_err': self._num2str(magnitude.mag_errors.uncertainty)
                 })
             # create tab separated row
             rows.append('\t'.join([strings[c] for c in self.zmap_columns]))
@@ -237,7 +237,15 @@ class Unpickler(object):
                 if year % 1 != 0:
                     origin.time = self._decyear2utc(year)
                 elif any(v > 0 for v in comps[1:]):
-                    utc_args = [int(v) for v in comps if v is not None]
+                    # no seconds involved
+                    if len(comps) < 6:
+                        utc_args = [int(v) for v in comps if v is not None]
+                    # we also have to handle seconds
+                    else:
+                        utc_args = [int(v) if v is not None else 0
+                                    for v in comps[:-1]]
+                        # just leave float seconds as is
+                        utc_args.append(comps[-1])
                     origin.time = UTCDateTime(*utc_args)
             mag = self._str2num(values.get('mag'))
             # Extract magnitude
@@ -247,6 +255,7 @@ class Unpickler(object):
                 magnitude.mag_errors.uncertainty = m_err
                 event.magnitudes.append(magnitude)
                 event.preferred_magnitude_id = magnitude.resource_id.id
+            event.scope_resource_ids()
             catalog.append(event)
         return catalog
 
@@ -316,7 +325,7 @@ def _read_zmap(filename, **kwargs):
         try:
             with open(filename):
                 pass
-        except:
+        except Exception:
             # we assume it's a string now
             return Unpickler().loads(filename)
     return Unpickler().load(filename)
@@ -354,10 +363,10 @@ def _is_zmap(filename):
         try:
             with open(filename, 'rb') as f:
                 first_line = f.readline().decode()
-        except:
+        except Exception:
             try:
                 first_line = filename.decode()
-            except:
+            except Exception:
                 first_line = str(filename)
             line_ending = first_line.find("\n")
             if line_ending == -1:

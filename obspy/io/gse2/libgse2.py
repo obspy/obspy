@@ -21,54 +21,49 @@ See: http://www.orfeus-eu.org/software/seismo_softwarelibrary.html#gse
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-import ctypes as C
+import ctypes as C  # NOQA
 import doctest
 import warnings
 
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 
 
 # Import shared libgse2
-clibgse2 = _load_CDLL("gse2")
+clibgse2 = _load_cdll("gse2")
 
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p), C.c_void_p]
 clibgse2.decomp_6b_buffer.restype = C.c_int
 
 clibgse2.rem_2nd_diff.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int]
 clibgse2.rem_2nd_diff.restype = C.c_int
 
 clibgse2.check_sum.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_int32]
 clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
 
 clibgse2.diff_2nd.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_int]
 clibgse2.diff_2nd.restype = C.c_void_p
 
 clibgse2.compress_6b_buffer.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int,
     C.CFUNCTYPE(C.c_int, C.c_char)]
 clibgse2.compress_6b_buffer.restype = C.c_int
@@ -98,6 +93,7 @@ class GSEUtiError(Exception):
 # 70        80        90        100
 def _str(s):
     return s.strip()
+
 
 GSE2_FIELDS = [
     # local used date fields
@@ -172,7 +168,7 @@ def read_header(fh):
     pos = fh.tell()
     line = fh.readline()
     if line.startswith(b'STA2'):
-        header2 = parse_STA2(line)
+        header2 = parse_sta2(line)
         header['network'] = header2.pop("network")
         header['gse2'].update(header2)
     # in case no STA2 line is encountered we need to rewind the file pointer,
@@ -225,15 +221,15 @@ def write_header(f, headdict):
             headdict['gse2']['vang'])).encode('ascii', 'strict')
             )
     try:
-        sta2_line = compile_STA2(headdict)
-    except:
+        sta2_line = compile_sta2(headdict)
+    except Exception:
         msg = "GSE2: Error while compiling the STA2 header line, omitting it."
         warnings.warn(msg)
     else:
         f.write(sta2_line)
 
 
-def uncompress_CM6(f, n_samps):
+def uncompress_cm6(f, n_samps):
     """
     Uncompress n_samps of CM6 compressed data from file pointer fp.
 
@@ -265,7 +261,7 @@ def uncompress_CM6(f, n_samps):
     return data
 
 
-def compress_CM6(data):
+def compress_cm6(data):
     """
     CM6 compress data
 
@@ -274,25 +270,25 @@ def compress_CM6(data):
     :returns: NumPy chararray containing compressed samples
     """
     data = np.ascontiguousarray(data, np.int32)
-    N = len(data)
+    n = len(data)
     count = [0]  # closure, must be container
     # 4 character bytes per int32_t
-    carr = np.zeros(N * 4, dtype=native_str('c'))
+    carr = np.zeros(n * 4, dtype='c')
 
     def writer(char):
         carr[count[0]] = char
         count[0] += 1
         return 0
     cwriter = C.CFUNCTYPE(C.c_int, C.c_char)(writer)
-    ierr = clibgse2.compress_6b_buffer(data, N, cwriter)
+    ierr = clibgse2.compress_6b_buffer(data, n, cwriter)
     if ierr != 0:
         msg = "Error status after compress_6b_buffer is NOT 0 but %d"
         raise GSEUtiError(msg % ierr)
     cnt = count[0]
     if cnt < 80:
-        return carr[:cnt].view(native_str('|S%d' % cnt))
+        return carr[:cnt].view('|S%d' % cnt)
     else:
-        return carr[:(cnt // 80 + 1) * 80].view(native_str('|S80'))
+        return carr[:(cnt // 80 + 1) * 80].view('|S80')
 
 
 def verify_checksum(fh, data, version=2):
@@ -308,9 +304,9 @@ def verify_checksum(fh, data, version=2):
     # find checksum within file
     buf = fh.readline()
     chksum_file = 0
-    CHK_LINE = ('CHK%d' % version).encode('ascii', 'strict')
+    chk_line = ('CHK%d' % version).encode('ascii', 'strict')
     while buf:
-        if buf.startswith(CHK_LINE):
+        if buf.startswith(chk_line):
             chksum_file = int(buf.strip().split()[1])
             break
         buf = fh.readline()
@@ -326,6 +322,36 @@ def verify_checksum(fh, data, version=2):
         msg = "Mismatching checksums, CHK %d != CHK %d"
         raise ChksumError(msg % (chksum_data, chksum_file))
     return
+
+
+def read_integer_data(fh, npts):
+    """
+    Reads npts points of uncompressed integers from given file handler.
+
+    :type fh: file
+    :param fh: File Pointer
+    :type npts: int
+    :param npts: Number of samples to read
+    :rtype: :class:`numpy.ndarray`, dtype=int32
+    :return: Data as numpy.ndarray of type int32.
+    """
+    # find next DAT2 section within file
+    data = []
+    in_data_section = False
+
+    while len(data) < npts:
+        buf = fh.readline()
+        if not buf:
+            # break loop if no data is given
+            break
+        if buf.strip() in (b"DAT1", b"DAT2"):
+            in_data_section = True
+            continue
+        if not in_data_section:
+            continue
+        data.extend(buf.strip().split(b" "))
+
+    return np.array(data, dtype=np.int32)
 
 
 def read(f, verify_chksum=True):
@@ -347,7 +373,14 @@ def read(f, verify_chksum=True):
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     headdict = read_header(f)
-    data = uncompress_CM6(f, headdict['npts'])
+    dtype = headdict['gse2']['datatype']
+    if dtype == 'CM6':
+        data = uncompress_cm6(f, headdict['npts'])
+    elif dtype == 'INT':
+        data = read_integer_data(f, headdict['npts'])
+    else:
+        msg = "Unsupported data type %s in GSE2 file" % (dtype)
+        raise NotImplementedError(msg)
     # test checksum only if enabled
     if verify_chksum:
         verify_checksum(f, data, version=2)
@@ -380,9 +413,9 @@ def write(headdict, data, f, inplace=False):
     :type headdict: dict
     :param headdict: ObsPy Header
     """
-    N = len(data)
+    n = len(data)
     #
-    chksum = clibgse2.check_sum(data, N, C.c_int32(0))
+    chksum = clibgse2.check_sum(data, n, C.c_int32(0))
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for NumPy array
     # for you
@@ -390,8 +423,8 @@ def write(headdict, data, f, inplace=False):
         data = data.copy()
     if data.max() > 2 ** 26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
-    clibgse2.diff_2nd(data, N, 0)
-    data_cm6 = compress_CM6(data)
+    clibgse2.diff_2nd(data, n, 0)
+    data_cm6 = compress_cm6(data)
     # set some defaults if not available and convert header entries
     headdict.setdefault('calib', 1.0)
     headdict.setdefault('gse2', {})
@@ -411,7 +444,7 @@ def write(headdict, data, f, inplace=False):
     f.write(("CHK2 %8ld\n\n" % chksum).encode('ascii', 'strict'))
 
 
-def parse_STA2(line):
+def parse_sta2(line):
     """
     Parses a string with a GSE2 STA2 header line.
 
@@ -441,7 +474,7 @@ def parse_STA2(line):
     positions. Here are some real-world examples:
 
     >>> l = "STA2           -999.0000 -999.00000              -.999 -.999"
-    >>> for k, v in sorted(parse_STA2(l).items()):  \
+    >>> for k, v in sorted(parse_sta2(l).items()):  \
             # doctest: +NORMALIZE_WHITESPACE
     ...     print(k, v)
     coordsys
@@ -451,7 +484,7 @@ def parse_STA2(line):
     lon -999.0
     network
     >>> l = "STA2 ABCD       12.34567   1.234567 WGS-84       -123.456 1.234"
-    >>> for k, v in sorted(parse_STA2(l).items()):
+    >>> for k, v in sorted(parse_sta2(l).items()):
     ...     print(k, v)
     coordsys WGS-84
     edepth 1.234
@@ -462,14 +495,33 @@ def parse_STA2(line):
     """
     header = {}
     try:
+        lat = line[15:24].strip()
+        if lat:
+            lat = float(lat)
+        else:
+            lat = None
+        lon = line[25:35].strip()
+        if lon:
+            lon = float(lon)
+        else:
+            lon = None
+        elev_edepth = line[48:].strip().split()
+        elev, edepth = elev_edepth or (None, None)
+        if elev:
+            elev = float(elev)
+        else:
+            elev = None
+        if edepth:
+            edepth = float(edepth)
+        else:
+            edepth = None
         header['network'] = line[5:14].strip()
-        header['lat'] = float(line[15:24])
-        header['lon'] = float(line[25:35])
+        header['lat'] = lat
+        header['lon'] = lon
         header['coordsys'] = line[36:48].strip()
-        elev, edepth = line[48:].strip().split()
-        header['elev'] = float(elev)
-        header['edepth'] = float(edepth)
-    except:
+        header['elev'] = elev
+        header['edepth'] = edepth
+    except Exception:
         msg = 'GSE2: Invalid STA2 header, ignoring.'
         warnings.warn(msg)
         return {}
@@ -477,20 +529,23 @@ def parse_STA2(line):
         return header
 
 
-def compile_STA2(stats):
+def compile_sta2(stats):
     """
     Returns a STA2 line as a string (including newline at end) from a
     :class:`~obspy.core.stats.Stats` object.
     """
-    fmt1 = "STA2 %-9s %9.5f %10.5f %-12s "
-    fmt2 = "%5.3f %5.3f\n"
+    fmt1 = "STA2 %-9s %9s %10s %-12s "
+    fmt2 = "%5s %5s\n"
     # compile first part, problems can only arise with invalid lat/lon values
     # or if coordsys has more than 12 characters. raise in case of problems.
+    lat = stats['gse2'].get('lat')
+    lon = stats['gse2'].get('lon')
+    coordsys = stats['gse2'].get('coordsys')
     line = fmt1 % (
         stats['network'],
-        stats['gse2']['lat'],
-        stats['gse2']['lon'],
-        stats['gse2']['coordsys'])
+        lat is not None and '{:9.5f}'.format(lat) or '',
+        lon is not None and '{:10.5f}'.format(lon) or '',
+        coordsys or '')
     if len(line) != 49:
         msg = ("GSE2: Invalid header values, unable to compile valid "
                "STA2 line. Omitting STA2 line in output")
@@ -498,10 +553,14 @@ def compile_STA2(stats):
         raise Exception()
     # compile second part, in many cases it is impossible to adhere to manual.
     # follow common practice, just not adhere to fixed format strictly.
+    elev = stats['gse2'].get('elev')
+    edepth = stats['gse2'].get('edepth')
     line = line + fmt2 % (
-        stats['gse2']['elev'],
-        stats['gse2']['edepth'])
-    for key in ('elev', 'edepth'):
+        elev is not None and '{:5.3f}'.format(elev) or '',
+        edepth is not None and '{:5.3f}'.format(edepth) or '')
+    for key, value in zip(('elev', 'edepth'), (elev, edepth)):
+        if value is None:
+            continue
         if len('%5.3f' % stats['gse2'][key]) > 5:
             msg = ("Bad value in GSE2 '%s' header field detected. "
                    "The last two header fields of the STA2 line in the "

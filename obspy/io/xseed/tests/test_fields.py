@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import io
+import string
 import unittest
 
 from obspy import UTCDateTime
-from obspy.io.xseed.fields import Float, VariableString
+from obspy.io.xseed.fields import Float, VariableString, FixedString
 
 
 class FieldsTestCase(unittest.TestCase):
     """
     Fields test suite.
     """
-    def test_formatExponential(self):
+    def test_format_exponential(self):
         field = Float(1, "test", 12, mask='%+1.5e', strict=True)
         self.assertEqual(field.write('2.5'), b'+2.50000E+00')
 
-    def test_readDateTime(self):
+    def test_read_date_time(self):
         field = VariableString(1, "test", 1, 22, 'T', strict=True)
         # 1
         orig = b'1992,002,00:00:00.0000~'
@@ -76,7 +73,7 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEqual(dt, UTCDateTime(2008, 12, 23, 1, 30, 22, 0))
         self.assertEqual(field.write(dt), orig)
 
-    def test_readCompactDateTime(self):
+    def test_read_compact_date_time(self):
         field = VariableString(1, "test", 0, 22, 'T', strict=True,
                                compact=True)
         # 1
@@ -147,6 +144,39 @@ class FieldsTestCase(unittest.TestCase):
         dt = field.read(io.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(2008, 12, 23, 1, 30, 22, 500000))
         self.assertEqual(field.write(dt), b'2008,358,01:30:22.5000~')
+
+    def test_wrong_spaces(self):
+        """
+        VariableString(..., 'S') should remove leading or trailing spaces.
+        """
+        field = VariableString(1, "test", 1, 60, 'UNLPS', strict=True)
+        orig = b' T3930_b A6689 3930 ~'
+        result = field.read(io.BytesIO(orig))
+        self.assertEqual(result, 'T3930_b A6689 3930')
+
+    def test_fixed_string_any_punctuation(self):
+        """
+        FixedString(..., 'P') should allow any punctuation character.
+        """
+        field = FixedString(1, "test", 9, 'UP')
+        for character in string.punctuation:
+            orig = b'ABC' + character.encode("utf-8") + b'DEF'
+            result = field.read(io.BytesIO(orig))
+            self.assertEqual(result, 'ABC' + character + 'DEF')
+
+    def test_variable_string_any_punctuation(self):
+        """
+        VariableString(..., 'P') should allow any punctuation character.
+        """
+        field = VariableString(1, "test", 1, 30, 'UP')
+        for character in string.punctuation:
+            # need to skip tilde as it is also the end marker of a variable
+            # field
+            if character == '~':
+                continue
+            orig = b'ABC' + character.encode("utf-8") + b'DEF~'
+            result = field.read(io.BytesIO(orig))
+            self.assertEqual(result, 'ABC' + character + 'DEF')
 
 
 def suite():

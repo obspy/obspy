@@ -2,22 +2,21 @@
 """
 The sac.core test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import copy
 import io
 import os
 import unittest
+import warnings
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
+from obspy.core import AttribDict
 from obspy.io.sac import SacError, SACTrace, SacIOError
-from obspy.io.sac.core import (_is_sac, _is_sacXY, _read_sac, _read_sacXY,
-                               _write_sac, _write_sacXY)
+from obspy.io.sac.core import (_is_sac, _is_sac_xy, _read_sac, _read_sac_xy,
+                               _write_sac, _write_sac_xy)
+from obspy.io.sac.util import utcdatetime_to_sac_nztimes
 
 
 class CoreTestCase(unittest.TestCase):
@@ -30,13 +29,17 @@ class CoreTestCase(unittest.TestCase):
         self.file = os.path.join(self.path, 'data', 'test.sac')
         self.filexy = os.path.join(self.path, 'data', 'testxy.sac')
         self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
+        self.fileseis = os.path.join(self.path, "data", "seism.sac")
+        self.file_notascii = os.path.join(self.path, "data",
+                                          "non_ascii.sac")
+        self.file_encode = os.path.join(self.path, "data", "test_encode.sac")
         self.testdata = np.array(
             [-8.74227766e-08, -3.09016973e-01,
              -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
              -1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
              -5.87784529e-01, -3.09016049e-01], dtype=np.float32)
 
-    def test_readViaObsPy(self):
+    def test_read_via_obspy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -51,7 +54,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_readwriteViaObsPy(self):
+    def test_read_write_via_obspy(self):
         """
         Write/Read files via L{obspy.Stream}
         """
@@ -69,7 +72,7 @@ class CoreTestCase(unittest.TestCase):
         tr1.stats.sac['depmen'] = tr.stats.sac['depmen']
         self.assertEqual(tr, tr1)
 
-    def test_readXYwriteXYViaObsPy(self):
+    def test_read_xy_write_xy_via_obspy(self):
         """
         Write/Read files via L{obspy.Stream}
         """
@@ -78,9 +81,13 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             tr.write(tempfile, format='SACXY')
             tr1 = read(tempfile)[0]
+
+        tr.stats.pop('sac', None)
+        tr1.stats.pop('sac', None)
+
         self.assertEqual(tr, tr1)
 
-    def test_readwriteXYViaObsPy(self):
+    def test_read_write_xy_via_obspy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -99,7 +106,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr1.data[0:10])
 
-    def test_readBigEndianViaObsPy(self):
+    def test_read_big_endian_via_obspy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -114,7 +121,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_swapbytesViaObsPy(self):
+    def test_swap_bytes_via_obspy(self):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             trbe = read(self.filebe, format='SAC')[0]
@@ -140,7 +147,7 @@ class CoreTestCase(unittest.TestCase):
             np.testing.assert_array_almost_equal(tr.data[0:10],
                                                  trbe.data[0:10])
 
-    def test_readHeadViaObsPy(self):
+    def test_read_head_via_obspy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -154,7 +161,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.b, 10.0)
         self.assertEqual(str(tr.data), '[]')
 
-    def test_writeViaObsPy(self):
+    def test_write_via_obspy(self):
         """
         Writing artificial files via L{obspy.Stream}
         """
@@ -165,7 +172,7 @@ class CoreTestCase(unittest.TestCase):
             tr = read(tempfile)[0]
         np.testing.assert_array_almost_equal(self.testdata, tr.data)
 
-    def test_setVersion(self):
+    def test_set_version(self):
         """
         Tests if SAC version is set when writing
         """
@@ -177,7 +184,7 @@ class CoreTestCase(unittest.TestCase):
             st2 = read(tempfile, format="SAC")
         self.assertEqual(st2[0].stats['sac'].nvhdr, 6)
 
-    def test_readAndWriteViaObsPy(self):
+    def test_read_and_write_via_obspy(self):
         """
         Read and Write files via L{obspy.Stream}
         """
@@ -203,13 +210,12 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.get('nvhdr'), tr.stats.sac.get('nvhdr'))
         np.testing.assert_equal(tr.data, tr3.data)
 
-    def test_convert2Sac(self):
+    def test_convert_to_sac(self):
         """
         Test that an obspy trace is correctly written to SAC.
         All the header variables which are tagged as required by
-        http://www.iris.edu/manuals/sac/SAC_Manuals/FileFormatPt2.html
+        https://ds.iris.edu/files/sac-manual/manual/file_format.html
         are controlled in this test
-        also see http://www.iris.edu/software/sac/manual/file_format.html
         """
         # setUp is called before every test, not only once at the
         # beginning, that is we allocate the data just here
@@ -257,21 +263,20 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
 
-    def test_defaultValues(self):
+    def test_default_values(self):
         tr = read(self.file)[0]
         self.assertEqual(tr.stats.calib, 1.0)
         self.assertEqual(tr.stats.location, '')
         self.assertEqual(tr.stats.network, '')
 
-    def test_referenceTime(self):
+    def test_reference_time(self):
         """
         Test case for bug #107. The SAC reference time is specified by the
         iztype. However it seems no matter what iztype is given, the
         starttime of the seismogram is calculated by adding the B header
         (in seconds) to the SAC reference time.
         """
-        file = os.path.join(self.path, "data", "seism.sac")
-        tr = read(file)[0]
+        tr = read(self.fileseis)[0]
         # see that starttime is set correctly (#107)
         self.assertAlmostEqual(tr.stats.sac.iztype, 9)
         self.assertAlmostEqual(tr.stats.sac.b, 9.4599991)
@@ -292,7 +297,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.station, "CDV")
         self.assertEqual(tr.stats.channel, "Q")
 
-    def test_undefinedB(self):
+    def test_undefined_b(self):
         """
         Test that an undefined B value (-12345.0) is not messing up the
         starttime
@@ -319,7 +324,7 @@ class CoreTestCase(unittest.TestCase):
                 sac_ref_time2 = SACTrace.read(fh).reftime
         self.assertEqual(sac_ref_time2.timestamp, 269596800.0)
 
-    def test_issue156(self):
+    def test_issue_156(self):
         """
         Test case for issue #156.
         """
@@ -344,7 +349,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.delta, 0.005)
         self.assertEqual(st[0].stats.sampling_rate, 200.0)
 
-    def test_write_sacXYWithMinimumStats(self):
+    def test_write_sac_xy_with_minimum_stats(self):
         """
         Write SACXY with minimal stats header, no inhereted from SAC file
         """
@@ -358,7 +363,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.delta, 0.01)
         self.assertEqual(st[0].stats.sampling_rate, 100.0)
 
-    def test_notUsedButGivenHeaders(self):
+    def test_not_used_but_given_headers(self):
         """
         Test case for #188
         """
@@ -375,7 +380,7 @@ class CoreTestCase(unittest.TestCase):
         for i, header_value in enumerate(not_used):
             self.assertEqual(int(tr2.stats.sac[header_value]), i)
 
-    def test_writingMicroSeconds(self):
+    def test_writing_micro_seconds(self):
         """
         Test case for #194. Check that microseconds are written to
         the SAC header b
@@ -395,7 +400,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
         self.assertAlmostEqual(st2[0].stats.sac.b, 0.000999)
 
-    def test_nullTerminatedStrings(self):
+    def test_null_terminated_strings(self):
         """
         Test case for #374. Check that strings stop at the position
         of null termination '\x00'
@@ -406,7 +411,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.network, 'GD')
         self.assertEqual(tr.stats.channel, 'LYE')
 
-    def test_writeSmallTrace(self):
+    def test_write_small_trace(self):
         """
         Tests writing Traces containing 0, 1, 2, 3, 4 samples only.
         """
@@ -605,32 +610,38 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr, tr2)
 
-    def test_readXYwriteXY_from_BytesIO(self):
+    def test_read_xy_write_xy_from_bytes_io(self):
         """
         Reading/writing XY sac files from/to io.BytesIO. It's alphanumeric
         so bytes should also do the trick.
         """
         # Original.
-        st = _read_sacXY(self.filexy)
+        st = _read_sac_xy(self.filexy)
 
         with io.BytesIO() as fh:
-            _write_sacXY(st, fh)
+            _write_sac_xy(st, fh)
             fh.seek(0, 0)
-            st2 = _read_sacXY(fh)
+            st2 = _read_sac_xy(fh)
+
+        st[0].stats.pop('sac', None)
+        st2[0].stats.pop('sac', None)
 
         self.assertEqual(st, st2)
 
-    def test_readXYwriteXY_from_open_file_binary_mode(self):
+    def test_read_xy_write_xy_from_open_file_binary_mode(self):
         """
         Reading/writing XY sac files to open files in binary mode.
         """
         # Original.
-        st = _read_sacXY(self.filexy)
+        st = _read_sac_xy(self.filexy)
 
         with NamedTemporaryFile() as tf:
-            _write_sacXY(st, tf)
+            _write_sac_xy(st, tf)
             tf.seek(0, 0)
-            st2 = _read_sacXY(tf)
+            st2 = _read_sac_xy(tf)
+
+        st[0].stats.pop('sac', None)
+        st2[0].stats.pop('sac', None)
 
         self.assertEqual(st, st2)
 
@@ -671,14 +682,14 @@ class CoreTestCase(unittest.TestCase):
 
     def test_is_sacxy_bytes_io(self):
         """
-        Tests the _is_sacXY function for BytesIO objects.
+        Tests the _is_sac_xy function for BytesIO objects.
         """
         with io.BytesIO() as buf:
             # Read file to BytesIO.
             with open(self.filexy, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertTrue(_is_sacXY(buf))
+            self.assertTrue(_is_sac_xy(buf))
 
         # Should naturally fail for a normal sac file.
         with io.BytesIO() as buf:
@@ -686,11 +697,11 @@ class CoreTestCase(unittest.TestCase):
             with open(self.file, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertFalse(_is_sacXY(buf))
+            self.assertFalse(_is_sac_xy(buf))
 
     def test_is_sacxy_string_io_raises(self):
         """
-        Tests the _is_sacXY function for StringIO objects where it should
+        Tests the _is_sac_xy function for StringIO objects where it should
         raise. I/O is binary only.
         """
         with io.StringIO() as buf:
@@ -698,24 +709,24 @@ class CoreTestCase(unittest.TestCase):
             with open(self.filexy, "rt") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertRaises(ValueError, _is_sacXY, buf)
+            self.assertRaises(ValueError, _is_sac_xy, buf)
 
     def test_is_sacxy_open_file_binary_mode(self):
         """
-        Tests the _is_sacXY function for open files in binary mode.
+        Tests the _is_sac_xy function for open files in binary mode.
         """
         with open(self.filexy, "rb") as fh:
-            self.assertTrue(_is_sacXY(fh))
+            self.assertTrue(_is_sac_xy(fh))
 
         with open(__file__, "rb") as fh:
-            self.assertFalse(_is_sacXY(fh))
+            self.assertFalse(_is_sac_xy(fh))
 
     def test_is_sacxy_open_file_text_mode_fails(self):
         """
-        Tests that the _is_sacXY function for open files in text mode fails.
+        Tests that the _is_sac_xy function for open files in text mode fails.
         """
         with open(self.filexy, "rt") as fh:
-            self.assertRaises(ValueError, _is_sacXY, fh)
+            self.assertRaises(ValueError, _is_sac_xy, fh)
 
     def test_writing_to_file_like_objects_with_obspy(self):
         """
@@ -738,6 +749,182 @@ class CoreTestCase(unittest.TestCase):
 
         with io.BytesIO() as fh:
             self.assertRaises(ValueError, st.write, fh, format="sacxy")
+
+    def test_valid_sac_from_minimal_existing_sac_header(self):
+        """
+        An incomplete manually-produced SAC header should still produce a
+        valid SAC file, including values from the ObsPy header.  Issue 1204.
+        """
+        tr = Trace(np.arange(100))
+        t = UTCDateTime()
+        tr.stats.starttime = t
+        tr.stats.station = 'AAA'
+        tr.stats.network = 'XX'
+        tr.stats.channel = 'BHZ'
+        tr.stats.location = '00'
+
+        tr.stats.sac = AttribDict()
+        tr.stats.sac.iztype = 9
+        tr.stats.sac.nvhdr = 6
+        tr.stats.sac.leven = 1
+        tr.stats.sac.lovrok = 1
+        tr.stats.sac.iftype = 1
+        tr.stats.sac.stla = 1.
+        tr.stats.sac.stlo = 2.
+
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SAC')
+            tr1 = read(tempfile)[0]
+
+        # starttime made its way to SAC file
+        nztimes, microsecond = utcdatetime_to_sac_nztimes(t)
+        self.assertEqual(tr1.stats.sac.nzyear, nztimes['nzyear'])
+        self.assertEqual(tr1.stats.sac.nzjday, nztimes['nzjday'])
+        self.assertEqual(tr1.stats.sac.nzhour, nztimes['nzhour'])
+        self.assertEqual(tr1.stats.sac.nzmin, nztimes['nzmin'])
+        self.assertEqual(tr1.stats.sac.nzsec, nztimes['nzsec'])
+        self.assertEqual(tr1.stats.sac.nzmsec, nztimes['nzmsec'])
+        self.assertEqual(tr1.stats.sac.kstnm, 'AAA')
+        self.assertEqual(tr1.stats.sac.knetwk, 'XX')
+        self.assertEqual(tr1.stats.sac.kcmpnm, 'BHZ')
+        self.assertEqual(tr1.stats.sac.khole, '00')
+        self.assertEqual(tr1.stats.sac.iztype, 9)
+        self.assertEqual(tr1.stats.sac.nvhdr, 6)
+        self.assertEqual(tr1.stats.sac.leven, 1)
+        self.assertEqual(tr1.stats.sac.lovrok, 1)
+        self.assertEqual(tr1.stats.sac.iftype, 1)
+        self.assertEqual(tr1.stats.sac.stla, 1.0)
+        self.assertEqual(tr1.stats.sac.stlo, 2.0)
+
+    def test_merge_sac_obspy_headers(self):
+        """
+        Test that manually setting a set of SAC headers not related
+        to validity or reference time on Trace.stats.sac is properly merged
+        with the Trace.stats header. Issue 1285.
+        """
+        tr = Trace(data=np.arange(30))
+        o = 10.0
+        tr.stats.sac = {'o': o}
+
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SAC')
+            tr1 = read(tempfile)[0]
+
+        self.assertEqual(tr1.stats.starttime, tr.stats.starttime)
+        self.assertEqual(tr1.stats.sac.o, o)
+
+    def test_decimate_resample(self):
+        """
+        Test that ObsPy Trace resampling and decimation is properly reflected
+        in the SAC file.
+        """
+        tr = read(self.file, format='SAC')[0]
+        tr.decimate(2)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SAC')
+            tr1 = read(tempfile)[0]
+        self.assertEqual(tr1.stats.sac.npts, tr.stats.sac.npts / 2)
+        self.assertEqual(tr1.stats.sac.delta, tr.stats.sac.delta * 2)
+
+    def test_invalid_header_field(self):
+        """
+        Given a SAC file on disk, when it is read and an invalid header is
+        appended to the stats.sac dictionary, then the invalid header should be
+        ignored (user given a warning) and the written file should be the same
+        as the original.
+        """
+        tr = read(self.file, format='SAC')[0]
+
+        with io.BytesIO() as buf:
+            tr.write(buf, format='SAC')
+            buf.seek(0, 0)
+
+            tr.stats.sac.AAA = 10.
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                with io.BytesIO() as buf1:
+                    tr.write(buf1, format='SAC')
+                    self.assertIn('Ignored', str(w[-1].message))
+                    buf1.seek(0, 0)
+
+                    self.assertEqual(buf.read(), buf1.read())
+
+    def test_not_ascii(self):
+        """
+        Read file with non-ascii and null-termination characters.
+        See ObsPy issue #1432
+        """
+        tr = read(self.file_notascii, format='SAC')[0]
+        self.assertEqual(tr.stats.station, 'ALS')
+        self.assertEqual(tr.stats.channel, 'HHE')
+        self.assertEqual(tr.stats.network, '')
+
+    def test_sac_booleans_from_trace(self):
+        """
+        SAC booleans "lcalda" and "lpspol" should be "False" and "True",
+        respectively, by default when converting from a "Trace".
+        """
+        tr = Trace()
+        sac = SACTrace.from_obspy_trace(tr)
+        self.assertFalse(sac.lcalda)
+        self.assertTrue(sac.lpspol)
+
+    def test_sac_file_from_new_header(self):
+        """
+        Writing to disk a new Trace object shouldn't ignore custom header
+        fields, if an arrival time is set. See ObsPy issue #1519
+        """
+        tr = Trace(np.zeros(1000))
+        tr.stats.delta = 0.01
+        tr.stats.station = 'XXX'
+        tr.stats.sac = {'stla': 10., 'stlo': -5., 'a': 12.34}
+        with io.BytesIO() as tf:
+            tr.write(tf, format='SAC')
+            tf.seek(0)
+            tr1 = read(tf)[0]
+        self.assertAlmostEqual(tr1.stats.sac.stla, 10., places=4)
+        self.assertAlmostEqual(tr1.stats.sac.stlo, -5., places=4)
+        self.assertAlmostEqual(tr1.stats.sac.a, 12.34, places=5)
+
+    def test_always_sac_reftime(self):
+        """
+        Writing a SAC file from a .stats.sac with no reference time should
+        still write a SAC file with a reference time.
+        """
+        reftime = UTCDateTime('2010001')
+        a = 12.34
+        b = 0.0
+        tr = Trace(np.zeros(1000))
+        tr.stats.delta = 0.01
+        tr.stats.station = 'XXX'
+        tr.stats.starttime = reftime
+        tr.stats.sac = {}
+        tr.stats.sac['a'] = a
+        tr.stats.sac['b'] = b
+        with io.BytesIO() as tf:
+            tr.write(tf, format='SAC')
+            tf.seek(0)
+            tr1 = read(tf)[0]
+        self.assertEqual(tr1.stats.starttime, reftime)
+        self.assertAlmostEqual(tr1.stats.sac.a, a, places=5)
+        self.assertEqual(tr1.stats.sac.b, b)
+
+    def test_wrong_encoding(self):
+        """
+        Read SAC file with wrong encoding
+        """
+        tr0 = read(self.file_encode)[0]
+        self.assertEqual(tr0.stats.get('channel'), '????????')
+
+    def test_encoding_flag(self):
+        """
+        Test passing encoding flag through obspy.read
+        """
+        tr0 = read(self.file_encode, encoding='cp1252')[0]
+        self.assertEqual(tr0.stats.get('channel'), 'ÇÏÿÿÇÏÿÿ')
 
 
 def suite():

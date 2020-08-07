@@ -1,0 +1,21 @@
+Event ID               : 1151125007
+Station code           : GRA1
+Onset time             : 25-NOV-2015_21:30:20.065
+Onset type             : emergent
+Phase name             : (Pdiff)
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Depth (km)             :  33.0
+Depth type             : (n) preset
+Location quality       : reliable
+Reference Location Name: GRA1
+Source of Information  : BGR
+Phase Flags            : T
+Analyst                : ks
+--- End of Phase ---
+
+

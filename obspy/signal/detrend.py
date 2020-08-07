@@ -7,15 +7,10 @@ Python module containing detrend methods.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 from scipy.interpolate import LSQUnivariateSpline
-import matplotlib.pyplot as plt
 
 
 def simple(data):
@@ -24,14 +19,21 @@ def simple(data):
     point of the trace
 
     :param data: Data to detrend, type numpy.ndarray.
-    :return: Detrended data.
+    :return: Detrended data. Returns the original array which has been
+        modified in-place if possible but it might have to return a copy in
+        case the dtype has to be changed.
     """
+    # Convert data if it's not a floating point type.
+    if not np.issubdtype(data.dtype, np.floating):
+        data = np.require(data, dtype=np.float64)
     ndat = len(data)
     x1, x2 = data[0], data[-1]
-    return data - (x1 + np.arange(ndat) * (x2 - x1) / float(ndat - 1))
+    data -= x1 + np.arange(ndat) * (x2 - x1) / float(ndat - 1)
+    return data
 
 
-def __plotting_helper(data, fit, plot):
+def _plotting_helper(data, fit, plot):
+    import matplotlib.pyplot as plt
     fig, axes = plt.subplots(2, 1, figsize=(8, 5))
     plt.subplots_adjust(hspace=0)
     axes[0].plot(data, color="k", label="Original Data")
@@ -101,14 +103,14 @@ def polynomial(data, order, plot=False):
         polynomial(tr.data, order=3, plot=True)
     """
     # Convert data if it's not a floating point type.
-    if not np.issubdtype(data.dtype, float):
-        data = np.require(data, dtype=np.float32)
+    if not np.issubdtype(data.dtype, np.floating):
+        data = np.require(data, dtype=np.float64)
 
     x = np.arange(len(data))
     fit = np.polyval(np.polyfit(x, data, deg=order), x)
 
     if plot:
-        __plotting_helper(data, fit, plot)
+        _plotting_helper(data, fit, plot)
 
     data -= fit
     return data
@@ -164,8 +166,8 @@ def spline(data, order, dspline, plot=False):
         spline(tr.data, order=2, dspline=1000, plot=True)
     """
     # Convert data if it's not a floating point type.
-    if not np.issubdtype(data.dtype, float):
-        data = np.require(data, dtype=np.float32)
+    if not np.issubdtype(data.dtype, np.floating):
+        data = np.require(data, dtype=np.float64)
 
     x = np.arange(len(data))
     splknots = np.arange(dspline / 2.0, len(data) - dspline / 2.0 + 2,
@@ -175,7 +177,7 @@ def spline(data, order, dspline, plot=False):
     fit = spl(x)
 
     if plot:
-        __plotting_helper(data, fit, plot)
+        _plotting_helper(data, fit, plot)
 
     data -= fit
     return data

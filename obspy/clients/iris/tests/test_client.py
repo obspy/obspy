@@ -2,10 +2,6 @@
 """
 The obspy.clients.iris.client test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import os
 import unittest
 
@@ -58,14 +54,23 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # normal request
         result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2, evtlon=1.4)
-        self.assertAlmostEqual(result['distance'], 2.09554)
-        self.assertAlmostEqual(result['backazimuth'], 5.46946)
-        self.assertAlmostEqual(result['azimuth'], 185.47692)
+        self.assertAlmostEqual(result['distance'], 2.10256)
+        self.assertAlmostEqual(result['distancemeters'], 233272.79028)
+        self.assertAlmostEqual(result['backazimuth'], 5.46944)
+        self.assertAlmostEqual(result['azimuth'], 185.47695)
+        self.assertEqual(result['ellipsoidname'], 'WGS84')
+        self.assertTrue(isinstance(result['distance'], float))
+        self.assertTrue(isinstance(result['distancemeters'], float))
+        self.assertTrue(isinstance(result['backazimuth'], float))
+        self.assertTrue(isinstance(result['azimuth'], float))
+        self.assertTrue(isinstance(result['ellipsoidname'], str))
         # w/o kwargs
         result = client.distaz(1.1, 1.2, 3.2, 1.4)
-        self.assertAlmostEqual(result['distance'], 2.09554)
-        self.assertAlmostEqual(result['backazimuth'], 5.46946)
-        self.assertAlmostEqual(result['azimuth'], 185.47692)
+        self.assertAlmostEqual(result['distance'], 2.10256)
+        self.assertAlmostEqual(result['distancemeters'], 233272.79028)
+        self.assertAlmostEqual(result['backazimuth'], 5.46944)
+        self.assertAlmostEqual(result['azimuth'], 185.47695)
+        self.assertEqual(result['ellipsoidname'], 'WGS84')
         # missing parameters
         self.assertRaises(Exception, client.distaz, stalat=1.1)
         self.assertRaises(Exception, client.distaz, 1.1)
@@ -80,18 +85,22 @@ class ClientTestCase(unittest.TestCase):
         # code
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
         self.assertEqual(result, 683)
+        self.assertTrue(isinstance(result, int))
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "code")
         self.assertEqual(result, 683)
         # region
         result = client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
         self.assertEqual(result, 'OREGON')
+        self.assertTrue(isinstance(result, str))
         # w/o kwargs
         result = client.flinnengdahl(42, -122.24, "region")
         self.assertEqual(result, 'OREGON')
         # both
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="both")
         self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
+        self.assertTrue(isinstance(result[0], int))
+        self.assertTrue(isinstance(result[1], str))
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "both")
         self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
@@ -153,7 +162,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
+                                 '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # cs as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -162,7 +171,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05 -1.055896E+04 1.473054E+02\n')
+                                 '1.000000E-05  -1.055896E+04  1.473054E+02\n')
         # fap & def as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -171,7 +180,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
+                                 '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # fap & dis as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -180,7 +189,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  6.635035E-01  2.692007E+02\n')
+                                 '1.000000E-05 6.635035E-01 2.692007E+02\n')
         # fap & vel as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -189,7 +198,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
+                                 '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # fap & acc as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -198,7 +207,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.680674E+08  8.920073E+01\n')
+                                 '1.000000E-05 1.680674E+08 8.920073E+01\n')
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')
@@ -214,7 +223,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests resp Web service interface.
 
-        Examples are inspired by http://www.iris.edu/ws/resp/.
+        Examples are inspired by https://service.iris.edu/irisws/resp/1/.
         """
         client = Client()
         # 1
@@ -239,7 +248,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests timeseries Web service interface.
 
-        Examples are inspired by http://www.iris.edu/ws/timeseries/.
+        Examples are inspired by https://service.iris.edu/irisws/timeseries/1/.
         """
         client = Client()
         # 1

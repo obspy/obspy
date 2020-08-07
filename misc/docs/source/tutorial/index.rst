@@ -11,16 +11,16 @@ This tutorial does not attempt to be comprehensive and cover every single
 feature. Instead, it introduces many of ObsPy's most noteworthy features, and
 will give you a good idea of the library’s flavor and style.
 
-A pdf version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`.
+A pdf version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`. A Chinese translation of the tutorial (as of 2020-04-12) is available `here <http://docs.obspy.org/archive/ObsPy_Tutorial_2020-04_chinese.pdf>`_.
 
 There are also IPython notebooks available online with an
-`introduction to Python <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction.ipynb>`__
-(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction_with_solutions.ipynb>`__),
+`introduction to Python <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2017-10-25_iris_stcu/Python%20Introduction/Python_Crash_Course.ipynb>`__
+(`with solutions/output <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2017-10-25_iris_stcu/Python%20Introduction/Python_Crash_Course-with_solutions.ipynb>`__),
 an
-`introduction to ObsPy <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction.ipynb>`__
-(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction_with_solutions.ipynb>`__)
-and an
-`brief primer on data center access and visualization with ObsPy <http://nbviewer.ipython.org/github/obspy/docs/blob/master/notebooks/Direct_Access_to_Seismological_Data_using_Python_and_ObsPy.ipynb>`__.
+`introduction to ObsPy split up in multiple chapters <http://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2017-10-25_iris_stcu/ObsPy%20Tutorial/00_Introduction.ipynb>`__ (again, versions with/without solutions available)
+and a
+`brief primer on data center access and visualization with ObsPy <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/notebooks/Direct_Access_to_Seismological_Data_using_Python_and_ObsPy.ipynb>`__.
+There are also nice `Jupyter notebooks with an introduction to matplotlib <http://nbviewer.jupyter.org/github/matplotlib/AnatomyOfMatplotlib/tree/master/>`__.
 
 Introduction to ObsPy
 ---------------------
@@ -59,7 +59,10 @@ Introduction to ObsPy
    code_snippets/visualize_data_availability_of_local_waveform_archive
    code_snippets/travel_time
    code_snippets/xcorr_pick_correction
+   code_snippets/xcorr_detector
    code_snippets/quakeml_custom_tags
+   code_snippets/stationxml_custom_tags
+   code_snippets/stationxml_file_from_scratch
    code_snippets/easyseedlink
 
 

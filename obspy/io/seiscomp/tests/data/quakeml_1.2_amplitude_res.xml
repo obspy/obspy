@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:ca.seismo/catalog/pickfile.npf">
+    <event publicID="smi:ca.seismo/event/evid/19521225.0428002">
+      <pick publicID="smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0430003">
+        <time>
+          <value>1952-12-25T04:30:40.000000Z</value>
+        </time>
+        <waveformID networkCode="CN" stationCode="OTT" locationCode="" channelCode="SZ"/>
+        <phaseHint>A</phaseHint>
+      </pick>
+      <amplitude publicID="smi:ca.seismo/amplitude/solid/arrid/19521225.0428001/19521225.0430003">
+        <type>AMN</type>
+        <genericAmplitude>
+          <value>3.06496844253e-07</value>
+        </genericAmplitude>
+        <pickID>smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0430003</pickID>
+        <waveformID networkCode="CN" stationCode="OTT" locationCode="" channelCode="SZ"/>
+      </amplitude>
+      <stationMagnitude publicID="smi:ca.seismo/stn_mag/solid/arrid/19521225.0428001/19521225.0430003">
+        <originID>smi:ca.seismo/origin/solid/19521225.0428001</originID>
+        <mag>
+          <value>3.0</value>
+        </mag>
+        <type>MN</type>
+        <amplitudeID>smi:ca.seismo/amplitude/solid/arrid/19521225.0428001/19521225.0430003</amplitudeID>
+      </stationMagnitude>
+      <magnitude publicID="smi:ca.seismo/magnitude/solid/magcnt/19521225.0428001/1">
+        <mag>
+          <value>3.0</value>
+        </mag>
+        <type>MN</type>
+        <originID>smi:ca.seismo/origin/solid/19521225.0428001</originID>
+        <stationMagnitudeContribution>
+          <stationMagnitudeID>smi:ca.seismo/stn_mag/solid/arrid/19521225.0428001/19521225.0430003</stationMagnitudeID>
+        </stationMagnitudeContribution>
+      </magnitude>
+      <pick publicID="smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0429001">
+        <time>
+          <value>1952-12-25T04:29:33.000000Z</value>
+          <uncertainty>0.5</uncertainty>
+        </time>
+        <waveformID networkCode="CN" stationCode="OTT" locationCode="" channelCode="SZ"/>
+        <phaseHint>P</phaseHint>
+      </pick>
+      <origin publicID="smi:ca.seismo/origin/solid/19521225.0428001">
+        <time>
+          <value>1952-12-25T04:28:30.000000Z</value>
+          <uncertainty>0.0</uncertainty>
+        </time>
+        <latitude>
+          <value>43.725</value>
+          <uncertainty>0.06</uncertainty>
+        </latitude>
+        <longitude>
+          <value>-81.147</value>
+          <uncertainty>0.09</uncertainty>
+        </longitude>
+        <arrival publicID="smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0429001_smi_ca.seismo/origin/solid/19521225.0428001">
+          <timeWeight>0.0</timeWeight>
+          <pickID>smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0429001</pickID>
+          <phase>Pn</phase>
+          <azimuth>65.0</azimuth>
+          <distance>4.226812</distance>
+          <takeoffAngle>
+            <value>49.0</value>
+          </takeoffAngle>
+          <timeResidual>0.14</timeResidual>
+          <creationInfo>
+            <agencyID>GSC</agencyID>
+            <creationTime>1995-02-15T00:00:00.000000Z</creationTime>
+            <version>GSC</version>
+          </creationInfo>
+        </arrival>
+      </origin>
+      <preferredOriginID>smi:ca.seismo/origin/solid/19521225.0428001</preferredOriginID>
+      <preferredMagnitudeID>smi:ca.seismo/magnitude/solid/magcnt/19521225.0428001/1</preferredMagnitudeID>
+      <type>earthquake</type>
+      <typeCertainty>known</typeCertainty>
+    </event>
+  </eventParameters>
+</q:quakeml>

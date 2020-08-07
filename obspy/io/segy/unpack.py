@@ -11,18 +11,14 @@
 Functions that will all take a file pointer and the sample count and return a
 NumPy array with the unpacked values.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-import ctypes as C
+import ctypes as C  # NOQA
 import os
 import sys
 import warnings
 
 import numpy as np
 
+from obspy.core.compatibility import from_buffer
 from .util import clibsegy
 
 
@@ -36,17 +32,17 @@ else:
 
 clibsegy.ibm2ieee.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int]
 clibsegy.ibm2ieee.restype = C.c_void_p
 
 
-def unpack_4byte_IBM(file, count, endian='>'):
+def unpack_4byte_ibm(file, count, endian='>'):
     """
     Unpacks 4 byte IBM floating points.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.float32)
+    data = from_buffer(file.read(count * 4), dtype=np.float32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -58,7 +54,7 @@ def unpack_4byte_IBM(file, count, endian='>'):
 
 # Old pure Python/NumPy code
 #
-# def unpack_4byte_IBM(file, count, endian='>'):
+# def unpack_4byte_ibm(file, count, endian='>'):
 #    """
 #    Unpacks 4 byte IBM floating points.
 #    """
@@ -67,9 +63,9 @@ def unpack_4byte_IBM(file, count, endian='>'):
 #    # Swap the byte order if necessary.
 #    if BYTEORDER != endian:
 #        data = data.byteswap()
-#    # See http://mail.scipy.org/pipermail/scipy-user/2009-January/019392.html
+#    # See https://mail.scipy.org/pipermail/scipy-user/2009-January/019392.html
 #    # XXX: Might need check for values out of range:
-#    # http://bytes.com/topic/c/answers/
+#    # https://bytes.com/topic/c/answers/
 #    #         221981-c-code-converting-ibm-370-floating-point-ieee-754-a
 #    sign = np.bitwise_and(np.right_shift(data, 31), 0x01)
 #    exponent = np.bitwise_and(np.right_shift(data, 24), 0x7f)
@@ -92,7 +88,7 @@ def unpack_4byte_integer(file, count, endian='>'):
     Unpacks 4 byte integers.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.int32)
+    data = from_buffer(file.read(count * 4), dtype=np.int32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -104,7 +100,7 @@ def unpack_2byte_integer(file, count, endian='>'):
     Unpacks 2 byte integers.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 2), dtype=np.int16)
+    data = from_buffer(file.read(count * 2), dtype=np.int16)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -115,12 +111,12 @@ def unpack_4byte_fixed_point(file, count, endian='>'):
     raise NotImplementedError
 
 
-def unpack_4byte_IEEE(file, count, endian='>'):
+def unpack_4byte_ieee(file, count, endian='>'):
     """
     Unpacks 4 byte IEEE floating points.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.float32)
+    data = from_buffer(file.read(count * 4), dtype=np.float32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()

@@ -3,10 +3,6 @@
 """
 The interpolation test suite for ObsPy.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 
@@ -93,7 +89,7 @@ class InterpolationTestCase(unittest.TestCase):
 
         expected_output = np.array([
             0.92961609, 0.54632548, 0.14335148, 0.19675436, 0.19030867,
-            0.41722415, 0.60644459, 0.6018648,  0.88751628, 0.90970863,
+            0.41722415, 0.60644459, 0.6018648, 0.88751628, 0.90970863,
             0.58602723, 0.71521445, 0.83288791])
 
         output = lanczos_interpolation(

@@ -2,13 +2,10 @@
 """
 The sac.sacpz test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 import io
+import warnings
 
 import numpy as np
 
@@ -62,6 +59,23 @@ class SACPZTestCase(unittest.TestCase):
         got = [l for l in got.split("\n") if "CREATED" not in l]
         expected = [l for l in expected.split("\n") if "CREATED" not in l]
         self.assertEqual(got, expected)
+
+    def test_write_sacpz_soh(self):
+        path = os.path.join(self.path, '..', '..', 'stationxml', 'tests',
+                            'data', 'only_soh.xml')
+        inv = read_inventory(path)
+        f = io.StringIO()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            inv.write(f, format='SACPZ')
+        # Testxml has 2 channels: 1 no paz, 2 unrecognized units.
+        self.assertEqual(len(w), 2)
+        # Assert warning messages contain correct warnings
+        self.assertTrue(any('has no paz' in str(x.message) for x in w))
+        self.assertTrue(any('has unrecognized input units'
+                            in str(x.message) for x in w))
+        # Only 2 newlines are written.
+        self.assertEqual(2, f.tell())
 
     def test_attach_paz(self):
         fvelhz = io.StringIO("""ZEROS 3

@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
+PYTHON        = python
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -16,7 +17,7 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp \
         epub latex latex-png-images latexpdf-png-images latexpdf text man \
-        changes linkcheck doctest gettext coverage coverager pep8 citations \
+        changes linkcheck doctest gettext coverage coverager citations \
         credits assets
 
 help:
@@ -43,7 +44,6 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 	@echo "  coverage   to make create coverage HTML files"
 	@echo "  coverager  to make create coverage HTML files and report test"
-	@echo "  pep8       to check PEP8 of tutorial"
 	@echo "  citations  to generate citations page"
 	@echo "  credits    to generate credits page"
 	@echo "  assets     to generate static assets for local browsing"
@@ -51,39 +51,34 @@ help:
 clean:
 	@rm -rf $(BUILDDIR)/*
 	@rm -rf source/packages/autogen/obspy.*
-	@rm -rf source/pep8/*
-	@python make_assets.py -c -f
+	@$(PYTHON) make_assets.py -c -f
 
 coverage:
-	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -q --all
+	@coverage run --rcfile=.coveragerc -m obspy.scripts.runtests -q --all
 	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
 	@coverage xml --rcfile=.coveragerc -o $(BUILDDIR)/html/coverage.xml
 
 coverager:
-	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r -q --all
+	@coverage run --rcfile=.coveragerc -m obspy.scripts.runtests -r -q --all
 	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
 	@coverage xml --rcfile=.coveragerc -o $(BUILDDIR)/html/coverage.xml
 
 c_coverage:
-	@python make_c_coverage.py $(BUILDDIR)/html/c_coverage
-
-pep8:
-	@python make_pep8.py 1
-	@pep8 --show-source source/tutorial; echo
+	@$(PYTHON) make_c_coverage.py $(BUILDDIR)/html/c_coverage
 
 citations:
-	@python make_citations.py
+	@$(PYTHON) make_citations.py
 
 credits:
-	@python make_credits.py
+	@$(PYTHON) make_credits.py
 
 assets:
-	@python make_assets.py
+	@$(PYTHON) make_assets.py
 
 html: assets credits citations
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
 	if [ ! -d $(BUILDDIR)/html ]; then mkdir $(BUILDDIR)/html; fi
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	SPHINX=true $(SPHINXBUILD) -w $(BUILDDIR)/html/sphinx-build_warnings.txt -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html 1> $(BUILDDIR)/html/sphinx-build_stdout.txt 2> $(BUILDDIR)/html/sphinx-build_stderr.txt
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 

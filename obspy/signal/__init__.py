@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.signal - Signal Processing Routines for ObsPy
+obspy.signal - Signal processing routines for ObsPy
 ===================================================
 Capabilities include filtering, triggering, rotation, instrument
 correction and coordinate transformations.
@@ -8,7 +8,7 @@ correction and coordinate transformations.
 :copyright: The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Filter
 ------
@@ -121,8 +121,8 @@ Again, there are convenience methods implemented on
             'zeros': [0j, 0j]}
     for tr in st:
         df = tr.stats.sampling_rate
-        tr.data = simulate_seismometer(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
-                          water_level=60.0)
+        tr.data = simulate_seismometer(tr.data, df, paz_remove=sts2,
+                                       paz_simulate=inst2hz, water_level=60.0)
     st.plot()
 
 Trigger
@@ -135,14 +135,14 @@ M. Bear. The implementation is based on [Withers1998]_ and [Baer1987]_.
 The following example demonstrates a recursive STA/LTA triggering:
 
 >>> from obspy import read
->>> from obspy.signal.trigger import recursive_STALTA, plot_trigger
+>>> from obspy.signal.trigger import recursive_sta_lta, plot_trigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
 >>> tr.filter("bandpass", freqmin=1, freqmax=20)  # doctest: +ELLIPSIS
 <...Trace object at 0x...>
 >>> sta = 0.5
 >>> lta = 4
->>> cft = recursive_STALTA(tr.data, int(sta * tr.stats.sampling_rate),
+>>> cft = recursive_sta_lta(tr.data, int(sta * tr.stats.sampling_rate),
 ...                        int(lta * tr.stats.sampling_rate))
 >>> thrOn = 4
 >>> thrOff = 0.7
@@ -151,13 +151,13 @@ The following example demonstrates a recursive STA/LTA triggering:
 .. plot::
 
     from obspy import read
-    from obspy.signal.trigger import recursive_STALTA, plot_trigger
+    from obspy.signal.trigger import recursive_sta_lta, plot_trigger
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)
     sta = 0.5
     lta = 4
-    cft = recursive_STALTA(tr.data, int(sta * tr.stats.sampling_rate),
+    cft = recursive_sta_lta(tr.data, int(sta * tr.stats.sampling_rate),
                     int(lta * tr.stats.sampling_rate))
     thr_on = 4
     thr_off = 0.7
@@ -187,13 +187,12 @@ network coincidence refer to :func:`obspy.signal.trigger.coincidence_trigger`
 and the same page in the `Tutorial`_. For automated use see the following
 `stalta`_ example scripts.
 
-.. _`trigger`: http://tutorial.obspy.org/code_snippets/trigger_tutorial.html
-.. _`Tutorial`: http://tutorial.obspy.org
+.. _`trigger`: https://tutorial.obspy.org/code_snippets/trigger_tutorial.html
+.. _`Tutorial`: https://tutorial.obspy.org
 .. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+if "filter" in locals():
+    del filter
 
 from .spectral_estimation import PPSD
 

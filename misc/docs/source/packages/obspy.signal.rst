@@ -14,12 +14,12 @@
        ~trigger.ar_pick
        ~filter.bandpass
        ~filter.bandstop
-       ~trigger.carl_STA_trig
-       ~trigger.classic_STALTA
+       ~trigger.carl_sta_trig
+       ~trigger.classic_sta_lta
        ~trigger.coincidence_trigger
        ~invsim.corn_freq_2_paz
        ~invsim.cosine_taper
-       ~trigger.delayed_STALTA
+       ~trigger.delayed_sta_lta
        ~filter.envelope
        ~interpolation.interpolate_1d
        ~interpolation.weighted_average_slopes
@@ -30,10 +30,11 @@
        ~invsim.paz_to_freq_resp
        ~trigger.pk_baer
        ~polarization.polarization_analysis
+       ~regression.linear_regression
        ~spectral_estimation.PPSD
-       ~spectral_estimation.psd
-       ~trigger.recursive_STALTA
-       ~rotate.rotate_NE_RT
+       ~quality_control.MSEEDMetadata
+       ~trigger.recursive_sta_lta
+       ~rotate.rotate_ne_rt
        ~invsim.simulate_seismometer
        ~util.util_geo_km
        ~util.util_lon_lat
@@ -60,6 +61,8 @@
        interpolation
        konnoohmachismoothing
        polarization
+       quality_control
+       regression
        spectral_estimation
        rotate
        tf_misfit

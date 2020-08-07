@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 import unittest
 import warnings
+import numpy as np
 
 from obspy.geodetics import (calc_vincenty_inverse, degrees2kilometers,
-                             gps2dist_azimuth, kilometer2degrees,
-                             locations2degrees)
+                             gps2dist_azimuth, inside_geobounds,
+                             kilometer2degrees, locations2degrees)
 from obspy.geodetics.base import HAS_GEOGRAPHICLIB
+from obspy.core import AttribDict
 
 
 def dms2dec(degs, mins, secs):
     """Converts angle given in degrees, mins and secs to decimal degrees"""
-    return (degs + mins/60.0 + secs/3600.0)
+    return (degs + mins / 60.0 + secs / 3600.0)
 
 
 class UtilGeodeticsTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.geodetics
     """
-    def test_calcVincentyInverse(self):
+    def test_calc_vincenty_inverse(self):
         """
         Tests for the Vincenty's Inverse formulae.
         """
@@ -36,7 +34,6 @@ class UtilGeodeticsTestCase(unittest.TestCase):
                           27.4675551, 17.28133229, -27.65771704, -162.65420626)
         self.assertRaises(StopIteration, calc_vincenty_inverse,
                           27.4675551, 17.28133229, -27.65771704, -162.65420626)
-        self.assertRaises(StopIteration, calc_vincenty_inverse, 0, 0, 0, 13)
         # working examples
         res = calc_vincenty_inverse(0, 0.2, 0, 20)
         self.assertAlmostEqual(res[0], 2204125.9174282863)
@@ -44,6 +41,10 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(res[2], 270.0)
         res = calc_vincenty_inverse(0, 0, 0, 10)
         self.assertAlmostEqual(res[0], 1113194.9077920639)
+        self.assertAlmostEqual(res[1], 90.0)
+        self.assertAlmostEqual(res[2], 270.0)
+        res = calc_vincenty_inverse(0, 0, 0, 13)
+        self.assertAlmostEqual(res[0], 1447153.3801296828)
         self.assertAlmostEqual(res[1], 90.0)
         self.assertAlmostEqual(res[2], 270.0)
         res = calc_vincenty_inverse(0, 0, 0, 17)
@@ -58,7 +59,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
 
     @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
                                             'installed')
-    def test_gps2DistAzimuthWithGeographiclib(self):
+    def test_gps_2_dist_azimuth_with_geographiclib(self):
         """
         Testing gps2dist_azimuth function using the module geographiclib.
         """
@@ -74,7 +75,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertRaises(ValueError, gps2dist_azimuth, 0, 0, 91, 0)
         self.assertRaises(ValueError, gps2dist_azimuth, 0, 0, -91, 0)
 
-    def test_calcVincentyInverse2(self):
+    def test_calc_vincenty_inverse_2(self):
         """
         Test calc_vincenty_inverse() method with test data from Geocentric
         Datum of Australia. (see http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf)
@@ -109,7 +110,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(alpha12, calc_alpha12)
         self.assertAlmostEqual(alpha21, calc_alpha21)
 
-    def test_calcVincentyInverseTabulated(self):
+    def test_calc_vincenty_inverse_tabulated(self):
         """ Tabulated results for Vincenty Inverse
 
         Table II of Vincenty's paper (T. Vincenty 1975, "Direct and inverse
@@ -134,7 +135,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         lat2 = dms2dec(-33.0, 26.0, 0.0)
         lon2 = dms2dec(108.0, 13.0, 0.0)
         a = 6377397.155
-        f = 1.0/299.1528128
+        f = 1.0 / 299.1528128
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
         self.assertAlmostEqual(dist, calc_dist, 2)
@@ -150,7 +151,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         lat2 = dms2dec(26.0, 7.0, 42.83946)
         lon2 = dms2dec(41.0, 28.0, 35.50729)
         a = 6378388.000
-        f = 1.0/297.0
+        f = 1.0 / 297.0
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
         self.assertAlmostEqual(dist, calc_dist, 2)
@@ -166,7 +167,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         lat2 = dms2dec(67.0, 22.0, 14.77638)
         lon2 = dms2dec(137.0, 47.0, 28.31435)
         a = 6378388.000
-        f = 1.0/297.0
+        f = 1.0 / 297.0
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
         self.assertAlmostEqual(dist, calc_dist, 2)
@@ -175,7 +176,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
 
     @unittest.skipIf(HAS_GEOGRAPHICLIB, 'Module geographiclib is installed, '
                                         'not using calc_vincenty_inverse')
-    def test_gps2DistAzimuthBUG150(self):
+    def test_gps_2_dist_azimuth_bug150(self):
         """
         Test case for #150: UserWarning will be only raised if geographiclib is
         not installed.
@@ -213,7 +214,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         Test the location 2 degree conversion.
         """
         # Inline method to avoid messy code.
-        def assertLoc(lat1, long1, lat2, long2, approx_distance):
+        def assert_loc(lat1, long1, lat2, long2, approx_distance):
             self.assertTrue(abs(math.radians(locations2degrees(
                 lat1, long1, lat2, long2)) * 6371 - approx_distance) <= 20)
 
@@ -221,27 +222,70 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         #   http://williams.best.vwh.net/gccalc.htm
 
         # Random location.
-        assertLoc(36.12, -86.67, 33.94, -118.40, 2893)
+        assert_loc(36.12, -86.67, 33.94, -118.40, 2893)
         # Test several combinations of quadrants.
-        assertLoc(11.11, 22.22, 33.33, 44.44, 3346)
-        assertLoc(-11.11, -22.22, -33.33, -44.44, 3346)
-        assertLoc(11.11, 22.22, -33.33, -44.44, 8596)
-        assertLoc(-11.11, -22.22, 33.33, 44.44, 8596)
-        assertLoc(11.11, -22.22, 33.33, -44.44, 3346)
-        assertLoc(-11.11, 22.22, 33.33, 44.44, 5454)
-        assertLoc(11.11, -22.22, 33.33, 44.44, 7177)
-        assertLoc(11.11, 22.22, -33.33, 44.44, 5454)
-        assertLoc(11.11, 22.22, 33.33, -44.44, 7177)
+        assert_loc(11.11, 22.22, 33.33, 44.44, 3346)
+        assert_loc(-11.11, -22.22, -33.33, -44.44, 3346)
+        assert_loc(11.11, 22.22, -33.33, -44.44, 8596)
+        assert_loc(-11.11, -22.22, 33.33, 44.44, 8596)
+        assert_loc(11.11, -22.22, 33.33, -44.44, 3346)
+        assert_loc(-11.11, 22.22, 33.33, 44.44, 5454)
+        assert_loc(11.11, -22.22, 33.33, 44.44, 7177)
+        assert_loc(11.11, 22.22, -33.33, 44.44, 5454)
+        assert_loc(11.11, 22.22, 33.33, -44.44, 7177)
         # Test some extreme values.
-        assertLoc(90, 0, 0, 0, 10018)
-        assertLoc(180, 0, 0, 0, 20004)
-        assertLoc(0, 90, 0, 0, 10018)
-        assertLoc(0, 180, 0, 0, 20004)
-        assertLoc(0, 0, 90, 0, 10018)
-        assertLoc(0, 0, 180, 0, 20004)
-        assertLoc(0, 0, 0, 90, 10018)
-        assertLoc(0, 0, 0, 180, 20004)
-        assertLoc(11, 55, 11, 55, 0)
+        assert_loc(90, 0, 0, 0, 10018)
+        assert_loc(180, 0, 0, 0, 20004)
+        assert_loc(0, 90, 0, 0, 10018)
+        assert_loc(0, 180, 0, 0, 20004)
+        assert_loc(0, 0, 90, 0, 10018)
+        assert_loc(0, 0, 180, 0, 20004)
+        assert_loc(0, 0, 0, 90, 10018)
+        assert_loc(0, 0, 0, 180, 20004)
+        assert_loc(11, 55, 11, 55, 0)
+
+        # test numpy inputs:
+        # Inline method to avoid messy code.
+        def assert_loc_np(lat1, long1, lat2, long2,
+                          approx_distance, expected_output_len):
+            loc2deg = locations2degrees(np.array(lat1),
+                                        np.array(long1),
+                                        np.array(lat2),
+                                        np.array(long2))
+            self.assertTrue((np.abs(np.radians(loc2deg) * 6371 -
+                                    approx_distance) <= 20).all())
+            self.assertTrue(np.isscalar(loc2deg)
+                            if expected_output_len == 0 else
+                            len(loc2deg) == expected_output_len)
+
+        # Test just with random location (combining scalars and arrays).
+        assert_loc_np(36.12, -86.67, 33.94, -118.40, 2893, 0)
+        assert_loc_np([36.12, 36.12], -86.67, 33.94, -118.40,
+                      2893, 2)
+        assert_loc_np(36.12, [-86.67, -86.67], 33.94, -118.40,
+                      2893, 2)
+        assert_loc_np(36.12, -86.67, [33.94, 33.94], -118.40,
+                      2893, 2)
+        assert_loc_np(36.12, -86.67, 33.94, [-118.40, -118.40],
+                      2893, 2)
+        assert_loc_np([36.12, 36.12], [-86.67, -86.67], 33.94, -118.40,
+                      2893, 2)
+        assert_loc_np([36.12, 36.12], -86.67, [33.94, 33.94], -118.40,
+                      2893, 2)
+        assert_loc_np([36.12, 36.12], -86.67, 33.94, [-118.40, -118.40],
+                      2893, 2)
+        assert_loc_np([36.12, 36.12], [-86.67, -86.67], [33.94, 33.94],
+                      -118.40, 2893, 2)
+        assert_loc_np([36.12, 36.12], -86.67, [33.94, 33.94],
+                      [-118.40, -118.40], 2893, 2)
+        assert_loc_np(36.12, [-86.67, -86.67], [33.94, 33.94],
+                      [-118.40, -118.40], 2893, 2)
+        assert_loc_np([36.12, 36.12], [-86.67, -86.67], [33.94, 33.94],
+                      [-118.40, -118.40], 2893, 2)
+
+        # test numpy broadcasting (bad shapes)
+        with self.assertRaises(ValueError):
+            locations2degrees(1, 2, [3, 4], [5, 6, 7])
 
     @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
                                             'installed')
@@ -261,6 +305,27 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         _, azim, bazim = gps2dist_azimuth(50, 10, 50 - 1, 10 - 1)
         self.assertEqual(round(azim, 0), 213)
         self.assertEqual(round(bazim, 0), 33)
+
+    def test_inside_geobounds(self):
+        obj = AttribDict()
+        obj.latitude = 48.8566
+        obj.longitude = 2.3522
+        ret = inside_geobounds(obj, minlatitude=48, maxlatitude=49,
+                               minlongitude=2, maxlongitude=3)
+        self.assertTrue(ret)
+        ret = inside_geobounds(obj, latitude=48, longitude=2,
+                               minradius=1, maxradius=2)
+        self.assertFalse(ret)
+        # Test for wrapping around longitude +/- 180°
+        obj.latitude = -41.2865
+        obj.longitude = 174.7762
+        ret = inside_geobounds(obj, minlongitude=170, maxlongitude=-170)
+        self.assertTrue(ret)
+        obj.longitude = -175.
+        ret = inside_geobounds(obj, minlongitude=170, maxlongitude=-170)
+        self.assertTrue(ret)
+        ret = inside_geobounds(obj, minlongitude=170, maxlongitude=190)
+        self.assertTrue(ret)
 
 
 def suite():

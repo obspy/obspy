@@ -18,19 +18,17 @@ by a distributed team in a transparent collaborative manner.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import inspect
 import io
 import os
+import re
 import warnings
 
 from lxml import etree
 
+from obspy.core import compatibility
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               CompositeTime, ConfidenceEllipsoid, CreationInfo,
                               DataUsed, Event, EventDescription,
@@ -42,11 +40,13 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               StationMagnitudeContribution, Tensor, TimeWindow,
                               WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, Enum
 
-
-NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
-                 'q': "http://quakeml.org/xmlns/quakeml/1.2"}
+QUAKEML_ROOTTAG_REGEX = r'^{(http://quakeml.org/xmlns/quakeml/([^}]*))}quakeml'
+NS_QUAKEML_PATTERN = 'http://quakeml.org/xmlns/quakeml/{version}'
+NS_QUAKEML_BED_PATTERN = 'http://quakeml.org/xmlns/bed/{version}'
+NSMAP_QUAKEML = {None: NS_QUAKEML_BED_PATTERN.format(version="1.2"),
+                 'q': NS_QUAKEML_PATTERN.format(version="1.2")}
 
 
 def _get_first_child_namespace(element):
@@ -68,14 +68,14 @@ def _xml_doc_from_anything(source):
     Will raise a ValueError if it fails.
     """
     try:
-        xml_doc = etree.parse(source)
-    except:
+        xml_doc = etree.parse(source).getroot()
+    except Exception:
         try:
             xml_doc = etree.fromstring(source)
-        except:
+        except Exception:
             try:
                 xml_doc = etree.fromstring(source.encode())
-            except:
+            except Exception:
                 raise ValueError("Could not parse '%s' to an etree element." %
                                  source)
     return xml_doc
@@ -104,7 +104,7 @@ def _is_quakeml(filename):
 
     try:
         xml_doc = _xml_doc_from_anything(filename)
-    except:
+    except Exception:
         return False
     finally:
         if file_like_object:
@@ -117,7 +117,7 @@ def _is_quakeml(filename):
         else:
             namespace = _get_first_child_namespace(xml_doc)
         xml_doc.xpath('q:eventParameters', namespaces={"q": namespace})[0]
-    except:
+    except Exception:
         return False
     return True
 
@@ -175,10 +175,22 @@ class Unpickler(object):
             return None
         try:
             return convert_to(text)
-        except:
+        except Exception:
             msg = "Could not convert %s to type %s. Returning None."
             warnings.warn(msg % (text, convert_to))
         return None
+
+    def _set_enum(self, xpath, element, obj, key):
+        obj_type = obj._property_dict[key]
+        if not isinstance(obj_type, Enum):  # pragma: no cover
+            raise ValueError
+        value = self._xpath2obj(xpath, element)
+        try:
+            setattr(obj, key, value)
+        except ValueError as e:
+            msg = ('%s. The attribute "%s" will not be set and will be missing'
+                   ' in the resulting object.' % (e.args[0], key))
+            warnings.warn(msg)
 
     def _xpath(self, xpath, element=None, namespace=None):
         if element is None:
@@ -277,9 +289,10 @@ class Unpickler(object):
     def _event_description(self, parent):
         out = []
         for el in self._xpath('description', parent):
-            text = self._xpath2obj('text', el)
-            type = self._xpath2obj('type', el)
-            out.append(EventDescription(text=text, type=type))
+            desc = EventDescription()
+            desc.text = self._xpath2obj('text', el)
+            self._set_enum('type', el, desc, 'type')
+            out.append(desc)
             self._extra(el, out[-1])
         return out
 
@@ -367,8 +380,8 @@ class Unpickler(object):
             return None
         element = elements[0]
         obj = OriginUncertainty()
-        obj.preferred_description = self._xpath2obj(
-            'preferredDescription', element)
+        self._set_enum('preferredDescription', element,
+                       obj, 'preferred_description')
         obj.horizontal_uncertainty = self._xpath2obj(
             'horizontalUncertainty', element, float)
         obj.min_horizontal_uncertainty = self._xpath2obj(
@@ -460,11 +473,11 @@ class Unpickler(object):
         obj.backazimuth, obj.backazimuth_errors = \
             self._float_value(element, 'backazimuth')
         obj.slowness_method_id = self._xpath2obj('slownessMethodID', element)
-        obj.onset = self._xpath2obj('onset', element)
+        self._set_enum('onset', element, obj, 'onset')
         obj.phase_hint = self._xpath2obj('phaseHint', element)
-        obj.polarity = self._xpath2obj('polarity', element)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('polarity', element, obj, 'polarity')
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
@@ -500,8 +513,8 @@ class Unpickler(object):
             self._float_value(element, 'genericAmplitude')
         # optional parameter
         obj.type = self._xpath2obj('type', element)
-        obj.category = self._xpath2obj('category', element)
-        obj.unit = self._xpath2obj('unit', element)
+        self._set_enum('category', element, obj, 'category')
+        self._set_enum('unit', element, obj, 'unit')
         obj.method_id = self._xpath2obj('methodID', element)
         obj.period, obj.period_errors = self._float_value(element, 'period')
         obj.snr = self._xpath2obj('snr', element)
@@ -514,15 +527,15 @@ class Unpickler(object):
         obj.scaling_time, obj.scaling_time_errors = \
             self._time_value(element, 'scalingTime')
         obj.magnitude_hint = self._xpath2obj('magnitudeHint', element)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
         self._extra(element, obj)
         return obj
 
-    def _origin(self, element):
+    def _origin(self, element, arrivals):
         """
         Converts an etree.Element into an Origin object.
 
@@ -538,7 +551,7 @@ class Unpickler(object):
         ... </origin>'''
         >>> xml_doc = etree.fromstring(XML)
         >>> unpickler = Unpickler(xml_doc)
-        >>> origin = unpickler._origin(xml_doc)
+        >>> origin = unpickler._origin(xml_doc, arrivals=[])
         >>> print(origin.latitude)
         34.23
         """
@@ -551,7 +564,7 @@ class Unpickler(object):
             self._float_value(element, 'longitude')
         # optional parameter
         obj.depth, obj.depth_errors = self._float_value(element, 'depth')
-        obj.depth_type = self._xpath2obj('depthType', element)
+        self._set_enum('depthType', element, obj, 'depth_type')
         obj.time_fixed = self._xpath2obj('timeFixed', element, bool)
         obj.epicenter_fixed = self._xpath2obj('epicenterFixed', element, bool)
         obj.reference_system_id = self._xpath2obj('referenceSystemID', element)
@@ -559,12 +572,14 @@ class Unpickler(object):
         obj.earth_model_id = self._xpath2obj('earthModelID', element)
         obj.composite_times = self._composite_times(element)
         obj.quality = self._origin_quality(element)
-        obj.origin_type = self._xpath2obj('type', element)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('type', element, obj, 'origin_type')
+        obj.region = self._xpath2obj('region', element)
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.origin_uncertainty = self._origin_uncertainty(element)
+        obj.arrivals = arrivals
         obj.resource_id = element.get('publicID')
         self._extra(element, obj)
         return obj
@@ -598,8 +613,8 @@ class Unpickler(object):
         obj.method_id = self._xpath2obj('methodID', element)
         obj.station_count = self._xpath2obj('stationCount', element, int)
         obj.azimuthal_gap = self._xpath2obj('azimuthalGap', element, float)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.creation_info = self._creation_info(element)
         obj.station_magnitude_contributions = \
             self._station_magnitude_contributions(element)
@@ -693,11 +708,11 @@ class Unpickler(object):
         :param name: tag name of sub nodal plane
         :rtype: :class:`~obspy.core.event.NodalPlane`
         """
-        obj = NodalPlane()
         try:
             sub_el = self._xpath(name, parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = NodalPlane()
         # required parameter
         obj.strike, obj.strike_errors = self._float_value(sub_el, 'strike')
         obj.dip, obj.dip_errors = self._float_value(sub_el, 'dip')
@@ -712,18 +727,18 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.NodalPlanes`
         """
-        obj = NodalPlanes()
         try:
             sub_el = self._xpath('nodalPlanes', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = NodalPlanes()
         # optional parameter
         obj.nodal_plane_1 = self._nodal_plane(sub_el, 'nodalPlane1')
         obj.nodal_plane_2 = self._nodal_plane(sub_el, 'nodalPlane2')
         # optional attribute
         try:
             obj.preferred_plane = int(sub_el.get('preferredPlane'))
-        except:
+        except Exception:
             obj.preferred_plane = None
         self._extra(sub_el, obj)
         return obj
@@ -735,13 +750,13 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.SourceTimeFunction`
         """
-        obj = SourceTimeFunction()
         try:
             sub_el = self._xpath('sourceTimeFunction', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = SourceTimeFunction()
         # required parameters
-        obj.type = self._xpath2obj('type', sub_el)
+        self._set_enum('type', sub_el, obj, 'type')
         obj.duration = self._xpath2obj('duration', sub_el, float)
         # optional parameter
         obj.rise_time = self._xpath2obj('riseTime', sub_el, float)
@@ -756,11 +771,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.Tensor`
         """
-        obj = Tensor()
         try:
             sub_el = self._xpath('tensor', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = Tensor()
         # required parameters
         obj.m_rr, obj.m_rr_errors = self._float_value(sub_el, 'Mrr')
         obj.m_tt, obj.m_tt_errors = self._float_value(sub_el, 'Mtt')
@@ -782,7 +797,7 @@ class Unpickler(object):
         for el in self._xpath('dataUsed', parent):
             data_used = DataUsed()
             # required parameters
-            data_used.wave_type = self._xpath2obj('waveType', el)
+            self._set_enum('waveType', el, data_used, 'wave_type')
             # optional parameter
             data_used.station_count = \
                 self._xpath2obj('stationCount', el, int)
@@ -804,11 +819,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.MomentTensor`
         """
-        obj = MomentTensor(force_resource_id=False)
         try:
             mt_el = self._xpath('momentTensor', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = MomentTensor(force_resource_id=False)
         # required parameters
         obj.derived_origin_id = self._xpath2obj('derivedOriginID', mt_el)
         # optional parameter
@@ -827,8 +842,8 @@ class Unpickler(object):
         obj.source_time_function = self._source_time_function(mt_el)
         obj.data_used = self._data_used(mt_el)
         obj.method_id = self._xpath2obj('methodID', mt_el)
-        obj.category = self._xpath2obj('category', mt_el)
-        obj.inversion_type = self._xpath2obj('inversionType', mt_el)
+        self._set_enum('category', mt_el, obj, 'category')
+        self._set_enum('inversionType', mt_el, obj, 'inversion_type')
         obj.creation_info = self._creation_info(mt_el)
         obj.comments = self._comments(mt_el)
         obj.resource_id = mt_el.get('publicID')
@@ -871,8 +886,8 @@ class Unpickler(object):
         obj.moment_tensor = self._moment_tensor(element)
         obj.nodal_planes = self._nodal_planes(element)
         obj.principal_axes = self._principal_axes(element)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.resource_id = element.get('publicID')
@@ -886,9 +901,11 @@ class Unpickler(object):
             catalog_el = self._xpath('eventParameters', namespace=namespace)[0]
         except IndexError:
             raise Exception("Not a QuakeML compatible file or string")
+        root_namespace, quakeml_version = re.match(
+            QUAKEML_ROOTTAG_REGEX, self.xml_root.tag).groups()
         self._quakeml_namespaces = [
-            ns for ns in self.xml_root.nsmap.values()
-            if ns.startswith(r"http://quakeml.org/xmlns/")]
+            root_namespace,
+            NS_QUAKEML_BED_PATTERN.format(version=quakeml_version)]
         # create catalog
         catalog = Catalog(force_resource_id=False)
         # add any custom namespace abbreviations of root element to Catalog
@@ -924,20 +941,26 @@ class Unpickler(object):
                 msg += "with QuakeML standard -- event will be ignored."
                 warnings.warn(msg, UserWarning)
                 continue
-            event.event_type_certainty = self._xpath2obj(
-                'typeCertainty', event_el)
+            self._set_enum('typeCertainty', event_el,
+                           event, 'event_type_certainty')
             event.creation_info = self._creation_info(event_el)
             event.event_descriptions = self._event_description(event_el)
             event.comments = self._comments(event_el)
             # origins
             event.origins = []
             for origin_el in self._xpath('origin', event_el):
-                origin = self._origin(origin_el)
-                # arrivals
-                origin.arrivals = []
+                # Have to be created before the origin is created to avoid a
+                # rare issue where a warning is read when the same event is
+                # read twice - the warnings does not occur if two referred
+                # to objects compare equal - for this the arrivals have to
+                # be bound to the event before the resource id is assigned.
+                arrivals = []
                 for arrival_el in self._xpath('arrival', origin_el):
                     arrival = self._arrival(arrival_el)
-                    origin.arrivals.append(arrival)
+                    arrivals.append(arrival)
+
+                origin = self._origin(origin_el, arrivals=arrivals)
+
                 # append origin with arrivals
                 event.origins.append(origin)
             # magnitudes
@@ -968,7 +991,10 @@ class Unpickler(object):
             # finally append newly created event to catalog
             event.resource_id = event_el.get('publicID')
             self._extra(event_el, event)
+            # bind event scoped resource IDs to this event
+            event.scope_resource_ids()
             catalog.append(event)
+
         catalog.resource_id = catalog_el.get('publicID')
         self._extra(catalog_el, catalog)
         return catalog
@@ -987,7 +1013,13 @@ class Unpickler(object):
             for el in element.iterfind("{%s}*" % ns):
                 # remove namespace from tag name
                 _, name = el.tag.split("}")
-                value = el.text
+                # check if element has children (nested tags)
+                if len(el):
+                    sub_obj = AttribDict()
+                    self._extra(el, sub_obj)
+                    value = sub_obj.extra
+                else:
+                    value = el.text
                 try:
                     extra = obj.setdefault("extra", AttribDict())
                 # Catalog object is not based on AttribDict..
@@ -1065,13 +1097,17 @@ class Pickler(object):
 
     def _id(self, obj):
         try:
-            return obj.get_quakeml_uri()
-        except:
-            return ResourceIdentifier().get_quakeml_uri()
+            return obj.get_quakeml_uri_str()
+        except Exception:
+            msg = ("'%s' is not a valid QuakeML URI. It will be in the final "
+                   "file but note that the file will not be a valid QuakeML "
+                   "file.")
+            warnings.warn(msg % obj.id)
+            return obj.id
 
     def _str(self, value, root, tag, always_create=False, attrib=None):
         if isinstance(value, ResourceIdentifier):
-            value = value.get_quakeml_uri()
+            value = self._id(value)
         if always_create is False and value is None:
             return
         etree.SubElement(root, tag, attrib=attrib).text = "%s" % value
@@ -1092,23 +1128,24 @@ class Pickler(object):
             return
         subelement = etree.Element(tag)
         self._str(quantity, subelement, 'value')
-        self._str(error.uncertainty, subelement, 'uncertainty')
-        self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
-        self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
-        self._str(error.confidence_level, subelement, 'confidenceLevel')
+        if error is not None:
+            self._str(error.uncertainty, subelement, 'uncertainty')
+            self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
+            self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
+            self._str(error.confidence_level, subelement, 'confidenceLevel')
         element.append(subelement)
 
     def _waveform_id(self, obj, element, required=False):
         if obj is None:
             return
         attrib = {}
-        if obj.network_code:
+        if obj.network_code is not None:
             attrib['networkCode'] = obj.network_code
-        if obj.station_code:
+        if obj.station_code is not None:
             attrib['stationCode'] = obj.station_code
         if obj.location_code is not None:
             attrib['locationCode'] = obj.location_code
-        if obj.channel_code:
+        if obj.channel_code is not None:
             attrib['channelCode'] = obj.channel_code
         subelement = etree.Element('waveformID', attrib=attrib)
         # WaveformStreamID has a non-mandatory resource_id
@@ -1142,14 +1179,10 @@ class Pickler(object):
     def _station_magnitude_contributions(self, stat_contrib, element):
         for contrib in stat_contrib:
             contrib_el = etree.Element('stationMagnitudeContribution')
-            etree.SubElement(contrib_el, 'stationMagnitudeID').text = \
-                contrib.station_magnitude_id.id
-            if contrib.weight:
-                etree.SubElement(contrib_el, 'weight').text = \
-                    str(contrib.weight)
-            if contrib.residual:
-                etree.SubElement(contrib_el, 'residual').text = \
-                    str(contrib.residual)
+            self._str(contrib.station_magnitude_id.id, contrib_el,
+                      'stationMagnitudeID')
+            self._str(contrib.weight, contrib_el, 'weight')
+            self._str(contrib.residual, contrib_el, 'residual')
             self._extra(contrib, contrib_el)
             element.append(contrib_el)
 
@@ -1171,7 +1204,10 @@ class Pickler(object):
         """
         if not hasattr(obj, "extra"):
             return
-        for key, item in obj.extra.items():
+        self._custom(obj.extra, element)
+
+    def _custom(self, obj, element):
+        for key, item in obj.items():
             value = item["value"]
             ns = item["namespace"]
             attrib = item.get("attrib", {})
@@ -1182,7 +1218,11 @@ class Pickler(object):
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
-                if isinstance(value, bool):
+                # check if value is dictionary-like
+                if isinstance(value, compatibility.collections_abc.Mapping):
+                    subelement = etree.SubElement(element, tag, attrib=attrib)
+                    self._custom(value, subelement)
+                elif isinstance(value, bool):
                     self._bool(value, element, tag, attrib=attrib)
                 else:
                     self._str(value, element, tag, attrib=attrib)
@@ -1385,6 +1425,7 @@ class Pickler(object):
             if len(qu_el) > 0:
                 element.append(qu_el)
         self._str(origin.origin_type, element, 'type')
+        self._str(origin.region, element, 'region')
         self._str(origin.evaluation_mode, element, 'evaluationMode')
         self._str(origin.evaluation_status, element, 'evaluationStatus')
         self._comments(origin.comments, element)
@@ -1506,9 +1547,11 @@ class Pickler(object):
         """
         Converts a NodalPlanes into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.NodalPlanes`
+        :type obj: :class:`~obspy.core.event.NodalPlanes`
         :rtype: etree.Element
         """
+        if obj is None:
+            return
         subelement = etree.Element('nodalPlanes')
         # optional
         if obj.nodal_plane_1:
@@ -1542,7 +1585,7 @@ class Pickler(object):
         """
         Converts a PrincipalAxes into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.PrincipalAxes`
+        :type obj: :class:`~obspy.core.event.PrincipalAxes`
         :rtype: etree.Element
         """
         if obj is None:
@@ -1586,7 +1629,7 @@ class Pickler(object):
         """
         Converts a MomentTensor into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.MomentTensor`
+        :type moment_tensor: :class:`~obspy.core.event.MomentTensor`
         :rtype: etree.Element
         """
         if moment_tensor is None:
@@ -1652,9 +1695,11 @@ class Pickler(object):
         """
         Converts a FocalMechanism into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.FocalMechanism`
+        :type focal_mechanism: :class:`~obspy.core.event.FocalMechanism`
         :rtype: etree.Element
         """
+        if focal_mechanism is None:
+            return
         element = etree.Element(
             'focalMechanism',
             attrib={'publicID': self._id(focal_mechanism.resource_id)})
@@ -1669,10 +1714,8 @@ class Pickler(object):
         self._str(focal_mechanism.misfit, element, 'misfit')
         self._str(focal_mechanism.station_distribution_ratio, element,
                   'stationDistributionRatio')
-        if focal_mechanism.nodal_planes:
-            self._nodal_planes(focal_mechanism.nodal_planes, element)
-        if focal_mechanism.principal_axes:
-            self._principal_axes(focal_mechanism.principal_axes, element)
+        self._nodal_planes(focal_mechanism.nodal_planes, element)
+        self._principal_axes(focal_mechanism.principal_axes, element)
         self._str(focal_mechanism.method_id, element, 'methodID')
         self._moment_tensor(focal_mechanism.moment_tensor, element)
         self._str(focal_mechanism.evaluation_mode, element, 'evaluationMode')
@@ -1717,7 +1760,7 @@ class Pickler(object):
             # event descriptions
             for description in event.event_descriptions:
                 el = etree.Element('description')
-                self._str(description.text, el, 'text', True)
+                self._str(description.text, el, 'text')
                 self._str(description.type, el, 'type')
                 self._extra(description, el)
                 event_el.append(el)
@@ -1789,7 +1832,7 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         the :meth:`~obspy.core.event.Catalog.write` method of an
         ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
@@ -1810,19 +1853,12 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
-    # Open filehandler or use an existing file like object.
-    if not hasattr(filename, "write"):
-        file_opened = True
-        fh = open(filename, "wb")
-    else:
-        file_opened = False
-        fh = filename
-
-    fh.write(xml_doc)
-
-    # Close if a file has been opened by this function.
-    if file_opened is True:
-        fh.close()
+    # Open filehandler or use an existing file like object
+    try:
+        with open(filename, 'wb') as fh:
+            fh.write(xml_doc)
+    except TypeError:
+        filename.write(xml_doc)
 
 
 def _read_seishub_event_xml(filename):

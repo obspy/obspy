@@ -3,13 +3,10 @@
 """
 The gse2.core test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import copy
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -26,7 +23,7 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.dirname(__file__)
 
-    def test_readViaObsPy(self):
+    def test_read_via_obspy(self):
         """
         Read files via L{obspy.Trace}
         """
@@ -49,7 +46,7 @@ class CoreTestCase(unittest.TestCase):
                                1125455629.850, 6)
         self.assertEqual(tr.data[0:13].tolist(), testdata)
 
-    def test_readHeadViaObsPy(self):
+    def test_read_head_via_obspy(self):
         """
         Read header of files via L{obspy.Trace}
         """
@@ -68,7 +65,7 @@ class CoreTestCase(unittest.TestCase):
                                1125455629.850, 6)
         self.assertEqual(str(tr.data), '[]')
 
-    def test_readAndWriteViaObsPy(self):
+    def test_read_and_write_via_obspy(self):
         """
         Read and Write files via L{obspy.Trace}
         """
@@ -85,7 +82,10 @@ class CoreTestCase(unittest.TestCase):
             tr2 = st2[0]
             tr2.data = copy.deepcopy(tr1.data)
             tr2.stats = copy.deepcopy(tr1.stats)
-            st2.write(tempfile, format='GSE2')
+            # raises "UserWarning: Bad value in GSE2 header field"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                st2.write(tempfile, format='GSE2')
             # read comparison trace
             st3 = read(tempfile)
         st3.verify()
@@ -107,7 +107,7 @@ class CoreTestCase(unittest.TestCase):
                          tr1.stats.gse2.get('calper'))
         np.testing.assert_equal(tr3.data, tr1.data)
 
-    def test_readAndWriteStreamsViaObsPy(self):
+    def test_read_and_write_streams_via_obspy(self):
         """
         Read and Write files containing multiple GSE2 parts via L{obspy.Trace}
         """
@@ -118,7 +118,10 @@ class CoreTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             for filename in files:
                 with open(filename, 'rb') as f1:
-                    tf.write(f1.read())
+                    # raises "UserWarning: Bad value in GSE2 header field"
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore', UserWarning)
+                        tf.write(f1.read())
             tf.flush()
             st1 = read(tf.name)
         st1.verify()
@@ -131,7 +134,10 @@ class CoreTestCase(unittest.TestCase):
         # write and read
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            st1.write(tmpfile, format='GSE2')
+            # raises "UserWarning: Bad value in GSE2 header field"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                st1.write(tmpfile, format='GSE2')
             st2 = read(tmpfile)
         st2.verify()
         self.assertEqual(len(st2), 2)
@@ -143,7 +149,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_equal(tr21.data, tr11.data)
         np.testing.assert_equal(tr22.data, tr12.data)
 
-    def test_writeIntegersViaObsPy(self):
+    def test_write_integers_via_obspy(self):
         """
         Write file test via L{obspy.Trace}.
         """
@@ -172,7 +178,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(1.0, stream[0].stats.gse2.calper)
         self.assertEqual(1.0, stream[0].stats.calib)
 
-    def test_tabCompleteStats(self):
+    def test_tab_complete_stats(self):
         """
         Read files via L{obspy.Trace}
         """
@@ -186,7 +192,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
 
-    def test_writeWrongFormat(self):
+    def test_write_wrong_format(self):
         """
         Write floating point encoded data
         """
@@ -196,7 +202,7 @@ class CoreTestCase(unittest.TestCase):
             tmpfile = tf.name
             self.assertRaises(Exception, st.write, tmpfile, format="GSE2")
 
-    def test_readWithWrongChecksum(self):
+    def test_read_with_wrong_checksum(self):
         """
         Test if additional kwarg verify_chksum can be given
         """
@@ -208,7 +214,7 @@ class CoreTestCase(unittest.TestCase):
         # should fail
         self.assertRaises(ChksumError, read, gse2file, verify_chksum=True)
 
-    def test_readWithWrongParameters(self):
+    def test_read_with_wrong_parameters(self):
         """
         Test if additional kwargs can be given
         """
@@ -218,7 +224,7 @@ class CoreTestCase(unittest.TestCase):
         # add wrong starttime flag of mseed, should also not fail
         read(gse2file, verify_chksum=False, starttime=None)
 
-    def test_read_gse1ViaObsPy(self):
+    def test_read_gse1_via_obspy(self):
         """
         Read files via L{obspy.Trace}
         """
@@ -237,7 +243,7 @@ class CoreTestCase(unittest.TestCase):
                          '2003-11-19T01:16:59.990000Z')
         self.assertEqual(tr.data[0:10].tolist(), testdata)
 
-    def test_read_gse1HeadViaObsPy(self):
+    def test_read_gse1_head_via_obspy(self):
         """
         Read header via L{obspy.Trace}
         """
@@ -253,7 +259,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(str(tr.stats.starttime),
                          '2003-11-19T01:16:59.990000Z')
 
-    def test_readINTVGSE1ViaObsPy(self):
+    def test_read_intv_gse1_via_obspy(self):
         """
         Read file via L{obspy.Trace}
         """
@@ -293,7 +299,7 @@ class CoreTestCase(unittest.TestCase):
         # check last 8 samples
         self.assertEqual(st[1].data[-8:].tolist(), data2)
 
-    def test_readDos(self):
+    def test_read_dos(self):
         """
         Read file with dos newlines / encoding, that is
         Line Feed (LF) and Carriage Return (CR)
@@ -322,6 +328,39 @@ class CoreTestCase(unittest.TestCase):
         tr = st[0]
         testdata = [n * tr.stats.calib for n in testdata]
         self.assertEqual(tr.data[0:13].tolist(), testdata)
+
+    def test_write_and_read_correct_network(self):
+        """
+        Tests that writing and reading the STA2 line works (otherwise the
+        network code of the data is missing), even if some details like e.g.
+        latitude are not present.
+        """
+        tr = Trace(np.arange(5, dtype=np.int32))
+        tr.stats.network = "BW"
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            tr.write(tmpfile, format='GSE2')
+            tr = read(tmpfile)[0]
+        self.assertEqual(tr.stats.network, "BW")
+
+    def test_read_gse2_int_datatype(self):
+        """
+        Test reading of GSE2 files with data type INT.
+        """
+        gse2file = os.path.join(self.path, 'data', 'boa___00_07a.gse')
+        testdata = [-4, -4, 1, 3, 2, -3, -6, -4, 2, 5]
+        # read
+        st = read(gse2file, verify_checksum=True)
+        st.verify()
+        tr = st[0]
+        self.assertEqual(tr.stats['station'], 'BBOA')
+        self.assertEqual(tr.stats.npts, 6784)
+        self.assertAlmostEqual(tr.stats['sampling_rate'], 50.0)
+        self.assertEqual(tr.stats.get('channel'), 'CPZ')
+        self.assertAlmostEqual(tr.stats.get('calib'), 0.313)
+        self.assertEqual(str(tr.stats.starttime),
+                         '1990-04-07T00:07:33.000000Z')
+        self.assertEqual(tr.data[0:10].tolist(), testdata)
 
 
 def suite():

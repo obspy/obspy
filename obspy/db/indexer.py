@@ -7,12 +7,8 @@ storing in into a standard SQL database.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import fnmatch
 import os
 import sys
@@ -63,7 +59,7 @@ class WaveformFileCrawler(object):
             # search for existing path
             query = session.query(WaveformPath)
             path = query.filter_by(path=data['path']).one()
-        except:
+        except Exception:
             # create new path entry
             path = WaveformPath(data)
             session.add(path)
@@ -181,7 +177,7 @@ class WaveformFileCrawler(object):
     def _process_output_queue(self):
         try:
             dataset = self.output_queue.pop(0)
-        except:
+        except Exception:
             pass
         else:
             self._update_or_insert(dataset)
@@ -189,7 +185,7 @@ class WaveformFileCrawler(object):
     def _process_log_queue(self):
         try:
             msg = self.log_queue.pop(0)
-        except:
+        except Exception:
             pass
         else:
             if msg.startswith('['):
@@ -367,7 +363,7 @@ class WaveformFileCrawler(object):
             if time.time() - mtime > 60 * 60 * self.options.recent:
                 try:
                     db_file_mtime = self._db_files.pop(file)
-                except:
+                except Exception:
                     pass
                 return
         # option force-reindex set -> process file regardless if already in
@@ -384,7 +380,7 @@ class WaveformFileCrawler(object):
         # -> remove from file list so it won't be deleted on database cleanup
         try:
             db_file_mtime = self._db_files.pop(file)
-        except:
+        except Exception:
             return
         # -> compare modification times of current file with database entry
         if mtime == db_file_mtime:
@@ -411,14 +407,14 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
             all_features[key]['run'] = func
             try:
                 all_features[key]['indexer_kwargs'] = cls['indexer_kwargs']
-            except:
+            except Exception:
                 all_features[key]['indexer_kwargs'] = {}
         # loop through input queue
         while True:
             # fetch a unprocessed item
             try:
                 filepath, (path, file, features) = input_queue.popitem()
-            except:
+            except Exception:
                 continue
             # skip item if already in work queue
             if filepath in work_queue:
@@ -437,7 +433,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 stats = os.stat(filepath)
                 stream = read(filepath, **kwargs)
                 # get gap and overlap information
-                gap_list = stream.getGaps()
+                gap_list = stream.get_gaps()
                 # merge channels and replace gaps/overlaps with 0 to prevent
                 # generation of masked arrays
                 stream.merge(fill_value=0)
@@ -446,7 +442,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 log_queue.append(msg % (filepath, e))
                 try:
                     work_queue.remove(filepath)
-                except:
+                except Exception:
                     pass
                 continue
             # build up dictionary of gaps and overlaps for easier lookup
@@ -534,11 +530,11 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
             # return results to main loop
             try:
                 output_queue.append(dataset)
-            except:
+            except Exception:
                 pass
             try:
                 work_queue.remove(filepath)
-            except:
+            except Exception:
                 pass
     except KeyboardInterrupt:
         return

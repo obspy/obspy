@@ -1,0 +1,4 @@
+#Network | Station | Location | Channel | Latitude | Longitude | Elevation | Depth | Azimuth | Dip | SensorDescription | Scale | ScaleFreq | ScaleUnits | SampleRate | StartTime | EndTime
+TA|857A||LHZ|28.267|-82.229103|50.0|0.0|0.0|-90.0|Streckeisen STS-2 G3/Quanterra 330 Linear Phase Co|6.2520198E8|0.03|M/S|1.0|2012-02-17T00:00:00|2012-07-19T18:00:00
+TA|857A||LHZ|28.267|-82.229103|50.0|0.0|0.0|-90.0|Streckeisen STS-2 G3/Quanterra 330 Linear Phase Co|6.2520198E8|0.03|M/S|1.0|2012-07-19T18:00:00|2012-07-21T18:00:00
+TA|857A||LHZ|28.267|-82.229103|50.0|0.0|0.0|-90.0|Streckeisen STS-2 G3/Quanterra 330 Linear Phase Co|6.2520198E8|0.03|M/S|1.0|2012-07-21T18:00:00|2012-07-25T17:59:59

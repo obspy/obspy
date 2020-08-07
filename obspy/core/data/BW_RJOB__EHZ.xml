@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
+  <Source>Erdbebendienst Bayern</Source>
+  <Module>fdsn-stationxml-converter/1.0.0</Module>
+  <ModuleURI>http://www.iris.edu/fdsnstationconverter</ModuleURI>
+  <Created>2013-12-07T18:00:42.878000Z</Created>
+  <Network code="BW">
+    <Description>BayernNetz</Description>
+    <Station code="RJOB" startDate="2007-12-17T00:00:00.000000Z">
+      <Latitude unit="DEGREES">47.737167</Latitude>
+      <Longitude unit="DEGREES">12.795714</Longitude>
+      <Elevation>860.0</Elevation>
+      <Site>
+        <Name>Jochberg, Bavaria, BW-Net</Name>
+      </Site>
+      <CreationDate>2007-12-17T00:00:00.000000Z</CreationDate>
+      <Channel code="EHZ" startDate="2007-12-17T00:00:00.000000Z" locationCode="">
+        <Latitude unit="DEGREES">47.737167</Latitude>
+        <Longitude unit="DEGREES">12.795714</Longitude>
+        <Elevation>860.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">1.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>A</Name>
+          <Description>Amperes</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Streckeisen STS-2/N seismometer</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>

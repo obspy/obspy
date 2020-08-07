@@ -22,7 +22,7 @@ for station in stations:
     try:
         tmp = client.get_waveforms("CH", station, "", "[EH]HZ", t, t2,
                                    metadata=True)
-    except:
+    except Exception:
         print(station, "---")
         continue
     st += tmp
@@ -55,7 +55,7 @@ for trig in triglist:
             st = client.get_waveforms("CH", station, "", "[EH]H[ZNE]", t - 300,
                                       t + 300, metadata=True)
             assert(len(st) == 3)
-        except:
+        except Exception:
             print(station, "---")
             continue
 

@@ -13,7 +13,7 @@ Various routines related to triggering/picking
 
 Module implementing the Recursive STA/LTA. Two versions, a fast ctypes one and
 a bit slower python one. Furthermore, the classic and delayed STA/LTA, the
-carl_STA_trig and the z_detect are implemented.
+carl_sta_trig and the z_detect are implemented.
 Also includes picking routines, routines for evaluation and visualization of
 characteristic functions and a coincidence triggering routine.
 
@@ -23,24 +23,21 @@ characteristic functions and a coincidence triggering routine.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import ctypes as C
-import warnings
 from collections import deque
+import ctypes as C  # NOQA
+import warnings
 
 import numpy as np
+import scipy
 
 from obspy import UTCDateTime
-from obspy.signal.cross_correlation import templatesMaxSimilarity
+from obspy.signal.cross_correlation import templates_max_similarity
 from obspy.signal.headers import clibsignal, head_stalta_t
 
 
-def recursive_STALTA(a, nsta, nlta):
+def recursive_sta_lta(a, nsta, nlta):
     """
     Recursive STA/LTA.
 
@@ -67,14 +64,14 @@ def recursive_STALTA(a, nsta, nlta):
     return charfct
 
 
-def recursive_STALTA_py(a, nsta, nlta):
+def recursive_sta_lta_py(a, nsta, nlta):
     """
     Recursive STA/LTA written in Python.
 
     .. note::
 
         There exists a faster version of this trigger wrapped in C
-        called :func:`~obspy.signal.trigger.recursive_STALTA` in this module!
+        called :func:`~obspy.signal.trigger.recursive_sta_lta` in this module!
 
     :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
@@ -89,7 +86,7 @@ def recursive_STALTA_py(a, nsta, nlta):
     """
     try:
         a = a.tolist()
-    except:
+    except Exception:
         pass
     ndat = len(a)
     # compute the short time average (STA) and long time average (LTA)
@@ -111,7 +108,7 @@ def recursive_STALTA_py(a, nsta, nlta):
     return np.array(charfct)
 
 
-def carl_STA_trig(a, nsta, nlta, ratio, quiet):
+def carl_sta_trig(a, nsta, nlta, ratio, quiet):
     """
     Computes the carlSTAtrig characteristic function.
 
@@ -124,9 +121,9 @@ def carl_STA_trig(a, nsta, nlta, ratio, quiet):
     :type nlta: int
     :param nlta: Length of long time average window in samples
     :type ration: float
-    :param ratio: as ratio gets smaller, carl_STA_trig gets more sensitive
+    :param ratio: as ratio gets smaller, carl_sta_trig gets more sensitive
     :type quiet: float
-    :param quiet: as quiet gets smaller, carl_STA_trig gets more sensitive
+    :param quiet: as quiet gets smaller, carl_sta_trig gets more sensitive
     :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of CarlStaTrig
     """
@@ -166,7 +163,7 @@ def carl_STA_trig(a, nsta, nlta, ratio, quiet):
     return eta
 
 
-def classic_STALTA(a, nsta, nlta):
+def classic_sta_lta(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
@@ -198,7 +195,7 @@ def classic_STALTA(a, nsta, nlta):
     return charfct
 
 
-def classic_STALTA_py(a, nsta, nlta):
+def classic_sta_lta_py(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
@@ -207,7 +204,7 @@ def classic_STALTA_py(a, nsta, nlta):
     .. note::
 
         There exists a faster version of this trigger wrapped in C
-        called :func:`~obspy.signal.trigger.classic_STALTA` in this module!
+        called :func:`~obspy.signal.trigger.classic_sta_lta` in this module!
 
     :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
@@ -245,7 +242,7 @@ def classic_STALTA_py(a, nsta, nlta):
     return sta / lta
 
 
-def delayed_STALTA(a, nsta, nlta):
+def delayed_sta_lta(a, nsta, nlta):
     """
     Delayed STA/LTA.
 
@@ -293,8 +290,8 @@ def z_detect(a, nsta):
         sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
     a_mean = np.mean(sta)
     a_std = np.std(sta)
-    Z = (sta - a_mean) / a_std
-    return Z
+    _z = (sta - a_mean) / a_std
+    return _z
 
 
 def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
@@ -378,7 +375,7 @@ def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
 
 
 def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
-            p_dur):
+            p_dur, return_cf=False):
     """
     Wrapper for P-picker routine by M. Baer, Schweizer Erdbebendienst.
 
@@ -393,9 +390,11 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
         SF(t) on preset()
     :param p_dur: p_dur defines the time interval for which the maximum
         amplitude is evaluated Originally set to 6 secs
-    :return: (pptime, pfm) pptime sample number of parrival; pfm direction
-        of first motion (U or D)
-
+    :type return_cf: bool
+    :param return_cf: If ``True``, also return the characteristic function.
+    :return: (pptime, pfm [,cf]) pptime sample number of parrival;
+        pfm direction of first motion (U or D), optionally also the
+        characteristic function.
     .. note:: currently the first sample is not taken into account
 
     .. seealso:: [Baer1987]_
@@ -405,44 +404,99 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     pfm = C.create_string_buffer(b"     ", 5)
     # be nice and adapt type if necessary
     reltrc = np.ascontiguousarray(reltrc, np.float32)
+    # Initiliaze CF array (MB)
+    c_float_p = C.POINTER(C.c_float)
+    cf_arr = np.zeros(len(reltrc) - 1, dtype=np.float32, order="C")
+    cf_p = cf_arr.ctypes.data_as(c_float_p)
     # index in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
     args = (len(reltrc) - 1, C.byref(pptime), pfm, samp_int,
-            tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
+            tdownmax, tupevent, thr1, thr2, preset_len, p_dur, cf_p)
     errcode = clibsignal.ppick(reltrc, *args)
     if errcode != 0:
         raise MemoryError("Error in function ppick of mk_mbaer.c")
+    # Switch cf_arr param (MB)
     # add the sample to the time which is not taken into account
     # pfm has to be decoded from byte to string
-    return pptime.value + 1, pfm.value.decode('utf-8')
+    if return_cf:
+        return pptime.value + 1, pfm.value.decode('utf-8'), cf_arr
+    else:
+        return pptime.value + 1, pfm.value.decode('utf-8')
 
 
 def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             l_p, l_s, s_pick=True):
     """
-    Return corresponding picks of the AR picker
+    Pick P and S arrivals with an AR-AIC + STA/LTA algorithm.
 
-    :param a: Z signal of numpy.ndarray float32 point data
-    :param b: N signal of numpy.ndarray float32 point data
-    :param c: E signal of numpy.ndarray float32 point data
-    :param samp_rate: no of samples per second
-    :param f1: frequency of lower Bandpass window
-    :param f2: frequency of upper Bandpass window
-    :param lta_p: length of LTA for parrival in seconds
-    :param sta_p: length of STA for parrival in seconds
-    :param lta_s: length of LTA for sarrival in seconds
-    :param sta_s: length of STA for sarrival in seconds
-    :param m_p: number of AR coefficients for parrival
-    :param m_s: number of AR coefficients for sarrival
-    :param l_p: length of variance window for parrival in seconds
-    :param l_s: length of variance window for sarrival in seconds
-    :param s_pick: if true pick also S phase, else only P
-    :return: (ptime, stime) parrival and sarrival
+    The algorithm picks onset times using an Auto Regression - Akaike
+    Information Criterion (AR-AIC) method. The detection intervals are
+    successively narrowed down with the help of STA/LTA ratios as well as
+    STA-LTA difference calculations. For details, please see [Akazawa2004]_.
+
+    An important feature of this algorithm is that it requires comparatively
+    little tweaking and site-specific settings and is thus applicable to large,
+    diverse data sets.
+
+    :type a: :class:`numpy.ndarray`
+    :param a: Z signal the data.
+    :type b: :class:`numpy.ndarray`
+    :param b: N signal of the data.
+    :type c: :class:`numpy.ndarray`
+    :param c: E signal of the data.
+    :type samp_rate: float
+    :param samp_rate: Number of samples per second.
+    :type f1: float
+    :param f1: Frequency of the lower bandpass window.
+    :type f2: float
+    :param f2: Frequency of the upper .andpass window.
+    :type lta_p: float
+    :param lta_p: Length of LTA for the P arrival in seconds.
+    :type sta_p: float
+    :param sta_p: Length of STA for the P arrival in seconds.
+    :type lta_s: float
+    :param lta_s: Length of LTA for the S arrival in seconds.
+    :type sta_s: float
+    :param sta_s: Length of STA for the S arrival in seconds.
+    :type m_p: int
+    :param m_p: Number of AR coefficients for the P arrival.
+    :type m_s: int
+    :param m_s: Number of AR coefficients for the S arrival.
+    :type l_p: float
+    :param l_p: Length of variance window for the P arrival in seconds.
+    :type l_s: float
+    :param l_s: Length of variance window for the S arrival in seconds.
+    :type s_pick: bool
+    :param s_pick: If ``True``, also pick the S phase, otherwise only the P
+        phase.
+    :rtype: tuple
+    :returns: A tuple with the P and the S arrival.
     """
+    if not (len(a) == len(b) == len(c)):
+        raise ValueError("All three data arrays must have the same length.")
+
+    a = scipy.signal.detrend(a, type='linear')
+    b = scipy.signal.detrend(b, type='linear')
+    c = scipy.signal.detrend(c, type='linear')
+
     # be nice and adapt type if necessary
-    a = np.ascontiguousarray(a, np.float32)
-    b = np.ascontiguousarray(b, np.float32)
-    c = np.ascontiguousarray(c, np.float32)
+    a = np.require(a, dtype=np.float32, requirements=['C_CONTIGUOUS'])
+    b = np.require(b, dtype=np.float32, requirements=['C_CONTIGUOUS'])
+    c = np.require(c, dtype=np.float32, requirements=['C_CONTIGUOUS'])
+
+    # scale amplitudes to avoid precision issues in case of low amplitudes
+    # C code picks the horizontal component with larger amplitudes, so scale
+    # horizontal components with a common scaling factor
+    data_max = np.abs(a).max()
+    if data_max < 100:
+        a *= 1e6
+        a /= data_max
+    data_max = max(np.abs(b).max(), np.abs(c).max())
+    if data_max < 100:
+        for data in (b, c):
+            data *= 1e6
+            data /= data_max
+
     s_pick = C.c_int(s_pick)  # pick S phase also
     ptime = C.c_float()
     stime = C.c_float()
@@ -451,11 +505,11 @@ def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             C.byref(stime), l_p, l_s, s_pick)
     errcode = clibsignal.ar_picker(a, b, c, *args)
     if errcode != 0:
-        BUFS = ['buff1', 'buff1_s', 'buff2', 'buff3', 'buff4', 'buff4_s',
+        bufs = ['buff1', 'buff1_s', 'buff2', 'buff3', 'buff4', 'buff4_s',
                 'f_error', 'b_error', 'ar_f', 'ar_b', 'buf_sta', 'buf_lta',
                 'extra_tr1', 'extra_tr2', 'extra_tr3']
-        if errcode <= len(BUFS):
-            raise MemoryError('Unable to allocate %s!' % (BUFS[errcode - 1]))
+        if errcode <= len(bufs):
+            raise MemoryError('Unable to allocate %s!' % (bufs[errcode - 1]))
         raise Exception('Error during PAZ calculation!')
     return ptime.value, stime.value
 
@@ -487,11 +541,12 @@ def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     ax1.plot(t, trace.data, 'k')
     ax2 = fig.add_subplot(212, sharex=ax1)
     ax2.plot(t, cft, 'k')
-    onOff = np.array(trigger_onset(cft, thr_on, thr_off))
+    on_off = np.array(trigger_onset(cft, thr_on, thr_off))
     i, j = ax1.get_ylim()
     try:
-        ax1.vlines(onOff[:, 0] / df, i, j, color='r', lw=2, label="Trigger On")
-        ax1.vlines(onOff[:, 1] / df, i, j, color='b', lw=2,
+        ax1.vlines(on_off[:, 0] / df, i, j, color='r', lw=2,
+                   label="Trigger On")
+        ax1.vlines(on_off[:, 1] / df, i, j, color='b', lw=2,
                    label="Trigger Off")
         ax1.legend()
     except IndexError:
@@ -532,7 +587,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
     .. note::
         An example can be found in the
         `Trigger/Picker Tutorial
-        <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
+        <https://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     .. note::
         Setting `trigger_type=None` precomputed characteristic functions can
@@ -670,7 +725,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
         templates = event_templates.get(sta)
         if templates:
             event['similarity'][sta] = \
-                templatesMaxSimilarity(stream, event['time'], templates)
+                templates_max_similarity(stream, event['time'], templates)
         # compile the list of stations that overlap with the current trigger
         for trigger in triggers:
             tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
@@ -697,7 +752,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             templates = event_templates.get(tmp_sta)
             if templates:
                 event['similarity'][tmp_sta] = \
-                    templatesMaxSimilarity(stream, event['time'], templates)
+                    templates_max_similarity(stream, event['time'], templates)
         # skip if both coincidence sum and similarity thresholds are not met
         if event['coincidence_sum'] < thr_coincidence_sum:
             if not event['similarity']:

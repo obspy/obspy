@@ -1,0 +1,28 @@
+name: test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - numpy
+  - scipy
+  - matplotlib>3.2.0
+  - basemap>=1.2.1
+  - pip
+  - pyproj
+  - proj4
+  - codecov
+  - coverage
+  - certifi>=2017.4.17
+  - decorator
+  - docopt
+  - future
+  - jsonschema
+  - lxml
+  - mock
+  - nose
+  - requests
+  - sqlalchemy
+  - cryptography
+  - pip:
+      - pyimgur
+      - -e..

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import unittest
 
+from obspy import UTCDateTime
+from obspy.core.inventory import Comment
 from obspy.core.util import (ComplexWithUncertainties, Enum,
                              FloatWithUncertainties)
+from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit)
 
 
 class UtilTypesTestCase(unittest.TestCase):
@@ -88,6 +87,47 @@ class UtilTypesTestCase(unittest.TestCase):
         self._check_complex_with_u(c4, f1, lu1, uu1, f2, lu2, uu2)
         self.assertEqual(c4.real, fu1)
         self.assertEqual(c4.imag, fu2)
+
+    def test_floating_point_types_are_indempotent(self):
+        """
+        Applying the constructor multiple times should not change the values.
+        """
+        f = FloatWithUncertainties(1.0, lower_uncertainty=0.5,
+                                   upper_uncertainty=1.5)
+        self.assertEqual(f, 1.0)
+        self.assertEqual(f.lower_uncertainty, 0.5)
+        self.assertEqual(f.upper_uncertainty, 1.5)
+        f = FloatWithUncertainties(f)
+        self.assertEqual(f, 1.0)
+        self.assertEqual(f.lower_uncertainty, 0.5)
+        self.assertEqual(f.upper_uncertainty, 1.5)
+
+        f = FloatWithUncertaintiesAndUnit(1.0, lower_uncertainty=0.5,
+                                          upper_uncertainty=1.5, unit="AB")
+        self.assertEqual(f, 1.0)
+        self.assertEqual(f.lower_uncertainty, 0.5)
+        self.assertEqual(f.upper_uncertainty, 1.5)
+        self.assertEqual(f.unit, "AB")
+        f = FloatWithUncertaintiesAndUnit(f)
+        self.assertEqual(f, 1.0)
+        self.assertEqual(f.lower_uncertainty, 0.5)
+        self.assertEqual(f.upper_uncertainty, 1.5)
+        self.assertEqual(f.unit, "AB")
+
+    def test_comment_str(self):
+        """
+        Tests the __str__ method of the Comment object.
+        """
+        c = Comment(value='test_comment', id=9,
+                    begin_effective_time=UTCDateTime(1240561632),
+                    end_effective_time=UTCDateTime(1584561632), authors=[])
+
+        self.assertEqual(str(c), "Comment:\ttest_comment\n"
+                         "\tBegin Effective Time:\t2009-04-24T08:27:12"
+                         ".000000Z\n"
+                         "\tEnd Effective Time:\t2020-03-18T20:00:32.000000Z\n"
+                         "\tAuthors:\t\t[]\n"
+                         "\tId:\t\t\t9")
 
 
 def suite():

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.zmap - ZMAP read/write support.
-========================================
+obspy.io.zmap - ZMAP read and write support for ObsPy
+=====================================================
 
 This module provides read and write support for the ZMAP format.
 
@@ -9,7 +9,7 @@ This module provides read and write support for the ZMAP format.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 
 Usage Example
@@ -22,8 +22,8 @@ mechanisms including format autodetection.
 >>> cat = read_events('/path/to/zmap_events.txt')
 >>> print(cat)
 2 Event(s) in Catalog:
-2012-04-04T14:21:42.299999Z | +41.818,  +79.689 | 4.4 None
-2012-04-04T14:21:42.299999Z | +41.822,  +79.684 | 5.1 None
+2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 None
+2012-04-04T14:21:42.300000Z | +41.822,  +79.684 | 5.1 None
 >>> cat.write('example.txt', format='ZMAP')  # doctest: +SKIP
 
 
@@ -111,11 +111,6 @@ Column #            Value
 13                  Magnitude error
 =================   ==============================================
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

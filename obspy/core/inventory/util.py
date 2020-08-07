@@ -7,17 +7,17 @@ Utility objects.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import copy
 import re
+import warnings
+from textwrap import TextWrapper
 
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
+from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit,
                                          FloatWithUncertaintiesFixedUnit)
 
@@ -32,7 +32,8 @@ class BaseNode(ComparingObject):
     """
     def __init__(self, code, description=None, comments=None, start_date=None,
                  end_date=None, restricted_status=None, alternate_code=None,
-                 historical_code=None, data_availability=None):
+                 historical_code=None, data_availability=None,
+                 identifiers=None, source_id=None):
         """
         :type code: str
         :param code: The SEED network, station, or channel code
@@ -56,6 +57,16 @@ class BaseNode(ComparingObject):
         :type data_availability: :class:`~obspy.station.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network/station/channel.
+        :type identifiers: list of str, optional
+        :param identifiers: Persistent identifiers for network/station/channel
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
+        :type source_id: str, optional
+        :param source_id: A data source identifier in URI form
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         """
         self.code = code
         self.comments = comments or []
@@ -66,6 +77,8 @@ class BaseNode(ComparingObject):
         self.alternate_code = alternate_code
         self.historical_code = historical_code
         self.data_availability = data_availability
+        self.identifiers = identifiers or []
+        self.source_id = source_id
 
     @property
     def code(self):
@@ -73,10 +86,38 @@ class BaseNode(ComparingObject):
 
     @code.setter
     def code(self, value):
-        if not value:
-            msg = "A Code is required"
+        if value is None:
+            msg = "A code is required"
             raise ValueError(msg)
         self._code = str(value).strip()
+
+    @property
+    def source_id(self):
+        return self._source_id
+
+    @source_id.setter
+    def source_id(self, value):
+        if value:
+            _warn_on_invalid_uri(value)
+            self._source_id = value.strip()
+        else:
+            self._source_id = None
+
+    @property
+    def identifiers(self):
+        return self._identifiers
+
+    @identifiers.setter
+    def identifiers(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "identifiers needs to be an iterable, e.g. a list."
+            raise ValueError(msg)
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        identifiers = [identifier for identifier in value]
+        for identifier in identifiers:
+            _warn_on_invalid_uri(identifier)
+        self._identifiers = identifiers
 
     @property
     def alternate_code(self):
@@ -195,14 +236,87 @@ class DataAvailability(ComparingObject):
     request that resulted in the document or limited to the availability of
     data within the request range. These details may or may not be
     retained when synchronizing metadata between data centers.
+    Spans of data are represented by a start time, end time, number of segments
+    contained in the span and maximum time tear within a certain span.
+
+    :param start: Start of time extent
+    :type start: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param end: End of time extent
+    :type end: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param spans: Time spans with detail information
+    :type spans: list of :class:`DataAvailabilitySpan`
     """
-    def __init__(self, start, end):
-        self.start = UTCDateTime(start)
-        self.end = UTCDateTime(end)
+    def __init__(self, start=None, end=None, spans=None):
+        start = start is not None and UTCDateTime(start)
+        self.start = start
+        end = end is not None and UTCDateTime(end)
+        self.end = end
+        self.spans = spans or []
+
+    @property
+    def spans(self):
+        return self._spans
+
+    @spans.setter
+    def spans(self, value):
+        msg = 'Data availability spans must be of DataAvailabilitySpan type.'
+        try:
+            for item in value:
+                if not isinstance(item, DataAvailabilitySpan):
+                    raise TypeError
+        except TypeError:
+            raise TypeError(msg)
+        self._spans = value
 
     def __str__(self):
-        return "Data Availability from %s to %s." % (str(self.start),
-                                                     str(self.end))
+        if not self.spans:
+            span_info = 'no time span information'
+        else:
+            span_info = '%d time spans with details' % len(self.spans)
+        return "Data Availability from %s to %s, %s." % (self.start,
+                                                         self.end, span_info)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
+
+class DataAvailabilitySpan(ComparingObject):
+    """
+    Data availability spans are represented by a start time, end time, number
+    of segments contained in the span and maximum time tear within a certain
+    span.
+
+    :param start: Start of time span
+    :type start: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param end: End of time span
+    :type end: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param number_of_segments: The number of continuous time series segments
+        contained in the specified time range. A value of 1 indicates that the
+        time series is continuous from start to end.
+    :type number_of_segments: int
+    :param maximum_time_tear: The maximum time tear (gap or overlap) in seconds
+        between time series segments in the specified range.
+    :type maximum_time_tear: float
+    """
+    def __init__(self, start, end, number_of_segments, maximum_time_tear=None):
+        self.start = UTCDateTime(start)
+        self.end = UTCDateTime(end)
+        self.number_of_segments = number_of_segments
+        self.maximum_time_tear = maximum_time_tear
+
+    def __str__(self):
+        if self.maximum_time_tear is None:
+            tear_info = 'maximum time tear not specified'
+        elif abs(self.maximum_time_tear) < 0.1:
+            tear_info = '%.6fs maximum time tear'
+        elif abs(self.maximum_time_tear) < 2:
+            tear_info = '%.3fs maximum time tear'
+        elif abs(self.maximum_time_tear) < 10:
+            tear_info = '%.1fs maximum time tear'
+        else:
+            tear_info = '%.0fs maximum time tear'
+        return "Data Availability Span: %d segments from %s to %s, %s." % (
+            self.number_of_segments, self.start, self.end, tear_info)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
@@ -307,30 +421,62 @@ class Operator(ComparingObject):
     the Contact element is a generic type that represents any contact person,
     it also has its own optional Agency element.
     """
-    def __init__(self, agencies, contacts=None, website=None):
+    @deprecated_keywords({"agencies": "agency"})
+    def __init__(self, agency, contacts=None, website=None):
         """
-        :type agencies: list of str
-        :param agencies: The agencies of the operator.
+        :type agency: str
+        :param agency: The agency of the operator.
         :type contacts: list of :class:`Person`, optional
         :param contacts: One or more contact persons.
         :type website: str, optional
         :param website: The website.
         """
-        self.agencies = agencies
+        self.agency = agency
         self.contacts = contacts or []
         self.website = website
 
     @property
+    def agency(self):
+        return self._agency
+
+    @agency.setter
+    def agency(self, value):
+        # check if a list of agencies was provided, which is not supported
+        # anymore (if we get a string, types of provided value and any index
+        # will match)
+        if not isinstance(value[0], type(value)):
+            msg = ("Only a single agency can be assigned to Operator due to "
+                   "the changes in StationXML 1.1. Subsequent agencies are "
+                   "ignored.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+            value = value[0]
+        self._agency = value
+
+    @property
     def agencies(self):
-        return self._agencies
+        msg = ("Attribute 'agencies' (holding a list of strings as Agencies) "
+               "is deprecated in favor of 'agency' which now holds a single "
+               "string (following changes in StationXML 1.1) and might be "
+               "removed in the future. Returning a list built up of the "
+               "single agency or an empty list if agency is None.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
+        if self.agency is not None:
+            return [self.agency]
+        return []
 
     @agencies.setter
     def agencies(self, value):
+        msg = ("Attribute 'agencies' (holding a list of strings as Agencies) "
+               "is deprecated in favor of 'agency' which now holds a single "
+               "string (following changes in StationXML 1.1) and might be "
+               "removed in the future. Setting 'agency' with first item in "
+               "provided list.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
         if not hasattr(value, "__iter__") or len(value) < 1:
             msg = ("agencies needs to be iterable, e.g. a list, and contain "
                    "at least one entry.")
             raise ValueError(msg)
-        self._agencies = value
+        self._agency = value[0]
 
     @property
     def contacts(self):
@@ -351,7 +497,7 @@ class Person(ComparingObject):
         to multiple agencies and have multiple email addresses and phone
         numbers.
     """
-    email_pattern = re.compile("[\w\.\-_]+@[\w\.\-_]+")
+    email_pattern = re.compile(r"[\w\.\-_]+@[\w\.\-_]+")
 
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
@@ -403,7 +549,7 @@ class Person(ComparingObject):
         for value in values:
             if re.match(self.email_pattern, value) is None:
                 msg = ("emails needs to match the pattern "
-                       "'[\w\.\-_]+@[\w\.\-_]+'")
+                       r"'[\w\.\-_]+@[\w\.\-_]+'")
                 raise ValueError(msg)
         self._emails = values
 
@@ -479,7 +625,7 @@ class Comment(ComparingObject):
         31, 51 and 59.
     """
     def __init__(self, value, id=None, begin_effective_time=None,
-                 end_effective_time=None, authors=None):
+                 end_effective_time=None, authors=None, subject=None):
         """
         :type value: str
         :param value: The actual comment string
@@ -493,12 +639,15 @@ class Comment(ComparingObject):
         :param end_effective_time: The effective end date.
         :type authors: list of :class:`Person`, optional
         :param authors: The authors of this comment.
+        :type subject: str, optional
+        :param subject: Subject for relating comment, optional
         """
         self.value = value
         self.begin_effective_time = begin_effective_time
         self.end_effective_time = end_effective_time
         self.authors = authors or []
         self.id = id
+        self.subject = subject
 
     @property
     def id(self):
@@ -555,6 +704,21 @@ class Comment(ComparingObject):
             raise ValueError(msg)
         self._authors = values
 
+    def __str__(self):
+        ret = ("Comment:\t{value}\n"
+               "\tBegin Effective Time:\t{begin_effective_time}\n"
+               "\tEnd Effective Time:\t{end_effective_time}\n"
+               "\tAuthors:\t\t{authors}\n"
+               "\tId:\t\t\t{id}")
+        ret = ret.format(
+            value=self.value, begin_effective_time=self.begin_effective_time,
+            end_effective_time=self.end_effective_time, authors=self.authors,
+            id=self.id)
+        return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class Site(ComparingObject):
     """
@@ -562,7 +726,7 @@ class Site(ComparingObject):
         Description of a site location using name and optional geopolitical
         boundaries (country, city, etc.).
     """
-    def __init__(self, name, description=None, town=None, county=None,
+    def __init__(self, name="", description=None, town=None, county=None,
                  region=None, country=None):
         """
         :type name: str
@@ -617,6 +781,8 @@ class Latitude(FloatWithUncertaintiesFixedUnit):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type datum: str
     :param datum: Datum for latitude coordinate
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = -90
     _maximum = 90
@@ -644,6 +810,8 @@ class Longitude(FloatWithUncertaintiesFixedUnit):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type datum: str
     :param datum: Datum for longitude coordinate
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = -180
     _maximum = 180
@@ -671,6 +839,8 @@ class Distance(FloatWithUncertaintiesAndUnit):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type unit: str
     :param unit: Unit for distance measure.
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
                  unit="METERS"):
@@ -690,6 +860,8 @@ class Azimuth(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = 0
     _maximum = 360
@@ -706,6 +878,8 @@ class Dip(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = -90
     _maximum = 90
@@ -722,6 +896,8 @@ class ClockDrift(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = 0
     unit = "SECONDS/SAMPLE"
@@ -737,6 +913,8 @@ class SampleRate(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     unit = "SAMPLES/S"
 
@@ -751,6 +929,8 @@ class Frequency(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     unit = "HERTZ"
 
@@ -765,10 +945,132 @@ class Angle(FloatWithUncertaintiesFixedUnit):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type measurement_method: str
+    :param measurement_method: Method used in the measurement.
     """
     _minimum = -360
     _maximum = 360
     unit = "DEGREES"
+
+
+def _unified_content_strings(contents):
+    contents_unique = sorted(set(contents), key=_seed_id_keyfunction)
+    contents_counts = [
+        (item, contents.count(item)) for item in contents_unique]
+    items = [item if count == 1 else "{} ({}x)".format(item, count)
+             for item, count in contents_counts]
+    return items
+
+
+# make TextWrapper only split on colons, so that we avoid splitting in between
+# e.g. network code and network code occurence count (can be controlled with
+# class attributes).
+# Also avoid lines starting with ", " (need to patch the class for this)
+class InventoryTextWrapper(TextWrapper):
+    wordsep_re = re.compile(r'(, )')
+    wordsep_simple_re = re.compile(r'(, )')
+
+    def _wrap_chunks(self, *args, **kwargs):
+        # the following doesn't work somehow (likely because of future??)
+        # lines = super(InventoryTextWrapper, self)._wrap_chunks(
+        #     *args, **kwargs)
+        lines = TextWrapper._wrap_chunks(self, *args, **kwargs)
+        lines = [re.sub(r'([\b\s]+), (.*)', r'\1\2', line, count=1)
+                 for line in lines]
+        return lines
+
+
+def _textwrap(text, *args, **kwargs):
+    return InventoryTextWrapper(*args, **kwargs).wrap(text)
+
+
+def _seed_id_keyfunction(x):
+    """
+    Keyfunction to use in sorting two (partial) SEED IDs
+
+    Assumes that the last (or only) "."-separated part is a channel code.
+    Assumes the last character is a the component code and sorts it
+    "Z"-"N"-"E"-others_lexical.
+    """
+    # for comparison we build a list of 5 SEED code pieces:
+    # [network, station, location, band+instrument, component]
+    # with partial codes (i.e. not 4 fields after splitting at dots),
+    # we go with the following assumptions (these seem a bit random, but that's
+    # what can be encountered in string representations of the Inventory object
+    # hierarchy):
+    #  - no dot means network code only (e.g. "IU")
+    #  - one dot means network.station code only (e.g. "IU.ANMO")
+    #  - two dots means station.location.channel code only (e.g. "ANMO.10.BHZ")
+    #  - three dots: full SEED ID (e.g. "IU.ANMO.10.BHZ")
+    #  - more dots: sort after any of the previous, plain lexical sort
+    # if no "." in the string: assume it's a network code
+
+    # split to get rid of the description that that is added to networks and
+    # stations which might also contain dots.
+    number_of_dots = x.strip().split()[0].count(".")
+
+    x = x.upper()
+    if number_of_dots == 0:
+        x = [x] + [""] * 4
+    elif number_of_dots == 1:
+        x = x.split(".") + [""] * 3
+    elif number_of_dots in (2, 3):
+        x = x.split(".")
+        if number_of_dots == 2:
+            x = [""] + x
+        # split channel code into band+instrument code and component code
+        x = x[:-1] + [x[-1][:-1], x[-1] and x[-1][-1] or '']
+        # special comparison for component code, convert "ZNE" to integers
+        # which compare less than any character
+        comp = "ZNE".find(x[-1])
+        # last item is component code, either the original 1-char string, or an
+        # int from 0-2 if any of "ZNE". Python3 does not allow comparison of
+        # int and string anymore (Python 2 always compares ints smaller than
+        # any string), so we need to work around this by making this last item
+        # a tuple with first item False for ints and True for strings.
+        if comp >= 0:
+            x[-1] = (False, comp)
+        else:
+            x[-1] = (True, x[-1])
+    # all other cases, just convert the upper case string to a single item
+    # list - it will compare greater than any of the split lists.
+    else:
+        x = [x, ]
+
+    return x
+
+
+def _response_plot_label(network, station, channel, label_epoch_dates):
+    label = ".".join((network.code, station.code,
+                      channel.location_code, channel.code))
+    if label_epoch_dates:
+        start = channel.start_date
+        if start is None:
+            start = 'open'
+        else:
+            start = str(start.date)
+        end = channel.end_date
+        if end is None:
+            end = 'open'
+        else:
+            end = str(end.date)
+        label += '\n{} -- {}'.format(start, end)
+    return label
+
+
+def _is_valid_uri(uri):
+    if ':' not in uri:
+        return False
+    scheme, path = uri.split(':', 1)
+    if any(not x.strip() for x in (scheme, path)):
+        return False
+    return True
+
+
+def _warn_on_invalid_uri(uri):
+    if not _is_valid_uri(uri):
+        msg = "Given string seems to not be a valid URI: ''" % uri
+        warnings.warn(msg)
 
 
 if __name__ == '__main__':

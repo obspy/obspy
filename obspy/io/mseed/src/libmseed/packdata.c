@@ -1,699 +1,712 @@
 /***********************************************************************
- *  Routines for packing INT_32, INT_16, FLOAT_32, FLOAT_64,
- *  STEIM1 and STEIM2 data records.
+ * Routines for packing text/ASCII, INT_16, INT_32, FLOAT_32, FLOAT_64,
+ * STEIM1 and STEIM2 data records.
  *
- *	Douglas Neuhauser						
- *	Seismological Laboratory					
- *	University of California, Berkeley				
- *	doug@seismo.berkeley.edu					
- *
- *
- * modified Aug 2008:
- *  - Optimize Steim 1 & 2 packing routines using small, re-used buffers.
- *
- * modified Sep 2004:
- *  - Reworked and cleaned routines for use within libmseed.
- *  - Added float32 and float64 packing routines.
- *
- * Modified by Chad Trabant, IRIS Data Management Center
- *
- * modified: 2009.111
+ * modified: 2017.053
  ************************************************************************/
 
-/*
- * Copyright (c) 1996-2004 The Regents of the University of California.
- * All Rights Reserved.
- * 
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for educational, research and non-profit purposes,
- * without fee, and without a written agreement is hereby granted,
- * provided that the above copyright notice, this paragraph and the
- * following three paragraphs appear in all copies.
- * 
- * Permission to incorporate this software into commercial products may
- * be obtained from the Office of Technology Licensing, 2150 Shattuck
- * Avenue, Suite 510, Berkeley, CA  94704.
- * 
- * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
- * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES,
- * INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND
- * ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF CALIFORNIA HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE
- * PROVIDED HEREUNDER IS ON AN "AS IS" BASIS, AND THE UNIVERSITY OF
- * CALIFORNIA HAS NO OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT,
- * UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- */
-
+#include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <memory.h>
 
 #include "libmseed.h"
 #include "packdata.h"
 
-static int pad_steim_frame (DFRAMES*, int, int, int, int, int);
-
-#define	EMPTY_BLOCK(fn,wn) (fn+wn == 0)
-
-#define	X0  dframes->f[0].w[0].fw
-#define	XN  dframes->f[0].w[1].fw
-
-#define	BIT4PACK(i,points_remaining)		   \
-  (points_remaining >= 7 &&			   \
-   (minbits[i] <= 4) && (minbits[i+1] <= 4) &&	   \
-   (minbits[i+2] <= 4) && (minbits[i+3] <= 4) &&   \
-   (minbits[i+4] <= 4) && (minbits[i+5] <= 4) &&   \
-   (minbits[i+6] <= 4))
-
-#define	BIT5PACK(i,points_remaining)		   \
-  (points_remaining >= 6 &&			   \
-   (minbits[i] <= 5) && (minbits[i+1] <= 5) &&	   \
-   (minbits[i+2] <= 5) && (minbits[i+3] <= 5) &&   \
-   (minbits[i+4] <= 5) && (minbits[i+5] <= 5))
-
-#define	BIT6PACK(i,points_remaining)		   \
-  (points_remaining >= 5 &&			   \
-   (minbits[i] <= 6) && (minbits[i+1] <= 6) &&	   \
-   (minbits[i+2] <= 6) && (minbits[i+3] <= 6) &&   \
-   (minbits[i+4] <= 6))
-
-#define	BYTEPACK(i,points_remaining)		 \
-  (points_remaining >= 4 &&			 \
-   (minbits[i] <= 8) && (minbits[i+1] <= 8) &&	 \
-   (minbits[i+2] <= 8) && (minbits[i+3] <= 8))
-
-#define	BIT10PACK(i,points_remaining)		   \
-  (points_remaining >= 3 &&			   \
-   (minbits[i] <= 10) && (minbits[i+1] <= 10) &&   \
-   (minbits[i+2] <= 10))
-
-#define	BIT15PACK(i,points_remaining)		\
-  (points_remaining >= 2 &&			\
-   (minbits[i] <= 15) && (minbits[i+1] <= 15))
-
-#define	HALFPACK(i,points_remaining)					\
-  (points_remaining >= 2 && (minbits[i] <= 16) && (minbits[i+1] <= 16))
-
-#define	BIT30PACK(i,points_remaining)  \
-  (points_remaining >= 1 &&	       \
-   (minbits[i] <= 30))
-
-#define	MINBITS(diff,minbits)					       \
-  if (diff >= -8 && diff < 8) minbits = 4;			       \
-  else if (diff >= -16 && diff < 16) minbits = 5;		       \
-  else if (diff >= -32 && diff < 32) minbits = 6;		       \
-  else if (diff >= -128 && diff < 128) minbits = 8;		       \
-  else if (diff >= -512 && diff < 512) minbits = 10;		       \
-  else if (diff >= -16384 && diff < 16384) minbits = 15;	       \
-  else if (diff >= -32768 && diff < 32768) minbits = 16;	       \
-  else if (diff >= -536870912 && diff < 536870912) minbits = 30;       \
-  else minbits = 32;
-
-#define PACK(bits,n,m1,m2)  {			\
-    int i = 0;					\
-    unsigned int val = 0;			\
-    for (i=0;i<n;i++) {				\
-      val = (val<<bits) | (diff[i]&m1); 	\
-    }						\
-    val |= ((unsigned int)m2 << 30);		\
-    dframes->f[fn].w[wn].fw = val; }
-
+/* Control for printing debugging information */
+int encodedebug = 0;
 
 /************************************************************************
- *  msr_pack_int_16:							*
- *	Pack integer data into INT_16 format.				*
- *	Return: 0 on success, -1 on failure.				*
+ * msr_encode_text:
+ *
+ * Encode text data and place in supplied buffer.  Pad any space
+ * remaining in output buffer with zeros.
+ *
+ * Return number of samples in output buffer on success, -1 on failure.
  ************************************************************************/
-int msr_pack_int_16
- (int16_t    *packed,           /* output data array - packed           */
-  int32_t    *data,             /* input data array                     */
-  int         ns,               /* desired number of samples to pack    */
-  int         max_bytes,        /* max # of bytes for output buffer     */
-  int         pad,              /* flag to specify padding to max_bytes */
-  int        *pnbytes,          /* number of bytes actually packed      */
-  int        *pnsamples,        /* number of samples actually packed    */
-  int         swapflag)         /* if data should be swapped            */
+int
+msr_encode_text (char *input, int samplecount, char *output,
+                 int outputlength)
 {
-  int points_remaining = ns;    /* number of samples remaining to pack  */
-  int i = 0;
-  
-  while (points_remaining > 0 && max_bytes >= 2)
-    {  /* Pack the next available data into INT_16 format */
-      if ( data[i] < -32768 || data[i] > 32767 )
-	ms_log (2, "msr_pack_int_16(%s): input sample out of range: %d\n",
-		PACK_SRCNAME, data[i]);
-      
-      *packed = data[i];      
-      if ( swapflag ) ms_gswap2 (packed);
-      
-      packed++;
-      max_bytes -= 2;
-      points_remaining--;
-      i++;
-    }
-  
-  *pnbytes = (ns - points_remaining) * 2;
-  
-  /* Pad miniSEED block if necessary */
-  if (pad)
-    {
-      memset ((void *)packed, 0, max_bytes);
-      *pnbytes += max_bytes;
-    }
+  int length;
 
-  *pnsamples = ns - points_remaining;
+  if (samplecount <= 0)
+    return 0;
 
-  return 0;
-}
+  if (!input || !output || outputlength <= 0)
+    return -1;
 
+  /* Determine minimum of input or output */
+  length = (samplecount < outputlength) ? samplecount : outputlength;
+
+  memcpy (output, input, length);
+
+  outputlength -= length;
+
+  if (outputlength > 0)
+    memset (output + length, 0, outputlength);
+
+  return length;
+} /* End of msr_encode_text() */
 
 /************************************************************************
- *  msr_pack_int_32:							*
- *	Pack integer data into INT_32 format.				*
- *	Return: 0 on success, -1 on failure.				*
+ * msr_encode_int16:
+ *
+ * Encode 16-bit integer data from an array of 32-bit integers and
+ * place in supplied buffer.  Swap if requested.  Pad any space
+ * remaining in output buffer with zeros.
+ *
+ * Return number of samples in output buffer on success, -1 on failure.
  ************************************************************************/
-int msr_pack_int_32 
- (int32_t  *packed,          /* output data array - packed              */
-  int32_t  *data,            /* input data array - unpacked             */
-  int       ns,              /* desired number of samples to pack       */
-  int       max_bytes,       /* max # of bytes for output buffer        */
-  int       pad,             /* flag to specify padding to max_bytes    */
-  int      *pnbytes,         /* number of bytes actually packed         */
-  int      *pnsamples,       /* number of samples actually packed       */
-  int       swapflag)        /* if data should be swapped               */
+int
+msr_encode_int16 (int32_t *input, int samplecount, int16_t *output,
+                  int outputlength, int swapflag)
 {
-  int points_remaining = ns; /* number of samples remaining to pack */
-  int i = 0;
+  int idx;
 
-  while (points_remaining > 0 && max_bytes >= 4)
-    { /* Pack the next available data into INT_32 format */
-      *packed = data[i];
-      if ( swapflag ) ms_gswap4 (packed);
-      
-      packed++;
-      max_bytes -= 4;
-      points_remaining--;
-      i++;
-    }
-  
-  *pnbytes = (ns - points_remaining) * 4;
-  
-  /* Pad miniSEED block if necessary */
-  if (pad)
-    {
-      memset ((void *)packed, 0, max_bytes);
-      *pnbytes += max_bytes;
-    }
-  
-  *pnsamples = ns - points_remaining;
+  if (samplecount <= 0)
+    return 0;
 
-  return 0;
-}
+  if (!input || !output || outputlength <= 0)
+    return -1;
 
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int16_t); idx++)
+  {
+    output[idx] = (int16_t)input[idx];
+
+    if (swapflag)
+      ms_gswap2a (&output[idx]);
+
+    outputlength -= sizeof (int16_t);
+  }
+
+  if (outputlength)
+    memset (&output[idx], 0, outputlength);
+
+  return idx;
+} /* End of msr_encode_int16() */
 
 /************************************************************************
- *  msr_pack_float_32:							*
- *	Pack float data into FLOAT32 format.				*
- *	Return: 0 on success, -1 on error.				*
+ * msr_encode_int32:
+ *
+ * Encode 32-bit integer data from an array of 32-bit integers and
+ * place in supplied buffer.  Swap if requested.  Pad any space
+ * remaining in output buffer with zeros.
+ *
+ * Return number of samples in output buffer on success, -1 on failure.
  ************************************************************************/
-int msr_pack_float_32 
- (float    *packed,          /* output data array - packed              */
-  float    *data,            /* input data array - unpacked             */
-  int       ns,              /* desired number of samples to pack       */
-  int       max_bytes,       /* max # of bytes for output buffer        */
-  int       pad,             /* flag to specify padding to max_bytes    */
-  int      *pnbytes,         /* number of bytes actually packed         */
-  int      *pnsamples,       /* number of samples actually packed       */
-  int       swapflag)        /* if data should be swapped               */
+int
+msr_encode_int32 (int32_t *input, int samplecount, int32_t *output,
+                  int outputlength, int swapflag)
 {
-  int points_remaining = ns; /* number of samples remaining to pack */
-  int i = 0;
-  
-  while (points_remaining > 0 && max_bytes >= 4)
-    {
-      *packed = data[i];
-      if ( swapflag ) ms_gswap4 (packed);
-      
-      packed++;
-      max_bytes -= 4;
-      points_remaining--;
-      i++;
-    }
-  
-  *pnbytes = (ns - points_remaining) * 4;
-  
-  /* Pad miniSEED block if necessary */
-  if (pad)
-    {
-      memset ((void *)packed, 0, max_bytes);
-      *pnbytes += max_bytes;
-    }
-  
-  *pnsamples = ns - points_remaining;
-  
-  return 0;
-}
+  int idx;
 
+  if (samplecount <= 0)
+    return 0;
+
+  if (!input || !output || outputlength <= 0)
+    return -1;
+
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int32_t); idx++)
+  {
+    output[idx] = input[idx];
+
+    if (swapflag)
+      ms_gswap4a (&output[idx]);
+
+    outputlength -= sizeof (int32_t);
+  }
+
+  if (outputlength)
+    memset (&output[idx], 0, outputlength);
+
+  return idx;
+} /* End of msr_encode_int32() */
 
 /************************************************************************
- *  msr_pack_float_64:							*
- *	Pack double data into FLOAT64 format.				*
- *	Return: 0 on success, -1 on error.				*
+ * msr_encode_float32:
+ *
+ * Encode 32-bit float data from an array of 32-bit floats and place
+ * in supplied buffer.  Swap if requested.  Pad any space remaining in
+ * output buffer with zeros.
+ *
+ * Return number of samples in output buffer on success, -1 on failure.
  ************************************************************************/
-int msr_pack_float_64 
- (double   *packed,          /* output data array - packed              */
-  double   *data,            /* input data array - unpacked             */
-  int       ns,              /* desired number of samples to pack       */
-  int       max_bytes,       /* max # of bytes for output buffer        */
-  int       pad,             /* flag to specify padding to max_bytes    */
-  int      *pnbytes,         /* number of bytes actually packed         */
-  int      *pnsamples,       /* number of samples actually packed       */
-  int       swapflag)        /* if data should be swapped               */
+int
+msr_encode_float32 (float *input, int samplecount, float *output,
+                    int outputlength, int swapflag)
 {
-  int points_remaining = ns; /* number of samples remaining to pack */
-  int i = 0;
-  
-  while (points_remaining > 0 && max_bytes >= 8)
-    {
-      *packed = data[i];
-      if ( swapflag ) ms_gswap8 (packed);
-      
-      packed++;
-      max_bytes -= 8;
-      points_remaining--;
-      i++;
-    }
-  
-  *pnbytes = (ns - points_remaining) * 8;
-  
-  /* Pad miniSEED block if necessary */
-  if (pad)
-    {
-      memset ((void *)packed, 0, max_bytes);
-      *pnbytes += max_bytes;
-    }
-  
-  *pnsamples = ns - points_remaining;
-  
-  return 0;
-}
+  int idx;
 
+  if (samplecount <= 0)
+    return 0;
+
+  if (!input || !output || outputlength <= 0)
+    return -1;
+
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (float); idx++)
+  {
+    output[idx] = input[idx];
+
+    if (swapflag)
+      ms_gswap4a (&output[idx]);
+
+    outputlength -= sizeof (float);
+  }
+
+  if (outputlength)
+    memset (&output[idx], 0, outputlength);
+
+  return idx;
+} /* End of msr_encode_float32() */
 
 /************************************************************************
- *  msr_pack_steim1:							*
- *	Pack data into STEIM1 data frames.				*
- *  return:								*
- *	0 on success.							*
- *	-1 on error.		           	         	        *
+ * msr_encode_float64:
+ *
+ * Encode 64-bit float data from an array of 64-bit doubles and place
+ * in supplied buffer.  Swap if requested.  Pad any space remaining in
+ * output buffer with zeros.
+ *
+ * Return number of samples in output buffer on success, -1 on failure.
  ************************************************************************/
-int msr_pack_steim1
- (DFRAMES      *dframes,       	/* ptr to data frames                   */
-  int32_t      *data,		/* ptr to unpacked data array           */
-  int32_t       d0,		/* first difference value               */
-  int		ns,		/* number of samples to pack            */
-  int		nf,		/* total number of data frames          */
-  int		pad,		/* flag to specify padding to nf        */
-  int	       *pnframes,	/* number of frames actually packed     */
-  int	       *pnsamples,	/* number of samples actually packed    */
-  int           swapflag)       /* if data should be swapped            */
+int
+msr_encode_float64 (double *input, int samplecount, double *output,
+                    int outputlength, int swapflag)
 {
-  int		points_remaining = ns;
-  int           points_packed = 0;
-  int32_t       diff[4];        /* array of differences                 */
-  uint8_t       minbits[4];     /* array of minimum bits for diffs      */
-  int		i, j;
-  int		mask;
-  int		ipt = 0;	/* index of initial data to pack.	*/
-  int		fn = 0;		/* index of initial frame to pack.	*/
-  int		wn = 2;		/* index of initial word to pack.	*/
-  int32_t      	itmp;
-  int16_t	stmp;
-  
-  /* Calculate initial difference and minbits buffers */
-  diff[0] = d0;
-  MINBITS(diff[0],minbits[0]);
-  for (i=1; i < 4 && i < ns; i++)
+  int idx;
+
+  if (samplecount <= 0)
+    return 0;
+
+  if (!input || !output || outputlength <= 0)
+    return -1;
+
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (double); idx++)
+  {
+    output[idx] = input[idx];
+
+    if (swapflag)
+      ms_gswap8a (&output[idx]);
+
+    outputlength -= sizeof (double);
+  }
+
+  if (outputlength)
+    memset (&output[idx], 0, outputlength);
+
+  return idx;
+} /* End of msr_encode_float64() */
+
+/* Macro to determine number of bits needed to represent VALUE in
+ * the following bit widths: 4,5,6,8,10,15,16,30,32 and set RESULT. */
+#define BITWIDTH(VALUE, RESULT)                       \
+  if (VALUE >= -8 && VALUE <= 7)                      \
+    RESULT = 4;                                       \
+  else if (VALUE >= -16 && VALUE <= 15)               \
+    RESULT = 5;                                       \
+  else if (VALUE >= -32 && VALUE <= 31)               \
+    RESULT = 6;                                       \
+  else if (VALUE >= -128 && VALUE <= 127)             \
+    RESULT = 8;                                       \
+  else if (VALUE >= -512 && VALUE <= 511)             \
+    RESULT = 10;                                      \
+  else if (VALUE >= -16384 && VALUE <= 16383)         \
+    RESULT = 15;                                      \
+  else if (VALUE >= -32768 && VALUE <= 32767)         \
+    RESULT = 16;                                      \
+  else if (VALUE >= -536870912 && VALUE <= 536870911) \
+    RESULT = 30;                                      \
+  else                                                \
+    RESULT = 32;
+
+/************************************************************************
+ * msr_encode_steim1:
+ *
+ * Encode Steim1 data frames from an array of 32-bit integers and
+ * place in supplied buffer.  Swap if requested.  Pad any space
+ * remaining in output buffer with zeros.
+ *
+ * diff0 is the first difference in the sequence and relates the first
+ * sample to the sample previous to it (not available to this
+ * function).  It should be set to 0 if this value is not known.
+ *
+ * Return number of samples in output buffer on success, -1 on failure.
+ ************************************************************************/
+int
+msr_encode_steim1 (int32_t *input, int samplecount, int32_t *output,
+                   int outputlength, int32_t diff0, int swapflag)
+{
+  int32_t *frameptr;   /* Frame pointer in output */
+  int32_t *Xnp = NULL; /* Reverse integration constant, aka last sample */
+  int32_t diffs[4];
+  int32_t bitwidth[4];
+  int diffcount     = 0;
+  int inputidx      = 0;
+  int outputsamples = 0;
+  int maxframes     = outputlength / 64;
+  int packedsamples = 0;
+  int frameidx;
+  int startnibble;
+  int widx;
+  int idx;
+
+  union dword {
+    int8_t d8[4];
+    int16_t d16[2];
+    int32_t d32;
+  } * word;
+
+  if (samplecount <= 0)
+    return 0;
+
+  if (!input || !output || outputlength <= 0)
+    return -1;
+
+  if (encodedebug)
+    ms_log (1, "Encoding Steim1 frames, samples: %d, max frames: %d, swapflag: %d\n",
+            samplecount, maxframes, swapflag);
+
+  /* Add first difference to buffers */
+  diffs[0] = diff0;
+  BITWIDTH (diffs[0], bitwidth[0]);
+  diffcount = 1;
+
+  for (frameidx = 0; frameidx < maxframes && outputsamples < samplecount; frameidx++)
+  {
+    frameptr = output + (16 * frameidx);
+
+    /* Set 64-byte frame to 0's */
+    memset (frameptr, 0, 64);
+
+    /* Save forward integration constant (X0), pointer to reverse integration constant (Xn)
+     * and set the starting nibble index depending on frame. */
+    if (frameidx == 0)
     {
-      diff[i] = data[i] - data[i-1];
-      MINBITS(diff[i],minbits[i]);
+      frameptr[1] = input[0];
+
+      if (encodedebug)
+        ms_log (1, "Frame %d: X0=%d\n", frameidx, frameptr[1]);
+
+      if (swapflag)
+        ms_gswap4a (&frameptr[1]);
+
+      Xnp = &frameptr[2];
+
+      startnibble = 3; /* First frame: skip nibbles, X0, and Xn */
     }
-  
-  dframes->f[fn].ctrl = 0;
-  
-  /* Set X0 and XN values in first frame */
-  X0 = data[0];
-  if ( swapflag ) ms_gswap4 (&X0);
-  dframes->f[0].ctrl = (dframes->f[0].ctrl<<2) | STEIM1_SPECIAL_MASK;
-  XN = data[ns-1];
-  if ( swapflag ) ms_gswap4 (&XN);
-  dframes->f[0].ctrl = (dframes->f[0].ctrl<<2) | STEIM1_SPECIAL_MASK;
-  
-  while (points_remaining > 0)
+    else
     {
-      points_packed = 0;
-      
-      /* Pack the next available data into the most compact form */
-      if (BYTEPACK(0,points_remaining))
-	{
-	  mask = STEIM1_BYTE_MASK;
-	  for (j=0; j<4; j++) { dframes->f[fn].w[wn].byte[j] = diff[j]; }
-	  points_packed = 4;
-	}
-      else if (HALFPACK(0,points_remaining))
-	{
-	  mask = STEIM1_HALFWORD_MASK;
-	  for (j=0; j<2; j++)
-	    {
-	      stmp = diff[j];
-	      if ( swapflag ) ms_gswap2 (&stmp);
-	      dframes->f[fn].w[wn].hw[j] = stmp;
-	    }
-	  points_packed = 2;
-	}
+      startnibble = 1; /* Subsequent frames: skip nibbles */
+
+      if (encodedebug)
+        ms_log (1, "Frame %d\n", frameidx);
+    }
+
+    for (widx = startnibble; widx < 16 && outputsamples < samplecount; widx++)
+    {
+      if (diffcount < 4)
+      {
+        /* Shift diffs and related bit widths to beginning of buffers */
+        for (idx = 0; idx < diffcount; idx++)
+        {
+          diffs[idx]    = diffs[packedsamples + idx];
+          bitwidth[idx] = bitwidth[packedsamples + idx];
+        }
+
+        /* Add new diffs and determine bit width needed to represent */
+        for (idx = diffcount; idx < 4 && inputidx < (samplecount - 1); idx++, inputidx++)
+        {
+          diffs[idx] = *(input + inputidx + 1) - *(input + inputidx);
+          BITWIDTH (diffs[idx], bitwidth[idx]);
+          diffcount++;
+        }
+      }
+
+      /* Determine optimal packing by checking, in-order:
+       * 4 x 8-bit differences
+       * 2 x 16-bit differences
+       * 1 x 32-bit difference */
+
+      word          = (union dword *)&frameptr[widx];
+      packedsamples = 0;
+
+      /* 4 x 8-bit differences */
+      if (diffcount == 4 &&
+          bitwidth[0] <= 8 && bitwidth[1] <= 8 &&
+          bitwidth[2] <= 8 && bitwidth[3] <= 8)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 01=4x8b  %d  %d  %d  %d\n",
+                  widx, diffs[0], diffs[1], diffs[2], diffs[3]);
+
+        word->d8[0] = diffs[0];
+        word->d8[1] = diffs[1];
+        word->d8[2] = diffs[2];
+        word->d8[3] = diffs[3];
+
+        /* 2-bit nibble is 0b01 (0x1) */
+        frameptr[0] |= 0x1ul << (30 - 2 * widx);
+
+        packedsamples = 4;
+      }
+      /* 2 x 16-bit differences */
+      else if (diffcount >= 2 &&
+               bitwidth[0] <= 16 && bitwidth[1] <= 16)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 2=2x16b  %d  %d\n", widx, diffs[0], diffs[1]);
+
+        word->d16[0] = diffs[0];
+        word->d16[1] = diffs[1];
+
+        if (swapflag)
+        {
+          ms_gswap2a (&word->d16[0]);
+          ms_gswap2a (&word->d16[1]);
+        }
+
+        /* 2-bit nibble is 0b10 (0x2) */
+        frameptr[0] |= 0x2ul << (30 - 2 * widx);
+
+        packedsamples = 2;
+      }
+      /* 1 x 32-bit difference */
       else
-	{
-	  mask = STEIM1_FULLWORD_MASK;
-	  itmp = diff[0];
-	  if ( swapflag ) ms_gswap4 (&itmp);
-	  dframes->f[fn].w[wn].fw = itmp;
-	  points_packed = 1;
-	}
-      
-      /* Append mask for this word to current mask */
-      dframes->f[fn].ctrl = (dframes->f[fn].ctrl<<2) | mask;
-      
-      points_remaining -= points_packed;
-      ipt += points_packed;
-      
-      /* Check for full frame or full block */
-      if (++wn >= VALS_PER_FRAME)
-	{
-	  if ( swapflag ) ms_gswap4 (&dframes->f[fn].ctrl);
-	  /* Reset output index to beginning of frame */
-	  wn = 0;
-	  /* If block is full, output block and reinitialize */
-	  if (++fn >= nf) break;
-	  dframes->f[fn].ctrl = 0;
-	}
-      
-      /* Shift and re-fill difference and minbits buffers */
-      for ( i=points_packed; i < 4; i++ )
-	{
-	  /* Shift remaining buffer entries */
-	  diff[i-points_packed] = diff[i];
-	  minbits[i-points_packed] = minbits[i];
-	}
-      for ( i=4-points_packed,j=ipt+(4-points_packed); i < 4 && j < ns; i++,j++ )
-	{
-	  /* Re-fill entries */
-	  diff[i] = data[j] - data[j-1];
-	  MINBITS(diff[i],minbits[i]);
-	}
-    }
-  
-  /* Update XN value in first frame */
-  XN = data[(ns-1)-points_remaining];
-  if ( swapflag ) ms_gswap4 (&XN);
-  
-  /* End of data.  Pad current frame and optionally rest of block */
-  /* Do not pad and output a completely empty block */
-  if ( ! EMPTY_BLOCK(fn,wn) )
-    {
-      *pnframes = pad_steim_frame (dframes, fn, wn, nf, swapflag, pad);
-    }
-  else
-    {
-      *pnframes = 0;
-    }
-  
-  *pnsamples = ns - points_remaining;
-  
-  return 0;
-}
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 3=1x32b  %d\n", widx, diffs[0]);
 
+        frameptr[widx] = diffs[0];
+
+        if (swapflag)
+          ms_gswap4a (&frameptr[widx]);
+
+        /* 2-bit nibble is 0b11 (0x3) */
+        frameptr[0] |= 0x3ul << (30 - 2 * widx);
+
+        packedsamples = 1;
+      }
+
+      diffcount -= packedsamples;
+      outputsamples += packedsamples;
+    } /* Done with words in frame */
+
+    /* Swap word with nibbles */
+    if (swapflag)
+      ms_gswap4a (&frameptr[0]);
+  } /* Done with frames */
+
+  /* Set Xn (reverse integration constant) in first frame to last sample */
+  if (Xnp)
+    *Xnp = *(input + outputsamples - 1);
+  if (swapflag)
+    ms_gswap4a (Xnp);
+
+  /* Pad any remaining bytes */
+  if ((frameidx * 64) < outputlength)
+    memset (output + (frameidx * 16), 0, outputlength - (frameidx * 64));
+
+  return outputsamples;
+} /* End of msr_encode_steim1() */
 
 /************************************************************************
- *  msr_pack_steim2:							*
- *	Pack data into STEIM1 data frames.				*
- *  return:								*
- *	0 on success.							*
- *	-1 on error.                                                    *
+ * msr_encode_steim2:
+ *
+ * Encode Steim2 data frames from an array of 32-bit integers and
+ * place in supplied buffer.  Swap if requested.  Pad any space
+ * remaining in output buffer with zeros.
+ *
+ * diff0 is the first difference in the sequence and relates the first
+ * sample to the sample previous to it (not available to this
+ * function).  It should be set to 0 if this value is not known.
+ *
+ * Return number of samples in output buffer on success, -1 on failure.
  ************************************************************************/
-int msr_pack_steim2
- (DFRAMES      *dframes,	/* ptr to data frames                   */
-  int32_t      *data,		/* ptr to unpacked data array           */
-  int32_t       d0,		/* first difference value               */
-  int		ns,		/* number of samples to pack            */
-  int		nf,		/* total number of data frames to pack  */
-  int		pad,		/* flag to specify padding to nf        */
-  int	       *pnframes,	/* number of frames actually packed     */
-  int	       *pnsamples,	/* number of samples actually packed    */
-  int           swapflag)       /* if data should be swapped            */
+int
+msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
+                   int outputlength, int32_t diff0,
+                   char *srcname, int swapflag)
 {
-  int		points_remaining = ns;
-  int           points_packed = 0;
-  int32_t       diff[7];        /* array of differences                 */
-  uint8_t       minbits[7];     /* array of minimum bits for diffs      */
-  int		i, j;
-  int		mask;
-  int		ipt = 0;	/* index of initial data to pack.	*/
-  int		fn = 0;		/* index of initial frame to pack.	*/
-  int		wn = 2;		/* index of initial word to pack.	*/
-  
-  /* Calculate initial difference and minbits buffers */
-  diff[0] = d0;
-  MINBITS(diff[0],minbits[0]);
-  for (i=1; i < 7 && i < ns; i++)
+  uint32_t *frameptr;  /* Frame pointer in output */
+  int32_t *Xnp = NULL; /* Reverse integration constant, aka last sample */
+  int32_t diffs[7];
+  int32_t bitwidth[7];
+  int diffcount     = 0;
+  int inputidx      = 0;
+  int outputsamples = 0;
+  int maxframes     = outputlength / 64;
+  int packedsamples = 0;
+  int frameidx;
+  int startnibble;
+  int widx;
+  int idx;
+
+  union dword {
+    int8_t d8[4];
+    int16_t d16[2];
+    int32_t d32;
+  } * word;
+
+  if (samplecount <= 0)
+    return 0;
+
+  if (!input || !output || outputlength <= 0)
+    return -1;
+
+  if (encodedebug)
+    ms_log (1, "Encoding Steim2 frames, samples: %d, max frames: %d, swapflag: %d\n",
+            samplecount, maxframes, swapflag);
+
+  /* Add first difference to buffers */
+  diffs[0] = diff0;
+  BITWIDTH (diffs[0], bitwidth[0]);
+  diffcount = 1;
+
+  for (frameidx = 0; frameidx < maxframes && outputsamples < samplecount; frameidx++)
+  {
+    frameptr = (uint32_t *)output + (16 * frameidx);
+
+    /* Set 64-byte frame to 0's */
+    memset (frameptr, 0, 64);
+
+    /* Save forward integration constant (X0), pointer to reverse integration constant (Xn)
+     * and set the starting nibble index depending on frame. */
+    if (frameidx == 0)
     {
-      diff[i] = data[i] - data[i-1];
-      MINBITS(diff[i],minbits[i]);
+      frameptr[1] = input[0];
+
+      if (encodedebug)
+        ms_log (1, "Frame %d: X0=%d\n", frameidx, frameptr[1]);
+
+      if (swapflag)
+        ms_gswap4a (&frameptr[1]);
+
+      Xnp = (int32_t *)&frameptr[2];
+
+      startnibble = 3; /* First frame: skip nibbles, X0, and Xn */
     }
-  
-  dframes->f[fn].ctrl = 0;
-  
-  /* Set X0 and XN values in first frame */
-  X0 = data[0];
-  if ( swapflag ) ms_gswap4 (&X0);
-  dframes->f[0].ctrl = (dframes->f[0].ctrl<<2) | STEIM2_SPECIAL_MASK;
-  XN = data[ns-1];
-  if ( swapflag ) ms_gswap4 (&XN);
-  dframes->f[0].ctrl = (dframes->f[0].ctrl<<2) | STEIM2_SPECIAL_MASK;
-  
-  while (points_remaining > 0)
+    else
     {
-      points_packed = 0;
-      
-      /* Pack the next available datapoints into the most compact form */
-      if (BIT4PACK(0,points_remaining))
-	{
-	  PACK(4,7,0x0000000f,02)
-	  if ( swapflag ) ms_gswap4 (&dframes->f[fn].w[wn].fw);
-	  mask = STEIM2_567_MASK;
-	  points_packed = 7;
-	}
-      else if (BIT5PACK(0,points_remaining))
-	{
-	  PACK(5,6,0x0000001f,01)
-	    if ( swapflag ) ms_gswap4 (&dframes->f[fn].w[wn].fw);
-	  mask = STEIM2_567_MASK;
-	  points_packed = 6;
-	}
-      else if (BIT6PACK(0,points_remaining))
-	{
-	  PACK(6,5,0x0000003f,00)
-	  if ( swapflag ) ms_gswap4 (&dframes->f[fn].w[wn].fw);
-	  mask = STEIM2_567_MASK;
-	  points_packed = 5;
-	}
-      else if (BYTEPACK(0,points_remaining))
-	{
-	  mask = STEIM2_BYTE_MASK;
-	  for (j=0; j<4; j++) dframes->f[fn].w[wn].byte[j] = diff[j];
-	  points_packed = 4;
-	}
-      else if (BIT10PACK(0,points_remaining))
-	{
-	  PACK(10,3,0x000003ff,03)
-	  if ( swapflag ) ms_gswap4 (&dframes->f[fn].w[wn].fw);
-	  mask = STEIM2_123_MASK;
-	  points_packed = 3;
-	}
-      else if (BIT15PACK(0,points_remaining))
-	{
-	  PACK(15,2,0x00007fff,02)
-	  if ( swapflag ) ms_gswap4 (&dframes->f[fn].w[wn].fw);
-	  mask = STEIM2_123_MASK;
-	  points_packed = 2;
-	}
-      else if (BIT30PACK(0,points_remaining))
-	{
-	  PACK(30,1,0x3fffffff,01)
-	  if ( swapflag ) ms_gswap4 (&dframes->f[fn].w[wn].fw);
-	  mask = STEIM2_123_MASK;
-	  points_packed = 1;
-	}
+      startnibble = 1; /* Subsequent frames: skip nibbles */
+
+      if (encodedebug)
+        ms_log (1, "Frame %d\n", frameidx);
+    }
+
+    for (widx = startnibble; widx < 16 && outputsamples < samplecount; widx++)
+    {
+      if (diffcount < 7)
+      {
+        /* Shift diffs and related bit widths to beginning of buffers */
+        for (idx = 0; idx < diffcount; idx++)
+        {
+          diffs[idx]    = diffs[packedsamples + idx];
+          bitwidth[idx] = bitwidth[packedsamples + idx];
+        }
+
+        /* Add new diffs and determine bit width needed to represent */
+        for (idx = diffcount; idx < 7 && inputidx < (samplecount - 1); idx++, inputidx++)
+        {
+          diffs[idx] = *(input + inputidx + 1) - *(input + inputidx);
+          BITWIDTH (diffs[idx], bitwidth[idx]);
+          diffcount++;
+        }
+      }
+
+      /* Determine optimal packing by checking, in-order:
+       * 7 x 4-bit differences
+       * 6 x 5-bit differences
+       * 5 x 6-bit differences
+       * 4 x 8-bit differences
+       * 3 x 10-bit differences
+       * 2 x 15-bit differences
+       * 1 x 30-bit difference */
+
+      packedsamples = 0;
+
+      /* 7 x 4-bit differences */
+      if (diffcount == 7 && bitwidth[0] <= 4 &&
+          bitwidth[1] <= 4 && bitwidth[2] <= 4 && bitwidth[3] <= 4 &&
+          bitwidth[4] <= 4 && bitwidth[5] <= 4 && bitwidth[6] <= 4)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 11,10=7x4b  %d  %d  %d  %d  %d  %d  %d\n",
+                  widx, diffs[0], diffs[1], diffs[2], diffs[3], diffs[4], diffs[5], diffs[6]);
+
+        /* Mask the values, shift to proper location and set in word */
+        frameptr[widx] = ((uint32_t)diffs[6] & 0xFul);
+        frameptr[widx] |= ((uint32_t)diffs[5] & 0xFul) << 4;
+        frameptr[widx] |= ((uint32_t)diffs[4] & 0xFul) << 8;
+        frameptr[widx] |= ((uint32_t)diffs[3] & 0xFul) << 12;
+        frameptr[widx] |= ((uint32_t)diffs[2] & 0xFul) << 16;
+        frameptr[widx] |= ((uint32_t)diffs[1] & 0xFul) << 20;
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0xFul) << 24;
+
+        /* 2-bit decode nibble is 0b10 (0x2) */
+        frameptr[widx] |= 0x2ul << 30;
+
+        /* 2-bit nibble is 0b11 (0x3) */
+        frameptr[0] |= 0x3ul << (30 - 2 * widx);
+
+        packedsamples = 7;
+      }
+      /* 6 x 5-bit differences */
+      else if (diffcount >= 6 &&
+               bitwidth[0] <= 5 && bitwidth[1] <= 5 && bitwidth[2] <= 5 &&
+               bitwidth[3] <= 5 && bitwidth[4] <= 5 && bitwidth[5] <= 5)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 11,01=6x5b  %d  %d  %d  %d  %d  %d\n",
+                  widx, diffs[0], diffs[1], diffs[2], diffs[3], diffs[4], diffs[5]);
+
+        /* Mask the values, shift to proper location and set in word */
+        frameptr[widx] = ((uint32_t)diffs[5] & 0x1Ful);
+        frameptr[widx] |= ((uint32_t)diffs[4] & 0x1Ful) << 5;
+        frameptr[widx] |= ((uint32_t)diffs[3] & 0x1Ful) << 10;
+        frameptr[widx] |= ((uint32_t)diffs[2] & 0x1Ful) << 15;
+        frameptr[widx] |= ((uint32_t)diffs[1] & 0x1Ful) << 20;
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0x1Ful) << 25;
+
+        /* 2-bit decode nibble is 0b01 (0x1) */
+        frameptr[widx] |= 0x1ul << 30;
+
+        /* 2-bit nibble is 0b11 (0x3) */
+        frameptr[0] |= 0x3ul << (30 - 2 * widx);
+
+        packedsamples = 6;
+      }
+      /* 5 x 6-bit differences */
+      else if (diffcount >= 5 &&
+               bitwidth[0] <= 6 && bitwidth[1] <= 6 && bitwidth[2] <= 6 &&
+               bitwidth[3] <= 6 && bitwidth[4] <= 6)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 11,00=5x6b  %d  %d  %d  %d  %d\n",
+                  widx, diffs[0], diffs[1], diffs[2], diffs[3], diffs[4]);
+
+        /* Mask the values, shift to proper location and set in word */
+        frameptr[widx] = ((uint32_t)diffs[4] & 0x3Ful);
+        frameptr[widx] |= ((uint32_t)diffs[3] & 0x3Ful) << 6;
+        frameptr[widx] |= ((uint32_t)diffs[2] & 0x3Ful) << 12;
+        frameptr[widx] |= ((uint32_t)diffs[1] & 0x3Ful) << 18;
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0x3Ful) << 24;
+
+        /* 2-bit decode nibble is 0b00, nothing to set */
+
+        /* 2-bit nibble is 0b11 (0x3) */
+        frameptr[0] |= 0x3ul << (30 - 2 * widx);
+
+        packedsamples = 5;
+      }
+      /* 4 x 8-bit differences */
+      else if (diffcount >= 4 &&
+               bitwidth[0] <= 8 && bitwidth[1] <= 8 &&
+               bitwidth[2] <= 8 && bitwidth[3] <= 8)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 01=4x8b  %d  %d  %d  %d\n",
+                  widx, diffs[0], diffs[1], diffs[2], diffs[3]);
+
+        word = (union dword *)&frameptr[widx];
+
+        word->d8[0] = diffs[0];
+        word->d8[1] = diffs[1];
+        word->d8[2] = diffs[2];
+        word->d8[3] = diffs[3];
+
+        /* 2-bit nibble is 0b01, only need to set 2nd bit */
+        frameptr[0] |= 0x1ul << (30 - 2 * widx);
+
+        packedsamples = 4;
+      }
+      /* 3 x 10-bit differences */
+      else if (diffcount >= 3 &&
+               bitwidth[0] <= 10 && bitwidth[1] <= 10 && bitwidth[2] <= 10)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 10,11=3x10b  %d  %d  %d\n",
+                  widx, diffs[0], diffs[1], diffs[2]);
+
+        /* Mask the values, shift to proper location and set in word */
+        frameptr[widx] = ((uint32_t)diffs[2] & 0x3FFul);
+        frameptr[widx] |= ((uint32_t)diffs[1] & 0x3FFul) << 10;
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0x3FFul) << 20;
+
+        /* 2-bit decode nibble is 0b11 (0x3) */
+        frameptr[widx] |= 0x3ul << 30;
+
+        /* 2-bit nibble is 0b10 (0x2) */
+        frameptr[0] |= 0x2ul << (30 - 2 * widx);
+
+        packedsamples = 3;
+      }
+      /* 2 x 15-bit differences */
+      else if (diffcount >= 2 &&
+               bitwidth[0] <= 15 && bitwidth[1] <= 15)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 10,10=2x15b  %d  %d\n",
+                  widx, diffs[0], diffs[1]);
+
+        /* Mask the values, shift to proper location and set in word */
+        frameptr[widx] = ((uint32_t)diffs[1] & 0x7FFFul);
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0x7FFFul) << 15;
+
+        /* 2-bit decode nibble is 0b10 (0x2) */
+        frameptr[widx] |= 0x2ul << 30;
+
+        /* 2-bit nibble is 0b10 (0x2) */
+        frameptr[0] |= 0x2ul << (30 - 2 * widx);
+
+        packedsamples = 2;
+      }
+      /* 1 x 30-bit difference */
+      else if (diffcount >= 1 &&
+               bitwidth[0] <= 30)
+      {
+        if (encodedebug)
+          ms_log (1, "  W%02d: 10,01=1x30b  %d\n",
+                  widx, diffs[0]);
+
+        /* Mask the value and set in word */
+        frameptr[widx] = ((uint32_t)diffs[0] & 0x3FFFFFFFul);
+
+        /* 2-bit decode nibble is 0b01 (0x1) */
+        frameptr[widx] |= 0x1ul << 30;
+
+        /* 2-bit nibble is 0b10 (0x2) */
+        frameptr[0] |= 0x2ul << (30 - 2 * widx);
+
+        packedsamples = 1;
+      }
       else
-	{
-	  ms_log (2, "msr_pack_steim2(%s): Unable to represent difference in <= 30 bits\n",
-		  PACK_SRCNAME);
-	  return -1;
-	}
-      
-      /* Append mask for this word to current mask */
-      dframes->f[fn].ctrl = (dframes->f[fn].ctrl<<2) | mask;
-      
-      points_remaining -= points_packed;
-      ipt += points_packed;
-      
-      /* Check for full frame or full block */
-      if (++wn >= VALS_PER_FRAME)
-	{
-	  if ( swapflag ) ms_gswap4 (&dframes->f[fn].ctrl);
-	  /* Reset output index to beginning of frame */
-	  wn = 0;
-	  /* If block is full, output block and reinitialize */
-	  if (++fn >= nf) break;
-	  dframes->f[fn].ctrl = 0;
-	}
-      
-      /* Shift and re-fill difference and minbits buffers */
-      for ( i=points_packed; i < 7; i++ )
-	{
-	  /* Shift remaining buffer entries */
-	  diff[i-points_packed] = diff[i];
-	  minbits[i-points_packed] = minbits[i];
-	}
-      for ( i=7-points_packed,j=ipt+(7-points_packed); i < 7 && j < ns; i++,j++ )
-	{
-	  /* Re-fill entries */
-	  diff[i] = data[j] - data[j-1];
-	  MINBITS(diff[i],minbits[i]);
-	}
-    }
-  
-  /* Update XN value in first frame */
-  XN = data[(ns-1)-points_remaining];
-  if ( swapflag ) ms_gswap4 (&XN);
-  
-  /* End of data.  Pad current frame and optionally rest of block */
-  /* Do not pad and output a completely empty block */
-  if ( ! EMPTY_BLOCK(fn,wn) )
-    {
-      *pnframes = pad_steim_frame (dframes, fn, wn, nf, swapflag, pad);
-    }
-  else
-    {
-      *pnframes = 0;
-    }
-  
-  *pnsamples = ns - points_remaining;
-  
-  return 0;
-}
+      {
+        ms_log (2, "msr_encode_steim2(%s): Unable to represent difference in <= 30 bits\n",
+                srcname);
+        return -1;
+      }
 
+      /* Swap encoded word except for 4x8-bit samples */
+      if (swapflag && packedsamples != 4)
+        ms_gswap4a (&frameptr[widx]);
 
-/************************************************************************
- *  pad_steim_frame:							*
- *	Pad the rest of the data record with null values,		*
- *	and optionally the rest of the total number of frames.		*
- *  return:								*
- *	total number of frames in record.				*
- ************************************************************************/
-static int pad_steim_frame
- (DFRAMES      *dframes,
-  int		fn,	    	/* current frame number.		*/
-  int	    	wn,		/* current work number.			*/
-  int	    	nf,		/* total number of data frames.		*/
-  int		swapflag,	/* flag to swap byte order of data.	*/
-  int	    	pad)		/* flag to pad # frames to nf.		*/
-{
-  /* Finish off the current frame */
-  if (wn < VALS_PER_FRAME && fn < nf)
-    {
-      for (; wn < VALS_PER_FRAME; wn++)
-	{
-	  dframes->f[fn].w[wn].fw = 0;
-	  dframes->f[fn].ctrl = (dframes->f[fn].ctrl<<2) | STEIM1_SPECIAL_MASK;
-	}
-      if ( swapflag ) ms_gswap4 (&dframes->f[fn].ctrl);
-      fn++;
-    }
-  
-  /* Fill the remaining frames in the block */
-  if (pad)
-    {
-      for (; fn<nf; fn++)
-	{
-	  dframes->f[fn].ctrl = STEIM1_SPECIAL_MASK;	/* mask for ctrl */
-	  for (wn=0; wn<VALS_PER_FRAME; wn++)
-	    {
-	      dframes->f[fn].w[wn].fw = 0;
-	      dframes->f[fn].ctrl = (dframes->f[fn].ctrl<<2) | STEIM1_SPECIAL_MASK;
-	    }
-	  
-	  if ( swapflag ) ms_gswap4 (&dframes->f[fn].ctrl);
-	}
-    }
-  
-  return fn;
-}
+      diffcount -= packedsamples;
+      outputsamples += packedsamples;
+    } /* Done with words in frame */
 
+    /* Swap word with nibbles */
+    if (swapflag)
+      ms_gswap4a (&frameptr[0]);
+  } /* Done with frames */
 
-/************************************************************************
- *  msr_pack_text:						       	*
- *	Pack text data into text format.  Split input data on line	*
-*	breaks so as to not split lines between records.		* 
-*	Return: 0 on success, -1 on error.				*
- ************************************************************************/
-int msr_pack_text
- (char 	       *packed,         /* output data array - packed.		*/
-  char	       *data,		/* input data array - unpacked.		*/
-  int		ns,		/* desired number of samples to pack.	*/
-  int		max_bytes,	/* max # of bytes for output buffer.	*/
-  int		pad,		/* flag to specify padding to max_bytes.*/
-  int	       *pnbytes,	/* number of bytes actually packed.	*/
-  int	       *pnsamples)	/* number of samples actually packed.	*/
-{
-  int points_remaining = ns;	/* number of samples remaining to pack.	*/
-  int		last = -1;
-  int		nbytes;
-  int		i;
-  
-  /* Split lines only if a single line will not fit in 1 record */
-  if (points_remaining > max_bytes)
-    {
-      /* Look for the last newline that will fit in output buffer */
-      for (i=max_bytes-1; i>=0; i--)
-	{
-	  if (data[i] == '\n') {
-	    last = i;
-	    break;
-	  }
-	}
-      if (last < 0) last = max_bytes - 1;
-    }
-  
-  if (last < 0) last = points_remaining - 1;
-  nbytes = last + 1;
-  memcpy (packed, data, nbytes);
-  packed += nbytes;
-  max_bytes -= nbytes;
-  *pnbytes = nbytes;
-  *pnsamples = nbytes;
-  points_remaining -= nbytes;
-  
-  /* Pad miniSEED block if necessary */
-  if (pad)
-    {
-      memset ((void *)packed, 0, max_bytes);
-      *pnbytes += max_bytes;
-    }
-  
-  *pnsamples = ns - points_remaining;
-  
-  return 0;
-}
+  /* Set Xn (reverse integration constant) in first frame to last sample */
+  if (Xnp)
+    *Xnp = *(input + outputsamples - 1);
+  if (swapflag)
+    ms_gswap4a (Xnp);
+
+  /* Pad any remaining bytes */
+  if ((frameidx * 64) < outputlength)
+    memset (output + (frameidx * 16), 0, outputlength - (frameidx * 64));
+
+  return outputsamples;
+} /* End of msr_encode_steim2() */

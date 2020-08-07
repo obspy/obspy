@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:eu.emsc/unid">
+    <origin publicID="smi:ch.ethz.sed/event/historical/1165/origin/1">
+      <time>
+        <value>2011-03-11T05:46:24.120000Z</value>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <magnitude publicID="smi:ch.ethz.sed/magnitude/37465">
+        <magnitude>
+          <value>5.5</value>
+          <uncertainty>0.1</uncertainty>
+        </magnitude>
+        <type>MS</type>
+        <originID>smi:ch.ethz.sed/event/historical/1165/origin/1</originID>
+        <methodID>smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude</methodID>
+        <stationCount>8</stationCount>
+        <evaluationStatus>preliminary</evaluationStatus>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+        <comment>
+          <text>Some comment</text>
+          <id>smi:some/comment/id/muh</id>
+          <creationInfo>
+            <author>EMSC</author>
+          </creationInfo>
+        </comment>
+        <comment>
+          <text>Another comment</text>
+        </comment>
+      </magnitude>
+    </origin>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:ch.ethz.sed/event/historical/1165/origin/1</originReference>
+    </event>
+  </EventParameters>
+</seiscomp>

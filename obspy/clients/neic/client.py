@@ -6,20 +6,16 @@ NEIC CWB Query service client for ObsPy.
     The ObsPy Development Team (devs@obspy.org) & David Ketchum
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
+import io
 import socket
 import traceback
 from time import sleep
 
 from obspy import Stream, UTCDateTime, read
-from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated
-from .util import ascdate, asctime
+from obspy.clients.neic.util import ascdate, asctime
+from obspy.clients.httpproxy import get_proxy_tuple, http_proxy_connect
 
 
 class Client(object):
@@ -45,15 +41,15 @@ class Client(object):
     >>> st = client.get_waveforms("IU", "ANMO", "00", "BH?", t, t + 10)
     >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 40.0 Hz, 401 samples
+    IU.ANMO.00.BH... | 40.0 Hz, 401 samples
+    IU.ANMO.00.BH... | 40.0 Hz, 401 samples
     >>> st = client.get_waveforms_nscl("IUANMO BH.00", t, 10)
     >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 40.0 Hz, 401 samples
+    IU.ANMO.00.BH... | 40.0 Hz, 401 samples
+    IU.ANMO.00.BH... | 40.0 Hz, 401 samples
     """
     def __init__(self, host="137.227.224.97", port=2061, timeout=30,
                  debug=False):
@@ -67,11 +63,7 @@ class Client(object):
         self.port = port
         self.timeout = timeout
         self.debug = debug
-
-    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")
-    def getWaveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
+        self.proxy = get_proxy_tuple()
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime):
@@ -116,9 +108,9 @@ class Client(object):
         >>> st = client.get_waveforms("IU", "ANMO", "0?", "BH?", t, t + 10)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 40.0 Hz, 401 samples
+        IU.ANMO.00.BH... | 40.0 Hz, 401 samples
+        IU.ANMO.00.BH... | 40.0 Hz, 401 samples
         """
         # padding channel with spaces does not make sense
         if len(channel) < 3 and channel != ".*":
@@ -130,11 +122,6 @@ class Client(object):
         seedname = seedname.replace("?", ".")
         return self.get_waveforms_nscl(seedname, starttime,
                                        endtime - starttime)
-
-    @deprecated("'getWaveformNSCL' has been renamed to 'get_waveforms_nscl'. "
-                "Use that instead.")
-    def getWaveformNSCL(self, *args, **kwargs):
-        return self.get_waveforms_nscl(*args, **kwargs)
 
     def get_waveforms_nscl(self, seedname, starttime, duration):
         """
@@ -172,25 +159,37 @@ class Client(object):
         >>> st = client.get_waveforms_nscl("IUANMO BH.00", t, 10)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 40.0 Hz, 401 samples
+        IU.ANMO.00.BH... | 40.0 Hz, 401 samples
+        IU.ANMO.00.BH... | 40.0 Hz, 401 samples
         """
         start = str(UTCDateTime(starttime)).replace("T", " ").replace("Z", "")
         line = "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'\t" % \
             (seedname, start, duration)
         if self.debug:
             print(ascdate() + " " + asctime() + " line=" + line)
+
+        # prepare for routing through http_proxy_connect
+        address = (self.host, self.port)
+        if self.proxy:
+            proxy = (self.proxy.hostname, self.proxy.port)
+            auth = ((self.proxy.username, self.proxy.password) if
+                    self.proxy.username else None)
+
         success = False
         while not success:
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                with NamedTemporaryFile() as tf:
-                    if self.debug:
-                        print(ascdate(), asctime(), "connecting temp file",
-                              tf.name)
+                if self.proxy:
+                    s, _, _ = http_proxy_connect(address, proxy, auth,
+                                                 timeout=self.timeout)
+                    # This socket is already connected to the proxy
+                else:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    if self.timeout is not None:
+                        s.settimeout(self.timeout)
                     s.connect((self.host, self.port))
-                    s.setblocking(0)
+
+                with io.BytesIO() as tf:
                     s.send(line.encode('ascii', 'strict'))
                     if self.debug:
                         print(ascdate(), asctime(), "Connected - start reads")
@@ -199,19 +198,23 @@ class Client(object):
                     totlen = 0
                     while True:
                         try:
-                            data = s.recv(102400)
+                            # Recommended bufsize is a small power of 2.
+                            data = s.recv(4096)
                             if self.debug:
                                 print(ascdate(), asctime(), "read len",
                                       str(len(data)), " total", str(totlen))
-                            if data.find(b"EOR") >= 0:
+                            _pos = data.find(b"<EOR>")
+                            # <EOR> can be after every 512 bytes which seems to
+                            # be the record length cwb query uses.
+                            if _pos >= 0 and (_pos + totlen) % 512 == 0:
                                 if self.debug:
                                     print(ascdate(), asctime(), b"<EOR> seen")
-                                tf.write(data[0:data.find(b"<EOR>")])
-                                totlen += len(data[0:data.find(b"<EOR>")])
+                                tf.write(data[0:_pos])
+                                totlen += len(data[0:_pos])
                                 tf.seek(0)
                                 try:
-                                    st = read(tf.name, 'MSEED')
-                                except Exception as e:
+                                    st = read(tf, 'MSEED')
+                                except Exception:
                                     st = Stream()
                                 st.trim(starttime, starttime + duration)
                                 s.close()
@@ -221,7 +224,7 @@ class Client(object):
                                 totlen += len(data)
                                 tf.write(data)
                                 slept = 0
-                        except socket.error as e:
+                        except socket.error:
                             if slept > maxslept:
                                 print(ascdate(), asctime(),
                                       "Timeout on connection",
@@ -230,7 +233,7 @@ class Client(object):
                                 s.close()
                             sleep(0.05)
                             slept += 1
-            except socket.error as e:
+            except socket.error:
                 print(traceback.format_exc())
                 print("CWB QueryServer at " + self.host + "/" + str(self.port))
                 raise

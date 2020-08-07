@@ -2,10 +2,6 @@
 """
 The obspy.imaging.beachball test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 import warnings
@@ -14,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.testing import ImageComparison
-from obspy.imaging.beachball import (tdl, AuxPlane, beach, beachball,
+from obspy.imaging.beachball import (tdl, aux_plane, beach, beachball,
                                      MomentTensor, mt2axes, mt2plane,
                                      strike_dip)
 
@@ -31,7 +27,7 @@ class BeachballTestCase(unittest.TestCase):
         """
         Create beachball examples in tests/output directory.
         """
-        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         data = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
                 [274, 13, 55],
                 [130, 79, 98],
@@ -50,11 +46,11 @@ class BeachballTestCase(unittest.TestCase):
                 [1, -1, 0, 0, 0, 0],
                 # Lars
                 [1, -1, 0, 0, 0, -1],
-                # http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
+                # https://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
                 [179, 55, -78],
                 [10, 42.5, 90],
                 [10, 42.5, 92],
-                # http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
+                # https://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
                 [150, 87, 1],
                 # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/
                 # 2nd.html
@@ -82,18 +78,21 @@ class BeachballTestCase(unittest.TestCase):
             with ImageComparison(self.path, filename) as ic:
                 beachball(data_, outfile=ic.name)
 
-    def test_BeachBallOutputFormats(self):
+    def test_beachball_output_format(self):
         """
         Tests various output formats.
         """
         fm = [115, 35, 50]
-        # PDF
-        data = beachball(fm, format='pdf')
-        self.assertEqual(data[0:4], b"%PDF")
-        # as file
-        # create and compare image
-        with NamedTemporaryFile(suffix='.pdf') as tf:
-            beachball(fm, format='pdf', outfile=tf.name)
+        # PDF - Some matplotlib versions internally raise some warnings here
+        # which we don't want to see in the tests.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            data = beachball(fm, format='pdf')
+            self.assertEqual(data[0:4], b"%PDF")
+            # as file
+            # create and compare image
+            with NamedTemporaryFile(suffix='.pdf') as tf:
+                beachball(fm, format='pdf', outfile=tf.name)
         # PS
         data = beachball(fm, format='ps')
         self.assertEqual(data[0:4], b"%!PS")
@@ -113,7 +112,7 @@ class BeachballTestCase(unittest.TestCase):
         with NamedTemporaryFile(suffix='.svg') as tf:
             beachball(fm, format='svg', outfile=tf.name)
 
-    def test_StrikeDip(self):
+    def test_strike_dip(self):
         """
         Test strike_dip function - all values are taken from MatLab.
         """
@@ -124,15 +123,15 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(strike, 254.64386091007400)
         self.assertAlmostEqual(dip, 10.641291652406172)
 
-    def test_AuxPlane(self):
+    def test_aux_plane(self):
         """
-        Test AuxPlane function - all values are taken from MatLab.
+        Test aux_plane function - all values are taken from MatLab.
         """
-        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         s1 = 132.18005257215460
         d1 = 84.240987194376590
         r1 = 98.963372641038790
-        (s2, d2, r2) = AuxPlane(s1, d1, r1)
+        (s2, d2, r2) = aux_plane(s1, d1, r1)
         self.assertAlmostEqual(s2, 254.64386091007400)
         self.assertAlmostEqual(d2, 10.641291652406172)
         self.assertAlmostEqual(r2, 32.915578422454380)
@@ -140,32 +139,32 @@ class BeachballTestCase(unittest.TestCase):
         s1 = 160.55
         d1 = 76.00
         r1 = -46.78
-        (s2, d2, r2) = AuxPlane(s1, d1, r1)
+        (s2, d2, r2) = aux_plane(s1, d1, r1)
         self.assertAlmostEqual(s2, 264.98676854650216)
         self.assertAlmostEqual(d2, 45.001906942415623)
         self.assertAlmostEqual(r2, -159.99404307049076)
 
-    def test_AuxPlane735(self):
+    def test_aux_plane_735(self):
         """
-        Test AuxPlane precision issue #735
+        Test aux_plane precision issue #735
         """
-        s, d, r = AuxPlane(164, 90, -32)
+        s, d, r = aux_plane(164, 90, -32)
         self.assertAlmostEqual(s, 254.)
         self.assertAlmostEqual(d, 58.)
         self.assertAlmostEqual(r, -180.)
 
-    def test_TDL(self):
+    def test_tdl(self):
         """
         Test tdl function - all values are taken from MatLab.
         """
-        AN = [0.737298200871146, -0.668073596186761, -0.100344571703004]
-        BN = [-0.178067035261159, -0.048901208638715, -0.982802524796805]
-        (FT, FD, FL) = tdl(AN, BN)
-        self.assertAlmostEqual(FT, 227.81994742784540)
-        self.assertAlmostEqual(FD, 84.240987194376590)
-        self.assertAlmostEqual(FL, 81.036627358961210)
+        an = [0.737298200871146, -0.668073596186761, -0.100344571703004]
+        bn = [-0.178067035261159, -0.048901208638715, -0.982802524796805]
+        (ft, fd, fl) = tdl(an, bn)
+        self.assertAlmostEqual(ft, 227.81994742784540)
+        self.assertAlmostEqual(fd, 84.240987194376590)
+        self.assertAlmostEqual(fl, 81.036627358961210)
 
-    def test_MT2Plane(self):
+    def test_mt2plane(self):
         """
         Tests mt2plane.
         """
@@ -175,22 +174,22 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(np.dip, 79.022700906654734)
         self.assertAlmostEqual(np.rake, 97.769255185515192)
 
-    def test_MT2Axes(self):
+    def test_mt2axes(self):
         """
         Tests mt2axes.
         """
-        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
-        (T, N, P) = mt2axes(mt)
-        self.assertAlmostEqual(T.val, 2.52461359)
-        self.assertAlmostEqual(T.dip, 55.33018576)
-        self.assertAlmostEqual(T.strike, 49.53656116)
-        self.assertAlmostEqual(N.val, 0.08745048)
-        self.assertAlmostEqual(N.dip, 7.62624529)
-        self.assertAlmostEqual(N.strike, 308.37440488)
-        self.assertAlmostEqual(P.val, -2.61206406)
-        self.assertAlmostEqual(P.dip, 33.5833323)
-        self.assertAlmostEqual(P.strike, 213.273886)
+        (t, n, p) = mt2axes(mt)
+        self.assertAlmostEqual(t.val, 2.52461359)
+        self.assertAlmostEqual(t.dip, 55.33018576)
+        self.assertAlmostEqual(t.strike, 49.53656116)
+        self.assertAlmostEqual(n.val, 0.08745048)
+        self.assertAlmostEqual(n.dip, 7.62624529)
+        self.assertAlmostEqual(n.strike, 308.37440488)
+        self.assertAlmostEqual(p.val, -2.61206406)
+        self.assertAlmostEqual(p.dip, 33.5833323)
+        self.assertAlmostEqual(p.strike, 213.273886)
 
     def test_collection(self):
         """
@@ -222,27 +221,28 @@ class BeachballTestCase(unittest.TestCase):
               [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
               [150, 87, 1]]
 
-        # Initialize figure
-        fig = plt.figure(figsize=(6, 6), dpi=300)
-        ax = fig.add_subplot(111, aspect='equal')
-
-        # Plot the stations or borders
-        ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
-
-        x = -100
-        y = -100
-        for i, t in enumerate(mt):
-            # add the beachball (a collection of two patches) to the axis
-            ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
-            x += 50
-            if (i + 1) % 5 == 0:
-                x = -100
-                y += 50
-
-        # set the x and y limits and save the output
-        ax.axis([-120, 120, -120, 120])
-        # create and compare image
         with ImageComparison(self.path, 'bb_collection.png') as ic:
+            # Initialize figure
+            fig = plt.figure(figsize=(6, 6), dpi=300)
+            ax = fig.add_subplot(111, aspect='equal')
+
+            # Plot the stations or borders
+            ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
+
+            x = -100
+            y = -100
+            for i, t in enumerate(mt):
+                # add the beachball (a collection of two patches) to the axis
+                ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
+                x += 50
+                if (i + 1) % 5 == 0:
+                    x = -100
+                    y += 50
+
+            # set the x and y limits
+            ax.axis([-120, 120, -120, 120])
+
+            # save the output
             fig.savefig(ic.name)
 
     def collection_aspect(self, axis, filename_width, filename_width_height):
@@ -252,33 +252,32 @@ class BeachballTestCase(unittest.TestCase):
         mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
         # Test passing only a width
-        # Initialize figure
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        # add the beachball (a collection of two patches) to the axis
-        # give it an axes to keep make the beachballs circular
-        # even though axes are not scaled
-        ax.add_collection(beach(mt, width=400, xy=(0, 0), linewidth=.6,
-                                axes=ax))
-        # set the x and y limits
-        ax.axis(axis)
-        # create and compare image
         with ImageComparison(self.path, filename_width) as ic:
+            # Initialize figure
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            # add the beachball (a collection of two patches) to the axis
+            # give it an axes to keep make the beachballs circular
+            # even though axes are not scaled
+            ax.add_collection(beach(mt, width=400, xy=(0, 0), linewidth=.6,
+                                    axes=ax))
+            # set the x and y limits
+            ax.axis(axis)
             fig.savefig(ic.name)
 
         # Test passing a width and a height
-        # Initialize figure
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        # add the beachball (a collection of two patches) to the axis
-        # give it an axes to keep make the beachballs circular
-        # even though axes are not scaled
-        ax.add_collection(beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
-                          axes=ax))
-        # set the x and y limits and save the output
-        ax.axis(axis)
-        # create and compare image
         with ImageComparison(self.path, filename_width_height) as ic:
+            # Initialize figure
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            # add the beachball (a collection of two patches) to the axis
+            # give it an axes to keep make the beachballs circular
+            # even though axes are not scaled
+            ax.add_collection(beach(mt, width=(400, 200), xy=(0, 0),
+                                    linewidth=.6, axes=ax))
+            # set the x and y limits
+            ax.axis(axis)
+            # save the output
             fig.savefig(ic.name)
 
     def test_collection_aspect_x(self):

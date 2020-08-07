@@ -14,16 +14,11 @@ Plotting spectrogram of seismograms.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
-import math as M
+import math
 
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import Normalize
 
@@ -44,8 +39,8 @@ def _nearest_pow_2(x):
     :rtype: Int
     :return: Nearest power of 2 to x
     """
-    a = M.pow(2, M.ceil(np.log2(x)))
-    b = M.pow(2, M.floor(np.log2(x)))
+    a = math.pow(2, math.ceil(np.log2(x)))
+    b = math.pow(2, math.floor(np.log2(x)))
     if abs(a - x) < abs(b - x):
         return a
     else:
@@ -67,7 +62,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         to 1. High overlaps take a long time to compute.
     :type wlen: int or float
     :param wlen: Window length for fft in seconds. If this parameter is too
-        small, the calculation will take forever.
+        small, the calculation will take forever. If None, it defaults to
+        (samp_rate/100.0).
     :type log: bool
     :param log: Logarithmic frequency axis if True, linear frequency axis
         otherwise.
@@ -103,6 +99,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         percentages of the amplitude range (linear or logarithmic depending
         on option `dbscale`) are clipped.
     """
+    import matplotlib.pyplot as plt
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
 
@@ -196,10 +193,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 
     if not sphinx:
         # ignoring all NumPy warnings during plot
-        temp = np.geterr()
-        np.seterr(all='ignore')
-        plt.draw()
-        np.seterr(**temp)
+        with np.errstate(all='ignore'):
+            plt.draw()
     if outfile:
         if fmt:
             fig.savefig(outfile, format=fmt)

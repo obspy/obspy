@@ -5,12 +5,12 @@
  *
  * Therefore ObsPy, which is licensed under the terms of the LGPL, ships an obspy_spline.c
  * which is a wrapper around the LGPL licensed SPLINE library of John Burkardt
- * (http://people.sc.fsu.edu/~jburkardt/c_src/spline/spline.html).
+ * (https://people.sc.fsu.edu/~jburkardt/c_src/spline/spline.html).
  *
  * Copyright (C) ObsPy Development Team, 2014.
  *
  * This file is licensed under the terms of the GNU Lesser General Public
- * License, Version 3 (http://www.gnu.org/copyleft/lesser.html).
+ * License, Version 3 (https://www.gnu.org/copyleft/lesser.html).
  *
  */
 
@@ -23,7 +23,7 @@ char *evr_spline(int num_points, double *t, double *y, double tension,
                                  double k, double *xvals_arr, int num_xvals,
                                  double **p_retvals_arr, int *p_num_retvals)
 {
-    unsigned int i;
+    int i;
     double tval;
     double yval;
     double * ypp;
@@ -63,7 +63,7 @@ char *evr_spline(int num_points, double *t, double *y, double tension,
 
     *p_num_retvals = 0;
 
-    for (i = 0u; i < num_xvals; ++i)
+    for (i = 0; i < num_xvals; ++i)
     {
         tval = xvals_arr[i];
         /* input must be strictly increasing */

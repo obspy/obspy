@@ -6,20 +6,16 @@ Waveform plotting utilities.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import re
+from dateutil.rrule import MINUTELY, SECONDLY
 
-from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
+from matplotlib.dates import (
+    AutoDateLocator, AutoDateFormatter, DateFormatter, num2date)
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
-from obspy.core.util.base import get_matplotlib_version
 
 
 def _seconds_to_days(sec):
@@ -100,12 +96,16 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
         # class prior to matplotlib version 1.2
-        if get_matplotlib_version() < [1, 2, 0]:
-            AutoDateFormatter.__init__(self, *args, **kwargs)
-        else:
-            super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
+        super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
+        # Reset the scale to make it reproducible across matplotlib versions.
+        self.scaled = {}
+        self.scaled[1.0] = '%b %d %Y'
+        self.scaled[30.0] = '%b %Y'
+        self.scaled[365.0] = '%Y'
         self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
         self.scaled[1. / (24. * 60.)] = \
+            FuncFormatter(format_hour_minute_second)
+        self.scaled[_seconds_to_days(1)] = \
             FuncFormatter(format_hour_minute_second)
         self.scaled[_seconds_to_days(10)] = \
             FuncFormatter(decimal_seconds_format_x_decimals(1))
@@ -136,7 +136,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
                 fmt = self.scaled[k]
                 break
 
-        if isinstance(fmt, (str, native_str)):
+        if isinstance(fmt, str):
             self._formatter = DateFormatter(fmt, self._tz)
             return self._formatter(x, pos)
         elif hasattr(fmt, '__call__'):
@@ -239,6 +239,31 @@ def _timestring(t):
     2012-04-05T12:12:00.12
     """
     return str(t).rstrip("Z0").rstrip(".")
+
+
+def _set_xaxis_obspy_dates(ax, ticklabels_small=True):
+    """
+    Set Formatter/Locator of x-Axis to use ObsPyAutoDateFormatter and do some
+    other tweaking.
+
+    In contrast to normal matplotlib ``AutoDateFormatter`` e.g. shows full
+    timestamp on first tick when zoomed in so far that matplotlib would only
+    show hours or minutes on all ticks (making it impossible to tell the date
+    from the axis labels) and also shows full timestamp in matplotlib figures
+    info line (mouse-over info of current cursor position).
+
+    :type ax: :class:`matplotlib.axes.Axes`
+    :rtype: None
+    """
+    ax.xaxis_date()
+    locator = AutoDateLocator(minticks=3, maxticks=6)
+    locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
+    locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
+    ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
+    ax.xaxis.set_major_locator(locator)
+    if ticklabels_small:
+        import matplotlib.pyplot as plt
+        plt.setp(ax.get_xticklabels(), fontsize='small')
 
 
 if __name__ == '__main__':

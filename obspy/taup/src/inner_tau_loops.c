@@ -16,7 +16,6 @@
 // Simple macros for easy array access.
 // Be careful as these naturally apply to all function in this module.
 #define RAY_PARAMS(I, J) ray_params[(I) * max_j + (J)]
-#define MASK(I, J) mask[(I) * max_j + (J)]
 #define TIME(I, J) time[(I) * max_j + (J)]
 #define DIST(I, J) dist[(I) * max_j + (J)]
 #define TIME_DIST(I, J) time_dist[(I) * 4 + (J)]
@@ -56,12 +55,11 @@ for i, p in enumerate(ray_params[:, 0]):
                     "Ray turns in the middle of this layer!")
 */
 void tau_branch_calc_time_dist_inner_loop(
-    double *ray_params, int *mask, double *time, double *dist,
+    double *ray_params, double *time, double *dist,
     double *layer, double *time_dist, int max_i, int max_j,
-    double max_ray_param) {
+    double max_ray_param, int allow_turn) {
 
     int i, j;
-    int m;
     double p, time_sum, dist_sum;
 
     for (i=0; i < max_i; i++) {
@@ -74,12 +72,19 @@ void tau_branch_calc_time_dist_inner_loop(
         dist_sum = 0.0;
 
         for (j=0; j < max_j; j++) {
-            m = MASK(i, j);
-            if (m == 0) {
-                continue;
+            if (p > LAYER(j, SL_TOP_P) || p > LAYER(j, SL_BOT_P)) {
+                break;
             }
             time_sum += TIME(i, j);
             dist_sum += DIST(i, j);
+        }
+
+        /* Check if the last element includes a turn. */
+        if (j < max_j && allow_turn) {
+            if ((LAYER(j, SL_TOP_P) - p) * (p - LAYER(j, SL_BOT_P)) > 0) {
+                time_sum += TIME(i, j);
+                dist_sum += DIST(i, j);
+            }
         }
 
         TIME_DIST(i, TD_TIME) = time_sum;
@@ -169,18 +174,21 @@ void bullen_radial_slowness_inner_loop(
         int max_i) {
     int i;
     double B, sqrt_top, sqrt_bot;
+    double arg_top, arg_bot, dumb_var;
 
     for (i=0; i<max_i; i++) {
-        if ((LAYER(i, SL_BOT_DEPTH) - LAYER(i, SL_TOP_DEPTH)) < 0.0000000001) {
-            continue;
-        }
+        dumb_var = (LAYER(i, SL_BOT_DEPTH) - LAYER(i, SL_TOP_DEPTH));
+        if ((dumb_var < 0.0000000001) || (dumb_var != dumb_var)) {continue;}
 
         B = log(LAYER(i, SL_TOP_P) / LAYER(i, SL_BOT_P)) /
             log((radius - LAYER(i, SL_TOP_DEPTH)) /
                 (radius - LAYER(i, SL_BOT_DEPTH)));
-
-        sqrt_top = sqrt(pow(LAYER(i, SL_TOP_P), 2) - pow(p[i], 2));
-        sqrt_bot = sqrt(pow(LAYER(i, SL_BOT_P), 2) - pow(p[i], 2));
+        arg_top = pow(LAYER(i, SL_TOP_P), 2) - pow(p[i], 2);
+        arg_bot = pow(LAYER(i, SL_BOT_P), 2) - pow(p[i], 2);
+        if (arg_top < 0.) {arg_top = 0.;}
+        if (arg_bot < 0.) {arg_bot = 0.;}
+        sqrt_top = sqrt(arg_top);
+        sqrt_bot = sqrt(arg_bot);
 
         dist[i] = (atan2(p[i], sqrt_bot) - atan2(p[i], sqrt_top)) / B;
         time[i] = (sqrt_top - sqrt_bot) / B;

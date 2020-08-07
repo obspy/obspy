@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 import warnings
@@ -20,11 +16,11 @@ try:
     version = float(__version__.rsplit('.', 1)[0])
     if version >= 2.3:
         IS_RECENT_LXML = True
-except:
+except Exception:
     pass
 
 
-class mchedrTestCase(unittest.TestCase):
+class MchedrTestCase(unittest.TestCase):
     """
     Test suite for obspy.mchedr
     """
@@ -87,7 +83,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
             origin.resource_id,
             ResourceIdentifier(
                 id='quakeml:us.anss.org/origin/20120101052755.98'))
-        self.assertEqual(origin.type, 'hypocenter')
+        self.assertEqual(origin.origin_type, 'hypocenter')
         self.assertEqual(
             origin.time,
             UTCDateTime(2012, 1, 1, 5, 27, 55, 980000))
@@ -109,7 +105,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
                 id='quakeml:us.anss.org/earthmodel/ak135'))
         self.assertEqual(origin.evaluation_mode, None)
         self.assertEqual(origin.evaluation_status, None)
-        self.assertEqual(origin.origin_type, None)
+        self.assertEqual(origin.origin_type, 'hypocenter')
         # composite times
         self.assertEqual(len(origin.composite_times), 0)
         # quality
@@ -318,7 +314,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
                 catalog2 = _read_quakeml(tf)
         self.assertTrue(len(catalog2), 1)
 
-    def test_readEvents(self):
+    def test_read_events(self):
         """
         Tests reading an mchedr document via read_events.
         """
@@ -326,12 +322,13 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         # Read file again. Avoid the (legit) warning about the already used
         # resource identifiers.
         with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
             catalog = read_events(filename)
             self.assertTrue(len(catalog), 1)
 
 
 def suite():
-    return unittest.makeSuite(mchedrTestCase, 'test')
+    return unittest.makeSuite(MchedrTestCase, 'test')
 
 
 if __name__ == '__main__':

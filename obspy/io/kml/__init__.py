@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.kml - Keyhole Markup Language (KML) write support
-==========================================================
+obspy.io.kml - Keyhole Markup Language (KML) write support for ObsPy
+====================================================================
 This module provides write support for the Keyhole Markup Language (KML)
 format.
 
@@ -23,8 +23,5 @@ For details on further parameters see
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA

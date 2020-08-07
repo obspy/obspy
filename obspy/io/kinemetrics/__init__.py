@@ -14,7 +14,7 @@ C code (Kw2asc.c (see "KW2ASC.SRC" File in /doc section)).
     Kinemetrics(c)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------
@@ -107,11 +107,6 @@ Not implemented
 
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

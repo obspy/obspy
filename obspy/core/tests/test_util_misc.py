@@ -1,57 +1,65 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
-import platform
 import sys
 import tempfile
 import unittest
-from ctypes import CDLL
-from ctypes.util import find_library
+import warnings
+from unittest import mock
 
-from obspy import UTCDateTime
-from obspy.core.util.misc import CatchOutput, get_window_times
+from obspy import UTCDateTime, read
+from obspy.core.event import ResourceIdentifier as ResId
+from obspy.core.util.misc import CatchOutput, get_window_times, \
+    _ENTRY_POINT_CACHE, _yield_obj_parent_attr
+from obspy.core.util.testing import WarningsCapture
 
 
 class UtilMiscTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.misc
     """
-    @unittest.skipIf(sys.platform == "darwin" and
-                     platform.python_version_tuple()[0] == "3",
-                     "Does not work on OSX and Python 3 for some reason.")
-    def test_CatchOutput(self):
+
+    def test_supress_output(self):
         """
-        Tests for CatchOutput context manager.
+        Tests that CatchOutput suppresses messages
         """
-        libc = CDLL(find_library("c"))
+        # this should write nothing to console
+        with CatchOutput():
+            sys.stdout.write("test_suppress_output #1 failed")
+            sys.stderr.write("test_suppress_output #2 failed")
+            print("test_suppress_output #3 failed")
+            print("test_suppress_output #4 failed", file=sys.stdout)
+            print("test_suppress_output #5 failed", file=sys.stderr)
+
+    def test_catch_output(self):
+        """
+        Tests that CatchOutput catches messages
+        """
+        with CatchOutput() as out:
+            sys.stdout.write("test_catch_output #1")
+            sys.stderr.write("test_catch_output #2")
+        self.assertEqual(out.stdout, 'test_catch_output #1')
+        self.assertEqual(out.stderr, 'test_catch_output #2')
 
         with CatchOutput() as out:
-            os.system('echo "abc"')
-            libc.printf(b"def\n")
-            # This flush is necessary for Python 3, which uses different
-            # buffering modes. Fortunately, in practice, we do not mix Python
-            # and C writes to stdout. This can also be fixed by setting the
-            # PYTHONUNBUFFERED environment variable, but this must be done
-            # externally, and cannot be done by the script.
-            libc.fflush(None)
-            print("ghi")
-            print("jkl", file=sys.stdout)
-            os.system('echo "123" 1>&2')
-            print("456", file=sys.stderr)
+            print("test_catch_output #3")
+        self.assertEqual(out.stdout, 'test_catch_output #3\n')
+        self.assertEqual(out.stderr, '')
 
-        if platform.system() == "Windows":
-            self.assertEqual(out.stdout.splitlines(),
-                             ['"abc"', 'def', 'ghi', 'jkl'])
-            self.assertEqual(out.stderr.splitlines(),
-                             ['"123" ', '456'])
-        else:
-            self.assertEqual(out.stdout, b"abc\ndef\nghi\njkl\n")
-            self.assertEqual(out.stderr, b"123\n456\n")
+        with CatchOutput() as out:
+            print("test_catch_output #4", file=sys.stdout)
+            print("test_catch_output #5", file=sys.stderr)
+        self.assertEqual(out.stdout, 'test_catch_output #4\n')
+        self.assertEqual(out.stderr, 'test_catch_output #5\n')
 
-    def test_CatchOutput_IO(self):
+    def test_catch_output_bytes(self):
+        with CatchOutput() as out:
+            # PY3 does not allow to write directly bytes into text streams
+            sys.stdout.buffer.write(b"test_catch_output_bytes #1")
+            sys.stderr.buffer.write(b"test_catch_output_bytes #2")
+        self.assertEqual(out.stdout, 'test_catch_output_bytes #1')
+        self.assertEqual(out.stderr, 'test_catch_output_bytes #2')
+
+    def test_catch_output_io(self):
         """
         Tests that CatchOutput context manager does not break I/O.
         """
@@ -122,7 +130,7 @@ class UtilMiscTestCase(unittest.TestCase):
             [
                 (UTCDateTime(0), UTCDateTime(5)),
                 (UTCDateTime(10), UTCDateTime(15))
-                ]
+            ]
         )
 
         # With offset.
@@ -232,6 +240,63 @@ class UtilMiscTestCase(unittest.TestCase):
                 (UTCDateTime(1.0), UTCDateTime(2.0))
             ]
         )
+
+    def test_entry_point_buffer(self):
+        """
+        Ensure the entry point buffer caches results from load_entry_point
+        """
+        with mock.patch.dict(_ENTRY_POINT_CACHE, clear=True):
+            with mock.patch('obspy.core.util.misc.load_entry_point') as p:
+                # raises UserWarning: No matching response information found.
+                with warnings.catch_warnings(record=True):
+                    warnings.simplefilter('ignore', UserWarning)
+                    st = read()
+                    st.write('temp.mseed', 'mseed')
+            self.assertEqual(len(_ENTRY_POINT_CACHE), 3)
+            self.assertEqual(p.call_count, 3)
+
+    def test_yield_obj_parent_attr(self):
+        """
+        Setup a complex data structure and ensure recursive search function
+        finds all target objects.
+        """
+        class Slots(object):
+            """
+            A simple class with slots
+            """
+            __slots__ = ('right', )
+
+            def __init__(self, init):
+                self.right = init
+
+        slotted = Slots((ResId('1'), AttributeError, [ResId('2')]))
+        nested = {
+            'not_right': 'nope',
+            'good': {'right': ResId('3'), 'wrong': [1, [(())]]},
+            'right': [[[[[[[[ResId('4')]]], ResId('5')]]]]],
+        }
+
+        base = dict(right=ResId('6'), slotted=slotted, nested=nested)
+
+        out = list(_yield_obj_parent_attr(base, ResId))
+
+        self.assertEqual(len(out), 6)
+
+        for obj, parent, attr in out:
+            self.assertEqual(attr, 'right')
+            self.assertIsInstance(obj, ResId)
+
+    def test_warning_capture(self):
+        """
+        Tests for the WarningsCapture class in obspy.core.util.testing
+        """
+        # ensure a warning issued with warn is captured. Before, this could
+        # raise a TypeError.
+        with WarningsCapture() as w:
+            warnings.warn('something bad is happening in the world')
+
+        self.assertEqual(len(w), 1)
+        self.assertIn('something bad', str(w.captured_warnings[0].message))
 
 
 def suite():

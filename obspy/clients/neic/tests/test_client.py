@@ -2,10 +2,6 @@
 """
 The obspy.clients.neic.client test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import unittest
 
 from obspy.core.utcdatetime import UTCDateTime
@@ -16,13 +12,17 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.neic.client.Client.
     """
-    def test_getWaveform(self):
+    @classmethod
+    def setUpClass(cls):
+        cls.client = Client(host="137.227.224.97", port=2061, timeout=8)
+        cls.starttime = UTCDateTime() - 5 * 60 * 60
+
+    def test_get_waveform(self):
         """
         Tests get_waveforms method. Tests against get_waveforms_nscl method.
         """
-        client = Client(host="137.227.224.97", port=2061)
-        # now - 5 hours
-        t = UTCDateTime() - 5 * 60 * 60
+        client = self.client
+        t = self.starttime
         duration = 1.0
         st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
         # try a series of requests, compare against get_waveforms_nscl
@@ -36,13 +36,12 @@ class ClientTestCase(unittest.TestCase):
                                        endtime=t + duration)
             self.assertEqual(st, st2)
 
-    def test_getWaveformNSCL(self):
+    def test_get_waveform_nscl(self):
         """
         Tests get_waveforms_nscl method.
         """
-        client = Client(host="137.227.224.97", port=2061)
-        # now - 5 hours
-        t = UTCDateTime() - 5 * 60 * 60
+        client = self.client
+        t = self.starttime
         duration_long = 3600.0
         duration = 1.0
         components = ["1", "2", "Z"]
@@ -58,11 +57,18 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(stats.network, "IU")
             self.assertEqual(stats.location, "00")
             self.assertEqual(stats.channel, "BH" + component)
-            self.assertEqual(stats.endtime - stats.starttime, duration_long)
+            # requested data duration has some minor fluctuations sometimes but
+            # should be pretty close to the expected duration.
+            # it should not be over a delta longer than expected (it should be
+            # trimmed correctly if more data is returned) but sometimes it's
+            # one delta shorter
+            self.assertTrue(
+                abs(duration_long - (stats.endtime - stats.starttime)) <=
+                tr.stats.delta)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertEqual(stats.sampling_rate, 20.0)
-            self.assertEqual(len(tr), 72001)
+            self.assertEqual(stats.sampling_rate, 40.0)
+            self.assertEqual(len(tr), 144001)
         # now use shorter piece, this is faster and less error prone (gaps etc)
         st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
         st.sort()
@@ -74,11 +80,18 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(stats.network, "IU")
             self.assertEqual(stats.location, "00")
             self.assertEqual(stats.channel, "BH" + component)
-            self.assertEqual(stats.endtime - stats.starttime, duration)
+            # requested data duration has some minor fluctuations sometimes but
+            # should be pretty close to the expected duration.
+            # it should not be over a delta longer than expected (it should be
+            # trimmed correctly if more data is returned) but sometimes it's
+            # one delta shorter
+            self.assertTrue(
+                abs(duration - (stats.endtime - stats.starttime)) <=
+                tr.stats.delta)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertEqual(stats.sampling_rate, 20.0)
-            self.assertEqual(len(tr), 21)
+            self.assertEqual(stats.sampling_rate, 40.0)
+            self.assertEqual(len(tr), 41)
 
         # try a series of regex patterns that should return the same data
         st = client.get_waveforms_nscl("IUANMO BH", t, duration)
@@ -86,8 +99,7 @@ class ClientTestCase(unittest.TestCase):
                     "IUANMO BH.*",
                     "IUANMO BH[Z12].*",
                     "IUANMO BH[Z12]..",
-                    "IUANMO B.*",
-                    "..ANMO B.*"]
+                    "..ANMO BH.*"]
         for pattern in patterns:
             st2 = client.get_waveforms_nscl(pattern, t, duration)
             self.assertEqual(st, st2)

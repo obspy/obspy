@@ -1,0 +1,17 @@
+BEGIN GSE2.0
+MSG_TYPE DATA
+MSG_ID example GSE_IDC
+DATA_TYPE BULLETIN GSE2.0
+Reviewed Event Bulletin (REB) of the GSE_IDC for January 16, 1995
+EVENT 280435
+   Date       Time       Latitude Longitude    Depth    Ndef Nsta Gap    Mag1  N    Mag2  N    Mag3  N  Author          ID
+       rms   OT_Error      Smajor Sminor Az        Err   mdist  Mdist     Err        Err        Err     Quality
+
+1995/01/16 07:26:52.4     39.4500   20.4400     66.8       9    8 322  mb 3.6  3  ML 4.0  1             GSE_IDC     282672
+      0.53   +- 12.69      93.6   83.7   27    +- 83.8   10.56  78.21   +-0.2                           m i ke
+
+GREECE-ALBANIA BORDER REGION
+Sta    Dist   EvAz     Phase       Date      Time     TRes  Azim  AzRes  Slow  SRes Def  SNR        Amp   Per   Mag1   Mag2 Arr ID
+GERES  10.56 150.3 m E P       1995/01/16 07:29:20.7  -0.2 163.7   13.4  13.8   0.1 T     6.8       0.6   0.3 ML 4.0         3586432
+GERES  10.56 150.3     S       1995/01/16 07:31:17.5  -0.6 153.4    3.1  23.4  -1.0 T     4.9       2.9   0.6                3586513
+NORES  22.02 161.4     P       1995/01/16 07:31:41.2   0.3 155.0   -6.4  11.5   0.7 T     9.9       3.5   0.3                3586453

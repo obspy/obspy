@@ -15,12 +15,8 @@ Various Seismogram Filtering Functions
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import warnings
 
 import numpy as np
@@ -60,11 +56,13 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     low = freqmin / fe
     high = freqmax / fe
     # raise for some bad scenarios
-    if high > 1:
-        high = 1.0
-        msg = "Selected high corner frequency is above Nyquist. " + \
-              "Setting Nyquist as high corner."
+    if high - 1.0 > -1e-6:
+        msg = ("Selected high corner frequency ({}) of bandpass is at or "
+               "above Nyquist ({}). Applying a high-pass instead.").format(
+            freqmax, fe)
         warnings.warn(msg)
+        return highpass(data, freq=freqmin, df=df, corners=corners,
+                        zerophase=zerophase)
     if low > 1:
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
@@ -210,7 +208,7 @@ def envelope(data):
     return data
 
 
-def remezFIR(data, freqmin, freqmax, df):
+def remez_fir(data, freqmin, freqmax, df):
     """
     The minimax optimal bandpass using Remez algorithm. (experimental)
 
@@ -283,7 +281,7 @@ def remezFIR(data, freqmin, freqmax, df):
     return convolve(filt, data)
 
 
-def lowpassFIR(data, freq, df, winlen=2048):
+def lowpass_fir(data, freq, df, winlen=2048):
     """
     FIR-Lowpass Filter. (experimental)
 
@@ -302,7 +300,7 @@ def lowpassFIR(data, freq, df, winlen=2048):
     .. versionadded:: 0.6.2
     """
     # Source: Travis Oliphant
-    # http://mail.scipy.org/pipermail/scipy-user/2004-February/002628.html
+    # https://mail.scipy.org/pipermail/scipy-user/2004-February/002628.html
     #
     # There is not currently an FIR-filter design program in SciPy. One
     # should be constructed as it is not hard to implement (of course making

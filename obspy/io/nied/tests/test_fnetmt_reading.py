@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import os
 import io
 import unittest
@@ -76,6 +72,7 @@ class FNETMTCatalogReadingTestCase(unittest.TestCase):
 
 def suite():
     return unittest.makeSuite(FNETMTCatalogReadingTestCase, 'test')
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

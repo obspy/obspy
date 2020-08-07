@@ -1,0 +1,23 @@
+XX_TEST_00_BHZ, 000001, R
+             start time: 2003,149,02:13:23.043400
+      number of samples: 5980
+     sample rate factor: 32760  (40 samples per second)
+ sample rate multiplier: -819
+         activity flags: [00000000] 8 bits
+    I/O and clock flags: [00000000] 8 bits
+     data quality flags: [00000000] 8 bits
+   number of blockettes: 2
+        time correction: 10000
+            data offset: 128
+ first blockette offset: 48
+         BLOCKETTE 1000: (Data Only SEED)
+              next blockette: 64
+                    encoding: STEIM 2 Compression (val:11)
+                  byte order: Big endian (val:1)
+               record length: 4096 (val:12)
+               reserved byte: 0
+          BLOCKETTE 100: (Sample Rate)
+              next blockette: 0
+          actual sample rate: 40
+             undefined flags: [00000000] 8 bits
+          reserved bytes (3): 0,0,0

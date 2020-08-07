@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:ISC/bulletin">
+    <focalMechanism publicID="smi:ISC/fmid=292310">
+      <momentTensor publicID="smi:ISC/mtid=123456">
+        <derivedOriginID>smi:some/origin/id</derivedOriginID>
+        <dataUsed>
+          <waveType>body waves</waveType>
+          <stationCount>88</stationCount>
+          <componentCount>166</componentCount>
+          <shortestPeriod>40.0</shortestPeriod>
+        </dataUsed>
+      </momentTensor>
+    </focalMechanism>
+    <focalMechanism publicID="smi:ISC/fmid=2923102">
+      <momentTensor publicID="smi:ISC/mtid=1234562">
+        <derivedOriginID>smi:some/origin/id</derivedOriginID>
+        <dataUsed>
+          <waveType>body waves</waveType>
+          <stationCount>88</stationCount>
+          <componentCount>166</componentCount>
+          <shortestPeriod>40.0</shortestPeriod>
+        </dataUsed>
+        <dataUsed>
+          <waveType>surface waves</waveType>
+          <stationCount>96</stationCount>
+          <componentCount>189</componentCount>
+          <shortestPeriod>50.0</shortestPeriod>
+        </dataUsed>
+        <dataUsed>
+          <waveType>long-period mantle waves</waveType>
+          <stationCount>41</stationCount>
+          <componentCount>52</componentCount>
+          <shortestPeriod>125.0</shortestPeriod>
+        </dataUsed>
+      </momentTensor>
+    </focalMechanism>
+    <event publicID="smi:ISC/evid=11713537">
+      <focalMechanismReference>smi:ISC/fmid=292310</focalMechanismReference>
+      <focalMechanismReference>smi:ISC/fmid=2923102</focalMechanismReference>
+    </event>
+  </EventParameters>
+</seiscomp>

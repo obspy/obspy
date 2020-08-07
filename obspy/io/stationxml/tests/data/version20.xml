@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<random:FDSNStationXML schemaVersion="2.0" xmlns:random="http://www.fdsn.org/xml/station/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <random:Source>Random Source</random:Source>
+  <random:Sender>Random Sender</random:Sender>
+  <random:Created>2014-03-13T15:18:28.497027Z</random:Created>
+  <random:Network code="XX">
+    <random:Description>Temp Network.</random:Description>
+    <random:TotalNumberStations>823</random:TotalNumberStations>
+    <random:SelectedNumberStations>0</random:SelectedNumberStations>
+  </random:Network>
+</random:FDSNStationXML>

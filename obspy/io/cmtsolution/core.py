@@ -7,12 +7,8 @@ CMTSOLUTION file format support for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import math
 import uuid
 import warnings
@@ -76,14 +72,15 @@ def _is_cmtsolution(filename_or_buf):
     :type filename_or_buf: str or file-like object.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_cmtsolution, reset_fp=True)
+        return _buffer_proxy(filename_or_buf, _internal_is_cmtsolution,
+                             reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
-    except (OSError, FileNotFoundError):
+    except OSError:
         return False
 
 
-def __is_cmtsolution(buf):
+def _internal_is_cmtsolution(buf):
     """
     Checks if the file is a CMTSOLUTION file.
 
@@ -94,9 +91,9 @@ def __is_cmtsolution(buf):
     # it passes it will be read again but that has really no
     # significant performance impact.
     try:
-        __read_single_cmtsolution(buf)
+        _internal_read_single_cmtsolution(buf)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -107,10 +104,10 @@ def _read_cmtsolution(filename_or_buf, **kwargs):
     :param filename_or_buf: File to read.
     :type filename_or_buf: str or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __read_cmtsolution, **kwargs)
+    return _buffer_proxy(filename_or_buf, _internal_read_cmtsolution, **kwargs)
 
 
-def __read_cmtsolution(buf, **kwargs):
+def _internal_read_cmtsolution(buf, **kwargs):
     """
     Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
 
@@ -137,14 +134,14 @@ def __read_cmtsolution(buf, **kwargs):
         # read the next event.
         if line:
             buf.seek(cur_pos, 0)
-            events.append(__read_single_cmtsolution(buf))
+            events.append(_internal_read_single_cmtsolution(buf))
         cur_pos = buf.tell()
 
     return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
                    events=events)
 
 
-def __read_single_cmtsolution(buf):
+def _internal_read_single_cmtsolution(buf):
     """
     Reads a single CMTSOLUTION file to a :class:`~obspy.core.event.Catalog`
     object.
@@ -155,9 +152,9 @@ def __read_single_cmtsolution(buf):
     # The first line encodes the preliminary epicenter.
     line = buf.readline()
 
-    hypocenter_catalog = line[:4].strip().decode()
+    hypocenter_catalog = line[:5].strip().decode()
 
-    origin_time = line[4:].strip().split()[:6]
+    origin_time = line[5:].strip().split()[:6]
     values = list(map(int, origin_time[:-1])) + \
         [float(origin_time[-1])]
     try:
@@ -166,7 +163,7 @@ def __read_single_cmtsolution(buf):
         warnings.warn("Could not determine origin time from line: %s. Will "
                       "be set to zero." % line)
         origin_time = UTCDateTime(0)
-    line = line.split()[7:]
+    line = line[28:].split()
     latitude, longitude, depth, body_wave_mag, surface_wave_mag = \
         map(float, line[:5])
 
@@ -297,6 +294,8 @@ def __read_single_cmtsolution(buf):
     ev.preferred_magnitude_id = cmt_mag.resource_id.id
     ev.preferred_focal_mechanism_id = foc_mec.resource_id.id
 
+    ev.scope_resource_ids()
+
     return ev
 
 
@@ -309,11 +308,11 @@ def _write_cmtsolution(catalog, filename_or_buf, **kwargs):
     :param filename_or_buf: Filename or file-like object to write to.
     :type filename_or_buf: str, open file, or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __write_cmtsolution, file_mode="wb",
-                         catalog=catalog, **kwargs)
+    return _buffer_proxy(filename_or_buf, _internal_write_cmtsolution,
+                         file_mode="wb", catalog=catalog, **kwargs)
 
 
-def __write_cmtsolution(buf, catalog, **kwargs):
+def _internal_write_cmtsolution(buf, catalog, **kwargs):
     """
     Write events to a file.
 
@@ -326,13 +325,13 @@ def __write_cmtsolution(buf, catalog, **kwargs):
     if len(catalog) < 1:
         raise ValueError("Catalog must contain at least one event")
     for event in catalog:
-        __write_single_cmtsolution(buf, event)
+        _internal_write_single_cmtsolution(buf, event)
         # Add an empty line between events.
         if len(catalog) > 1:
             buf.write(b"\n")
 
 
-def __write_single_cmtsolution(buf, event, **kwargs):
+def _internal_write_single_cmtsolution(buf, event, **kwargs):
     """
     Write an event to a file.
 
@@ -343,7 +342,7 @@ def __write_single_cmtsolution(buf, event, **kwargs):
     """
     if not event.focal_mechanisms:
         raise ValueError("Event must contain a focal mechanism.")
-    foc_mec = event.preferred_focal_mechanism() or event.focal_mechansisms[0]
+    foc_mec = event.preferred_focal_mechanism() or event.focal_mechanisms[0]
     if not foc_mec.moment_tensor:
         raise ValueError("The preferred or first focal mechanism must "
                          "contain a moment tensor.")

@@ -6,50 +6,56 @@ Base utilities and constants for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future import standard_library
-from future.utils import native_str
-
 import doctest
+import glob
+import importlib
 import inspect
 import io
 import os
+import re
 import sys
 import tempfile
+import unicodedata
+import warnings
+from collections import OrderedDict
 
-with standard_library.hooks():
-    from collections import OrderedDict
-
-from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
+import pkg_resources
+import requests
+from pkg_resources import get_entry_info, iter_entry_points
 
-from obspy.core.util.misc import to_int_or_zero
+from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
-                   'io.ah', 'io.ascii', 'io.cmtsolution', 'io.cnv', 'io.css',
-                   'io.datamark', 'io.gse2', 'io.json', 'io.kinemetrics',
-                   'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc', 'io.pdas',
-                   'io.pde', 'io.quakeml', 'io.sac', 'io.seg2', 'io.segy',
-                   'io.seisan', 'io.sh', 'io.shapefile', 'io.stationxml',
-                   'io.wav', 'io.xseed', 'io.y', 'io.zmap', 'realtime',
-                   'signal', 'taup']
+                   'io.ah', 'io.arclink', 'io.ascii', 'io.cmtsolution',
+                   'io.cnv', 'io.css', 'io.dmx', 'io.focmec', 'io.hypodd',
+                   'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
+                   'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk', 'io.nied',
+                   'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde', 'io.quakeml',
+                   'io.reftek', 'io.rg16', 'io.sac', 'io.scardec', 'io.seg2',
+                   'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
+                   'io.seiscomp', 'io.stationtxt', 'io.stationxml', 'io.wav',
+                   'io.win', 'io.xseed', 'io.y', 'io.zmap', 'realtime',
+                   'scripts', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
-                   'clients.iris', 'clients.neic', 'clients.seedlink',
-                   'clients.seishub']
+                   'clients.iris', 'clients.neic', 'clients.nrl',
+                   'clients.seedlink', 'clients.seishub', 'clients.syngine']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
-                            'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
-                            'AH', 'PDAS', 'KINEMETRICS_EVT']
+                            'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
+                            'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
+                            'GCF', 'DMX']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
+INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
+# waveform plugins accepting a byteorder keyword
+WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
@@ -90,6 +96,7 @@ class NamedTemporaryFile(io.BufferedIOBase):
     >>> os.path.exists(tf.name)
     False
     """
+
     def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
         fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
         self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
@@ -107,12 +114,15 @@ class NamedTemporaryFile(io.BufferedIOBase):
     def tell(self, *args, **kwargs):
         return self._fileobj.tell(*args, **kwargs)
 
+    def close(self, *args, **kwargs):
+        super(NamedTemporaryFile, self).close(*args, **kwargs)
+        self._fileobj.close()
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
-        self.close()  # flush internal buffer
-        self._fileobj.close()
+        self.close()
         os.remove(self.name)
 
 
@@ -132,20 +142,19 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
     >>> create_empty_data_chunk(3, 'int', 10)
     array([10, 10, 10])
 
-    >>> create_empty_data_chunk(6, np.complex128, 0)
-    array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
-
     >>> create_empty_data_chunk(
     ...     3, 'f')  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     masked_array(data = [-- -- --],
                  mask = ...,
                  ...)
     """
-    # For compatibility with NumPy 1.4
-    if isinstance(dtype, str):
-        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
+        # fill with nan if float number and otherwise with a very small number
+        if issubclass(temp.data.dtype.type, np.integer):
+            temp.data[:] = np.iinfo(temp.data.dtype).min
+        else:
+            temp.data[:] = np.nan
     elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \
             and len(fill_value) == 2:
         # if two values are supplied use these as samples bordering to our data
@@ -187,7 +196,7 @@ def get_example_file(filename):
     for module in ALL_MODULES:
         try:
             mod = __import__("obspy.%s" % module,
-                             fromlist=[native_str("obspy")])
+                             fromlist=["obspy"])
         except ImportError:
             continue
         file_ = os.path.join(mod.__path__[0], "tests", "data", filename)
@@ -239,7 +248,7 @@ def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     for name in order_list:
         try:
             entry_points[name] = ep_dict.pop(name)
-        except:
+        except Exception:
             # skip plug-ins which are not installed
             continue
     # extend entry points with any left over waveform plug-ins
@@ -259,10 +268,12 @@ ENTRY_POINTS = {
         'obspy.plugin.waveform', 'readFormat', WAVEFORM_PREFERRED_ORDER),
     'waveform_write': _get_ordered_entry_points(
         'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
-    'event': _get_entry_points('obspy.plugin.event', 'readFormat'),
+    'event': _get_ordered_entry_points('obspy.plugin.event', 'readFormat',
+                                       EVENT_PREFERRED_ORDER),
     'event_write': _get_entry_points('obspy.plugin.event', 'writeFormat'),
     'taper': _get_entry_points('obspy.plugin.taper'),
-    'inventory': _get_entry_points('obspy.plugin.inventory', 'readFormat'),
+    'inventory': _get_ordered_entry_points(
+        'obspy.plugin.inventory', 'readFormat', INVENTORY_PREFERRED_ORDER),
     'inventory_write': _get_entry_points(
         'obspy.plugin.inventory', 'writeFormat'),
 }
@@ -307,17 +318,21 @@ def _get_function_from_entry_point(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = load_entry_point(entry_point.dist.key, 'obspy.plugin.%s' % (group),
-                            entry_point.name)
+    func = buffered_load_entry_point(entry_point.dist.key,
+                                     'obspy.plugin.%s' % (group),
+                                     entry_point.name)
     return func
 
 
-def get_matplotlib_version():
+def get_dependency_version(package_name, raw_string=False):
     """
-    Get matplotlib version information.
+    Get version information of a dependency package.
 
-    :returns: Matplotlib version as a list of three integers or ``None`` if
-        matplotlib import fails.
+    :type package_name: str
+    :param package_name: Name of package to return version info for
+    :returns: Package version as a list of three integers or ``None`` if
+        import fails. With option ``raw_string=True`` returns raw version
+        string instead (or ``None`` if import fails).
         The last version number can indicate different things like it being a
         version from the old svn trunk, the latest git repo, some release
         candidate version, ...
@@ -325,21 +340,27 @@ def get_matplotlib_version():
         0.
     """
     try:
-        import matplotlib
-        version = matplotlib.__version__
-        version = version.split("rc")[0].strip("~")
-        version = list(map(to_int_or_zero, version.split(".")))
-    except ImportError:
-        version = None
-    return version
+        version_string = pkg_resources.get_distribution(package_name).version
+    except pkg_resources.DistributionNotFound:
+        return []
+    if raw_string:
+        return version_string
+    version_list = version_string.split("rc")[0].strip("~")
+    version_list = list(map(to_int_or_zero, version_list.split(".")))
+    return version_list
 
 
-def get_basemap_version():
+def get_proj_version(raw_string=False):
     """
-    Get basemap version information.
+    Get the version number for proj4 as a list.
 
-    :returns: basemap version as a list of three integers or ``None`` if
-        basemap import fails.
+    proj4 >= 5 does not play nicely for pseudocyl projections
+    (see basemap issue 433).  Checking this will allow us to raise a warning
+    when plotting using basemap.
+
+    :returns: Package version as a list of three integers. Empty list if pyproj
+        not installed.
+        With option ``raw_string=True`` returns raw version string instead.
         The last version number can indicate different things like it being a
         version from the old svn trunk, the latest git repo, some release
         candidate version, ...
@@ -347,71 +368,54 @@ def get_basemap_version():
         0.
     """
     try:
-        from mpl_toolkits import basemap
-        version = basemap.__version__
-        version = version.split("rc")[0].strip("~")
-        version = list(map(to_int_or_zero, version.split(".")))
+        from pyproj import Proj
     except ImportError:
-        version = None
-    return version
+        return []
+
+    # proj4 is a c library, prproj wraps this.  proj_version is an attribute
+    # of the Proj class that is only set when the projection is made. Make
+    # a dummy projection and get the version
+    _proj = Proj(proj='utm', zone=10, ellps='WGS84')
+    if hasattr(_proj, 'proj_version'):
+        version_string = str(getattr(_proj, 'proj_version'))
+    else:
+        from pyproj import proj_version_str
+        version_string = proj_version_str
+
+    if raw_string:
+        return version_string
+    version_list = [to_int_or_zero(no) for no in version_string.split(".")]
+    # For version 5.2.0 the version number is given as 5.2
+    while len(version_list) < 3:
+        version_list.append(0)
+    return version_list
 
 
-def get_cartopy_version():
-    """
-    Get cartopy version information.
-
-    :returns: Cartopy version as a list of three integers or ``None`` if
-        cartopy import fails.
-        The last version number can indicate different things like it being a
-        version from the old svn trunk, the latest git repo, some release
-        candidate version, ...
-        If the last number cannot be converted to an integer it will be set to
-        0.
-    """
-    try:
-        import cartopy
-        version = cartopy.__version__
-        version = version.split("rc")[0].strip("~")
-        version = list(map(to_int_or_zero, version.split(".")))
-    except ImportError:
-        version = None
-    return version
-
-
-def get_scipy_version():
-    """
-    Get SciPy version information.
-
-    :returns: SciPy version as a list of three integers or ``None`` if scipy
-        import fails.
-        The last version number can indicate different things like it being a
-        version from the old svn trunk, the latest git repo, some release
-        candidate version, ...
-        If the last number cannot be converted to an integer it will be set to
-        0.
-    """
-    try:
-        import scipy
-        version = scipy.__version__
-        version = version.split("~rc")[0]
-        version = list(map(to_int_or_zero, version.split(".")))
-    except ImportError:
-        version = None
-    return version
+NUMPY_VERSION = get_dependency_version('numpy')
+SCIPY_VERSION = get_dependency_version('scipy')
+MATPLOTLIB_VERSION = get_dependency_version('matplotlib')
+BASEMAP_VERSION = get_dependency_version('basemap')
+PROJ4_VERSION = get_proj_version()
+CARTOPY_VERSION = get_dependency_version('cartopy')
 
 
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
-    EPS = ENTRY_POINTS[plugin_type]
+    if isinstance(filename, str):
+        if not os.path.exists(filename):
+            msg = "[Errno 2] No such file or directory: '{}'".format(
+                filename)
+            raise FileNotFoundError(msg)
+    eps = ENTRY_POINTS[plugin_type]
     # get format entry point
     format_ep = None
     if not format:
         # auto detect format - go through all known formats in given sort order
-        for format_ep in EPS.values():
+        for format_ep in eps.values():
             # search isFormat for given entry point
-            is_format = load_entry_point(
+            is_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
@@ -425,7 +429,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             # check format
             is_format = is_format(filename)
             if position is not None:
-                filename.seek(0, 0)
+                filename.seek(position, 0)
             if is_format:
                 break
         else:
@@ -434,20 +438,20 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         # format given via argument
         format = format.upper()
         try:
-            format_ep = EPS[format]
+            format_ep = eps[format]
         except (KeyError, IndexError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format, ', '.join(EPS)))
+            raise TypeError(msg % (format, ', '.join(eps)))
     # file format should be known by now
     try:
         # search readFormat for given entry point
-        read_format = load_entry_point(
+        read_format = buffered_load_entry_point(
             format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
-        raise TypeError(msg % (format_ep.name, ', '.join(EPS)))
+        raise TypeError(msg % (format_ep.name, ', '.join(eps)))
     # read
     list_obj = read_format(filename, **kwargs)
     return list_obj, format_ep.name
@@ -470,19 +474,24 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
     >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    ======... ===============... ========================================...
-    Format    Required Module    _`Linked Function Call`
-    ======... ===============... ========================================...
+    ======... ===========... ========================================...
+    Format    Used Module    _`Linked Function Call`
+    ======... ===========... ========================================...
     CMTSOLUTION  :mod:`...io.cmtsolution` :func:`..._write_cmtsolution`
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
+    HYPODDPHA :mod:`...io.hypodd`    :func:`obspy.io.hypodd.pha._write_pha`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     KML       :mod:`obspy.io.kml` :func:`obspy.io.kml.core._write_kml`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
+    NORDIC    :mod:`obspy.io.nordic` :func:`obspy.io.nordic.core.write_select`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
+    SC3ML   :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_sc3ml`
+    SCARDEC   :mod:`obspy.io.scardec`
+                             :func:`obspy.io.scardec.core._write_scardec`
     SHAPEFILE :mod:`obspy.io.shapefile`
                              :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
-    ======... ===============... ========================================...
+    ======... ===========... ========================================...
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").
@@ -506,13 +515,13 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     mod_list = []
     for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        func = load_entry_point(ep.dist.key,
-                                "obspy.plugin.%s.%s" % (group, name), method)
-        func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
+        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
+        entry_info = str(get_entry_info(*ep_list))
+        func_str = ':func:`%s`' % entry_info.split(' = ')[1].replace(':', '.')
         mod_list.append((name, module_short, func_str))
 
     mod_list = sorted(mod_list)
-    headers = ["Format", "Required Module", "_`Linked Function Call`"]
+    headers = ["Format", "Used Module", "_`Linked Function Call`"]
     maxlens = [max([len(x[0]) for x in mod_list] + [len(headers[0])]),
                max([len(x[1]) for x in mod_list] + [len(headers[1])]),
                max([len(x[2]) for x in mod_list] + [len(headers[2])])]
@@ -533,12 +542,23 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     return ret
 
 
+def _add_format_plugin_table(func, group, method, numspaces=4):
+    """
+    A function to populate the docstring of func with its plugin table.
+    """
+    if '%s' in func.__doc__:
+        func.__doc__ = func.__doc__ % make_format_plugin_table(
+            group, method, numspaces=numspaces)
+
+
 class ComparingObject(object):
     """
     Simple base class that implements == and != based on self.__dict__
     """
+
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return (isinstance(other, self.__class__) and
+                self.__dict__ == other.__dict__)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -568,6 +588,186 @@ def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
                 setattr(namespace, self.dest, False)
 
     return _Action
+
+
+def sanitize_filename(filename):
+    """
+    Adapted from Django's slugify functions.
+
+    :param filename: The filename.
+    """
+    try:
+        filename = filename.decode()
+    except AttributeError:
+        pass
+
+    value = unicodedata.normalize('NFKD', filename).encode(
+        'ascii', 'ignore').decode('ascii')
+    # In constrast to django we allow dots and don't lowercase.
+    value = re.sub(r'[^\w\.\s-]', '', value).strip()
+    return re.sub(r'[-\s]+', '-', value)
+
+
+def download_to_file(url, filename_or_buffer, chunk_size=1024):
+    """
+    Helper function to download a potentially large file.
+
+    :param url: The URL to GET the data from.
+    :type url: str
+    :param filename_or_buffer: The filename_or_buffer or file-like object to
+        download to.
+    :type filename_or_buffer: str or file-like object
+    :param chunk_size: The chunk size in bytes.
+    :type chunk_size: int
+    """
+    # Workaround for old request versions.
+    try:
+        r = requests.get(url, stream=True)
+    except TypeError:
+        r = requests.get(url)
+
+    # Raise anything except for 200
+    if r.status_code != 200:
+        raise requests.HTTPError('%s HTTP Error: %s for url: %s'
+                                 % (r.status_code, r.reason, url))
+
+    if hasattr(filename_or_buffer, "write"):
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            if not chunk:
+                continue
+            filename_or_buffer.write(chunk)
+    else:
+        with io.open(filename_or_buffer, "wb") as fh:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if not chunk:
+                    continue
+                fh.write(chunk)
+
+
+def _generic_reader(pathname_or_url=None, callback_func=None,
+                    **kwargs):
+    if not isinstance(pathname_or_url, str):
+        # not a string - we assume a file-like object
+        try:
+            # first try reading directly
+            generic = callback_func(pathname_or_url, **kwargs)
+        except TypeError:
+            # if this fails, create a temporary file which is read directly
+            # from the file system
+            pathname_or_url.seek(0)
+            with NamedTemporaryFile() as fh:
+                fh.write(pathname_or_url.read())
+                generic = callback_func(fh.name, **kwargs)
+        return generic
+    elif isinstance(pathname_or_url, bytes) and \
+            pathname_or_url.strip().startswith(b'<'):
+        # XML string
+        return callback_func(io.BytesIO(pathname_or_url), **kwargs)
+    elif "://" in pathname_or_url[:10]:
+        # URL
+        # extract extension if any
+        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
+        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
+            download_to_file(url=pathname_or_url, filename_or_buffer=fh)
+            generic = callback_func(fh.name, **kwargs)
+        return generic
+    else:
+        pathname = pathname_or_url
+        # File name(s)
+        pathnames = sorted(glob.glob(pathname))
+        if not pathnames:
+            # try to give more specific information why the stream is empty
+            if glob.has_magic(pathname) and not glob.glob(pathname):
+                raise Exception("No file matching file pattern: %s" % pathname)
+            elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
+                raise IOError(2, "No such file or directory", pathname)
+
+        generic = callback_func(pathnames[0], **kwargs)
+        if len(pathnames) > 1:
+            for filename in pathnames[1:]:
+                generic.extend(callback_func(filename, **kwargs))
+        return generic
+
+
+class CatchAndAssertWarnings(warnings.catch_warnings):
+    def __init__(self, clear=None, expected=None, show_all=True, **kwargs):
+        """
+        :type clear: list of str
+        :param clear: list of modules to clear warning
+            registries on (e.g. ``["obspy.signal", "obspy.core"]``), in order
+            to make sure any expected warnings will be shown and not suppressed
+            because already raised in previously executed code.
+        :type expected: list
+        :param expected: list of 2-tuples specifying expected
+            warnings that should be looked for when exiting the context
+            manager. An ``AssertionError`` will be raised if any expected
+            warning is not encountered. First item in tuple should be the
+            class of the warning, second item should be a regex matching (a
+            part of) the warning message (e.g.
+            ``(ObsPyDeprecationWarning, 'Attribute .* is deprecated')``).
+            Make sure to escape regex special characters like `(` or `.` with a
+            backslash and provide message regex as a raw string.
+        :type show_all: str
+        :param show_all: Whether to set ``warnings.simplefilter('always')``
+            when entering context.
+        """
+        self.registries_to_clear = clear
+        self.expected_warnings = expected
+        self.show_all = show_all
+        # always record warnings, obviously..
+        kwargs['record'] = True
+        super(CatchAndAssertWarnings, self).__init__(**kwargs)
+
+    def __enter__(self):
+        self.warnings = super(CatchAndAssertWarnings, self).__enter__()
+        if self.registries_to_clear:
+            for modulename in self.registries_to_clear:
+                self.clear_warning_registry(modulename)
+        if self.show_all:
+            warnings.simplefilter("always", Warning)
+        # this will always return the list of warnings because we set
+        # record=True
+        return self.warnings
+
+    def __exit__(self, *exc_info):
+        super(CatchAndAssertWarnings, self).__exit__(self, *exc_info)
+        # after cleanup, check expected warnings
+        self._assert_warnings()
+
+    @staticmethod
+    def clear_warning_registry(modulename):
+        """
+        Clear warning registry of specified module
+
+        :type modulename: str
+        :param modulename: Full module name (e.g. ``'obspy.signal'``)
+        """
+        mod = importlib.import_module(modulename)
+        try:
+            registry = mod.__warningregistry__
+        except AttributeError:
+            pass
+        else:
+            registry.clear()
+
+    def _assert_warnings(self):
+        """
+        Checks for expected warnings and raises an AssertionError if anyone of
+        these is not encountered.
+        """
+        if not self.expected_warnings:
+            return
+        for category, regex in self.expected_warnings:
+            for warning in self.warnings:
+                if not isinstance(warning.message, category):
+                    continue
+                if not re.search(regex, str(warning.message)):
+                    continue
+                # found a matching warning, so break out
+                break
+            else:
+                msg = 'Expected warning not raised: (%s, %s)'
+                raise AssertionError(msg % (category.__name__, regex))
 
 
 if __name__ == '__main__':

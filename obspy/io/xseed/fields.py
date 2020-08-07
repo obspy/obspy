@@ -6,12 +6,8 @@ Helper module containing xseed fields.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import re
 import warnings
 
@@ -56,13 +52,13 @@ class Field(object):
         if self.id:
             return "F%02d" % self.id
 
-    def _repr_pretty_(self, p, cycle):
+    def _repr_pretty_(self, p, cycle):  # @UnusedVariable
         p.text(str(self))
 
     def convert(self, value):
         return value
 
-    def _formatString(self, s):
+    def _format_string(self, s):
         """
         Using SEED specific flags to format strings.
 
@@ -81,25 +77,28 @@ class Field(object):
             return sn
         rx_list = []
         if 'U' in self.flags:
-            rx_list.append("[A-Z]")
+            # upper case A—Z
+            rx_list.append(r"[A-Z]")
         if 'L' in self.flags:
-            rx_list.append("[a-z]")
+            # lower case a—z
+            rx_list.append(r"[a-z]")
         if 'N' in self.flags:
-            rx_list.append("[0-9]")
+            # digits 0—9
+            rx_list.append(r"[0-9]")
         if 'P' in self.flags:
-            rx_list.append("[^A-Za-z0-9 ]")
+            # any punctuation characters (including “_”)
+            rx_list.append(r"[^A-Za-z0-9 ]")
         if 'S' in self.flags:
-            rx_list.append(" ")
+            # spaces between words
+            rx_list.append(r" ")
         if '_' in self.flags:
-            rx_list.append("_")
+            # underline symbol
+            rx_list.append(r"_")
+        # auto-format
         if 'U' in self.flags and 'L' not in self.flags:
             sn = sn.upper()
         elif 'L' in self.flags and 'U' not in self.flags:
             sn = sn.lower()
-        if 'S' in self.flags and 'X' not in self.flags:
-            sn = sn.replace("_", " ")
-        elif 'X' in self.flags and 'S' not in self.flags:
-            sn = sn.replace(" ", "_")
         rx = "|".join(rx_list)
         sn = "".join(re.findall(rx, sn))
         if re.match("(" + rx + ")*$", sn) is None:
@@ -107,7 +106,7 @@ class Field(object):
             raise SEEDTypeException(msg)
         return sn
 
-    def parse_SEED(self, blockette, data):
+    def parse_seed(self, blockette, data):
         """
         """
         try:
@@ -130,13 +129,13 @@ class Field(object):
         if blockette.debug:
             print('  %s: %s' % (self, text))
 
-    def get_SEED(self, blockette, pos=0):
+    def get_seed(self, blockette, pos=0):
         """
         """
         self.compact = blockette.compact
         try:
             result = getattr(blockette, self.attribute_name)
-        except:
+        except Exception:
             if blockette.strict:
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
@@ -149,7 +148,7 @@ class Field(object):
             print('  %s: %s' % (self, result))
         return self.write(result, strict=blockette.strict)
 
-    def get_XML(self, blockette, pos=0):
+    def get_xml(self, blockette, pos=0):
         """
         """
         if self.ignore:
@@ -159,7 +158,7 @@ class Field(object):
             return []
         try:
             result = getattr(blockette, self.attribute_name)
-        except:
+        except Exception:
             if blockette.strict:
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
@@ -171,7 +170,7 @@ class Field(object):
         if self.optional:
             try:
                 result = result.strip()
-            except:
+            except Exception:
                 pass
             if not result:
                 # debug
@@ -195,12 +194,12 @@ class Field(object):
             print('  %s: %s' % (self, [node]))
         return [node]
 
-    def parse_XML(self, blockette, xml_doc, pos=0):
+    def parse_xml(self, blockette, xml_doc, pos=0):
         """
         """
         try:
             text = xml_doc.xpath(self.field_name + "/text()")[pos]
-        except:
+        except Exception:
             setattr(blockette, self.attribute_name, self.default_value)
             # debug
             if blockette.debug:
@@ -239,7 +238,7 @@ class Integer(Field):
                 return [int(_i) for _i in value]
             else:
                 return int(value)
-        except:
+        except Exception:
             if not self.strict:
                 return self.default_value
             msg = "No integer value found for %s." % self.attribute_name
@@ -253,7 +252,7 @@ class Integer(Field):
         format_str = "%%0%dd" % self.length
         try:
             temp = int(data)
-        except:
+        except Exception:
             msg = "No integer value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
         result = format_str % temp
@@ -282,7 +281,7 @@ class Float(Field):
                 return [float(_i) for _i in value]
             else:
                 return float(value)
-        except:
+        except Exception:
             if not self.strict:
                 return self.default_value
             msg = "No float value found for %s." % self.attribute_name
@@ -296,7 +295,7 @@ class Float(Field):
         format_str = "%%0%ds" % self.length
         try:
             temp = float(data)
-        except:
+        except Exception:
             msg = "No float value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
         # special format for exponential output
@@ -312,7 +311,7 @@ class Float(Field):
 
 class FixedString(Field):
     """
-    An string field with a fixed width.
+    A string field with a fixed width.
     """
     def __init__(self, id, name, length, flags='', **kwargs):
         self.default = ' ' * length
@@ -321,13 +320,13 @@ class FixedString(Field):
         self.flags = flags
 
     def read(self, data, strict=False):  # @UnusedVariable
-        return self._formatString(data.read(self.length).strip())
+        return self._format_string(data.read(self.length).strip())
 
     def write(self, data, strict=False):  # @UnusedVariable
         # Leave fixed length alphanumeric fields left justified (no leading
         # spaces), and pad them with spaces (after the field’s contents).
         format_str = "%%-%ds" % self.length
-        result = format_str % self._formatString(data)
+        result = format_str % self._format_string(data)
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)
@@ -375,7 +374,7 @@ class VariableString(Field):
             return ""
         else:
             if self.flags:
-                return self._formatString(data)
+                return self._format_string(data)
             else:
                 return data
 
@@ -399,7 +398,7 @@ class VariableString(Field):
         return buffer
 
     def write(self, data, strict=False):  # @UnusedVariable
-        result = self._formatString(data).encode('utf-8')
+        result = self._format_string(data).encode('utf-8')
         if self.max_length and len(result) > self.max_length + 1:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.max_length, self.attribute_name)
@@ -443,12 +442,12 @@ class Loop(Field):
         self.omit_tag = kwargs.get('omit_tag', False)
         self.flat = kwargs.get('flat', False)
 
-    def parse_SEED(self, blockette, data):
+    def parse_seed(self, blockette, data):
         """
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
@@ -458,7 +457,7 @@ class Loop(Field):
         for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                field.parse_SEED(blockette, data)
+                field.parse_seed(blockette, data)
                 if debug:
                     temp.append(field.data)
         # debug
@@ -469,12 +468,12 @@ class Loop(Field):
                 print('  LOOP: %s' % (temp))
             blockette.debug = debug
 
-    def get_SEED(self, blockette):
+    def get_seed(self, blockette):
         """
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
@@ -482,17 +481,17 @@ class Loop(Field):
         for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                data += field.get_SEED(blockette, i)
+                data += field.get_seed(blockette, i)
         return data
 
-    def get_XML(self, blockette, pos=0):  # @UnusedVariable
+    def get_xml(self, blockette, pos=0):  # @UnusedVariable
         """
         """
         if self.ignore:
             return []
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         if self.length == 0 and self.optional:
@@ -505,7 +504,7 @@ class Loop(Field):
                 se = SubElement(root, self.field_name)
                 # loop over data fields within one entry
                 for field in self.data_fields:
-                    node = field.get_XML(blockette, _i)
+                    node = field.get_xml(blockette, _i)
                     se.extend(node)
             return root.getchildren()
         # loop over number of entries
@@ -513,7 +512,7 @@ class Loop(Field):
         for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                node = field.get_XML(blockette, _i)
+                node = field.get_xml(blockette, _i)
                 root.extend(node)
         # format output for requested loop type
         if self.flat:
@@ -530,12 +529,12 @@ class Loop(Field):
             # standard loop
             return [root]
 
-    def parse_XML(self, blockette, xml_doc, pos=0):
+    def parse_xml(self, blockette, xml_doc, pos=0):
         """
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         if self.length == 0:
@@ -572,4 +571,4 @@ class Loop(Field):
         for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                field.parse_XML(blockette, root, i)
+                field.parse_xml(blockette, root, i)

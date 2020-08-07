@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import unittest
 from copy import deepcopy
+import platform
 
 import numpy as np
 
@@ -149,7 +146,22 @@ class StreamTestCase(unittest.TestCase):
         st1.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
         for tr in st2:
             tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
-        self.assertEqual(st1, st2)
+
+        # There is some strange issue on Win32bit (see #2188) and Win64bit (see
+        # #2330). Thus we just use assert_allclose() here instead of testing
+        # for full equality.
+        if platform.system() == "Windows":  # pragma: no cover
+            for tr1, tr2 in zip(st1, st2):
+                self.assertEqual(tr1.stats, tr2.stats)
+                np.testing.assert_allclose(tr1.data, tr2.data, rtol=1E-6,
+                                           atol=1E-6 * tr1.data.ptp())
+        else:
+            # Added (up to ###) to debug appveyor fails
+            for tr1, tr2 in zip(st1.sort(), st2.sort()):
+                self.assertEqual(tr1.stats, tr2.stats)
+                np.testing.assert_allclose(tr1.data, tr2.data)
+            ###
+            self.assertEqual(st1, st2)
 
     def test_decimate(self):
         """

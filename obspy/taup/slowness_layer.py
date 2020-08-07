@@ -3,20 +3,17 @@
 """
 Functions acting on slowness layers.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 
 import numpy as np
 
 from .c_wrappers import clibtau
 from .helper_classes import SlownessLayer, SlownessModelError
-from .velocity_layer import evaluateVelocityAtBottom, evaluateVelocityAtTop
+from .velocity_layer import (evaluate_velocity_at_bottom,
+                             evaluate_velocity_at_top)
 
 
-def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
+def bullen_radial_slowness(layer, p, radius_of_planet, check=True):
     """
     Calculate time and distance increments of a spherical ray.
 
@@ -33,8 +30,8 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
     :type layer: :class:`~numpy.ndarray`, dtype = :const:`SlownessLayer`
     :param p: The spherical ray paramater to use for calculation, in s/km.
     :type p: :class:`~numpy.ndarray`, dtype = :class:`float`
-    :param radiusOfEarth: The radius of the Earth to use, in km.
-    :type radiusOfEarth: float
+    :param radius_of_planet: The radius of the planet to use, in km.
+    :type radius_of_planet: float
     :param check: Check that the calculated results are not invalid. This
         check may be disabled if the layers requested are expected not to
         include the specified ray.
@@ -60,10 +57,10 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
 
     length = len(time)
     if isinstance(p, np.float_):
-        p = np.array([p] * length, dtype=np.float_)
+        p = p * np.ones(length, dtype=np.float_)
 
     clibtau.bullen_radial_slowness_inner_loop(
-        layer, p, time, dist, radiusOfEarth, length)
+        layer, p, time, dist, radius_of_planet, length)
 
     if check and (np.any(time < 0) or np.any(np.isnan(time)) or
                   np.any(dist < 0) or np.any(np.isnan(dist))):
@@ -72,96 +69,170 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
     return time, dist
 
 
-def bullenDepthFor(layer, ray_param, radiusOfEarth):
+def bullen_depth_for(layer, ray_param, radius_of_planet, check=True):
     """
     Finds the depth for a ray parameter within this layer.
 
-    Uses a Bullen interpolant, Ar^B. Special case for ``botP == 0`` or
-    ``botDepth == radiusOfEarth`` as these cause division by 0; use linear
+    Uses a Bullen interpolant, Ar^B. Special case for ``bot_p == 0`` or
+    ``bot_depth == radius_of_planet`` as these cause division by 0; use linear
     interpolation in this case.
 
-    :param layer: The layer to check.
+    The ``layer`` and ``ray_param`` parameters must be either 0-D, or both of
+    the same shape.
+
+    :param layer: The layer(s) to check.
     :type layer: :class:`~numpy.ndarray` (shape = (1, ), dtype =
         :const:`SlownessLayer`)
-    :param ray_param: The ray paramater to use for calculation, in s/km.
+    :param ray_param: The ray parameter(s) to use for calculation, in s/km.
     :type ray_param: float
-    :param radiusOfEarth: The radius (in km) of the Earth to use.
-    :type radiusOfEarth: float
+    :param radius_of_planet: The radius (in km) of the planet to use.
+    :type radius_of_planet: float
 
     :returns: The depth (in km) for the specified ray parameter.
     :rtype: float
     """
-    if (layer['topP'] - ray_param) * (ray_param - layer['botP']) >= 0:
+    ldim = np.ndim(layer)
+    pdim = np.ndim(ray_param)
+    if ldim == 1 and pdim == 0:
+        ray_param = ray_param * np.ones(layer.shape, dtype=np.float_)
+        depth = np.zeros(shape=layer.shape, dtype=np.float_)
+    elif ldim == 0 and pdim == 1:
+        layer = layer * np.ones(ray_param.shape, dtype=SlownessLayer)
+        depth = np.zeros(shape=ray_param.shape, dtype=np.float_)
+    elif ldim == pdim and (ldim == 0 or layer.shape == ray_param.shape):
+        if ldim == 0:
+            # Make array-like to work with NumPy < 1.9.
+            layer = np.array([layer], dtype=SlownessLayer)
+            ray_param = np.array([ray_param])
+        depth = np.zeros(shape=layer.shape, dtype=np.float_)
+    else:
+        raise TypeError('Either layer or ray_param must be 0D, or they must '
+                        'have the same shape.')
+
+    valid = (layer['top_p'] - ray_param) * (ray_param - layer['bot_p']) >= 0
+    if not check or np.all(valid):
+        leftover = np.ones_like(depth, dtype=np.bool_)
+
         # Easy cases for 0 thickness layer, or ray parameter found at
         # top or bottom.
-        if layer['topDepth'] == layer['botDepth']:
-            return layer['botDepth']
-        if layer['topP'] == ray_param:
-            return layer['topDepth']
-        if layer['botP'] == ray_param:
-            return layer['botDepth']
-        if layer['botP'] != 0 and layer['botDepth'] != radiusOfEarth:
-            B = np.divide(math.log(layer['topP'] / layer['botP']),
-                          math.log((radiusOfEarth - layer['topDepth']) /
-                          (radiusOfEarth - layer['botDepth'])))
-            # This is a cludge but it's needed to mimic the Java behaviour.
-            try:
-                denom = math.pow((radiusOfEarth - layer['topDepth']), B)
-            except OverflowError:
-                denom = np.inf
-            A = np.divide(layer['topP'], denom)
-            with np.errstate(divide='ignore', invalid='ignore'):
-                tempDepth = radiusOfEarth - math.exp(
-                    1.0 / B * math.log(np.divide(ray_param, A)))
+        mask = layer['top_depth'] == layer['bot_depth']
+        depth[mask] = layer['bot_depth'][mask]
+        leftover &= ~mask
+
+        mask = leftover & (layer['top_p'] == ray_param)
+        depth[mask] = layer['top_depth'][mask]
+        leftover &= ~mask
+
+        mask = leftover & (layer['bot_p'] == ray_param)
+        depth[mask] = layer['bot_depth'][mask]
+        leftover &= ~mask
+
+        mask = leftover & (
+            (layer['bot_p'] != 0) & (layer['bot_depth'] != radius_of_planet))
+        if np.any(mask):
+            top_p_mask = layer['top_p'][mask]
+            bot_p_mask = layer['bot_p'][mask]
+            top_depth_mask = layer['top_depth'][mask]
+            bot_depth_mask = layer['bot_depth'][mask]
+            ray_param_mask = ray_param[mask]
+
+            b = np.divide(np.log(top_p_mask / bot_p_mask),
+                          np.log((radius_of_planet - top_depth_mask) /
+                                 (radius_of_planet - bot_depth_mask)))
+            with np.errstate(over='ignore'):
+                denom = np.power(radius_of_planet - top_depth_mask, b)
+            a = np.divide(top_p_mask, denom)
+
+            temp_depth = np.empty_like(a)
+            mask2 = (a != 0) & (b != 0)
+            temp_depth[mask2] = radius_of_planet - np.exp(
+                1.0 / b[mask2] * np.log(np.divide(ray_param_mask[mask2],
+                                                  a[mask2])))
             # or equivalent (maybe better stability?):
-            # tempDepth = radiusOfEarth - math.pow(ray_param/A, 1/B)
+            # tempDepth = radius_of_planet - math.pow(ray_param_mask/A, 1/B)
+
+            # Overflow. Use linear interpolation.
+            temp_depth[~mask2] = (
+                (bot_depth_mask[~mask2] - top_depth_mask[~mask2]) /
+                (bot_p_mask[~mask2] - top_p_mask[~mask2]) *
+                (ray_param_mask[~mask2] - top_p_mask[~mask2])
+            ) + top_depth_mask[~mask2]
+
             # Check if slightly outside layer due to rounding or
             # numerical instability:
-            if layer['topDepth'] > tempDepth > layer['topDepth'] - 0.000001:
-                tempDepth = layer['topDepth']
-            if layer['botDepth'] < tempDepth < layer['botDepth'] + 0.000001:
-                tempDepth = layer['botDepth']
-            if tempDepth < 0 \
-                    or math.isnan(tempDepth) \
-                    or math.isinf(tempDepth) \
-                    or tempDepth < layer['topDepth'] \
-                    or tempDepth > layer['botDepth']:
-                # Numerical instability in power law calculation? Try a
-                # linear interpolation if the layer is small (<5km).
-                if layer['botDepth'] - layer['topDepth'] < 5:
-                    linear = ((layer['botDepth'] - layer['topDepth']) /
-                              (layer['botP'] - layer['topP']) *
-                              (ray_param - layer['topP']) + layer['topDepth'])
-                    if linear >= 0 \
-                            and not math.isnan(linear) \
-                            and not math.isinf(linear):
-                        return linear
-                raise SlownessModelError(
-                    "Calculated depth is outside layer, negative, or NaN.")
-            # Check for tempDepth just above topDepth or below bottomDepth.
-            if tempDepth < layer['topDepth'] \
-                    and layer['topDepth'] - tempDepth < 1e-10:
-                return layer['topDepth']
-            if tempDepth > layer['botDepth'] \
-                    and tempDepth - layer['botDepth'] < 1e-10:
-                return layer['botDepth']
-            return tempDepth
+            mask2 = ((top_depth_mask > temp_depth) &
+                     (temp_depth > top_depth_mask - 0.000001))
+            temp_depth[mask2] = top_depth_mask[mask2]
+            mask2 = ((bot_depth_mask < temp_depth) &
+                     (temp_depth < bot_depth_mask + 0.000001))
+            temp_depth[mask2] = bot_depth_mask[mask2]
+
+            mask2 = ((temp_depth < 0) | np.isnan(temp_depth) |
+                     np.isinf(temp_depth) |
+                     (temp_depth < top_depth_mask) |
+                     (temp_depth > bot_depth_mask))
+            # Numerical instability in power law calculation? Try a
+            # linear interpolation if the layer is small (<5km).
+            small_layer = bot_depth_mask[mask2] - top_depth_mask[mask2] > 5
+            if np.any(small_layer):
+                if check:
+                    raise SlownessModelError(
+                        "Calculated depth is outside layer, negative, or NaN.")
+                else:
+                    temp_depth[mask2][small_layer] = np.nan
+
+            linear = (
+                (bot_depth_mask[mask2] - top_depth_mask[mask2]) /
+                (bot_p_mask[mask2] - top_p_mask[mask2]) *
+                (ray_param_mask[mask2] - top_p_mask[mask2])
+            ) + top_depth_mask[mask2]
+            outside_layer = small_layer & (
+                linear < 0 | np.isnan(linear) | np.isinf(linear))
+            if np.any(outside_layer):
+                if check:
+                    raise SlownessModelError(
+                        "Calculated depth is outside layer, negative, or NaN.")
+                else:
+                    temp_depth[mask2][outside_layer] = np.nan
+            temp_depth[mask2] = linear
+
+            # Check for tempDepth just above top_depth or below bottomDepth.
+            mask2 = ((temp_depth < top_depth_mask) &
+                     (top_depth_mask - temp_depth < 1e-10))
+            temp_depth[mask2] = top_depth_mask[mask2]
+            mask2 = ((temp_depth > bot_depth_mask) &
+                     (temp_depth - bot_depth_mask < 1e-10))
+            temp_depth[mask2] = bot_depth_mask[mask2]
+
+            depth[mask] = temp_depth
+            leftover &= ~mask
+
+        # Special case for the centre of the planet, since Ar^B might
+        # blow up at r = 0.
+        mask = leftover & (layer['top_p'] != layer['bot_p'])
+        depth[mask] = (layer['bot_depth'][mask] +
+                       (ray_param[mask] - layer['bot_p'][mask]) *
+                       (layer['top_depth'][mask] - layer['bot_depth'][mask]) /
+                       (layer['top_p'][mask] - layer['bot_p'][mask]))
+        leftover &= ~mask
+
+        # weird case, return bot_depth??
+        depth[leftover] = layer['bot_depth'][leftover]
+
+        # Make sure invalid cases are left out
+        depth[~valid] = np.nan
+
+        # NumPy < 1.9 compatibility.
+        if ldim == 0 and pdim == 0:
+            return depth[0]
         else:
-            # Special case for the centre of the Earth, since Ar^B might
-            #  blow up at r = 0.
-            if layer['topP'] != layer['botP']:
-                return (layer['botDepth'] + (ray_param - layer['botP']) *
-                        (layer['topDepth'] - layer['botDepth']) /
-                        (layer['topP'] - layer['botP']))
-            else:
-                # weird case, return botDepth??
-                return layer['botDepth']
+            return depth
     else:
         raise SlownessModelError(
             "Ray parameter is not contained within this slowness layer.")
 
 
-def evaluateAtBullen(layer, depth, radiusOfEarth):
+def evaluate_at_bullen(layer, depth, radius_of_planet):
     """
     Find the slowness at the given depth.
 
@@ -177,37 +248,44 @@ def evaluateAtBullen(layer, depth, radiusOfEarth):
     :param depth: The depth (in km) to use for the calculation. It must be
         contained within the provided ``layer`` or else results are undefined.
     :type depth: float
-    :param radiusOfEarth: The radius of the Earth to use, in km.
-    :type radiusOfEarth: float
+    :param radius_of_planet: The radius of the planet to use, in km.
+    :type radius_of_planet: float
     """
-    topP = layer['topP']
-    botP = layer['botP']
-    topDepth = layer['topDepth']
-    botDepth = layer['botDepth']
+    top_p = layer['top_p']
+    bot_p = layer['bot_p']
+    top_depth = layer['top_depth']
+    bot_depth = layer['bot_depth']
     # Could do some safeguard asserts...
-    assert not botDepth > radiusOfEarth
-    assert not (topDepth - depth) * (depth - botDepth) < 0
-    if depth == topDepth:
-        return topP
-    elif depth == botDepth:
-        return botP
+    assert not bot_depth > radius_of_planet
+    assert not (top_depth - depth) * (depth - bot_depth) < 0
+    if depth == top_depth:
+        return top_p
+    elif depth == bot_depth:
+        return bot_p
     else:
-        B = np.divide(math.log(np.divide(topP, botP)),
-                      math.log(np.divide((radiusOfEarth - topDepth),
-                                         (radiusOfEarth - botDepth))))
-        ADenominator = pow((radiusOfEarth - topDepth), B)
-        A = topP / ADenominator
-        answer = A * pow((radiusOfEarth - depth), B)
+        try:
+            # The power law calculation has some stability issues with very
+            # small layers. Catch them here to trigger the fallback
+            # computations later on.
+            with np.errstate(all="raise"):
+                b = math.log(top_p / bot_p) / \
+                    math.log((radius_of_planet - top_depth) /
+                             (radius_of_planet - bot_depth))
+                a_denominator = pow((radius_of_planet - top_depth), b)
+                a = top_p / a_denominator
+                answer = a * pow((radius_of_planet - depth), b)
+        except FloatingPointError:
+            answer = np.nan
         if answer < 0 or math.isnan(answer) or math.isinf(answer):
             # numerical instability in power law calculation???
             # try a linear interpolation if the layer is small ( <2 km)
             # or if denominator of A is infinity as we probably overflowed
             # the double in that case.
-            if botDepth - topDepth < 2 \
-                    or math.isinf(ADenominator) \
-                    or botP == 0:
-                linear = (botP - topP) / (botDepth - topDepth) * \
-                         (depth - topDepth) + topP
+            if bot_depth - top_depth < 2 \
+                    or math.isinf(a_denominator) \
+                    or bot_p == 0:
+                linear = (bot_p - top_p) / (bot_depth - top_depth) * \
+                         (depth - top_depth) + top_p
                 if linear < 0 \
                         or math.isinf(linear) \
                         or math.isnan(linear):
@@ -219,31 +297,37 @@ def evaluateAtBullen(layer, depth, radiusOfEarth):
     return answer
 
 
-def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
-                       isSpherical=True):
+def create_from_vlayer(v_layer, is_p_wave, radius_of_planet,
+                       is_spherical=True):
     """
     Compute the slowness layer from a velocity layer.
 
-    :param vLayer: The velocity layer to convert.
-    :type vLayer: :class:`numpy.ndarray`, dtype = :const:`VelocityLayer`
-    :param isPWave: Whether this velocity layer is for compressional/P
+    :param v_layer: The velocity layer to convert.
+    :type v_layer: :class:`numpy.ndarray`, dtype = :const:`VelocityLayer`
+    :param is_p_wave: Whether this velocity layer is for compressional/P
          (``True``) or shear/S (``False``) waves.
-    :type isPWave: bool
-    :param radiusOfEarth: The radius of the Earth to use, in km.
-    :type radiusOfEarth: float
-    :param isSpherical: Whether the model is spherical. Non-spherical models
+    :type is_p_wave: bool
+    :param radius_of_planet: The radius of the planet to use, in km.
+    :type radius_of_planet: float
+    :param is_spherical: Whether the model is spherical. Non-spherical models
         are not currently supported.
-    :type isSpherical: bool
+    :type is_spherical: bool
     """
-    ret = np.empty(shape=vLayer.shape, dtype=SlownessLayer)
-    ret['topDepth'] = vLayer['topDepth']
-    ret['botDepth'] = vLayer['botDepth']
-    waveType = ('p' if isPWave else 's')
-    if isSpherical:
-        ret['topP'] = (radiusOfEarth - ret['topDepth']) / \
-            evaluateVelocityAtTop(vLayer, waveType)
-        ret['botP'] = (radiusOfEarth - ret['botDepth']) / \
-            evaluateVelocityAtBottom(vLayer, waveType)
+    ret = np.empty(shape=v_layer.shape, dtype=SlownessLayer)
+    ret['top_depth'] = v_layer['top_depth']
+    ret['bot_depth'] = v_layer['bot_depth']
+    wave_type = ('p' if is_p_wave else 's')
+    if is_spherical:
+        ret['top_p'] = (radius_of_planet - ret['top_depth']) / \
+            evaluate_velocity_at_top(v_layer, wave_type)
+
+        bot_depth = ret["bot_depth"]
+        bot_vel = evaluate_velocity_at_bottom(v_layer, wave_type)
+
+        if bot_depth.shape:
+            if bot_depth[-1] == radius_of_planet and bot_vel[-1] == 0.0:
+                bot_depth[-1] = 1.0
+        ret['bot_p'] = (radius_of_planet - bot_depth) / bot_vel
     else:
         raise NotImplementedError("no flat models yet")
     return ret

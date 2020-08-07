@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
+  <Inventory>
+    <sensor publicID="Sensor#20140909071419.913703.12" name="HGN.1993.307.HE">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.913171.9" name="HGN.1993.307.HN">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.912238.6" name="HGN.1993.307.HZ">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.922259.31" name="HGN.2003.035.HE00">
+      <description>STS-2</description>
+      <model>STS-2</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.919352.25" name="HGN.2003.035.HN00">
+      <description>STS-2</description>
+      <model>STS-2</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.916662.19" name="HGN.2003.035.HZ00">
+      <description>STS-2</description>
+      <model>STS-2</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.930191.50" name="HGN.2003.297.HE01">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.927588.44" name="HGN.2003.297.HN01">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.924976.38" name="HGN.2003.297.HZ01">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.932634.63" name="HGN.2009.117.HE02">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.93184.59" name="HGN.2009.117.HN02">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#20140909071419.931039.55" name="HGN.2009.117.HZ02">
+      <description>STS-1</description>
+      <model>STS-1</model>
+      <unit>M/S</unit>
+    </sensor>
+    <datalogger publicID="Datalogger#20140909071419.913633.11" name="HGN.1993.307.BHE">
+      <description>HGN.1993.307.BHE</description>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.913087.8" name="HGN.1993.307.BHN">
+      <description>HGN.1993.307.BHN</description>
+      <gain>1</gain>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.911916.5" name="HGN.1993.307.BHZ">
+      <description>HGN.1993.307.BHZ</description>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.919902.27" name="HGN.2003.035.BHE00">
+      <description>HGN.2003.035.BHE00</description>
+      <gain>408655</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.91715.21" name="HGN.2003.035.BHN00">
+      <description>HGN.2003.035.BHN00</description>
+      <gain>415155</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.914199.15" name="HGN.2003.035.BHZ00">
+      <description>HGN.2003.035.BHZ00</description>
+      <gain>407468</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.928001.46" name="HGN.2003.297.BHE01">
+      <description>HGN.2003.297.BHE01</description>
+      <gain>408655</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.925383.40" name="HGN.2003.297.BHN01">
+      <description>HGN.2003.297.BHN01</description>
+      <gain>415155</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.922832.34" name="HGN.2003.297.BHZ01">
+      <description>HGN.2003.297.BHZ01</description>
+      <gain>407468</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.932253.61" name="HGN.2009.117.BHE02">
+      <description>HGN.2009.117.BHE02</description>
+      <gain>1677720</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.931459.57" name="HGN.2009.117.BHN02">
+      <description>HGN.2009.117.BHN02</description>
+      <gain>1677720</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#20140909071419.930666.53" name="HGN.2009.117.BHZ02">
+      <description>HGN.2009.117.BHZ02</description>
+      <gain>1677720</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <network publicID="Network#20140909071412.503733.2" code="NL">
+      <start>1980-01-01T00:00:00.0000Z</start>
+      <description>NL - Netherlands Seismic Network</description>
+      <netClass>p</netClass>
+      <archive>KNMI</archive>
+      <restricted>false</restricted>
+      <shared>true</shared>
+      <station publicID="Station#20160318154518.867302.32814" code="HGN">
+        <start>1993-01-01T00:00:00.0000Z</start>
+        <description>HEIMANSGROEVE, NETHERLANDS</description>
+        <latitude>50.764</latitude>
+        <longitude>5.9317</longitude>
+        <elevation>135</elevation>
+        <place>Heimansgroeve</place>
+        <country>The Nederlands</country>
+        <affiliation>NL - Netherlands Seismic Network</affiliation>
+        <archive>KNMI</archive>
+        <restricted>false</restricted>
+        <shared>true</shared>
+        <sensorLocation publicID="SensorLocation#20160318154518.867422.32815" code="">
+          <start>1993-11-03T00:00:00.0000Z</start>
+          <end>2003-10-24T00:00:00.0000Z</end>
+          <latitude>50.764</latitude>
+          <longitude>5.9317</longitude>
+          <elevation>135</elevation>
+          <stream code="BHE" datalogger="Datalogger#20140909071419.913633.11" sensor="Sensor#20140909071419.913703.12">
+            <start>1993-11-03T00:00:00.0000Z</start>
+            <end>2003-10-24T00:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>2</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>2</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>90</azimuth>
+            <dip>0</dip>
+            <gain>801102000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+          <stream code="BHN" datalogger="Datalogger#20140909071419.913087.8" sensor="Sensor#20140909071419.913171.9">
+            <start>1993-11-03T00:00:00.0000Z</start>
+            <end>2003-10-24T00:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>1</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>1</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>0</azimuth>
+            <dip>0</dip>
+            <gain>808000000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+          <stream code="BHZ" datalogger="Datalogger#20140909071419.911916.5" sensor="Sensor#20140909071419.912238.6">
+            <start>1993-11-03T00:00:00.0000Z</start>
+            <end>2003-10-24T00:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>0</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>0</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>0</azimuth>
+            <dip>-90</dip>
+            <gain>814301000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+        </sensorLocation>
+        <sensorLocation publicID="SensorLocation#20160318154518.867886.32819" code="00">
+          <start>2003-02-04T00:00:00.0000Z</start>
+          <end>2003-10-24T00:00:00.0000Z</end>
+          <latitude>50.764</latitude>
+          <longitude>5.9317</longitude>
+          <elevation>135</elevation>
+          <stream code="BHE" datalogger="Datalogger#20140909071419.919902.27" sensor="Sensor#20140909071419.922259.31">
+            <start>2003-02-04T00:00:00.0000Z</start>
+            <end>2003-10-24T00:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>2</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>2</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>90</azimuth>
+            <dip>0</dip>
+            <gain>612983000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+          <stream code="BHN" datalogger="Datalogger#20140909071419.91715.21" sensor="Sensor#20140909071419.919352.25">
+            <start>2003-02-04T00:00:00.0000Z</start>
+            <end>2003-10-24T00:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>1</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>1</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>0</azimuth>
+            <dip>0</dip>
+            <gain>622733000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+          <stream code="BHZ" datalogger="Datalogger#20140909071419.914199.15" sensor="Sensor#20140909071419.916662.19">
+            <start>2003-02-04T00:00:00.0000Z</start>
+            <end>2003-10-24T00:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>0</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>0</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>0</azimuth>
+            <dip>-90</dip>
+            <gain>611202000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+        </sensorLocation>
+        <sensorLocation publicID="SensorLocation#20160318154518.868674.32823" code="01">
+          <start>2003-10-24T00:00:00.0000Z</start>
+          <end>2009-04-27T00:00:00.0000Z</end>
+          <latitude>50.764</latitude>
+          <longitude>5.9317</longitude>
+          <elevation>135</elevation>
+          <stream code="BHE" datalogger="Datalogger#20140909071419.928001.46" sensor="Sensor#20140909071419.930191.50">
+            <start>2003-10-24T00:00:00.0000Z</start>
+            <end>2009-04-27T00:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>2</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>2</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>90</azimuth>
+            <dip>0</dip>
+            <gain>937454000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+          <stream code="BHN" datalogger="Datalogger#20140909071419.925383.40" sensor="Sensor#20140909071419.927588.44">
+            <start>2003-10-24T00:00:00.0000Z</start>
+            <end>2009-04-27T00:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>1</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>1</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>0</azimuth>
+            <dip>0</dip>
+            <gain>960668000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+          <stream code="BHZ" datalogger="Datalogger#20140909071419.922832.34" sensor="Sensor#20140909071419.924976.38">
+            <start>2003-10-24T00:00:00.0000Z</start>
+            <end>2009-04-27T13:00:00.0000Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>0</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>0</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>0</azimuth>
+            <dip>-90</dip>
+            <gain>950215000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+        </sensorLocation>
+        <sensorLocation publicID="SensorLocation#20160318154518.869448.32827" code="02">
+          <start>2009-04-27T19:06:00.0000Z</start>
+          <latitude>50.764</latitude>
+          <longitude>5.9317</longitude>
+          <elevation>135</elevation>
+          <stream code="BHE" datalogger="Datalogger#20140909071419.932253.61" sensor="Sensor#20140909071419.932634.63">
+            <start>2009-04-27T19:06:00.0000Z</start>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>2</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>2</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>90</azimuth>
+            <dip>0</dip>
+            <gain>3848690000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+          <stream code="BHN" datalogger="Datalogger#20140909071419.931459.57" sensor="Sensor#20140909071419.93184.59">
+            <start>2009-04-27T19:06:00.0000Z</start>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>1</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>1</sensorChannel>
+            <sampleRateNumerator>40</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>0</azimuth>
+            <dip>0</dip>
+            <gain>3882250000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+          <stream code="BHZ" datalogger="Datalogger#20140909071419.930666.53" sensor="Sensor#20140909071419.931039.55">
+            <start>2009-04-27T19:06:00.0000Z</start>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>0</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>0</sensorChannel>
+            <sampleRateNumerator>0</sampleRateNumerator>
+            <sampleRateDenominator>0</sampleRateDenominator>
+            <depth>4</depth>
+            <azimuth>0</azimuth>
+            <dip>-90</dip>
+            <gain>3912450000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <format>Steim2</format>
+            <flags>G</flags>
+            <restricted>false</restricted>
+            <shared>true</shared>
+          </stream>
+        </sensorLocation>
+      </station>
+    </network>
+  </Inventory>
+</seiscomp>

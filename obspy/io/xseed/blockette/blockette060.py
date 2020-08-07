@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import io
 import sys
 
@@ -68,7 +63,7 @@ class Blockette060(Blockette):
         ]),
     ]
 
-    def parse_SEED(self, data, length=0, *args, **kwargs):  # @UnusedVariable
+    def parse_seed(self, data, length=0, *args, **kwargs):  # @UnusedVariable
         """
         Read Blockette 60.
         """
@@ -76,7 +71,7 @@ class Blockette060(Blockette):
         if isinstance(data, bytes):
             length = len(data)
             data = io.BytesIO(data)
-        elif isinstance(data, (str, native_str)):
+        elif isinstance(data, str):
             raise TypeError("data must be bytes, not string")
         new_data = data.read(length)
         new_data = new_data[7:]
@@ -93,7 +88,7 @@ class Blockette060(Blockette):
                 self.stages[-1].append(int(new_data[counter:counter + 4]))
                 counter += 4
 
-    def get_SEED(self, *args, **kwargs):  # @UnusedVariable
+    def get_seed(self, *args, **kwargs):  # @UnusedVariable
         """
         Writes Blockette 60.
         """
@@ -114,9 +109,9 @@ class Blockette060(Blockette):
         length = len(data) + 7
         header = '060%4d' % length
         data = header + data
-        return data
+        return data.encode()
 
-    def get_XML(self, xseed_version, *args, **kwargs):  # @UnusedVariable
+    def get_xml(self, xseed_version, *args, **kwargs):  # @UnusedVariable
         """
         Write XML.
         """
@@ -140,7 +135,7 @@ class Blockette060(Blockette):
                     set_xpath('dictionary', self.stages[_i][_j])
         return node
 
-    def parse_XML(self, xml_doc,
+    def parse_xml(self, xml_doc,
                   version='1.0', *args, **kwargs):  # @UnusedVariable
         """
         Read XML of blockette 60.
@@ -159,29 +154,28 @@ class Blockette060(Blockette):
                 else:
                     self.stages[-1].append(get_xpath(inner_child.text))
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
-        string = ''
+        string = b''
         # Possible dictionary blockettes.
         dict_blockettes = [41, 43, 44, 45, 46, 47, 48]
         for _i in range(len(self.stages)):
-            string += \
-                '#\t\t+            +----------------------------------' + \
-                '----------------+             +\n' + \
-                '#\t\t+            |   Response Reference Information,' + \
-                '%6s ch %s   |             +\n' % (station, channel) + \
-                '#\t\t+            +----------------------------------' + \
-                '----------------+             +\n' + \
-                '#\t\t\n' + \
-                'B060F03     Number of Stages:                      %s\n' \
-                % len(self.stages) + \
-                'B060F04     Stage number:                          %s\n' \
-                % (_i + 1) + \
-                'B060F05     Number of Responses:                   %s\n' \
-                % len(self.stages[_i]) + \
+            string += (
+                '#\t\t+            +----------------------------------'
+                '----------------+             +\n'
+                '#\t\t+            |   Response Reference Information,'
+                '%6s ch %s   |             +\n' % (station, channel) +
+                '#\t\t+            +----------------------------------'
+                '----------------+             +\n'
                 '#\t\t\n'
+                'B060F03     Number of Stages:                      %s\n'
+                % len(self.stages) +
+                'B060F04     Stage number:                          %s\n'
+                % (_i + 1) +
+                'B060F05     Number of Responses:                   %s\n'
+                % len(self.stages[_i]) + '#\t\t\n').encode()
             # Loop over all keys and print the information in order.
             for response_key in self.stages[_i]:
                 # Find the corresponding key in the abbreviations.
@@ -189,18 +183,16 @@ class Blockette060(Blockette):
                 for blockette in abbreviations:
                     if blockette.id in dict_blockettes and \
                             blockette.response_lookup_key == response_key:
-                        try:
-                            string += \
-                                blockette.get_RESP(station, channel,
-                                                   abbreviations)
-                            found_abbrev = True
-                        except AttributeError:
+                        if not hasattr(blockette, "get_resp"):
                             msg = 'RESP output not implemented for ' + \
                                   'blockette %d.' % blockette.id
                             raise AttributeError(msg)
+                        string += blockette.get_resp(station, channel,
+                                                     abbreviations)
+                        found_abbrev = True
                 if not found_abbrev:
                     msg = 'The reference blockette for response key ' + \
                           '%d could not be found.' % response_key
                     raise Exception(msg)
-        string += '#\t\t\n'
-        return string.encode()
+        string += b'#\t\t\n'
+        return string

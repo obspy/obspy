@@ -21,17 +21,12 @@ written by Lars Krieger and Sebastian Heimann.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import numpy as np
 import matplotlib.collections as mpl_collections
 from matplotlib import patches, transforms
 
-from obspy.core.util.decorator import deprecated
 from obspy.imaging.beachball import xy2patch
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
@@ -53,9 +48,17 @@ KWARG_MAP = {
 }
 
 
-@deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
-def Beach(*args, **kwargs):
-    return beach(*args, **kwargs)
+def _normalize_focmec(fm):
+    """
+    Improve stability of plots by normalizing the moment tensors. The scale
+    does not matter for the beachballs.
+    """
+    # Only normalize 6 component tensors.
+    if len(fm) != 6:
+        return fm
+    fm = np.array(fm, dtype=np.float64)
+    fm /= np.linalg.norm(fm)
+    return fm
 
 
 def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
@@ -119,6 +122,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     ``'NWU'`` North, West, Up     Stein and Wysession 2003
     ========= =================== =============================================
     """
+    fm = _normalize_focmec(fm)
     # initialize beachball
     mt = mopad_MomentTensor(fm, system=mopad_basis)
     bb = mopad_BeachBall(mt, npoints=size)
@@ -204,12 +208,6 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     return collection
 
 
-@deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
-            "instead.")
-def Beachball(*args, **kwargs):
-    return beachball(*args, **kwargs)
-
-
 def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
               alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
               zorder=100, mopad_basis='USE', outfile=None, format=None,
@@ -291,6 +289,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             mt = [1, 2, 3, -4, -5, -10]
             beachball(mt, mopad_basis='NED')
     """
+    fm = _normalize_focmec(fm)
     mopad_kwargs = {}
     loc = locals()
     # map to kwargs used in mopad

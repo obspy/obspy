@@ -1,5 +1,8 @@
+from future import standard_library
+standard_library.install_aliases()
+
 import io
-import urllib
+from urllib.request import urlopen
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,8 +12,8 @@ from scipy.spatial import distance
 from obspy.imaging.cm import obspy_sequential
 
 
-url = "http://examples.obspy.org/dissimilarities.npz"
-with io.BytesIO(urllib.urlopen(url).read()) as fh, np.load(fh) as data:
+url = "https://examples.obspy.org/dissimilarities.npz"
+with io.BytesIO(urlopen(url).read()) as fh, np.load(fh) as data:
     dissimilarity = data['dissimilarity']
 
 plt.subplot(121)

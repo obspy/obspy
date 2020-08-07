@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
+import pickle
 import unittest
+import warnings
 
 from obspy.core import AttribDict
+
+
+class DefaultTestAttribDict(AttribDict):
+    defaults = {'test': 1}
 
 
 class AttribDictTestCase(unittest.TestCase):
@@ -250,18 +252,20 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.test, 1)
         self.assertRaises(AttributeError, ad.__setitem__, 'test', 1)
 
-    def test_deepcopy(self):
+    def test_deepcopy_and_pickle(self):
         """
-        Tests __deepcopy__ method of AttribDict.
+        Tests deepcopy and pickle of AttribDict.
         """
-        class MyAttribDict(AttribDict):
-            defaults = {'test': 1}
-
-        ad = MyAttribDict()
+        ad = DefaultTestAttribDict()
         ad.muh = 2
-        ad2 = ad.__deepcopy__()
+        ad2 = ad.copy()
         self.assertEqual(ad2.test, 1)
         self.assertEqual(ad2.muh, 2)
+        self.assertEqual(ad2, ad)
+        ad3 = pickle.loads(pickle.dumps(ad, protocol=2))
+        self.assertEqual(ad3.test, 1)
+        self.assertEqual(ad3.muh, 2)
+        self.assertEqual(ad3, ad)
 
     def test_compare_with_dict(self):
         """
@@ -288,6 +292,29 @@ class AttribDictTestCase(unittest.TestCase):
         ad = AttribDict({'test1': 1, 'test2': 2})
         out = ' test1: 1\n test2: 2'
         self.assertEqual(ad._pretty_str(min_label_length=6), out)
+
+    def test_types(self):
+        """
+        Test that types are enforced with _types attribute
+        """
+        class AttrOcity(AttribDict):
+            _types = {'string': str, 'number': (float, int), 'int': int,
+                      'another_number': (float, int)}
+
+        ad = AttrOcity()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('default')
+            ad.string = int
+            ad.number = '1'
+            ad.int = 1.0
+            ad.not_type_controlled = 2
+            ad.another_number = 1
+
+        self.assertEqual(len(w), 3)
+        self.assertIsInstance(ad.string, str)
+        self.assertIsInstance(ad.number, float)
+        self.assertIsInstance(ad.int, int)
+        self.assertIsInstance(ad.another_number, int)
 
 
 def suite():

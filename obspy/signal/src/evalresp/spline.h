@@ -92,4 +92,3 @@ void spline_pchip_val ( int n, double x[], double f[], double d[], int ne,
   double xe[], double fe[] );
 void spline_quadratic_val ( int ndata, double tdata[], double ydata[], 
   double tval, double *yval, double *ypval );
-void timestamp ( void );

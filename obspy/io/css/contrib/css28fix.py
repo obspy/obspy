@@ -9,10 +9,6 @@ Quick and dirty conversion routine from CSS 2.8 to Seismic Handler ASCII format
 - output written to stdout
 - shows plot for inspection (if matplotlib installed)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import struct
 import sys
 from datetime import datetime
@@ -22,7 +18,7 @@ from datetime import datetime
 try:
     # only process first line
     head = list(map(str.strip, open(sys.argv[1]).readlines()[0].split()))
-except:
+except Exception:
     sys.exit("cannot read wfdisc file (arg)")
 
 input = head[15]  # input file name
@@ -62,5 +58,5 @@ try:
     pylab.plot([x * SH["DELTA"] for x in range(SH["LENGTH"])],
                [d * SH["CALIB"] for d in data])
     pylab.show()
-except:
+except Exception:
     sys.exit("cannot show plot!")

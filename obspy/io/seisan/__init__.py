@@ -10,14 +10,14 @@ files in the SEISAN format.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------
 Importing SEISAN files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
-the :mod:`obspy.core` module. Examples seismograms files may be found at
-http://examples.obspy.org.
+the :mod:`obspy.core` module. Example seismogram files may be found at
+https://examples.obspy.org.
 
 >>> from obspy import read
 >>> st = read("/path/to/2001-01-13-1742-24S.KONO__004")
@@ -52,11 +52,6 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 >>> print(st[0].data)
 [  464   492   519 ..., -7042 -6960 -6858]
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

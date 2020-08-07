@@ -4,7 +4,8 @@ Beamforming - FK Analysis
 
 The following code shows how to do an FK Analysis with ObsPy. The data are from
 the blasting of the AGFA skyscraper in Munich. We execute
-:func:`~obspy.signal.array_analysis.sonic` using the following settings:
+:func:`~obspy.signal.array_analysis.array_processing` using the following
+settings:
 
 * The slowness grid is set to corner values of -3.0 to 3.0 s/km with a step
   fraction of ``sl_s = 0.03``.
@@ -20,10 +21,10 @@ the blasting of the AGFA skyscraper in Munich. We execute
 The output will be stored in ``out``.
 
 The second half shows how to plot the output. We use the output
-``out`` produced by :func:`~obspy.signal.array_analysis.sonic`, which are
-:class:`numpy ndarrays <numpy.ndarray>` containing timestamp, relative power,
-absolute power, backazimuth, slowness. The colorbar corresponds to relative
-power.
+``out`` produced by :func:`~obspy.signal.array_analysis.array_processing`,
+which are :class:`numpy ndarrays <numpy.ndarray>` containing timestamp,
+relative power, absolute power, backazimuth, slowness. The colorbar corresponds
+to relative power.
 
 .. plot:: tutorial/code_snippets/beamforming_fk_analysis_1.py
    :include-source:

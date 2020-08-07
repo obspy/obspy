@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 MODULE_DOCSTRING = """
 SAC header specification, including documentation.
 
@@ -16,113 +12,115 @@ documentation is in a dictionary, for reuse throughout the package.
 
 # header documentation is large and used in several places, so we just write
 # it once here and distributed it as needed.
-DOC = {'npts': 'N    Number of points per data component. [required]',
-       'nvhdr': '''N    Header version number. Current value is the integer 6.
+DOC = {
+    'npts': 'N    Number of points per data component.',
+    'nvhdr': '''N    Header version number. Current value is the integer 6.
                   Older version data (NVHDR < 6) are automatically updated
-                  when read into sac. [required]''',
-       'b': 'F    Beginning value of the independent variable. [required]',
-       'e': 'F    Ending value of the independent variable. [required]',
-       'iftype': '''I    Type of file [required]:
+                  when read into sac.''',
+    'b': 'F    Beginning value of the independent variable.',
+    'e': 'F    Ending value of the independent variable.',
+    'iftype': '''I    Type of file:
+
                   * ITIME {Time series file}
                   * IRLIM {Spectral file---real and imaginary}
                   * IAMPH {Spectral file---amplitude and phase}
                   * IXY {General x versus y data}
                   * IXYZ {General XYZ (3-D) file}''',
-       'leven': 'L    TRUE if data is evenly spaced. [required]',
-       'delta': 'F    Increment between evenly spaced samples (nominal value).'
-                ' [required]',
-       'odelta': 'F    Observed increment if different from nominal value.',
-       'idep': '''I    Type of dependent variable:
+    'leven': 'L    TRUE if data is evenly spaced.',
+    'delta': 'F    Increment between evenly spaced samples (nominal value).',
+    'odelta': 'F    Observed increment if different from nominal value.',
+    'idep': '''I    Type of dependent variable:
+
                   * IUNKN (Unknown)
                   * IDISP (Displacement in nm)
                   * IVEL (Velocity in nm/sec)
                   * IVOLTS (Velocity in volts)
                   * IACC (Acceleration in nm/sec/sec)''',
-       'scale': 'F    Multiplying scale factor for dependent variable '
-                '[not currently used]',
-       'depmin': 'F    Minimum value of dependent variable.',
-       'depmax': 'F    Maximum value of dependent variable.',
-       'depmen': 'F    Mean value of dependent variable.',
-       'nzyear': 'N    GMT year corresponding to reference time in file.',
-       'nzjday': 'N    GMT julian day.',
-       'nzhour': 'N    GMT hour.',
-       'nzmin': 'N    GMT minute.',
-       'nzsec': 'N    GMT second.',
-       'nzmsec': 'N    GMT millisecond.',
-       'iztype': '''I    Reference time equivalence:
+    'scale': 'F    Multiplying scale factor for dependent variable ',
+    'depmin': 'F    Minimum value of dependent variable.',
+    'depmax': 'F    Maximum value of dependent variable.',
+    'depmen': 'F    Mean value of dependent variable.',
+    'nzyear': 'N    GMT year corresponding to reference time in file.',
+    'nzjday': 'N    GMT julian day.',
+    'nzhour': 'N    GMT hour.',
+    'nzmin': 'N    GMT minute.',
+    'nzsec': 'N    GMT second.',
+    'nzmsec': 'N    GMT millisecond.',
+    'iztype': '''I    Reference time equivalence:
+
                   * IUNKN (5): Unknown
                   * IB (9): Begin time
                   * IDAY (10): Midnight of reference GMT day
                   * IO (11): Event origin time
                   * IA (12): First arrival time
                   * ITn (13-22): User defined time pick n, n=0,9''',
-       'o': 'F    Event origin time (seconds relative to reference time.)',
-       'ko': 'K    Event origin time identification.',
-       'a': 'F    First arrival time (seconds relative to reference time.)',
-       'ka': 'K    First arrival time identification.',
-       'f': 'F    Fini or end of event time '
-            '(seconds relative to reference time.)',
-       'kf': 'F    Fini or end of event time identification.',
-       't0': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't1': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't2': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't3': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't4': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't5': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't6': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't7': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't8': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       't9': 'F    User defined time (seconds picks or markers relative to '
-             'reference time).',
-       'kt0': 'F    User defined time pick identification.',
-       'kt1': 'F    User defined time pick identification.',
-       'kt2': 'F    User defined time pick identification.',
-       'kt3': 'F    User defined time pick identification.',
-       'kt4': 'F    User defined time pick identification.',
-       'kt5': 'F    User defined time pick identification.',
-       'kt6': 'F    User defined time pick identification.',
-       'kt7': 'F    User defined time pick identification.',
-       'kt8': 'F    User defined time pick identification.',
-       'kt9': 'F    User defined time pick identification.',
-       'kinst': 'K    Generic name of recording instrument',
-       'iinst': 'I    Type of recording instrument. [currently not used]',
-       'knetwk': 'K    Name of seismic network.',
-       'kstnm': 'K    Station name.',
-       'istreg': 'I    Station geographic region. [not currently used]',
-       'stla': 'F    Station latitude (degrees, north positive)',
-       'stlo': 'F    Station longitude (degrees, east positive).',
-       'stel': 'F    Station elevation (meters). [not currently used]',
-       'stdp': 'F    Station depth below surface (meters). '
-               '[not currently used]',
-       'cmpaz': 'F    Component azimuth (degrees, clockwise from north).',
-       'cmpinc': 'F    Component incident angle (degrees, from vertical).',
-       'kcmpnm': 'K    Component name.',
-       'lpspol': 'L    TRUE if station components have a positive polarity '
-                 '(left-hand rule).',
-       'kevnm': 'K    Event name.',
-       'ievreg': 'I    Event geographic region. [not currently used]',
-       'evla': 'F    Event latitude (degrees north positive).',
-       'evlo': 'F    Event longitude (degrees east positive).',
-       'evel': 'F    Event elevation (meters). [not currently used]',
-       'evdp': 'F    Event depth below surface (meters). [not currently used]',
-       'mag': 'F    Event magnitude.',
-       'imagtyp': '''I    Magnitude type:
+    'o': 'F    Event origin time (seconds relative to reference time.)',
+    'ko': 'K    Event origin time identification.',
+    'a': 'F    First arrival time (seconds relative to reference time.)',
+    'ka': 'K    First arrival time identification.',
+    'f': 'F    Fini/end of event time (seconds relative to reference time.)',
+    'kf': 'F    Fini or end of event time identification.',
+    't0': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't1': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't2': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't3': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't4': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't5': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't6': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't7': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't8': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    't9': 'F    User defined time (seconds picks or markers relative to '
+          'reference time).',
+    'kt0': 'F    User defined time pick identification.',
+    'kt1': 'F    User defined time pick identification.',
+    'kt2': 'F    User defined time pick identification.',
+    'kt3': 'F    User defined time pick identification.',
+    'kt4': 'F    User defined time pick identification.',
+    'kt5': 'F    User defined time pick identification.',
+    'kt6': 'F    User defined time pick identification.',
+    'kt7': 'F    User defined time pick identification.',
+    'kt8': 'F    User defined time pick identification.',
+    'kt9': 'F    User defined time pick identification.',
+    'kinst': 'K    Generic name of recording instrument',
+    'iinst': 'I    Type of recording instrument.',
+    'knetwk': 'K    Name of seismic network.',
+    'kstnm': 'K    Station name.',
+    'istreg': 'I    Station geographic region.',
+    'stla': 'F    Station latitude (degrees, north positive)',
+    'stlo': 'F    Station longitude (degrees, east positive).',
+    'stel': 'F    Station elevation (meters).',
+    'stdp': 'F    Station depth below surface (meters).',
+    'cmpaz': 'F    Component azimuth (degrees, clockwise from north).',
+    'cmpinc': 'F    Component incident angle (degrees, from vertical).',
+    'kcmpnm': 'K    Component name.',
+    'lpspol': 'L    TRUE if station components have a positive polarity '
+              '(left-hand rule).',
+    'kevnm': 'K    Event name.',
+    'ievreg': 'I    Event geographic region.',
+    'evla': 'F    Event latitude (degrees north positive).',
+    'evlo': 'F    Event longitude (degrees east positive).',
+    'evel': 'F    Event elevation (meters).',
+    'evdp': 'F    Event depth below surface (meters).',
+    'mag': 'F    Event magnitude.',
+    'imagtyp': '''I    Magnitude type:
+
                   * IMB (52): Bodywave Magnitude
                   * IMS (53): Surfacewave Magnitude
                   * IML (54): Local Magnitude
                   * IMW (55): Moment Magnitude
                   * IMD (56): Duration Magnitude
                   * IMX (57): User Defined Magnitude''',
-       'imagsrc': '''I    Source of magnitude information:
+    'imagsrc': '''I    Source of magnitude information:
+
                   * INEIC (National Earthquake Information Center)
                   * IPDE (Preliminary Determination of Epicenter)
                   * IISC (International Seismological Centre)
@@ -135,7 +133,8 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
                   * IJSOP (Joint Seismic Observation Program)
                   * IUSER (The individual using SAC2000)
                   * IUNKNOWN (unknown)''',
-       'ievtyp': '''I    Type of event:
+    'ievtyp': '''I    Type of event:
+
                   * IUNKN (Unknown)
                   * INUCL (Nuclear event)
                   * IPREN (Nuclear pre-shot event)
@@ -164,39 +163,42 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
                   * IT (Teleseismic event of unknown origin)
                   * IU (Undetermined or conflicting information)
                   * IOTHER (Other)''',
-       'nevid': 'N    Event ID (CSS 3.0)',
-       'norid': 'N    Origin ID (CSS 3.0)',
-       'nwfid': 'N    Waveform ID (CSS 3.0)',
-       'khole': 'k    Hole identification if nuclear event.',
-       'dist': 'F    Station to event distance (km).',
-       'az': 'F    Event to station azimuth (degrees).',
-       'baz': 'F    Station to event azimuth (degrees).',
-       'gcarc': 'F    Station to event great circle arc length (degrees).',
-       'lcalda': 'L    TRUE if DIST AZ BAZ and GCARC are to be calculated '
-                 'from st event coordinates.',
-       'iqual': '''I    Quality of data [not currently used]:
-                  * IGOOD (Good data)
-                  * IGLCH (Glitches)
-                  * IDROP (Dropouts)
-                  * ILOWSN (Low signal to noise ratio)
-                  * IOTHER (Other)''',
-       'isynth': '''I    Synthetic data flag [not currently used]:
+    'nevid': 'N    Event ID (CSS 3.0)',
+    'norid': 'N    Origin ID (CSS 3.0)',
+    'nwfid': 'N    Waveform ID (CSS 3.0)',
+    'khole': 'k    Hole identification if nuclear event.',
+    'dist': 'F    Station to event distance (km).',
+    'az': 'F    Event to station azimuth (degrees).',
+    'baz': 'F    Station to event azimuth (degrees).',
+    'gcarc': 'F    Station to event great circle arc length (degrees).',
+    'lcalda': 'L    TRUE if DIST AZ BAZ and GCARC are to be calculated '
+              'from st event coordinates.',
+    'iqual': '''N    Quality of data, as integers. Enum values listed:
+
+                  * IGOOD (45) (Good data)
+                  * IGLCH (46) (Glitches)
+                  * IDROP (47) (Dropouts)
+                  * ILOWSN (48) (Low signal to noise ratio)
+                  * IOTHER (44) (Other)''',
+    'isynth': '''I    Synthetic data flag:
+
                   * IRLDTA (Real data)
                   * ????? (Flags for various synthetic seismogram codes)''',
-       'user0': 'F    User defined variable storage area 0.',
-       'user1': 'F    User defined variable storage area 1.',
-       'user2': 'F    User defined variable storage area 2.',
-       'user3': 'F    User defined variable storage area 3.',
-       'user4': 'F    User defined variable storage area 4.',
-       'user5': 'F    User defined variable storage area 5.',
-       'user6': 'F    User defined variable storage area 6.',
-       'user7': 'F    User defined variable storage area 7.',
-       'user8': 'F    User defined variable storage area 8.',
-       'user9': 'F    User defined variable storage area 9.',
-       'kuser0': 'K    User defined variable storage area 0.',
-       'kuser1': 'K    User defined variable storage area 1.',
-       'kuser2': 'K    User defined variable storage area 2.',
-       'lovrok': 'L    TRUE if it is okay to overwrite this file on disk.'}
+    'user0': 'F    User defined variable storage area 0.',
+    'user1': 'F    User defined variable storage area 1.',
+    'user2': 'F    User defined variable storage area 2.',
+    'user3': 'F    User defined variable storage area 3.',
+    'user4': 'F    User defined variable storage area 4.',
+    'user5': 'F    User defined variable storage area 5.',
+    'user6': 'F    User defined variable storage area 6.',
+    'user7': 'F    User defined variable storage area 7.',
+    'user8': 'F    User defined variable storage area 8.',
+    'user9': 'F    User defined variable storage area 9.',
+    'kuser0': 'K    User defined variable storage area 0.',
+    'kuser1': 'K    User defined variable storage area 1.',
+    'kuser2': 'K    User defined variable storage area 2.',
+    'lovrok': 'L    TRUE if it is okay to overwrite this file on disk.'}
+
 
 # because readable
 _hdritems = sorted(DOC.items())
@@ -208,7 +210,7 @@ HEADER_DOCSTRING = """
 Field Name   Type Description
 ============ ==== ===============================================
 """ + HDR_DESC + \
-        "\n============ ==== ==============================================="
+    "\n============ ==== ==============================================="
 
 # Module documentation string
 __doc__ = MODULE_DOCSTRING + HEADER_DOCSTRING
@@ -243,6 +245,10 @@ INTHDRS = ('nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'nvhdr',
 STRHDRS = ('kstnm', 'kevnm', 'kevnm2', 'khole', 'ko', 'ka', 'kt0', 'kt1',
            'kt2', 'kt3', 'kt4', 'kt5', 'kt6', 'kt7', 'kt8', 'kt9', 'kf',
            'kuser0', 'kuser1', 'kuser2', 'kcmpnm', 'knetwk', 'kdatrd', 'kinst')
+
+# Headers that are in seconds relative to the reference "nz" times
+RELHDRS = ('b', 'e', 'a', 'o', 'f', 't0', 't1', 't2', 't3', 't4', 't5', 't6',
+           't7', 't8', 't9')
 
 """
 NOTE:

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ns0:inventory xmlns:ns0="http://geofon.gfz-potsdam.de/ns/Inventory/1.0/">
+	<ns0:network archive="ODC" code="SL" description="SEISMIC NETWORK OF THE REPUBLIC OF SLOVENIA" end="" institutions="" netClass="p" publicID="Network/SL" region="" restricted="false" shared="true" start="1980-01-01T00:00:00.0000Z" type="BB">
+		<ns0:remark />
+		<ns0:station affiliation="SEISMIC NETWORK OF THE REPUBLIC OF SLOVENIA" archive="ODC" archiveNetworkCode="" code="VISS" country="SL" description="VISNJE, SL" elevation="399.0" end="" latitude="45.8033" longitude="14.8393" place="VISNJE" publicID="Station/SL/VISS/2003-08-14T00:00:00.0000Z" restricted="false" shared="true" start="2003-08-14T00:00:00.0000Z" type="">
+			<ns0:remark />
+			<ns0:sensorLocation code="" elevation="399.0" end="" latitude="45.8033" longitude="14.8393" publicID="SensorLocation#20121207100902.171382.3556" start="2003-08-14T00:00:00.0000Z">
+				<ns0:stream azimuth="90.0" clockSerialNumber="" code="LHE" datalogger="Datalogger#20121207102426.851279.14401" dataloggerChannel="2" dataloggerSerialNumber="xxxx" depth="0.0" dip="0.0" end="" flags="G" format="Steim2" gain="1079250000.0" gainFrequency="0.03" gainUnit="M/S" restricted="false" sampleRateDenominator="1" sampleRateNumerator="1" sensor="Sensor#20121207102426.862019.14406" sensorChannel="2" sensorSerialNumber="yyyy" shared="false" start="2008-07-31T10:00:00.0000Z" />
+			</ns0:sensorLocation>
+		</ns0:station>
+	</ns0:network>
+	<ns0:datalogger clockManufacturer="" clockModel="" clockType="" description="KOGS.2004.026.G" digitizerManufacturer="" digitizerModel="" gain="532810.0" maxClockDrift="0.01" name="KOGS.2004.026.G" publicID="Datalogger#20121207102426.851279.14401" recorderManufacturer="" recorderModel="">
+		<ns0:remark />
+		<ns0:calibration channel="0" end="" gain="532810.0" gainFrequency="0.03" serialNumber="xxxx" start="2004-01-26T10:00:01.0000Z">
+			<ns0:remark />
+		</ns0:calibration>
+	</ns0:datalogger>
+        <ns0:sensor description="CMG3ESP_120SEC/QUANTERRA" highFrequency="" lowFrequency="" manufacturer="GURALP" model="CMG3ESP_120SEC/QUANTERRA" name="PERS.2011.172.HE" publicID="Sensor#20121207102426.862019.14406" response="ResponsePolynomial#20121207102408.809219.14178" type="" unit="M/S">
+                <ns0:remark />
+                <ns0:calibration channel="2" end="" gain="1994.94" gainFrequency="0.03" serialNumber="yyyy" start="2011-06-21T11:50:01.0000Z">
+                        <ns0:remark/>
+                </ns0:calibration>
+        </ns0:sensor>
+        <ns0:responsePolynomial gain="1" gainFrequency="1" name="" publicID="ResponsePolynomial#20121207102408.809219.14178">
+                <ns0:coefficients>1 2 3 4 5 6</ns0:coefficients>
+        </ns0:responsePolynomial>
+</ns0:inventory>

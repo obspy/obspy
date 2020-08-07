@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 """
+obspy.io.nied.fnet - F-net moment tensor file read support for ObsPy
+====================================================================
 F-net moment tensor file format support for ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) and Yannik Behr
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import re
 import uuid
 
@@ -75,7 +73,7 @@ def _is_fnetmt_catalog(filename_or_buf):
     :type filename_or_buf: str or file-like object.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_fnetmt_catalog,
+        return _buffer_proxy(filename_or_buf, _internal_is_fnetmt_catalog,
                              reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
@@ -83,7 +81,7 @@ def _is_fnetmt_catalog(filename_or_buf):
         return False
 
 
-def __is_fnetmt_catalog(buf):
+def _internal_is_fnetmt_catalog(buf):
     """
     Test whether file is an F-net moment tensor catalog file by reading the
     header and the first data line. Reads at most 40 lines.
@@ -113,7 +111,7 @@ def __is_fnetmt_catalog(buf):
                         return False
                     return True
             cnt += 1
-    except:
+    except Exception:
         return False
     else:
         return True
@@ -127,10 +125,11 @@ def _read_fnetmt_catalog(filename_or_buf, **kwargs):
     :param filename_or_buf: File to read.
     :type filename_or_buf: str or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __read_fnetmt_catalog, **kwargs)
+    return _buffer_proxy(filename_or_buf, _internal_read_fnetmt_catalog,
+                         **kwargs)
 
 
-def __read_fnetmt_catalog(buf, **kwargs):
+def _internal_read_fnetmt_catalog(buf, **kwargs):
     """
     Reads an F-net moment tensor catalog file to a
     :class:`~obspy.core.event.Catalog` object.
@@ -165,7 +164,7 @@ def __read_fnetmt_catalog(buf, **kwargs):
         # If there is something, jump back to the beginning of the line and
         # read the next event.
         if line:
-            events.append(__read_single_fnetmt_entry(line.decode()))
+            events.append(_internal_read_single_fnetmt_entry(line.decode()))
 
     # Consistency check
     if len(events) != nevents:
@@ -176,7 +175,7 @@ def __read_fnetmt_catalog(buf, **kwargs):
                    events=events, description=headerlines[:-1])
 
 
-def __read_single_fnetmt_entry(line, **kwargs):
+def _internal_read_single_fnetmt_entry(line, **kwargs):
     """
     Reads a single F-net moment tensor solution to a
     :class:`~obspy.core.event.Event` object.
@@ -187,9 +186,9 @@ def __read_single_fnetmt_entry(line, **kwargs):
 
     a = line.split()
     try:
-        ot = UTCDateTime().strptime(a[0], '%Y/%m/%d,%H:%M:%S.%f')
+        ot = UTCDateTime.strptime(a[0], '%Y/%m/%d,%H:%M:%S.%f')
     except ValueError:
-        ot = UTCDateTime().strptime(a[0], '%Y/%m/%d,%H:%M:%S')
+        ot = UTCDateTime.strptime(a[0], '%Y/%m/%d,%H:%M:%S')
     lat, lon, depjma, magjma = map(float, a[1:5])
     depjma *= 1000
     region = a[5]
@@ -251,4 +250,7 @@ def __read_single_fnetmt_entry(line, **kwargs):
     e.preferred_magnitude_id = m_mt.resource_id.id
     e.preferred_origin_id = o_mt.resource_id.id
     e.preferred_focal_mechanism_id = foc_mec.resource_id.id
+
+    e.scope_resource_ids()
+
     return e

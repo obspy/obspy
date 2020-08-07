@@ -1,0 +1,98 @@
+#!/usr/bin/make -f
+
+.PHONY: binary
+
+export DH_ALWAYS_EXCLUDE=CVS:.git:.gitignore:__pycache__:src
+export PYBUILD_SYSTEM=distutils
+
+%:
+	# XXX somehow pybuild wants to build py37 even if it's not installed and we
+	# XXX try to tell it not to build it via PYBUILD_VERSIONS..
+	if [ `lsb_release -cs` = "cosmic" ]; then \
+		pybuild --disable '3.7'; \
+	fi
+	dh $@ --buildsystem=pybuild --with=python2,python3 --with quilt
+
+binary:
+	dh binary
+
+override_dh_auto_build:
+	dh_auto_build
+	set -ex; for python in $(shell py3versions -d); do \
+	    $$python setup.py build; \
+	done;
+
+override_dh_auto_install:
+	dh_auto_install #-- release
+	dh_numpy
+	dh_numpy3
+	set -ex; for python in $(shell py3versions -d); do \
+		echo $$python; \
+	    $$python setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb; \
+	done;
+	########## lib naming hack start
+	# python-setuptools on Debian/Ubuntu is patched to include multiarch information in lib filenames
+	# in the deb build log e.g.:
+	#   "renaming extension libevresp_Linux_32bit_py34.cpython-34m.so -> libevresp_Linux_32bit_py34.cpython-34m-i386-linux-gnu.so"
+	# the patch can be viewed here: https://sources.debian.net/src/python-setuptools/5.5.1-1/debian/patches/multiarch-extname.diff/
+	# in principle the cleaner solution would be to patch obspy.core.util.libnames._get_lib_name,
+	# but setuptools only changes the name in a if/else depending on (it looks like) whether multiarch is enabled in the current system,
+	# and this is also only done by newer (patched) setuptools in Debian/Ubuntu.
+	# Therefore, the uglier but easier solution is to rename libraries back to our own naming scheme.
+	# This can still be changed when somebody runs into problems in an obscure multiarch setup and reports problems.
+	# Links:
+	#  - https://sources.debian.net/src/python-setuptools/5.5.1-1/debian/patches/multiarch-extname.diff/
+	#  - http://metadata.ftp-master.debian.org/changelogs/main/p/python-setuptools/unstable_changelog
+	#  - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=733128
+	# Update 2018-03: This patch is also present in Debian 9 'stretch' and the
+	#   current testing "Buster", but at least on "stretch" the complex suffix
+	#   is set in the system (see `sysconfig.get_config_var("EXT_SUFFIX")`), so
+	#   that is what obspy looks up in the end and we must not strip that
+	#   suffix like on Debian 8 'jessie'.
+	#   We can keep to distinguish by Python version.. 'jessie' has Python 3.4,
+	#   'stretch' has Python 3.5
+	if [ `py3versions -d` = "python3.3" ] || [ `py3versions -d` = "python3.4" ]; then \
+		sh -x debian/_rename_lib_extensions.sh; \
+	fi;
+	########## lib naming hack end
+	sh -x debian/_copy_lib_extensions_to_source_tree.sh
+	python2 setup.py build_man
+	python3 setup.py build_man
+	ln build/man/* debian/
+	ls -1 build/man/obspy-* | sed 's#.*/#./debian/#' > debian/python-obspy.manpages
+	ls -1 build/man/obspy3-* | sed 's#.*/#./debian/#' > debian/python3-obspy.manpages
+
+override_dh_install:
+	# hard link test files of libmseed to normal mseed test directories
+	mkdir debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/tests/data/libmseed
+	ln debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/src/libmseed/test/*.test debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/tests/data/libmseed
+	ln debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/src/libmseed/test/*.test.ref debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/tests/data/libmseed
+	ln debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/src/libmseed/test/data/*.mseed debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/tests/data/libmseed
+	cd debian/tmp/usr/lib/python3*/dist-packages/obspy/io/mseed/tests/data && mkdir libmseed
+	ln debian/tmp/usr/lib/python3*/dist-packages/obspy/io/mseed/src/libmseed/test/*.test debian/tmp/usr/lib/python3*/dist-packages/obspy/io/mseed/tests/data/libmseed
+	ln debian/tmp/usr/lib/python3*/dist-packages/obspy/io/mseed/src/libmseed/test/*.test.ref debian/tmp/usr/lib/python3*/dist-packages/obspy/io/mseed/tests/data/libmseed
+	ln debian/tmp/usr/lib/python3*/dist-packages/obspy/io/mseed/src/libmseed/test/data/*.mseed debian/tmp/usr/lib/python3*/dist-packages/obspy/io/mseed/tests/data/libmseed
+	# data files get separated into /usr/share for both python2/3 to use
+	sh -x debian/_dh_install_data_files.sh
+	# files for normal packages
+	## bin
+	dh_install -p python3-obspy "debian/tmp/usr/bin/obspy3-*"
+	dh_install -p python-obspy "debian/tmp/usr/bin/obspy-*"
+	## lib
+	dh_install -p python3-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python3*/*-packages/*"
+	dh_install -p python-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python2.7/*-packages/*"
+	# Continue with regular dh_install
+	dh_install
+
+override_dh_link:
+	sh -x debian/_dh_link_data_files.sh
+	dh_link
+
+override_dh_installdeb:
+	find $(CURDIR)/debian/ -name LICENSE.txt -exec rm -f {} \;
+	find $(CURDIR)/debian/ -name README.txt -exec rm -f {} \;
+	find $(CURDIR) -name RELEASE-VERSION -exec sh -c 'cat {} | sed s/-dirty// > {}.tmp && mv {}.tmp {}; chmod 0644 {}' \;
+	dh_installdeb
+
+override_dh_auto_test:
+	echo

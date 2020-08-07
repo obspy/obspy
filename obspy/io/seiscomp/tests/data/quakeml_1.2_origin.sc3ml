@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:eu.emsc/unid">
+    <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+      <time>
+        <value>2011-03-11T05:46:24.120000Z</value>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <depth>
+        <value>0.029</value>
+        <confidenceLevel>50.0</confidenceLevel>
+      </depth>
+      <depthType>from location</depthType>
+      <epicenterFixed>false</epicenterFixed>
+      <referenceSystemID>smi:some/reference/muh</referenceSystemID>
+      <methodID>smi:some/method/NA</methodID>
+      <earthModelID>smi:same/model/maeh</earthModelID>
+      <quality>
+        <usedStationCount>16</usedStationCount>
+        <standardError>0.0</standardError>
+        <azimuthalGap>231.0</azimuthalGap>
+        <maximumDistance>53.03</maximumDistance>
+        <minimumDistance>2.45</minimumDistance>
+      </quality>
+      <uncertainty>
+        <horizontalUncertainty>9</horizontalUncertainty>
+        <minHorizontalUncertainty>6</minHorizontalUncertainty>
+        <maxHorizontalUncertainty>10</maxHorizontalUncertainty>
+        <azimuthMaxHorizontalUncertainty>80.0</azimuthMaxHorizontalUncertainty>
+        <confidenceEllipsoid>
+          <semiMajorAxisLength>0.000123</semiMajorAxisLength>
+          <semiMinorAxisLength>0.001123</semiMinorAxisLength>
+          <semiIntermediateAxisLength>0.002123</semiIntermediateAxisLength>
+          <majorAxisPlunge>3.123</majorAxisPlunge>
+          <majorAxisAzimuth>4.123</majorAxisAzimuth>
+          <majorAxisRotation>5.123</majorAxisRotation>
+        </confidenceEllipsoid>
+        <preferredDescription>uncertainty ellipse</preferredDescription>
+      </uncertainty>
+      <type>hypocenter</type>
+      <evaluationMode>manual</evaluationMode>
+      <evaluationStatus>preliminary</evaluationStatus>
+      <creationInfo>
+        <author>NEIC</author>
+      </creationInfo>
+      <comment>
+        <text>Some comment</text>
+        <id>smi:some/comment/reference</id>
+        <creationInfo>
+          <author>EMSC</author>
+        </creationInfo>
+      </comment>
+      <comment>
+        <text>Another comment</text>
+      </comment>
+      <compositeTime>
+        <year>
+          <value>2029</value>
+          <uncertainty>2</uncertainty>
+          <lowerUncertainty>2028</lowerUncertainty>
+          <upperUncertainty>2030</upperUncertainty>
+          <confidenceLevel>0.3</confidenceLevel>
+        </year>
+        <hour>
+          <value>12</value>
+        </hour>
+      </compositeTime>
+      <compositeTime>
+        <hour>
+          <value>1</value>
+        </hour>
+        <second>
+          <value>29.124234</value>
+        </second>
+      </compositeTime>
+    </origin>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:www.iris.edu/ws/event/query?originId=7680412</originReference>
+    </event>
+  </EventParameters>
+</seiscomp>

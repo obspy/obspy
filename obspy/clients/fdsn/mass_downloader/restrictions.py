@@ -7,11 +7,9 @@ Non-geographical restrictions and constraints for the mass downloader.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from obspy.core.compatibility import collections_abc
 
 import obspy
 
@@ -39,10 +37,10 @@ class Restrictions(object):
     ...     # Only HH or BH channels. If a station has HH channels,
     ...     # those will be downloaded, otherwise the BH. Nothing will be
     ...     # downloaded if it has neither.
-    ...     channel_priorities=("HH[ZNE]", "BH[ZNE]"),
+    ...     channel_priorities=["HH[ZNE]", "BH[ZNE]"],
     ...     # Location codes are arbitrary and there is no rule as to which
     ...     # location is best.
-    ...     location_priorities=("", "00", "10"))
+    ...     location_priorities=["", "00", "10"])
 
 
     And the restrictions for downloading a noise data set might look similar to
@@ -75,6 +73,48 @@ class Restrictions(object):
     ...     # Guard against the same station having different names.
     ...     minimum_interstation_distance_in_m=100.0)
 
+    The ``network``, ``station``, ``location``, and ``channel`` codes are
+    directly passed to the `station` service of each fdsn-ws implementation
+    and can thus take comma separated string lists as arguments, i.e.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            network="BW,G?", station="A*,B*",
+            ...
+            )
+
+    Not all fdsn-ws implementations support the direct exclusion of network
+    or station codes. The ``exclude_networks`` and ``exclude_stations``
+    arguments should thus be used for that purpose to ensure compatibility
+    across all data providers, e.g.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            network="B*,G*", station="A*, B*",
+            exclude_networks=["BW", "GR"],
+            exclude_stations=["AL??", "*O"],
+            ...
+            )
+
+    It is also possible to restrict the downloaded stations to stations part of
+    an existing inventory object which can originate from a StationXML file or
+    from other sources. It will only keep stations that are part of the
+    inventory object. Channels are still selected dynamically based on the
+    other restrictions. Keep in mind that all other restrictions still apply -
+    passing an inventory will just further restrict the possibly downloaded
+    data.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            limit_stations_to_inventory=inv,
+            ...
+            )
 
     :param starttime: The start time of the data to be downloaded.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -103,6 +143,18 @@ class Restrictions(object):
     :type location: str
     :param channel: The channel code. Can contain wildcards.
     :type channel: str
+    :param exclude_networks: A list of potentially wildcarded networks that
+        should not be downloaded.
+    :type exclude_networks: list of str
+    :param exclude_stations: A list of potentially wildcarded stations that
+        should not be downloaded.
+    :type exclude_stations: list of str
+    :param limit_stations_to_inventory: If given, only stations part of the
+        this inventory object will be downloaded. All other restrictions
+        still apply - this just serves to further limit the set of stations
+        to download.
+    :type limit_stations_to_inventory:
+        :class:`~obspy.core.inventory.inventory.Inventory`
     :param reject_channels_with_gaps: If True (default), MiniSEED files with
         gaps and/or overlaps will be rejected.
     :type reject_channels_with_gaps: bool
@@ -134,12 +186,31 @@ class Restrictions(object):
                  station_starttime=None, station_endtime=None,
                  chunklength_in_sec=None,
                  network=None, station=None, location=None, channel=None,
+                 exclude_networks=tuple(), exclude_stations=tuple(),
+                 limit_stations_to_inventory=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
                  sanitize=True, minimum_interstation_distance_in_m=1000,
-                 channel_priorities=("HH[ZNE]", "BH[ZNE]",
-                                     "MH[ZNE]", "EH[ZNE]",
-                                     "LH[ZNE]"),
-                 location_priorities=("", "00", "10")):
+                 channel_priorities=("HH[ZNE12]", "BH[ZNE12]",
+                                     "MH[ZNE12]", "EH[ZNE12]",
+                                     "LH[ZNE12]", "HL[ZNE12]",
+                                     "BL[ZNE12]", "ML[ZNE12]",
+                                     "EL[ZNE12]", "LL[ZNE12]",
+                                     "SH[ZNE12]"),
+                 location_priorities=("", "00", "10", "01", "20", "02", "30",
+                                      "03", "40", "04", "50", "05", "60",
+                                      "06", "70", "07", "80", "08", "90",
+                                      "09")):
+        # Awkward logic to keep track whether or not the location priorities
+        # are equal to the default values. This "solution" keeps the function
+        # signature intact and it also located close to where the location
+        # priorities are set.
+        if location_priorities == (
+                "", "00", "10", "01", "20", "02", "30", "03", "40", "04", "50",
+                "05", "60", "06", "70", "07", "80", "08", "90", "09"):
+            self._loc_prios_are_default_values = True
+        else:
+            self._loc_prios_are_default_values = False
+
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
         self.station_starttime = station_starttime and \
@@ -157,13 +228,40 @@ class Restrictions(object):
         self.station = station
         self.location = location
         self.channel = channel
+        self.exclude_networks = exclude_networks
+        self.exclude_stations = exclude_stations
         self.reject_channels_with_gaps = reject_channels_with_gaps
         self.minimum_length = minimum_length
         self.sanitize = bool(sanitize)
+
+        # These must be iterables, but not strings.
+        if not isinstance(channel_priorities, collections_abc.Iterable) \
+                or isinstance(channel_priorities, str):
+            msg = "'channel_priorities' must be a list or other iterable " \
+                  "container."
+            raise TypeError(msg)
+
+        if not isinstance(location_priorities, collections_abc.Iterable) \
+                or isinstance(location_priorities, str):
+            msg = "'location_priorities' must be a list or other iterable " \
+                  "container."
+            raise TypeError(msg)
+
         self.channel_priorities = channel_priorities
         self.location_priorities = location_priorities
+
         self.minimum_interstation_distance_in_m = \
             float(minimum_interstation_distance_in_m)
+
+        # Further restrict the possibly downloaded networks and station to
+        # the one in the given inventory.
+        if limit_stations_to_inventory is not None:
+            self.limit_stations_to_inventory = set()
+            for net in limit_stations_to_inventory:
+                for sta in net:
+                    self.limit_stations_to_inventory.add((net.code, sta.code))
+        else:
+            self.limit_stations_to_inventory = None
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -190,7 +288,7 @@ class Restrictions(object):
             while starttime < endtime:
                 yield (starttime, min(starttime + chunklength, endtime))
                 starttime += chunklength
-            raise StopIteration
+            return
 
         return it()
 

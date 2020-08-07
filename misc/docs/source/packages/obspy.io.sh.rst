@@ -10,5 +10,6 @@
        :nosignatures:
 
        core
+       evt
 
     .. comment to end block

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.xseed - Dataless SEED, RESP and XML-SEED read and write support
-========================================================================
+obspy.io.xseed - (X)SEED and RESP support for ObsPy
+===================================================
 `XML-SEED` was introduced by Tsuboi, Tromp and Komatitsch (2004), it is a XML
 representation of `Dataless SEED`. This module contains converters from
 `Dataless SEED` to `XML-SEED` and vice versa as well as a converter from
@@ -9,18 +9,23 @@ representation of `Dataless SEED`. This module contains converters from
 against the complete ORFEUS Dataless SEED archive, the IRIS (US) Dataless SEED
 archive and against ArcLink response requests.
 
+All files can be converted to ObsPy's internal inventory objects at which
+point they can be written out to any format ObsPy supports. In the case of
+RESP files these are potentially incomplete as RESP files lack vital
+information like geographical coordinates.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Allocate a Parser object and read/write
 ---------------------------------------
 
 >>> from obspy.io.xseed import Parser
 >>> sp = Parser("/path/to/dataless.seed.BW_FURT")
->>> sp.write_XSEED("dataless.seed.BW_RJOB.xml") #doctest: +SKIP
+>>> sp.write_xseed("dataless.seed.BW_RJOB.xml") #doctest: +SKIP
 
 The lines above will convert `Dataless SEED`, e.g.::
 
@@ -44,10 +49,10 @@ to the `XML-SEED` representation, e.g.::
 
 
 A response file can be written in a similar manner, just replace
-:meth:`~obspy.io.xseed.parser.Parser.write_XSEED` by
-:meth:`~obspy.io.xseed.parser.Parser.write_RESP`:
+:meth:`~obspy.io.xseed.parser.Parser.write_xseed` by
+:meth:`~obspy.io.xseed.parser.Parser.write_resp`:
 
->>> sp.write_RESP(folder="BW_FURT", zipped=False) #doctest: +SKIP
+>>> sp.write_resp(folder="BW_FURT", zipped=False) #doctest: +SKIP
 
 
 The Parser Object
@@ -70,12 +75,18 @@ volume will be stored in the attributes``Parser.volume``,
 related Blockettes and ``Parser.stations`` is a list of stations which contains
 all related Blockettes.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 # needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'
+
+
+class InvalidResponseError(Exception):
+    """
+    Raised when a response is clearly invalid.
+
+    The error message should give a clearer idea of why.
+    """
+    pass
+
 
 from .parser import Parser
 

@@ -52,14 +52,7 @@ connection object and cannot be easily influenced. Also, a ``HELLO`` is always
 sent to the server when connecting in order to determine the SeedLink protocol
 version.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-from future import standard_library
-with standard_library.hooks():
-    import urllib.parse
+from urllib.parse import urlparse
 
 import lxml
 
@@ -132,7 +125,7 @@ class EasySeedLinkClient(object):
 
     def __init__(self, server_url, autoconnect=True):
         # Catch invalid server_url parameters
-        if not isinstance(server_url, (str, native_str)):
+        if not isinstance(server_url, str):
             raise ValueError('Expected string for SeedLink server URL')
         # Allow for sloppy server URLs (e.g. 'geofon.gfz-potsdam.de:18000).
         # (According to RFC 1808 the net_path segment needs to start with '//'
@@ -141,7 +134,7 @@ class EasySeedLinkClient(object):
         if '://' not in server_url and not server_url.startswith('//'):
             server_url = '//' + server_url
 
-        parsed_url = urllib.parse.urlparse(server_url, scheme='seedlink')
+        parsed_url = urlparse(server_url, scheme='seedlink')
 
         # Check the provided scheme
         if not parsed_url.scheme == 'seedlink':
@@ -156,8 +149,8 @@ class EasySeedLinkClient(object):
         self.server_port = parsed_url.port or 18000
 
         self.conn = SeedLinkConnection()
-        self.conn.setSLAddress('%s:%d' %
-                               (self.server_hostname, self.server_port))
+        self.conn.set_sl_address('%s:%d' %
+                                 (self.server_hostname, self.server_port))
 
         if autoconnect:
             self.connect()
@@ -181,7 +174,7 @@ class EasySeedLinkClient(object):
 
         Available info levels depend on the server implementation. Usually one
         of ``ID``, ``CAPABILITIES``, ``STATIONS``, ``STREAMS``, ``GAPS``,
-        ``CONNNECTIONS``, ``ALL``.
+        ``CONNECTIONS``, ``ALL``.
 
         As a convenience, the server's ``CAPABILITIES`` can be accessed through
         the client's :attr:`~.EasySeedLinkClient.capabilities` attribute.
@@ -201,7 +194,7 @@ class EasySeedLinkClient(object):
             raise EasySeedLinkClientException(msg)
 
         # Send the INFO request
-        self.conn.requestInfo(level)
+        self.conn.request_info(level)
 
         # Wait for full response
         while True:
@@ -218,7 +211,7 @@ class EasySeedLinkClient(object):
             # Wait for the terminated INFO response
             packet_type = data.get_type()
             if packet_type == SLPacket.TYPE_SLINFT:
-                return self.conn.getInfoString()
+                return self.conn.get_info_string()
 
     @property
     def capabilities(self):
@@ -320,13 +313,15 @@ class EasySeedLinkClient(object):
         while True:
             bytes_read = self.conn.socket.recv(
                 SeedLinkConnection.DFT_READBUF_SIZE)
+            if not bytes_read:
+                break
             response += bytes_read
             for stopword in stop_on:
                 if response.endswith(stopword):
                     # Collapse the bytearray
                     return bytes(response)
 
-    def _get_CAT(self):
+    def _get_cat(self):
         """
         Send the CAT command to a server and receive the answer.
 
@@ -372,7 +367,7 @@ class EasySeedLinkClient(object):
                   'connection has entered streaming mode.'
             raise EasySeedLinkClientException(msg)
 
-        self.conn.addStream(net, station, selector, seqnum=-1, timestamp=None)
+        self.conn.add_stream(net, station, selector, seqnum=-1, timestamp=None)
 
     def run(self):
         """

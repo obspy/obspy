@@ -2,14 +2,13 @@
 """
 Convenience class for handling MSRecord and MSFileparam.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import ctypes as C
+import ctypes as C  # NOQA
 import os
 
+import numpy as np
+
 from obspy import UTCDateTime
+from obspy.core.compatibility import from_buffer
 from .headers import HPTMODULUS, MS_NOERROR, MSFileParam, MSRecord, clibmseed
 
 
@@ -30,7 +29,7 @@ def _get_ms_file_info(f, real_name):
     info = {'filesize': os.path.getsize(real_name)}
     pos = f.tell()
     f.seek(0)
-    rec_buffer = f.read(512)
+    rec_buffer = from_buffer(f.read(512), dtype=np.int8)
     info['record_length'] = clibmseed.ms_detect(rec_buffer, 512)
     # Calculate Number of Records
     info['number_of_records'] = int(info['filesize'] //

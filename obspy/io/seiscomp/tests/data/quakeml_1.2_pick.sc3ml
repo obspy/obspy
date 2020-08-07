@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:eu.emsc/unid">
+    <pick publicID="smi:ch.ethz.sed/pick/117634">
+      <time>
+        <value>2005-09-18T22:04:35.000000Z</value>
+        <uncertainty>0.012</uncertainty>
+      </time>
+      <waveformID networkCode="BW" stationCode="FUR">
+        <resourceURI>smi:ch.ethz.sed/waveform/201754</resourceURI>
+      </waveformID>
+      <filterID>smi:ch.ethz.sed/filter/lowpass/standard</filterID>
+      <methodID>smi:ch.ethz.sed/picker/autopicker/6.0.2</methodID>
+      <backazimuth>
+        <value>44.0</value>
+      </backazimuth>
+      <onset>impulsive</onset>
+      <phaseHint>Pn</phaseHint>
+      <polarity>positive</polarity>
+      <evaluationMode>manual</evaluationMode>
+      <evaluationStatus>confirmed</evaluationStatus>
+      <creationInfo>
+        <agencyID>EMSC</agencyID>
+        <agencyURI>smi:smi-registry/organization/EMSC</agencyURI>
+        <author>Erika Mustermann</author>
+        <authorURI>smi:smi-registry/organization/EMSC</authorURI>
+        <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
+        <version>1.0.1</version>
+      </creationInfo>
+      <comment>
+        <text>Some comment</text>
+        <creationInfo>
+          <agencyID>EMSC</agencyID>
+        </creationInfo>
+      </comment>
+      <comment>
+        <text>More comment</text>
+        <id>smi:some/comment/id</id>
+      </comment>
+    </pick>
+    <pick publicID="smi:geonet.org.nz/pick/4965421">
+      <time>
+        <value>2007-05-12T07:41:28.815000Z</value>
+        <lowerUncertainty>0.0</lowerUncertainty>
+        <upperUncertainty>0.1</upperUncertainty>
+      </time>
+      <waveformID networkCode="NZ" stationCode="BKZ" channelCode="HHZ"/>
+      <polarity>positive</polarity>
+      <evaluationMode>automatic</evaluationMode>
+      <evaluationStatus>confirmed</evaluationStatus>
+    </pick>
+    <origin publicID="smi:ch.ethz.sed/event/historical/1165/origin/1">
+      <time>
+        <value>2011-03-11T05:46:24.120000Z</value>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <arrival>
+        <pickID>smi:ch.ethz.sed/pick/117634</pickID>
+        <phase>Pn</phase>
+      </arrival>
+      <arrival>
+        <pickID>smi:geonet.org.nz/pick/4965421</pickID>
+        <phase>Pn</phase>
+      </arrival>
+    </origin>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:ch.ethz.sed/event/historical/1165/origin/1</originReference>
+    </event>
+  </EventParameters>
+</seiscomp>

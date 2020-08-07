@@ -15,8 +15,8 @@
         </stationMagnitudeContribution>
         <stationMagnitudeContribution>
             <stationMagnitudeID>smi:ch.ethz.sed/magnitude/station/881334</stationMagnitudeID>
-            <weight>0.55</weight>
-            <residual>0.11</residual>
+            <weight>0.0</weight>
+            <residual>0.0</residual>
         </stationMagnitudeContribution>
       </magnitude>
     </event>

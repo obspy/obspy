@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:eu.emsc/unid">
+    <origin publicID="smi:ch.ethz.sed/event/historical/1165/origin/1">
+      <time>
+        <value>2011-03-11T05:46:24.120000Z</value>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <stationMagnitude publicID="smi:ch.ethz.sed/magnitude/station/881342">
+        <originID>smi:ch.ethz.sed/event/historical/1165/origin/1</originID>
+        <magnitude>
+          <value>6.5</value>
+          <uncertainty>0.2</uncertainty>
+        </magnitude>
+        <type>MS</type>
+        <amplitudeID>smi:ch.ethz.sed/amplitude/824315</amplitudeID>
+        <methodID>smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude</methodID>
+        <waveformID networkCode="BW" stationCode="FUR">
+          <resourceURI>smi:ch.ethz.sed/waveform/201754</resourceURI>
+        </waveformID>
+      </stationMagnitude>
+    </origin>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:ch.ethz.sed/event/historical/1165/origin/1</originReference>
+    </event>
+  </EventParameters>
+</seiscomp>

@@ -1,0 +1,26 @@
+### Blockette 062 tests ###
+
+--01-SEED
+0620129P01021001MB+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00002+2.55000E+01+0.00000E+00-1.44628E+01+0.00000E+00
+
+--01-XSEED
+<response_polynomial blockette="062">
+  <transfer_function_type>P</transfer_function_type>
+  <stage_sequence_number>1</stage_sequence_number>
+  <stage_signal_in_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="21"]/parent::*</stage_signal_in_units>
+  <stage_signal_out_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="1"]/parent::*</stage_signal_out_units>
+  <polynomial_approximation_type>M</polynomial_approximation_type>
+  <valid_frequency_units>B</valid_frequency_units>
+  <lower_valid_frequency_bound>+0.00000E+00</lower_valid_frequency_bound>
+  <upper_valid_frequency_bound>+0.00000E+00</upper_valid_frequency_bound>
+  <lower_bound_of_approximation>+0.00000E+00</lower_bound_of_approximation>
+  <upper_bound_of_approximation>+0.00000E+00</upper_bound_of_approximation>
+  <maximum_absolute_error>+0.00000E+00</maximum_absolute_error>
+  <number_of_polynomial_coefficients>2</number_of_polynomial_coefficients>
+  <polynomial_coefficients>
+    <polynomial_coefficient>+2.55000E+01</polynomial_coefficient>
+    <polynomial_coefficient_error>+0.00000E+00</polynomial_coefficient_error>
+    <polynomial_coefficient>-1.44628E+01</polynomial_coefficient>
+    <polynomial_coefficient_error>+0.00000E+00</polynomial_coefficient_error>
+  </polynomial_coefficients>
+</response_polynomial>

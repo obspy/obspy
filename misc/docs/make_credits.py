@@ -25,9 +25,24 @@ libraries and applications, our build tools and our web sites.
 
 """)
 
+
 # add contributors
+def name_key_function(name):
+    """
+    Key function for use with :py:func:`sorted` to sort full names given as
+    "last name, first names" (e.g. `u'van Driel, Martin\n'`).
+    """
+    last, first = name.split(",")
+    last = last.split()
+    # "pop" any last name prefixes that should be ignored during sorting
+    if last[0] in ["van"]:
+        last.pop(0)
+    return last, first
+
 filename = os.path.join(os.pardir, os.pardir, 'CONTRIBUTORS.txt')
-contributors = sorted(codecs.open(filename, 'r', 'utf-8').readlines())
+lines = [line for line in codecs.open(filename, 'r', 'utf-8').readlines()
+         if line.strip()]
+contributors = sorted(lines, key=name_key_function)
 
 for item in contributors:
     fh.write("    * %s" % (item))

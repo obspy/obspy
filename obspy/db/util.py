@@ -6,12 +6,8 @@ Additional utilities for obspy.db.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from obspy import UTCDateTime
 
 
@@ -54,7 +50,7 @@ def parse_mapping_data(lines):
         if len(data) > 2:
             try:
                 temp['starttime'] = UTCDateTime(data[2])
-            except:
+            except Exception:
                 msg += "starttime '%s' is not a time format"
                 raise Exception(msg % data[2])
         else:
@@ -62,7 +58,7 @@ def parse_mapping_data(lines):
         if len(data) > 3:
             try:
                 temp['endtime'] = UTCDateTime(data[3])
-            except:
+            except Exception:
                 msg += "endtime '%s' is not a time format"
                 raise Exception(msg % data[3])
             if temp['endtime'] < temp['starttime']:

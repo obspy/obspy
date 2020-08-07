@@ -1,0 +1,185 @@
+# Created by `$ conda export -n py3-docs-master -f py3-docs-master.yml` on docs buildbot server.
+# Replaced mlpy version with explicit URL.
+# Can be used to generate a mimic of the environment used by the docs buildbot:
+# `$ conda env create -f py3-docs-master.yml`
+name: py3-docs-master
+dependencies:
+- abstract-rendering=0.5.1=np110py34_0
+- alabaster=0.7.7=py34_0
+- argcomplete=1.0.0=py34_1
+- astropy=1.1.1=np110py34_0
+- babel=2.2.0=py34_0
+- backports_abc=0.4=py34_0
+- basemap=1.0.7=np110py34_0
+- beautiful-soup=4.3.2=py34_0
+- beautifulsoup4=4.4.1=py34_0
+- bitarray=0.8.1=py34_0
+- blaze-core=0.9.0=py34_0
+- bokeh=0.11.1=py34_0
+- boto=2.39.0=py34_0
+- bottleneck=1.0.0=np110py34_0
+- cffi=1.2.1=py34_0
+- clyent=1.2.0=py34_0
+- colorama=0.3.1=py34_0
+- configobj=5.0.6=py34_0
+- coverage=4.0=py34_0
+- cryptography=1.0.2=py34_0
+- curl=7.45.0=0
+- cycler=0.9.0=py34_0
+- cython=0.23.4=py34_0
+- cytoolz=0.7.5=py34_0
+- datashape=0.5.1=py34_0
+- decorator=4.0.6=py34_0
+- docutils=0.12=py34_0
+- et_xmlfile=1.0.1=py34_0
+- fastcache=1.0.2=py34_0
+- flake8=2.5.1=py34_0
+- flask=0.10.1=py34_1
+- fontconfig=2.11.1=5
+- freetype=2.5.5=0
+- funcsigs=0.4=py34_0
+- future=0.15.2=py34_0
+- futures=3.0.3=py34_0
+- geos=3.3.3=0
+- greenlet=0.4.9=py34_0
+- h5py=2.5.0=np110py34_4
+- hdf5=1.8.15.1=2
+- idna=2.0=py34_0
+- ipykernel=4.2.2=py34_0
+- ipython=4.1.1=py34_0
+- ipython-notebook=4.0.4=py34_0
+- ipython-qtconsole=4.0.1=py34_0
+- ipython_genutils=0.1.0=py34_0
+- ipywidgets=4.1.1=py34_0
+- itsdangerous=0.24=py34_0
+- jbig=2.1=0
+- jdcal=1.2=py34_0
+- jedi=0.9.0=py34_0
+- jinja2=2.8=py34_0
+- jpeg=8d=0
+- jsonschema=2.4.0=py34_0
+- jupyter=1.0.0=py34_1
+- jupyter_client=4.1.1=py34_0
+- jupyter_console=4.1.0=py34_0
+- jupyter_core=4.0.6=py34_0
+- libffi=3.0.13=0
+- libgfortran=1.0=0
+- libpng=1.6.17=0
+- libsodium=1.0.3=0
+- libtiff=4.0.6=1
+- libxml2=2.9.2=0
+- libxslt=1.1.28=0
+- llvmlite=0.8.0=py34_0
+- lxml=3.3.5=py34_0
+- markupsafe=0.23=py34_0
+- matplotlib=1.5.1=np110py34_0
+- mccabe=0.3.1=py34_0
+- mistune=0.7.1=py34_0
+- mkl=11.3.1=0
+- mkl-rt=11.1=p0
+- mkl-service=1.1.2=py34_0
+- mock=1.3.0=py34_0
+- multipledispatch=0.4.8=py34_0
+- nbconvert=4.1.0=py34_0
+- nbformat=4.0.1=py34_0
+- networkx=1.11=py34_0
+- nltk=3.1=py34_0
+- nose=1.3.7=py34_0
+- notebook=4.1.0=py34_0
+- numba=0.23.1=np110py34_0
+- numexpr=2.4.6=np110py34_1
+- numpy=1.10.4=py34_0
+- odo=0.4.2=py34_0
+- openpyxl=2.3.2=py34_0
+- openssl=1.0.2f=0
+- pandas=0.17.1=np110py34_0
+- patchelf=0.8=0
+- path.py=8.1.2=py34_1
+- patsy=0.4.0=np110py34_0
+- pbr=1.3.0=py34_0
+- pep8=1.7.0=py34_0
+- pexpect=3.3=py34_0
+- pickleshare=0.5=py34_0
+- pillow=3.1.1=py34_0
+- pip=8.0.2=py34_0
+- ply=3.8=py34_0
+- proj.4=4.9.1=0
+- psutil=3.4.2=py34_0
+- ptyprocess=0.5=py34_0
+- py=1.4.31=py34_0
+- pyasn1=0.1.9=py34_0
+- pycosat=0.6.1=py34_0
+- pycparser=2.14=py34_0
+- pycrypto=2.6.1=py34_0
+- pycurl=7.19.5.3=py34_0
+- pyflakes=1.0.0=py34_0
+- pygments=2.1=py34_0
+- pyopenssl=0.15.1=py34_1
+- pyparsing=2.0.3=py34_0
+- pyproj=1.9.4=py34_1
+- pyqt=4.11.4=py34_1
+- pytables=3.2.2=np110py34_0
+- pytest=2.8.5=py34_0
+- python=3.4.4=0
+- python-dateutil=2.4.2=py34_0
+- pytz=2015.7=py34_0
+- pyyaml=3.11=py34_1
+- pyzmq=15.2.0=py34_0
+- qt=4.8.7=1
+- qtconsole=4.1.1=py34_0
+- readline=6.2=2
+- requests=2.9.1=py34_0
+- rope=0.9.4=py34_1
+- scikit-image=0.11.3=np110py34_0
+- scikit-learn=0.17=np110py34_2
+- scipy=0.17.0=np110py34_1
+- setuptools=19.6.2=py34_0
+- simplegeneric=0.8.1=py34_0
+- sip=4.16.9=py34_0
+- six=1.7.3=py34_0
+- snowballstemmer=1.2.1=py34_0
+- sockjs-tornado=1.0.1=py34_0
+- sphinx=1.2.2=py34_2
+- sphinx_rtd_theme=0.1.9=py34_0
+- spyder=2.3.8=py34_0
+- spyder-app=2.3.8=py34_0
+- sqlalchemy=1.0.11=py34_0
+- sqlite=3.9.2=0
+- statsmodels=0.6.1=np110py34_0
+- sympy=0.7.6.1=py34_0
+- terminado=0.5=py34_1
+- tk=8.5.18=0
+- toolz=0.7.4=py34_0
+- tornado=4.3=py34_0
+- traitlets=4.1.0=py34_0
+- unicodecsv=0.14.1=py34_0
+- util-linux=2.21=0
+- werkzeug=0.11.3=py34_0
+- wheel=0.29.0=py34_0
+- xlrd=0.9.4=py34_0
+- xlsxwriter=0.8.4=py34_0
+- xlwt=1.0.0=py34_0
+- xz=5.0.5=1
+- yaml=0.1.6=0
+- zeromq=4.1.3=0
+- zlib=1.2.8=0
+- zope.interface=4.1.1=py34_0
+- pip:
+  - backports-abc==0.4
+  - blaze==0.9.0
+  - characteristic==14.1.0
+  - click==3.1
+  - doc2dash==2.0.2
+  - et-xmlfile==1.0.1
+  - ipython-genutils==0.1.0
+  - jupyter-client==4.1.1
+  - jupyter-console==4.1.0
+  - jupyter-core==4.0.6
+#  - mlpy==3.5.0
+  - 'http://downloads.sourceforge.net/project/mlpy/mlpy%203.5.0/mlpy-3.5.0.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fmlpy%2Ffiles%2Fmlpy%25203.5.0%2F&ts=1455576292&use_mirror=netcologne'
+  - pybtex==0.19
+  - pyimgur==0.5.3
+  - rope-py3k==0.9.4.post1
+  - sphinx-bootstrap-theme==0.4.8
+  - sphinx-rtd-theme==0.1.9
+  - tables==3.2.2

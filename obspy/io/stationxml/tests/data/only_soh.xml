@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.1">
+  <Source>IRIS-DMC</Source>
+  <Sender>IRIS-DMC</Sender>
+  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.33</Module>
+  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?network=TA&amp;station=034A&amp;level=response</ModuleURI>
+  <Created>2018-07-31T17:06:40.000000Z</Created>
+  <Network code="TA" endDate="2500-12-31T23:59:59.000000Z" restrictedStatus="open" startDate="2003-01-01T00:00:00.000000Z">
+    <Description>USArray Transportable Array (NSF EarthScope Project)</Description>
+    <TotalNumberStations>1892</TotalNumberStations>
+    <SelectedNumberStations>1</SelectedNumberStations>
+    <Station code="034A" endDate="2011-11-17T23:59:59.000000Z" restrictedStatus="open" startDate="2010-01-08T00:00:00.000000Z">
+      <Latitude unit="DEGREES">27.0647</Latitude>
+      <Longitude unit="DEGREES">-98.6833</Longitude>
+      <Elevation>155.0</Elevation>
+      <Site>
+        <Name>Hebronville, TX, USA</Name>
+      </Site>
+      <CreationDate>2010-01-08T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>37</TotalNumberChannels>
+      <SelectedNumberChannels>37</SelectedNumberChannels>
+      <Channel code="ACE" endDate="2011-11-17T17:05:00.000000Z" locationCode="" restrictedStatus="open" startDate="2010-01-08T00:00:00.000000Z">
+        <Comment>
+          <Value>0100000B69C47486</Value>
+        </Comment>
+        <Latitude unit="DEGREES">27.064699</Latitude>
+        <Longitude unit="DEGREES">-98.683296</Longitude>
+        <Elevation>155.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>HEALTH</Type>
+        <SampleRate unit="SAMPLES/S">0.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Quanterra 330 Linear Phase Composite</Description>
+        </Sensor>
+        <Response/>
+      </Channel>
+      <Channel code="QEP" endDate="2010-01-09T23:59:59.000000Z" locationCode="EP" restrictedStatus="open" startDate="2010-01-08T00:00:00.000000Z">
+        <Comment>
+          <Value>117194 117194</Value>
+        </Comment>
+        <Latitude unit="DEGREES">27.064699</Latitude>
+        <Longitude unit="DEGREES">-98.683296</Longitude>
+        <Elevation>155.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1e-07</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">100000.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Description>QEP dummy sensor/QEP - Q330 Environmental Processo</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1.0</Value>
+            <Frequency>0.1</Frequency>
+            <InputUnits>
+              <Name>COUNTS</Name>
+              <Description>digital counts</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>COUNTS</Name>
+              <Description>digital counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+          <Stage number="1">
+            <PolesZeros>
+              <InputUnits>
+                <Name>COUNTS</Name>
+                <Description>digital counts</Description>
+              </InputUnits>
+              <OutputUnits>
+                <Name>V</Name>
+                <Description>emf in volts</Description>
+              </OutputUnits>
+              <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
+              <NormalizationFactor>1.0</NormalizationFactor>
+              <NormalizationFrequency unit="HERTZ">0.1</NormalizationFrequency>
+            </PolesZeros>
+            <StageGain>
+              <Value>1.0</Value>
+              <Frequency>0.1</Frequency>
+            </StageGain>
+          </Stage>
+          <Stage number="2">
+            <Coefficients>
+              <InputUnits>
+                <Name>V</Name>
+                <Description>emf in volts</Description>
+              </InputUnits>
+              <OutputUnits>
+                <Name>COUNTS</Name>
+                <Description>digital counts</Description>
+              </OutputUnits>
+              <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+            </Coefficients>
+            <Decimation>
+              <InputSampleRate unit="HERTZ">1e-07</InputSampleRate>
+              <Factor>1</Factor>
+              <Offset>0</Offset>
+              <Delay>0.0</Delay>
+              <Correction>0.0</Correction>
+            </Decimation>
+            <StageGain>
+              <Value>1.0</Value>
+              <Frequency>0.1</Frequency>
+            </StageGain>
+          </Stage>
+        </Response>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>

@@ -6,7 +6,7 @@ Library name handling for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 # NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
 # installation time)
@@ -24,12 +24,12 @@ def cleanse_pymodule_filename(filename):
     "_".
 
     See bug report:
-     - http://stackoverflow.com/questions/21853678/install-obspy-in-cygwin
+     - https://stackoverflow.com/q/21853678
      - See #755
 
     See also:
-     - http://stackoverflow.com/questions/7552311/
-     - http://docs.python.org/2/reference/lexical_analysis.html#identifiers
+     - https://stackoverflow.com/q/7552311
+     - https://docs.python.org/3/reference/lexical_analysis.html#identifiers
 
     >>> print(cleanse_pymodule_filename("0blup-bli.554_3!32"))
     _blup_bli_554_3_32
@@ -76,7 +76,7 @@ def _get_lib_name(lib, add_extension_suffix):
     return libname
 
 
-def _load_CDLL(name):
+def _load_cdll(name):
     """
     Helper function to load a shared library built during ObsPy installation
     with ctypes.
@@ -90,10 +90,25 @@ def _load_CDLL(name):
     libdir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
                           'lib')
     libpath = os.path.join(libdir, libname)
+    # resolve parent directory '../' for windows
+    libpath = os.path.normpath(libpath)
+    libpath = os.path.abspath(libpath)
+    libpath = str(libpath)
     try:
         cdll = ctypes.CDLL(libpath)
     except Exception as e:
-        msg = 'Could not load shared library "%s".\n\n %s' % (libname, str(e))
+        import textwrap
+        dirlisting = textwrap.wrap(
+            ', '.join(sorted(os.path.dirname(libpath))))
+        msg = ['Could not load shared library "%s"' % libname,
+               'Path: %s' % libpath,
+               'Current directory: %s' % os.path.abspath(os.curdir),
+               'ctypes error message: %s' % str(e),
+               'Directory listing of lib directory:',
+               '  ',
+               ]
+        msg = '\n  '.join(msg)
+        msg = msg + '\n    '.join(dirlisting)
         raise ImportError(msg)
     return cdll
 

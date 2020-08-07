@@ -1,0 +1,69 @@
+#		<< Constructed for testing purposed >>
+#
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     WR0
+B050F16     Network:     BN
+B052F03     Location:    ??
+B052F04     Channel:     SHZ
+B052F22     Start date:  1996,061
+B052F23     End date:    1999,003
+#		=======================================
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros),   WR0 ch SHZ   |                +
+#		+               +--------------------------------------------+                +
+#
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M -
+B053F06     Response out units lookup:             COUNTS -
+B053F07     A0 normalization factor:               5.3443E-06
+B053F08     Normalization frequency:               1
+B053F09     Number of zeroes:                      5
+B053F14     Number of poles:                       7
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+B053F10-13    0  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+B053F10-13    1  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+B053F10-13    2  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+B053F10-13    3 -1.767700E+02  0.000000E+00  0.000000E+00  0.000000E+00
+B053F10-13    4 -5.490300E+04  0.000000E+00  0.000000E+00  0.000000E+00
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+B053F15-18    0 -3.896000E+00  4.930000E+00  0.000000E+00  0.000000E+00
+B053F15-18    1 -3.896000E+00 -4.930000E+00  0.000000E+00  0.000000E+00
+B053F15-18    2 -8.800000E+01  8.928000E+01  0.000000E+00  0.000000E+00
+B053F15-18    3 -8.800000E+01 -8.928000E+01  0.000000E+00  0.000000E+00
+B053F15-18    4 -1.377400E+02  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    5 -1.667000E+02  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    6 -2.547100E+04  0.000000E+00  0.000000E+00  0.000000E+00
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,   WR0 ch SHZ   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 1
+B058F04     Sensitivity:                           2.197800E+10
+B058F05     Frequency of sensitivity:              1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,   WR0 ch SHZ   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           2.197800E+10
+B058F05     Frequency of sensitivity:              1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,   WR0 ch SHZ   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           2.197800E+10
+B058F05     Frequency of sensitivity:              1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#

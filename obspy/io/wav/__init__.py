@@ -1,6 +1,6 @@
 """
-obspy.io.wav - WAV(audio) read and write support for ObsPy
-==========================================================
+obspy.io.wav - WAV (audio) read and write support for ObsPy
+===========================================================
 
 The obspy.io.wav package contains methods in order to read and write seismogram
 files in the WAV(audio) format. The data are squeezed to audible frequencies.
@@ -9,14 +9,14 @@ files in the WAV(audio) format. The data are squeezed to audible frequencies.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------
 Importing WAV files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
-http://examples.obspy.org.
+https://examples.obspy.org.
 
 >>> from obspy import read
 >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
@@ -59,11 +59,6 @@ squeezed. Using the original sampling_rate results in an WAV file with
 frequencies which cannot be heard by a human, therefore it makes sense to
 set the framerate to a high value.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

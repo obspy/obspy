@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://quakeml.org/xmlns/quakeml/1.0" targetNamespace="http://quakeml.org/xmlns/quakeml/1.0" elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xs:simpleType name="ResourceIdentifier">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+    <xs:simpleType name="FloatArray">
+        <xs:list itemType="xs:double"/>
+    </xs:simpleType>
+    <xs:simpleType name="ComplexArray">
+        <xs:restriction base="xs:string">
+            <!-- e.g. "(-0.01836,4.1e-05) (-0.01836,-4e-05) (-39.18,49.12) (-39.18,-49.12)"-->
+            <xs:pattern value="(\s*\(\s*[+\-]?[0-9]+(\.[0-9]+)?([Ee][+\-][0-9]+)?\s*,\s*[+\-]?[0-9]+(\.[0-9]+)?([Ee][+\-][0-9]+)?\s*\)\s*)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

@@ -1,63 +1,110 @@
-Charles J. Ammon
-Emanuel Antunes
-Ólafur St. Arnarsson
-Markus Bank
-Robert Barsch
-Yannik Behr
-Fabrizio Bernardi
-Felix Bernauer
-Moritz Beyreuther
-Sébastien Bonaimé
-Peter Danecek
-Martin van Driel
-Fabian Engels
-Sven Egdorf
-Laura Ermert
-Marc Grunberg
-Conny Hammer
-Sebastian Heimann
-Lukas Heiniger
-Gaute Hope
-Seyed Kasra Hosseini Zad
-Heiner Igel
-Adolfo Inza
-Marius Isken
-Paul Käufl
-David Ketchum
-Andreas Köhler
-Simon Kremers
-Victor Kress
-Lars Krieger
-Lion Krischer
-Thomas Lecocq
-John Leeman
-Philippe Lesage
-Anthony Lomax
-Jonathan MacCarthy
-Alessia Maggi
-Henri Martin
-Tobias Megies
-Alberto Michelini
-Bernhard Morgenstern
-Nathaniel C. Miller
-Mark P. Panning
-Celso Reyes
-Tom Richter
-Adam Ringler
-Nicolas Rothenhäusler
-Emiliano Russo
-Elliott Sales de Andrade
-Claudio Satriano
-Joachim Saul
-Chris Scheingraber
-Christian Sippl
-Arthur Snoke
-Stefan Stange
-Benjamin Sullivan
-Chad Trabant
-Tommaso Fabbri
-Leonardo Uieda
-Andrew Walker
-Marcus Walther
-Joachim Wassermann
-Mark C. Williams
+Ackerley, Nick
+Allgeyer, Sebastien
+Ammon, Charles J.
+Antunes, Emanuel
+Arnarsson, Ólafur St.
+Bagagli, Matteo
+Bank, Markus
+Barsch, Robert
+Behr, Yannik
+Bernardi, Fabrizio
+Bernauer, Felix
+Bes de Berc, Maxime
+Beyreuther, Moritz
+Boltz, Shawn
+Bonaimé, Sébastien
+Carothers, Lloyd
+Chamberlain, Calum
+Chambers, Derrick
+Chen, Zhao
+Clark, Adam
+Crawford, Wayne
+Danecek, Peter
+van Driel, Martin
+Egdorf, Sven
+Ely, Geoffrey
+Engels, Fabian
+Ermert, Laura
+Eulenfeld, Tom
+Fabbri, Tommaso
+Falco, Nicholas
+Fee, Jeremy
+Grellier, Clément
+Grunberg, Marc
+Hagerty, Mike
+Halpaap, Felix
+Hammer, Conny
+Heimann, Sebastian
+Heiniger, Lukas
+Helffrich, George
+Hope, Gaute
+Igel, Heiner
+Inza, Adolfo
+Isken, Marius
+Kearns, Aaron
+Ketchum, David
+Koymans, Mathijs
+Kremers, Simon
+Kress, Victor
+Krieger, Lars
+Krischer, Lion
+Kula, Damian
+Käufl, Paul
+Köhler, Andreas
+Lecocq, Thomas
+Leeman, John
+Legovini, Paride
+Lesage, Philippe
+Li, Yulin
+Lindeman, Matthew C.
+Lomax, Anthony
+Lopes, Rui L.
+MacCarthy, Jonathan
+Maggi, Alessia
+Martin, Henri
+Massin, Frederick
+Medlin, Andrew
+Megies, Tobias
+Meschede, Matthias
+Michelini, Alberto
+Miller, Nathaniel C.
+Morgenstern, Bernhard
+Münchmeyer, Jannes
+Murray-Bergquist, Louisa
+Nesbitt, Ian M.
+Nof, Ran Novitsky
+Panning, Mark P.
+Rapagnani, Giovanni
+Parker, Tom
+Pestourie, Romain
+Pourpoint, Maeva
+Reyes, Celso
+Ringler, Adam
+Rothenhäusler, Nicolas
+Russo, Emiliano
+Sales de Andrade, Elliott
+Satriano, Claudio
+Saul, Joachim
+Scarabello, Luca
+Scheingraber, Chris
+Schneider, Simon
+Sippl, Christian
+Snoke, Arthur
+Stähler, Simon C.
+Stange, Stefan
+Strutz, Dominik
+Sullivan, Benjamin
+Tian, Dongdong
+Trabant, Chad
+Trani, Luca
+Uieda, Leonardo
+Walker, Andrew
+Walther, Marcus
+Wang, Yinzhi
+Wassermann, Joachim
+van Wijk, Kasper
+Williams, Mark C.
+Winkelman, Andrew
+Zaccarelli, Riccardo
+Zad, Seyed Kasra Hosseini
+Zhu, Lijun

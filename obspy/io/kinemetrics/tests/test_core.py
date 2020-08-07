@@ -3,10 +3,6 @@
 """
 The obspy.io.kinemetrics.core test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import io
 import os
 import unittest
@@ -73,7 +69,7 @@ class CoreTestCase(unittest.TestCase):
             # The is_evt() method should not change the file pointer.
             self.assertEqual(buf.tell(), 0)
 
-    def test_read_via_ObsPy(self):
+    def test_read_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
         """
@@ -114,7 +110,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2012-01-17T09:54:36.000000Z'))
         self.assertEqual(st[5].stats.starttime,
                          UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(len(st[0]), 390*25)
+        self.assertEqual(len(st[0]), 390 * 25)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MOLA')
@@ -236,7 +232,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2013-08-15T09:20:28.000000Z'))
         self.assertEqual(st[2].stats.starttime,
                          UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230*25)
+        self.assertEqual(len(st[0]), 230 * 25)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')

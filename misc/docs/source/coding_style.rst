@@ -7,20 +7,30 @@ Like most Python projects, we try to adhere to :pep:`8` (Style Guide for Python
 Code) and :pep:`257` (Docstring Conventions) with the modifications documented
 here. Be sure to read all documents if you intend to contribute code to ObsPy.
 
-Reference Conventions
----------------------
+We rely on flake8_ for code style checks, it can be installed using ``conda
+install`` or ``pip install``. Thanks to `.flake8` configuration file included 
+in the repository, check of your contributions with flake8_ can be done with 
+a single command ``flake8``.
 
-As with :class:`numpy.ndarrays <numpy.ndarray>` or Python ``lists``, we try to
-reduce the memory consumption by using references where ever possible. In the
-following example ``a`` is appended to ``b`` as reference, that is the reason
-why ``b`` get changed when we change ``a``:
+.. _flake8: https://flake8.pycqa.org
 
->>> a = [1, 2, 3, 4]
->>> b = [5, 6]
->>> b.append(a)
->>> a[0] = -99
->>> print(b)
-[5, 6, [-99, 2, 3, 4]]
+Pre-Commit Hooks
+------------------
+
+In order to further ease the development process you can use pre-commit hooks.
+Pre-commit hooks can be configured in your repository with use of pre-commit_ 
+framework. In order to do that, execute two commands::
+    pip install pre-commit
+    pre-commit install
+
+That will install in your git repository all pre-commit hooks configured in 
+``.pre-commit-hooks.yaml`` file. 
+That way, ``flake8`` will immediately complain about problems with the coding
+style and the changes staged for committing can be adapted accordingly
+(even with git commit hooks installed, they can be ignored on a per-commit
+basis using ``git commit -n``).
+
+.. _pre-commit: https://flake8.pycqa.org
 
 Import Conventions
 ------------------
@@ -30,11 +40,38 @@ readability of the code by importing the following modules in an unified
 manner:
 
 >>> import numpy as np
->>> import matplotlib.pylab as plt 
+>>> import matplotlib.pylab as plt
 
 .. _NumPy: http://www.numpy.org/
-.. _SciPy: http://scipy.scipy.org/
+.. _SciPy: https://scipy.scipy.org/
 .. _matplotlib: http://matplotlib.org/
+
+Import statements in source code are grouped by ``__future__``, standard
+library, third party packages and finally obspy imports. Inside blocks
+``from ...`` imports come after ``import ...`` statements, and both should be
+sorted alphabetically:
+
+.. code-block:: python
+
+    from __future__ import (absolute_import, division, print_function,
+                            unicode_literals)
+    from future.builtins import *  # NOQA
+    from future.utils import native_str
+
+    import inspect
+    import math
+    import warnings
+    from copy import copy, deepcopy
+
+    import numpy as np
+    from decorator import decorator
+
+    from obspy import read, Stream
+    from obspy.core import compatibility
+    from obspy.core.utcdatetime import UTCDateTime
+    from obspy.core.util import AttribDict, create_empty_data_chunk, NUMPY_VERSION
+    from obspy.core.util.base import _get_function_from_entry_point
+    from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 
 Naming
 ------
@@ -47,62 +84,76 @@ Naming
 
 **Naming Convention**
 
-* "Internal" means internal to a module or protected or private within a class.
-* Prepending a single underscore (``_``) has some support for protecting module
-  variables and functions (not included with ``import * from``). Prepending a
-  double underscore (``__``) to an instance variable or method effectively
-  serves to make the variable or method private to its class (using name
-  mangling).
+* Use meaningful variable/function/method names; these will help other people a
+  lot when reading your code.
+* Prepending a single underscore (``_``) means an object is "internal" /
+  "private", which means that it is not supposed to be used by end-users and
+  the API might change internally without notice to users (in contrast to API
+  changes in public objects which get handled with deprecation warnings for one
+  release cycle).
+* Prepending a double underscore (``__``) to an instance variable or method
+  effectively serves to make the variable or method private to its class (using
+  name mangling).
 * Place related classes and top-level functions together in a module. Unlike
   Java, there is no need to limit yourself to one class per module.
-* Use ``CamelCase`` for class names, but ``lower_with_under.py`` for module
-  names.
+* Use ``CamelCase`` for class names, but ``snake_case`` for module
+  names, variables and functions/methods.
 
-==================  ======================  ===================================
-Type                Public                  Internal
-==================  ======================  ===================================
-Packages            ``lower_with_under``      
-Modules             ``lower_with_under``    ``_lower_with_under``
-Classes             ``CamelCase``           ``_CamelCase``
-Exceptions          ``CamelCase``    
-Functions           ``lower_with_under()``  ``_lower_with_under()``
-Constants           ``CAPS_WITH_UNDER``     ``_CAPS_WITH_UNDER``
-Class Variables     ``lower_with_under``    ``_lower_with_under``
-Instance Variables  ``lower_with_under``    ``_lower_with_under`` (protected)
-                                            ``__lower_with_under`` (private)
-Methods             ``lower_with_under()``  ``_lower_with_under()`` (protected)
-                                            ``__lower_with_under()`` (private)
-Attributes          ``lower_with_under``      
-Local Variables     ``lower_with_under``      
-==================  ======================  ===================================
+======================  ===================  ====================
+Type                    Public               Internal / Private
+======================  ===================  ====================
+Packages                ``snake_case``
+Modules                 ``snake_case.py``    ``_snake_case``
+Classes / Exceptions    ``CamelCase``        ``_CamelCase``
+Functions / Methods     ``snake_case()``     ``_snake_case()``
+Variables / Attributes  ``snake_case``       ``_snake_case``
+Constants               ``CAPS_WITH_UNDER``  ``_CAPS_WITH_UNDER``
+======================  ===================  ====================
 
-Doc Strings
------------
+Doc Strings / Comments
+----------------------
 
-* One-liner: both ``"""`` are in new lines
+* One-liner Doc Strings: both ``"""`` are in new lines
 
   .. code-block:: python
 
-      def someMethod():
+      def some_method():
           """
           This is a one line doc string.
           """
           print("test")
 
-* Multiple lines: both ``"""`` are in new lines - also you should try provide
-  a meaningful one-liner description at the top, followed by two linebreaks
-  with further text.
+* Multiple line Doc Strings: both ``"""`` are in new lines - also you should
+  try provide a meaningful one-liner description at the top, followed by two
+  linebreaks with further text.
 
   .. code-block:: python
 
-      def someMethod():
+      def some_method():
           """
-          This is just the short story. 
+          This is just the short story.
 
           The long story is, this docstring would not have been able to fit in
           one line. Therefore we have to break lines.
           """
           print("test")
+
+* Comments at the end of code lines should come after (at least) two spaces:
+
+  .. code-block:: python
+
+      x = x + 1  # Compensate for border
+
+* Comments start with a single # followed by a single space. The same goes for
+  multi-line block comments:
+
+  .. code-block:: python
+
+      # Compensate for border
+      x = x + 1
+      # The next line needs some more longish explanation which does not fit
+      # on a single line.
+      foobar = (foo + bar) ** 3 - 1
 
 Function/Method Definitions
 ---------------------------
@@ -129,7 +180,7 @@ explained by an example:
 
 .. code-block:: python
 
-  def formatException(etype, value, tb, limit=None):
+  def format_exception(etype, value, tb, limit=None):
       """
       Format the exception with a traceback.
 
@@ -144,7 +195,7 @@ explained by an example:
 
 which renders like this:
 
-.. function:: formatException(etype, value, tb, limit=None)
+.. function:: format_exception(etype, value, tb, limit=None)
 
    Format the exception with a traceback.
 
@@ -158,6 +209,21 @@ which renders like this:
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 
+Reference Conventions
+---------------------
+
+As with :class:`numpy.ndarrays <numpy.ndarray>` or Python ``lists``, we try to
+reduce the memory consumption by using references where ever possible. In the
+following example ``a`` is appended to ``b`` as reference, that is the reason
+why ``b`` get changed when we change ``a``:
+
+>>> a = [1, 2, 3, 4]
+>>> b = [5, 6]
+>>> b.append(a)
+>>> a[0] = -99
+>>> print(b)
+[5, 6, [-99, 2, 3, 4]]
+
 Tests
 -----
 
@@ -167,8 +233,9 @@ Tests
 
   .. code-block:: python
 
-      def test_doSomething():
-          """XXX: This test does something. 
+      def test_do_something():
+          """
+          XXX: This test does something.
 
           But fails badly. See ticket #number.
           """
@@ -176,6 +243,43 @@ Tests
           ...
           # XXX: here it fails
           ...
+
+Citations
+---------
+
+References to publications (journal articles, books, etc.) should be properly
+reproducible. A bibtex entry in `obspy/misc/docs/source/bibliography` should be
+made for each single publication (ideally with an URL or DOI), using first
+author and year as article identifier::
+
+    @article{Beyreuther2010,
+    author = {Beyreuther, Moritz and Barsch, Robert and Krischer,
+              Lion and Megies, Tobias and Behr, Yannik and Wassermann, Joachim},
+    title = {ObsPy: A Python Toolbox for Seismology},
+    volume = {81},
+    number = {3},
+    pages = {530-533},
+    year = {May/June 2010},
+    doi = {10.1785/gssrl.81.3.530},
+    URL = {http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/},
+    eprint = {http://srl.geoscienceworld.org/content/81/3/530.full.pdf+html},
+    journal = {Seismological Research Letters}
+    }
+
+This entry can then be referenced (using the bibtex article identifier) in
+docstrings in the source code with the following Sphinx syntax to be converted
+to a link to the bibliography section:
+
+  .. code-block:: python
+
+      def some_function():
+          """
+          Function to do something.
+
+          See [Beyreuther2010]_ for details.
+          """
+          return None
+
 
 Miscellaneous
 -------------
@@ -185,5 +289,4 @@ Miscellaneous
   look nicer on short lines, especially in side-by-side mode.
 * never use multiple statements on the same line, e.g. ``if check: a = 0``.
 * Prefer `list comprehension` to the built-in functions :func:`filter()` and
-  :func:`map()` when appropriate. 
-          
+  :func:`map()` when appropriate.

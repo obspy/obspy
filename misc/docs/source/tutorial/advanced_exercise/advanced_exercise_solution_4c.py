@@ -24,7 +24,7 @@ for station in stations:
         st = client.get_waveforms("CH", station, "", "[EH]H[ZNE]", t - 300,
                                   t + 300, metadata=True)
         assert(len(st) == 3)
-    except:
+    except Exception:
         print(station, "---")
         continue
 

@@ -7,68 +7,102 @@ Provides the Inventory class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible
-
 import copy
 import fnmatch
 import textwrap
 import warnings
 
-from pkg_resources import load_entry_point
-
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
-                                  _read_from_plugin)
-from obspy.core.util.decorator import map_example_filename
+                                  _read_from_plugin, _generic_reader)
+from obspy.core.util.decorator import map_example_filename, uncompress_file
+from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
+from .util import _unified_content_strings, _textwrap, _response_plot_label
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
-SOFTWARE_URI = "http://www.obspy.org"
+SOFTWARE_URI = "https://www.obspy.org"
 
 
-def _createExampleInventory():
+def _create_example_inventory():
     """
     Create an example inventory.
     """
-    return read_inventory('/path/to/BW_GR_misc.xml.gz', format="STATIONXML")
+    return read_inventory('/path/to/BW_GR_misc.xml', format="STATIONXML")
 
 
 @map_example_filename("path_or_file_object")
-def read_inventory(path_or_file_object=None, format=None):
+def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
     Function to read inventory files.
 
-    :param path_or_file_object: File name or file like object. If this
-        attribute is omitted, an example :class:`Inventory`
-        object will be returned.
-    :type format: str, optional
-    :param format: Format of the file to read (e.g. ``"STATIONXML"``).
+    :type path_or_file_object: str or file-like object.
+    :param path_or_file_object: String containing a file name or a URL or a
+        open file-like object. Wildcards are allowed for a file name. If this
+        attribute is omitted, an example
+        :class:`~obspy.core.inventory.inventory.Inventory` object will be
+        returned.
+    :type format: str
+    :param format: Format of the file to read (e.g. ``"STATIONXML"``). See the
+        `Supported Formats`_ section below for a list of supported formats.
+    :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
+    :return: An ObsPy :class:`~obspy.core.inventory.inventory.Inventory`
+        object.
+
+    Additional args and kwargs are passed on to the underlying ``_read_X()``
+    methods of the inventory plugins.
+
+    .. rubric:: _`Supported Formats`
+
+    Additional ObsPy modules extend the functionality of the
+    :func:`~obspy.core.inventory.inventory.read_inventory` function. The
+    following table summarizes all known file formats currently supported by
+    ObsPy.
+
+    Please refer to the `Linked Function Call`_ of each module for any extra
+    options available at the import stage.
+
+    %s
+
+    .. note::
+
+        For handling additional information not covered by the
+        StationXML standard and how to output it to StationXML
+        see the :ref:`ObsPy Tutorial <stationxml-extra>`.
     """
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
-        return _createExampleInventory()
-    return _read_from_plugin("inventory", path_or_file_object,
-                             format=format)[0]
+        return _create_example_inventory()
+    else:
+        return _generic_reader(path_or_file_object, _read, format=format,
+                               **kwargs)
 
 
-@python_2_unicode_compatible
+@uncompress_file
+def _read(filename, format=None, **kwargs):
+    """
+    Reads a single event file into a ObsPy Catalog object.
+    """
+    inventory, format = _read_from_plugin('inventory', filename, format=format,
+                                          **kwargs)
+    return inventory
+
+
 class Inventory(ComparingObject):
     """
     The root object of the Inventory->Network->Station->Channel hierarchy.
 
     In essence just a container for one or more networks.
     """
-    def __init__(self, networks, source, sender=None, created=None,
-                 module=SOFTWARE_MODULE, module_uri=SOFTWARE_URI):
+    def __init__(self, networks=None, source=SOFTWARE_MODULE, sender=None,
+                 created=None, module=SOFTWARE_MODULE,
+                 module_uri=SOFTWARE_URI):
         """
         :type networks: list of
             :class:`~obspy.core.inventory.network.Network`
@@ -87,8 +121,14 @@ class Inventory(ComparingObject):
         :param module_uri: This is the address of the query that generated the
             document, or, if applicable, the address of the software that
             generated this document, defaults to ObsPy related information.
+
+        .. note::
+
+            For handling additional information not covered by the
+            StationXML standard and how to output it to StationXML
+            see the :ref:`ObsPy Tutorial <stationxml-extra>`.
         """
-        self.networks = networks
+        self.networks = networks if networks is not None else []
         self.source = source
         self.sender = sender
         self.module = module
@@ -98,6 +138,32 @@ class Inventory(ComparingObject):
             self.created = obspy.UTCDateTime()
         else:
             self.created = created
+
+    def __eq__(self, other):
+        """
+        __eq__ method of the Inventory object.
+
+        :type other: :class:`~obspy.core.inventory.Inventory`
+        :param other: Inventory object for comparison.
+        :rtype: bool
+        :return: ``True`` if both Inventories are equal.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.inventory import read_inventory
+        >>> inv = read_inventory()
+        >>> inv2 = inv.copy()
+        >>> inv is inv2
+        False
+        >>> inv == inv2
+        True
+        """
+        if not isinstance(other, Inventory):
+            return False
+        return self.networks == other.networks
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __add__(self, other):
         new = copy.deepcopy(self)
@@ -116,6 +182,9 @@ class Inventory(ComparingObject):
                    "an Inventory.")
             raise TypeError(msg)
         return self
+
+    def __len__(self):
+        return len(self.networks)
 
     def __getitem__(self, index):
         return self.networks[index]
@@ -188,6 +257,7 @@ class Inventory(ComparingObject):
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
                 content_dict[key].sort()
+        content_dict['networks'].sort()
         return content_dict
 
     def __str__(self):
@@ -204,19 +274,42 @@ class Inventory(ComparingObject):
         contents = self.get_contents()
         ret_str += "\tContains:\n"
         ret_str += "\t\tNetworks (%i):\n" % len(contents["networks"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["networks"]])
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["networks"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         ret_str += "\n"
         ret_str += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret_str += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret_str += "\n"
         ret_str += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret_str += "\n".join(textwrap.wrap(
-            ", ".join(contents["channels"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["channels"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         return ret_str
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
+
+    def extend(self, network_list):
+        """
+        Extends the current Catalog object with a list of Network objects.
+        """
+        if isinstance(network_list, list):
+            for _i in network_list:
+                # Make sure each item in the list is a event.
+                if not isinstance(_i, Network):
+                    msg = 'Extend only accepts a list of Network objects.'
+                    raise TypeError(msg)
+            self.networks.extend(network_list)
+        elif isinstance(network_list, Inventory):
+            self.networks.extend(network_list.networks)
+        else:
+            msg = 'Extend only supports a list of Network objects as argument.'
+            raise TypeError(msg)
 
     def write(self, path_or_file_object, format, **kwargs):
         """
@@ -225,21 +318,72 @@ class Inventory(ComparingObject):
 
         :param path_or_file_object: File name or file-like object to be written
             to.
-        :param format: The format of the written file.
+        :type format: str
+        :param format: The file format to use (e.g. ``"STATIONXML"``). See the
+            `Supported Formats`_ section below for a list of supported formats.
+        :param kwargs: Additional keyword arguments passed to the underlying
+            plugin's writer method.
+
+        .. rubric:: Example
+
+        >>> from obspy import read_inventory
+        >>> inventory = read_inventory()
+        >>> inventory.write("example.xml",
+        ...                 format="STATIONXML")  # doctest: +SKIP
+
+        .. rubric:: _`Supported Formats`
+
+        Additional ObsPy modules extend the parameters of the
+        :meth:`~obspy.core.inventory.inventory.Inventory.write()` method. The
+        following table summarizes all known formats with write capability
+        currently available for ObsPy.
+
+        Please refer to the `Linked Function Call`_ of each module for any
+        extra options available.
+
+        %s
         """
         format = format.upper()
         try:
             # get format specific entry point
             format_ep = ENTRY_POINTS['inventory_write'][format]
             # search writeFormat method for given entry point
-            write_format = load_entry_point(
+            write_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.inventory.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
-            msg = "Writing format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format,
-                                   ', '.join(ENTRY_POINTS['inventory_write'])))
+            msg = "Writing format '{}' is not supported. Supported types: {}"
+            msg = msg.format(format,
+                             ', '.join(ENTRY_POINTS['inventory_write']))
+            raise ValueError(msg)
         return write_format(self, path_or_file_object, **kwargs)
+
+    def copy(self):
+        """
+        Return a deepcopy of the Inventory object.
+
+        :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
+        :return: Copy of current inventory.
+
+        .. rubric:: Examples
+
+        1. Create an Inventory and copy it
+
+            >>> from obspy import read_inventory
+            >>> inv = read_inventory()
+            >>> inv2 = inv.copy()
+
+           The two objects are not the same:
+
+            >>> inv is inv2
+            False
+
+           But they are (currently) equal:
+
+            >>> inv == inv2
+            True
+        """
+        return copy.deepcopy(self)
 
     @property
     def networks(self):
@@ -287,7 +431,7 @@ class Inventory(ComparingObject):
                 continue
             try:
                 responses.append(net.get_response(seed_id, datetime))
-            except:
+            except Exception:
                 pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Returning first."
@@ -297,9 +441,49 @@ class Inventory(ComparingObject):
             raise Exception(msg)
         return responses[0]
 
+    def get_channel_metadata(self, seed_id, datetime=None):
+        """
+        Return basic metadata for a given channel.
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get metadata for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Time to get metadata for.
+        :rtype: dict
+        :return: Dictionary containing coordinates and orientation (latitude,
+            longitude, elevation, azimuth, dip)
+        """
+        network, _, _, _ = seed_id.split(".")
+
+        metadata = []
+        for net in self.networks:
+            if net.code != network:
+                continue
+            try:
+                metadata.append(net.get_channel_metadata(seed_id, datetime))
+            except Exception:
+                pass
+        if len(metadata) > 1:
+            msg = ("Found more than one matching channel metadata. "
+                   "Returning first.")
+            warnings.warn(msg)
+        elif len(metadata) < 1:
+            msg = "No matching channel metadata found."
+            raise Exception(msg)
+        return metadata[0]
+
     def get_coordinates(self, seed_id, datetime=None):
         """
         Return coordinates for a given channel.
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
+        >>> t = UTCDateTime("2015-01-01")
+        >>> inv.get_coordinates("GR.FUR..LHE", t)  # doctest: +SKIP
+        {'elevation': 565.0,
+         'latitude': 48.162899,
+         'local_depth': 0.0,
+         'longitude': 11.2752}
 
         :type seed_id: str
         :param seed_id: SEED ID string of channel to get coordinates for.
@@ -307,30 +491,46 @@ class Inventory(ComparingObject):
         :param datetime: Time to get coordinates for.
         :rtype: dict
         :return: Dictionary containing coordinates (latitude, longitude,
-            elevation)
+            elevation, local_depth)
         """
-        network, _, _, _ = seed_id.split(".")
+        metadata = self.get_channel_metadata(seed_id, datetime)
+        coordinates = {}
+        for key in ['latitude', 'longitude', 'elevation', 'local_depth']:
+            coordinates[key] = metadata[key]
+        return coordinates
 
-        coordinates = []
-        for net in self.networks:
-            if net.code != network:
-                continue
-            try:
-                coordinates.append(net.get_coordinates(seed_id, datetime))
-            except:
-                pass
-        if len(coordinates) > 1:
-            msg = "Found more than one matching coordinates. Returning first."
-            warnings.warn(msg)
-        elif len(coordinates) < 1:
-            msg = "No matching coordinates found."
-            raise Exception(msg)
-        return coordinates[0]
+    def get_orientation(self, seed_id, datetime=None):
+        """
+        Return orientation for a given channel.
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
+        >>> t = UTCDateTime("2015-01-01")
+        >>> inv.get_orientation("GR.FUR..LHE", t)  # doctest: +SKIP
+        {'azimuth': 90.0,
+         'dip': 0.0}
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get orientation for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Time to get orientation for.
+        :rtype: dict
+        :return: Dictionary containing orientation (azimuth, dip).
+        """
+        metadata = self.get_channel_metadata(seed_id, datetime)
+        orientation = {}
+        for key in ['azimuth', 'dip']:
+            orientation[key] = metadata[key]
+        return orientation
 
     def select(self, network=None, station=None, location=None, channel=None,
                time=None, starttime=None, endtime=None, sampling_rate=None,
-               keep_empty=False):
-        """
+               keep_empty=False, minlatitude=None, maxlatitude=None,
+               minlongitude=None, maxlongitude=None, latitude=None,
+               longitude=None, minradius=None, maxradius=None):
+        r"""
+        Return a copy of the inventory filtered on various parameters.
+
         Returns the :class:`Inventory` object with only the
         :class:`~obspy.core.inventory.network.Network`\ s /
         :class:`~obspy.core.inventory.station.Station`\ s /
@@ -358,8 +558,7 @@ class Inventory(ComparingObject):
             Sending institution: Erdbebendienst Bayern
             Contains:
                 Networks (2):
-                    GR
-                    BW
+                    BW, GR
                 Stations (2):
                     BW.RJOB (Jochberg, Bavaria, BW-Net)
                     GR.WET (Wettzell, Bavaria, GR-Net)
@@ -371,9 +570,17 @@ class Inventory(ComparingObject):
         :func:`~fnmatch.fnmatch`).
 
         :type network: str
+        :param network: Potentially wildcarded network code. If not given,
+            all network codes will be accepted.
         :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include networks/stations/channels active at given
             point in time.
@@ -386,10 +593,39 @@ class Inventory(ComparingObject):
             or at given point in time (i.e. channels starting after given time
             will not be shown).
         :type sampling_rate: float
+        :param sampling_rate: Only include channels whose sampling rate
+            matches the given sampling rate, in Hz (within absolute tolerance
+            of 1E-8 Hz and relative tolerance of 1E-5)
         :type keep_empty: bool
         :param keep_empty: If set to `True`, networks/stations that match
             themselves but have no matching child elements (stations/channels)
             will be included in the result.
+        :type minlatitude: float
+        :param minlatitude: Only include stations/channels with a latitude
+            larger than the specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Only include stations/channels with a latitude
+            smaller than the specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Only include stations/channels with a longitude
+            larger than the specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Only include stations/channels with a longitude
+            smaller than the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius
+            selection.
+        :type longitude: float
+        :param longitude: Specify the longitude to be used for a radius
+            selection.
+        :type minradius: float
+        :param minradius: Only include stations/channels within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Only include stations/channels within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
         """
         networks = []
         for net in self.networks:
@@ -403,13 +639,169 @@ class Inventory(ComparingObject):
                                      endtime=endtime):
                     continue
 
+            has_stations = bool(net.stations)
+
             net_ = net.select(
                 station=station, location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
-                sampling_rate=sampling_rate, keep_empty=keep_empty)
-            if not keep_empty and not net_.stations:
+                sampling_rate=sampling_rate, keep_empty=keep_empty,
+                minlatitude=minlatitude, maxlatitude=maxlatitude,
+                minlongitude=minlongitude, maxlongitude=maxlongitude,
+                latitude=latitude, longitude=longitude,
+                minradius=minradius, maxradius=maxradius)
+
+            # If the network previously had stations but no longer has any
+            # and keep_empty is False: Skip the network.
+            if has_stations and not keep_empty and not net_.stations:
                 continue
             networks.append(net_)
+        inv = copy.copy(self)
+        inv.networks = networks
+        return inv
+
+    def remove(self, network='*', station='*', location='*', channel='*',
+               keep_empty=False):
+        r"""
+        Return a copy of the inventory with selected elements removed.
+
+        Returns the :class:`Inventory` object but excluding the
+        :class:`~obspy.core.inventory.network.Network`\ s /
+        :class:`~obspy.core.inventory.station.Station`\ s /
+        :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
+        criteria (e.g. remove all ``EHZ`` channels with ``channel="EHZ"``).
+
+        .. warning::
+            The returned object is based on a shallow copy of the original
+            object. That means that modifying any mutable child elements will
+            also modify the original object
+            (see https://docs.python.org/2/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
+
+        .. rubric:: Example
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
+        >>> inv_new = inv.remove(network='BW')
+        >>> print(inv_new)  # doctest: +NORMALIZE_WHITESPACE
+        Inventory created at 2014-03-03T11:07:06.198000Z
+            Created by: fdsn-stationxml-converter/1.0.0
+                    http://www.iris.edu/fdsnstationconverter
+            Sending institution: Erdbebendienst Bayern
+            Contains:
+                Networks (1):
+                    GR
+                Stations (2):
+                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (21):
+                    GR.FUR..BHZ, GR.FUR..BHN, GR.FUR..BHE, GR.FUR..HHZ,
+                    GR.FUR..HHN, GR.FUR..HHE, GR.FUR..LHZ, GR.FUR..LHN,
+                    GR.FUR..LHE, GR.FUR..VHZ, GR.FUR..VHN, GR.FUR..VHE,
+                    GR.WET..BHZ, GR.WET..BHN, GR.WET..BHE, GR.WET..HHZ,
+                    GR.WET..HHN, GR.WET..HHE, GR.WET..LHZ, GR.WET..LHN,
+                    GR.WET..LHE
+        >>> inv_new = inv.remove(network='BW', channel="[EH]*")
+        >>> print(inv_new)  # doctest: +NORMALIZE_WHITESPACE
+        Inventory created at 2014-03-03T11:07:06.198000Z
+            Created by: fdsn-stationxml-converter/1.0.0
+                    http://www.iris.edu/fdsnstationconverter
+            Sending institution: Erdbebendienst Bayern
+            Contains:
+                Networks (1):
+                    GR
+                Stations (2):
+                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (21):
+                    GR.FUR..BHZ, GR.FUR..BHN, GR.FUR..BHE, GR.FUR..HHZ,
+                    GR.FUR..HHN, GR.FUR..HHE, GR.FUR..LHZ, GR.FUR..LHN,
+                    GR.FUR..LHE, GR.FUR..VHZ, GR.FUR..VHN, GR.FUR..VHE,
+                    GR.WET..BHZ, GR.WET..BHN, GR.WET..BHE, GR.WET..HHZ,
+                    GR.WET..HHN, GR.WET..HHE, GR.WET..LHZ, GR.WET..LHN,
+                    GR.WET..LHE
+        >>> inv_new = inv.remove(network='BW', channel="[EH]*",
+        ...                      keep_empty=True)
+        >>> print(inv_new)  # doctest: +NORMALIZE_WHITESPACE
+        Inventory created at 2014-03-03T11:07:06.198000Z
+            Created by: fdsn-stationxml-converter/1.0.0
+                    http://www.iris.edu/fdsnstationconverter
+            Sending institution: Erdbebendienst Bayern
+            Contains:
+                Networks (2):
+                    BW, GR
+                Stations (5):
+                    BW.RJOB (Jochberg, Bavaria, BW-Net) (3x)
+                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (21):
+                    GR.FUR..BHZ, GR.FUR..BHN, GR.FUR..BHE, GR.FUR..HHZ,
+                    GR.FUR..HHN, GR.FUR..HHE, GR.FUR..LHZ, GR.FUR..LHN,
+                    GR.FUR..LHE, GR.FUR..VHZ, GR.FUR..VHN, GR.FUR..VHE,
+                    GR.WET..BHZ, GR.WET..BHN, GR.WET..BHE, GR.WET..HHZ,
+                    GR.WET..HHN, GR.WET..HHE, GR.WET..LHZ, GR.WET..LHN,
+                    GR.WET..LHE
+
+        The `network`, `station`, `location` and `channel` selection criteria
+        may also contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
+        :func:`~fnmatch.fnmatch`).
+
+        :type network: str
+        :param network: Potentially wildcarded network code. If not specified,
+            then all network codes will be matched for removal (combined with
+            other options).
+        :type station: str
+        :param station: Potentially wildcarded station code. If not specified,
+            then all station codes will be matched for removal (combined with
+            other options).
+        :type location: str
+        :param location: Potentially wildcarded location code. If not
+            specified, then all location codes will be matched for removal
+            (combined with other options).
+        :type channel: str
+        :param channel: Potentially wildcarded channel code. If not specified,
+            then all channel codes will be matched for removal (combined with
+            other options).
+        :type keep_empty: bool
+        :param keep_empty: If set to `True`, networks/stations that are left
+            without child elements (stations/channels) will still be included
+            in the result.
+        """
+        # Select all objects that are to be removed.
+        selected = self.select(network=network, station=station,
+                               location=location, channel=channel)
+        selected_networks = [net for net in selected]
+        selected_stations = [sta for net in selected_networks for sta in net]
+        selected_channels = [cha for net in selected_networks
+                             for sta in net for cha in sta]
+        # Iterate inventory tree and rebuild it excluding selected components.
+        networks = []
+        for net in self:
+            if net in selected_networks and station == '*' and \
+                    location == '*' and channel == '*':
+                continue
+            stations = []
+            for sta in net:
+                if sta in selected_stations and location == '*' \
+                        and channel == '*':
+                    continue
+                channels = []
+                for cha in sta:
+                    if cha in selected_channels:
+                        continue
+                    channels.append(cha)
+                channels_were_empty = not bool(sta.channels)
+                if not channels and not (keep_empty or channels_were_empty):
+                    continue
+                sta = copy.copy(sta)
+                sta.channels = channels
+                stations.append(sta)
+            stations_were_empty = not bool(net.stations)
+            if not stations and not (keep_empty or stations_were_empty):
+                continue
+            net = copy.copy(net)
+            net.stations = stations
+            networks.append(net)
         inv = copy.copy(self)
         inv.networks = networks
         return inv
@@ -633,8 +1025,9 @@ class Inventory(ComparingObject):
 
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
-                      endtime=None, axes=None, unwrap_phase=False, show=True,
-                      outfile=None):
+                      endtime=None, axes=None, unwrap_phase=False,
+                      plot_degrees=False, show=True, outfile=None,
+                      label_epoch_dates=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
         inventory's channels.
@@ -681,6 +1074,8 @@ class Inventory(ComparingObject):
             opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using NumPy.
+        :type plot_degrees: bool
+        :param plot_degrees: if ``True`` plot bode in degrees
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
@@ -691,6 +1086,9 @@ class Inventory(ComparingObject):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :type label_epoch_dates: bool
+        :param label_epoch_dates: Whether to add channel epoch dates in the
+            plot's legend labels.
 
         .. rubric:: Basic Usage
 
@@ -706,7 +1104,7 @@ class Inventory(ComparingObject):
         """
         import matplotlib.pyplot as plt
 
-        if axes:
+        if axes is not None:
             ax1, ax2 = axes
             fig = ax1.figure
         else:
@@ -721,12 +1119,13 @@ class Inventory(ComparingObject):
         for net in matching.networks:
             for sta in net.stations:
                 for cha in sta.channels:
+                    label = _response_plot_label(
+                        net, sta, cha, label_epoch_dates=label_epoch_dates)
                     try:
                         cha.plot(min_freq=min_freq, output=output,
-                                 axes=(ax1, ax2),
-                                 label=".".join((net.code, sta.code,
-                                                 cha.location_code, cha.code)),
-                                 unwrap_phase=unwrap_phase, show=False,
+                                 axes=(ax1, ax2), label=label,
+                                 unwrap_phase=unwrap_phase,
+                                 plot_degrees=plot_degrees, show=False,
                                  outfile=None)
                     except ZeroSamplingRate:
                         msg = ("Skipping plot of channel with zero "
@@ -735,12 +1134,10 @@ class Inventory(ComparingObject):
                     except ObsPyException as e:
                         msg = "Skipping plot of channel (%s):\n%s"
                         warnings.warn(msg % (str(e), str(cha)), UserWarning)
-
         # final adjustments to plot if we created the figure in here
-        if not axes:
+        if axes is None:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
-            _adjust_bode_plot_figure(fig, show=False)
-
+            _adjust_bode_plot_figure(fig, plot_degrees, show=False)
         if outfile:
             fig.savefig(outfile)
         else:

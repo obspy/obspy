@@ -7,25 +7,21 @@ Utility functions required for the download helpers.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2105
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future import standard_library
-with standard_library.hooks():
-    import itertools
-    from urllib.error import HTTPError, URLError
-
 import collections
 import fnmatch
+import itertools
 import os
-from lxml import etree
+from socket import timeout as socket_timeout
+from urllib.error import HTTPError, URLError
+
 import numpy as np
+from lxml import etree
 from scipy.spatial import cKDTree
-from socket import timeout as SocketTimeout
 
 import obspy
+from obspy.core import compatibility
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn.client import FDSNException
 from obspy.io.mseed.util import get_record_information
@@ -33,8 +29,7 @@ from obspy.io.mseed.util import get_record_information
 
 # Different types of errors that can happen when downloading data via the
 # FDSN clients.
-ERRORS = (FDSNException, HTTPError, URLError, SocketTimeout)
-
+ERRORS = (FDSNException, HTTPError, URLError, socket_timeout, ConnectionError)
 
 # mean earth radius in meter as defined by the International Union of
 # Geodesy and Geophysics. Used for the spherical kd-tree.
@@ -99,12 +94,17 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     # intervals, each of which will end up in a separate file.
     filenames = collections.defaultdict(list)
     for chunk in chunks:
-        filenames[tuple(chunk[:4])].append({
+        candidate = {
             "starttime": chunk[4],
             "endtime": chunk[5],
             "filename": chunk[6],
             "current_latest_endtime": None,
-            "sequence_number": None})
+            "sequence_number": None}
+        # Should not be necessary if chunks have been deduplicated before but
+        # better safe than sorry.
+        if candidate in filenames[tuple(chunk[:4])]:
+            continue
+        filenames[tuple(chunk[:4])].append(candidate)
 
     sequence_number = [0]
 
@@ -168,7 +168,9 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
                 else:
                     candidates = [second]
         elif len(candidates) >= 2:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Please contact the developers. candidates: %s" %
+                str(candidates))
 
         # Finally found the correct chunk
         ret_val = candidates[0]
@@ -251,7 +253,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
                 for f in open_files.values():
                     try:
                         f.close()
-                    except:
+                    except Exception:
                         pass
     logger.info("Client '%s' - Successfully downloaded %i channels (of %i)" % (
         client_name, len(open_files), original_bulk_length))
@@ -372,9 +374,14 @@ def get_stationxml_contents(filename):
     channel_tag = "{%s}Channel" % ns
     response_tag = "{%s}Response" % ns
 
-    context = etree.iterparse(filename, events=("start", ),
-                              tag=(network_tag, station_tag, channel_tag,
-                                   response_tag))
+    try:
+        context = etree.iterparse(filename, events=("start", ),
+                                  tag=(network_tag, station_tag, channel_tag,
+                                       response_tag))
+    except TypeError:  # pragma: no cover
+        # Some old lxml version have a way less powerful iterparse()
+        # function. Fall back to parsing with ObsPy.
+        return _get_stationxml_contents_slow(filename)
 
     channels = []
     for event, elem in context:
@@ -402,6 +409,28 @@ def get_stationxml_contents(filename):
         while elem.getprevious() is not None:
             del elem.getparent()[0]
 
+    return channels
+
+
+def _get_stationxml_contents_slow(filename):
+    """
+    Slow variant for get_stationxml_contents() for old lxml versions.
+
+    :param filename: The path to the file.
+    :returns: list of ChannelAvailability objects.
+    """
+    channels = []
+    inv = obspy.read_inventory(filename)
+    for net in inv:
+        for sta in net:
+            for cha in sta:
+                if not cha.response:
+                    continue
+                channels.append(ChannelAvailability(
+                    net.code, sta.code, cha.location_code, cha.code,
+                    cha.start_date, cha.end_date
+                    if cha.end_date else obspy.UTCDateTime(2599, 1, 1),
+                    filename))
     return channels
 
 
@@ -451,7 +480,7 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     if isinstance(path, (str, bytes)):
         return path
 
-    elif isinstance(path, collections.Container):
+    elif isinstance(path, compatibility.collections_abc.Container):
         if "available_channels" not in path or \
                 "missing_channels" not in path or \
                 "filename" not in path:
@@ -459,9 +488,10 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
                 "The dictionary returned by the stationxml filename function "
                 "must contain the following keys: 'available_channels', "
                 "'missing_channels', and 'filename'.")
-        if not isinstance(path["available_channels"], collections.Iterable) or\
+        if not isinstance(path["available_channels"],
+                          compatibility.collections_abc.Iterable) or\
                 not isinstance(path["missing_channels"],
-                               collections.Iterable) or \
+                               compatibility.collections_abc.Iterable) or \
                 not isinstance(path["filename"], (str, bytes)):
             raise ValueError("Return types must be two lists of channels and "
                              "a string for the filename.")

@@ -50,6 +50,7 @@
           <maximumDistance>53.03</maximumDistance>
         </quality>
         <type>hypocenter</type>
+        <region>Kalamazoo</region>
         <evaluationMode>manual</evaluationMode>
         <evaluationStatus>preliminary</evaluationStatus>
         <comment id="smi:some/comment/reference">

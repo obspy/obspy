@@ -1,0 +1,29 @@
+#
+#		<< Constructed file B057 without B058.>>
+#
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     ABC
+B050F16     Network:     XX
+B052F03     Location:    ??
+B052F04     Channel:     BHX
+B052F22     Start date:  1999,350,02:14:00.0000
+B052F23     End date:    1999,355,19:10:59.0000
+#
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,   DHL ch BS1   |                       +
+#		+                      +------------------------------+                       +
+#
+B057F03     Stage sequence number:                 1
+B057F04     Input sample rate:                     1.000000E+03
+B057F05     Decimation factor:                     5
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             2.450000E-01
+B057F08     Correction applied (seconds):          2.450000E-01
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,   DHL ch BS1   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           1.700000E+06
+B058F05     Frequency of sensitivity:              1.000000E+00 HZ
+B058F06     Number of calibrations:                0

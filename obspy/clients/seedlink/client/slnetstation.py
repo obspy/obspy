@@ -9,12 +9,8 @@ JSeedLink of Anthony Lomax
     The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from obspy.core.utcdatetime import UTCDateTime
 
 
@@ -62,17 +58,17 @@ class SLNetStation(object):
         else:
             self.btime = None
 
-    def appendSelectors(self, newSelectors):
+    def append_selectors(self, new_selectors):
         """
         Appends a selectors String to the current selectors for this
         SLNetStation.
 
         :return: 0 if selectors added successfully, 1 otherwise
         """
-        self.selectors.append(newSelectors)
+        self.selectors.append(new_selectors)
         return 1
 
-    def getSelectors(self):
+    def get_selectors(self):
         """
         Returns the selectors as an array of Strings
 
@@ -80,7 +76,7 @@ class SLNetStation(object):
         """
         return self.selectors
 
-    def getSLTimeStamp(self):
+    def get_sl_time_stamp(self):
         """
         Returns the time stamp in SeedLink string format:
         "year,month,day,hour,minute,second"

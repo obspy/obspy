@@ -5,7 +5,7 @@ Mass Downloader for FDSN Compliant Web Services
 ===============================================
 
 This package contains functionality to query and integrate data from any number
-of `FDSN web service <http://www.fdsn.org/webservices/>`_ providers
+of `FDSN web service <https://www.fdsn.org/webservices/>`_ providers
 simultaneously. The package aims to formulate download requests in a way that
 is convenient for seismologists without having to worry about political and
 technical data center issues. It can be used by itself or as a library
@@ -15,7 +15,12 @@ component integrated into a bigger project.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
+
+
+.. contents:: Contents
+    :local:
+    :depth: 2
 
 
 Why Would You Want to Use This?
@@ -107,10 +112,10 @@ ObsPy knows of and combine it into one data set.
         # Only HH or BH channels. If a station has HH channels, those will be
         # downloaded, otherwise the BH. Nothing will be downloaded if it has
         # neither. You can add more/less patterns if you like.
-        channel_priorities=("HH[ZNE]", "BH[ZNE]"),
+        channel_priorities=["HH[ZNE]", "BH[ZNE]"],
         # Location codes are arbitrary and there is no rule as to which
         # location is best. Same logic as for the previous setting.
-        location_priorities=("", "00", "10"))
+        location_priorities=["", "00", "10"])
 
     # No specified providers will result in all known ones being queried.
     mdl = MassDownloader()
@@ -275,11 +280,11 @@ acquire the final filename. The start and end times will be formatted with
 avoid colons which are troublesome in file names on many systems.
 
 >>> mseed_storage = ("some_folder/{network}/{station}/"
-...                  "{location}.{channel}.{starttime}.{endtime}.mseed")
+...                  "{channel}.{location}.{starttime}.{endtime}.mseed")
 
 results in
 
-``some_folder/BW/FURT/.BHZ.20141027T163723Z.20141027T163733Z.mseed``.
+``some_folder/BW/FURT/BHZ..20141027T163723Z.20141027T163733Z.mseed``.
 
 The download helpers will create any non-existing folders along the path.
 
@@ -467,7 +472,7 @@ and downloading whatever it offers. A bit more detail:
 
 
 Logging
-~~~~~~~
+-------
 
 The download helpers utilizes Python's `logging facilities
 <https://docs.python.org/2/library/logging.html>`__. By default it will log to
@@ -481,8 +486,23 @@ the corresponding logger after you import the download helpers module:
 >>> logger.setLevel(logging.DEBUG)  # doctest: +SKIP
 
 
+Authentication
+--------------
+
+To make the mass downloader work for restricted data, just initialize it
+with existing :class:`~obspy.clients.fdsn.client.Client` instances that have
+credentials. Note that you can mix already initialized clients with varying
+credientials and just passing the name of the FDSN services to query.
+
+>>> from obspy.clients.fdsn import Client
+>>> client_orfeus = Client("ORFEUS", user="random", password="some_pw")
+>>> client_eth = Client("ETH", user="from_me", password="to_you")
+>>> mdl = MassDownloader(providers=[client_orfeus, "IRIS", client_eth]) \
+    # doctest: +SKIP
+
+
 Further Documentation
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Further functionality of this module is documented at a couple of other places:
 
@@ -490,15 +510,23 @@ Further functionality of this module is documented at a couple of other places:
 * :class:`~.restrictions.Restrictions` class
 * :class:`~.mass_downloader.MassDownloader` class
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+import warnings
 
+from obspy.core.util.base import SCIPY_VERSION
 # Convenience imports.
 from .mass_downloader import MassDownloader  # NOQA
 from .restrictions import Restrictions  # NOQA
 from .domain import (Domain, RectangularDomain,  # NOQA
                      CircularDomain, GlobalDomain)  # NOQA
+
+
+__all__ = ['MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
+           'CircularDomain', 'GlobalDomain']
+
+if SCIPY_VERSION < [0, 12]:
+    msg = ('At least some parts of FDSN Mass downloader might not '
+           'work with old scipy versions <0.12.0 (installed: {})')
+    warnings.warn(msg.format(SCIPY_VERSION))
 
 
 if __name__ == '__main__':

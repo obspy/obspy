@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:nz.org.geonet/catalog/1">
+    <amplitude publicID="test_amplitude_id">
+      <type>A</type>
+      <amplitude>
+        <value>1.0e-08</value>
+      </amplitude>
+      <timeWindow>
+        <reference>2007-10-10T14:40:39.055</reference>
+        <begin>0</begin>
+        <end>0.51424</end>
+      </timeWindow>
+      <unit>m/s</unit>
+    </amplitude>
+    <origin publicID="test_origin_id">
+      <time>
+        <value>2007-10-10T14:40:39.055</value>
+        <uncertainty>0.51424</uncertainty>
+        <confidenceLevel>68.0</confidenceLevel>
+      </time>
+      <latitude>
+        <value>-38.28462</value>
+        <uncertainty>0.02711</uncertainty>
+        <confidenceLevel>99.0</confidenceLevel>
+      </latitude>
+      <longitude>
+        <value>176.00703</value>
+        <uncertainty>0.02229</uncertainty>
+        <confidenceLevel>99.0</confidenceLevel>
+      </longitude>
+      <depth>
+        <value>0.1555297</value>
+        <uncertainty>0.0043677</uncertainty>
+        <confidenceLevel>90.0</confidenceLevel>
+      </depth>
+      <depthType>from location</depthType>
+      <timeFixed>true</timeFixed>
+      <epicenterFixed>false</epicenterFixed>
+      <referenceSystemID>test_reference_system_id</referenceSystemID>
+      <quality>
+        <usedPhaseCount>23</usedPhaseCount>
+        <usedStationCount>19</usedStationCount>
+        <standardError>0.21386</standardError>
+        <azimuthalGap>203</azimuthalGap>
+        <maximumDistance>217.43</maximumDistance>
+        <minimumDistance>96.61</minimumDistance>
+      </quality>
+      <type>hypocenter</type>
+      <evaluationMode>manual</evaluationMode>
+      <evaluationStatus>confirmed</evaluationStatus>
+      <stationMagnitude publicID="test_station_magnitude_id">
+        <originID>test_origin_id</originID>
+        <magnitude>
+          <value>3.662</value>
+          <uncertainty>0.217</uncertainty>
+        </magnitude>
+        <amplitudeID>test_amplitude_id</amplitudeID>
+      </stationMagnitude>
+      <magnitude publicID="test_magnitude_id">
+        <magnitude>
+          <value>3.662</value>
+          <uncertainty>0.217</uncertainty>
+        </magnitude>
+        <type>ML</type>
+        <originID>test_origin_id</originID>
+        <stationCount>15</stationCount>
+        <evaluationStatus>confirmed</evaluationStatus>
+      </magnitude>
+    </origin>
+    <event publicID="test_event_id">
+      <preferredOriginID>test_origin_id</preferredOriginID>
+      <preferredMagnitudeID>test_magnitude_id</preferredMagnitudeID>
+      <type>earthquake</type>
+      <originReference>test_origin_id</originReference>
+    </event>
+  </EventParameters>
+</seiscomp>

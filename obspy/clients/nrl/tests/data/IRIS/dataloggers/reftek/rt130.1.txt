@@ -1,0 +1,54 @@
+[Main]
+question = "Select the sample rate in samples per second for this channel"
+
+[1]
+resp = "RESP.XX.NR001..LHZ.130.1.1"
+description = "RT130, gain 1, 1 sps"
+
+[5]
+resp = "RESP.XX.NR002..MHZ.130.1.5"
+description = "RT130, gain 1, 5 sps"
+
+[10]
+resp = "RESP.XX.NR003..BHZ.130.1.10"
+description = "RT130, gain 1, 10 sps"
+
+[20]
+resp = "RESP.XX.NR004..BHZ.130.1.20"
+description = "RT130, gain 1, 20 sps"
+
+[25]
+resp = "RESP.XX.NR005..BHZ.130.1.25"
+description = "RT130, gain 1, 25 sps"
+
+[40]
+resp = "RESP.XX.NR006..BHZ.130.1.40"
+description = "RT130, gain 1, 40 sps"
+
+[50]
+resp = "RESP.XX.NR007..BHZ.130.1.50"
+description = "RT130, gain 1, 50 sps"
+
+[100]
+resp = "RESP.XX.NR008..HHZ.130.1.100"
+description = "RT130, gain 1, 100 sps"
+
+[125]
+resp = "RESP.XX.NR009..HHZ.130.1.125"
+description = "RT130, gain 1, 125 sps"
+
+[200]
+resp = "RESP.XX.NR010..HHZ.130.1.200"
+description = "RT130, gain 1, 200 sps"
+
+[250]
+resp = "RESP.XX.NR011..HHZ.130.1.250"
+description = "RT130, gain 1, 250 sps"
+
+[500]
+resp = "RESP.XX.NR012..HHZ.130.1.500"
+description = "RT130, gain 1, 500 sps"
+
+[1000]
+resp = "RESP.XX.NR013..HHZ.130.1.1000"
+description = "RT130, gain 1, 1000 sps"

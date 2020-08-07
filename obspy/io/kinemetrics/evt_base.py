@@ -7,12 +7,8 @@ Base classes (cannot be directly called)
     Royal Observatory of Belgium, 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from obspy import UTCDateTime
 
 
@@ -135,8 +131,7 @@ class EvtVirtual(object):
             frame_milli = 0
         frame_time += 315532800  # diff between 1970/1/1 and 1980/1/1
         time = UTCDateTime(frame_time) + frame_milli / 1000.0
-        time.precision = 3
-        return time
+        return UTCDateTime(ns=time.ns, precision=3)
 
     def _strnull(self, strn,
                  unused_param=None, unused_val=None, unused_offset=None):

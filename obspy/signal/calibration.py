@@ -14,13 +14,8 @@ Functions for relative calibration.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import numpy as np
 
 from obspy.core.stream import Stream
@@ -39,9 +34,10 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
 
     :param st1: Stream or Trace object, (known)
     :param st2: Stream or Trace object, (unknown)
-    :type calib_file: str
+    :type calib_file: str or dict
     :param calib_file: file name of calibration file containing the PAZ of the
-        known instrument in GSE2 standard.
+        known instrument in GSE2 standard or a dictionary with poles and zeros
+        information (with keys ``'poles'``, ``'zeros'`` and ``'sensitivity'``).
     :type window_len: float
     :param window_len: length of sliding window in seconds
     :type overlap_frac: float
@@ -72,7 +68,6 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
         msg = "Traces don't have the same sampling rate!"
         raise ValueError(msg)
     else:
-        ndat1 = st1[0].stats.npts
         sampfreq = st1[0].stats.sampling_rate
 
     # read waveforms
@@ -87,13 +82,15 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
     gg, _freq = _calc_resp(calib_file, nfft, sampfreq)
 
     # calculate number of windows and overlap
-    nwin = int(np.floor((ndat1 - nfft) / (nfft / 2)) + 1)
     noverlap = nfft * overlap_frac
 
     auto, _freq, _t = \
         spectral_helper(tr1, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
     cross, freq, _t = \
         spectral_helper(tr2, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
+
+    # get number of windows that were actually computed inside FFT routine
+    nwin = auto.shape[1]
 
     res = (cross / auto).sum(axis=1) * gg
 
@@ -130,10 +127,10 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
         temp[:, 0] = freq
         temp[:, 1] = amp
         temp[:, 2] = phase
-        np.savetxt(trans_new, temp, fmt=native_str('%.10f'))
+        np.savetxt(trans_new, temp, fmt='%.10f')
         temp[:, 1] = ra
         temp[:, 2] = rpha
-        np.savetxt(trans_ref, temp, fmt=native_str('%.10f'))
+        np.savetxt(trans_ref, temp, fmt='%.10f')
 
     return freq, amp, phase
 
@@ -144,13 +141,20 @@ def _calc_resp(calfile, nfft, sampfreq):
 
     :type calfile: str
     :param calfile: file containing poles, zeros and scale factor for known
-        system
+        system or a dictionary with poles and zeros information (with keys
+        ``'poles'``, ``'zeros'`` and ``'sensitivity'``).
     :returns: complex transfer function, array of frequencies
     """
+    # test if calfile is a paz dict
+    if isinstance(calfile, dict):
+        paz = calfile
+    # or read paz file if a filename is specified
+    else:
+        paz = dict()
+        paz['poles'], paz['zeros'], paz['sensitivity'] = read_paz(calfile)
     # calculate transfer function
-    poles, zeros, scale_fac = read_paz(calfile)
-    h, f = paz_to_freq_resp(poles, zeros, scale_fac, 1.0 / sampfreq,
-                            nfft, freq=True)
+    h, f = paz_to_freq_resp(paz['poles'], paz['zeros'], paz['sensitivity'],
+                            1.0 / sampfreq, nfft, freq=True)
     return h, f
 
 
@@ -162,7 +166,7 @@ def _calc_resp(calfile, nfft, sampfreq):
 
 # This is a helper function that implements the commonality between the
 # psd, csd, and spectrogram.  It is *NOT* meant to be used outside of mlab
-def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
+def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,  # noqa
                     sides='default', scale_by_freq=None):
     # The checks for if y is x are so that we can use the same function to
     # implement the core of psd(), csd(), and spectrogram() without doing
@@ -195,10 +199,10 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
 
     # For real x, ignore the negative frequencies unless told otherwise
     if (sides == 'default' and np.iscomplexobj(x)) or sides == 'twosided':
-        numFreqs = pad_to
+        num_freqs = pad_to
         scaling_factor = 1.
     elif sides in ('default', 'onesided'):
-        numFreqs = pad_to // 2 + 1
+        num_freqs = pad_to // 2 + 1
         scaling_factor = 2.
     else:
         raise ValueError("sides must be one of: 'default', 'onesided', or "
@@ -210,40 +214,40 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
     if scale_by_freq:
         scaling_factor /= Fs
 
-    windowVals = np.hanning(NFFT)
+    window_vals = np.hanning(NFFT)
 
     step = int(NFFT) - int(noverlap)
     ind = np.arange(0, len(x) - NFFT + 1, step, dtype=np.int32)
     n = len(ind)
-    Pxy = np.zeros((numFreqs, n), np.complex_)
+    p_xy = np.zeros((num_freqs, n), np.complex_)
 
     # do the ffts of the slices
     for i in range(n):
-        thisX = x[ind[i]:ind[i] + NFFT]
-        thisX = windowVals * thisX
-        fx = np.fft.fft(thisX, n=pad_to)
+        this_x = x[ind[i]:ind[i] + NFFT]
+        this_x = window_vals * this_x
+        fx = np.fft.fft(this_x, n=pad_to)
 
         if same_data:
             fy = fx
         else:
             th_is_y = y[ind[i]:ind[i] + NFFT]
-            th_is_y = windowVals * th_is_y
+            th_is_y = window_vals * th_is_y
             fy = np.fft.fft(th_is_y, n=pad_to)
-        Pxy[:, i] = np.conjugate(fx[:numFreqs]) * fy[:numFreqs]
+        p_xy[:, i] = np.conjugate(fx[:num_freqs]) * fy[:num_freqs]
 
     # Scale the spectrum by the norm of the window to compensate for
     # windowing loss; see Bendat & Piersol Sec 11.5.2.  Also include
     # scaling factors for one-sided densities and dividing by the sampling
     # frequency, if desired.
-    Pxy *= scaling_factor / (np.abs(windowVals) ** 2).sum()
+    p_xy *= scaling_factor / (np.abs(window_vals) ** 2).sum()
     t = 1. / Fs * (ind + NFFT / 2.)
-    freqs = float(Fs) / pad_to * np.arange(numFreqs)
+    freqs = float(Fs) / pad_to * np.arange(num_freqs)
 
     if (np.iscomplexobj(x) and sides == 'default') or sides == 'twosided':
         # center the frequency range at zero
-        freqs = np.concatenate((freqs[numFreqs // 2:] - Fs,
-                                freqs[:numFreqs // 2]))
-        Pxy = np.concatenate((Pxy[numFreqs // 2:, :],
-                              Pxy[:numFreqs // 2, :]), 0)
+        freqs = np.concatenate((freqs[num_freqs // 2:] - Fs,
+                                freqs[:num_freqs // 2]))
+        p_xy = np.concatenate((p_xy[num_freqs // 2:, :],
+                              p_xy[:num_freqs // 2, :]), 0)
 
-    return Pxy, freqs, t
+    return p_xy, freqs, t

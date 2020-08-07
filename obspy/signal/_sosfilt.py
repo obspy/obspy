@@ -12,12 +12,8 @@ Backport of Second-Order Section Filtering from SciPy 0.16.0
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 from scipy.signal import lfilter, zpk2tf
 
@@ -66,8 +62,10 @@ def _cplxreal(z, tol=None):
     --------
     >>> a = [4, 3, 1, 2-2j, 2+2j, 2-1j, 2+1j, 2-1j, 2+1j, 1+1j, 1-1j]
     >>> zc, zr = _cplxreal(a)
-    >>> print(zc)
-    [ 1.+1.j  2.+1.j  2.+1.j  2.+2.j]
+    >>> print(zc.real)
+    [ 1.  2.  2.  2.]
+    >>> print(zc.imag)
+    [ 1.  1.  1.  2.]
     >>> print(zr)
     [ 1.  3.  4.]
     """
@@ -463,6 +461,8 @@ def _sosfilt(sos, x, axis=-1, zi=None):
     >>> x[0] = 1.
     >>> y_tf = signal.lfilter(b, a, x)
     >>> y_sos = _sosfilt(sos, x)
+    >>> plt.figure()  # doctest: +ELLIPSIS
+    <...Figure ...>
     >>> plt.plot(y_tf, 'r', label='TF')  # doctest: +ELLIPSIS
     [<matplotlib.lines.Line2D object at ...>]
     >>> plt.plot(y_sos, 'k', label='SOS')  # doctest: +ELLIPSIS
@@ -492,7 +492,7 @@ def _sosfilt(sos, x, axis=-1, zi=None):
                              'shape %r, and an sos array with %d sections, zi '
                              'must have shape %r.' %
                              (axis, x.shape, n_sections, x_zi_shape))
-        zf = zeros_like(zi)
+        zf = np.zeros_like(zi)
 
     for section in range(n_sections):
         if use_zi:

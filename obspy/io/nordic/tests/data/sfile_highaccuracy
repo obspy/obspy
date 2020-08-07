@@ -1,0 +1,18 @@
+ 2015  424 1525 37.7 L  37.292 -32.270  2.0  wcc  4 0.1-0.7Lwcc                1
+ GAP=231        0.18       0.5     1.1  0.7 -0.2149E+00  0.1451E-01  0.2737E-01E
+ 2015  424 1525 37.676  37.29242  -32.26983    1.969  0.051                    H
+ ACTION:UPD 19-03-08 15:46 OP:wcc  STATUS:               ID:20150424152537 L   I
+ 2015-04-24-1525-05M.LSFIR_020                                                 6
+ STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU VELO AIN AR TRES W  DIS CAZ7
+ LSVCISZ EPg  0A  152538.392                             149   -0.0810 0.92 263 
+ LSVCISZ ESg  0A  152539.162                             149    0.0410 0.92 263 
+ LSVCISZ  IAML A  152539.262       43.69 0.10                          0.92 263 
+ LSVNISZ EPg  0A  1525 38.66                             106    0.0210 3.11 345 
+ LSVNISZ  IAML A  1525 39.96       41.55 0.13                          3.11 345 
+ LSVSISZ EPg  1A  1525 38.96                              98   -0.02 7 4.54 216 
+ LSVSISZ ESg  0A  1525 40.09                              98    0.0210 4.54 216 
+ LSVSISZ  IAML A  1525 40.91        3.22 0.13                          4.54 216 
+ LSVWISZ EPg  1A  1525 39.00                              97    0.08 7 4.89 275 
+ LSVWISZ ESg  1A  1525 39.89                              97   -0.06 7 4.89 275 
+ LSVWISZ  IAML A  1525 40.04       26.89 0.06                          4.89 275 
+ 

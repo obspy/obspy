@@ -2,10 +2,6 @@
 """
 The obspy.imaging.spectrogram test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 import warnings
@@ -42,11 +38,10 @@ class SpectrogramTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'spectrogram_log.png') as ic:
             with warnings.catch_warnings(record=True):
                 warnings.resetwarnings()
-                np_err = np.seterr(all="warn")
-                spectrogram.spectrogram(st[0].data, log=True, outfile=ic.name,
-                                        samp_rate=st[0].stats.sampling_rate,
-                                        show=False)
-                np.seterr(**np_err)
+                with np.errstate(all='warn'):
+                    spectrogram.spectrogram(
+                        st[0].data, log=True, outfile=ic.name,
+                        samp_rate=st[0].stats.sampling_rate, show=False)
         # 2 - using log=False
         with ImageComparison(self.path, 'spectrogram.png') as ic:
             spectrogram.spectrogram(st[0].data, log=False, outfile=ic.name,

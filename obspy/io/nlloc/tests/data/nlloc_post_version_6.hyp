@@ -1,0 +1,28 @@
+NLLOC "./nlloc.20170319.201834.grid0" "LOCATED" "Location completed."
+SIGNATURE "Megies LMU Munich   obs:./nlloc.obs   NLLoc:v6.04.02(06Nov2015)  run:09May2017 11h00m22"
+COMMENT "NonLinLoc OctTree Location"
+GRID  405 445 52  4231.5 5011.5 0.5  1.5 1.5 1.5 PROB_DENSITY
+SEARCH OCTREE nInitial 300 nEvaluated 50004 smallestNodeSide 0.029590/0.032520/0.012695 oct_tree_integral 1.033871e+00 scatter_volume 1.033871e+00
+HYPOCENTER  x 4424.68 y 5307.38 z 5.5083  OT 31.8989  ix -1 iy -1 iz -1
+GEOGRAPHIC  OT 2017 03 19  20 18 31.898898  Lat 5307.378955 Long 4424.677295 Depth 5.508301
+QUALITY  Pmax 8.58024e-23 MFmin 2.52017 MFmax 65.5061 RMS 0.232166 Nphs 16 Gap 112.376 Dist 17.2422 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio 1.65955  Npair 8  Diff 15.055
+STATISTICS  ExpectX 4424.78 Y 5307.35 Z 5.78623  CovXX 0.254371 XY -0.0208796 XZ 0.315039 YY 0.069208 YZ -0.0616818 ZZ 0.700232 EllAz1  166.03 Dip1  -12.0015 Len1  0.463619 Az2  250.465 Dip2  24.518 Len2  0.577556 Len3  1.750868e+00
+STAT_GEOG  ExpectLat 5307.345478 Long 4424.784853 Depth 5.786232
+TRANSFORM  NONE
+QML_OriginQuality  assocPhCt 22  usedPhCt 16  assocStaCt -1  usedStaCt 8  depthPhCt -1  stdErr 0.232166  azGap 112.376  secAzGap 112.376  gtLevel -  minDist 17.2422 maxDist 136.342 medDist 69.4868
+QML_OriginUncertainty  horUnc -1  minHorUnc 0.392212  maxHorUnc 0.768376  azMaxHorUnc 96.3545
+QML_ConfidenceEllipsoid  semiMajorAxisLength 1.75087  semiMinorAxisLength 0.463619  semiIntermediateAxisLength 0.577556  majorAxisPlunge 62.344  majorAxisAzimuth 99.9628  majorAxisRotation 41.3627
+FOCALMECH  Hyp  5307.378955 4424.677295 5.508301 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr 
+FUR    ?    ?    ? P      ? 20170319 2018   39.4450 GAU  5.00e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    7.7842 -2.3810e-01    2.9264 4446.1899 5336.3523    0.0000   36.0867  36.59  37.2  59.7  9     0.0000
+FUR    ?    ?    ? S      ? 20170319 2018   44.8750 GAU  1.10e-01 -1.00e+00 -1.00e+00 -1.00e+00 >   13.0775 -1.0136e-01    0.6789 4446.1899 5336.3523    0.0000   36.0867  36.59  37.2  59.7  9     0.0000
+RETA   ?    ?    ? P      ? 20170319 2018   40.1584 GAU  3.20e-01 -1.00e+00 -1.00e+00 -1.00e+00 >    9.3054 -1.0459e+00    0.0826 4406.8332 5261.7005    0.0000   49.0401 201.34 201.6  59.9  9     0.0000
+RETA   ?    ?    ? S      ? 20170319 2018   46.6184 GAU  3.50e-01 -1.00e+00 -1.00e+00 -1.00e+00 >   15.6330 -9.1350e-01    0.0691 4406.8332 5261.7005    0.0000   49.0401 201.34 201.6  59.9  9     0.0000
+MOTA   ?    ?    ? P      ? 20170319 2018   42.9584 GAU  2.10e-01 -1.00e+00 -1.00e+00 -1.00e+00 >   11.0790 -1.9526e-02    0.1907 4432.3794 5245.5267    0.0000   62.3299 172.90 173.7  56.8  9     0.0000
+MOTA   ?    ?    ? S      ? 20170319 2018   50.6684 GAU  1.70e-01 -1.00e+00 -1.00e+00 -1.00e+00 >   18.6128 1.5673e-01    0.2896 4432.3794 5245.5267    0.0000   62.3299 172.90 173.7  56.8  9     0.0000
+WATA   ?    ?    ? P      ? 20170319 2018   45.5984 GAU  2.50e-01 -1.00e+00 -1.00e+00 -1.00e+00 >   13.5452 1.5435e-01    0.1349 4468.0859 5244.2130    0.0000   76.6437 145.50 150.7  55.6  9     0.0000
+WATA   ?    ?    ? S      ? 20170319 2018   55.2284 GAU  3.80e-01 -1.00e+00 -1.00e+00 -1.00e+00 >   22.7559 5.7364e-01    0.0586 4468.0859 5244.2130    0.0000   76.6437 145.50 150.7  55.6  9     0.0000
+END_PHASE
+END_NLLOC
+

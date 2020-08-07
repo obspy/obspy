@@ -14,27 +14,23 @@ WAV bindings to ObsPy core module.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import os
 import wave
 
 import numpy as np
 
 from obspy import Stream, Trace
+from obspy.core.compatibility import from_buffer
 
 
 # WAVE data format is unsigned char up to 8bit, and signed int
 # for the remaining.
 WIDTH2DTYPE = {
-    1: native_str('<u1'),  # unsigned char
-    2: native_str('<i2'),  # signed short int
-    4: native_str('<i4'),  # signed int (int32)
+    1: '<u1',  # unsigned char
+    2: '<i2',  # signed short int
+    4: '<i4',  # signed int (int32)
 }
 
 
@@ -59,7 +55,7 @@ def _is_wav(filename):
                 fh.getparams()
         finally:
             fh.close()
-    except:
+    except Exception:
         return False
     if width in [1, 2, 4]:
         return True
@@ -102,7 +98,7 @@ def _read_wav(filename, headonly=False, **kwargs):  # @UnusedVariable
         if width not in WIDTH2DTYPE.keys():
             msg = "Unsupported Format Type, word width %dbytes" % width
             raise TypeError(msg)
-        data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
+        data = from_buffer(fh.readframes(length), dtype=WIDTH2DTYPE[width])
     finally:
         fh.close()
     return Stream([Trace(header=header, data=data)])

@@ -2,17 +2,14 @@
 """
 The obspy.imaging.mopad test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from obspy.core.util.testing import ImageComparison
-from obspy.imaging.mopad_wrapper import Beach
+from obspy.imaging.mopad_wrapper import beach
 
 
 class MopadTestCase(unittest.TestCase):
@@ -23,6 +20,12 @@ class MopadTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
+        # ignore some "RuntimeWarning: invalid value encountered in sign"
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
     def test_collection(self):
         """
@@ -66,7 +69,7 @@ class MopadTestCase(unittest.TestCase):
             y = -100
             for i, t in enumerate(mt):
                 # add the beachball (a collection of two patches) to the axis
-                ax.add_collection(Beach(t, width=30, xy=(x, y), linewidth=.6))
+                ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
                 x += 50
                 if (i + 1) % 5 == 0:
                     x = -100

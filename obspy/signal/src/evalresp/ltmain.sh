@@ -24,7 +24,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with GNU Libtool; see the file COPYING.  If not, a copy
-# can be downloaded from http://www.gnu.org/licenses/gpl.html,
+# can be downloaded from https://www.gnu.org/licenses/gpl.html,
 # or obtained by writing to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 

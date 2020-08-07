@@ -7,15 +7,10 @@ Some Seismogram Interpolating Functions.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 import scipy.interpolate
-import matplotlib.pyplot as plt
 
 from obspy.signal.headers import clibsignal
 
@@ -101,7 +96,7 @@ def interpolate_1d(data, old_start, old_dt, new_start, new_dt, new_npts,
 
 def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
                             new_npts, *args, **kwargs):
-    """
+    r"""
     Implements the weighted average slopes interpolation scheme proposed in
     [Wiggins1976]_ for evenly sampled data. The scheme guarantees that there
     will be no additional extrema after the interpolation in contrast to
@@ -185,7 +180,7 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
                           a, window="lanczos", *args, **kwargs):
     r"""
     Function performing Lanczos resampling, see
-    http://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
+    https://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
     finite support version of sinc resampling (the ideal reconstruction
     filter). For large values of ``a`` it converges towards sinc resampling. If
     used for downsampling, make sure to apply an appropriate anti-aliasing
@@ -262,12 +257,12 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
                 \operatorname{sinc}(t)\, \cdot \frac{1}{2}
                 (1 + \cos(\pi\, t/a))
                     & \text{if } t \in [-a, a]
-                    \text{ and } \texttt{window} = \texttt{lanczos}\\
+                    \text{ and } \texttt{window} = \texttt{hanning}\\
                 \operatorname{sinc}(t)\, \cdot \left( \frac{21}{50} +
                 \frac{1}{2}
                 \cos(\pi\, t/a) + \frac{2}{25} \cos (2\pi\, t/a) \right)
                     & \text{if } t \in [-a, a]
-                    \text{ and } \texttt{window} = \texttt{lanczos}\\
+                    \text{ and } \texttt{window} = \texttt{blackman}\\
                 0                     & \text{else}
             \end{cases}
         \end{align}
@@ -380,6 +375,7 @@ def plot_lanczos_windows(a, filename=None):
         from obspy.signal.interpolation import plot_lanczos_windows
         plot_lanczos_windows(a=20)
     """
+    import matplotlib.pyplot as plt
     x_max = 1024.0 - 0.5
     n = 2 ** 15
     x = np.linspace(-x_max, x_max, n)

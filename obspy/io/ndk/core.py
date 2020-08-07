@@ -9,21 +9,14 @@ The format is an ASCII format but will internally handled by unicode routines.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future import standard_library
-
 import math
 import re
 import traceback
 import uuid
 import warnings
-
-with standard_library.hooks():
-    import itertools
+from itertools import zip_longest
 
 from obspy import UTCDateTime
 from obspy.core.event import (Axis, Catalog, Comment, CreationInfo, DataUsed,
@@ -97,10 +90,10 @@ def _is_ndk(filename):
         try:
             with open(filename, "rt") as fh:
                 first_line = fh.readline()
-        except:
+        except Exception:
             try:
                 filename = filename.decode()
-            except:
+            except Exception:
                 filename = str(filename)
             filename = filename.strip()
             line_ending = filename.find("\n")
@@ -155,10 +148,10 @@ def _read_ndk(filename, *args, **kwargs):  # @UnusedVariable
         try:
             with open(filename, "rt") as fh:
                 data = fh.read()
-        except:
+        except Exception:
             try:
                 data = filename.decode()
-            except:
+            except Exception:
                 data = str(filename)
             data = data.strip()
     else:
@@ -183,7 +176,7 @@ def _read_ndk(filename, *args, **kwargs):  # @UnusedVariable
     cat = Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())))
 
     # Loop over 5 lines at once.
-    for _i, lines in enumerate(itertools.zip_longest(*[lines_iter()] * 5)):
+    for _i, lines in enumerate(zip_longest(*[lines_iter()] * 5)):
         if None in lines:
             msg = "Skipped last %i lines. Not a multiple of 5 lines." % (
                 lines.count(None))
@@ -513,11 +506,15 @@ def _read_lines(line1, line2, line3, line4, line5):
     #         events, the date and time of the analysis. This is useful to
     #         distinguish Quick CMTs ("Q-"), calculated within hours of an
     #         event, from Standard CMTs ("S-"), which are calculated later.
+    if line3[0:9] != "CENTROID:":
+        raise ObsPyNDKException("parse error")
+    numbers = [line3[10:18], line3[18:22], line3[22:29], line3[29:34],
+               line3[34:42], line3[42:47], line3[47:53], line3[53:58]]
     rec["centroid_time"], rec["centroid_time_error"], \
         rec["centroid_latitude"], rec["centroid_latitude_error"], \
         rec["centroid_longitude"], rec["centroid_longitude_error"], \
         rec["centroid_depth_in_km"], rec["centroid_depth_in_km_error"] = \
-        map(float, line3[:58].split()[1:])
+        map(float, numbers)
     type_of_depth = line3[59:63].strip().upper()
 
     if type_of_depth == "FREE":

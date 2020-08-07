@@ -3,10 +3,6 @@
 """
 A command-line program that converts Dataless SEED into RESP files.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import sys
 from argparse import ArgumentParser
@@ -42,9 +38,9 @@ def dataless2resp(filename, options):
             parser = Parser(file, debug=options.debug)
             if options.zipped:
                 folder = os.path.join(os.path.curdir, os.path.basename(file))
-                parser.write_RESP(folder=folder, zipped=True)
+                parser.write_resp(folder=folder, zipped=True)
             else:
-                parser.write_RESP(folder=os.path.curdir, zipped=False)
+                parser.write_resp(folder=os.path.curdir, zipped=False)
         except Exception as e:
             if options.debug:
                 raise

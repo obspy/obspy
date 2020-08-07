@@ -7,25 +7,21 @@ Provides the Network class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible
-
 import copy
 import fnmatch
-import textwrap
 import warnings
 
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
+from obspy.geodetics import inside_geobounds
 
 from .station import Station
-from .util import BaseNode
+from .util import (
+    BaseNode, Operator, _unified_content_strings, _textwrap,
+    _response_plot_label)
 
 
-@python_2_unicode_compatible
 class Network(BaseNode):
     """
     From the StationXML definition:
@@ -38,7 +34,8 @@ class Network(BaseNode):
                  selected_number_of_stations=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None, data_availability=None):
+                 historical_code=None, data_availability=None,
+                 identifiers=None, operators=None, source_id=None):
         """
         :type code: str
         :param code: The SEED network code.
@@ -71,17 +68,31 @@ class Network(BaseNode):
         :type data_availability: :class:`~obspy.station.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network.
+        :type identifiers: list of str, optional
+        :param identifiers: Persistent identifiers for network/station/channel
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
+        :type operators: list of :class:`~obspy.core.inventory.util.Operator`
+        :param operators: An operating agency and associated contact persons.
+        :type source_id: str, optional
+        :param source_id: A data source identifier in URI form
+            (schema version >=1.1). URIs are in general composed of a 'scheme'
+            and a 'path' (optionally with additional components), the two of
+            which separated by a colon.
         """
         self.stations = stations or []
         self.total_number_of_stations = total_number_of_stations
         self.selected_number_of_stations = selected_number_of_stations
+        self.operators = operators or []
 
         super(Network, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
-            data_availability=data_availability)
+            data_availability=data_availability,
+            identifiers=identifiers, source_id=source_id)
 
     @property
     def total_number_of_stations(self):
@@ -104,6 +115,26 @@ class Network(BaseNode):
             msg = "selected_number_of_stations cannot be negative."
             raise ValueError(msg)
         self._selected_number_of_stations = value
+
+    @property
+    def operators(self):
+        return self._operators
+
+    @operators.setter
+    def operators(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "Operators needs to be an iterable, e.g. a list."
+            raise ValueError(msg)
+        # make sure to unwind actual iterators, or the just might get exhausted
+        # at some point
+        operators = [operator for operator in value]
+        if any([not isinstance(x, Operator) for x in operators]):
+            msg = "Operators can only contain Operator objects."
+            raise ValueError(msg)
+        self._operators = operators
+
+    def __len__(self):
+        return len(self.stations)
 
     def __getitem__(self, index):
         return self.stations[index]
@@ -130,12 +161,15 @@ class Network(BaseNode):
         contents = self.get_contents()
         ret += "\tContains:\n"
         ret += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret += "\n"
         ret += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret += "\n".join(textwrap.wrap(", ".join(
-            contents["channels"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret += "\n".join(_textwrap(", ".join(
+            _unified_content_strings(contents["channels"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         return ret
 
     def _repr_pretty_(self, p, cycle):
@@ -217,20 +251,20 @@ class Network(BaseNode):
             raise Exception(msg)
         return responses[0]
 
-    def get_coordinates(self, seed_id, datetime=None):
+    def get_channel_metadata(self, seed_id, datetime=None):
         """
-        Return coordinates for a given channel.
+        Return basic metadata for a given channel.
 
         :type seed_id: str
-        :param seed_id: SEED ID string of channel to get coordinates for.
-        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param datetime: Time to get coordinates for.
+        :param seed_id: SEED ID string of channel to get metadata for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param datetime: Time to get metadata for.
         :rtype: dict
-        :return: Dictionary containing coordinates (latitude, longitude,
-            elevation)
+        :return: Dictionary containing coordinates and orientation (latitude,
+            longitude, elevation, azimuth, dip)
         """
         network, station, location, channel = seed_id.split(".")
-        coordinates = []
+        metadata = []
         if self.code != network:
             pass
         elif self.start_date and self.start_date > datetime:
@@ -267,24 +301,68 @@ class Network(BaseNode):
                             continue
                     # prepare coordinates
                     data = {}
-                    # if channel latitude or longitude is not given use station
-                    data['latitude'] = cha.latitude or sta.latitude
-                    data['longitude'] = cha.longitude or sta.longitude
-                    data['elevation'] = cha.elevation
+                    for key in ('latitude', 'longitude', 'elevation'):
+                        value = getattr(cha, key, None)
+                        # if channel latitude/longitude/elevation is not given
+                        # use station information
+                        if value is None:
+                            value = getattr(sta, key, None)
+                        data[key] = value
                     data['local_depth'] = cha.depth
-                    coordinates.append(data)
-        if len(coordinates) > 1:
-            msg = "Found more than one matching coordinates. Returning first."
+                    data['azimuth'] = cha.azimuth
+                    data['dip'] = cha.dip
+                    metadata.append(data)
+        if len(metadata) > 1:
+            msg = ("Found more than one matching channel metadata. "
+                   "Returning first.")
             warnings.warn(msg)
-        elif len(coordinates) < 1:
-            msg = "No matching coordinates found."
+        elif len(metadata) < 1:
+            msg = "No matching channel metadata found."
             raise Exception(msg)
-        return coordinates[0]
+        return metadata[0]
+
+    def get_coordinates(self, seed_id, datetime=None):
+        """
+        Return coordinates and orientation for a given channel.
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get coordinates and
+            orientation for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param datetime: Time to get coordinates for.
+        :rtype: dict
+        :return: Dictionary containing coordinates (latitude, longitude,
+            elevation, local_depth)
+        """
+        metadata = self.get_channel_metadata(seed_id, datetime)
+        coordinates = {}
+        for key in ['latitude', 'longitude', 'elevation', 'local_depth']:
+            coordinates[key] = metadata[key]
+        return coordinates
+
+    def get_orientation(self, seed_id, datetime=None):
+        """
+        Return orientation for a given channel.
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get orientation for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param datetime: Time to get orientation for.
+        :rtype: dict
+        :return: Dictionary containing orientation (azimuth, dip).
+        """
+        metadata = self.get_channel_metadata(seed_id, datetime)
+        orientation = {}
+        for key in ['azimuth', 'dip']:
+            orientation[key] = metadata[key]
+        return orientation
 
     def select(self, station=None, location=None, channel=None, time=None,
                starttime=None, endtime=None, sampling_rate=None,
-               keep_empty=False):
-        """
+               keep_empty=False, minlatitude=None, maxlatitude=None,
+               minlongitude=None, maxlongitude=None, latitude=None,
+               longitude=None, minradius=None, maxradius=None):
+        r"""
         Returns the :class:`Network` object with only the
         :class:`~obspy.core.inventory.station.Station`\ s /
         :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
@@ -321,8 +399,14 @@ class Network(BaseNode):
         :func:`~fnmatch.fnmatch`).
 
         :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include stations/channels active at given point in
             time.
@@ -335,10 +419,41 @@ class Network(BaseNode):
             given point in time (i.e. channels starting after given time will
             not be shown).
         :type sampling_rate: float
+        :param sampling_rate: Only include channels whose sampling rate
+            matches the given sampling rate, in Hz (within absolute tolerance
+            of 1E-8 Hz and relative tolerance of 1E-5)
+        :type minlatitude: float
+        :param minlatitude: Only include stations/channels with a latitude
+            larger than the specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Only include stations/channels with a latitude
+            smaller than the specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Only include stations/channels with a longitude
+            larger than the specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Only include stations/channels with a longitude
+            smaller than the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius
+            selection.
+        :type longitude: float
+        :param longitude: Specify the longitude to be used for a radius
+            selection.
+        :type minradius: float
+        :param minradius: Only include stations/channels within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Only include stations/channels within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
         :type keep_empty: bool
-        :param keep_empty: If set to `True`, networks/stations that match
-            themselves but have no matching child elements (stations/channels)
-            will be included in the result.
+        :param keep_empty: If set to `True`, stations that match
+            themselves but have no matching child elements (channels)
+            will be included in the result. This flag has no effect for
+            initially empty stations which will always be retained if they
+            are matched by the other parameters.
         """
         stations = []
         for sta in self.stations:
@@ -351,12 +466,29 @@ class Network(BaseNode):
                 if not sta.is_active(time=time, starttime=starttime,
                                      endtime=endtime):
                     continue
+            geo_filters = dict(
+                minlatitude=minlatitude, maxlatitude=maxlatitude,
+                minlongitude=minlongitude, maxlongitude=maxlongitude,
+                latitude=latitude, longitude=longitude, minradius=minradius,
+                maxradius=maxradius)
+            if any(value is not None for value in geo_filters.values()):
+                if not inside_geobounds(sta, **geo_filters):
+                    continue
+
+            has_channels = bool(sta.channels)
 
             sta_ = sta.select(
                 location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
-                sampling_rate=sampling_rate)
-            if not keep_empty and not sta_.channels:
+                sampling_rate=sampling_rate,
+                minlatitude=minlatitude, maxlatitude=maxlatitude,
+                minlongitude=minlongitude, maxlongitude=maxlongitude,
+                latitude=latitude, longitude=longitude,
+                minradius=minradius, maxradius=maxradius)
+
+            # If the station previously had channels but no longer has any
+            # and keep_empty is False: Skip the station.
+            if has_channels and not keep_empty and not sta_.channels:
                 continue
             stations.append(sta_)
         net = copy.copy(self)
@@ -506,7 +638,8 @@ class Network(BaseNode):
 
     def plot_response(self, min_freq, output="VEL", station="*", location="*",
                       channel="*", time=None, starttime=None, endtime=None,
-                      axes=None, unwrap_phase=False, show=True, outfile=None):
+                      axes=None, unwrap_phase=False, show=True, outfile=None,
+                      label_epoch_dates=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
         network's channels.
@@ -559,6 +692,9 @@ class Network(BaseNode):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :type label_epoch_dates: bool
+        :param label_epoch_dates: Whether to add channel epoch dates in the
+            plot's legend labels.
 
         .. rubric:: Basic Usage
 
@@ -574,7 +710,7 @@ class Network(BaseNode):
         """
         import matplotlib.pyplot as plt
 
-        if axes:
+        if axes is not None:
             ax1, ax2 = axes
             fig = ax1.figure
         else:
@@ -588,12 +724,12 @@ class Network(BaseNode):
 
         for sta in matching.stations:
             for cha in sta.channels:
+                label = _response_plot_label(
+                    self, sta, cha, label_epoch_dates=label_epoch_dates)
                 try:
                     cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
-                             label=".".join((self.code, sta.code,
-                                             cha.location_code, cha.code)),
-                             unwrap_phase=unwrap_phase, show=False,
-                             outfile=None)
+                             label=label, unwrap_phase=unwrap_phase,
+                             show=False, outfile=None)
                 except ZeroSamplingRate:
                     msg = ("Skipping plot of channel with zero "
                            "sampling rate:\n%s")

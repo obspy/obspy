@@ -358,10 +358,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         memset(buf_lta,0,ndat*sizeof(float));
         for(i=(ndat-nlta-1);i>nlta;i--){
             for(j=(i+nsta-1);j>=(i);j--){
-                buf_sta[i] += fabsf(buff4[j])/(float)nsta;
+                buf_sta[i] += fabsf(buff4_s[j])/(float)nsta;
             }
             for(j=(i+nlta-1);j>=(i);j--){
-                buf_lta[i] += fabsf(buff4[j])/(float)nlta;
+                buf_lta[i] += fabsf(buff4_s[j])/(float)nlta;
             }
         }
         lta_max = 0.;
@@ -384,7 +384,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             }
             //flip the trace in time
             for(i=0;i<n65;i++){
-                buff2[n65-i-1] = buff1[i];
+                buff2[n65-i-1] = buff1_s[i];
             }
 
             errcode = spr_coef_paz(buff1_s-1,nl_s,m1_s,&pm,ar_f-1);

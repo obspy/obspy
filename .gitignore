@@ -8,9 +8,11 @@
 *.pyc
 *.pyd.manifest
 *.pyo
+.cache
 .DS_Store
-/.project
-/.pydevproject
+.idea
+.project
+.pydevproject
 /.settings
 RELEASE-VERSION
 build/
@@ -26,7 +28,7 @@ misc/docs/source/_templates/navbar-local.html
 misc/docs/source/credits.rst
 misc/docs/source/citations.rst
 misc/docs/_build/
-misc/docker_tests/logs/
+misc/docker/logs/
 obspy/lib/*.pyd
 obspy/lib/*.so
 /obspy.pstats
@@ -39,3 +41,4 @@ obspy/taup/tests/images/testrun/
 misc/docker_tests/temp/
 # Temporary dir for the anaconda builds.
 misc/installer/anaconda/conda_builds
+.vscode/**

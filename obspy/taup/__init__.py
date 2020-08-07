@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-obspy.taup - Ray Theoretical Travel Times and Paths
+obspy.taup - Ray theoretical travel times and paths
 ===================================================
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 This package started out as port of the Java TauP Toolkit by [Crotwell1999]_ so
 please look there for more details about the algorithms used and further
@@ -21,56 +21,71 @@ Basic Usage
 
 Let's start by initializing a :class:`~obspy.taup.tau.TauPyModel` instance.
 Models can be initialized by specifying the name of a model provided by ObsPy.
-Names of available builtin models (in ``obspy/taup/data`` folder) are provided
-by :const:`~obspy.taup.BUILTIN_TAUP_MODELS`.
 
 >>> from obspy.taup import TauPyModel
 >>> model = TauPyModel(model="iasp91")
 
-Model initialization is a fairly expensive operation so make sure to do it only
-if necessary. Custom built models can be initialized by specifying an absolute
+ObsPy currently ships with the following 1D velocity models:
+
+* ``1066a``, see [GilbertDziewonski1975]_
+* ``1066b``, see [GilbertDziewonski1975]_
+* ``ak135``, see [KennetEngdahlBuland1995]_
+* ``ak135f``, see [KennetEngdahlBuland1995]_, [MontagnerKennett1995]_, and
+  http://rses.anu.edu.au/seismology/ak135/ak135f.html (not supported)
+* ``ak135f_no_mud``, ``ak135f`` with ``ak135`` used above the 120-km
+  discontinuity; see the SPECFEM3D_GLOBE manual at
+  https://geodynamics.org/cig/software/specfem3d_globe/
+* ``herrin``, see [Herrin1968]_
+* ``iasp91``, see [KennetEngdahl1991]_
+* ``jb``, see [JeffreysBullen1940]_
+* ``prem``, see [Dziewonski1981]_
+* ``pwdk``, see [WeberDavis1990]_
+* ``sp6``, see [MorelliDziewonski1993]_
+
+Custom built models can be initialized by specifying an absolute
 path to a model in ObsPy's ``.npz`` model format instead of just a model name.
-See below for how to build a ``.npz`` model file.
+Model initialization is a fairly expensive operation so make sure to do it only
+if necessary. See below for information on how to build a ``.npz`` model file.
 
 Travel Times
 ^^^^^^^^^^^^
 The models' main method is the
 :meth:`~obspy.taup.tau.TauPyModel.get_travel_times` method; as the name
 suggests it returns travel times for the chosen phases, distance, source depth,
-and model. Per default it returns arrivals for a number of phases.
+and model. By default it returns arrivals for a number of phases.
 
 >>> arrivals = model.get_travel_times(source_depth_in_km=55,
 ...                                   distance_in_degree=67)
 >>> print(arrivals)  # doctest: +NORMALIZE_WHITESPACE
 28 arrivals
-    P phase arrival at 647.036 seconds
-    pP phase arrival at 662.230 seconds
-    sP phase arrival at 668.702 seconds
-    PcP phase arrival at 674.868 seconds
-    PP phase arrival at 794.975 seconds
-    PKiKP phase arrival at 1034.106 seconds
-    pPKiKP phase arrival at 1050.535 seconds
-    sPKiKP phase arrival at 1056.727 seconds
-    S phase arrival at 1176.947 seconds
-    pS phase arrival at 1195.500 seconds
-    SP phase arrival at 1196.827 seconds
-    sS phase arrival at 1203.128 seconds
-    PS phase arrival at 1205.418 seconds
-    SKS phase arrival at 1239.088 seconds
-    SKKS phase arrival at 1239.107 seconds
-    ScS phase arrival at 1239.515 seconds
-    SKiKP phase arrival at 1242.400 seconds
-    pSKS phase arrival at 1260.313 seconds
-    sSKS phase arrival at 1266.919 seconds
-    SS phase arrival at 1437.417 seconds
-    PKIKKIKP phase arrival at 1855.260 seconds
-    SKIKKIKP phase arrival at 2063.556 seconds
-    PKIKKIKS phase arrival at 2069.749 seconds
-    SKIKKIKS phase arrival at 2277.833 seconds
-    PKIKPPKIKP phase arrival at 2353.930 seconds
-    PKPPKP phase arrival at 2356.420 seconds
-    PKPPKP phase arrival at 2358.925 seconds
-    SKIKSSKIKS phase arrival at 3208.154 seconds
+    P phase arrival at 647.041 seconds
+    pP phase arrival at 662.233 seconds
+    sP phase arrival at 668.704 seconds
+    PcP phase arrival at 674.865 seconds
+    PP phase arrival at 794.992 seconds
+    PKiKP phase arrival at 1034.098 seconds
+    pPKiKP phase arrival at 1050.529 seconds
+    sPKiKP phase arrival at 1056.721 seconds
+    S phase arrival at 1176.948 seconds
+    pS phase arrival at 1195.508 seconds
+    SP phase arrival at 1196.830 seconds
+    sS phase arrival at 1203.129 seconds
+    PS phase arrival at 1205.421 seconds
+    SKS phase arrival at 1239.090 seconds
+    SKKS phase arrival at 1239.109 seconds
+    ScS phase arrival at 1239.512 seconds
+    SKiKP phase arrival at 1242.388 seconds
+    pSKS phase arrival at 1260.314 seconds
+    sSKS phase arrival at 1266.921 seconds
+    SS phase arrival at 1437.427 seconds
+    PKIKKIKP phase arrival at 1855.271 seconds
+    SKIKKIKP phase arrival at 2063.564 seconds
+    PKIKKIKS phase arrival at 2069.756 seconds
+    SKIKKIKS phase arrival at 2277.857 seconds
+    PKIKPPKIKP phase arrival at 2353.934 seconds
+    PKPPKP phase arrival at 2356.425 seconds
+    PKPPKP phase arrival at 2358.899 seconds
+    SKIKSSKIKS phase arrival at 3208.155 seconds
 
 If you know which phases you are interested in, you can also specify them
 directly which speeds up the calculation as unnecessary phases are not
@@ -82,16 +97,16 @@ adhere to the naming scheme which is detailed later.
 ...                                   phase_list=["P", "PSPSPS"])
 >>> print(arrivals)  # doctest: +NORMALIZE_WHITESPACE
 3 arrivals
-    P phase arrival at 485.204 seconds
-    PSPSPS phase arrival at 4983.023 seconds
-    PSPSPS phase arrival at 5799.225 seconds
+    P phase arrival at 485.210 seconds
+    PSPSPS phase arrival at 4983.041 seconds
+    PSPSPS phase arrival at 5799.249 seconds
 
 Each arrival is represented by an :class:`~obspy.taup.helper_classes.Arrival`
 object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
 >>> arr.ray_param, arr.time, arr.incident_angle  # doctest: +ELLIPSIS
-(453.7188..., 485.2041..., 24.3968...)
+(453.7535..., 485.2100..., 24.3988...)
 
 Ray Paths
 ^^^^^^^^^
@@ -125,53 +140,119 @@ Plotting
 --------
 
 If ray paths have been calculated, they can be plotted using the
-:meth:`~obspy.taup.tau.Arrivals.plot` method:
+:meth:`Arrivals.plot_rays() <obspy.taup.tau.Arrivals.plot_rays>` method:
 
->>> arrivals = model.get_ray_paths(source_depth_in_km=500,
-...                                distance_in_degree=130)
->>> arrivals.plot()  # doctest: +SKIP
+>>> arrivals = model.get_ray_paths(
+...     source_depth_in_km=500, distance_in_degree=130, phase_list=["ttbasic"])
+>>> ax = arrivals.plot_rays()
 
 .. plot::
     :width: 50%
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(500, 130).plot()
+    TauPyModel().get_ray_paths(500, 130, phase_list=["ttbasic"]).plot_rays()
 
 Plotting will only show the requested phases:
 
->>> arrivals = model.get_ray_paths(
-...     source_depth_in_km=500,
-...     distance_in_degree=130,
-...     phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"])
->>> arrivals.plot()  # doctest: +SKIP
+>>> arrivals = model.get_ray_paths(source_depth_in_km=500,
+...                                distance_in_degree=130,
+...                                phase_list=["Pdiff", "Sdiff",
+...                                            "pPdiff", "sSdiff"])
+>>> ax = arrivals.plot_rays()
 
 .. plot::
     :width: 50%
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(
-        500, 130,
-        phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"]).plot()
+    TauPyModel().get_ray_paths(500, 130,
+                               phase_list=["Pdiff", "Sdiff", "pPdiff",
+                                           "sSdiff"]).plot_rays()
 
 Additionally, Cartesian coordinates may be used instead of a polar grid:
 
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
 ...                                distance_in_degree=130,
 ...                                phase_list=["ttbasic"])
->>> arrivals.plot(plot_type="cartesian")  # doctest: +SKIP
+>>> ax = arrivals.plot_rays(plot_type="cartesian")
 
 .. plot::
     :width: 75%
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(
-        500, 130, phase_list=["ttbasic"]).plot(plot_type="cartesian")
+    TauPyModel().get_ray_paths(500, 130,
+                               phase_list=["ttbasic"]).plot_rays(plot_type=
+                                                                 "cartesian")
+
+Travel times for these ray paths can be plotted using the
+:meth:`Arrivals.plot_times() <obspy.taup.tau.Arrivals.plot_times>` method:
+
+>>> arrivals = model.get_ray_paths(source_depth_in_km=500,
+...                                distance_in_degree=130)
+>>> ax = arrivals.plot_times()
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import TauPyModel
+    ax = TauPyModel().get_ray_paths(500, 130).plot_times()
+
+Alternatively, convenience wrapper functions plot the arrival times
+and the ray paths for a range of epicentral distances.
+
+The travel times wrapper function is :func:`~obspy.taup.tau.plot_travel_times`, 
+creating the figure and axes first is optional to have control over e.g. figure
+size or subplot setup:
+
+>>> from obspy.taup import plot_travel_times
+>>> import matplotlib.pyplot as plt
+>>> fig, ax = plt.subplots(figsize=(9, 9))
+>>> ax = plot_travel_times(source_depth=10, phase_list=["P", "S", "PP"],
+...                        ax=ax, fig=fig, verbose=True)
+There was 1 epicentral distance without an arrival
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import plot_travel_times
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(9, 9))
+    ax = plot_travel_times(source_depth=10, ax=ax, phase_list=["P", "S", "PP"],
+                           fig=fig)
+
+The ray path plot wrapper function is :func:`~obspy.taup.tau.plot_ray_paths`.
+Again, creating the figure and axes first is optional to have control over e.g.
+figure size or subplot setup (note that a polar axes has to be set up when
+aiming to do a plot with ``plot_type='spherical'`` and a normal matplotlib axes
+when aiming to do a plot with ``plot_type='cartesian'``. An error will be
+raised when mixing the two options):
+
+>>> from obspy.taup import plot_ray_paths
+>>> import matplotlib.pyplot as plt
+>>> fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+>>> ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig, verbose=True)
+There were rays for all but the following epicentral distances:
+ [0.0, 360.0]
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import plot_ray_paths
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplot(subplot_kw=dict(projection='polar'))
+    ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
 
 More examples of plotting may be found in the :doc:`ObsPy tutorial
 </tutorial/code_snippets/travel_time>`.
+
+.. _`Phase naming in taup`:
 
 Phase naming in obspy.taup
 --------------------------
@@ -182,7 +263,7 @@ Phase naming in obspy.taup
     all credit goes to the authors of that.
 
 A major feature of ``obspy.taup`` is the implementation of a phase name parser
-that allows the user to define essentially arbitrary phases through the Earth.
+that allows the user to define essentially arbitrary phases through a planet.
 Thus, ``obspy.taup`` is extremely flexible in this respect since it is not
 limited to a pre-defined set of phases. Phase names are not hard-coded into the
 software, rather the names are interpreted and the appropriate propagation path
@@ -230,6 +311,8 @@ depth to an interface involved in an interaction.
       mantle boundary
     * ``kmps`` appended to a velocity - horizontal phase velocity (see 10
       below)
+    * ``ed`` appended to ``P`` or ``S`` - an exclusively downgoing path, for a
+      receiver below the source (see 3 below)
 3. The characters ``p`` and ``s`` **always** represent up-going legs. An
    example is the source to surface leg of the phase ``pP`` from a source at
    depth. ``P`` and ``S`` can be turning waves, but always indicate downgoing
@@ -240,6 +323,13 @@ depth to an interface involved in an interaction.
    cases. For instance, ``PcP`` is allowed since the direction of the phase is
    unambiguously determined by the symbol ``c``, but would be named ``Pcp`` by
    a purist using our nomenclature.
+
+   With the ability to have sources at depth, there is a need to specify the
+   difference between a wave that is exclusively downgoing to the receiver from
+   one that turns and is upgoing at the receiver. The suffix ``ed`` can be
+   appended to indicate exclusively downgoing. So for a source at 10 km depth
+   and a receiver at 20 km depth at 0 degree distance ``P`` does not have an
+   arrival but ``Ped`` does.
 4. Numbers, except velocities for ``kmps`` phases (see 10 below), represent
    depths at which interactions take place. For example, ``P410s`` represents a
    *P*-to-*S* conversion at a discontinuity at 410km depth. Since the *S*-leg
@@ -333,27 +423,30 @@ depth to an interface involved in an interaction.
 Building custom models
 ----------------------
 
-Custom models can be built from ``.tvel`` files using the
+Custom models can be built from ``.tvel`` and ``.nd`` files using the
 :func:`~obspy.taup.taup_create.build_taup_model` function.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+# Module wide default settings.
+_DEFAULT_VALUES = {
+    # Default depths for a couple of discontinuities in earth. These are
+    # only used for the tvel files which have no named discontinuities.
+    # Values are in km.
+    "default_moho": 35,
+    "default_cmb": 2889.0,
+    "default_iocb": 5153.9,
+    # Default material parameters if a model does not set them.
+    "density": 2.6,
+    "qp": 1000.0,
+    "qs": 2000.0,
+    # Slowness tolerance
+    "slowness_tolerance": 1e-16
+}
 
-import os
 
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
-from .taup import getTravelTimes, travelTimePlot  # NOQA
-
-# Internal imports.
-from .taup_create import get_builtin_models as _get_builtin_models
-
-
-BUILTIN_TAUP_MODELS = [
-    os.path.splitext(os.path.basename(path))[0]
-    for path in _get_builtin_models()]
-
+from .tau import plot_travel_times  # NOQA
+from .tau import plot_ray_paths  # NOQA
 
 if __name__ == '__main__':
     import doctest

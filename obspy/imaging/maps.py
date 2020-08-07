@@ -6,30 +6,24 @@ Module for basemap related plotting in ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import datetime
 import warnings
 
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
-from matplotlib.colors import Normalize
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
-import matplotlib.patheffects as PathEffects
+from matplotlib import patheffects
 from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
 from obspy import UTCDateTime
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
+from obspy.core.util import (BASEMAP_VERSION, CARTOPY_VERSION,
+                             MATPLOTLIB_VERSION, PROJ4_VERSION)
+from obspy.geodetics.base import mean_longitude
 
-BASEMAP_VERSION = get_basemap_version()
+
 if BASEMAP_VERSION:
     from mpl_toolkits.basemap import Basemap
     HAS_BASEMAP = True
@@ -38,18 +32,33 @@ if BASEMAP_VERSION:
                       "when rendering countries and continents. ObsPy will "
                       "still work but the maps might be wrong. Please update "
                       "your basemap installation.")
+    if PROJ4_VERSION and PROJ4_VERSION[0] == 5:
+        msg = (
+            "basemap/pyproj with proj4 version >= 5 has a bug that results in "
+            "inverted map axes. Your maps may be wrong. Please use another "
+            "version of proj4, or use cartopy. "
+            "See https://github.com/matplotlib/basemap/issues/443")
+        warnings.warn(msg)
+    if MATPLOTLIB_VERSION == [3, 0, 1] and BASEMAP_VERSION >= [1, 1, 0]:
+        msg = (
+            "basemap and matplotlib version 3.0.1 have compataibilty issues, "
+            "please change your matplotlib version. "
+            "See https://github.com/matplotlib/basemap/issues/435")
+        warnings.warn(msg)
 else:
-    warnings.warn("basemap not installed.")
     HAS_BASEMAP = False
 
-CARTOPY_VERSION = get_cartopy_version()
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
     HAS_CARTOPY = True
 else:
-    warnings.warn("Cartopy not installed.")
     HAS_CARTOPY = False
+
+
+if not HAS_BASEMAP and not HAS_CARTOPY:
+    msg = ("Neither basemap nor cartopy installed, map plots will not work.")
+    warnings.warn(msg)
 
 
 _BASEMAP_RESOLUTIONS = {
@@ -103,19 +112,24 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     :type labels: list/tuple of str
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
-    :param projection: The map projection. Currently supported are
-        * ``"global"`` (Will plot the whole world.)
-        * ``"ortho"`` (Will center around the mean lat/long.)
-        * ``"local"`` (Will plot around local events)
-        Defaults to "global"
+    :param projection: The map projection.
+        Currently supported are:
+
+            * ``"global"`` (Will plot the whole world.)
+            * ``"ortho"`` (Will center around the mean lat/long.)
+            * ``"local"`` (Will plot around local events)
+
+        Defaults to "global".
     :type resolution: str, optional
     :param resolution: Resolution of the boundary database to use. Will be
-        based directly to the basemap module. Possible values are
-        * ``"c"`` (crude)
-        * ``"l"`` (low)
-        * ``"i"`` (intermediate)
-        * ``"h"`` (high)
-        * ``"f"`` (full)
+        based directly to the basemap module. Possible values are:
+
+            * ``"c"`` (crude)
+            * ``"l"`` (low)
+            * ``"i"`` (intermediate)
+            * ``"h"`` (high)
+            * ``"f"`` (full)
+
         Defaults to ``"l"``. For compatibility, you may also specify any of the
         Cartopy resolutions defined in :func:`plot_cartopy`.
     :type continent_fill_color: Valid matplotlib color, optional
@@ -154,8 +168,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         are problematic, but e.g. one station plot (without colorbar) and one
         event plot (with colorbar) together should work well.
     """
-    min_color = min(color)
-    max_color = max(color)
+    import matplotlib.pyplot as plt
 
     if any([isinstance(c, (datetime.datetime, UTCDateTime)) for c in color]):
         datetimeplot = True
@@ -167,15 +180,11 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     else:
         datetimeplot = False
 
-    scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                              cmap=colormap)
-    scal_map.set_array(np.linspace(0, 1, 1))
-
     # The colorbar should only be plotted if more then one event is
     # present.
     if colorbar is None:
         if len(lons) > 1 and hasattr(color, "__len__") and \
-                not isinstance(color, (str, native_str)):
+                not isinstance(color, str):
             colorbar = True
         else:
             colorbar = False
@@ -199,107 +208,8 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                 ax_y0 += 0.05
                 ax_height -= 0.05
             map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
+        bmap = None
 
-        if projection == 'global':
-            bmap = Basemap(projection='moll', lon_0=round(np.mean(lons), 4),
-                           resolution=_BASEMAP_RESOLUTIONS[resolution],
-                           ax=map_ax)
-        elif projection == 'ortho':
-            bmap = Basemap(projection='ortho',
-                           resolution=_BASEMAP_RESOLUTIONS[resolution],
-                           area_thresh=1000.0, lat_0=round(np.mean(lats), 4),
-                           lon_0=round(np.mean(lons), 4), ax=map_ax)
-        elif projection == 'local':
-            if min(lons) < -150 and max(lons) > 150:
-                max_lons = max(np.array(lons) % 360)
-                min_lons = min(np.array(lons) % 360)
-            else:
-                max_lons = max(lons)
-                min_lons = min(lons)
-            lat_0 = max(lats) / 2. + min(lats) / 2.
-            lon_0 = max_lons / 2. + min_lons / 2.
-            if lon_0 > 180:
-                lon_0 -= 360
-            deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
-            deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
-            if len(lats) > 1:
-                height = (max(lats) - min(lats)) * deg2m_lat
-                width = (max_lons - min_lons) * deg2m_lon
-                margin = 0.2 * (width + height)
-                height += margin
-                width += margin
-            else:
-                height = 2.0 * deg2m_lat
-                width = 5.0 * deg2m_lon
-            # do intelligent aspect calculation for local projection
-            # adjust to figure dimensions
-            w, h = fig.get_size_inches()
-            aspect = w / h
-            if colorbar:
-                aspect *= 1.2
-            if width / height < aspect:
-                width = height * aspect
-            else:
-                height = width / aspect
-
-            bmap = Basemap(projection='aea',
-                           resolution=_BASEMAP_RESOLUTIONS[resolution],
-                           area_thresh=1000.0, lat_0=round(lat_0, 4),
-                           lon_0=round(lon_0, 4),
-                           width=width, height=height, ax=map_ax)
-            # not most elegant way to calculate some round lats/lons
-
-            def linspace2(val1, val2, N):
-                """
-                returns around N 'nice' values between val1 and val2
-                """
-                dval = val2 - val1
-                round_pos = int(round(-np.log10(1. * dval / N)))
-                # Fake negative rounding as not supported by future as of now.
-                if round_pos < 0:
-                    factor = 10 ** (abs(round_pos))
-                    delta = round(2. * dval / N / factor) * factor / 2
-                else:
-                    delta = round(2. * dval / N, round_pos) / 2
-                new_val1 = np.ceil(val1 / delta) * delta
-                new_val2 = np.floor(val2 / delta) * delta
-                N = (new_val2 - new_val1) / delta + 1
-                return np.linspace(new_val1, new_val2, N)
-
-            N1 = int(np.ceil(height / max(width, height) * 8))
-            N2 = int(np.ceil(width / max(width, height) * 8))
-            parallels = linspace2(lat_0 - height / 2 / deg2m_lat,
-                                  lat_0 + height / 2 / deg2m_lat, N1)
-
-            # Old basemap versions have problems with non-integer parallels.
-            try:
-                bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
-            except KeyError:
-                parallels = sorted(list(set(map(int, parallels))))
-                bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
-
-            if min(lons) < -150 and max(lons) > 150:
-                lon_0 %= 360
-            meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
-                                  lon_0 + width / 2 / deg2m_lon, N2)
-            meridians[meridians > 180] -= 360
-            bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
-        else:
-            msg = "Projection '%s' not supported." % projection
-            raise ValueError(msg)
-
-        # draw coast lines, country boundaries, fill continents.
-        map_ax.set_axis_bgcolor(water_fill_color)
-        bmap.drawcoastlines(color="0.4")
-        bmap.drawcountries(color="0.75")
-        bmap.fillcontinents(color=continent_fill_color,
-                            lake_color=water_fill_color)
-        # draw the edge of the bmap projection region (the projection limb)
-        bmap.drawmapboundary(fill_color=water_fill_color)
-        # draw lat/lon grid lines every 30 degrees.
-        bmap.drawmeridians(np.arange(-180, 180, 30))
-        bmap.drawparallels(np.arange(-90, 90, 30))
-        fig.bmap = bmap
     else:
         error_message_suffix = (
             ". Please provide a figure object from a previous call to the "
@@ -317,51 +227,50 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                            list(e.args[1:]))
             raise
 
-    # compute the native bmap projection coordinates for events.
-    x, y = bmap(lons, lats)
-    # plot labels
-    if labels:
-        if 100 > len(lons) > 1:
-            for name, xpt, ypt, _colorpt in zip(labels, x, y, color):
-                # Check if the point can actually be seen with the current bmap
-                # projection. The bmap object will set the coordinates to very
-                # large values if it cannot project a point.
-                if xpt > 1e25:
-                    continue
-                map_ax.text(xpt, ypt, name, weight="heavy",
-                            color="k", zorder=100,
-                            path_effects=[
-                                PathEffects.withStroke(linewidth=3,
-                                                       foreground="white")])
-        elif len(lons) == 1:
-            map_ax.text(x[0], y[0], labels[0], weight="heavy", color="k",
-                        path_effects=[
-                            PathEffects.withStroke(linewidth=3,
-                                                   foreground="white")])
-
-    # scatter plot is removing valid x/y points with invalid color value,
-    # so we plot those points separately.
+    # basemap plots will break with basemap 1.1.0 together with matplotlib
+    # >=2.3 (see matplotlib/basemap#382) so only thing we can do is show a
+    # nicer message.
+    # XXX can be removed maybe a year or so after basemap
+    # 1.1.1 or 1.2.0 is released
     try:
-        nan_points = np.isnan(np.array(color, dtype=np.float))
-    except ValueError:
-        # `color' was not a list of values, but a list of colors.
-        pass
+        from matplotlib.cbook import MatplotlibDeprecationWarning
+    except ImportError:
+        # matplotlib 1.2.0 does not have that warning class yet
+        # XXX can be removed when minimum matplotlib version gets bumped to
+        # XXX 1.3.0
+        category = {}
     else:
-        if nan_points.any():
-            x_ = np.array(x)[nan_points]
-            y_ = np.array(y)[nan_points]
-            size_ = np.array(size)[nan_points]
-            scatter = bmap.scatter(x_, y_, marker=marker, s=size_, c="0.3",
-                                   zorder=10, cmap=None)
-    scatter = bmap.scatter(x, y, marker=marker, s=size, c=color,
-                           zorder=10, cmap=colormap)
+        category = {'category': MatplotlibDeprecationWarning}
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                'ignore', message='The axesPatch function was deprecated '
+                'in version 2.1. Use Axes.patch instead.',
+                module='.*basemap.*', **category)
+            scatter = _plot_basemap_into_axes(
+                ax=map_ax, lons=lons, lats=lats, size=size, color=color,
+                bmap=bmap, labels=labels, projection=projection,
+                resolution=resolution,
+                continent_fill_color=continent_fill_color,
+                water_fill_color=water_fill_color, colormap=colormap,
+                marker=marker, title="", adjust_aspect_to_colorbar=colorbar,
+                **kwargs)
+    except AttributeError as e:
+        if 'axesPatch' not in str(e):
+            raise
+        msg = ('Encountered a problem doing the basemap plot due to a known '
+               'issue of matplotlib >=2.3 together with basemap <=1.1.0 (see '
+               'https://github.com/matplotlib/basemap/issues/382). Please '
+               'update basemap to a version >1.1.0 if available or downgrade '
+               'matplotlib to a version <2.3.')
+        raise Exception(msg)
 
     if title:
         plt.suptitle(title)
 
     if colorbar:
         if colorbar_ticklabel_format is not None:
-            if isinstance(colorbar_ticklabel_format, (str, native_str)):
+            if isinstance(colorbar_ticklabel_format, str):
                 formatter = FormatStrFormatter(colorbar_ticklabel_format)
             elif hasattr(colorbar_ticklabel_format, '__call__'):
                 formatter = FuncFormatter(colorbar_ticklabel_format)
@@ -399,6 +308,181 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     return fig
 
 
+def _plot_basemap_into_axes(
+        ax, lons, lats, size, color, bmap=None, labels=None,
+        projection='global', resolution='l', continent_fill_color='0.8',
+        water_fill_color='1.0', colormap=None, marker="o", title=None,
+        adjust_aspect_to_colorbar=False, **kwargs):  # @UnusedVariable
+    """
+    Creates a (or adds to existing) basemap plot with a data point scatter
+    plot in given axes.
+
+    See :func:`plot_basemap` for details on most args/kwargs.
+
+    :type ax: :class:`matplotlib.axes.Axes`
+    :param ax: Existing matplotlib axes instance, optionally with previous
+        basemap plot (see `bmap` kwarg).
+    :type bmap: :class:`mpl_toolkits.basemap.Basemap`
+    :param bmap: Basemap instance in provided matplotlib Axes `ax` to reuse. If
+        specified, any kwargs regarding the basemap plot setup will be ignored
+        (i.e.  `projection`, `resolution`, `continent_fill_color`,
+        `water_fill_color`).
+    :rtype: :class:`matplotlib.collections.PathCollection`
+    :returns: Matplotlib path collection (e.g. to reuse for colorbars).
+    """
+    fig = ax.figure
+    if bmap is None:
+
+        if projection == 'global':
+            bmap = Basemap(projection='moll', lon_0=round(np.mean(lons), 4),
+                           resolution=_BASEMAP_RESOLUTIONS[resolution],
+                           ax=ax)
+        elif projection == 'ortho':
+            bmap = Basemap(projection='ortho',
+                           resolution=_BASEMAP_RESOLUTIONS[resolution],
+                           lat_0=round(np.mean(lats), 4),
+                           lon_0=round(mean_longitude(lons), 4), ax=ax)
+        elif projection == 'local':
+            if min(lons) < -150 and max(lons) > 150:
+                max_lons = max(np.array(lons) % 360)
+                min_lons = min(np.array(lons) % 360)
+            else:
+                max_lons = max(lons)
+                min_lons = min(lons)
+            lat_0 = max(lats) / 2. + min(lats) / 2.
+            lon_0 = max_lons / 2. + min_lons / 2.
+            if lon_0 > 180:
+                lon_0 -= 360
+            deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
+            deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
+            if len(lats) > 1:
+                height = (max(lats) - min(lats)) * deg2m_lat
+                width = (max_lons - min_lons) * deg2m_lon
+                margin = 0.2 * (width + height)
+                height += margin
+                width += margin
+            else:
+                height = 2.0 * deg2m_lat
+                width = 5.0 * deg2m_lon
+            # do intelligent aspect calculation for local projection
+            # adjust to figure dimensions
+            w, h = fig.get_size_inches()
+            ax_bbox = ax.get_position()
+            aspect = (w * ax_bbox.width) / (h * ax_bbox.height)
+            if adjust_aspect_to_colorbar:
+                aspect *= 1.2
+            if width / height < aspect:
+                width = height * aspect
+            else:
+                height = width / aspect
+
+            bmap = Basemap(projection='aea',
+                           resolution=_BASEMAP_RESOLUTIONS[resolution],
+                           lat_0=round(lat_0, 4),
+                           lon_0=round(lon_0, 4),
+                           width=width, height=height, ax=ax)
+            # not most elegant way to calculate some round lats/lons
+
+            def linspace2(val1, val2, n):
+                """
+                returns around n 'nice' values between val1 and val2
+                """
+                dval = val2 - val1
+                round_pos = int(round(-np.log10(1. * dval / n)))
+                # Fake negative rounding as not supported by future as of now.
+                if round_pos < 0:
+                    factor = 10 ** (abs(round_pos))
+                    delta = round(2. * dval / n / factor) * factor / 2
+                else:
+                    delta = round(2. * dval / n, round_pos) / 2
+                new_val1 = np.ceil(val1 / delta) * delta
+                new_val2 = np.floor(val2 / delta) * delta
+                n = int((new_val2 - new_val1) / delta + 1)
+                return np.linspace(new_val1, new_val2, n)
+
+            n_1 = int(np.ceil(height / max(width, height) * 8))
+            n_2 = int(np.ceil(width / max(width, height) * 8))
+            parallels = linspace2(lat_0 - height / 2 / deg2m_lat,
+                                  lat_0 + height / 2 / deg2m_lat, n_1)
+
+            # Old basemap versions have problems with non-integer parallels.
+            try:
+                bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+            except KeyError:
+                parallels = sorted(list(set(map(int, parallels))))
+                bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+
+            if min(lons) < -150 and max(lons) > 150:
+                lon_0 %= 360
+            meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
+                                  lon_0 + width / 2 / deg2m_lon, n_2)
+            meridians[meridians > 180] -= 360
+            bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
+        else:
+            msg = "Projection '%s' not supported." % projection
+            raise ValueError(msg)
+
+        # draw coast lines, country boundaries, fill continents.
+        ax.set_facecolor(water_fill_color)
+        # newer matplotlib errors out if called with empty coastline data (no
+        # coast on map)
+        if np.size(getattr(bmap, 'coastsegs', [])):
+            bmap.drawcoastlines(color="0.4")
+        bmap.drawcountries(color="0.75")
+        bmap.fillcontinents(color=continent_fill_color,
+                            lake_color=water_fill_color)
+        # draw the edge of the bmap projection region (the projection limb)
+        bmap.drawmapboundary(fill_color=water_fill_color)
+        # draw lat/lon grid lines every 30 degrees.
+        bmap.drawmeridians(np.arange(-180, 180, 30))
+        bmap.drawparallels(np.arange(-90, 90, 30))
+        fig.bmap = bmap
+
+    # compute the native bmap projection coordinates for events.
+    x, y = bmap(lons, lats)
+    # plot labels
+    if labels:
+        if 100 > len(lons) > 1:
+            for name, xpt, ypt, _colorpt in zip(labels, x, y, color):
+                # Check if the point can actually be seen with the current bmap
+                # projection. The bmap object will set the coordinates to very
+                # large values if it cannot project a point.
+                if xpt > 1e25:
+                    continue
+                ax.text(xpt, ypt, name, weight="heavy",
+                        color="k", zorder=100,
+                        path_effects=[
+                            patheffects.withStroke(linewidth=3,
+                                                   foreground="white")])
+        elif len(lons) == 1:
+            ax.text(x[0], y[0], labels[0], weight="heavy", color="k",
+                    path_effects=[
+                        patheffects.withStroke(linewidth=3,
+                                               foreground="white")])
+
+    # scatter plot is removing valid x/y points with invalid color value,
+    # so we plot those points separately.
+    try:
+        nan_points = np.isnan(np.array(color, dtype=np.float))
+    except ValueError:
+        # `color' was not a list of values, but a list of colors.
+        pass
+    else:
+        if nan_points.any():
+            x_ = np.array(x)[nan_points]
+            y_ = np.array(y)[nan_points]
+            size_ = np.array(size)[nan_points]
+            bmap.scatter(x_, y_, marker=marker, s=size_, c="0.3",
+                         zorder=10, cmap=None)
+    scatter = bmap.scatter(x, y, marker=marker, s=size, c=color, zorder=10,
+                           cmap=colormap)
+
+    if title:
+        ax.set_title(title)
+
+    return scatter
+
+
 def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                  resolution='110m', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
@@ -422,22 +506,27 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     :type labels: list/tuple of str
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
-    :param projection: The map projection. Currently supported are
-        * ``"global"`` (Will plot the whole world using
-            :class:`~cartopy.crs.Mollweide`.)
-        * ``"ortho"`` (Will center around the mean lat/long using
-          :class:`~cartopy.crs.Orthographic`.)
-        * ``"local"`` (Will plot around local events using
-          :class:`~cartopy.crs.AlbersEqualArea`.)
-        * Any other Cartopy :class:`~cartopy.crs.Projection`. An instance of
-          this class will be created using the supplied ``proj_kwargs``.
+    :param projection: The map projection.
+        Currently supported are:
+
+            * ``"global"`` (Will plot the whole world using
+              :class:`~cartopy.crs.Mollweide`.)
+            * ``"ortho"`` (Will center around the mean lat/long using
+              :class:`~cartopy.crs.Orthographic`.)
+            * ``"local"`` (Will plot around local events using
+              :class:`~cartopy.crs.AlbersEqualArea`.)
+            * Any other Cartopy :class:`~cartopy.crs.Projection`. An instance
+              of this class will be created using the supplied ``proj_kwargs``.
+
         Defaults to "global"
     :type resolution: str, optional
     :param resolution: Resolution of the boundary database to use. Will be
-        passed directly to the Cartopy module. Possible values are
-        * ``"110m"``
-        * ``"50m"``
-        * ``"10m"``
+        passed directly to the Cartopy module. Possible values are:
+
+            * ``"110m"``
+            * ``"50m"``
+            * ``"10m"``
+
         Defaults to ``"110m"``. For compatibility, you may also specify any of
         the Basemap resolutions defined in :func:`plot_basemap`.
     :type continent_fill_color: Valid matplotlib color, optional
@@ -475,18 +564,13 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         projections. Some arguments may be ignored if you choose one of the
         built-in ``projection`` choices.
     """
-    min_color = min(color)
-    max_color = max(color)
+    import matplotlib.pyplot as plt
 
     if isinstance(color[0], (datetime.datetime, UTCDateTime)):
         datetimeplot = True
         color = [date2num(getattr(t, 'datetime', t)) for t in color]
     else:
         datetimeplot = False
-
-    scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                              cmap=colormap)
-    scal_map.set_array(np.linspace(0, 1, 1))
 
     fig = plt.figure()
 
@@ -496,7 +580,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         show_colorbar = colorbar
     else:
         if len(lons) > 1 and hasattr(color, "__len__") and \
-                not isinstance(color, (str, native_str)):
+                not isinstance(color, str):
             show_colorbar = True
         else:
             show_colorbar = False
@@ -514,7 +598,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         proj = ccrs.Mollweide(**proj_kwargs)
     elif projection == 'ortho':
         proj_kwargs['central_latitude'] = np.mean(lats)
-        proj_kwargs['central_longitude'] = np.mean(lons)
+        proj_kwargs['central_longitude'] = mean_longitude(lons)
         proj = ccrs.Orthographic(**proj_kwargs)
     elif projection == 'local':
         if min(lons) < -150 and max(lons) > 150:
@@ -551,13 +635,14 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
 
         proj_kwargs['central_latitude'] = lat_0
         proj_kwargs['central_longitude'] = lon_0
+        proj_kwargs['standard_parallels'] = [lat_0, lat_0]
         proj = ccrs.AlbersEqualArea(**proj_kwargs)
 
     # User-supplied projection.
     elif isinstance(projection, type):
         if 'central_longitude' in proj_kwargs:
             if proj_kwargs['central_longitude'] == 'auto':
-                proj_kwargs['central_longitude'] = np.mean(lons)
+                proj_kwargs['central_longitude'] = mean_longitude(lons)
         if 'central_latitude' in proj_kwargs:
             if proj_kwargs['central_latitude'] == 'auto':
                 proj_kwargs['central_latitude'] = np.mean(lats)
@@ -613,7 +698,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         _CARTOPY_FEATURES[resolution] = (borders, land, ocean)
 
     # Draw coast lines, country boundaries, fill continents.
-    map_ax.set_axis_bgcolor(water_fill_color)
+    map_ax.set_facecolor(water_fill_color)
     map_ax.add_feature(ocean, facecolor=water_fill_color)
     map_ax.add_feature(land, facecolor=continent_fill_color)
     map_ax.add_feature(borders, edgecolor='0.75')
@@ -631,14 +716,14 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         with map_ax.hold_limits():
             for name, xpt, ypt, _colorpt in zip(labels, lons, lats, color):
                 map_ax.text(xpt, ypt, name, weight="heavy", color="k",
-                            zorder=100, transform=ccrs.Geodetic(),
+                            zorder=100, transform=ccrs.PlateCarree(),
                             path_effects=[
-                                PathEffects.withStroke(linewidth=3,
+                                patheffects.withStroke(linewidth=3,
                                                        foreground="white")])
 
     scatter = map_ax.scatter(lons, lats, marker=marker, s=size, c=color,
                              zorder=10, cmap=colormap,
-                             transform=ccrs.Geodetic())
+                             transform=ccrs.PlateCarree())
 
     if title:
         plt.suptitle(title)
@@ -646,7 +731,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     # Only show the colorbar for more than one event.
     if show_colorbar:
         if colorbar_ticklabel_format is not None:
-            if isinstance(colorbar_ticklabel_format, (str, native_str)):
+            if isinstance(colorbar_ticklabel_format, str):
                 formatter = FormatStrFormatter(colorbar_ticklabel_format)
             elif hasattr(colorbar_ticklabel_format, '__call__'):
                 formatter = FuncFormatter(colorbar_ticklabel_format)

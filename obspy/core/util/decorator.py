@@ -6,13 +6,8 @@ Decorator used in ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import functools
 import inspect
 import os
@@ -48,9 +43,10 @@ def deprecated(warning_msg=None):
             msg = func.__doc__
         elif warning_msg:
             msg = warning_msg
+            func.__doc__ = warning_msg
         else:
             msg = "Call to deprecated function %s." % func.__name__
-        warnings.warn(msg, category=ObsPyDeprecationWarning)
+        warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         return func(*args, **kwargs)
     return _deprecated
 
@@ -83,6 +79,10 @@ def deprecated_keywords(keywords):
                 if key in kwargs:
                     new_keyword_appearance_counts[new_key] += 1
             for key_ in keywords.values():
+                # ignore `None` as new value, it means that no mapping is
+                # happening..
+                if key_ is None:
+                    continue
                 if new_keyword_appearance_counts[key_] > 1:
                     conflicting_keys = ", ".join(
                         [old_key for old_key, new_key in keywords.items()
@@ -94,10 +94,12 @@ def deprecated_keywords(keywords):
                     nkw = keywords[kw]
                     if nkw is None:
                         warnings.warn(msg2 % (kw, fname),
-                                      category=ObsPyDeprecationWarning)
+                                      category=ObsPyDeprecationWarning,
+                                      stacklevel=3)
                     else:
                         warnings.warn(msg % (kw, fname, nkw),
-                                      category=ObsPyDeprecationWarning)
+                                      category=ObsPyDeprecationWarning,
+                                      stacklevel=3)
                         kwargs[nkw] = kwargs[kw]
                     del(kwargs[kw])
             return func(*args, **kwargs)
@@ -125,7 +127,7 @@ def skip_on_network_error(func, *args, **kwargs):
         if str(e) == "[Errno 110] Connection timed out":
             raise unittest.SkipTest(str(e))
     # general except to be able to generally reraise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -134,7 +136,9 @@ def uncompress_file(func, filename, *args, **kwargs):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
-    if not isinstance(filename, (str, native_str)):
+    if not kwargs.get('check_compression', True):
+        return func(filename, *args, **kwargs)
+    if not isinstance(filename, str):
         return func(filename, *args, **kwargs)
     elif not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -150,14 +154,19 @@ def uncompress_file(func, filename, *args, **kwargs):
                     if not tarinfo.isfile():
                         continue
                     data = tar.extractfile(tarinfo).read()
+                    # Skip empty files - we don't need them no matter what
+                    # and it guards against rare cases where waveforms files
+                    # are also slightly valid tar-files.
+                    if not data:
+                        continue
                     obj_list.append(data)
-        except:
+        except Exception:
             pass
     elif zipfile.is_zipfile(filename):
         try:
             zip = zipfile.ZipFile(filename)
             obj_list = [zip.read(name) for name in zip.namelist()]
-        except:
+        except Exception:
             pass
     elif filename.endswith('.bz2'):
         # bz2 module
@@ -165,7 +174,7 @@ def uncompress_file(func, filename, *args, **kwargs):
             import bz2
             with open(filename, 'rb') as fp:
                 obj_list.append(bz2.decompress(fp.read()))
-        except:
+        except Exception:
             pass
     elif filename.endswith('.gz'):
         # gzip module
@@ -173,7 +182,7 @@ def uncompress_file(func, filename, *args, **kwargs):
             import gzip
             with gzip.open(filename, 'rb') as fp:
                 obj_list.append(fp.read())
-        except:
+        except Exception:
             pass
     # handle results
     if obj_list:
@@ -247,7 +256,7 @@ def map_example_filename(arg_kwarg_name):
         prefix = '/path/to/'
         # check kwargs
         if arg_kwarg_name in kwargs:
-            if isinstance(kwargs[arg_kwarg_name], (str, native_str)):
+            if isinstance(kwargs[arg_kwarg_name], str):
                 if re.match(prefix, kwargs[arg_kwarg_name]):
                     try:
                         kwargs[arg_kwarg_name] = \
@@ -269,8 +278,7 @@ def map_example_filename(arg_kwarg_name):
             except ValueError:
                 pass
             else:
-                if ind < len(args) and isinstance(args[ind], (str,
-                                                              native_str)):
+                if ind < len(args) and isinstance(args[ind], str):
                     # need to check length of args from inspect
                     if re.match(prefix, args[ind]):
                         try:

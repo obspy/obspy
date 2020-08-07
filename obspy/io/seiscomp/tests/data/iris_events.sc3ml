@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:www.iris.edu/ws/event/query">
+    <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+      <time>
+        <value>2011-03-11T05:46:24.1200</value>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <depth>
+        <value>0.029</value>
+      </depth>
+      <creationInfo>
+        <author>NEIC</author>
+      </creationInfo>
+    </origin>
+    <origin publicID="smi:www.iris.edu/ws/event/query?originId=3881858">
+      <time>
+        <value>2006-09-10T04:26:33.6100</value>
+      </time>
+      <latitude>
+        <value>9.614</value>
+      </latitude>
+      <longitude>
+        <value>121.961</value>
+      </longitude>
+      <depth>
+        <value>0.009</value>
+      </depth>
+      <creationInfo>
+        <author>MAN</author>
+      </creationInfo>
+    </origin>
+    <event publicID="smi:www.iris.edu/ws/event/query?eventId=3279407">
+      <preferredOriginID>smi:www.iris.edu/ws/event/query?originId=7680412</preferredOriginID>
+      <preferredMagnitudeID>smi:www.iris.edu/ws/event/query?magnitudeId=13949593</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <originReference>smi:www.iris.edu/ws/event/query?originId=7680412</originReference>
+    </event>
+    <event publicID="smi:www.iris.edu/ws/event/query?eventId=2318174">
+      <preferredOriginID>smi:www.iris.edu/ws/event/query?originId=3881858</preferredOriginID>
+      <preferredMagnitudeID>smi:www.iris.edu/ws/event/query?magnitudeId=9764891</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>SULU SEA</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <originReference>smi:www.iris.edu/ws/event/query?originId=3881858</originReference>
+    </event>
+  </EventParameters>
+</seiscomp>

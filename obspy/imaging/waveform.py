@@ -14,25 +14,19 @@ Waveform plotting for obspy.Stream objects.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
-import collections
 import io
 import warnings
+import functools
 from copy import copy
 from datetime import datetime
-from dateutil.rrule import MINUTELY, SECONDLY
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.dates import AutoDateLocator, date2num
 import matplotlib.lines as mlines
+import matplotlib.patches as patches
+from matplotlib.cm import get_cmap
+from matplotlib.dates import date2num
 from matplotlib.path import Path
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
@@ -40,8 +34,7 @@ import scipy.signal as signal
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import create_empty_data_chunk
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
-from obspy.core.util.decorator import deprecated_keywords
-from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
+from obspy.imaging.util import (_set_xaxis_obspy_dates, _id_key, _timestring)
 
 
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
@@ -105,6 +98,8 @@ class WaveformPlotting(object):
         self.ev_coord = kwargs.get('ev_coord', None)
         self.alpha = kwargs.get('alpha', 0.5)
         self.sect_plot_dx = kwargs.get('plot_dx', None)
+        if self.sect_plot_dx is not None and not self.sect_dist_degree:
+            self.sect_plot_dx /= 1e3
         self.sect_timedown = kwargs.get('time_down', False)
         self.sect_recordstart = kwargs.get('recordstart', None)
         self.sect_recordlength = kwargs.get('recordlength', None)
@@ -171,7 +166,7 @@ class WaveformPlotting(object):
         if self.type == 'dayplot':
             self.color = kwargs.get('color', ('#B2000F', '#004C12', '#847200',
                                               '#0E01FF'))
-            if isinstance(self.color, (str, native_str)):
+            if isinstance(self.color, str):
                 self.color = (self.color,)
             self.number_of_ticks = kwargs.get('number_of_ticks', None)
         else:
@@ -216,12 +211,15 @@ class WaveformPlotting(object):
         self.one_tick_per_line = kwargs.get('one_tick_per_line', False)
         self.show_y_UTC_label = kwargs.get('show_y_UTC_label', True)
         self.title = kwargs.get('title', self.stream[0].id)
+        self.fillcolor_pos, self.fillcolor_neg = \
+            kwargs.get('fillcolors', (None, None))
 
     def __del__(self):
         """
         Destructor closes the figure instance if it has been created by the
         class.
         """
+        import matplotlib.pyplot as plt
         if self.kwargs.get('fig', None) is None and \
                 not self.kwargs.get('handle'):
             plt.close()
@@ -260,6 +258,7 @@ class WaveformPlotting(object):
         'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
         can be given as a string encoding a float in the 0-1 range.
         """
+        import matplotlib.pyplot as plt
         # Setup the figure if not passed explicitly.
         if not self.fig_obj:
             self.__setup_figure()
@@ -279,6 +278,8 @@ class WaveformPlotting(object):
             fract_x = 80.0 / self.width
             self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y2,
                                      left=fract_x, right=1.0 - fract_x / 2)
+        if self.type == 'section':
+            self.fig.subplots_adjust(bottom=0.12)
         with warnings.catch_warnings(record=True):
             warnings.filterwarnings("ignore", DATELOCATOR_WARNING_MSG,
                                     UserWarning, "matplotlib.dates")
@@ -317,8 +318,11 @@ class WaveformPlotting(object):
                     if not self.fig_obj and self.show:
                         try:
                             plt.show(block=self.block)
-                        except:
+                        except Exception:
                             plt.show()
+                    # Also return the figure to make it work the jupyter
+                    # notebooks.
+                    return self.fig
 
     def plot(self, *args, **kwargs):
         """
@@ -370,9 +374,9 @@ class WaveformPlotting(object):
                 sharex = None
             else:
                 sharex = self.axis[0]
+            axis_facecolor_kwargs = dict(facecolor=self.background_color)
             ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
-                                      axisbg=self.background_color,
-                                      sharex=sharex)
+                                      sharex=sharex, **axis_facecolor_kwargs)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
             method_ = self.plotting_method
@@ -398,7 +402,6 @@ class WaveformPlotting(object):
         ax.set_xlim(xmin, xmax)
         self._draw_overlap_axvspan_legend()
 
-    @deprecated_keywords({'swap_time_axis': None})
     def plot_day(self, *args, **kwargs):
         """
         Extend the seismogram.
@@ -433,7 +436,8 @@ class WaveformPlotting(object):
                 self.repeat = intervals
         # Create axis to plot on.
         if self.background_color:
-            ax = self.fig.add_subplot(1, 1, 1, axisbg=self.background_color)
+            axis_facecolor_kwargs = dict(facecolor=self.background_color)
+            ax = self.fig.add_subplot(1, 1, 1, **axis_facecolor_kwargs)
         else:
             ax = self.fig.add_subplot(1, 1, 1)
         # Adjust the subplots
@@ -481,14 +485,14 @@ class WaveformPlotting(object):
         if "min_magnitude" in events:
             try:
                 from obspy.clients.fdsn import Client
-                c = Client("NERIES")
+                c = Client("EMSC")
                 events = c.get_events(starttime=self.starttime,
                                       endtime=self.endtime,
                                       minmagnitude=events["min_magnitude"])
             except Exception as e:
                 events = None
                 msg = "Could not download the events because of '%s: %s'." % \
-                    (e.__class__.__name__, e.message)
+                    (e.__class__.__name__, str(e))
                 warnings.warn(msg)
         if events:
             for event in events:
@@ -602,7 +606,7 @@ class WaveformPlotting(object):
 
         for pick in getattr(event, 'picks', []):
             # check that network/station/location matches
-            if pick.waveform_id.getSEEDString().split(".")[:-1] != \
+            if pick.waveform_id.get_seed_string().split(".")[:-1] != \
                seed_id.split(".")[:-1]:
                 continue
             x_pos, y_pos = time2xy(pick.time)
@@ -786,6 +790,7 @@ class WaveformPlotting(object):
         """
         Goes through all axes in pyplot and sets time ticks on the x axis.
         """
+        import matplotlib.pyplot as plt
         self.fig.subplots_adjust(hspace=0)
         # Loop over all but last axes.
         for ax in self.axis[:-1]:
@@ -794,19 +799,16 @@ class WaveformPlotting(object):
         ax = self.axis[-1]
         if self.type == "relative":
             locator = MaxNLocator(5)
+            ax.xaxis.set_major_locator(locator)
         else:
-            ax.xaxis_date()
-            locator = AutoDateLocator(minticks=3, maxticks=6)
-            locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
-            locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
-            ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
-        ax.xaxis.set_major_locator(locator)
+            _set_xaxis_obspy_dates(ax)
         plt.setp(ax.get_xticklabels(), fontsize='small',
                  rotation=self.tick_rotation)
 
     def __plot_set_y_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         """
+        import matplotlib.pyplot as plt
         if self.equal_scale:
             ylims = np.vstack([ax.get_ylim() for ax in self.axis])
             yranges = np.diff(ylims).flatten()
@@ -1074,7 +1076,14 @@ class WaveformPlotting(object):
         ax, lines = self.__sect_init_plot()
 
         # Setting up line properties
-        if isinstance(self.sect_color, collections.Mapping):
+        try:
+            names_colors = self.sect_color.items()
+        except AttributeError:
+            for line in lines:
+                line.set_alpha(self.alpha)
+                line.set_linewidth(self.linewidth)
+                line.set_color(self.sect_color)
+        else:
             for line, tr in zip(lines, self.stream):
                 line.set_alpha(self.alpha)
                 line.set_linewidth(self.linewidth)
@@ -1083,48 +1092,48 @@ class WaveformPlotting(object):
 
             legend_lines = []
             legend_labels = []
-            for name, color in sorted(self.sect_color.items()):
+            for name, color in sorted(names_colors):
                 legend_lines.append(
                     mlines.Line2D([], [], color=color, alpha=self.alpha,
                                   linewidth=self.linewidth))
                 legend_labels.append(name)
-            plt.legend(legend_lines, legend_labels)
-
-        else:
-            for line in lines:
-                line.set_alpha(self.alpha)
-                line.set_linewidth(self.linewidth)
-                line.set_color(self.sect_color)
+            ax.legend(legend_lines, legend_labels)
 
         # Setting up plot axes
-        if self.sect_offset_min is not None:
-            self.set_offset_lim(
-                left=self.__sect_offset_to_fraction(self._offset_min))
-        if self.sect_offset_max is not None:
-            self.set_offset_lim(
-                right=self.__sect_offset_to_fraction(self._offset_max))
+        if self.sect_orientation == 'vertical':
+            if self.sect_offset_min is not None:
+                self.set_offset_lim(left=self._offset_min)
+            if self.sect_offset_max is not None:
+                self.set_offset_lim(right=self._offset_max)
+        elif self.sect_orientation == 'horizontal':
+            if self.sect_offset_min is not None:
+                self.set_offset_lim(bottom=self._offset_min)
+            if self.sect_offset_max is not None:
+                self.set_offset_lim(top=self._offset_max)
+
         # Set up offset ticks
-        tick_min, tick_max = \
-            self.__sect_fraction_to_offset(np.array(self.get_offset_lim()))
+        tick_min, tick_max = np.array(self.get_offset_lim())
         if tick_min != 0.0 and self.sect_plot_dx is not None:
             tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
         # Define tick vector for offset axis
-        if self.sect_plot_dx is None:
-            ticks = np.int_(np.linspace(tick_min, tick_max, 10))
-        else:
-            ticks = np.arange(tick_min, tick_max, self.sect_plot_dx)
+        ticks = None
+        if self.sect_plot_dx:
+            xmin, xmax = ax.get_xlim()
+            ticks = np.concatenate((
+                np.arange(-self.sect_plot_dx, xmin, -self.sect_plot_dx)[::-1],
+                np.arange(0, xmax, self.sect_plot_dx)))
             if len(ticks) > 100:
                 self.fig.clf()
                 msg = 'Too many ticks! Try changing plot_dx.'
                 raise ValueError(msg)
-        self.set_offset_ticks(self.__sect_offset_to_fraction(ticks))
+            self.set_offset_ticks(ticks)
         # Setting up tick labels
         self.set_time_label('Time [s]')
         if not self.sect_dist_degree:
             self.set_offset_label('Offset [km]')
-            self.set_offset_ticklabels(ticks / 1e3)
         else:
             self.set_offset_label(u'Offset [°]')
+        if ticks is not None:
             self.set_offset_ticklabels(ticks)
         ax.minorticks_on()
         # Limit time axis
@@ -1159,8 +1168,10 @@ class WaveformPlotting(object):
             try:
                 for _i, tr in enumerate(self.stream):
                     self._tr_offsets[_i] = tr.stats.distance
-            except:
-                msg = 'Define trace.stats.distance in meters to epicenter'
+            except Exception:
+                msg = 'trace.stats.distance undefined ' +\
+                      '(set before plotting [in m], ' +\
+                      'or use the ev_coords argument)'
                 raise ValueError(msg)
         else:
             # Define offset as degree from epicenter
@@ -1170,7 +1181,7 @@ class WaveformPlotting(object):
                         tr.stats.coordinates.latitude,
                         tr.stats.coordinates.longitude,
                         self.ev_coord[0], self.ev_coord[1])
-            except:
+            except Exception:
                 msg = 'Define latitude/longitude in trace.stats.' + \
                     'coordinates and ev_coord. See documentation.'
                 raise ValueError(msg)
@@ -1189,8 +1200,11 @@ class WaveformPlotting(object):
                 (self._tr_offsets <= self._offset_max))
         self._tr_offsets = self._tr_offsets[mask]
         self.stream = [tr for m, tr in zip(mask, self.stream) if m]
-        # Normalized offsets for plotting
-        self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
+        # Use km on distance axis, if not degrees
+        if not self.sect_dist_degree:
+            self._tr_offsets /= 1e3
+            self._offset_min /= 1e3
+            self._offset_max /= 1e3
         # Number of traces
         self._tr_num = len(self._tr_offsets)
         # Arranging trace data in single list
@@ -1222,9 +1236,11 @@ class WaveformPlotting(object):
     def __sect_scale_traces(self):
         """
         The traces have to be scaled to fit between 0-1., each trace
-        gets 1./num_traces space. adjustable by scale=1.0.
+        gets distance-range/num_traces space. adjustable by scale=1.0.
         """
-        self._sect_scale = self.sect_user_scale / (self._tr_num * 1.5)
+        self._sect_scale = (
+            (self._offset_max - self._offset_min) * self.sect_user_scale /
+            (self._tr_num * 1.5))
 
     def __sect_init_time(self):
         """
@@ -1234,8 +1250,8 @@ class WaveformPlotting(object):
         self._tr_times = []
         for _tr in range(self._tr_num):
             self._tr_times.append(
-                (np.arange(self._tr_npts[_tr]) +
-                 (self._tr_starttimes[_tr] - reftime)) * self._tr_delta[_tr])
+                np.arange(self._tr_npts[_tr]) * self._tr_delta[_tr] +
+                (self._tr_starttimes[_tr] - reftime))
             if self.sect_vred:
                 self._tr_times[-1] -= self._tr_offsets[_tr] / self.sect_vred
 
@@ -1256,14 +1272,8 @@ class WaveformPlotting(object):
             self.sect_color = self.color
             return
 
-        cmap = plt.get_cmap('Paired', lut=len(colors))
+        cmap = get_cmap('Paired', lut=len(colors))
         self.sect_color = {k: cmap(i) for i, k in enumerate(sorted(colors))}
-
-    def __sect_offset_to_fraction(self, offset):
-        """
-        Helper function to return offsets from fractions
-        """
-        return offset / self._tr_offsets.max()
 
     def __sect_fraction_to_offset(self, fraction):
         """
@@ -1277,6 +1287,16 @@ class WaveformPlotting(object):
         self.plot_section()
         """
         ax = self.fig.gca()
+        # Matplotlib 1.5.x does not support interpolation on fill_betweenx
+        # Should be integrated by version 2.1
+        # (see https://github.com/matplotlib/matplotlib/pull/6560)
+        fill_kwargs = {"lw": 0}
+
+        if self.sect_orientation == 'vertical':
+            self.fillfun = functools.partial(ax.fill_betweenx, **fill_kwargs)
+        else:
+            self.fillfun = functools.partial(ax.fill_between, interpolate=True,
+                                             **fill_kwargs)
         # Calculate normalizing factor
         self.__sect_normalize_traces()
         # Calculate scaling factor
@@ -1287,7 +1307,7 @@ class WaveformPlotting(object):
             # Scale, normalize and shift traces by offset for plotting
             data = ((self._tr_data[_tr] / self._tr_normfac[_tr] *
                      self._sect_scale) +
-                    self._tr_offsets_norm[_tr])
+                    self._tr_offsets[_tr])
             time = self._tr_times[_tr]
             if self.sect_orientation == 'vertical':
                 lines += ax.plot(data, time)
@@ -1296,6 +1316,14 @@ class WaveformPlotting(object):
             else:
                 raise NotImplementedError("sect_orientiation '%s' is not "
                                           "valid." % self.sect_orientation)
+            if self.fillcolor_pos:
+                self.fillfun(time, data, self._tr_offsets[_tr],
+                             where=data > self._tr_offsets[_tr],
+                             facecolor=self.fillcolor_pos)
+            if self.fillcolor_neg:
+                self.fillfun(time, data, self._tr_offsets[_tr],
+                             where=data < self._tr_offsets[_tr],
+                             facecolor=self.fillcolor_neg)
 
         # Set correct axes orientation
         if self.sect_orientation == 'vertical':
@@ -1353,6 +1381,7 @@ class WaveformPlotting(object):
         """
         The design and look of the whole plot to be produced.
         """
+        import matplotlib.pyplot as plt
         # Setup figure and axes
         self.fig = plt.figure(num=None, dpi=self.dpi,
                               figsize=(float(self.width) / self.dpi,
@@ -1412,7 +1441,7 @@ class WaveformPlotting(object):
         self._minmax_warning_text = None
 
     def _draw_overlap_axvspans(self, st, ax):
-        for _, _, _, _, start, end, delta, _ in st.getGaps():
+        for _, _, _, _, start, end, delta, _ in st.get_gaps():
             if delta > 0:
                 continue
             start = self._time_to_xvalue(start)
@@ -1427,10 +1456,10 @@ class WaveformPlotting(object):
                 loc="lower right", prop=dict(size="small"))
 
     def _time_to_xvalue(self, t):
-            if self.type == 'relative':
-                return t - self.reftime
-            else:
-                return date2num(t.datetime)
+        if self.type == 'relative':
+            return t - self.reftime
+        else:
+            return date2num(t.datetime)
 
 
 if __name__ == '__main__':

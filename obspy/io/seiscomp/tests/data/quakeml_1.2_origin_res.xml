@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:eu.emsc/unid">
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+        <time>
+          <value>2011-03-11T05:46:24.120000Z</value>
+        </time>
+        <latitude>
+          <value>38.297</value>
+        </latitude>
+        <longitude>
+          <value>142.373</value>
+        </longitude>
+        <depth>
+          <value>29</value>
+          <confidenceLevel>50.0</confidenceLevel>
+        </depth>
+        <depthType>from location</depthType>
+        <epicenterFixed>false</epicenterFixed>
+        <referenceSystemID>smi:some/reference/muh</referenceSystemID>
+        <methodID>smi:some/method/NA</methodID>
+        <earthModelID>smi:same/model/maeh</earthModelID>
+        <quality>
+          <usedStationCount>16</usedStationCount>
+          <standardError>0.0</standardError>
+          <azimuthalGap>231.0</azimuthalGap>
+          <maximumDistance>53.03</maximumDistance>
+          <minimumDistance>2.45</minimumDistance>
+        </quality>
+        <originUncertainty>
+          <horizontalUncertainty>9000</horizontalUncertainty>
+          <minHorizontalUncertainty>6000</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>10000</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>80.0</azimuthMaxHorizontalUncertainty>
+          <confidenceEllipsoid>
+            <semiMajorAxisLength>0.123</semiMajorAxisLength>
+            <semiMinorAxisLength>1.123</semiMinorAxisLength>
+            <semiIntermediateAxisLength>2.123</semiIntermediateAxisLength>
+            <majorAxisPlunge>3.123</majorAxisPlunge>
+            <majorAxisAzimuth>4.123</majorAxisAzimuth>
+            <majorAxisRotation>5.123</majorAxisRotation>
+          </confidenceEllipsoid>
+          <preferredDescription>uncertainty ellipse</preferredDescription>
+        </originUncertainty>
+        <type>hypocenter</type>
+        <evaluationMode>manual</evaluationMode>
+        <evaluationStatus>preliminary</evaluationStatus>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+        <comment id="smi:some/comment/reference">
+          <text>Some comment</text>
+          <creationInfo>
+            <author>EMSC</author>
+          </creationInfo>
+        </comment>
+        <comment>
+          <text>Another comment</text>
+        </comment>
+        <compositeTime>
+          <year>
+            <value>2029</value>
+            <uncertainty>2</uncertainty>
+            <lowerUncertainty>2028</lowerUncertainty>
+            <upperUncertainty>2030</upperUncertainty>
+            <confidenceLevel>0.3</confidenceLevel>
+          </year>
+          <hour>
+            <value>12</value>
+          </hour>
+        </compositeTime>
+        <compositeTime>
+          <hour>
+            <value>1</value>
+          </hour>
+          <second>
+            <value>29.124234</value>
+          </second>
+        </compositeTime>
+      </origin>
+    </event>
+  </eventParameters>
+</q:quakeml>

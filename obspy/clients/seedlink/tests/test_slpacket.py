@@ -2,10 +2,6 @@
 """
 The obspy.clients.seedlink.slpacket test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os.path
 import unittest
 
@@ -23,7 +19,7 @@ class SLPacketTestCase(unittest.TestCase):
 
         return data
 
-    def test_getStringPayload(self):
+    def test_get_string_payload(self):
         """
         Test parsing of SeedLink MiniSEED payload as XML string.
 

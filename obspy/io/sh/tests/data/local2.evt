@@ -1,0 +1,473 @@
+Event ID               : 1180129001
+Station code           : GRZ1
+Onset time             : 29-JAN-2018_01:36:34.329
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : N
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :   18.11
+Theo. Backazimuth (deg):  198.20
+Distance (deg)         :  0.226
+Distance (km)          : 25.167
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : GRZ1
+Onset time             : 29-JAN-2018_01:36:30.893
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :   18.11
+Theo. Backazimuth (deg):  198.20
+Distance (deg)         :  0.226
+Distance (km)          : 25.167
+Mean Magnitude ml      : 0.6
+Latitude               : +50.476
+Longitude              :  +12.109
+Depth (km)             :  14.8
+Depth type             : ( ) free
+Origin time            : 29-JAN-2018_01:36:25.939
+Region Table           : GEO_REG
+Region ID              : 5538
+Source region          : Plauen
+No. of Stations used   : 14
+Reference Location Name: CENTRE
+Error in Latitude (km) :   1.43
+Error in Longitude (km):   2.21
+Error in Depth (km)    :   3.61
+Error in Origin Time   :   0.40
+Error Ellipse Major    :   0.02
+Error Ellipse Minor    :   0.02
+Error Ellipse Strike   :  75.70
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : GUNZ
+Onset time             : 29-JAN-2018_01:36:33.280
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : E
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  128.26
+Theo. Backazimuth (deg):  308.43
+Distance (deg)         :  0.182
+Distance (km)          : 20.188
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : GUNZ
+Onset time             : 29-JAN-2018_01:36:30.284
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  128.26
+Theo. Backazimuth (deg):  308.43
+Distance (deg)         :  0.182
+Distance (km)          : 20.188
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : MODW
+Onset time             : 29-JAN-2018_01:36:36.166
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :   25.91
+Theo. Backazimuth (deg):  206.19
+Distance (deg)         :  0.520
+Distance (km)          : 57.824
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : MOX
+Onset time             : 29-JAN-2018_01:36:33.477
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  298.41
+Theo. Backazimuth (deg):  118.03
+Distance (deg)         :  0.357
+Distance (km)          : 39.713
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : MULD
+Onset time             : 29-JAN-2018_01:36:33.776
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : E
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  108.71
+Theo. Backazimuth (deg):  288.94
+Distance (deg)         :  0.199
+Distance (km)          : 22.150
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : PLN
+Onset time             : 29-JAN-2018_01:36:30.498
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : E
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :   71.41
+Theo. Backazimuth (deg):  251.45
+Distance (deg)         :  0.034
+Distance (km)          :  3.739
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : PLN
+Onset time             : 29-JAN-2018_01:36:28.591
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :   71.41
+Theo. Backazimuth (deg):  251.45
+Distance (deg)         :  0.034
+Distance (km)          :  3.739
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : ROHR
+Onset time             : 29-JAN-2018_01:36:31.759
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  151.11
+Theo. Backazimuth (deg):  331.27
+Distance (deg)         :  0.277
+Distance (km)          : 30.746
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : ROHR
+Onset time             : 29-JAN-2018_01:36:35.806
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : SCHF
+Onset time             : 29-JAN-2018_01:36:31.699
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :   42.83
+Theo. Backazimuth (deg):  223.06
+Distance (deg)         :  0.275
+Distance (km)          : 30.602
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : SCHF
+Onset time             : 29-JAN-2018_01:36:35.677
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : TANN
+Onset time             : 29-JAN-2018_01:36:31.159
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  105.05
+Theo. Backazimuth (deg):  285.32
+Distance (deg)         :  0.233
+Distance (km)          : 25.929
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : TANN
+Onset time             : 29-JAN-2018_01:36:34.773
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : TRIB
+Onset time             : 29-JAN-2018_01:36:31.959
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : E
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  171.78
+Theo. Backazimuth (deg):  351.80
+Distance (deg)         :  0.125
+Distance (km)          : 13.948
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : TRIB
+Onset time             : 29-JAN-2018_01:36:29.469
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  171.78
+Theo. Backazimuth (deg):  351.80
+Distance (deg)         :  0.125
+Distance (km)          : 13.948
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : VIEL
+Onset time             : 29-JAN-2018_01:36:31.907
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  180.76
+Theo. Backazimuth (deg):    0.76
+Distance (deg)         :  0.290
+Distance (km)          : 32.288
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : VIEL
+Onset time             : 29-JAN-2018_01:36:35.998
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : WERD
+Onset time             : 29-JAN-2018_01:36:32.140
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : E
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  102.63
+Theo. Backazimuth (deg):  282.78
+Distance (deg)         :  0.129
+Distance (km)          : 14.380
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : WERD
+Onset time             : 29-JAN-2018_01:36:29.559
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  102.63
+Theo. Backazimuth (deg):  282.78
+Distance (deg)         :  0.129
+Distance (km)          : 14.380
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : WERN
+Onset time             : 29-JAN-2018_01:36:31.490
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  137.73
+Theo. Backazimuth (deg):  317.94
+Distance (deg)         :  0.255
+Distance (km)          : 28.326
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : WERN
+Onset time             : 29-JAN-2018_01:36:35.184
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : ZEU
+Onset time             : 29-JAN-2018_01:36:33.860
+Onset type             : emergent
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : E
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  336.71
+Theo. Backazimuth (deg):  156.61
+Distance (deg)         :  0.212
+Distance (km)          : 23.601
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 1180129001
+Station code           : ZEU
+Onset time             : 29-JAN-2018_01:36:30.658
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : SHM_HP_6HZ_3
+Component              : Z
+Quality number         : 2
+Pick Type              : manual
+Weight                 : 4
+Theo. Azimuth (deg)    :  336.71
+Theo. Backazimuth (deg):  156.61
+Distance (deg)         :  0.212
+Distance (km)          : 23.601
+Phase Flags            : L
+--- End of Phase ---
+
+

@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML schemaVersion="1.1" xmlns="http://www.fdsn.org/xml/station/1">
+  <Source>OBS</Source>
+  <Module/>
+  <ModuleURI/>
+  <Created>2013-01-01T00:00:00.123456Z</Created>
+  <Network code="PY"/>
+</FDSNStationXML>

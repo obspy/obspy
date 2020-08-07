@@ -3,10 +3,6 @@
 """
 A command-line program that converts XML-SEED into Dataless SEED files.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import sys
 from argparse import ArgumentParser
@@ -59,7 +55,7 @@ def xseed2dataless(filename, options):
             sys.stdout.write(msg)
         try:
             parser = Parser(file, debug=options.debug)
-            parser.write_SEED(output)
+            parser.write_seed(output)
         except Exception as e:
             if options.debug:
                 raise

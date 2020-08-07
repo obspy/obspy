@@ -18,12 +18,8 @@ in a previous packet, so has to be retrieved from memory see
     The ObsPy Development Team (devs@obspy.org), Anthony Lomax & Alessia Maggi
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 import sys
 
@@ -334,11 +330,11 @@ def tauc(trace, width, rtmemory_list=None):
 
         sample_d = sample[i]
         deriv_d = (sample_d - sample_last) / delta_time
-        indexBegin = i - width
-        if (indexBegin >= 0):
-            xval = xval - (sample[indexBegin]) * (sample[indexBegin]) \
+        index_begin = i - width
+        if (index_begin >= 0):
+            xval = xval - (sample[index_begin]) * (sample[index_begin]) \
                 + sample_d * sample_d
-            dval = dval - deriv[indexBegin] * deriv[indexBegin] \
+            dval = dval - deriv[index_begin] * deriv[index_begin] \
                 + deriv_d * deriv_d
         else:
             index = i
@@ -363,6 +359,7 @@ def tauc(trace, width, rtmemory_list=None):
 
     return new_sample
 
+
 # memory object indices for storing specific values
 _AMP_AT_PICK = 0
 _HAVE_USED_MEMORY = 1
@@ -372,7 +369,7 @@ _POLARITY = 4
 _MEMORY_SIZE_OUTPUT = 5
 
 
-def mwpIntegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
+def mwpintegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
                 rtmemory_list=None):
     """
     Calculate Mwp integral on a displacement trace.
@@ -510,14 +507,14 @@ MWP_CONST *= 7900.0 * 7900.0 * 7900.0  # Pvel**3
 MWP_CONST *= 2.0  # FP average radiation pattern
 MWP_CONST *= (10000.0 / 90.0)  # distance deg -> km
 MWP_CONST *= 1000.0  # distance km -> meters
-# http://mail.python.org/pipermail/python-list/2010-February/1235196.html, ff.
+# https://mail.python.org/pipermail/python-list/2010-February/567089.html, ff.
 try:
     FLOAT_MIN = sys.float_info.min
 except AttributeError:
     FLOAT_MIN = 1.1e-37
 
 
-def calculateMwpMag(peak, epicentral_distance):
+def calculate_mwp_mag(peak, epicentral_distance):
     """
     Calculate Mwp magnitude.
 
@@ -575,10 +572,10 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
     dt = trace.stats.delta
 
     # set some constants for the kurtosis calculation
-    C1 = dt / float(win)
-    a1 = 1.0 - C1
-    C2 = (1.0 - a1 * a1) / 2.0
-    bias = -3 * C1 - 3.0
+    c_1 = dt / float(win)
+    a1 = 1.0 - c_1
+    c_2 = (1.0 - a1 * a1) / 2.0
+    bias = -3 * c_1 - 3.0
 
     # prepare the output array
     kappa4 = np.empty(npts, sample.dtype)
@@ -619,11 +616,11 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
 
     # do recursive kurtosis
     for i in range(npts):
-        mu1 = a1 * mu1_last + C1 * sample[i]
+        mu1 = a1 * mu1_last + c_1 * sample[i]
         dx2 = (sample[i] - mu1_last) * (sample[i] - mu1_last)
-        mu2 = a1 * mu2_last + C2 * dx2
+        mu2 = a1 * mu2_last + c_2 * dx2
         dx2 = dx2 / mu2_last
-        k4_bar = (1 + C1 - 2 * C1 * dx2) * k4_bar_last + C1 * dx2 * dx2
+        k4_bar = (1 + c_1 - 2 * c_1 * dx2) * k4_bar_last + c_1 * dx2 * dx2
         kappa4[i] = k4_bar + bias
         mu1_last = mu1
         mu2_last = mu2

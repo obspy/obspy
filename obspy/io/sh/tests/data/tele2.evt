@@ -1,0 +1,3823 @@
+Event ID               : 1150810006
+Station code           : AHRW
+Onset time             : 10-AUG-2015_10:20:14.631
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  308.65
+Theo. Backazimuth (deg):   81.76
+Distance (deg)         : 47.408
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : AHRW
+Onset time             : 10-AUG-2015_10:21:39.070
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : AHRW
+Onset time             : 10-AUG-2015_10:23:55.738
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : AHRW
+Onset time             : 10-AUG-2015_10:13:35.444
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.04
+Amplitude (nm)         : 198.6
+Vel. Amplitude (nm/sec): 1200.5
+Amplitude Time (sec)   :  2.78
+Ampl&Period Source     : direct
+Residual Time          :  -0.22
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  308.65
+Theo. Backazimuth (deg):   81.76
+Distance (deg)         : 47.408
+Magnitude mb           : 6.2
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : AHRW
+Onset time             : 10-AUG-2015_10:14:26.347
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.35
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : AHRW
+Onset time             : 10-AUG-2015_10:14:52.970
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.00
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ASSE
+Onset time             : 10-AUG-2015_10:19:36.931
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.33
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  310.50
+Theo. Backazimuth (deg):   85.84
+Distance (deg)         : 44.992
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ASSE
+Onset time             : 10-AUG-2015_10:21:01.120
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.45
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ASSE
+Onset time             : 10-AUG-2015_10:23:12.388
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.87
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ASSE
+Onset time             : 10-AUG-2015_10:13:16.294
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.71
+Amplitude (nm)         : 243.9
+Vel. Amplitude (nm/sec): 896.5
+Amplitude Time (sec)   :  1.83
+Ampl&Period Source     : direct
+Residual Time          :  -0.34
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  310.50
+Theo. Backazimuth (deg):   85.84
+Distance (deg)         : 44.992
+Magnitude mb           : 5.9
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BFO
+Onset time             : 10-AUG-2015_10:20:07.081
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  305.49
+Theo. Backazimuth (deg):   80.56
+Distance (deg)         : 46.939
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BFO
+Onset time             : 10-AUG-2015_10:21:30.920
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BFO
+Onset time             : 10-AUG-2015_10:13:31.194
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.47
+Amplitude (nm)         : 145.4
+Vel. Amplitude (nm/sec): 620.0
+Amplitude Time (sec)   :  2.97
+Ampl&Period Source     : direct
+Residual Time          :  -0.37
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  305.49
+Theo. Backazimuth (deg):   80.56
+Distance (deg)         : 46.939
+Magnitude mb           : 5.9
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BFO
+Onset time             : 10-AUG-2015_10:14:22.829
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.02
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BRG
+Onset time             : 10-AUG-2015_10:19:09.081
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.03
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  308.51
+Theo. Backazimuth (deg):   86.96
+Distance (deg)         : 43.032
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BRG
+Onset time             : 10-AUG-2015_10:20:33.470
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.47
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BRG
+Onset time             : 10-AUG-2015_10:22:28.438
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.28
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BRG
+Onset time             : 10-AUG-2015_10:13:01.044
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.34
+Amplitude (nm)         : 336.0
+Vel. Amplitude (nm/sec): 1573.7
+Amplitude Time (sec)   :  2.92
+Ampl&Period Source     : direct
+Residual Time          :  -0.27
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  308.51
+Theo. Backazimuth (deg):   86.96
+Distance (deg)         : 43.032
+Magnitude mb           : 5.9
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BRG
+Onset time             : 10-AUG-2015_10:13:51.367
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BRG
+Onset time             : 10-AUG-2015_10:14:17.535
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BSEG
+Onset time             : 10-AUG-2015_10:19:38.831
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.22
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  313.07
+Theo. Backazimuth (deg):   87.38
+Distance (deg)         : 45.100
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BSEG
+Onset time             : 10-AUG-2015_10:21:03.670
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.10
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BSEG
+Onset time             : 10-AUG-2015_10:23:16.299
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  12.64
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BSEG
+Onset time             : 10-AUG-2015_10:13:17.544
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.40
+Amplitude (nm)         : 645.8
+Vel. Amplitude (nm/sec): 2899.9
+Amplitude Time (sec)   :  2.26
+Ampl&Period Source     : direct
+Residual Time          :   0.56
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  313.07
+Theo. Backazimuth (deg):   87.38
+Distance (deg)         : 45.100
+Magnitude mb           : 6.4
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BSEG
+Onset time             : 10-AUG-2015_10:14:07.946
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :  -0.74
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BUG
+Onset time             : 10-AUG-2015_10:20:08.831
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  309.84
+Theo. Backazimuth (deg):   82.72
+Distance (deg)         : 47.165
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BUG
+Onset time             : 10-AUG-2015_10:21:33.420
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BUG
+Onset time             : 10-AUG-2015_10:23:51.288
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BUG
+Onset time             : 10-AUG-2015_10:13:33.344
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.29
+Amplitude (nm)         : 309.3
+Vel. Amplitude (nm/sec): 1501.0
+Amplitude Time (sec)   :  2.90
+Ampl&Period Source     : direct
+Residual Time          :  -0.40
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  309.84
+Theo. Backazimuth (deg):   82.72
+Distance (deg)         : 47.165
+Magnitude mb           : 6.3
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BUG
+Onset time             : 10-AUG-2015_10:14:24.342
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.25
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : BUG
+Onset time             : 10-AUG-2015_10:14:50.454
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.32
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLL
+Onset time             : 10-AUG-2015_10:19:16.331
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.22
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  309.19
+Theo. Backazimuth (deg):   86.73
+Distance (deg)         : 43.600
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLL
+Onset time             : 10-AUG-2015_10:20:41.120
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.20
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLL
+Onset time             : 10-AUG-2015_10:13:05.044
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.63
+Amplitude (nm)         : 297.5
+Vel. Amplitude (nm/sec): 1144.6
+Amplitude Time (sec)   :  2.24
+Ampl&Period Source     : direct
+Residual Time          :  -0.73
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  309.19
+Theo. Backazimuth (deg):   86.73
+Distance (deg)         : 43.600
+Magnitude mb           : 5.8
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLL
+Onset time             : 10-AUG-2015_10:13:55.296
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :   1.03
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLL
+Onset time             : 10-AUG-2015_10:14:22.071
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLZ
+Onset time             : 10-AUG-2015_10:19:40.081
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   2.47
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  310.11
+Theo. Backazimuth (deg):   85.33
+Distance (deg)         : 45.200
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLZ
+Onset time             : 10-AUG-2015_10:21:04.720
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   2.95
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLZ
+Onset time             : 10-AUG-2015_10:23:16.788
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :   1.19
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLZ
+Onset time             : 10-AUG-2015_10:13:18.244
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.03
+Amplitude (nm)         : 272.6
+Vel. Amplitude (nm/sec): 1659.6
+Amplitude Time (sec)   :  2.95
+Ampl&Period Source     : direct
+Residual Time          :  -0.05
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  310.11
+Theo. Backazimuth (deg):   85.33
+Distance (deg)         : 45.200
+Magnitude mb           : 6.1
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : CLZ
+Onset time             : 10-AUG-2015_10:14:08.646
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :  -1.04
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FBE
+Onset time             : 10-AUG-2015_10:13:04.194
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.24
+Amplitude (nm)         : 408.2
+Vel. Amplitude (nm/sec): 2073.3
+Amplitude Time (sec)   :  2.95
+Ampl&Period Source     : direct
+Residual Time          :  -0.02
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  308.61
+Theo. Backazimuth (deg):   86.58
+Distance (deg)         : 43.401
+Magnitude mb           : 6.0
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FBE
+Onset time             : 10-AUG-2015_10:13:54.396
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :  -0.20
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FBE
+Onset time             : 10-AUG-2015_10:14:20.616
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FLT1
+Onset time             : 10-AUG-2015_10:19:31.181
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.01
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  310.75
+Theo. Backazimuth (deg):   86.47
+Distance (deg)         : 44.633
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FLT1
+Onset time             : 10-AUG-2015_10:20:55.520
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.23
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FLT1
+Onset time             : 10-AUG-2015_10:23:06.038
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.07
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FLT1
+Onset time             : 10-AUG-2015_10:13:12.994
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  0.71
+Amplitude (nm)         : 305.2
+Vel. Amplitude (nm/sec): 2702.6
+Amplitude Time (sec)   :  2.36
+Ampl&Period Source     : direct
+Residual Time          :  -0.79
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  310.75
+Theo. Backazimuth (deg):   86.47
+Distance (deg)         : 44.633
+Magnitude mb           : 6.3
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FLT1
+Onset time             : 10-AUG-2015_10:14:03.296
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.28
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FUR
+Onset time             : 10-AUG-2015_10:19:37.231
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.41
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  304.86
+Theo. Backazimuth (deg):   82.31
+Distance (deg)         : 45.017
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FUR
+Onset time             : 10-AUG-2015_10:21:01.820
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.40
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FUR
+Onset time             : 10-AUG-2015_10:23:15.122
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :   6.78
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FUR
+Onset time             : 10-AUG-2015_10:13:16.944
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.26
+Amplitude (nm)         : 378.3
+Vel. Amplitude (nm/sec): 1887.0
+Amplitude Time (sec)   :  2.89
+Ampl&Period Source     : direct
+Residual Time          :   0.62
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  304.86
+Theo. Backazimuth (deg):   82.31
+Distance (deg)         : 45.017
+Magnitude mb           : 6.2
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FUR
+Onset time             : 10-AUG-2015_10:14:07.765
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.05
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : FUR
+Onset time             : 10-AUG-2015_10:14:33.839
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.08
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GEC2
+Onset time             : 10-AUG-2015_10:19:13.931
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.61
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  305.57
+Theo. Backazimuth (deg):   84.63
+Distance (deg)         : 43.336
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GEC2
+Onset time             : 10-AUG-2015_10:20:38.620
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.46
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GEC2
+Onset time             : 10-AUG-2015_10:22:30.423
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -2.52
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GEC2
+Onset time             : 10-AUG-2015_10:13:03.494
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.62
+Amplitude (nm)         : 194.6
+Vel. Amplitude (nm/sec): 755.2
+Amplitude Time (sec)   :  2.91
+Ampl&Period Source     : direct
+Residual Time          :   0.17
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  305.57
+Theo. Backazimuth (deg):   84.63
+Distance (deg)         : 43.336
+Magnitude mb           : 5.6
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GEC2
+Onset time             : 10-AUG-2015_10:13:53.921
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.44
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GEC2
+Onset time             : 10-AUG-2015_10:14:20.023
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GRA1
+Onset time             : 10-AUG-2015_10:19:37.931
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.72
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  307.01
+Theo. Backazimuth (deg):   83.80
+Distance (deg)         : 44.867
+Phase Flags            : T
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GRA1
+Onset time             : 10-AUG-2015_10:21:02.070
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.66
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Phase Flags            : T
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GRA1
+Onset time             : 10-AUG-2015_10:23:06.888
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :   0.45
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Phase Flags            : T
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GRA1
+Onset time             : 10-AUG-2015_10:13:16.394
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.65
+Amplitude (nm)         : 602.2
+Vel. Amplitude (nm/sec): 2289.3
+Amplitude Time (sec)   :  2.94
+Ampl&Period Source     : direct
+Residual Time          :   0.80
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  307.01
+Theo. Backazimuth (deg):   83.80
+Distance (deg)         : 44.867
+Magnitude mb           : 6.3
+Phase Flags            : T
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GRA1
+Onset time             : 10-AUG-2015_10:14:07.388
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.09
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Phase Flags            : T
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GRA1
+Onset time             : 10-AUG-2015_10:14:32.918
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.13
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Phase Flags            : T
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GTTG
+Onset time             : 10-AUG-2015_10:19:44.631
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.73
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  309.73
+Theo. Backazimuth (deg):   84.75
+Distance (deg)         : 45.479
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GTTG
+Onset time             : 10-AUG-2015_10:21:09.170
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.94
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GTTG
+Onset time             : 10-AUG-2015_10:23:21.388
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -2.05
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GTTG
+Onset time             : 10-AUG-2015_10:13:20.394
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.35
+Amplitude (nm)         : 496.9
+Vel. Amplitude (nm/sec): 2315.0
+Amplitude Time (sec)   :  2.95
+Ampl&Period Source     : direct
+Residual Time          :  -0.12
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  309.73
+Theo. Backazimuth (deg):   84.75
+Distance (deg)         : 45.479
+Magnitude mb           : 6.3
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GTTG
+Onset time             : 10-AUG-2015_10:14:10.996
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :   1.08
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GUNZ
+Onset time             : 10-AUG-2015_10:13:09.644
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.47
+Amplitude (nm)         : 242.1
+Vel. Amplitude (nm/sec): 1036.8
+Amplitude Time (sec)   :  2.95
+Ampl&Period Source     : direct
+Residual Time          :   0.05
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  307.87
+Theo. Backazimuth (deg):   85.26
+Distance (deg)         : 44.090
+Magnitude mb           : 5.7
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GUNZ
+Onset time             : 10-AUG-2015_10:14:00.339
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.04
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : GUNZ
+Onset time             : 10-AUG-2015_10:14:26.449
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : HLG
+Onset time             : 10-AUG-2015_10:19:58.731
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.13
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  313.54
+Theo. Backazimuth (deg):   85.74
+Distance (deg)         : 46.517
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : HLG
+Onset time             : 10-AUG-2015_10:21:23.970
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.82
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : HLG
+Onset time             : 10-AUG-2015_10:23:37.038
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : HLG
+Onset time             : 10-AUG-2015_10:13:28.394
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.34
+Amplitude (nm)         : 599.7
+Vel. Amplitude (nm/sec): 2821.2
+Amplitude Time (sec)   :  3.00
+Ampl&Period Source     : direct
+Residual Time          :   0.44
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  313.54
+Theo. Backazimuth (deg):   85.74
+Distance (deg)         : 46.517
+Magnitude mb           : 6.6
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : IBBN
+Onset time             : 10-AUG-2015_10:20:01.431
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  310.97
+Theo. Backazimuth (deg):   83.87
+Distance (deg)         : 46.764
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : IBBN
+Onset time             : 10-AUG-2015_10:21:26.770
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -2.63
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : IBBN
+Onset time             : 10-AUG-2015_10:23:43.888
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : IBBN
+Onset time             : 10-AUG-2015_10:13:30.244
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.47
+Amplitude (nm)         : 780.7
+Vel. Amplitude (nm/sec): 3336.2
+Amplitude Time (sec)   :  3.00
+Ampl&Period Source     : direct
+Residual Time          :  -0.23
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  310.97
+Theo. Backazimuth (deg):   83.87
+Distance (deg)         : 46.764
+Magnitude mb           : 6.6
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : IBBN
+Onset time             : 10-AUG-2015_10:14:21.146
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :   0.03
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : IBBN
+Onset time             : 10-AUG-2015_10:14:47.675
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.00
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : KAST
+Onset time             : 10-AUG-2015_10:19:59.831
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.47
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  309.39
+Theo. Backazimuth (deg):   83.31
+Distance (deg)         : 46.480
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : KAST
+Onset time             : 10-AUG-2015_10:21:24.220
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.01
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : KAST
+Onset time             : 10-AUG-2015_10:23:39.938
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : KAST
+Onset time             : 10-AUG-2015_10:13:28.094
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.69
+Amplitude (nm)         : 186.2
+Vel. Amplitude (nm/sec): 692.7
+Amplitude Time (sec)   :  2.05
+Ampl&Period Source     : direct
+Residual Time          :  -0.29
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  309.39
+Theo. Backazimuth (deg):   83.31
+Distance (deg)         : 46.480
+Magnitude mb           : 5.8
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : KAST
+Onset time             : 10-AUG-2015_10:14:18.751
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.40
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : LNIZ
+Onset time             : 10-AUG-2015_10:19:03.081
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.16
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  312.35
+Theo. Backazimuth (deg):   89.99
+Distance (deg)         : 42.798
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : LNIZ
+Onset time             : 10-AUG-2015_10:20:27.570
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.62
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : LNIZ
+Onset time             : 10-AUG-2015_10:22:32.538
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   8.24
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : LNIZ
+Onset time             : 10-AUG-2015_10:12:58.494
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.16
+Amplitude (nm)         : 472.3
+Vel. Amplitude (nm/sec): 2556.2
+Amplitude Time (sec)   :  2.25
+Ampl&Period Source     : direct
+Residual Time          :  -0.60
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  312.35
+Theo. Backazimuth (deg):   89.99
+Distance (deg)         : 42.798
+Magnitude mb           : 6.1
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : LNIZ
+Onset time             : 10-AUG-2015_10:13:48.631
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : LNIZ
+Onset time             : 10-AUG-2015_10:14:15.341
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MANZ
+Onset time             : 10-AUG-2015_10:19:28.831
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :   1.70
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  307.35
+Theo. Backazimuth (deg):   84.71
+Distance (deg)         : 44.266
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MANZ
+Onset time             : 10-AUG-2015_10:20:53.620
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.23
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MANZ
+Onset time             : 10-AUG-2015_10:22:50.988
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   7.51
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MANZ
+Onset time             : 10-AUG-2015_10:13:11.344
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.44
+Amplitude (nm)         : 305.3
+Vel. Amplitude (nm/sec): 1335.5
+Amplitude Time (sec)   :  2.96
+Ampl&Period Source     : direct
+Residual Time          :   0.42
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  307.35
+Theo. Backazimuth (deg):   84.71
+Distance (deg)         : 44.266
+Magnitude mb           : 5.8
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MANZ
+Onset time             : 10-AUG-2015_10:14:01.646
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :  -0.49
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MANZ
+Onset time             : 10-AUG-2015_10:14:27.874
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.20
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MILB
+Onset time             : 10-AUG-2015_10:19:55.131
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.60
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  307.41
+Theo. Backazimuth (deg):   82.61
+Distance (deg)         : 46.093
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MILB
+Onset time             : 10-AUG-2015_10:21:19.770
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.13
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MILB
+Onset time             : 10-AUG-2015_10:23:33.943
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -5.33
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MILB
+Onset time             : 10-AUG-2015_10:13:25.094
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.46
+Amplitude (nm)         : 315.5
+Vel. Amplitude (nm/sec): 1360.7
+Amplitude Time (sec)   :  2.89
+Ampl&Period Source     : direct
+Residual Time          :  -0.17
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  307.41
+Theo. Backazimuth (deg):   82.61
+Distance (deg)         : 46.093
+Magnitude mb           : 6.1
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MILB
+Onset time             : 10-AUG-2015_10:14:16.496
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.32
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MILB
+Onset time             : 10-AUG-2015_10:14:42.466
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.31
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MOX
+Onset time             : 10-AUG-2015_10:19:31.381
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.74
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  308.33
+Theo. Backazimuth (deg):   85.04
+Distance (deg)         : 44.522
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MOX
+Onset time             : 10-AUG-2015_10:20:56.070
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -0.73
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MOX
+Onset time             : 10-AUG-2015_10:23:06.188
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.65
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MOX
+Onset time             : 10-AUG-2015_10:13:12.994
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.56
+Amplitude (nm)         : 348.0
+Vel. Amplitude (nm/sec): 1402.9
+Amplitude Time (sec)   :  2.88
+Ampl&Period Source     : direct
+Residual Time          :  -0.01
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  308.33
+Theo. Backazimuth (deg):   85.04
+Distance (deg)         : 44.522
+Magnitude mb           : 6.0
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : MOX
+Onset time             : 10-AUG-2015_10:14:03.491
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.17
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NEUB
+Onset time             : 10-AUG-2015_10:19:27.881
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.66
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  309.10
+Theo. Backazimuth (deg):   85.71
+Distance (deg)         : 44.379
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NEUB
+Onset time             : 10-AUG-2015_10:20:52.620
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.08
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NEUB
+Onset time             : 10-AUG-2015_10:23:02.638
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   3.47
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NEUB
+Onset time             : 10-AUG-2015_10:13:11.444
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.42
+Amplitude (nm)         : 475.5
+Vel. Amplitude (nm/sec): 2105.9
+Amplitude Time (sec)   :  3.05
+Ampl&Period Source     : direct
+Residual Time          :  -0.45
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  309.10
+Theo. Backazimuth (deg):   85.71
+Distance (deg)         : 44.379
+Magnitude mb           : 6.0
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NEUB
+Onset time             : 10-AUG-2015_10:14:01.796
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :  -0.13
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NEUB
+Onset time             : 10-AUG-2015_10:14:28.745
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.13
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NRDL
+Onset time             : 10-AUG-2015_10:19:41.781
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.72
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  311.05
+Theo. Backazimuth (deg):   85.78
+Distance (deg)         : 45.312
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NRDL
+Onset time             : 10-AUG-2015_10:21:06.220
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.63
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NRDL
+Onset time             : 10-AUG-2015_10:23:18.688
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   3.87
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NRDL
+Onset time             : 10-AUG-2015_10:13:19.244
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.58
+Amplitude (nm)         : 555.8
+Vel. Amplitude (nm/sec): 2217.4
+Amplitude Time (sec)   :  2.97
+Ampl&Period Source     : direct
+Residual Time          :   0.17
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  311.05
+Theo. Backazimuth (deg):   85.78
+Distance (deg)         : 45.312
+Magnitude mb           : 6.2
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NRDL
+Onset time             : 10-AUG-2015_10:14:08.395
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.02
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : NRDL
+Onset time             : 10-AUG-2015_10:14:36.091
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.07
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : PLN
+Onset time             : 10-AUG-2015_10:19:26.131
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.26
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  308.06
+Theo. Backazimuth (deg):   85.26
+Distance (deg)         : 44.190
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : PLN
+Onset time             : 10-AUG-2015_10:20:50.420
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.28
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : PLN
+Onset time             : 10-AUG-2015_10:13:10.294
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.51
+Amplitude (nm)         : 253.4
+Vel. Amplitude (nm/sec): 1057.7
+Amplitude Time (sec)   :  2.89
+Ampl&Period Source     : direct
+Residual Time          :  -0.09
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  308.06
+Theo. Backazimuth (deg):   85.26
+Distance (deg)         : 44.190
+Magnitude mb           : 5.7
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : PLN
+Onset time             : 10-AUG-2015_10:14:00.596
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :   0.38
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : PLN
+Onset time             : 10-AUG-2015_10:14:27.242
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RGN
+Onset time             : 10-AUG-2015_10:19:11.581
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.61
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  313.90
+Theo. Backazimuth (deg):   90.40
+Distance (deg)         : 43.325
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RGN
+Onset time             : 10-AUG-2015_10:20:36.620
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.76
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RGN
+Onset time             : 10-AUG-2015_10:22:29.246
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -5.68
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RGN
+Onset time             : 10-AUG-2015_10:13:03.344
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Period (sec)           :  1.35
+Amplitude (nm)         : 1531.9
+Vel. Amplitude (nm/sec): 7127.8
+Amplitude Time (sec)   :  3.05
+Ampl&Period Source     : direct
+Residual Time          :   0.54
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  313.90
+Theo. Backazimuth (deg):   90.40
+Distance (deg)         : 43.325
+Magnitude mb           : 6.6
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RGN
+Onset time             : 10-AUG-2015_10:13:53.496
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RJOB
+Onset time             : 10-AUG-2015_10:19:22.931
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.10
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  304.07
+Theo. Backazimuth (deg):   82.87
+Distance (deg)         : 44.058
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RJOB
+Onset time             : 10-AUG-2015_10:20:49.120
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.52
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RJOB
+Onset time             : 10-AUG-2015_10:22:38.657
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -3.13
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RJOB
+Onset time             : 10-AUG-2015_10:13:08.944
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.15
+Amplitude (nm)         : 549.1
+Vel. Amplitude (nm/sec): 3003.1
+Amplitude Time (sec)   :  2.10
+Ampl&Period Source     : direct
+Residual Time          :   0.37
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  304.07
+Theo. Backazimuth (deg):   82.87
+Distance (deg)         : 44.058
+Magnitude mb           : 6.2
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RJOB
+Onset time             : 10-AUG-2015_10:13:59.368
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.41
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RJOB
+Onset time             : 10-AUG-2015_10:14:25.726
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.18
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ROTZ
+Onset time             : 10-AUG-2015_10:19:28.281
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.00
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  307.03
+Theo. Backazimuth (deg):   84.56
+Distance (deg)         : 44.223
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ROTZ
+Onset time             : 10-AUG-2015_10:20:53.070
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.32
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ROTZ
+Onset time             : 10-AUG-2015_10:22:48.067
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :   1.59
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ROTZ
+Onset time             : 10-AUG-2015_10:13:11.094
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Period (sec)           :  1.50
+Amplitude (nm)         : 368.8
+Vel. Amplitude (nm/sec): 1545.7
+Amplitude Time (sec)   :  2.95
+Ampl&Period Source     : direct
+Residual Time          :   0.54
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  307.03
+Theo. Backazimuth (deg):   84.56
+Distance (deg)         : 44.223
+Magnitude mb           : 5.9
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ROTZ
+Onset time             : 10-AUG-2015_10:14:01.540
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.26
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : ROTZ
+Onset time             : 10-AUG-2015_10:14:27.695
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.32
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RUE
+Onset time             : 10-AUG-2015_10:19:07.831
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.18
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  310.86
+Theo. Backazimuth (deg):   88.56
+Distance (deg)         : 43.070
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RUE
+Onset time             : 10-AUG-2015_10:20:31.720
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -2.19
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RUE
+Onset time             : 10-AUG-2015_10:22:25.717
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -4.46
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RUE
+Onset time             : 10-AUG-2015_10:13:00.694
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Period (sec)           :  1.25
+Amplitude (nm)         : 466.5
+Vel. Amplitude (nm/sec): 2340.8
+Amplitude Time (sec)   :  2.95
+Ampl&Period Source     : direct
+Residual Time          :  -0.81
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  310.86
+Theo. Backazimuth (deg):   88.56
+Distance (deg)         : 43.070
+Magnitude mb           : 6.1
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RUE
+Onset time             : 10-AUG-2015_10:13:51.009
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : RUE
+Onset time             : 10-AUG-2015_10:14:17.530
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : SKMB
+Onset time             : 10-AUG-2015_10:19:46.481
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.10
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  314.20
+Theo. Backazimuth (deg):   87.46
+Distance (deg)         : 45.579
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : SKMB
+Onset time             : 10-AUG-2015_10:21:11.520
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.09
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : SKMB
+Onset time             : 10-AUG-2015_10:23:29.238
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -1.62
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : SKMB
+Onset time             : 10-AUG-2015_10:13:21.694
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.54
+Amplitude (nm)         : 973.2
+Vel. Amplitude (nm/sec): 3976.8
+Amplitude Time (sec)   :  3.00
+Ampl&Period Source     : direct
+Residual Time          :   1.32
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  314.20
+Theo. Backazimuth (deg):   87.46
+Distance (deg)         : 45.579
+Magnitude mb           : 6.6
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : STU
+Onset time             : 10-AUG-2015_10:19:57.631
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -2.18
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  305.97
+Theo. Backazimuth (deg):   81.54
+Distance (deg)         : 46.303
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : STU
+Onset time             : 10-AUG-2015_10:21:21.920
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -1.19
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : STU
+Onset time             : 10-AUG-2015_10:23:39.825
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -5.55
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : STU
+Onset time             : 10-AUG-2015_10:13:26.844
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.66
+Amplitude (nm)         : 479.4
+Vel. Amplitude (nm/sec): 1815.4
+Amplitude Time (sec)   :  2.90
+Ampl&Period Source     : direct
+Residual Time          :   0.15
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  305.97
+Theo. Backazimuth (deg):   81.54
+Distance (deg)         : 46.303
+Magnitude mb           : 6.3
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : STU
+Onset time             : 10-AUG-2015_10:14:18.130
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.34
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : TNS
+Onset time             : 10-AUG-2015_10:20:02.231
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.83
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  308.05
+Theo. Backazimuth (deg):   82.40
+Distance (deg)         : 46.582
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : TNS
+Onset time             : 10-AUG-2015_10:21:27.120
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.03
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : TNS
+Onset time             : 10-AUG-2015_10:23:41.888
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : TNS
+Onset time             : 10-AUG-2015_10:13:28.994
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.15
+Amplitude (nm)         : 131.7
+Vel. Amplitude (nm/sec): 718.9
+Amplitude Time (sec)   :  2.90
+Ampl&Period Source     : direct
+Residual Time          :  -0.17
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  308.05
+Theo. Backazimuth (deg):   82.40
+Distance (deg)         : 46.582
+Magnitude mb           : 6.0
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : TNS
+Onset time             : 10-AUG-2015_10:14:20.418
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.32
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : TNS
+Onset time             : 10-AUG-2015_10:14:46.063
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.25
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBBA
+Onset time             : 10-AUG-2015_10:19:45.731
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.30
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  308.71
+Theo. Backazimuth (deg):   84.06
+Distance (deg)         : 45.527
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBBA
+Onset time             : 10-AUG-2015_10:21:10.570
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.20
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBBA
+Onset time             : 10-AUG-2015_10:23:23.438
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -5.59
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBBA
+Onset time             : 10-AUG-2015_10:13:20.594
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  0.87
+Amplitude (nm)         : 87.5
+Vel. Amplitude (nm/sec): 635.0
+Amplitude Time (sec)   :  2.83
+Ampl&Period Source     : direct
+Residual Time          :  -0.31
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  308.71
+Theo. Backazimuth (deg):   84.06
+Distance (deg)         : 45.527
+Magnitude mb           : 5.8
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBBA
+Onset time             : 10-AUG-2015_10:14:11.911
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.48
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBBA
+Onset time             : 10-AUG-2015_10:14:38.113
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.01
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBR
+Onset time             : 10-AUG-2015_10:19:48.581
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.32
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  304.34
+Theo. Backazimuth (deg):   81.09
+Distance (deg)         : 45.864
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBR
+Onset time             : 10-AUG-2015_10:21:14.120
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   1.15
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBR
+Onset time             : 10-AUG-2015_10:23:37.472
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Applied filter         : KIRNOS
+Component              : R
+Residual Time          :  -4.43
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBR
+Onset time             : 10-AUG-2015_10:13:22.944
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.16
+Amplitude (nm)         : 139.4
+Vel. Amplitude (nm/sec): 757.4
+Amplitude Time (sec)   :  1.40
+Ampl&Period Source     : direct
+Residual Time          :   0.13
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  304.34
+Theo. Backazimuth (deg):   81.09
+Distance (deg)         : 45.864
+Magnitude mb           : 5.9
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBR
+Onset time             : 10-AUG-2015_10:14:13.007
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.99
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : UBR
+Onset time             : 10-AUG-2015_10:14:40.110
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.27
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WERD
+Onset time             : 10-AUG-2015_10:13:09.544
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.32
+Amplitude (nm)         : 227.9
+Vel. Amplitude (nm/sec): 1085.3
+Amplitude Time (sec)   :  2.90
+Ampl&Period Source     : direct
+Residual Time          :  -0.13
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  307.99
+Theo. Backazimuth (deg):   85.33
+Distance (deg)         : 44.099
+Magnitude mb           : 5.7
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WERD
+Onset time             : 10-AUG-2015_10:13:59.996
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Component              : Z
+Residual Time          :  -0.71
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WERD
+Onset time             : 10-AUG-2015_10:14:26.529
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WERN
+Onset time             : 10-AUG-2015_10:13:09.594
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  2.00
+Amplitude (nm)         : 386.9
+Vel. Amplitude (nm/sec): 1213.9
+Amplitude Time (sec)   :  3.09
+Ampl&Period Source     : direct
+Residual Time          :   0.18
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  307.76
+Theo. Backazimuth (deg):   85.21
+Distance (deg)         : 44.068
+Magnitude mb           : 5.8
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WERN
+Onset time             : 10-AUG-2015_10:14:00.265
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.08
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WERN
+Onset time             : 10-AUG-2015_10:14:26.366
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WET
+Onset time             : 10-AUG-2015_10:19:22.231
+Onset type             : emergent
+Phase name             : S
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -0.53
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.80
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  306.07
+Theo. Backazimuth (deg):   84.38
+Distance (deg)         : 43.847
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WET
+Onset time             : 10-AUG-2015_10:20:46.970
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :   0.93
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WET
+Onset time             : 10-AUG-2015_10:22:32.838
+Onset type             : emergent
+Phase name             : SS
+Event Type             : teleseismic quake
+Component              : R
+Residual Time          :  -4.90
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 21.15
+Beam-Azimuth (deg)     :   86.80
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WET
+Onset time             : 10-AUG-2015_10:13:07.644
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  2.03
+Amplitude (nm)         : 331.1
+Vel. Amplitude (nm/sec): 1023.7
+Amplitude Time (sec)   :  2.01
+Ampl&Period Source     : direct
+Residual Time          :   0.20
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  306.07
+Theo. Backazimuth (deg):   84.38
+Distance (deg)         : 43.847
+Magnitude mb           : 5.7
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WET
+Onset time             : 10-AUG-2015_10:14:24.312
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WLF
+Onset time             : 10-AUG-2015_10:21:46.070
+Onset type             : emergent
+Phase name             : sS
+Event Type             : teleseismic quake
+Component              : R
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg): 14.65
+Beam-Azimuth (deg)     :   84.30
+Theo. Azimuth (deg)    :  307.60
+Theo. Backazimuth (deg):   80.35
+Distance (deg)         : 48.132
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WLF
+Onset time             : 10-AUG-2015_10:13:41.194
+Onset type             : emergent
+Phase name             : P
+Event Type             : teleseismic quake
+Component              : Z
+Period (sec)           :  1.28
+Amplitude (nm)         : 321.5
+Vel. Amplitude (nm/sec): 1579.8
+Amplitude Time (sec)   :  2.96
+Ampl&Period Source     : direct
+Residual Time          :  -0.09
+Quality number         : 9
+Pick Type              : automatic
+Weight                 : 0
+Beam-Slowness (sec/deg):  7.85
+Beam-Azimuth (deg)     :   85.20
+Theo. Azimuth (deg)    :  307.60
+Theo. Backazimuth (deg):   80.35
+Distance (deg)         : 48.132
+Magnitude mb           : 6.3
+Mean Magnitude mb      : 6.1
+Latitude               : +36.230
+Longitude              :  +71.380
+Depth (km)             : 238.2
+Depth type             : (*) less well constrained
+Origin time            : 10-AUG-2015_10:05:25.808
+Region Table           : Flinn-Engdahl
+Region ID              : 717
+Source region          : Afghanistan-Tajikistan border region
+Location method        : relative travel times
+Location quality       : reliable
+Velocity Model         : bgr
+Location Input Params  : 20
+No. of Stations used   : 30
+Reference Latitude     : +49.692
+Reference Longitude    :  +11.222
+Reference Location Name: GRA1
+Source of Information  : BGR
+Error in Depth (km)    :   7.18
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WLF
+Onset time             : 10-AUG-2015_10:14:32.918
+Onset type             : emergent
+Phase name             : pP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :   0.34
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.04
+Beam-Azimuth (deg)     :   84.10
+Analyst                : tp
+--- End of Phase ---
+
+
+Event ID               : 1150810006
+Station code           : WLF
+Onset time             : 10-AUG-2015_10:14:58.700
+Onset type             : emergent
+Phase name             : sP
+Event Type             : teleseismic quake
+Applied filter         : G_WWSSN_SP
+Component              : Z
+Residual Time          :  -0.13
+Quality number         : 9
+Pick Type              : manual
+Weight                 : 0
+Beam-Slowness (sec/deg):  8.03
+Beam-Azimuth (deg)     :   84.20
+Analyst                : tp
+--- End of Phase ---
+
+

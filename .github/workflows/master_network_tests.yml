@@ -1,0 +1,55 @@
+# This workflow runs anytime new commits are added to master branch.
+# It runs all network tests on the master branch using linux and one
+# python version.
+name: master_network_tests
+on:
+  push:
+    branches:
+      - master
+
+# Set globally scoped environmental variables.
+env:
+  OBSPY_GITHUB_BRANCH: release_0.10.0
+
+jobs:
+  network_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup conda
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          python-version: 3.7
+          activate-environment: test
+          environment-file: .github/test_conda_env.yml
+
+      - name: install obspy
+        shell: bash -l {0}
+        run: |
+          pip install -e .
+
+      - name: install obspy github api
+        shell: bash -l {0}
+        run: |
+          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+
+      - name: run test suite
+        shell: bash -l {0}
+        run: |
+          export MODULELIST=`obshub get-module-list --group all --sep ','`
+          export MODULELISTSPACES=`obshub get-module-list --group default --sep ' '`
+          export MODULES=${MODULELISTSPACES//obspy.}
+          coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" $MODULELS
+          coverage xml -o coverage.xml
+
+      - name: upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:eu.emsc/unid">
+    <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+      <time>
+        <value>2011-03-11T05:46:24.120000Z</value>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <arrival>
+        <pickID>smi:ch.ethz.sed/pick/117634</pickID>
+        <phase>Pn</phase>
+        <azimuth>12.0</azimuth>
+        <distance>0.5</distance>
+        <takeOffAngle>11.0</takeOffAngle>
+        <timeResidual>1.6</timeResidual>
+        <horizontalSlownessResidual>1.7</horizontalSlownessResidual>
+        <backazimuthResidual>1.8</backazimuthResidual>
+        <timeUsed>true</timeUsed>
+        <weight>0.48</weight>
+        <earthModelID>smi:ch.ethz.sed/earthmodel/U21</earthModelID>
+        <creationInfo>
+          <agencyID>EMSC</agencyID>
+          <agencyURI>smi:smi-registry/organization/EMSC</agencyURI>
+          <author>Erika Mustermann</author>
+          <authorURI>smi:smi-registry/organization/EMSC</authorURI>
+          <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
+          <version>1.0.1</version>
+        </creationInfo>
+      </arrival>
+      <arrival>
+        <pickID>smi:geonet.org.nz/pick/4965459</pickID>
+        <phase>P*</phase>
+        <horizontalSlownessUsed>true</horizontalSlownessUsed>
+        <weight>0.48</weight>
+      </arrival>
+      <arrival>
+        <pickID>smi:geonet.org.nz/pick/4965460</pickID>
+        <phase>P*</phase>
+        <backazimuthUsed>true</backazimuthUsed>
+        <weight>0.48</weight>
+      </arrival>
+      <arrival>
+        <pickID>smi:geonet.org.nz/pick/4965461</pickID>
+        <phase>P*</phase>
+        <timeUsed>true</timeUsed>
+        <horizontalSlownessUsed>true</horizontalSlownessUsed>
+        <backazimuthUsed>true</backazimuthUsed>
+        <weight>0.48</weight>
+      </arrival>
+    </origin>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:www.iris.edu/ws/event/query?originId=7680412</originReference>
+    </event>
+  </EventParameters>
+</seiscomp>

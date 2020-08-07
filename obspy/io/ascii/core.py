@@ -29,12 +29,8 @@ Simple ASCII time series formats
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import io
 
 import numpy as np
@@ -44,7 +40,21 @@ from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
 
 
-HEADER = "TIMESERIES %s_%s_%s_%s_%s, %d samples, %d sps, %.26s, %s, %s, %s\n"
+HEADER = ("TIMESERIES {network}_{station}_{location}_{channel}_{dataquality}, "
+          "{npts:d} samples, {sampling_rate} sps, {starttime!s:.26s}, "
+          "{format}, {dtype}, {unit}\n")
+
+
+def _format_header(stats, format, dataquality, dtype, unit):
+    sampling_rate = str(stats.sampling_rate)
+    if "." in sampling_rate and "E" not in sampling_rate.upper():
+        sampling_rate = sampling_rate.rstrip('0').rstrip('.')
+    header = HEADER.format(
+        network=stats.network, station=stats.station, location=stats.location,
+        channel=stats.channel, dataquality=dataquality, npts=stats.npts,
+        sampling_rate=sampling_rate, starttime=stats.starttime,
+        format=format, dtype=dtype, unit=unit)
+    return header
 
 
 def _is_slist(filename):
@@ -64,7 +74,7 @@ def _is_slist(filename):
     try:
         with open(filename, 'rt') as f:
             temp = f.readline()
-    except:
+    except Exception:
         return False
     if not temp.startswith('TIMESERIES'):
         return False
@@ -90,7 +100,7 @@ def _is_tspair(filename):
     try:
         with open(filename, 'rt') as f:
             temp = f.readline()
-    except:
+    except Exception:
         return False
     if not temp.startswith('TIMESERIES'):
         return False
@@ -151,7 +161,10 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality': temp[4]})
+        # don't put blank quality code into 'mseed' dictionary
+        # (quality code is mentioned as optional by format specs anyway)
+        if temp[4]:
+            stats.mseed = AttribDict({'dataquality': temp[4]})
         stats.ascii = AttribDict({'unit': parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
@@ -216,7 +229,10 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality': temp[4]})
+        # don't put blank quality code into 'mseed' dictionary
+        # (quality code is mentioned as optional by format specs anyway)
+        if temp[4]:
+            stats.mseed = AttribDict({'dataquality': temp[4]})
         stats.ascii = AttribDict({'unit': parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
@@ -229,7 +245,8 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     return stream
 
 
-def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
+def _write_slist(stream, filename, custom_fmt=None,
+                 **kwargs):  # @UnusedVariable
     """
     Writes a ASCII SLIST file.
 
@@ -242,6 +259,10 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
     :param stream: The ObsPy Stream object to write.
     :type filename: str
     :param filename: Name of file to write.
+    :type custom_fmt: str
+    :param custom_fmt: formatter for writing sample values. Defaults to None.
+        Using this parameter will set ``TYPE`` value in header to ``CUSTOM``
+        and ObsPy will raise an exception while trying to read that file.
 
     .. rubric:: Example
 
@@ -297,7 +318,7 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
             # quality code
             try:
                 dataquality = stats.mseed.dataquality
-            except:
+            except Exception:
                 dataquality = ''
             # sample type
             if trace.data.dtype.name.startswith('int'):
@@ -305,19 +326,21 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
                 fmt = '%d'
             elif trace.data.dtype.name.startswith('float'):
                 dtype = 'FLOAT'
-                fmt = '%f'
+                fmt = '%+.10e'
+
             else:
                 raise NotImplementedError
+            # fmt
+            if custom_fmt is not None:
+                dtype = _determine_dtype(custom_fmt)
+                fmt = custom_fmt
             # unit
             try:
                 unit = stats.ascii.unit
-            except:
+            except Exception:
                 unit = ''
             # write trace header
-            header = HEADER % (stats.network, stats.station, stats.location,
-                               stats.channel, dataquality, stats.npts,
-                               stats.sampling_rate, stats.starttime, 'SLIST',
-                               dtype, unit)
+            header = _format_header(stats, 'SLIST', dataquality, dtype, unit)
             fh.write(header.encode('ascii', 'strict'))
             # write data
             rest = stats.npts % 6
@@ -333,7 +356,8 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
                          '\n').encode('ascii', 'strict'))
 
 
-def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
+def _write_tspair(stream, filename, custom_fmt=None,
+                  **kwargs):  # @UnusedVariable
     """
     Writes a ASCII TSPAIR file.
 
@@ -346,6 +370,10 @@ def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
     :param stream: The ObsPy Stream object to write.
     :type filename: str
     :param filename: Name of file to write.
+    :type custom_fmt: str
+    :param custom_fmt: formatter for writing sample values. Defaults to None.
+        Using this parameter will set ``TYPE`` value in header to ``CUSTOM``
+        and ObsPy will raise an exception while trying to read that file.
 
     .. rubric:: Example
 
@@ -408,7 +436,7 @@ def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
             # quality code
             try:
                 dataquality = stats.mseed.dataquality
-            except:
+            except Exception:
                 dataquality = ''
             # sample type
             if trace.data.dtype.name.startswith('int'):
@@ -416,27 +444,47 @@ def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
                 fmt = '%d'
             elif trace.data.dtype.name.startswith('float'):
                 dtype = 'FLOAT'
-                fmt = '%f'
-            else:
-                raise NotImplementedError
+                fmt = '%+.10e'
+            # fmt
+            if custom_fmt is not None:
+                dtype = _determine_dtype(custom_fmt)
+                fmt = custom_fmt
             # unit
             try:
                 unit = stats.ascii.unit
-            except:
+            except Exception:
                 unit = ''
             # write trace header
-            header = HEADER % (stats.network, stats.station, stats.location,
-                               stats.channel, dataquality, stats.npts,
-                               stats.sampling_rate, stats.starttime, 'TSPAIR',
-                               dtype, unit)
+            header = _format_header(stats, 'TSPAIR', dataquality, dtype, unit)
             fh.write(header.encode('ascii', 'strict'))
             # write data
-            times = np.linspace(stats.starttime.timestamp,
-                                stats.endtime.timestamp, stats.npts)
-            for t, d in zip(times, trace.data):
+            for t, d in zip(trace.times(type='utcdatetime'), trace.data):
                 # .26s cuts the Z from the time string
-                line = ('%.26s  ' + fmt + '\n') % (UTCDateTime(t), d)
+                line = ('%.26s  ' + fmt + '\n') % (t, d)
                 fh.write(line.encode('ascii', 'strict'))
+
+
+def _determine_dtype(custom_fmt):
+    """
+    :type custom_fmt: str
+    :param custom_fmt: Python string formatter.
+    :rtype: str
+    :return: Datatype string for writing in header. Currently supported
+        are 'INTEGER', 'FLOAT' and `CUSTOM`.
+    :raises ValueError: if provided string is empty.
+    """
+    floats = ('e', 'f', 'g')
+    ints = ('d', 'i')
+    try:
+        if custom_fmt[-1].lower() in floats:
+            return 'FLOAT'
+        elif custom_fmt[-1].lower() in ints:
+            return 'INTEGER'
+        else:
+            return 'CUSTOM'
+    except IndexError:
+        raise ValueError('Provided string is not valid for determining ' +
+                         'datatype. Provide a proper Python string formatter')
 
 
 def _parse_data(data, data_type):
@@ -453,7 +501,7 @@ def _parse_data(data, data_type):
     if data_type == "INTEGER":
         dtype = np.int_
     elif data_type == "FLOAT":
-        dtype = np.float32
+        dtype = np.float64
     else:
         raise NotImplementedError
     # Seek to the beginning of the StringIO.

@@ -53,7 +53,7 @@ tjm@iris.washington.edu
 Modified
 i.dricker@isti.com
 17 July, 2001
-Modified (MS Windows port) 
+Modified (MS Windows port)
 e.thomas@isti.com
 28 August, 2001
 
@@ -73,20 +73,20 @@ RESP format, but unexpected, evalresp now skips to the next line.
 Added support for blank lines within and at the end of a RESP file.
 
 version 2.3.22 (21-Oct-2003)
-FIXED: evaluation of the response for an IIR filter. Versions before 
+FIXED: evaluation of the response for an IIR filter. Versions before
 2.3.20 computed IIR PZ incorrectly. Versions 3.2.20-21 computed amplitude
 of the filter properly, while PHASE was improperly multiplied by (-1),
 mirrored aross y = 0. This release fixes the problem.
 
 ADDED: Interpolation of blockette 55 (to enable this feature, the program
 should be compiled with -DB55_INTRPL compilation flag, which is not set
-by default). This feature is experimaental and not recommended for the 
-general use. 
+by default). This feature is experimaental and not recommended for the
+general use.
 
 version 2.3.21 (21-May-2002)
 Added a partial support for generic response blockette. Partial means that
 if such blockette is found, evalresp ignores the blockette, prints a warning
-and continues execution. Previous versions considered the generic response 
+and continues execution. Previous versions considered the generic response
 blockette to be offensive and terminated the processing of the response
 
 version 3.2.20 (28-August-2001)
@@ -131,14 +131,14 @@ These modifications include:
        a stage 0.  If generic response blockette is recognized in
        the  input,  evalresp  ignores  the user-defined frequency
        sampling from the command line. The ouput, therefore, con-
-       tains responses for only those frequencies which have been 			
+       tains responses for only those frequencies which have been
        defined in the generic response blockette.
 
 (3)    The source code is cleaned; all unused variables are removed
 
-(4)    The man pages are modified to reflect the current version of 
-       the evalresp. 
-	 
+(4)    The man pages are modified to reflect the current version of
+       the evalresp.
+
 version 3.0 to version 3.2:
 
 (1) Error handling improved.  In version 3.0, if the end of the file was
@@ -165,13 +165,13 @@ version 3.0 to version 3.2:
         network because the line containing the network code was missing,
         evalresp v3.0 would have reported
 
-        EVRESP ERROR: get_line; blkt and fld numbers do not match expected values
+        EVRESP ERROR: get_line; Blkt and fld numbers do not match expected values
                 blkt_xpt=B050, blkt_found=B052; fld_xpt=F16, fld_found=F04, skipping
                 to next response now
 
         whereas evalresp v3.1 reports (for the same parsing error)
 
-        EVRESP ERROR (RESP.SR.ANMO.LHZ): get_line; blkt and fld numbers do not match
+        EVRESP ERROR (RESP.SR.ANMO.LHZ): get_line; Blkt and fld numbers do not match
             expected values blkt_xpt=B050, blkt_found=B052; fld_xpt=F16, fld_found=F04,
             skipping to next response now
 

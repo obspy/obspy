@@ -1,3 +1,88 @@
+2017.283: 2.19.5
+	- msr_endtime(): calculate correct end time during a leap second.
+	- Fixed signedness comparison warning.
+
+2017.125:
+	- Export LM_SIZEOF_OFF_T on Windows via libmseed.def.
+
+2017.118: 2.19.4
+	- Add global LM_SIZEOF_OFF_T variable that is set to the size of
+	the off_t data type as determined at compile time.
+
+2017.075: 2.19.3
+	- Add missing public, global symbols to libmseed.map, thanks
+	to Elliott Sales de Andrade.
+
+2017.061: 2.19.2
+	- Provide install target in Makefile thanks to by Pierre Duperray.
+	- Deprecate dynamic build target, the shared target will now build
+	shared or dynamic (Darwin) libraries depending on the system.
+	- Limit symbols exported in shared libraries to public interfaces
+	as defined in libmseed.map, thanks again to Pierre Duperray.
+	- Allow tests to work on Darwin with dynamic libraries.
+
+2017.060: 2.19.1
+	- Derive versioning of shared/dynamic library from canonical version
+	defined as LIBMSEED_VERSION in libmseed.h.
+	- Apply updates to more standardized use of NAME and typos in man pages,
+	submitted by Pierre Duperray.
+
+2017.053: 2.19
+	- Incorporate lmplatform.h details into libmseed.h for improved usage.
+	All that is needed is the static/shared/dynamic library and libmseed.h.
+	- Avoid undefined left shifts of signed values that would go out of
+	range and specify the types of some constants.
+
+2016.290:
+	- Remove dependency on ntwin32.mak for Windows nmake makefiles, now
+	building works in plain MSVC development environments.
+
+2016.286: 2.18
+	- Remove limitation on sample rate before calling ms_genfactmult()
+	in the normal path of packing records.  Previously generating the
+	factor and multiplier was not attempted for rates higher than
+	32,767.
+
+2016.281: 2.18rc4
+	- ms_genfactmult() now support a much larger range of integer
+	sample rates and periods.
+	- ms_genfactmult() now sets the factor and multiplier using the
+	SECONDS/SAMPLE notation for sample rates less than 1.0 to retain
+	precision for low rates.
+	- ms_genfactmult() now assumes the specified rate is a sample
+	period in seconds if the samprate value is negative.
+	- Add ms_rsqrt64() as a general use reciprocal sqrt for doubles.
+	- Use memcpy() instead of assignment when unpacking float32 and
+	float64 samples to avoid problems with NaN's.  Thanks Lion Krischer.
+	- Add test for reading records without Blockette 1000.
+	- Reformat all source code using included clang-format profile.
+
+2016.277:
+	- A more elegant sanity check for output length in packing by mbyt.
+
+2016:276: 2.18rc3
+	- Improvements for test suite, more consistency.
+	- Remove msr_decode_steim? from libmseed.def, they are internal.
+	- Add sanity to length check before memset calls in packing functions.
+
+2016:274: 2.18rc2
+	- Check for environment variables ENCODE_DEBUG and DECODE_DEBUG
+	and set debugging output, at this point it is Steim frame details
+	and differences being encoded/decoded.
+	- Fix padding in steim[12] encoding routines.
+	- Remove unneeded output buffer checks in steim[12] decoding routines.
+
+2016.272: 2.18rc1
+	- Replace data sample packing and unpacking routines from qlib2 with
+	new routines developed from scratch.  All code is now LGPL licensed.
+	- Add test suite with tests for encoding, decoding, parsing, etc.
+	- Update licensing to GNU-LGPL version 3 and include (L)GPL licenses
+	in LICENSE.txt.
+
+2015.053:
+	- Define needed C99 int types for MSVC 2012 or earlier.  Previously
+	this was only done for versions earlier than MSVC 2010.
+
 2015.213: 2.17
 	- Round Fixed Section Data Header start time values to the nearest
 	tenth of millisecond and restrict the microsecond offset value
@@ -29,7 +114,7 @@
 	- Cleanup of lmplatform.h removing unneeded headers and using C99
 	standard headers except for a few platform specific cases.
 	- Convert all printf() and scanf() usage of %lld for 64-bit integers
-	to use the C99 PRId64 and SCNd64 macros for portability (MingGW).
+	to use the C99 PRId64 and SCNd64 macros for portability (MinGW).
 	- Change detection of Linux/Cygwin to set global define LMP_LINUX
 	instead of LMP_GLIB2 (now marked as deprecated).
 	- Change detection of Windows to set global define LMP_WIN instead

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """
+obspy.io.nied.knet - K-NET/KiK-net read support for ObsPy
+=========================================================
+
 Reading of the K-NET and KiK-net ASCII format as defined on
 http://www.kyoshin.bosai.go.jp.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import re
 
 import numpy as np
@@ -58,14 +57,15 @@ def _is_knet_ascii(filename_or_buf):
     :type filename_or_buf: str or file-like object.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_knet_ascii, reset_fp=True)
+        return _buffer_proxy(filename_or_buf, _internal_is_knet_ascii,
+                             reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
     except (OSError, UnicodeDecodeError):
         return False
 
 
-def __is_knet_ascii(buf):
+def _internal_is_knet_ascii(buf):
     """
     Checks if the file is a valid K-NET/KiK-net ASCII file.
 
@@ -117,7 +117,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     # Event information
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
-    dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S')
+    dt = UTCDateTime.strptime(dt, '%Y/%m/%d %H:%M:%S')
     # All times are in Japanese standard time which is 9 hours ahead of UTC
     dt -= 9 * 3600.
     hdrdict['knet']['evot'] = dt
@@ -178,7 +178,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     dt = flds[2] + ' ' + flds[3]
     # A 15 s delay is added to the record time by the
     # the K-NET and KiK-Net data logger
-    dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S') - 15.0
+    dt = UTCDateTime.strptime(dt, '%Y/%m/%d %H:%M:%S') - 15.0
     # All times are in Japanese standard time which is 9 hours ahead of UTC
     dt -= 9 * 3600.
     hdrdict['starttime'] = dt
@@ -220,7 +220,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     _i += 1
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
-    dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S')
+    dt = UTCDateTime.strptime(dt, '%Y/%m/%d %H:%M:%S')
     # All times are in Japanese standard time which is 9 hours ahead of UTC
     dt -= 9 * 3600.
     hdrdict['knet']['last correction'] = dt
@@ -248,10 +248,10 @@ def _read_knet_ascii(filename_or_buf, **kwargs):
     :param filename: K-NET/KiK-net ASCII file to be read.
     :type filename: str or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __read_knet_ascii, **kwargs)
+    return _buffer_proxy(filename_or_buf, _internal_read_knet_ascii, **kwargs)
 
 
-def __read_knet_ascii(buf, **kwargs):
+def _internal_read_knet_ascii(buf, **kwargs):
     """
     Reads a K-NET/KiK-net ASCII file and returns an ObsPy Stream object.
 

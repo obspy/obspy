@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .blockette import Blockette
 from ..fields import Float, Integer, Loop
-from ..utils import blockette_34_lookup, format_RESP
+from ..utils import blockette_34_lookup, format_resp
 
 
 class Blockette055(Blockette):
@@ -38,32 +34,36 @@ class Blockette055(Blockette):
     ]
 
     # Changes the name of the blockette because of an error in XSEED 1.0
-    def get_XML(self, *args, **kwargs):
-        xml = Blockette.get_XML(self, *args, **kwargs)
+    def get_xml(self, *args, **kwargs):
+        xml = Blockette.get_xml(self, *args, **kwargs)
         if self.xseed_version == '1.0':
             xml.tag = 'reponse_list'
         return xml
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
-        string = \
-            '#\t\t+                     +---------------------------------+' +\
-            '                     +\n' + \
-            '#\t\t+                     |   Response List,%6s ch %s   |' + \
-            '                     +\n' % (station, channel) + \
-            '#\t\t+                     +---------------------------------+' +\
-            '                     +\n' + \
-            '#\t\t\n' + \
-            'B055F03     Stage sequence number:                 %s\n' \
-            % self.stage_sequence_number + \
-            'B055F04     Response in units lookup:              %s\n' \
-            % blockette_34_lookup(abbreviations, self.stage_input_units) + \
-            'B055F05     Response out units lookup:             %s\n' \
-            % blockette_34_lookup(abbreviations, self.stage_output_units) + \
-            'B055F06     Number of responses:                   %s\n' \
-            % self.number_of_responses_listed
+        string = (
+            '#\t\t+                     +---------------------------------+'
+            '                     +\n'
+            '#\t\t+                     |   Response List,%6s ch %s   |'
+            '                     +\n'
+            '#\t\t+                     +---------------------------------+'
+            '                     +\n'
+            '#\t\t\n'
+            'B055F03     Stage sequence number:                 %s\n'
+
+            'B055F04     Response in units lookup:              %s\n'
+
+            'B055F05     Response out units lookup:             %s\n'
+
+            'B055F06     Number of responses:                   %s\n') % (
+                station, channel, self.stage_sequence_number,
+                blockette_34_lookup(abbreviations, self.stage_input_units),
+                blockette_34_lookup(abbreviations, self.stage_output_units),
+                self.number_of_responses_listed)
+
         if self.number_of_responses_listed:
             string += \
                 '#\t\tResponses:\n' + \
@@ -72,17 +72,17 @@ class Blockette055(Blockette):
             if self.number_of_responses_listed > 1:
                 for _i in range(self.number_of_responses_listed):
                     string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' % \
-                        (format_RESP(self.frequency[_i], 6),
-                         format_RESP(self.amplitude[_i], 6),
-                         format_RESP(self.amplitude_error[_i], 6),
-                         format_RESP(self.phase_angle[_i], 6),
-                         format_RESP(self.phase_error[_i], 6))
+                        (format_resp(self.frequency[_i], 6),
+                         format_resp(self.amplitude[_i], 6),
+                         format_resp(self.amplitude_error[_i], 6),
+                         format_resp(self.phase_angle[_i], 6),
+                         format_resp(self.phase_error[_i], 6))
             else:
                 string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' % \
-                    (format_RESP(self.frequency, 6),
-                     format_RESP(self.amplitude, 6),
-                     format_RESP(self.amplitude_error, 6),
-                     format_RESP(self.phase_angle, 6),
-                     format_RESP(self.phase_error, 6))
+                    (format_resp(self.frequency, 6),
+                     format_resp(self.amplitude, 6),
+                     format_resp(self.amplitude_error, 6),
+                     format_resp(self.phase_angle, 6),
+                     format_resp(self.phase_error, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()

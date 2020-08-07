@@ -8,7 +8,13 @@
 #
 # Copyright (C) 2010 Lars Krieger, Sebastian Heimann
 # --------------------------------------------------------------------
+#
+# Completely skip this file for flake8 testing - it is not our code.
+#
+# flake8: noqa
 """
+MoPaD command line utility.
+
 USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 
 ::
@@ -63,16 +69,11 @@ USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import io
 import math
 import os
 import os.path
 import sys
-import warnings
 
 import numpy as np
 
@@ -219,7 +220,7 @@ class MomentTensor:
         if len(mech) == 3 or len(mech) == 4:
             try:
                 [float(val) for val in mech]
-            except:
+            except Exception:
                 msg = "angles must be given as floats, separated by commas"
                 sys.exit('\n  ERROR -  %s\n  ' % msg)
 
@@ -359,15 +360,13 @@ class MomentTensor:
 
         # eigen values can be zero in some cases. this is handled in the
         # following try/except.
-        with warnings.catch_warnings(record=True):
-            np_err = np.seterr(all="warn")
+        with np.errstate(all='ignore'):
             F = -eigenw_devi[0] / eigenw_devi[2]
 
             M_DC = \
                 eigenw[2] * (1 - 2 * F) * (np.outer(a3, a3) - np.outer(a2, a2))
             M_CLVD = eigenw[2] * F * (2 * np.outer(a3, a3) - np.outer(a2, a2) -
                                       np.outer(a1, a1))
-            np.seterr(**np_err)
 
         try:
             M_DC_percentage = int(round((1 - 2 * abs(F)) * 100, 6))
@@ -1809,7 +1808,7 @@ def fancy_matrix(m_in):
                 out += "  \\ %5.2F %5.2F %5.2F /\n" % \
                     (m[2, 0], m[2, 1], m[2, 2])
                 return out
-    except:
+    except Exception:
         pass
 
     return "\n  / %5.2F %5.2F %5.2F \\\n" % (m[0, 0], m[0, 1], m[0, 2]) + \
@@ -1890,30 +1889,30 @@ class BeachBall:
         if self._plot_outfile_format == 'svg':
             try:
                 matplotlib.use('SVG')
-            except:
+            except Exception:
                 matplotlib.use('Agg')
         elif self._plot_outfile_format == 'pdf':
             try:
                 matplotlib.use('PDF')
-            except:
+            except Exception:
                 matplotlib.use('Agg')
                 pass
         elif self._plot_outfile_format == 'ps':
             try:
                 matplotlib.use('PS')
-            except:
+            except Exception:
                 matplotlib.use('Agg')
                 pass
         elif self._plot_outfile_format == 'eps':
             try:
                 matplotlib.use('Agg')
-            except:
+            except Exception:
                 matplotlib.use('PS')
                 pass
         elif self._plot_outfile_format == 'png':
             try:
                 matplotlib.use('AGG')
-            except:
+            except Exception:
                 mp_out = matplotlib.use('GTKCairo')
                 if mp_out:
                     mp_out2 = matplotlib.use('Cairo')
@@ -1934,7 +1933,7 @@ class BeachBall:
             plotfig.savefig(outfile_abs_name, dpi=self._plot_dpi,
                             transparent=True, facecolor='k',
                             format=outfile_format)
-        except:
+        except Exception:
             print('ERROR!! -- Saving of plot not possible')
             return
         plt.close(667)
@@ -2345,7 +2344,7 @@ class BeachBall:
                                 self._plot_outfile_format, dpi=self._plot_dpi,
                                 transparent=True,
                                 format=self._plot_outfile_format)
-            except:
+            except Exception:
                 print('saving of plot not possible')
 
         plt.show()
@@ -2369,7 +2368,9 @@ class BeachBall:
         size = min(width, height)
 
         fig = plt.figure(34, figsize=(size, size))
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True, axisbg='#d5de9c')
+        axis_facecolor_kwargs = dict(facecolor='#d5de9c')
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True,
+                          **axis_facecolor_kwargs)
 
         r_steps = [0.000001]
         for i in (np.arange(4) + 1) * 0.2:
@@ -2401,7 +2402,7 @@ class BeachBall:
                             self._plot_outfile_format, dpi=self._plot_dpi,
                             transparent=True,
                             format=self._plot_outfile_format)
-            except:
+            except Exception:
                 print('saving of plot not possible')
         plt.show()
 
@@ -2703,10 +2704,8 @@ class BeachBall:
         norm_factor = max(np.abs([EWh, EWn, EWs]))
 
         # norm_factor is be zero in some cases
-        with warnings.catch_warnings(record=True):
-            np_err = np.seterr(all="warn")
+        with np.errstate(all='ignore'):
             [EWh, EWn, EWs] = [xx / norm_factor for xx in [EWh, EWn, EWs]]
-            np.seterr(**np_err)
 
         RHS = -EWs / (EWn * np.cos(phi) ** 2 + EWh * np.sin(phi) ** 2)
 
@@ -3562,7 +3561,7 @@ class BeachBall:
         point - (2,) array
 
         See
-        http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+        https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
         """
         # using take instead of getitem, about ten times faster, see
         # http://wesmckinney.com/blog/?p=215
@@ -3670,7 +3669,7 @@ class BeachBall:
                                 self._plot_outfile_format, dpi=self._plot_dpi,
                                 transparent=True,
                                 format=self._plot_outfile_format)
-            except:
+            except Exception:
                 print('saving of plot not possible')
         plt.show()
         plt.close('all')
@@ -4090,7 +4089,7 @@ def main(argv=None):
                 decomp = MT.get_full_decomposition()
                 try:
                     print(decomp)
-                except:
+                except Exception:
                     print(decomp.replace('°', ' deg'))
                 return
             else:
@@ -4201,7 +4200,7 @@ def main(argv=None):
                     raise
                 consistent_kwargs_dict['plot_viewpoint'] = \
                     [float(vp[0]), float(vp[1]), float(vp[2])]
-            except:
+            except Exception:
                 pass
 
         if args.GMT_projection:
@@ -4217,7 +4216,7 @@ def main(argv=None):
                         do_allowed_projections[gmtp]
                 else:
                     consistent_kwargs_dict['plot_projection'] = 'stereo'
-            except:
+            except Exception:
                 pass
 
         consistent_kwargs_dict['_GMT_scaling'] = args.GMT_scaling
@@ -4393,7 +4392,7 @@ def main(argv=None):
                     consistent_kwargs_dict['plot_outfile_format'] = \
                         lo_possible_formats[0]
 
-            except:
+            except Exception:
                 msg = 'please provide valid filename: <name>.<format>  !!\n'
                 msg += ' <format> must be svg, png, eps, pdf, or ps '
                 exit(msg)
@@ -4422,7 +4421,7 @@ def main(argv=None):
                     raise
                 consistent_kwargs_dict['plot_viewpoint'] = \
                     [float(vp[0]), float(vp[1]), float(vp[2])]
-            except:
+            except Exception:
                 pass
 
         if args.plot_projection:
@@ -4438,7 +4437,7 @@ def main(argv=None):
                         do_allowed_projections[ppl]
                 else:
                     consistent_kwargs_dict['plot_projection'] = 'stereo'
-            except:
+            except Exception:
                 pass
 
         if args.plot_show_upper_hemis:
@@ -4459,7 +4458,7 @@ def main(argv=None):
                     consistent_kwargs_dict['plot_size'] = 5
                 consistent_kwargs_dict['plot_aux_plot_size'] = \
                     consistent_kwargs_dict['plot_size']
-            except:
+            except Exception:
                 pass
 
         if args.plot_pressure_colour:
@@ -4481,7 +4480,7 @@ def main(argv=None):
                          float(sec_colour_raw[2]) / 255.)
                 else:
                     raise
-            except:
+            except Exception:
                 pass
 
         if args.plot_tension_colour:
@@ -4503,7 +4502,7 @@ def main(argv=None):
                          float(sec_colour_raw[2]) / 255.)
                 else:
                     raise
-            except:
+            except Exception:
                 pass
 
         if args.plot_total_alpha:
@@ -4548,16 +4547,16 @@ def main(argv=None):
                              float(sec_colour_raw[2]) / 255.)
                     else:
                         raise
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_faultplane_colour'] = 'k'
 
                 try:
                     if 0 <= float(fp_args[3]) <= 1:
                         consistent_kwargs_dict['plot_faultplane_alpha'] = \
                             float(fp_args[3])
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_faultplane_alpha'] = 1
-            except:
+            except Exception:
                 pass
 
         if args.plot_show_faultplanes:
@@ -4598,16 +4597,16 @@ def main(argv=None):
                              float(sec_colour_raw[2]) / 255.)
                     else:
                         raise
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_outerline_colour'] = 'k'
 
                 try:
                     if 0 <= float(fp_args[2]) <= 1:
                         consistent_kwargs_dict['plot_outerline_alpha'] = \
                             float(fp_args[2])
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_outerline_alpha'] = 1
-            except:
+            except Exception:
                 pass
 
         if args.plot_nodalline:
@@ -4638,15 +4637,15 @@ def main(argv=None):
                              float(sec_colour_raw[2]) / 255.)
                     else:
                         raise
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_nodalline_colour'] = 'k'
                 try:
                     if 0 <= float(fp_args[2]) <= 1:
                         consistent_kwargs_dict['plot_nodalline_alpha'] = \
                             float(fp_args[2])
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_nodalline_alpha'] = 1
-            except:
+            except Exception:
                 pass
 
         if args.plot_show_princ_axes:
@@ -4669,9 +4668,9 @@ def main(argv=None):
                     if 0 <= float(fp_args[2]) <= 1:
                         consistent_kwargs_dict['plot_princ_axes_alpha'] = \
                             float(fp_args[2])
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_princ_axes_alpha'] = 1
-            except:
+            except Exception:
                 pass
 
         if args.plot_show_basis_axes:
@@ -4694,7 +4693,6 @@ def main(argv=None):
                               RawDescriptionHelpFormatter,
                               RawTextHelpFormatter,
                               SUPPRESS)
-        from obspy.core.util.base import _get_deprecated_argument_action
 
         parser = ArgumentParser(prog='obspy-mopad',
                                 formatter_class=RawDescriptionHelpFormatter,
@@ -4813,19 +4811,6 @@ The 'source mechanism' as a comma-separated list of length:
             action='store_true',
             help='if isotropic part shall be considered for plotting '
                  '[%(default)s]')
-
-        # Deprecated arguments
-
-        action = _get_deprecated_argument_action('--show_1fp', '--show-1fp')
-        group_show.add_argument(
-            '--show_1fp', dest='GMT_show_1FP', action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--show_isotropic_part', '--show-isotropic-part',
-            real_action='store_true')
-        group_show.add_argument(
-            '--show_isotropic_part', dest='GMT_plot_isotropic_part', nargs=0,
-            action=action, help=SUPPRESS)
 
         parser_gmt.set_defaults(call=_call_gmt, build=_build_gmt_dict)
 
@@ -4982,68 +4967,6 @@ The 'source mechanism' as a comma-separated list of length:
             help='if isotropic part shall be considered for plotting '
                  '[%(default)s]')
 
-        # Deprecated arguments
-        action = _get_deprecated_argument_action(
-            '--basis_vectors', '--basis-vectors', real_action='store_true')
-        group_misc.add_argument(
-            '--basis_vectors', dest='plot_show_basis_axes', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--full_sphere', '--full-sphere', real_action='store_true')
-        group_misc.add_argument(
-            '--full_sphere', dest='plot_full_sphere', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--input_system', '--input-system')
-        group_misc.add_argument(
-            '--input_system', dest='plot_input_system',
-            type=caps, choices=ALLOWED_BASES, default='NED',
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--lines_only', '--lines-only', real_action='store_true')
-        group_misc.add_argument(
-            '--lines_only', dest='plot_only_lines', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action('--output_file',
-                                                 '--output-file')
-        group_misc.add_argument(
-            '--output_file', dest='plot_outfile', action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--pa_system', '--pa-system', real_action='store_true')
-        group_misc.add_argument(
-            '--pa_system', dest='plot_pa_plot', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--pressure_colour', '--pressure-colour')
-        group_misc.add_argument(
-            '--pressure_colour', dest='plot_pressure_colour',
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--show1fp', '--show-1fp', real_action='store_true')
-        group_misc.add_argument(
-            '--show1fp', dest='plot_show_1faultplane', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--show_isotropic_part', '--show-isotropic-part',
-            real_action='store_true')
-        group_misc.add_argument(
-            '--show_isotropic_part', dest='plot_isotropic_part', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action('--tension_colour',
-                                                 '--tension-colour')
-        group_misc.add_argument(
-            '--tension_colour', dest='plot_tension_colour',
-            action=action, help=SUPPRESS)
-
         parser_plot.set_defaults(call=_call_plot, build=_build_plot_dict)
 
         # decompose
@@ -5158,21 +5081,6 @@ The 'source mechanism' as a comma-separated list of length:
             help='integer key to choose the type of decomposition - 20: '
                  'ISO+DC+CLVD ; 21: ISO+major DC+ minor DC ; 31: ISO + 3 DCs')
 
-        # Deprecated arguments
-        action = _get_deprecated_argument_action('--input_system',
-                                                 '--input-system')
-        group_system.add_argument(
-            '--input_system', dest='decomp_in_system',
-            type=caps, choices=ALLOWED_BASES, default='NED',
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action('--output_system',
-                                                 '--output-system')
-        group_system.add_argument(
-            '--output_system', dest='decomp_out_system',
-            type=caps, choices=ALLOWED_BASES, default='NED',
-            action=action, help=SUPPRESS)
-
         parser_decompose.set_defaults(call=_call_decompose,
                                       build=_build_decompose_dict)
 
@@ -5183,7 +5091,7 @@ The 'source mechanism' as a comma-separated list of length:
 
     try:
         M_raw = [float(xx) for xx in args.mechanism.split(',')]
-    except:
+    except Exception:
         parser.error('invalid source mechanism')
 
     if not len(M_raw) in [3, 4, 6, 7, 9]:
@@ -5195,8 +5103,8 @@ The 'source mechanism' as a comma-separated list of length:
     if aa is not None:
         try:
             print(aa)
-        except:
-            print(aa.replace('°', ' deg'))
+        except Exception:
+            print(str(aa).replace('°', ' deg'))
 
 
 if __name__ == '__main__':

@@ -8,13 +8,13 @@
  * modified: 2015.108
  ***************************************************************************/
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <errno.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
 
 #include "libmseed.h"
 
@@ -24,15 +24,15 @@ static int ms_fread (char *buf, int size, int num, FILE *stream);
  * [type] : [hdrlen] [sizelen] [chksumlen]
  */
 int8_t packtypes[9][3] = {
-  { 0, 0, 0 },
-  { 8, 8, 8 },
-  { 11, 8, 8 },
-  { 11, 8, 8 },
-  { 11, 8, 8 },
-  { 11, 8, 8 },
-  { 13, 8, 8 },
-  { 15, 8, 8 },
-  { 22, 15, 10 }};
+    {0, 0, 0},
+    {8, 8, 8},
+    {11, 8, 8},
+    {11, 8, 8},
+    {11, 8, 8},
+    {11, 8, 8},
+    {13, 8, 8},
+    {15, 8, 8},
+    {22, 15, 10}};
 
 /*********************************************************************
  * Notes about packed files as read by ms_readmsr_main()
@@ -67,10 +67,10 @@ int8_t packtypes[9][3] = {
  * _____10_____2__2___3_____8_______mod 256_______8_____2__2___3_____8_______mod 256_______8____ ...
  * |PQI-      |q |lc|chn|  size  | ...data... | chksum |q |lc|chn|  size  | ...data... | chksum  ...
  * parsing guide:
- *      10    |     15 hdr       |     xx     |   8    |    15 hdr        |    xx   
+ *      10    |     15 hdr       |     xx     |   8    |    15 hdr        |    xx
  *            |+0|+2|+4 |+7      |
- * 
- * 
+ *
+ *
  * Large-Size Pack - Type 8: (for large channel blocks)
  * _____10_____2__2___3_____15_______mod 256_______8____2__2__2___3_____15_______mod 256_______8____ ...
  * |PLS-------|q |lc|chn|  size  | ...data... | chksum |--|q |lc|chn|  size  | ...data... | chksum  ...
@@ -86,7 +86,6 @@ int8_t packtypes[9][3] = {
 /* Initialize the global file reading parameters */
 MSFileParam gMSFileParam = {NULL, "", NULL, 0, 0, 0, 0, 0, 0, 0};
 
-
 /**********************************************************************
  * ms_readmsr:
  *
@@ -99,14 +98,13 @@ MSFileParam gMSFileParam = {NULL, "", NULL, 0, 0, 0, 0, 0, 0, 0};
  *********************************************************************/
 int
 ms_readmsr (MSRecord **ppmsr, const char *msfile, int reclen, off_t *fpos,
-	    int *last, flag skipnotdata, flag dataflag, flag verbose)
+            int *last, flag skipnotdata, flag dataflag, flag verbose)
 {
   MSFileParam *msfp = &gMSFileParam;
-  
-  return ms_readmsr_main (&msfp, ppmsr, msfile, reclen, fpos,
-			  last, skipnotdata, dataflag, NULL, verbose);
-}  /* End of ms_readmsr() */
 
+  return ms_readmsr_main (&msfp, ppmsr, msfile, reclen, fpos,
+                          last, skipnotdata, dataflag, NULL, verbose);
+} /* End of ms_readmsr() */
 
 /**********************************************************************
  * ms_readmsr_r:
@@ -121,13 +119,12 @@ ms_readmsr (MSRecord **ppmsr, const char *msfile, int reclen, off_t *fpos,
  *********************************************************************/
 int
 ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile,
-	      int reclen, off_t *fpos, int *last, flag skipnotdata,
-	      flag dataflag, flag verbose)
+              int reclen, off_t *fpos, int *last, flag skipnotdata,
+              flag dataflag, flag verbose)
 {
   return ms_readmsr_main (ppmsfp, ppmsr, msfile, reclen, fpos,
-			  last, skipnotdata, dataflag, NULL, verbose);
-}  /* End of ms_readmsr_r() */
-
+                          last, skipnotdata, dataflag, NULL, verbose);
+} /* End of ms_readmsr_r() */
 
 /**********************************************************************
  * ms_shift_msfp:
@@ -140,32 +137,31 @@ ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile,
 static void
 ms_shift_msfp (MSFileParam *msfp, int shift)
 {
-  if ( ! msfp )
+  if (!msfp)
     return;
-  
-  if ( shift <= 0 && shift > msfp->readlen )
-    {
-      ms_log (2, "ms_shift_msfp(): Cannot shift buffer, shift: %d, readlen: %d, readoffset: %d\n",
-	      shift, msfp->readlen, msfp->readoffset);
-      return;
-    }
-  
+
+  if (shift <= 0 && shift > msfp->readlen)
+  {
+    ms_log (2, "ms_shift_msfp(): Cannot shift buffer, shift: %d, readlen: %d, readoffset: %d\n",
+            shift, msfp->readlen, msfp->readoffset);
+    return;
+  }
+
   memmove (msfp->rawrec, msfp->rawrec + shift, msfp->readlen - shift);
   msfp->readlen -= shift;
-  
-  if ( shift < msfp->readoffset )
-    {
-      msfp->readoffset -= shift;
-    }
-  else
-    {
-      msfp->filepos += (shift - msfp->readoffset);
-      msfp->readoffset = 0;
-    }
-  
-  return;
-}  /* End of ms_shift_msfp() */
 
+  if (shift < msfp->readoffset)
+  {
+    msfp->readoffset -= shift;
+  }
+  else
+  {
+    msfp->filepos += (shift - msfp->readoffset);
+    msfp->readoffset = 0;
+  }
+
+  return;
+} /* End of ms_shift_msfp() */
 
 /* Macro to calculate length of unprocessed buffer */
 #define MSFPBUFLEN(MSFP) (MSFP->readlen - MSFP->readoffset)
@@ -221,496 +217,495 @@ ms_shift_msfp (MSFileParam *msfp, int shift)
  *********************************************************************/
 int
 ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile,
-		 int reclen, off_t *fpos, int *last, flag skipnotdata,
-		 flag dataflag, Selections *selections, flag verbose)
+                 int reclen, off_t *fpos, int *last, flag skipnotdata,
+                 flag dataflag, Selections *selections, flag verbose)
 {
   MSFileParam *msfp;
   off_t packdatasize = 0;
   int packskipsize;
-  int parseval = 0;
-  int readsize = 0;
+  int parseval  = 0;
+  int readsize  = 0;
   int readcount = 0;
-  int retcode = MS_NOERROR;
-  
-  if ( ! ppmsr )
+  int retcode   = MS_NOERROR;
+
+  if (!ppmsr)
     return MS_GENERROR;
-  
-  if ( ! ppmsfp )
+
+  if (!ppmsfp)
     return MS_GENERROR;
-  
+
   msfp = *ppmsfp;
-  
+
   /* Initialize the file read parameters if needed */
-  if ( ! msfp )
+  if (!msfp)
+  {
+    msfp = (MSFileParam *)malloc (sizeof (MSFileParam));
+
+    if (msfp == NULL)
     {
-      msfp = (MSFileParam *) malloc (sizeof (MSFileParam));
-      
-      if ( msfp == NULL )
-	{
-	  ms_log (2, "ms_readmsr_main(): Cannot allocate memory for MSFP\n");
-	  return MS_GENERROR;
-	}
-      
-      /* Redirect the supplied pointer to the allocated params */
-      *ppmsfp = msfp;
-      
-      msfp->fp = NULL;
-      msfp->filename[0] = '\0';
-      msfp->rawrec = NULL;
-      msfp->readlen = 0;
-      msfp->readoffset = 0;
-      msfp->packtype = 0;
-      msfp->packhdroffset = 0;
-      msfp->filepos = 0;
-      msfp->filesize = 0;
-      msfp->recordcount = 0;
+      ms_log (2, "ms_readmsr_main(): Cannot allocate memory for MSFP\n");
+      return MS_GENERROR;
     }
-  
+
+    /* Redirect the supplied pointer to the allocated params */
+    *ppmsfp = msfp;
+
+    msfp->fp            = NULL;
+    msfp->filename[0]   = '\0';
+    msfp->rawrec        = NULL;
+    msfp->readlen       = 0;
+    msfp->readoffset    = 0;
+    msfp->packtype      = 0;
+    msfp->packhdroffset = 0;
+    msfp->filepos       = 0;
+    msfp->filesize      = 0;
+    msfp->recordcount   = 0;
+  }
+
   /* When cleanup is requested */
-  if ( msfile == NULL )
+  if (msfile == NULL)
+  {
+    msr_free (ppmsr);
+
+    if (msfp->fp != NULL)
+      fclose (msfp->fp);
+
+    if (msfp->rawrec != NULL)
+      free (msfp->rawrec);
+
+    /* If the file parameters are the global parameters reset them */
+    if (*ppmsfp == &gMSFileParam)
     {
-      msr_free (ppmsr);
-      
-      if ( msfp->fp != NULL )
-	fclose (msfp->fp);
-      
-      if ( msfp->rawrec != NULL )
-	free (msfp->rawrec);
-      
-      /* If the file parameters are the global parameters reset them */
-      if ( *ppmsfp == &gMSFileParam )
-	{
-	  gMSFileParam.fp = NULL;
-	  gMSFileParam.filename[0] = '\0';
-          gMSFileParam.rawrec = NULL;
-	  gMSFileParam.readlen = 0;
-	  gMSFileParam.readoffset = 0;
-	  gMSFileParam.packtype = 0;
-	  gMSFileParam.packhdroffset = 0;
-	  gMSFileParam.filepos = 0;
-	  gMSFileParam.filesize = 0;
-	  gMSFileParam.recordcount = 0;
-	}
-      /* Otherwise free the MSFileParam */
-      else
-	{
-	  free (*ppmsfp);
-	  *ppmsfp = NULL;
-	}
-      
-      return MS_NOERROR;
+      gMSFileParam.fp            = NULL;
+      gMSFileParam.filename[0]   = '\0';
+      gMSFileParam.rawrec        = NULL;
+      gMSFileParam.readlen       = 0;
+      gMSFileParam.readoffset    = 0;
+      gMSFileParam.packtype      = 0;
+      gMSFileParam.packhdroffset = 0;
+      gMSFileParam.filepos       = 0;
+      gMSFileParam.filesize      = 0;
+      gMSFileParam.recordcount   = 0;
     }
-  
+    /* Otherwise free the MSFileParam */
+    else
+    {
+      free (*ppmsfp);
+      *ppmsfp = NULL;
+    }
+
+    return MS_NOERROR;
+  }
+
   /* Allocate reading buffer */
-  if ( msfp->rawrec == NULL )
+  if (msfp->rawrec == NULL)
+  {
+    if (!(msfp->rawrec = (char *)malloc (MAXRECLEN)))
     {
-      if ( ! (msfp->rawrec = (char *) malloc (MAXRECLEN)) )
-	{
-	  ms_log (2, "ms_readmsr_main(): Cannot allocate memory for read buffer\n");
-	  return MS_GENERROR;
-	}
+      ms_log (2, "ms_readmsr_main(): Cannot allocate memory for read buffer\n");
+      return MS_GENERROR;
     }
-  
+  }
+
   /* Sanity check: track if we are reading the same file */
-  if ( msfp->fp && strncmp (msfile, msfp->filename, sizeof(msfp->filename)) )
-    {
-      ms_log (2, "ms_readmsr_main() called with a different file name without being reset\n");
-      
-      /* Close previous file and reset needed variables */
-      if ( msfp->fp != NULL )
-	fclose (msfp->fp);
-      
-      msfp->fp = NULL;
-      msfp->readlen = 0;
-      msfp->readoffset = 0;
-      msfp->packtype = 0;
-      msfp->packhdroffset = 0;
-      msfp->filepos = 0;
-      msfp->filesize = 0;
-      msfp->recordcount = 0;
-    }
-  
+  if (msfp->fp && strncmp (msfile, msfp->filename, sizeof (msfp->filename)))
+  {
+    ms_log (2, "ms_readmsr_main() called with a different file name without being reset\n");
+
+    /* Close previous file and reset needed variables */
+    if (msfp->fp != NULL)
+      fclose (msfp->fp);
+
+    msfp->fp            = NULL;
+    msfp->readlen       = 0;
+    msfp->readoffset    = 0;
+    msfp->packtype      = 0;
+    msfp->packhdroffset = 0;
+    msfp->filepos       = 0;
+    msfp->filesize      = 0;
+    msfp->recordcount   = 0;
+  }
+
   /* Open the file if needed, redirect to stdin if file is "-" */
-  if ( msfp->fp == NULL )
+  if (msfp->fp == NULL)
+  {
+    /* Store the filename for tracking */
+    strncpy (msfp->filename, msfile, sizeof (msfp->filename) - 1);
+    msfp->filename[sizeof (msfp->filename) - 1] = '\0';
+
+    if (strcmp (msfile, "-") == 0)
     {
-      /* Store the filename for tracking */
-      strncpy (msfp->filename, msfile, sizeof(msfp->filename) - 1);
-      msfp->filename[sizeof(msfp->filename) - 1] = '\0';
-      
-      if ( strcmp (msfile, "-") == 0 )
-	{
-	  msfp->fp = stdin;
-	}
+      msfp->fp = stdin;
+    }
+    else
+    {
+      if ((msfp->fp = fopen (msfile, "rb")) == NULL)
+      {
+        ms_log (2, "Cannot open file: %s (%s)\n", msfile, strerror (errno));
+        msr_free (ppmsr);
+
+        return MS_GENERROR;
+      }
       else
-	{
-	  if ( (msfp->fp = fopen (msfile, "rb")) == NULL )
-	    {
-	      ms_log (2, "Cannot open file: %s (%s)\n", msfile, strerror (errno));
-	      msr_free (ppmsr);
-	      
-	      return MS_GENERROR;
-	    }
-	  else
-	    {
-	      /* Determine file size */
-	      struct stat sbuf;
-	      
-	      if ( fstat (fileno(msfp->fp), &sbuf) )
-		{
-		  ms_log (2, "Cannot open file: %s (%s)\n", msfile, strerror (errno));
-		  msr_free (ppmsr);
-		  
-		  return MS_GENERROR;
-		}
-	      
-	      msfp->filesize = sbuf.st_size;
-	    }
-	}
+      {
+        /* Determine file size */
+        struct stat sbuf;
+
+        if (fstat (fileno (msfp->fp), &sbuf))
+        {
+          ms_log (2, "Cannot open file: %s (%s)\n", msfile, strerror (errno));
+          msr_free (ppmsr);
+
+          return MS_GENERROR;
+        }
+
+        msfp->filesize = sbuf.st_size;
+      }
     }
-  
+  }
+
   /* Seek to a specified offset if requested */
-  if ( fpos != NULL && *fpos < 0 )
+  if (fpos != NULL && *fpos < 0)
+  {
+    /* Only try to seek in real files, not stdin */
+    if (msfp->fp != stdin)
     {
-      /* Only try to seek in real files, not stdin */
-      if ( msfp->fp != stdin )
-	{
-	  if ( lmp_fseeko (msfp->fp, *fpos * -1, SEEK_SET) )
-	    {
-	      ms_log (2, "Cannot seek in file: %s (%s)\n", msfile, strerror (errno));
-	      
-	      return MS_GENERROR;
-	    }
-	  
-	  msfp->filepos = *fpos * -1;
-	  msfp->readlen = 0;
-	  msfp->readoffset = 0;
-	}
+      if (lmp_fseeko (msfp->fp, *fpos * -1, SEEK_SET))
+      {
+        ms_log (2, "Cannot seek in file: %s (%s)\n", msfile, strerror (errno));
+
+        return MS_GENERROR;
+      }
+
+      msfp->filepos    = *fpos * -1;
+      msfp->readlen    = 0;
+      msfp->readoffset = 0;
     }
-  
+  }
+
   /* Zero the last record indicator */
-  if ( last )
+  if (last)
     *last = 0;
-  
+
   /* Read data and search for records */
   for (;;)
-    {
-      /* Read more data into buffer if not at EOF and buffer has less than MINRECLEN
+  {
+    /* Read more data into buffer if not at EOF and buffer has less than MINRECLEN
        * or more data is needed for the current record detected in buffer. */
-      if ( ! feof(msfp->fp) && (MSFPBUFLEN(msfp) < MINRECLEN || parseval > 0) )
-	{
-	  /* Reset offsets if no unprocessed data in buffer */
-	  if ( MSFPBUFLEN(msfp) <= 0 )
-	    {
-	      msfp->readlen = 0;
-	      msfp->readoffset = 0;
-	    }
-	  /* Otherwise shift existing data to beginning of buffer */
-	  else if ( msfp->readoffset > 0 )
-	    {
-	      ms_shift_msfp (msfp, msfp->readoffset);
-	    }
-	  
-	  /* Determine read size */
-	  readsize = (MAXRECLEN - msfp->readlen);
-	  
-	  /* Read data into record buffer */
-	  readcount = ms_fread (msfp->rawrec + msfp->readlen, 1, readsize, msfp->fp);
-	  
-	  if ( readcount != readsize )
-	    {
-	      if ( ! feof (msfp->fp) )
-		{
-		  ms_log (2, "Short read of %d bytes starting from %"PRId64"\n",
-			  readsize, msfp->filepos);
-		  retcode = MS_GENERROR;
-		  break;
-		}
-	    }
-	  
-	  /* Update read buffer length */
-	  msfp->readlen += readcount;
-	  
-	  /* File position corresponding to start of buffer; not strictly necessary */
-	  if ( msfp->fp != stdin )
-	    msfp->filepos = lmp_ftello (msfp->fp) - msfp->readlen;
-	}
-      
-      /* Test for packed file signature at the beginning of the file */
-      if ( msfp->filepos == 0 && *(MSFPREADPTR(msfp)) == 'P' && MSFPBUFLEN(msfp) >= 48 )
-	{
-	  msfp->packtype = 0;
-	  
-	  /* Determine pack type, the negative pack type indicates initial header */
-	  if ( ! memcmp ("PED", MSFPREADPTR(msfp), 3) )
-	    msfp->packtype = -1;
-	  else if ( ! memcmp ("PSD", MSFPREADPTR(msfp), 3) )
-	    msfp->packtype = -2;
-	  else if ( ! memcmp ("PLC", MSFPREADPTR(msfp), 3) )
-	    msfp->packtype = -6;
-	  else if ( ! memcmp ("PQI", MSFPREADPTR(msfp), 3) )
-	    msfp->packtype = -7;
-	  else if ( ! memcmp ("PLS", MSFPREADPTR(msfp), 3) )
-	    msfp->packtype = -8;
-	  
-	  if ( verbose > 0 )
-	    ms_log (1, "Detected packed file (%3.3s: type %d)\n", MSFPREADPTR(msfp), -msfp->packtype);
-	}
-      
-      /* Read pack headers, initial and subsequent headers including (ignored) chksum values */
-      if ( msfp->packtype && (msfp->packtype < 0 || msfp->filepos == msfp->packhdroffset) && MSFPBUFLEN(msfp) >= 48 )
-	{
-	  char hdrstr[30];
-	  int64_t datasize;
-	  
-	  /* Determine bytes to skip before header: either initial ID block or type-specific chksum block */
-	  packskipsize = ( msfp->packtype < 0 ) ? 10 : packtypes[msfp->packtype][2];
-	  
-	  if ( msfp->packtype < 0 )
-	    msfp->packtype = -msfp->packtype;
-	  
-	  /* Read pack length from pack header accounting for bytes that should be skipped */
-	  memset (hdrstr, 0, sizeof(hdrstr));
-	  memcpy (hdrstr, MSFPREADPTR(msfp) + (packtypes[msfp->packtype][0] + packskipsize - packtypes[msfp->packtype][1]),
-		  packtypes[msfp->packtype][1]);
-	  sscanf (hdrstr, " %"SCNd64, &datasize);
-	  packdatasize = (off_t) datasize;
-	  
-	  /* Next pack header = File position + skipsize + header size + data size
+    if (!feof (msfp->fp) && (MSFPBUFLEN (msfp) < MINRECLEN || parseval > 0))
+    {
+      /* Reset offsets if no unprocessed data in buffer */
+      if (MSFPBUFLEN (msfp) <= 0)
+      {
+        msfp->readlen    = 0;
+        msfp->readoffset = 0;
+      }
+      /* Otherwise shift existing data to beginning of buffer */
+      else if (msfp->readoffset > 0)
+      {
+        ms_shift_msfp (msfp, msfp->readoffset);
+      }
+
+      /* Determine read size */
+      readsize = (MAXRECLEN - msfp->readlen);
+
+      /* Read data into record buffer */
+      readcount = ms_fread (msfp->rawrec + msfp->readlen, 1, readsize, msfp->fp);
+
+      if (readcount != readsize)
+      {
+        if (!feof (msfp->fp))
+        {
+          ms_log (2, "Short read of %d bytes starting from %" PRId64 "\n",
+                  readsize, msfp->filepos);
+          retcode = MS_GENERROR;
+          break;
+        }
+      }
+
+      /* Update read buffer length */
+      msfp->readlen += readcount;
+
+      /* File position corresponding to start of buffer; not strictly necessary */
+      if (msfp->fp != stdin)
+        msfp->filepos = lmp_ftello (msfp->fp) - msfp->readlen;
+    }
+
+    /* Test for packed file signature at the beginning of the file */
+    if (msfp->filepos == 0 && *(MSFPREADPTR (msfp)) == 'P' && MSFPBUFLEN (msfp) >= 48)
+    {
+      msfp->packtype = 0;
+
+      /* Determine pack type, the negative pack type indicates initial header */
+      if (!memcmp ("PED", MSFPREADPTR (msfp), 3))
+        msfp->packtype = -1;
+      else if (!memcmp ("PSD", MSFPREADPTR (msfp), 3))
+        msfp->packtype = -2;
+      else if (!memcmp ("PLC", MSFPREADPTR (msfp), 3))
+        msfp->packtype = -6;
+      else if (!memcmp ("PQI", MSFPREADPTR (msfp), 3))
+        msfp->packtype = -7;
+      else if (!memcmp ("PLS", MSFPREADPTR (msfp), 3))
+        msfp->packtype = -8;
+
+      if (verbose > 0)
+        ms_log (1, "Detected packed file (%3.3s: type %d)\n", MSFPREADPTR (msfp), -msfp->packtype);
+    }
+
+    /* Read pack headers, initial and subsequent headers including (ignored) chksum values */
+    if (msfp->packtype && (msfp->packtype < 0 || msfp->filepos == msfp->packhdroffset) && MSFPBUFLEN (msfp) >= 48)
+    {
+      char hdrstr[30];
+      int64_t datasize;
+
+      /* Determine bytes to skip before header: either initial ID block or type-specific chksum block */
+      packskipsize = (msfp->packtype < 0) ? 10 : packtypes[msfp->packtype][2];
+
+      if (msfp->packtype < 0)
+        msfp->packtype = -msfp->packtype;
+
+      /* Read pack length from pack header accounting for bytes that should be skipped */
+      memset (hdrstr, 0, sizeof (hdrstr));
+      memcpy (hdrstr, MSFPREADPTR (msfp) + (packtypes[msfp->packtype][0] + packskipsize - packtypes[msfp->packtype][1]),
+              packtypes[msfp->packtype][1]);
+      sscanf (hdrstr, " %" SCNd64, &datasize);
+      packdatasize = (off_t)datasize;
+
+      /* Next pack header = File position + skipsize + header size + data size
 	   * This offset is actually to the data block chksum which is skipped by the logic above,
 	   * the next pack header should directly follow the chksum. */
-	  msfp->packhdroffset = msfp->filepos + packskipsize + packtypes[msfp->packtype][0] + packdatasize;
-	  
-	  if ( verbose > 1 )
-	    ms_log (1, "Read packed file header at offset %"PRId64" (%d bytes follow), chksum offset: %"PRId64"\n",
-		    (msfp->filepos + packskipsize), packdatasize,
-		    msfp->packhdroffset);
+      msfp->packhdroffset = msfp->filepos + packskipsize + packtypes[msfp->packtype][0] + packdatasize;
 
-	  /* Shift buffer to new reading offset (aligns records in buffer) */
-	  ms_shift_msfp (msfp, msfp->readoffset + (packskipsize + packtypes[msfp->packtype][0]));
-	} /* End of packed header processing */
-      
-      /* Check for match if selections are supplied and pack header was read, */
-      /* only when enough data is in buffer and not reading from stdin pipe */
-      if ( selections && msfp->packtype && packdatasize && MSFPBUFLEN(msfp) >= 48 && msfp->fp != stdin )
-	{
-	  char srcname[100];
-	  
-	  ms_recsrcname (MSFPREADPTR(msfp), srcname, 1);
-	  
-	  if ( ! ms_matchselect (selections, srcname, HPTERROR, HPTERROR, NULL) )
-	    {
-	      /* Update read position if next section is in buffer */
-	      if ( MSFPBUFLEN(msfp) >= (msfp->packhdroffset - msfp->filepos) )
-		{
-		  if ( verbose > 1 )
-		    {
-		      ms_log (1, "Skipping (jump) packed section for %s (%d bytes) starting at offset %"PRId64"\n",
-			      srcname, (msfp->packhdroffset - msfp->filepos), msfp->filepos);
-		    }
-		  
-		  msfp->readoffset += (msfp->packhdroffset - msfp->filepos);
-		  msfp->filepos = msfp->packhdroffset;
-		  packdatasize = 0;
-		}
-	      
-	      /* Otherwise seek to next pack header and reset reading position */
-	      else
-		{
-		  if ( verbose > 1 )
-		    {
-		      ms_log (1, "Skipping (seek) packed section for %s (%d bytes) starting at offset %"PRId64"\n",
-			      srcname, (msfp->packhdroffset - msfp->filepos), msfp->filepos);
-		    }
+      if (verbose > 1)
+        ms_log (1, "Read packed file header at offset %" PRId64 " (%d bytes follow), chksum offset: %" PRId64 "\n",
+                (msfp->filepos + packskipsize), packdatasize,
+                msfp->packhdroffset);
 
-		  if ( lmp_fseeko (msfp->fp, msfp->packhdroffset, SEEK_SET) )
-		    {
-		      ms_log (2, "Cannot seek in file: %s (%s)\n", msfile, strerror (errno));
-		      
-		      return MS_GENERROR;
-		      break;
-		    }
-		  
-		  msfp->filepos = msfp->packhdroffset;
-		  msfp->readlen = 0;
-		  msfp->readoffset = 0;
-		  packdatasize = 0;
-		}
-	      
-	      /* Return to top of loop for proper pack header handling */
-	      continue;
-	    }
-	} /* End of selection processing */
-      
-      /* Attempt to parse record from buffer */
-      if ( MSFPBUFLEN(msfp) >= MINRECLEN )
-	{
-	  int parselen = MSFPBUFLEN(msfp);
-	  
-	  /* Limit the parse length to offset of pack header if present in the buffer */
-	  if ( msfp->packhdroffset && msfp->packhdroffset < (msfp->filepos + MSFPBUFLEN(msfp)) )
-	    parselen = msfp->packhdroffset - msfp->filepos;
-	  
- 	  parseval = msr_parse (MSFPREADPTR(msfp), parselen, ppmsr, reclen, dataflag, verbose);
-	  
-	  /* Record detected and parsed */
-	  if ( parseval == 0 )
-	    {
-	      if ( verbose > 1 )
-		ms_log (1, "Read record length of %d bytes\n", (*ppmsr)->reclen);
-	      
-	      /* Test if this is the last record if file size is known (not pipe) */
-	      if ( last && msfp->filesize )
-		if ( (msfp->filesize - (msfp->filepos + (*ppmsr)->reclen)) < MINRECLEN )
-		  *last = 1;
-	      
-	      /* Return file position for this record */
-	      if ( fpos )
-		*fpos = msfp->filepos;
-	      
-	      /* Update reading offset, file position and record count */
-	      msfp->readoffset += (*ppmsr)->reclen;
-	      msfp->filepos += (*ppmsr)->reclen;
-	      msfp->recordcount++;
-	      
-	      retcode = MS_NOERROR;
-	      break;
-	    }
-	  else if ( parseval < 0 )
-	    {
-	      /* Skip non-data if requested */ 
-	      if ( skipnotdata )
-		{
-		  if ( verbose > 1 )
-		    {
-		      if ( MS_ISVALIDBLANK((char *)MSFPREADPTR(msfp)) )
-			ms_log (1, "Skipped %d bytes of blank/noise record at byte offset %"PRId64"\n",
-				MINRECLEN, msfp->filepos);
-		      else
-			ms_log (1, "Skipped %d bytes of non-data record at byte offset %"PRId64"\n",
-				MINRECLEN, msfp->filepos);
-		    }
-		  
-		  /* Skip MINRECLEN bytes, update reading offset and file position */
-		  msfp->readoffset += MINRECLEN;
-		  msfp->filepos += MINRECLEN;
-		}
-	      /* Parsing errors */ 
-	      else
-		{
-		  ms_log (2, "Cannot detect record at byte offset %"PRId64": %s\n",
-			  msfp->filepos, msfile);
-		  
-		  /* Print common errors and raw details if verbose */
-		  ms_parse_raw (MSFPREADPTR(msfp), MSFPBUFLEN(msfp), verbose, -1);
-		  
-		  retcode = parseval;
-		  break;
-		}
-	    }
-	  else /* parseval > 0 (found record but need more data) */
-	    {
-	      /* Determine implied record length if needed */
-	      int32_t impreclen = reclen;
-	      
-	      /* Check for parse hints that are larger than MAXRECLEN */
-	      if ( (MSFPBUFLEN(msfp) + parseval) > MAXRECLEN )
-		{
-		  if ( skipnotdata )
-		    {
-		      /* Skip MINRECLEN bytes, update reading offset and file position */
-		      msfp->readoffset += MINRECLEN;
-		      msfp->filepos += MINRECLEN;
-		    }
-		  else
-		    {
-		      retcode = MS_OUTOFRANGE;
-		      break;
-		    }
-		}
-	      
-	      /* Pack header check, if pack header offset is within buffer */
-	      else if ( impreclen <= 0 && msfp->packhdroffset &&
-			msfp->packhdroffset < (msfp->filepos + MSFPBUFLEN(msfp)) )
-		{
-		  impreclen = msfp->packhdroffset - msfp->filepos;
-		  
-		  /* Check that record length is within range and a power of 2.
-		   * Power of two if (X & (X - 1)) == 0 */
-		  if ( impreclen >= MINRECLEN && impreclen <= MAXRECLEN &&
-		       (impreclen & (impreclen - 1)) == 0 )
-		    {
-		      /* Set the record length implied by the next pack header */
-		      reclen = impreclen;
-		    }
-		  else
-		    {
-		      ms_log (1, "Implied record length (%d) is invalid\n", impreclen);
-		      
-		      retcode = MS_NOTSEED;
-		      break;
-		    }
-		}
-	      
-	      /* End of file check */
-	      else if ( impreclen <= 0 && feof (msfp->fp) )
-		{
-		  impreclen = msfp->filesize - msfp->filepos;
-		  
-		  /* Check that record length is within range and a power of 2.
-		   * Power of two if (X & (X - 1)) == 0 */
-		  if ( impreclen >= MINRECLEN && impreclen <= MAXRECLEN &&
-		       (impreclen & (impreclen - 1)) == 0 )
-		    {
-		      /* Set the record length implied by the end of the file */
-		      reclen = impreclen;
-		    }
-		  /* Otherwise a trucated record */
-		  else
-		    {
-		      if ( verbose )
-			{
-			  if ( msfp->filesize )
-			    ms_log (1, "Truncated record at byte offset %"PRId64", filesize %d: %s\n",
-				    msfp->filepos, msfp->filesize, msfile);
-			  else
-			    ms_log (1, "Truncated record at byte offset %"PRId64"\n",
-				    msfp->filepos);
-			}
-		      
-		      retcode = MS_ENDOFFILE;
-		      break;
-		    }
-		}
-	    }
-	}  /* End of record detection */
-      
-      /* Finished when within MINRECLEN from EOF and buffer less than MINRECLEN */
-      if ( (msfp->filesize - msfp->filepos) < MINRECLEN && MSFPBUFLEN(msfp) < MINRECLEN )
-	{
-	  if ( msfp->recordcount == 0 && msfp->packtype == 0 )
-	    {
-	      if ( verbose > 0 )
-		ms_log (2, "%s: No data records read, not SEED?\n", msfile);
-	      retcode = MS_NOTSEED;
-	    }
-	  else
-	    {
-	      retcode = MS_ENDOFFILE;
-	    }
-	  
-	  break;
-	}
-    }  /* End of reading, record detection and parsing loop */
-  
-  /* Cleanup target MSRecord if returning an error */
-  if ( retcode != MS_NOERROR )
+      /* Shift buffer to new reading offset (aligns records in buffer) */
+      ms_shift_msfp (msfp, msfp->readoffset + (packskipsize + packtypes[msfp->packtype][0]));
+    } /* End of packed header processing */
+
+    /* Check for match if selections are supplied and pack header was read, */
+    /* only when enough data is in buffer and not reading from stdin pipe */
+    if (selections && msfp->packtype && packdatasize && MSFPBUFLEN (msfp) >= 48 && msfp->fp != stdin)
     {
-      msr_free (ppmsr);
-    }
-  
-  return retcode;
-}  /* End of ms_readmsr_main() */
+      char srcname[100];
 
+      ms_recsrcname (MSFPREADPTR (msfp), srcname, 1);
+
+      if (!ms_matchselect (selections, srcname, HPTERROR, HPTERROR, NULL))
+      {
+        /* Update read position if next section is in buffer */
+        if (MSFPBUFLEN (msfp) >= (msfp->packhdroffset - msfp->filepos))
+        {
+          if (verbose > 1)
+          {
+            ms_log (1, "Skipping (jump) packed section for %s (%d bytes) starting at offset %" PRId64 "\n",
+                    srcname, (msfp->packhdroffset - msfp->filepos), msfp->filepos);
+          }
+
+          msfp->readoffset += (msfp->packhdroffset - msfp->filepos);
+          msfp->filepos = msfp->packhdroffset;
+          packdatasize  = 0;
+        }
+
+        /* Otherwise seek to next pack header and reset reading position */
+        else
+        {
+          if (verbose > 1)
+          {
+            ms_log (1, "Skipping (seek) packed section for %s (%d bytes) starting at offset %" PRId64 "\n",
+                    srcname, (msfp->packhdroffset - msfp->filepos), msfp->filepos);
+          }
+
+          if (lmp_fseeko (msfp->fp, msfp->packhdroffset, SEEK_SET))
+          {
+            ms_log (2, "Cannot seek in file: %s (%s)\n", msfile, strerror (errno));
+
+            return MS_GENERROR;
+            break;
+          }
+
+          msfp->filepos    = msfp->packhdroffset;
+          msfp->readlen    = 0;
+          msfp->readoffset = 0;
+          packdatasize     = 0;
+        }
+
+        /* Return to top of loop for proper pack header handling */
+        continue;
+      }
+    } /* End of selection processing */
+
+    /* Attempt to parse record from buffer */
+    if (MSFPBUFLEN (msfp) >= MINRECLEN)
+    {
+      int parselen = MSFPBUFLEN (msfp);
+
+      /* Limit the parse length to offset of pack header if present in the buffer */
+      if (msfp->packhdroffset && msfp->packhdroffset < (msfp->filepos + MSFPBUFLEN (msfp)))
+        parselen = msfp->packhdroffset - msfp->filepos;
+
+      parseval = msr_parse (MSFPREADPTR (msfp), parselen, ppmsr, reclen, dataflag, verbose);
+
+      /* Record detected and parsed */
+      if (parseval == 0)
+      {
+        if (verbose > 1)
+          ms_log (1, "Read record length of %d bytes\n", (*ppmsr)->reclen);
+
+        /* Test if this is the last record if file size is known (not pipe) */
+        if (last && msfp->filesize)
+          if ((msfp->filesize - (msfp->filepos + (*ppmsr)->reclen)) < MINRECLEN)
+            *last = 1;
+
+        /* Return file position for this record */
+        if (fpos)
+          *fpos = msfp->filepos;
+
+        /* Update reading offset, file position and record count */
+        msfp->readoffset += (*ppmsr)->reclen;
+        msfp->filepos += (*ppmsr)->reclen;
+        msfp->recordcount++;
+
+        retcode = MS_NOERROR;
+        break;
+      }
+      else if (parseval < 0)
+      {
+        /* Skip non-data if requested */
+        if (skipnotdata)
+        {
+          if (verbose > 1)
+          {
+            if (MS_ISVALIDBLANK ((char *)MSFPREADPTR (msfp)))
+              ms_log (1, "Skipped %d bytes of blank/noise record at byte offset %" PRId64 "\n",
+                      MINRECLEN, msfp->filepos);
+            else
+              ms_log (1, "Skipped %d bytes of non-data record at byte offset %" PRId64 "\n",
+                      MINRECLEN, msfp->filepos);
+          }
+
+          /* Skip MINRECLEN bytes, update reading offset and file position */
+          msfp->readoffset += MINRECLEN;
+          msfp->filepos += MINRECLEN;
+        }
+        /* Parsing errors */
+        else
+        {
+          ms_log (2, "Cannot detect record at byte offset %" PRId64 ": %s\n",
+                  msfp->filepos, msfile);
+
+          /* Print common errors and raw details if verbose */
+          ms_parse_raw (MSFPREADPTR (msfp), MSFPBUFLEN (msfp), verbose, -1);
+
+          retcode = parseval;
+          break;
+        }
+      }
+      else /* parseval > 0 (found record but need more data) */
+      {
+        /* Determine implied record length if needed */
+        int32_t impreclen = reclen;
+
+        /* Check for parse hints that are larger than MAXRECLEN */
+        if ((MSFPBUFLEN (msfp) + parseval) > MAXRECLEN)
+        {
+          if (skipnotdata)
+          {
+            /* Skip MINRECLEN bytes, update reading offset and file position */
+            msfp->readoffset += MINRECLEN;
+            msfp->filepos += MINRECLEN;
+          }
+          else
+          {
+            retcode = MS_OUTOFRANGE;
+            break;
+          }
+        }
+
+        /* Pack header check, if pack header offset is within buffer */
+        else if (impreclen <= 0 && msfp->packhdroffset &&
+                 msfp->packhdroffset < (msfp->filepos + MSFPBUFLEN (msfp)))
+        {
+          impreclen = msfp->packhdroffset - msfp->filepos;
+
+          /* Check that record length is within range and a power of 2.
+		   * Power of two if (X & (X - 1)) == 0 */
+          if (impreclen >= MINRECLEN && impreclen <= MAXRECLEN &&
+              (impreclen & (impreclen - 1)) == 0)
+          {
+            /* Set the record length implied by the next pack header */
+            reclen = impreclen;
+          }
+          else
+          {
+            ms_log (1, "Implied record length (%d) is invalid\n", impreclen);
+
+            retcode = MS_NOTSEED;
+            break;
+          }
+        }
+
+        /* End of file check */
+        else if (impreclen <= 0 && feof (msfp->fp))
+        {
+          impreclen = msfp->filesize - msfp->filepos;
+
+          /* Check that record length is within range and a power of 2.
+		   * Power of two if (X & (X - 1)) == 0 */
+          if (impreclen >= MINRECLEN && impreclen <= MAXRECLEN &&
+              (impreclen & (impreclen - 1)) == 0)
+          {
+            /* Set the record length implied by the end of the file */
+            reclen = impreclen;
+          }
+          /* Otherwise a trucated record */
+          else
+          {
+            if (verbose)
+            {
+              if (msfp->filesize)
+                ms_log (1, "Truncated record at byte offset %" PRId64 ", filesize %d: %s\n",
+                        msfp->filepos, msfp->filesize, msfile);
+              else
+                ms_log (1, "Truncated record at byte offset %" PRId64 "\n",
+                        msfp->filepos);
+            }
+
+            retcode = MS_ENDOFFILE;
+            break;
+          }
+        }
+      }
+    } /* End of record detection */
+
+    /* Finished when within MINRECLEN from EOF and buffer less than MINRECLEN */
+    if ((msfp->filesize - msfp->filepos) < MINRECLEN && MSFPBUFLEN (msfp) < MINRECLEN)
+    {
+      if (msfp->recordcount == 0 && msfp->packtype == 0)
+      {
+        if (verbose > 0)
+          ms_log (2, "%s: No data records read, not SEED?\n", msfile);
+        retcode = MS_NOTSEED;
+      }
+      else
+      {
+        retcode = MS_ENDOFFILE;
+      }
+
+      break;
+    }
+  } /* End of reading, record detection and parsing loop */
+
+  /* Cleanup target MSRecord if returning an error */
+  if (retcode != MS_NOERROR)
+  {
+    msr_free (ppmsr);
+  }
+
+  return retcode;
+} /* End of ms_readmsr_main() */
 
 /*********************************************************************
  * ms_readtraces:
@@ -723,15 +718,14 @@ ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile,
  *********************************************************************/
 int
 ms_readtraces (MSTraceGroup **ppmstg, const char *msfile, int reclen,
-	       double timetol, double sampratetol, flag dataquality,
-	       flag skipnotdata, flag dataflag, flag verbose)
+               double timetol, double sampratetol, flag dataquality,
+               flag skipnotdata, flag dataflag, flag verbose)
 {
   return ms_readtraces_selection (ppmstg, msfile, reclen,
-				  timetol, sampratetol, NULL,
-				  dataquality, skipnotdata,
-				  dataflag, verbose);
-}  /* End of ms_readtraces() */
-
+                                  timetol, sampratetol, NULL,
+                                  dataquality, skipnotdata,
+                                  dataflag, verbose);
+} /* End of ms_readtraces() */
 
 /*********************************************************************
  * ms_readtraces_timewin:
@@ -744,28 +738,27 @@ ms_readtraces (MSTraceGroup **ppmstg, const char *msfile, int reclen,
  *********************************************************************/
 int
 ms_readtraces_timewin (MSTraceGroup **ppmstg, const char *msfile, int reclen,
-		       double timetol, double sampratetol,
-		       hptime_t starttime, hptime_t endtime, flag dataquality,
-		       flag skipnotdata, flag dataflag, flag verbose)
+                       double timetol, double sampratetol,
+                       hptime_t starttime, hptime_t endtime, flag dataquality,
+                       flag skipnotdata, flag dataflag, flag verbose)
 {
   Selections selection;
   SelectTime selecttime;
-  
-  selection.srcname[0] = '*';
-  selection.srcname[1] = '\0';
-  selection.timewindows = &selecttime;
-  selection.next = NULL;
-  
-  selecttime.starttime = starttime;
-  selecttime.endtime = endtime;
-  selecttime.next = NULL;
-  
-  return ms_readtraces_selection (ppmstg, msfile, reclen,
-				  timetol, sampratetol, &selection,
-				  dataquality, skipnotdata,
-				  dataflag, verbose);
-}  /* End of ms_readtraces_timewin() */
 
+  selection.srcname[0]  = '*';
+  selection.srcname[1]  = '\0';
+  selection.timewindows = &selecttime;
+  selection.next        = NULL;
+
+  selecttime.starttime = starttime;
+  selecttime.endtime   = endtime;
+  selecttime.next      = NULL;
+
+  return ms_readtraces_selection (ppmstg, msfile, reclen,
+                                  timetol, sampratetol, &selection,
+                                  dataquality, skipnotdata,
+                                  dataflag, verbose);
+} /* End of ms_readtraces_timewin() */
 
 /*********************************************************************
  * ms_readtraces_selection:
@@ -785,58 +778,57 @@ ms_readtraces_timewin (MSTraceGroup **ppmstg, const char *msfile, int reclen,
  *********************************************************************/
 int
 ms_readtraces_selection (MSTraceGroup **ppmstg, const char *msfile,
-			 int reclen, double timetol, double sampratetol,
-			 Selections *selections, flag dataquality,
-			 flag skipnotdata, flag dataflag, flag verbose)
+                         int reclen, double timetol, double sampratetol,
+                         Selections *selections, flag dataquality,
+                         flag skipnotdata, flag dataflag, flag verbose)
 {
-  MSRecord *msr = 0;
+  MSRecord *msr     = 0;
   MSFileParam *msfp = 0;
   int retcode;
-  
-  if ( ! ppmstg )
-    return MS_GENERROR;
-  
-  /* Initialize MSTraceGroup if needed */
-  if ( ! *ppmstg )
-    {
-      *ppmstg = mst_initgroup (*ppmstg);
-      
-      if ( ! *ppmstg )
-	return MS_GENERROR;
-    }
-  
-  /* Loop over the input file */
-  while ( (retcode = ms_readmsr_main (&msfp, &msr, msfile, reclen, NULL, NULL,
-				      skipnotdata, dataflag, NULL, verbose)) == MS_NOERROR)
-    {
-      /* Test against selections if supplied */
-      if ( selections )
-	{
-	  char srcname[50];
-	  hptime_t endtime;
-	  
-	  msr_srcname (msr, srcname, 1);
-	  endtime = msr_endtime (msr);
-	  
-	  if ( ms_matchselect (selections, srcname, msr->starttime, endtime, NULL) == NULL )
-	    {
-	      continue;
-	    }
-	}
-      
-      /* Add to trace group */
-      mst_addmsrtogroup (*ppmstg, msr, dataquality, timetol, sampratetol);
-    }
-  
-  /* Reset return code to MS_NOERROR on successful read by ms_readmsr() */
-  if ( retcode == MS_ENDOFFILE )
-    retcode = MS_NOERROR;
-  
-  ms_readmsr_main (&msfp, &msr, NULL, 0, NULL, NULL, 0, 0, NULL, 0);
-  
-  return retcode;
-}  /* End of ms_readtraces_selection() */
 
+  if (!ppmstg)
+    return MS_GENERROR;
+
+  /* Initialize MSTraceGroup if needed */
+  if (!*ppmstg)
+  {
+    *ppmstg = mst_initgroup (*ppmstg);
+
+    if (!*ppmstg)
+      return MS_GENERROR;
+  }
+
+  /* Loop over the input file */
+  while ((retcode = ms_readmsr_main (&msfp, &msr, msfile, reclen, NULL, NULL,
+                                     skipnotdata, dataflag, NULL, verbose)) == MS_NOERROR)
+  {
+    /* Test against selections if supplied */
+    if (selections)
+    {
+      char srcname[50];
+      hptime_t endtime;
+
+      msr_srcname (msr, srcname, 1);
+      endtime = msr_endtime (msr);
+
+      if (ms_matchselect (selections, srcname, msr->starttime, endtime, NULL) == NULL)
+      {
+        continue;
+      }
+    }
+
+    /* Add to trace group */
+    mst_addmsrtogroup (*ppmstg, msr, dataquality, timetol, sampratetol);
+  }
+
+  /* Reset return code to MS_NOERROR on successful read by ms_readmsr() */
+  if (retcode == MS_ENDOFFILE)
+    retcode = MS_NOERROR;
+
+  ms_readmsr_main (&msfp, &msr, NULL, 0, NULL, NULL, 0, 0, NULL, 0);
+
+  return retcode;
+} /* End of ms_readtraces_selection() */
 
 /*********************************************************************
  * ms_readtracelist:
@@ -849,15 +841,14 @@ ms_readtraces_selection (MSTraceGroup **ppmstg, const char *msfile,
  *********************************************************************/
 int
 ms_readtracelist (MSTraceList **ppmstl, const char *msfile, int reclen,
-		  double timetol, double sampratetol, flag dataquality,
-		  flag skipnotdata, flag dataflag, flag verbose)
+                  double timetol, double sampratetol, flag dataquality,
+                  flag skipnotdata, flag dataflag, flag verbose)
 {
   return ms_readtracelist_selection (ppmstl, msfile, reclen,
-				     timetol, sampratetol, NULL,
-				     dataquality, skipnotdata,
-				     dataflag, verbose);
-}  /* End of ms_readtracelist() */
-
+                                     timetol, sampratetol, NULL,
+                                     dataquality, skipnotdata,
+                                     dataflag, verbose);
+} /* End of ms_readtracelist() */
 
 /*********************************************************************
  * ms_readtracelist_timewin:
@@ -870,28 +861,27 @@ ms_readtracelist (MSTraceList **ppmstl, const char *msfile, int reclen,
  *********************************************************************/
 int
 ms_readtracelist_timewin (MSTraceList **ppmstl, const char *msfile,
-			  int reclen, double timetol, double sampratetol,
-			  hptime_t starttime, hptime_t endtime, flag dataquality,
-			  flag skipnotdata, flag dataflag, flag verbose)
+                          int reclen, double timetol, double sampratetol,
+                          hptime_t starttime, hptime_t endtime, flag dataquality,
+                          flag skipnotdata, flag dataflag, flag verbose)
 {
   Selections selection;
   SelectTime selecttime;
-  
-  selection.srcname[0] = '*';
-  selection.srcname[1] = '\0';
-  selection.timewindows = &selecttime;
-  selection.next = NULL;
-  
-  selecttime.starttime = starttime;
-  selecttime.endtime = endtime;
-  selecttime.next = NULL;
-  
-  return ms_readtracelist_selection (ppmstl, msfile, reclen,
-				     timetol, sampratetol, &selection,
-				     dataquality, skipnotdata,
-				     dataflag, verbose);
-}  /* End of ms_readtracelist_timewin() */
 
+  selection.srcname[0]  = '*';
+  selection.srcname[1]  = '\0';
+  selection.timewindows = &selecttime;
+  selection.next        = NULL;
+
+  selecttime.starttime = starttime;
+  selecttime.endtime   = endtime;
+  selecttime.next      = NULL;
+
+  return ms_readtracelist_selection (ppmstl, msfile, reclen,
+                                     timetol, sampratetol, &selection,
+                                     dataquality, skipnotdata,
+                                     dataflag, verbose);
+} /* End of ms_readtracelist_timewin() */
 
 /*********************************************************************
  * ms_readtracelist_selection:
@@ -911,58 +901,57 @@ ms_readtracelist_timewin (MSTraceList **ppmstl, const char *msfile,
  *********************************************************************/
 int
 ms_readtracelist_selection (MSTraceList **ppmstl, const char *msfile,
-			    int reclen, double timetol, double sampratetol,
-			    Selections *selections, flag dataquality,
-			    flag skipnotdata, flag dataflag, flag verbose)
+                            int reclen, double timetol, double sampratetol,
+                            Selections *selections, flag dataquality,
+                            flag skipnotdata, flag dataflag, flag verbose)
 {
-  MSRecord *msr = 0;
+  MSRecord *msr     = 0;
   MSFileParam *msfp = 0;
   int retcode;
-  
-  if ( ! ppmstl )
-    return MS_GENERROR;
-  
-  /* Initialize MSTraceList if needed */
-  if ( ! *ppmstl )
-    {
-      *ppmstl = mstl_init (*ppmstl);
-      
-      if ( ! *ppmstl )
-	return MS_GENERROR;
-    }
-  
-  /* Loop over the input file */
-  while ( (retcode = ms_readmsr_main (&msfp, &msr, msfile, reclen, NULL, NULL,
-				      skipnotdata, dataflag, NULL, verbose)) == MS_NOERROR)
-    {
-      /* Test against selections if supplied */
-      if ( selections )
-	{
-	  char srcname[50];
-	  hptime_t endtime;
-	  
-	  msr_srcname (msr, srcname, 1);
-	  endtime = msr_endtime (msr);
-	  
-	  if ( ms_matchselect (selections, srcname, msr->starttime, endtime, NULL) == NULL )
-	    {
-	      continue;
-	    }
-	}
-      
-      /* Add to trace list */
-      mstl_addmsr (*ppmstl, msr, dataquality, 1, timetol, sampratetol);
-    }
-  
-  /* Reset return code to MS_NOERROR on successful read by ms_readmsr() */
-  if ( retcode == MS_ENDOFFILE )
-    retcode = MS_NOERROR;
-  
-  ms_readmsr_main (&msfp, &msr, NULL, 0, NULL, NULL, 0, 0, NULL, 0);
-  
-  return retcode;
-}  /* End of ms_readtracelist_selection() */
 
+  if (!ppmstl)
+    return MS_GENERROR;
+
+  /* Initialize MSTraceList if needed */
+  if (!*ppmstl)
+  {
+    *ppmstl = mstl_init (*ppmstl);
+
+    if (!*ppmstl)
+      return MS_GENERROR;
+  }
+
+  /* Loop over the input file */
+  while ((retcode = ms_readmsr_main (&msfp, &msr, msfile, reclen, NULL, NULL,
+                                     skipnotdata, dataflag, NULL, verbose)) == MS_NOERROR)
+  {
+    /* Test against selections if supplied */
+    if (selections)
+    {
+      char srcname[50];
+      hptime_t endtime;
+
+      msr_srcname (msr, srcname, 1);
+      endtime = msr_endtime (msr);
+
+      if (ms_matchselect (selections, srcname, msr->starttime, endtime, NULL) == NULL)
+      {
+        continue;
+      }
+    }
+
+    /* Add to trace list */
+    mstl_addmsr (*ppmstl, msr, dataquality, 1, timetol, sampratetol);
+  }
+
+  /* Reset return code to MS_NOERROR on successful read by ms_readmsr() */
+  if (retcode == MS_ENDOFFILE)
+    retcode = MS_NOERROR;
+
+  ms_readmsr_main (&msfp, &msr, NULL, 0, NULL, NULL, 0, 0, NULL, 0);
+
+  return retcode;
+} /* End of ms_readtracelist_selection() */
 
 /*********************************************************************
  * ms_fread:
@@ -975,21 +964,20 @@ static int
 ms_fread (char *buf, int size, int num, FILE *stream)
 {
   int read = 0;
-  
-  read = (int) fread (buf, size, num, stream);
-  
-  if ( read <= 0 && size && num )
-    {
-      if ( ferror (stream) )
-	ms_log (2, "ms_fread(): Cannot read input file\n");
-      
-      else if ( ! feof (stream) )
-	ms_log (2, "ms_fread(): Unknown return from fread()\n");
-    }
-  
-  return read;
-}  /* End of ms_fread() */
 
+  read = (int)fread (buf, size, num, stream);
+
+  if (read <= 0 && size && num)
+  {
+    if (ferror (stream))
+      ms_log (2, "ms_fread(): Cannot read input file\n");
+
+    else if (!feof (stream))
+      ms_log (2, "ms_fread(): Unknown return from fread()\n");
+  }
+
+  return read;
+} /* End of ms_fread() */
 
 /***************************************************************************
  * ms_record_handler_int:
@@ -1001,12 +989,11 @@ ms_fread (char *buf, int size, int num, FILE *stream)
 static void
 ms_record_handler_int (char *record, int reclen, void *ofp)
 {
-  if ( fwrite(record, reclen, 1, (FILE *)ofp) != 1 )
-    {
-      ms_log (2, "Error writing to output file\n");
-    }
-}  /* End of ms_record_handler_int() */
-
+  if (fwrite (record, reclen, 1, (FILE *)ofp) != 1)
+  {
+    ms_log (2, "Error writing to output file\n");
+  }
+} /* End of ms_record_handler_int() */
 
 /***************************************************************************
  * msr_writemseed:
@@ -1017,51 +1004,50 @@ ms_record_handler_int (char *record, int reclen, void *ofp)
  * Returns the number of records written on success and -1 on error.
  ***************************************************************************/
 int
-msr_writemseed ( MSRecord *msr, const char *msfile, flag overwrite,
-		 int reclen, flag encoding, flag byteorder, flag verbose )
+msr_writemseed (MSRecord *msr, const char *msfile, flag overwrite,
+                int reclen, flag encoding, flag byteorder, flag verbose)
 {
   FILE *ofp;
   char srcname[50];
-  char *perms = (overwrite) ? "wb":"ab";
+  char *perms       = (overwrite) ? "wb" : "ab";
   int packedrecords = 0;
-  
-  if ( ! msr || ! msfile )
+
+  if (!msr || !msfile)
     return -1;
-  
+
   /* Open output file or use stdout */
-  if ( strcmp (msfile, "-") == 0 )
-    {
-      ofp = stdout;
-    }
-  else if ( (ofp = fopen (msfile, perms)) == NULL )
-    {
-      ms_log (1, "Cannot open output file %s: %s\n", msfile, strerror(errno));
-      
-      return -1;
-    }
-  
+  if (strcmp (msfile, "-") == 0)
+  {
+    ofp = stdout;
+  }
+  else if ((ofp = fopen (msfile, perms)) == NULL)
+  {
+    ms_log (1, "Cannot open output file %s: %s\n", msfile, strerror (errno));
+
+    return -1;
+  }
+
   /* Pack the MSRecord */
-  if ( msr->numsamples > 0 )
+  if (msr->numsamples > 0)
+  {
+    msr->encoding  = encoding;
+    msr->reclen    = reclen;
+    msr->byteorder = byteorder;
+
+    packedrecords = msr_pack (msr, &ms_record_handler_int, ofp, NULL, 1, verbose - 1);
+
+    if (packedrecords < 0)
     {
-      msr->encoding = encoding;
-      msr->reclen = reclen;
-      msr->byteorder = byteorder;
-      
-      packedrecords = msr_pack (msr, &ms_record_handler_int, ofp, NULL, 1, verbose-1);
-      
-      if ( packedrecords < 0 )
-        {
-	  msr_srcname (msr, srcname, 1);
-          ms_log (1, "Cannot write Mini-SEED for %s\n", srcname);
-        }
+      msr_srcname (msr, srcname, 1);
+      ms_log (1, "Cannot write Mini-SEED for %s\n", srcname);
     }
-  
+  }
+
   /* Close file and return record count */
   fclose (ofp);
-  
-  return (packedrecords >= 0) ? packedrecords : -1;
-}  /* End of msr_writemseed() */
 
+  return (packedrecords >= 0) ? packedrecords : -1;
+} /* End of msr_writemseed() */
 
 /***************************************************************************
  * mst_writemseed:
@@ -1072,48 +1058,47 @@ msr_writemseed ( MSRecord *msr, const char *msfile, flag overwrite,
  * Returns the number of records written on success and -1 on error.
  ***************************************************************************/
 int
-mst_writemseed ( MSTrace *mst, const char *msfile, flag overwrite,
-		 int reclen, flag encoding, flag byteorder, flag verbose )
+mst_writemseed (MSTrace *mst, const char *msfile, flag overwrite,
+                int reclen, flag encoding, flag byteorder, flag verbose)
 {
   FILE *ofp;
   char srcname[50];
-  char *perms = (overwrite) ? "wb":"ab";
+  char *perms       = (overwrite) ? "wb" : "ab";
   int packedrecords = 0;
-  
-  if ( ! mst || ! msfile )
+
+  if (!mst || !msfile)
     return -1;
-  
+
   /* Open output file or use stdout */
-  if ( strcmp (msfile, "-") == 0 )
-    {
-      ofp = stdout;
-    }
-  else if ( (ofp = fopen (msfile, perms)) == NULL )
-    {
-      ms_log (1, "Cannot open output file %s: %s\n", msfile, strerror(errno));
-      
-      return -1;
-    }
-  
+  if (strcmp (msfile, "-") == 0)
+  {
+    ofp = stdout;
+  }
+  else if ((ofp = fopen (msfile, perms)) == NULL)
+  {
+    ms_log (1, "Cannot open output file %s: %s\n", msfile, strerror (errno));
+
+    return -1;
+  }
+
   /* Pack the MSTrace */
-  if ( mst->numsamples > 0 )
+  if (mst->numsamples > 0)
+  {
+    packedrecords = mst_pack (mst, &ms_record_handler_int, ofp, reclen, encoding,
+                              byteorder, NULL, 1, verbose - 1, NULL);
+
+    if (packedrecords < 0)
     {
-      packedrecords = mst_pack (mst, &ms_record_handler_int, ofp, reclen, encoding,
-				byteorder, NULL, 1, verbose-1, NULL);
-      
-      if ( packedrecords < 0 )
-        {
-	  mst_srcname (mst, srcname, 1);
-          ms_log (1, "Cannot write Mini-SEED for %s\n", srcname);
-        }
+      mst_srcname (mst, srcname, 1);
+      ms_log (1, "Cannot write Mini-SEED for %s\n", srcname);
     }
-  
+  }
+
   /* Close file and return record count */
   fclose (ofp);
-  
-  return (packedrecords >= 0) ? packedrecords : -1;
-}  /* End of mst_writemseed() */
 
+  return (packedrecords >= 0) ? packedrecords : -1;
+} /* End of mst_writemseed() */
 
 /***************************************************************************
  * mst_writemseedgroup:
@@ -1124,60 +1109,59 @@ mst_writemseed ( MSTrace *mst, const char *msfile, flag overwrite,
  * Returns the number of records written on success and -1 on error.
  ***************************************************************************/
 int
-mst_writemseedgroup ( MSTraceGroup *mstg, const char *msfile, flag overwrite,
-		      int reclen, flag encoding, flag byteorder, flag verbose )
+mst_writemseedgroup (MSTraceGroup *mstg, const char *msfile, flag overwrite,
+                     int reclen, flag encoding, flag byteorder, flag verbose)
 {
   MSTrace *mst;
   FILE *ofp;
   char srcname[50];
-  char *perms = (overwrite) ? "wb":"ab";
+  char *perms = (overwrite) ? "wb" : "ab";
   int trpackedrecords;
   int packedrecords = 0;
-  
-  if ( ! mstg || ! msfile )
+
+  if (!mstg || !msfile)
     return -1;
-  
+
   /* Open output file or use stdout */
-  if ( strcmp (msfile, "-") == 0 )
-    {
-      ofp = stdout;
-    }
-  else if ( (ofp = fopen (msfile, perms)) == NULL )
-    {
-      ms_log (1, "Cannot open output file %s: %s\n", msfile, strerror(errno));
-      
-      return -1;
-    }
-  
+  if (strcmp (msfile, "-") == 0)
+  {
+    ofp = stdout;
+  }
+  else if ((ofp = fopen (msfile, perms)) == NULL)
+  {
+    ms_log (1, "Cannot open output file %s: %s\n", msfile, strerror (errno));
+
+    return -1;
+  }
+
   /* Pack each MSTrace in the group */
   mst = mstg->traces;
-  while ( mst )
+  while (mst)
+  {
+    if (mst->numsamples <= 0)
     {
-      if ( mst->numsamples <= 0 )
-        {
-          mst = mst->next;
-          continue;
-        }
-      
-      trpackedrecords = mst_pack (mst, &ms_record_handler_int, ofp, reclen, encoding,
-                                  byteorder, NULL, 1, verbose-1, NULL);
-      
-      if ( trpackedrecords < 0 )
-        {
-	  mst_srcname (mst, srcname, 1);
-          ms_log (1, "Cannot write Mini-SEED for %s\n", srcname);
-        }
-      else
-        {
-          packedrecords += trpackedrecords;
-        }
-      
       mst = mst->next;
+      continue;
     }
-  
+
+    trpackedrecords = mst_pack (mst, &ms_record_handler_int, ofp, reclen, encoding,
+                                byteorder, NULL, 1, verbose - 1, NULL);
+
+    if (trpackedrecords < 0)
+    {
+      mst_srcname (mst, srcname, 1);
+      ms_log (1, "Cannot write Mini-SEED for %s\n", srcname);
+    }
+    else
+    {
+      packedrecords += trpackedrecords;
+    }
+
+    mst = mst->next;
+  }
+
   /* Close file and return record count */
   fclose (ofp);
-  
-  return packedrecords;
-}  /* End of mst_writemseedgroup() */
 
+  return packedrecords;
+} /* End of mst_writemseedgroup() */

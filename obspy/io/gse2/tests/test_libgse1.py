@@ -3,10 +3,6 @@
 """
 The libgse1 test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 
@@ -22,7 +18,7 @@ class LibGSE1TestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_verifyChecksums(self):
+    def test_verify_checksums(self):
         """
         Tests verifying checksums for CM6 encoded GSE1 files.
         """

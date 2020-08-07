@@ -27,7 +27,7 @@ DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 CODENAME=`lsb_release -cs`
 # the lsb-release package in raspbian wheezy
-# (http://www.raspberrypi.org/downloads) does not report the codename
+# (https://www.raspberrypi.org/downloads) does not report the codename
 # correctly, so fix this
 if [ "$CODENAME" == "n/a" ] && [ `arch` == "armv6l" ]; then CODENAME=wheezy; fi
 BUILDDIR=/tmp/python-obspy_build
@@ -37,6 +37,16 @@ GITDIR=$BUILDDIR/git
 # deactivate, else each time all packages are removed
 rm -rf $BUILDDIR
 mkdir -p $PACKAGEDIR
+# sometimes git commands like "stash" fail with:
+#   fatal: unable to auto-detect email address (got 'root@a0b4bf921641.(none)')
+#   Cannot save the current index state
+# so set some bogus address to be able to clean the repo state and properly
+# switch branches
+git config --global user.email "test@obspy.org"
+git config --global user.name "obspy debian packaging"
+# try to avoid problems with git stash replacing linefeeds somehow on some
+# distros
+git config --global core.autocrlf false
 git clone git://github.com/${GITFORK}/obspy.git $GITDIR
 cd $GITDIR
 if [ "$GITFORK" != "obspy" ]
@@ -51,24 +61,15 @@ cd $GITDIR
 git clean -fxd
 git fetch --all
 git checkout -- .
+# seems sometimes there are still changes in tracked files, weird and should
+# not happen but we can get rid of it with a stash command
+git stash save
 if [ "$GITTARGET" != "master" ]
 then
-    git checkout -b $GITTARGET origin/$GITTARGET
+    git checkout $GITTARGET
 fi
 git clean -fxd
-# first of all selectively use debian build instructions for either
-# buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
-# (newer Debuntu releases)
-if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
-then
-    # old build style, python2 only
-    cp -a debian/python_distutils/* debian/
-else
-    # new build style, python2 and python3
-    # Ubuntu: trusty and higher
-    # Debian: jessie and higher
-    cp -a debian/pybuild/* debian/
-fi
+
 # remove dependencies of distribute for obspy.core
 # distribute is not packed for python2.5 in Debian
 # Note: the space before distribute is essential
@@ -104,11 +105,6 @@ cat >> debian/changelog << EOF
 
  -- ObsPy Development Team <devs@obspy.org>  $DATE
 EOF
-# adjust dh compatibility for older dh versions
-if [ $CODENAME = "squeeze" ]
-    then
-    echo "8" > ./debian/compat
-fi
 # build the package
 export FFLAGS="$FFLAGS -fPIC"  # needed for gfortran
 export LDFLAGS="$LDFLAGS -shared -z relro -z now"  # needed for gfortran

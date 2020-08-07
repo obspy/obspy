@@ -1,0 +1,26 @@
+Description: patch locating libmseed test data
+ Libmseed test data originally in "../io/mseed/src/libmseed" are moved to
+ "../io/mseed/tests/data" in Debian packaging. Therefore we need to change the
+ directory lookup in the test routines.
+Author: Tobias Megies
+Bug: https://github.com/obspy/obspy/issues/1568
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/obspy/io/mseed/tests/test_mseed_reading_and_writing.py
++++ b/obspy/io/mseed/tests/test_mseed_reading_and_writing.py
+@@ -1454,13 +1454,12 @@ class MSEEDReadingAndWritingTestCase(uni
+             else:  # pragma: no cover
+                 raise NotImplementedError
+ 
+-        folder = os.path.join(self.path, os.path.pardir, "src", "libmseed",
+-                              "test")
++        folder = os.path.join(self.path, "data", "libmseed")
+ 
+         # Get all the tests.
+         tests = sorted(glob.glob(os.path.join(folder, "*.test")))
+         # And all the test data.
+-        test_files = glob.glob(os.path.join(folder, "data", "*.mseed"))
++        test_files = glob.glob(os.path.join(folder, "*.mseed"))
+         # And their paths relative to the test folder.
+         rel_test_files = [os.path.normpath(os.path.relpath(_i, folder))
+                           for _i in test_files]

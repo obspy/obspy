@@ -8,7 +8,7 @@ def post_process_html(app, pagename, templatename, context, doctree):
     try:
         context['body'] = \
             context['body'].replace("&#8211;", '<span class="dash" />')
-    except:
+    except Exception:
         pass
 
     if not doctree or not doctree.has_name('citations'):

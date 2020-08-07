@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import sys
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop
-from ..utils import blockette_34_lookup, format_RESP
+from ..utils import blockette_34_lookup, format_resp
 
 
 class Blockette062(Blockette):
@@ -45,14 +41,14 @@ class Blockette062(Blockette):
         Integer(14, "Number of Polynomial Coefficients", 3),
         # REPEAT fields 15 and 16 for each polynomial coefficient
         Loop("Polynomial Coefficients", "Number of Polynomial Coefficients", [
-            Float(12, "Polynomial Coefficient", 12, mask='%+1.5e'),
-            Float(12, "Polynomial Coefficient Error", 12, mask='%+1.5e'),
+            Float(15, "Polynomial Coefficient", 12, mask='%+1.5e'),
+            Float(16, "Polynomial Coefficient Error", 12, mask='%+1.5e'),
         ])
     ]
 
     # Changes the name of the blockette because of an error in XSEED 1.0
-    def get_XML(self, *args, **kwargs):
-        xml = Blockette.get_XML(self, *args, **kwargs)
+    def get_xml(self, *args, **kwargs):
+        xml = Blockette.get_xml(self, *args, **kwargs)
         if self.xseed_version == '1.0':
             msg = 'The xsd-validation file for XML-SEED version 1.0 does ' + \
                 'not support Blockette 62. It will be written but ' + \
@@ -62,7 +58,7 @@ class Blockette062(Blockette):
             sys.stdout.write(msg)
         return xml
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -117,12 +113,12 @@ class Blockette062(Blockette):
             if self.number_of_polynomial_coefficients > 1:
                 for _i in range(self.number_of_polynomial_coefficients):
                     string += 'B062F15-16   %2s %13s %13s\n' \
-                        % (_i, format_RESP(self.polynomial_coefficient[_i], 6),
-                           format_RESP(self.polynomial_coefficient_error[_i],
+                        % (_i, format_resp(self.polynomial_coefficient[_i], 6),
+                           format_resp(self.polynomial_coefficient_error[_i],
                                        6))
             else:
                 string += 'B062F15-16   %2s %13s %13s\n' \
-                    % (0, format_RESP(self.polynomial_coefficient, 6),
-                       format_RESP(self.polynomial_coefficient_error, 6))
+                    % (0, format_resp(self.polynomial_coefficient, 6),
+                       format_resp(self.polynomial_coefficient_error, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()

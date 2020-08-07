@@ -207,8 +207,7 @@ int decomp_6b_buffer (int n_of_samples, int32_t *dta, char * (* reader)(char *, 
   int i, ibuf=-1, k, inn, jsign=0, joflow=0;
   int32_t itemp;
   char cbuf[83]=" ";
-
-  if (n_of_samples == 0) { printf ("decomp_6b: no action.\n"); return 0; }
+  if (n_of_samples == 0) { fprintf (stdout, "decomp_6b: no action.\n"); return 0; }
   
   while (1) {
       /* read until we encounter DAT1 or DAT2 */
@@ -220,22 +219,22 @@ int decomp_6b_buffer (int n_of_samples, int32_t *dta, char * (* reader)(char *, 
       }
       /* print error if we reached the end of the file */
     if ((*reader)(cbuf, vptr) == NULL) {
-          printf ("decomp_6b: Neither DAT2 or DAT1 found!\n"); 
+          fprintf (stderr, "decomp_6b: Neither DAT2 or DAT1 found!\n"); 
           return -1;
       }
   }
     if ((*reader)(cbuf, vptr) == NULL) /* read first char line */
-  	{printf ("decomp_6b: Whoops! No data after DAT2 or DAT1.\n"); return -1; }
+  	{fprintf (stderr, "decomp_6b: Whoops! No data after DAT2 or DAT1.\n"); return -1; }
   for (i = 0; i < n_of_samples; i++)		/* loop over expected samples */
   {
   	ibuf += 1;
   	if (ibuf > 79 || isspace(cbuf[ibuf])) { 
   	if ((*reader)(cbuf, vptr) == NULL) /* get next line */
-  		{printf ("decomp_6b: missing input line?\n"); return -1; }
+  		{fprintf (stderr, "decomp_6b: missing input line?\n"); return -1; }
       /* We need a space to be sure that CHK2 is not occuring in the middle
        * of the encoded string/buffer */
   	  if (!(strncmp(cbuf,"CHK2 ",5)) || !(strncmp(cbuf,"CHK1 ", 5)))
-  		{printf ("decomp_6b: CHK2 or CHK1 reached prematurely!\n"); return i; }
+  		{fprintf (stderr, "decomp_6b: CHK2 or CHK1 reached prematurely!\n"); return i; }
   	  ibuf = 0;
   	}
 
@@ -254,7 +253,7 @@ int decomp_6b_buffer (int n_of_samples, int32_t *dta, char * (* reader)(char *, 
   	  ibuf += 1;
   	  if (ibuf > 79 || isspace(cbuf[ibuf])) {
   	    if ((*reader)(cbuf, vptr) == NULL) /* get next line */
-  		{printf ("decomp_6b: missing input line.\n"); return -1; }
+  		{fprintf (stderr, "decomp_6b: missing input line.\n"); return -1; }
   	    ibuf = 0;
 	  }
   					/* now the same procedure as above */

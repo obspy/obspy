@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import io
 import os
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop, VariableString
-from ..utils import lookup_code, format_RESP
+from ..utils import lookup_code, format_resp
 
 
 class Blockette041(Blockette):
@@ -38,7 +33,7 @@ class Blockette041(Blockette):
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]
 
-    def parse_SEED(self, data, expected_length=0):
+    def parse_seed(self, data, expected_length=0):
         """
         If number of FIR coefficients are larger than maximal blockette size of
         9999 chars a follow up blockette with the same blockette id and
@@ -48,7 +43,7 @@ class Blockette041(Blockette):
         if isinstance(data, bytes):
             expected_length = len(data)
             data = io.BytesIO(data)
-        elif isinstance(data, (str, native_str)):
+        elif isinstance(data, str):
             raise TypeError("Data must be bytes, not string")
         # get current lookup key
         pos = data.tell()
@@ -90,20 +85,20 @@ class Blockette041(Blockette):
         temp.seek(0, os.SEEK_END)
         _len = temp.tell()
         temp.seek(0)
-        Blockette.parse_SEED(self, temp, expected_length=_len)
+        Blockette.parse_seed(self, temp, expected_length=_len)
 
-    def parse_XML(self, xml_doc, *args, **kwargs):
+    def parse_xml(self, xml_doc, *args, **kwargs):
         if self.xseed_version == '1.0':
             xml_doc.find('fir_coefficient').tag = 'FIR_coefficient'
-        Blockette.parse_XML(self, xml_doc, *args, **kwargs)
+        Blockette.parse_xml(self, xml_doc, *args, **kwargs)
 
-    def get_XML(self, *args, **kwargs):
-        xml = Blockette.get_XML(self, *args, **kwargs)
+    def get_xml(self, *args, **kwargs):
+        xml = Blockette.get_xml(self, *args, **kwargs)
         if self.xseed_version == '1.0':
             xml.find('FIR_coefficient').tag = 'fir_coefficient'
         return xml
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -135,11 +130,11 @@ class Blockette041(Blockette):
                       '#\t\t  i, coefficient\n'
             for _i in range(self.number_of_factors):
                 string += 'B041F09    %4s %13s\n' \
-                    % (_i, format_RESP(self.FIR_coefficient[_i], 6))
+                    % (_i, format_resp(self.FIR_coefficient[_i], 6))
         elif self.number_of_factors == 1:
             string += '#\t\tNumerator coefficients:\n' + \
                 '#\t\t  i, coefficient\n'
             string += 'B041F09    %4s %13s\n' \
-                % (0, format_RESP(self.FIR_coefficient, 6))
+                % (0, format_resp(self.FIR_coefficient, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()

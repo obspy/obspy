@@ -11,10 +11,6 @@
 Functions that will all take a file pointer and the sample count and return a
 NumPy array with the unpacked values.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import sys
 
 import numpy as np
@@ -33,7 +29,7 @@ class WrongDtypeException(Exception):
     pass
 
 
-def pack_4byte_IBM(file, data, endian='>'):
+def pack_4byte_ibm(file, data, endian='>'):
     """
     Packs 4 byte IBM floating points. This will only work if the host system
     internally uses little endian byte orders.
@@ -42,7 +38,7 @@ def pack_4byte_IBM(file, data, endian='>'):
     if data.dtype != np.float64 and data.dtype != np.float32:
         raise WrongDtypeException
     # Calculate the values. The theory is explained in
-    # http://www.codeproject.com/KB/applications/libnumber.aspx
+    # https://www.codeproject.com/KB/applications/libnumber.aspx
 
     # Calculate the signs.
     signs = np.empty(len(data), dtype=np.uint8)
@@ -153,7 +149,7 @@ def pack_4byte_fixed_point(file, data, endian='>'):
     raise NotImplementedError
 
 
-def pack_4byte_IEEE(file, data, endian='>'):
+def pack_4byte_ieee(file, data, endian='>'):
     """
     Packs 4 byte IEEE floating points.
     """

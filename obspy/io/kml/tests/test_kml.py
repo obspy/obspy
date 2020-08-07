@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import os
 import unittest
 
@@ -20,14 +15,14 @@ class KMLTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_write_Inventory(self):
+    def test_write_inventory(self):
         """
         Test writing Inventory to KML.
         """
         # write the example inventory to KML and read it into a string
         inv = read_inventory()
         with NamedTemporaryFile(suffix=".kml") as tf:
-            inv.write(native_str(tf.name), format="KML")
+            inv.write(tf.name, format="KML")
             with open(tf.name, "rb") as fh:
                 got = fh.read()
         # read expected result into string
@@ -37,14 +32,14 @@ class KMLTestCase(unittest.TestCase):
         # compare the two
         compare_xml_strings(expected, got)
 
-    def test_write_Catalog(self):
+    def test_write_catalog(self):
         """
         Test writing Catalog to KML.
         """
         # write the example catalog to KML and read it into a string
         cat = read_events()
         with NamedTemporaryFile(suffix=".kml") as tf:
-            cat.write(native_str(tf.name), format="KML")
+            cat.write(tf.name, format="KML")
             with open(tf.name, "rb") as fh:
                 got = fh.read()
         # read expected result into string

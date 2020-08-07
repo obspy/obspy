@@ -6,18 +6,14 @@ SAC bindings to ObsPy core module.
     The ObsPy Development Team (devs@obspy.org) & C. J. Ammon & J. MacCarthy
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
+import io
 import os
 import struct
 
 from obspy import Stream
-from obspy.core.compatibility import is_bytes_buffer
+
 from .sactrace import SACTrace
 
 
@@ -32,18 +28,22 @@ def _is_sac(filename):
 
     .. rubric:: Example
 
-    >>> _is_sac('/path/to/test.sac')  #doctest: +SKIP
+    >>> from obspy.core.util import get_example_file
+    >>> _is_sac(get_example_file('test.sac'))
+    True
+    >>> _is_sac(get_example_file('test.mseed'))
+    False
     """
-    if is_bytes_buffer(filename):
-        return __is_sac(filename)
+    if isinstance(filename, io.BufferedIOBase):
+        return _internal_is_sac(filename)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
-            return __is_sac(fh)
+            return _internal_is_sac(fh)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def __is_sac(buf):
+def _internal_is_sac(buf):
     """
     Checks whether a file-like object contains a SAC file or not.
 
@@ -56,39 +56,39 @@ def __is_sac(buf):
     try:
         # read delta (first header float)
         delta_bin = buf.read(4)
-        delta = struct.unpack(native_str('<f'), delta_bin)[0]
+        delta = struct.unpack('<f', delta_bin)[0]
         # read nvhdr (70 header floats, 6 position in header integers)
-        buf.seek(4 * 70 + 4 * 6)
+        buf.seek(starting_pos + 4 * 70 + 4 * 6, 0)
         nvhdr_bin = buf.read(4)
-        nvhdr = struct.unpack(native_str('<i'), nvhdr_bin)[0]
+        nvhdr = struct.unpack('<i', nvhdr_bin)[0]
         # read leven (70 header floats, 35 header integers, 0 position in
         # header bool)
-        buf.seek(4 * 70 + 4 * 35)
+        buf.seek(starting_pos + 4 * 70 + 4 * 35, 0)
         leven_bin = buf.read(4)
-        leven = struct.unpack(native_str('<i'), leven_bin)[0]
+        leven = struct.unpack('<i', leven_bin)[0]
         # read lpspol (70 header floats, 35 header integers, 1 position in
         # header bool)
-        buf.seek(4 * 70 + 4 * 35 + 4 * 1)
+        buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 1, 0)
         lpspol_bin = buf.read(4)
-        lpspol = struct.unpack(native_str('<i'), lpspol_bin)[0]
+        lpspol = struct.unpack('<i', lpspol_bin)[0]
         # read lovrok (70 header floats, 35 header integers, 2 position in
         # header bool)
-        buf.seek(4 * 70 + 4 * 35 + 4 * 2)
+        buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 2, 0)
         lovrok_bin = buf.read(4)
-        lovrok = struct.unpack(native_str('<i'), lovrok_bin)[0]
+        lovrok = struct.unpack('<i', lovrok_bin)[0]
         # read lcalda (70 header floats, 35 header integers, 3 position in
         # header bool)
-        buf.seek(4 * 70 + 4 * 35 + 4 * 3)
+        buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 3, 0)
         lcalda_bin = buf.read(4)
-        lcalda = struct.unpack(native_str('<i'), lcalda_bin)[0]
+        lcalda = struct.unpack('<i', lcalda_bin)[0]
         # check if file is big-endian
         if nvhdr < 0 or nvhdr > 20:
-            nvhdr = struct.unpack(native_str('>i'), nvhdr_bin)[0]
-            delta = struct.unpack(native_str('>f'), delta_bin)[0]
-            leven = struct.unpack(native_str('>i'), leven_bin)[0]
-            lpspol = struct.unpack(native_str('>i'), lpspol_bin)[0]
-            lovrok = struct.unpack(native_str('>i'), lovrok_bin)[0]
-            lcalda = struct.unpack(native_str('>i'), lcalda_bin)[0]
+            nvhdr = struct.unpack('>i', nvhdr_bin)[0]
+            delta = struct.unpack('>f', delta_bin)[0]
+            leven = struct.unpack('>i', leven_bin)[0]
+            lpspol = struct.unpack('>i', lpspol_bin)[0]
+            lovrok = struct.unpack('>i', lovrok_bin)[0]
+            lcalda = struct.unpack('>i', lcalda_bin)[0]
         # check again nvhdr
         if nvhdr < 1 or nvhdr > 20:
             return False
@@ -102,7 +102,7 @@ def __is_sac(buf):
             return False
         if lcalda != 0 and lcalda != 1 and lcalda != -12345:
             return False
-    except:
+    except Exception:
         return False
     finally:
         # Reset buffer head position after reading.
@@ -110,7 +110,7 @@ def __is_sac(buf):
     return True
 
 
-def _is_sacXY(filename):
+def _is_sac_xy(filename):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
@@ -121,18 +121,22 @@ def _is_sacXY(filename):
 
     .. rubric:: Example
 
-    >>> _is_sacXY('/path/to/testxy.sac')  #doctest: +SKIP
+    >>> from obspy.core.util import get_example_file
+    >>> _is_sac_xy(get_example_file('testxy.sac'))
+    True
+    >>> _is_sac_xy(get_example_file('test.sac'))
+    False
     """
-    if is_bytes_buffer(filename):
-        return __is_sacXY(filename)
+    if isinstance(filename, io.BufferedIOBase):
+        return _internal_is_sac_xy(filename)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
-            return __is_sacXY(fh)
+            return _internal_is_sac_xy(fh)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def __is_sacXY(buf):
+def _internal_is_sac_xy(buf):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
@@ -151,7 +155,7 @@ def __is_sacXY(buf):
             npts = int(hdcards[15].split()[-1])
             # read in the seismogram
             seis = buf.read(-1).split()
-        except:
+        except Exception:
             return False
         # check that npts header value and seismogram length are consistent
         if npts != len(seis):
@@ -161,8 +165,8 @@ def __is_sacXY(buf):
         buf.seek(cur_pos, 0)
 
 
-def _read_sacXY(filename, headonly=False, debug_headers=False,
-                **kwargs):  # @UnusedVariable
+def _read_sac_xy(filename, headonly=False, debug_headers=False,
+                 **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -187,20 +191,20 @@ def _read_sacXY(filename, headonly=False, debug_headers=False,
 
     .. rubric:: Example
 
-    >>> from obspy import read # doctest: +SKIP
-    >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
+    >>> from obspy import read
+    >>> st = read("/path/to/testxy.sac")
     """
-    if is_bytes_buffer(filename):
-        return __read_sacXY(buf=filename, headonly=headonly,
-                            debug_headers=debug_headers, **kwargs)
+    if isinstance(filename, io.BufferedIOBase):
+        return _internal_read_sac_xy(buf=filename, headonly=headonly,
+                                     debug_headers=debug_headers, **kwargs)
     else:
         with open(filename, "rb") as fh:
-            return __read_sacXY(buf=fh, headonly=headonly,
-                                debug_headers=debug_headers, **kwargs)
+            return _internal_read_sac_xy(buf=fh, headonly=headonly,
+                                         debug_headers=debug_headers, **kwargs)
 
 
-def __read_sacXY(buf, headonly=False, debug_headers=False,
-                 **kwargs):  # @UnusedVariable
+def _internal_read_sac_xy(buf, headonly=False, debug_headers=False,
+                          **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -225,8 +229,8 @@ def __read_sacXY(buf, headonly=False, debug_headers=False,
 
     .. rubric:: Example
 
-    >>> from obspy import read # doctest: +SKIP
-    >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
+    >>> from obspy import read
+    >>> st = read("/path/to/testxy.sac")
     """
     sac = SACTrace.read(buf, headonly=headonly, ascii=True)
     # assign all header entries to a new dictionary compatible with ObsPy
@@ -235,7 +239,7 @@ def __read_sacXY(buf, headonly=False, debug_headers=False,
     return Stream([tr])
 
 
-def _write_sacXY(stream, filename, **kwargs):  # @UnusedVariable
+def _write_sac_xy(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a alphanumeric SAC file.
 
@@ -260,12 +264,12 @@ def _write_sacXY(stream, filename, **kwargs):  # @UnusedVariable
     >>> st.write("testxy.sac", format="SACXY")  #doctest: +SKIP
     """
     # SAC can only store one Trace per file.
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object can only contain "
                              "one Trace.")
-        __write_sacXY(stream[0], filename, **kwargs)
+        _internal_write_sac_xy(stream[0], filename, **kwargs)
         return
     elif isinstance(filename, (str, bytes)):
         # Otherwise treat it as a filename
@@ -275,12 +279,12 @@ def _write_sacXY(stream, filename, **kwargs):  # @UnusedVariable
             if len(stream) != 1:
                 filename = "%s%02d%s" % (base, i + 1, ext)
             with open(filename, "wb") as fh:
-                __write_sacXY(trace, fh, **kwargs)
+                _internal_write_sac_xy(trace, fh, **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def __write_sacXY(trace, buf, **kwargs):  # @UnusedVariable
+def _internal_write_sac_xy(trace, buf, **kwargs):  # @UnusedVariable
     """
     Writes a single trace to alphanumeric SAC file.
 
@@ -327,24 +331,25 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
 
     .. rubric:: Example
 
-    >>> from obspy import read # doctest: +SKIP
-    >>> st = read("/path/to/test.sac") # doctest: +SKIP
+    >>> from obspy import read
+    >>> st = read("/path/to/test.sac")
     """
     # Only byte buffers for binary SAC.
-    if is_bytes_buffer(filename):
-        return __read_sac(buf=filename, headonly=headonly,
-                          debug_headers=debug_headers, fsize=fsize, **kwargs)
+    if isinstance(filename, io.BufferedIOBase):
+        return _internal_read_sac(buf=filename, headonly=headonly,
+                                  debug_headers=debug_headers, fsize=fsize,
+                                  **kwargs)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
-            return __read_sac(buf=fh, headonly=headonly,
-                              debug_headers=debug_headers, fsize=fsize,
-                              **kwargs)
+            return _internal_read_sac(buf=fh, headonly=headonly,
+                                      debug_headers=debug_headers, fsize=fsize,
+                                      **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def __read_sac(buf, headonly=False, debug_headers=False, fsize=True,
-               **kwargs):  # @UnusedVariable
+def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
+                       byteorder=None, **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -367,13 +372,24 @@ def __read_sac(buf, headonly=False, debug_headers=False, fsize=True,
     :param fsize: Check if file size is consistent with theoretical size
         from header. Defaults to ``True``.
     :type fsize: bool
+    :param byteorder: If omitted or None, automatic byte-order checking is
+        done, starting with native order. If byteorder is specified and
+        incorrect, a :class:`SacIOError` is raised. Only valid for binary
+        files.
+    :type byteorder: str {'little', 'big'}, optional
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
+
+    # Extract encoding flag (default to ascii)
+    encoding_str = kwargs.get('encoding', 'ascii')
+
     # read SAC file
-    sac = SACTrace.read(buf, headonly=headonly, ascii=False, checksize=fsize)
+    sac = SACTrace.read(buf, headonly=headonly, ascii=False,
+                        byteorder=byteorder, checksize=fsize,
+                        encoding=encoding_str)
     # assign all header entries to a new dictionary compatible with an ObsPy
-    tr = sac.to_obspy_trace(debug_headers=debug_headers)
+    tr = sac.to_obspy_trace(debug_headers=debug_headers, encoding=encoding_str)
 
     return Stream([tr])
 
@@ -408,12 +424,12 @@ def _write_sac(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     """
     # Bytes buffer are ok, but only if the Stream object contains only one
     # Trace. SAC can only store one Trace per file.
-    if is_bytes_buffer(filename):
+    if isinstance(filename, io.BufferedIOBase):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object can only contain "
                              "one Trace.")
-        __write_sac(stream[0], filename, byteorder=byteorder, **kwargs)
+        _internal_write_sac(stream[0], filename, byteorder=byteorder, **kwargs)
         return
     elif isinstance(filename, (str, bytes)):
         # Otherwise treat it as a filename
@@ -423,12 +439,12 @@ def _write_sac(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
             if len(stream) != 1:
                 filename = "%s%02d%s" % (base, i + 1, ext)
             with open(filename, "wb") as fh:
-                __write_sac(trace, fh, byteorder=byteorder, **kwargs)
+                _internal_write_sac(trace, fh, byteorder=byteorder, **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def __write_sac(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
+def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
     """
     Writes a single trace to an open file or file-like object.
 

@@ -17,13 +17,8 @@ The read in PAZ information can be used with
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import doctest
 
 import numpy as np
@@ -58,40 +53,40 @@ def read_paz(paz_file):
     poles = []
     zeros = []
 
-    if isinstance(paz_file, (str, native_str)):
+    if isinstance(paz_file, str):
         with open(paz_file, 'rt') as fh:
-            PAZ = fh.readlines()
+            paz = fh.readlines()
     else:
-        PAZ = paz_file.readlines()
-    if PAZ[0][0:4] != 'CAL1':
-        raise NameError("Unknown GSE PAZ format %s" % PAZ[0][0:4])
-    if PAZ[0][31:34] != 'PAZ':
-        raise NameError("%s type is not known" % PAZ[0][31:34])
+        paz = paz_file.readlines()
+    if paz[0][0:4] != 'CAL1':
+        raise NameError("Unknown GSE PAZ format %s" % paz[0][0:4])
+    if paz[0][31:34] != 'PAZ':
+        raise NameError("%s type is not known" % paz[0][31:34])
 
     ind = 1
-    npoles = int(PAZ[ind])
+    npoles = int(paz[ind])
     for i in range(npoles):
         try:
             poles.append(complex(*[float(n)
-                                   for n in PAZ[i + 1 + ind].split()]))
+                                   for n in paz[i + 1 + ind].split()]))
         except ValueError:
-            poles.append(complex(float(PAZ[i + 1 + ind][:8]),
-                                 float(PAZ[i + 1 + ind][8:])))
+            poles.append(complex(float(paz[i + 1 + ind][:8]),
+                                 float(paz[i + 1 + ind][8:])))
 
     ind += i + 2
-    nzeros = int(PAZ[ind])
+    nzeros = int(paz[ind])
     for i in range(nzeros):
         try:
             zeros.append(complex(*[float(n)
-                                   for n in PAZ[i + 1 + ind].split()]))
+                                   for n in paz[i + 1 + ind].split()]))
         except ValueError:
-            zeros.append(complex(float(PAZ[i + 1 + ind][:8]),
-                                 float(PAZ[i + 1 + ind][8:])))
+            zeros.append(complex(float(paz[i + 1 + ind][:8]),
+                                 float(paz[i + 1 + ind][8:])))
 
     ind += i + 2
     # in the observatory this is the seismometer gain [muVolt/nm/s]
     # the A0_normalization_factor is hardcoded to 1.0
-    seismometer_gain = float(PAZ[ind])
+    seismometer_gain = float(paz[ind])
     return poles, zeros, seismometer_gain
 
 

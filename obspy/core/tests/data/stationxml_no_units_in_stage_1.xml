@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
+  <Source>ObsPy's obspy.io.xseed version 1.0.3.post0+1209.gb1a2061328.dirty</Source>
+  <Module>ObsPy 1.0.3.post0+1209.gb1a2061328.dirty</Module>
+  <ModuleURI>https://www.obspy.org</ModuleURI>
+  <Created>2017-06-01T15:05:08.176169</Created>
+  <Network code="SG">
+    <Description>Superconducting Gravimeter Global Geodynamics Project</Description>
+    <Station code="MEMB" endDate="2599-12-31T23:59:59" startDate="2005-02-15T00:00:00">
+      <Latitude unit="DEGREES">50.6092</Latitude>
+      <Longitude unit="DEGREES">6.0067</Longitude>
+      <Elevation unit="METERS">250.0</Elevation>
+      <Site>
+        <Name>Membach, Belgium</Name>
+      </Site>
+      <CreationDate>2015-06-17T11:42:00</CreationDate>
+      <Channel code="BDI" endDate="2599-12-31T23:59:59" locationCode="" startDate="2005-02-15T00:00:00">
+        <Latitude unit="DEGREES">50.6092</Latitude>
+        <Longitude unit="DEGREES">6.0067</Longitude>
+        <Elevation unit="METERS">250.0</Elevation>
+        <Depth unit="METERS">0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <SampleRate>100.0</SampleRate>
+        <Sensor>
+          <Type>Paroscientific Microbarograph</Type>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>3141.49</Value>
+            <Frequency>0.0001</Frequency>
+            <InputUnits>
+              <Name>M/S</Name>
+              <Description>Meters per second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>COUNTS</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+          <Stage number="1">
+            <StageGain>
+              <Value>0.00748991</Value>
+              <Frequency>0.0001</Frequency>
+            </StageGain>
+          </Stage>
+          <Stage number="2">
+            <Coefficients>
+              <InputUnits>
+                <Name>V</Name>
+                <Description>VOLTS</Description>
+              </InputUnits>
+              <OutputUnits>
+                <Name>COUNTS</Name>
+                <Description>Digital Counts</Description>
+              </OutputUnits>
+              <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+            </Coefficients>
+            <Decimation>
+              <InputSampleRate unit="HERTZ">1.0</InputSampleRate>
+              <Factor>1</Factor>
+              <Offset>0</Offset>
+              <Delay>0.0</Delay>
+              <Correction>0.0</Correction>
+            </Decimation>
+            <StageGain>
+              <Value>419430.0</Value>
+              <Frequency>0.0001</Frequency>
+            </StageGain>
+          </Stage>
+        </Response>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>

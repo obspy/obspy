@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import inspect
 import io
 import os
@@ -47,7 +43,35 @@ class CmtsolutionTestCase(unittest.TestCase):
         finally:
             try:
                 os.remove(temp_filename)
-            except:
+            except Exception:
+                pass
+
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
+
+    def test_write_no_preferred_focal_mechanism(self):
+        """
+        Tests that writing a CMTSOLUTION file with no preferred (but at least
+        one) focal mechanism works, see #1303.
+        """
+        filename = os.path.join(self.datapath, "CMTSOLUTION")
+        with open(filename, "rb") as fh:
+            data = fh.read()
+
+        cat = obspy.read_events(filename)
+        cat[0].preferred_focal_mechanism_id = None
+
+        with NamedTemporaryFile() as tf:
+            temp_filename = tf.name
+
+        try:
+            cat.write(temp_filename, format="CMTSOLUTION")
+            with open(temp_filename, "rb") as fh:
+                new_data = fh.read()
+        finally:
+            try:
+                os.remove(temp_filename)
+            except Exception:
                 pass
 
         self.assertEqual(data.decode().splitlines(),
@@ -163,7 +187,7 @@ class CmtsolutionTestCase(unittest.TestCase):
         finally:
             try:
                 os.remove(temp_filename)
-            except:
+            except Exception:
                 pass
 
         self.assertEqual(data.decode().splitlines(),
@@ -195,6 +219,26 @@ class CmtsolutionTestCase(unittest.TestCase):
 
         self.assertEqual(data.decode().splitlines(),
                          new_data.decode().splitlines())
+
+    def test_reading_newer_cmtsolution_files(self):
+        """
+        The format changed a bit. Make sure these files can also be read.
+        """
+        filename = os.path.join(self.datapath, "CMTSOLUTION_NEW")
+        cat = obspy.read_events(filename)
+
+        self.assertEqual(len(cat), 3)
+
+        # Test the hypocentral origins as the "change" to the format only
+        # affected the first line.
+        self.assertEqual(cat[0].origins[1].latitude, 55.29)
+        self.assertEqual(cat[0].origins[1].longitude, 163.06)
+
+        self.assertEqual(cat[1].origins[1].latitude, -13.75)
+        self.assertEqual(cat[1].origins[1].longitude, -111.75)
+
+        self.assertEqual(cat[2].origins[1].latitude, -13.68)
+        self.assertEqual(cat[2].origins[1].longitude, -111.93)
 
 
 def suite():

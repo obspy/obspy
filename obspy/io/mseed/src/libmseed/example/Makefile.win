@@ -1,20 +1,13 @@
 #
 # Nmake file - Windows version
 # Use 'nmake -f Makefile.win'
-#
-# THIS HAS NEVER BEEN TESTED
-# Some modification might be required.
 
 NODEBUG=1
-
-!include <ntwin32.mak>
 
 INCS = /I..
 OPTS = -D_CRT_SECURE_NO_WARNINGS
 LIBS = ../libmseed.lib
 BINS = msrepack.exe msview.exe
-
-cflags = $(cflags) -DWIN32
 
 all: $(BINS)
 
@@ -25,7 +18,7 @@ msview.exe: msview.obj
 	link.exe /nologo /out:msview.exe $(LIBS) msview.obj
 
 .c.obj:
-	$(cc) /nologo $(cflags) $(cdebug) $(cvarsmt) $(tflags) $(INCS) $(OPTS) $<
+	$(CC) /nologo $(CFLAGS) $(INCS) $(OPTS) /c $<
 
 # Clean-up directives
 clean:

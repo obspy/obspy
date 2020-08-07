@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+"""
+obspy.io.quakeml - QuakeML read and write support for ObsPy
+===========================================================
 
-import sys
-
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
-
-# Remove once 0.11 has been released!
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    import_map={},
-    function_map={
-        "_validate": "obspy.io.quakeml.core._validate"})
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+"""

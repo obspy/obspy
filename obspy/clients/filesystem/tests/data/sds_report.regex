@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head><META HTTP-EQUIV=REFRESH CONTENT=60>
+<title>SDS Report .*obspy-sdstest-[\w]*</title>
+<style>
+p.monospace
+    {font-family: "Lucida Console", Monaco, monospace;
+     }
+p.monospace_wide_columns
+    {font-family: "Lucida Console", Monaco, monospace;
+     -webkit-column-count: 4;
+     -moz-column-count: 4;
+     column-count: 4;
+     -webkit-column-width: 480px;
+     -moz-column-width: 480px;
+     column-width: 480px;
+     }
+p.monospace_narrow_columns
+    {font-family: "Lucida Console", Monaco, monospace;
+     -webkit-column-count: 8;
+     -moz-column-count: 8;
+     column-count: 8;
+     -webkit-column-width: 250px;
+     -moz-column-width: 250px;
+     column-width: 250px;
+     }
+</style>
+</head>
+<body bgcolor="#999999">
+<h1 style="font-size:medium">
+    SDS Report for .*obspy-sdstest-[\w]*<br>
+    Latency, data percentage, number of gaps/overlaps
+    \(last 1 days\)<br>[\w /]* [\d]{2}:[\d]{2}:[\d]{2} ([\d]{4} )?UTC</h1>
+<p class="monospace_wide_columns">
+<span style="background-color: #FFFF33">AB XYZ&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; BHE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+<span style="background-color: #FFFF33">AB XYZ&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; HHZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+<span style="background-color: #FFFF33">AB XYZ&nbsp;&nbsp;&nbsp; 00 HHZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+<span style="background-color: #FFFF33">AB ZZZ3&nbsp;&nbsp; &nbsp;&nbsp; HHZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+<span style="background-color: #FFFF33">AB ZZZ3&nbsp;&nbsp; 00 HHZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+<span style="background-color: #FFFF33">CD XYZ&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; HHZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+<span style="background-color: #FFFF33">CD XYZ&nbsp;&nbsp;&nbsp; 00 HHZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+<span style="background-color: #FFFF33">CD ZZZ3&nbsp;&nbsp; &nbsp;&nbsp; HHZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+<span style="background-color: #FFFF33">CD ZZZ3&nbsp;&nbsp; 00 HHZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2h 18m &nbsp;&nbsp;0.7% &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+
+</p>
+<p class="monospace_narrow_columns">
+
+</p>
+<p class="monospace">
+  <span style="background-color: #4DAF4A">
+      All checks pass&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+  <span style="background-color: #377EB8">
+      Last 1 days: < 99.5% data or > 20 gaps&nbsp;&nbsp;</span><br>
+  <span style="background-color: #FFFF33">
+      Latency > 1h &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+  <span style="background-color: #E41A1C">
+      Latency > 1d &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+  <span style="background-color: #808080">
+      No data within 30 days&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+</p>
+  <img src="sds_report.png" alt="obspy-scan image broken!">
+</body>
+</html>

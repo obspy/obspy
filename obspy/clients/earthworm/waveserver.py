@@ -6,20 +6,17 @@ Low-level Earthworm Wave Server tools.
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import socket
 import struct
+import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.compatibility import from_buffer
 
 
 RETURNFLAG_KEY = {
@@ -47,7 +44,7 @@ def get_numpy_type(tpstr):
     return appropriate numpy.dtype object
     """
     dtypestr = DATATYPE_KEY[tpstr]
-    tp = np.dtype(native_str(dtypestr))
+    tp = np.dtype(dtypestr)
     return tp
 
 
@@ -56,7 +53,7 @@ class TraceBuf2(object):
     """
     byteswap = False
     ndata = 0           # number of samples in instance
-    inputType = None    # NumPy data type
+    input_type = None   # NumPy data type
 
     def read_tb2(self, tb2):
         """
@@ -67,7 +64,7 @@ class TraceBuf2(object):
             return 0   # not enough array to hold header
         head = tb2[:64]
         self.parse_header(head)
-        nbytes = 64 + self.ndata * self.inputType.itemsize
+        nbytes = 64 + self.ndata * self.input_type.itemsize
         if len(tb2) < nbytes:
             return 0   # not enough array to hold data specified in header
         dat = tb2[64:nbytes]
@@ -78,7 +75,7 @@ class TraceBuf2(object):
         """
         Parse tracebuf header into class variables
         """
-        packStr = b'2i3d7s9s4s3s2s3s2s2s'
+        pack_str = b'2i3d7s9s4s3s2s3s2s2s'
         dtype = head[-7:-5]
         if dtype[0:1] in b'ts':
             endian = b'>'
@@ -86,12 +83,13 @@ class TraceBuf2(object):
             endian = b'<'
         else:
             raise ValueError
-        self.inputType = get_numpy_type(dtype)
+        self.input_type = get_numpy_type(dtype)
         (self.pinno, self.ndata, ts, te, self.rate, self.sta, self.net,
          self.chan, self.loc, self.version, tp, self.qual, _pad) = \
-            struct.unpack(endian + packStr, head)
+            struct.unpack(endian + pack_str, head)
         if not tp.startswith(dtype):
-            print('Error parsing header: %s!=%s' % (dtype, tp))
+            msg = 'Error parsing header: %s!=%s'
+            print(msg % (dtype, tp), file=sys.stderr)
         self.start = UTCDateTime(ts)
         self.end = UTCDateTime(te)
         return
@@ -100,11 +98,11 @@ class TraceBuf2(object):
         """
         Parse tracebuf char array data into self.data
         """
-        self.data = np.fromstring(dat, self.inputType)
+        self.data = from_buffer(dat, self.input_type)
         ndat = len(self.data)
         if self.ndata != ndat:
-            print('data count in header (%d) != data count (%d)' % (self.nsamp,
-                                                                    ndat))
+            msg = 'data count in header (%d) != data count (%d)'
+            print(msg % (self.nsamp, ndat), file=sys.stderr)
             self.ndata = ndat
         return
 
@@ -127,18 +125,27 @@ class TraceBuf2(object):
         return Trace(data=self.data, header=stat)
 
 
-def send_sock_req(server, port, reqStr, timeout=None):
+def send_sock_req(server, port, req_str, timeout=None):
     """
-    Sets up socket to server and port, sends reqStr
+    Sets up socket to server and port, sends req_str
     to socket and returns open socket
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect((server, port))
-    if reqStr[-1:] == b'\n':
-        s.send(reqStr)
-    else:
-        s.send(reqStr + b'\n')
+
+    full_req = req_str
+    if not full_req.endswith(b'\n'):
+        full_req += b'\n'
+
+    req_len = len(full_req)
+    totalsent = 0
+
+    while totalsent < req_len:
+        sent = s.send(full_req[totalsent:])
+        if sent == 0:
+            raise RuntimeError("socket connection broken")
+        totalsent = totalsent + sent
     return s
 
 
@@ -151,12 +158,14 @@ def get_sock_char_line(sock, timeout=10.):
     indat = b'^'
     try:
         while indat[-1:] != b'\n':
-            # see http://obspy.org/ticket/383
+            # see https://github.com/obspy/obspy/issues/383
             # indat = sock.recv(8192)
             indat = sock.recv(1)
+            if not indat:
+                break
             chunks.append(indat)
     except socket.timeout:
-        print('socket timeout in get_sock_char_line()')
+        print('socket timeout in get_sock_char_line()', file=sys.stderr)
         return None
     if chunks:
         response = b''.join(chunks)
@@ -176,10 +185,12 @@ def get_sock_bytes(sock, nbytes, timeout=None):
     try:
         while btoread:
             indat = sock.recv(min(btoread, 8192))
+            if not indat:
+                break
             btoread -= len(indat)
             chunks.append(indat)
     except socket.timeout:
-        print('socket timeout in get_sock_bytes()')
+        print('socket timeout in get_sock_bytes()', file=sys.stderr)
         return None
     if chunks:
         response = b''.join(chunks)
@@ -212,18 +223,19 @@ def get_menu(server, port, scnl=None, timeout=None):
             tokens = tokens[1:]
         flag = tokens[-1]
         if flag in ['FN', 'FC', 'FU']:
-            print('request returned %s - %s' % (flag, RETURNFLAG_KEY[flag]))
+            msg = 'request returned %s - %s'
+            print(msg % (flag, RETURNFLAG_KEY[flag]), file=sys.stderr)
             return []
         if tokens[7].encode() in DATATYPE_KEY:
             elen = 8  # length of return entry if location included
         elif tokens[6].encode() in DATATYPE_KEY:
             elen = 7  # length of return entry if location omitted
         else:
-            print('no type token found in get_menu')
+            print('no type token found in get_menu', file=sys.stderr)
             return []
         outlist = []
         for p in range(0, len(tokens), elen):
-            l = tokens[p:p + elen]
+            l = tokens[p:p + elen]  # NOQA
             if elen == 8:
                 outlist.append((int(l[0]), l[1], l[2], l[3], l[4],
                                 float(l[5]), float(l[6]), l[7]))
@@ -234,7 +246,8 @@ def get_menu(server, port, scnl=None, timeout=None):
     return []
 
 
-def read_wave_server_v(server, port, scnl, start, end, timeout=None):
+def read_wave_server_v(server, port, scnl, start, end, timeout=None,
+                       cleanup=False):
     """
     Reads data for specified time interval and scnl on specified waveserverV.
 
@@ -252,21 +265,62 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None):
     flag = tokens[6]
     if flag != 'F':
         msg = 'read_wave_server_v returned flag %s - %s'
-        print(msg % (flag, RETURNFLAG_KEY[flag]))
+        print(msg % (flag, RETURNFLAG_KEY[flag]), file=sys.stderr)
         return []
     nbytes = int(tokens[-1])
     dat = get_sock_bytes(sock, nbytes, timeout=timeout)
     sock.close()
+
     tbl = []
-    new = TraceBuf2()  # empty..filled below
     bytesread = 1
     p = 0
-    while bytesread and p < len(dat):
-        bytesread = new.read_tb2(dat[p:])
-        if bytesread:
-            tbl.append(new)
-            new = TraceBuf2()  # empty..filled on next iteration
-            p += bytesread
+    dat_len = len(dat)
+    current_tb = None
+    period = None
+    bufs = None
+
+    while bytesread and p < dat_len:
+        if not dat_len > p + 64:
+            break  # no tracebufs left
+
+        new_tb = TraceBuf2()
+        new_tb.parse_header(dat[p:p + 64])
+        p += 64
+        nbytes = new_tb.ndata * new_tb.input_type.itemsize
+
+        if dat_len < p + nbytes:
+            break   # not enough array to hold data specified in header
+
+        if current_tb is not None:
+            if cleanup and new_tb.start - current_tb.end == period:
+                buf = dat[p:p + nbytes]
+                bufs.append(from_buffer(buf, current_tb.input_type))
+                current_tb.end = new_tb.end
+
+            else:
+                if len(bufs) > 1:
+                    current_tb.data = np.concatenate(bufs)
+                else:
+                    current_tb.data = bufs[0]
+
+                current_tb.ndata = len(current_tb.data)
+                current_tb = None
+
+        if current_tb is None:
+            current_tb = new_tb
+            tbl.append(current_tb)
+            period = 1 / current_tb.rate
+            bufs = [from_buffer(dat[p:p + nbytes], current_tb.input_type)]
+
+        p += nbytes
+
+    if len(bufs) > 1:
+        current_tb.data = np.concatenate(bufs)
+    else:
+        current_tb.data = bufs[0]
+
+    current_tb.ndata = len(current_tb.data)
+
     return tbl
 
 

@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 
@@ -26,6 +22,7 @@ class ZMAPTestCase(unittest.TestCase):
     """
     def setUp(self):
         data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        self.data_dir = data_dir
         path_to_catalog = os.path.join(data_dir, 'neries_events.xml')
         self.catalog = read_events(path_to_catalog)
         self.zmap_fields = _STD_ZMAP_FIELDS
@@ -55,18 +52,18 @@ class ZMAPTestCase(unittest.TestCase):
         dump = pickler.dumps(self.catalog)
         self.assertIn(self._expected_string(self.test_data), dump)
         self.assertEqual(dump.count('\n'), 3)
-        # no preferred origin
+        # no preferred origin -- still dump first origin
         oid = self.test_event.preferred_origin_id
         self.test_event.preferred_origin_id = None
         dump = pickler.dumps(self.catalog)
-        self.assertIn(self._expected_string({'mag': '4.400000'}), dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
         self.test_event.preferred_origin_id = oid
-        # no preferred magnitude
+        # no preferred magnitude -- still dump first magnitude
+        mid = self.test_event.preferred_origin_id
         self.test_event.preferred_magnitude_id = None
         dump = pickler.dumps(self.catalog)
-        test_data = self.test_data.copy()
-        del test_data['mag']
-        self.assertIn(self._expected_string(test_data), dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
+        self.test_event.preferred_magnitude_id = mid
 
     def test_plugin_interface(self):
         """
@@ -238,6 +235,16 @@ class ZMAPTestCase(unittest.TestCase):
         catalog = zmap._read_zmap(zmap_str)
         self._assert_zmap_equal(catalog, test_events)
 
+    def test_read_float_seconds(self):
+        """
+        Test that floating point part of seconds is parsed correctly.
+        """
+        catalog = zmap._read_zmap(os.path.join(self.data_dir, "templates.txt"))
+        self.assertEqual(catalog[0].origins[0].time.microsecond, 840000)
+        self.assertEqual(catalog[1].origins[0].time.microsecond, 880000)
+        self.assertEqual(catalog[2].origins[0].time.microsecond, 550000)
+        self.assertEqual(catalog[3].origins[0].time.microsecond, 450000)
+
     def _assert_zmap_equal(self, catalog, dicts):
         """
         Compares a zmap imported catalog with test event dictionaries
@@ -274,7 +281,9 @@ class ZMAPTestCase(unittest.TestCase):
                     end = UTCDateTime(int(year) + 1, 1, 1)
                     utc = start + (year % 1) * (end - start)
                 elif any(d.get(k, 0) > 0 for k in comps[1:]):
-                    utc = UTCDateTime(*[int(d.get(k)) for k in comps])
+                    utc = UTCDateTime(*[
+                        k == 'second' and d.get(k) or int(d.get(k))
+                        for k in comps])
                 self.assertEqual(utc, event.preferred_origin().time)
             if 'mag' in d:
                 self.assertEqual(d['mag'], magnitude.mag)

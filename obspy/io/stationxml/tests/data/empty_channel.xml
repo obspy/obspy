@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.1" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+  <Source>SeisNet-mysql</Source>
+  <Sender>INGV-CNT</Sender>
+  <Module>INGV-CNT WEB SERVICE: fdsnws-station | version: 1.1.34</Module>
+  <ModuleURI>http://webservices.rm.ingv.it/fdsnws/station/1/query?endtime=2017-03-01T00%3A00%3A00.000000&amp;format=xml&amp;includerestricted=false&amp;level=response&amp;network=IV&amp;starttime=2016-08-24T00%3A00%3A00.000000&amp;station=LATE</ModuleURI>
+  <Created>2017-07-12T12:18:17</Created>
+  <Network code="IV" startDate="1988-01-01T00:00:00" restrictedStatus="open">
+    <Description>Italian Seismic Network</Description>
+    <TotalNumberStations>540</TotalNumberStations>
+    <SelectedNumberStations>1</SelectedNumberStations>
+    <Station code="LATE" startDate="2006-05-04T00:00:00" restrictedStatus="open">
+      <Latitude>42.6137</Latitude>
+      <Longitude>11.804</Longitude>
+      <Elevation>610</Elevation>
+      <Site>
+        <Name>Latera</Name>
+      </Site>
+      <CreationDate>2017-07-12T12:18:15</CreationDate>
+      <TotalNumberChannels>63</TotalNumberChannels>
+      <SelectedNumberChannels>0</SelectedNumberChannels>
+      <Channel/>
+    </Station>
+  </Network>
+</FDSNStationXML>

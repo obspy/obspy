@@ -4,19 +4,20 @@
 Connecting to a SeedLink Server
 ===============================
 
-The :mod:`obspy.seedlink` module provides a Python implementation of the
-SeedLink client protocol. The :mod:`obspy.seedlink.easyseedlink` submodule
-contains a high-level interface to the SeedLink implementation that facilitates
-the creation of a SeedLink client.
+The :mod:`obspy.clients.seedlink` module provides a Python implementation of
+the SeedLink client protocol. The :mod:`obspy.clients.seedlink.easyseedlink`
+submodule contains a high-level interface to the SeedLink implementation that
+facilitates the creation of a SeedLink client.
 
 --------------------------
 The create_client function
 --------------------------
 
 The easiest way to connect to a SeedLink server is using the
-:func:`~obspy.seedlink.easyseedlink.create_client` function to create a new
-instance of the :class:`~obspy.seedlink.easyseedlink.EasySeedLinkClient` class.
-It accepts as an argument a function that handles new data received from the
+:func:`~obspy.clients.seedlink.easyseedlink.create_client` function to create a
+new instance of the
+:class:`~obspy.clients.seedlink.easyseedlink.EasySeedLinkClient` class.  It
+accepts as an argument a function that handles new data received from the
 SeedLink server, for example:
 
 .. code-block:: python
@@ -27,8 +28,8 @@ SeedLink server, for example:
         print()
 
 This function can then be passed to
-:func:`~obspy.seedlink.easyseedlink.create_client` together with a SeedLink
-server URL to create a client instance:
+:func:`~obspy.clients.seedlink.easyseedlink.create_client` together with a
+SeedLink server URL to create a client instance:
 
 .. code-block:: python
 
@@ -67,7 +68,8 @@ Streaming data from the server
 
 In order to start receiving waveform data, a *stream* needs to be selected.
 This is done by calling the
-:meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.select_stream` method:
+:meth:`~obspy.clients.seedlink.easyseedlink.EasySeedLinkClient.select_stream`
+method:
 
 .. code-block:: python
 
@@ -106,10 +108,11 @@ object:
 	Received new data:
 	BW.ROTZ..EHN | 2014-09-04T19:47:22.930000Z - 2014-09-04T19:47:24.985000Z | 200.0 Hz, 412 samples
 
-The :func:`~obspy.seedlink.easyseedlink.create_client` function also accepts
-functions to be called when the connection terminates or when a SeedLink
-error is received.
-See the :func:`documentation <obspy.seedlink.easyseedlink.create_client>` for
+The :func:`~obspy.clients.seedlink.easyseedlink.create_client` function also
+accepts functions to be called when the connection terminates or when a
+SeedLink error is received.
+See the
+:func:`documentation <obspy.clients.seedlink.easyseedlink.create_client>` for
 details.
 
 --------------------------------------
@@ -117,8 +120,8 @@ Advanced usage: subclassing the client
 --------------------------------------
 
 For advanced use cases, subclassing the
-:class:`~obspy.seedlink.easyseedlink.EasySeedLinkClient` class allows for finer
-control over the instance. Implementing the same client as above:
+:class:`~obspy.clients.seedlink.easyseedlink.EasySeedLinkClient` class allows
+for finer control over the instance. Implementing the same client as above:
 
 .. code-block:: python
 
@@ -134,5 +137,6 @@ control over the instance. Implementing the same client as above:
             print(trace)
             print()
 
-The :class:`documentation <obspy.seedlink.easyseedlink.EasySeedLinkClient>`
+The
+:class:`documentation <obspy.clients.seedlink.easyseedlink.EasySeedLinkClient>`
 has more details about the client.

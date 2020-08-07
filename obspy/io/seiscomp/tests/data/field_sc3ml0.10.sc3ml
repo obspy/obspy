@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:eu.emsc/unid">
+    <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+      <time>
+        <value>2011-03-11T05:46:24.120000Z</value>
+        <pdf>
+          <variable>2002-05-30T09:00:00 2003-05-30T09:00:00 2004-05-30T09:00:00</variable>
+          <probability>0.5 1.3 2.8</probability>
+        </pdf>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <comment>
+        <text>comment</text>
+        <start>2002-05-30T09:00:00</start>
+        <end>2003-05-30T09:00:00</end>
+      </comment>
+    </origin>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:www.iris.edu/ws/event/query?originId=7680412</originReference>
+    </event>
+  </EventParameters>
+</seiscomp>

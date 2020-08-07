@@ -4,7 +4,7 @@ obspy.core.inventory - Classes for handling station metadata
 ============================================================
 This module provides a class hierarchy to consistently handle station metadata.
 This class hierarchy is closely modelled after the upcoming de-facto standard
-format `FDSN StationXML <http://www.fdsn.org/xml/station/>`_ which was
+format `FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was
 developed as a human readable XML replacement for Dataless SEED.
 
 .. note:: IRIS is maintaining a Java tool for converting dataless SEED into
@@ -15,7 +15,7 @@ developed as a human readable XML replacement for Dataless SEED.
     The ObsPy Development Team (devs@obspy.org) & Chad Trabant
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------
@@ -156,6 +156,23 @@ For example:
     resp = inv[0][0][0].response
     resp.plot(0.001, output="VEL")
 
+When plotting stations with instrumentation changes, epoch times can be added
+to the legend labels:
+
+.. code-block:: python
+
+    >>> from obspy import read_inventory
+    >>> inv = read_inventory()
+    >>> inv = inv.select(station='RJOB', channel='EHZ')
+    >>> inv.plot_response(0.001, label_epoch_dates=True)  # doctest: +SKIP
+
+.. plot::
+
+    from obspy import read_inventory
+    inv = read_inventory()
+    inv = inv.select(station='RJOB', channel='EHZ')
+    inv.plot_response(0.001, label_epoch_dates=True)
+
 For more examples see the :ref:`Obspy Gallery <gallery>`.
 
 Dealing with the Response information
@@ -174,8 +191,6 @@ method will call some functions within evalresp to generate the response.
 Some convenience methods to perform an instrument correction on
 :class:`~obspy.core.stream.Stream` (and :class:`~obspy.core.trace.Trace`)
 objects are available and most users will want to use those. The
-:meth:`~obspy.core.stream.Stream.attach_response()` method will attach matching
-responses to each trace if they are available within the inventory object. The
 :meth:`~obspy.core.stream.Stream.remove_response()` method deconvolves the
 instrument response in-place. As always see the corresponding docs pages for a
 full list of options and a more detailed explanation.
@@ -183,9 +198,8 @@ full list of options and a more detailed explanation.
 >>> from obspy import read
 >>> st = read()
 >>> inv = read_inventory("/path/to/BW_RJOB.xml")
->>> st.attach_response(inv)  # doctest: +NORMALIZE_WHITESPACE
- []
->>> st.remove_response(output="VEL", water_level=20)  # doctest: +ELLIPSIS
+>>> st.remove_response(
+...     inventory=inv, output="VEL", water_level=20)  # doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 
 Writing
@@ -195,10 +209,6 @@ StationXML files, e.g. after making modifications.
 
 >>> inv.write('my_inventory.xml', format='STATIONXML')  # doctest: +SKIP
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 # Don't change order! .util must be first.
 from .util import (Angle, Azimuth, BaseNode, ClockDrift, Comment, Dip,
                    Distance, Equipment, ExternalReference, Frequency, Latitude,

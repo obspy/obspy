@@ -3,17 +3,15 @@
 """
 The Filter test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import gzip
 import os
 import unittest
+import warnings
 
 import numpy as np
 import scipy.signal as sg
 
+from obspy import read
 from obspy.signal.filter import (bandpass, highpass, lowpass, envelope,
                                  lowpass_cheby_2)
 
@@ -26,7 +24,7 @@ class FilterTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_bandpassVsPitsa(self):
+    def test_bandpass_vs_pitsa(self):
         """
         Test Butterworth bandpass filter against Butterworth bandpass filter
         of PITSA. Note that the corners value is twice the value of the filter
@@ -53,7 +51,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_bandpassZPHSHVsPitsa(self):
+    def test_bandpass_zphsh_vs_pitsa(self):
         """
         Test Butterworth zero-phase bandpass filter against Butterworth
         zero-phase bandpass filter of PITSA. Note that the corners value is
@@ -86,7 +84,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_lowpassVsPitsa(self):
+    def test_lowpass_vs_pitsa(self):
         """
         Test Butterworth lowpass filter against Butterworth lowpass filter of
         PITSA. Note that the corners value is twice the value of the filter
@@ -112,7 +110,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_lowpassZPHSHVsPitsa(self):
+    def test_lowpass_zphsh_vs_pitsa(self):
         """
         Test Butterworth zero-phase lowpass filter against Butterworth
         zero-phase lowpass filter of PITSA. Note that the corners value is
@@ -144,7 +142,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_highpassVsPitsa(self):
+    def test_highpass_vs_pitsa(self):
         """
         Test Butterworth highpass filter against Butterworth highpass filter
         of PITSA. Note that the corners value is twice the value of the filter
@@ -170,7 +168,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_highpassZPHSHVsPitsa(self):
+    def test_highpass_zphsh_vs_pitsa(self):
         """
         Test Butterworth zero-phase highpass filter against Butterworth
         zero-phase highpass filter of PITSA. Note that the corners value is
@@ -202,7 +200,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_envelopeVsPitsa(self):
+    def test_envelope_vs_pitsa(self):
         """
         Test Envelope filter against PITSA.
         The rms is not so good, but the fit is still good in most parts.
@@ -222,7 +220,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-02, True)
 
-    def test_lowpassCheby2(self):
+    def test_lowpass_cheby_2(self):
         """
         Check magnitudes of basic lowpass cheby2
         """
@@ -238,6 +236,46 @@ class FilterTestCase(unittest.TestCase):
         self.assertGreater(-96, h_db[freq > 50].max())
         # be 0 (1dB ripple) before filter ramp
         self.assertGreater(h_db[freq < 25].min(), -1)
+
+    def test_bandpass_high_corner_at_nyquist(self):
+        """
+        Check that using exactly Nyquist for high corner gives correct results.
+        See #1451.
+        """
+        tr = read()[0]
+        data = tr.data[:1000]
+
+        df = tr.stats.sampling_rate
+        nyquist = df / 2.0
+
+        for low_corner in (6.0, 8.55, 8.59):
+            for corners in (3, 4, 5, 6):
+                # this is filtering with high corner slightly below what we
+                # catch and change into highpass
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    expected = bandpass(
+                        data, low_corner, nyquist * (1 - 1.1e-6), df=df,
+                        corners=corners)
+                    self.assertEqual(len(w), 0)
+                # all of these should be changed into a highpass
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    got1 = bandpass(data, low_corner, nyquist * (1 - 0.9e-6),
+                                    df=df, corners=corners)
+                    got2 = bandpass(data, low_corner, nyquist,
+                                    df=df, corners=corners)
+                    got3 = bandpass(data, low_corner, nyquist + 1.78,
+                                    df=df, corners=corners)
+                    self.assertEqual(len(w), 3)
+                    for w_ in w:
+                        self.assertTrue('Selected high corner frequency ' in
+                                        str(w[0].message))
+                        self.assertTrue('Applying a high-pass instead.' in
+                                        str(w[0].message))
+                for got in (got1, got2, got3):
+                    np.testing.assert_allclose(got, expected, rtol=1e-3,
+                                               atol=0.9)
 
 
 def suite():

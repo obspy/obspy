@@ -3,10 +3,6 @@
 """
 The paz test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import io
 import unittest
 
@@ -17,7 +13,7 @@ class PAZTestCase(unittest.TestCase):
     """
     Test cases for reading GSE PAZ files.
     """
-    def test_readWithSpace(self):
+    def test_read_with_spaces(self):
         """
         Reading PAZ files where PAZ are separated by spaces.
         """
@@ -39,7 +35,7 @@ class PAZTestCase(unittest.TestCase):
         self.assertAlmostEqual(0.4, k)
         f.close()
 
-    def test_readWithOutSpace(self):
+    def test_read_without_spaces(self):
         """
         Reading PAZ files where PAZ are not separated by spaces.
 

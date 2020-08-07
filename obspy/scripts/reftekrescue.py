@@ -35,12 +35,8 @@ conversion tools.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import contextlib
 import mmap
 import os
@@ -104,7 +100,7 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
                     # at least for packet types 'DT', 'EH' and 'ET'
                     try:
                         event_no = int(b2a_hex(m[(ind + 16):(ind + 18)]))
-                    except:
+                    except Exception:
                         msg = "Could not decode event number. Dropping " + \
                               "possibly corrupted packet at byte position" + \
                               " %d in input file."

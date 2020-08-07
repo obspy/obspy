@@ -16,21 +16,14 @@ A command-line tool to analyze Mini-SEED records.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future import standard_library
-from future.utils import native_str
-
 import sys
+import string
 from argparse import ArgumentParser
+from collections import OrderedDict
 from copy import deepcopy
 from struct import unpack
-
-with standard_library.hooks():
-    from collections import OrderedDict
 
 from obspy import UTCDateTime, __version__
 
@@ -144,8 +137,8 @@ class RecordAnalyser(object):
         # Get the year
         year_raw = self.file.read(2)
         try:
-            year = unpack(native_str('>H'), year_raw)[0]
-        except:
+            year = unpack('>H', year_raw)[0]
+        except Exception:
             if len(year_raw) == 0:
                 msg = "Unexpected end of file."
                 raise IOError(msg)
@@ -168,27 +161,32 @@ class RecordAnalyser(object):
         # Read and unpack.
         self.file.seek(self.record_offset, 0)
         fixed_header = self.file.read(48)
-        encoding = native_str('%s20c2H3Bx4H4Bl2H' % self.endian)
+        encoding = '%s20c2H3Bx2H2h4Bl2h' % self.endian
         try:
             header_item = unpack(encoding, fixed_header)
-        except:
+        except Exception:
             if len(fixed_header) == 0:
                 msg = "Unexpected end of file."
                 raise IOError(msg)
             raise
         # Write values to dictionary.
         self.fixed_header['Sequence number'] = \
-            int(''.join(x.decode('ascii') for x in header_item[:6]))
+            int(''.join(x.decode('ascii', errors="replace")
+                for x in header_item[:6]))
         self.fixed_header['Data header/quality indicator'] = \
-            header_item[6].decode('ascii')
+            header_item[6].decode('ascii', errors="replace")
         self.fixed_header['Station identifier code'] = \
-            ''.join(x.decode('ascii') for x in header_item[8:13]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[8:13]).strip()
         self.fixed_header['Location identifier'] = \
-            ''.join(x.decode('ascii') for x in header_item[13:15]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[13:15]).strip()
         self.fixed_header['Channel identifier'] = \
-            ''.join(x.decode('ascii') for x in header_item[15:18]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[15:18]).strip()
         self.fixed_header['Network code'] = \
-            ''.join(x.decode('ascii') for x in header_item[18:20]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[18:20]).strip()
         # Construct the starttime. This is only the starttime in the fixed
         # header without any offset. See page 31 of the SEED manual for the
         # time definition.
@@ -217,17 +215,18 @@ class RecordAnalyser(object):
         cur_blkt_offset = self.fixed_header['First blockette']
         # Loop until the beginning of the data is reached.
         while True:
-            if cur_blkt_offset >= self.fixed_header['Beginning of data']:
+            if len(self.blockettes) == \
+                    self.fixed_header["Number of blockettes that follow"]:
                 break
             # Seek to the offset.
-            self.file.seek(cur_blkt_offset, 0)
+            self.file.seek(self.record_offset + cur_blkt_offset, 0)
             # Unpack the first two values. This is always the blockette type
             # and the beginning of the next blockette.
-            encoding = native_str('%s2H' % self.endian)
+            encoding = '%s2H' % self.endian
             _tmp = self.file.read(4)
             try:
                 blkt_type, next_blockette = unpack(encoding, _tmp)
-            except:
+            except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
                     raise IOError(msg)
@@ -251,20 +250,131 @@ class RecordAnalyser(object):
         if blkt_type == 100:
             _tmp = self.file.read(8)
             try:
-                unpack_values = unpack(native_str('%sfxxxx' % self.endian),
+                unpack_values = unpack('%sfxxxx' % self.endian,
                                        _tmp)
-            except:
+            except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
                     raise IOError(msg)
                 raise
             blkt_dict['Sampling Rate'] = float(unpack_values[0])
+        elif blkt_type == 300:
+            # Step calibration blockette
+            _tmp = self.file.read(56)
+            try:
+                unpack_values = unpack(
+                    '%sHHBBBBHBBLLf3sxL12s12s' % self.endian, _tmp)
+            except Exception:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
+            blkt_dict['Calibration Start Time'] = \
+                UTCDateTime(year=int(unpack_values[0]),
+                            julday=int(unpack_values[1]),
+                            hour=int(unpack_values[2]),
+                            minute=int(unpack_values[3]),
+                            second=int(unpack_values[4]),
+                            microsecond=int(unpack_values[5]))
+
+            blkt_dict['Number of Step Calibrations'] = int(unpack_values[7])
+            blkt_dict['Step Duration in Seconds'] = \
+                int(float(unpack_values[8]) / 10000.)
+            blkt_dict['Interval Duration in Seconds'] = \
+                int(float(unpack_values[9]) / 10000.)
+            blkt_dict['Calibration Signal Amplitude'] = \
+                float(unpack_values[11])
+            blkt_dict['Calibration Monitor Channel'] = \
+                unpack_values[12].decode('ascii', errors="replace")
+            blkt_dict['Calibration Reference Amplitude'] = \
+                float(unpack_values[13])
+            tmp = unpack_values[14].decode('ascii', errors="replace")
+            blkt_dict['Coupling'] = ""
+            for c in tmp:
+                if c in string.printable:
+                    blkt_dict['Coupling'] += c
+            blkt_dict['Coupling'] = blkt_dict['Coupling'].rstrip()
+            blkt_dict['Rolloff'] = \
+                unpack_values[15].decode('ascii', errors="replace").rstrip()
+        elif blkt_type == 310:
+            # Sine calibration blockette
+            _tmp = self.file.read(56)
+            try:
+                unpack_values = unpack(
+                    '%sHHBBBBHBBLff3sxL12s12s' % self.endian, _tmp)
+            except Exception:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
+            blkt_dict['Calibration Start Time'] = \
+                UTCDateTime(year=int(unpack_values[0]),
+                            julday=int(unpack_values[1]),
+                            hour=int(unpack_values[2]),
+                            minute=int(unpack_values[3]),
+                            second=int(unpack_values[4]),
+                            microsecond=int(unpack_values[5]))
+
+            blkt_dict['Calibration Duration in Seconds'] = \
+                int(float(unpack_values[9]) / 10000.)
+            blkt_dict['Period of Signal in Seconds'] = \
+                int(float(unpack_values[10]) / 10000.)
+            blkt_dict['Calibration Signal Amplitude'] = \
+                float(unpack_values[11])
+            blkt_dict['Calibration Monitor Channel'] = \
+                unpack_values[12].decode('ascii', errors="replace")
+            blkt_dict['Calibration Reference Amplitude'] = \
+                float(unpack_values[13])
+            tmp = unpack_values[14].decode('ascii', errors="replace")
+            blkt_dict['Coupling'] = ""
+            for c in tmp:
+                if c in string.printable:
+                    blkt_dict['Coupling'] += c
+            blkt_dict['Coupling'] = blkt_dict['Coupling'].rstrip()
+            blkt_dict['Rolloff'] = \
+                unpack_values[15].decode('ascii', errors="replace")
+        elif blkt_type == 320:
+            # Pseudo-random calibration blockette
+            _tmp = self.file.read(60)
+            try:
+                unpack_values = unpack(
+                    '%sHHBBBBHBBLf3sxL12s12s8s' % self.endian, _tmp)
+            except Exception:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
+            blkt_dict['Calibration Start Time'] = \
+                UTCDateTime(year=int(unpack_values[0]),
+                            julday=int(unpack_values[1]),
+                            hour=int(unpack_values[2]),
+                            minute=int(unpack_values[3]),
+                            second=int(unpack_values[4]),
+                            microsecond=int(unpack_values[5]))
+
+            blkt_dict['Calibration Duration in Seconds'] = \
+                int(float(unpack_values[9]) / 10000.)
+            blkt_dict['Peak-To-Peak Amplitude'] = int(unpack_values[10])
+            blkt_dict['Calibration Monitor Channel'] = \
+                unpack_values[11].decode('ascii', errors="replace")
+            blkt_dict['Calibration Reference Amplitude'] = \
+                str(unpack_values[12])
+            tmp = blkt_dict['Coupling'] = \
+                unpack_values[13].decode('ascii', errors="replace")
+            blkt_dict['Coupling'] = ""
+            for c in tmp:
+                if c in string.printable:
+                    blkt_dict['Coupling'] += c
+            blkt_dict['Rolloff'] = \
+                unpack_values[14].decode('ascii', errors="replace")
+            blkt_dict['Noise Type'] = \
+                unpack_values[15].decode('ascii', errors="replace")
         elif blkt_type == 1000:
             _tmp = self.file.read(4)
             try:
-                unpack_values = unpack(native_str('%sBBBx' % self.endian),
+                unpack_values = unpack('%sBBBx' % self.endian,
                                        _tmp)
-            except:
+            except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
                     raise IOError(msg)
@@ -275,9 +385,9 @@ class RecordAnalyser(object):
         elif blkt_type == 1001:
             _tmp = self.file.read(4)
             try:
-                unpack_values = unpack(native_str('%sbbxb' % self.endian),
+                unpack_values = unpack('%sbbxb' % self.endian,
                                        _tmp)
-            except:
+            except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
                     raise IOError(msg)
@@ -340,21 +450,25 @@ class RecordAnalyser(object):
                    endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
         for key in self.fixed_header.keys():
-            ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
+            # Don't print empty values to ease testing.
+            if self.fixed_header[key] != "":
+                ret_val += '    %s: %s\n' % (key, self.fixed_header[key])
+            else:
+                ret_val += '    %s:\n' % (key)
         ret_val += '\nBLOCKETTES\n'
         for key in self.blockettes.keys():
-            ret_val += '\t%i:' % key
+            ret_val += '    %i:' % key
             if not len(self.blockettes[key]):
-                ret_val += '\tNOT YET IMPLEMENTED\n'
+                ret_val += '    NOT YET IMPLEMENTED\n'
             for _i, blkt_key in enumerate(self.blockettes[key].keys()):
                 if _i == 0:
-                    tabs = '\t'
+                    tabs = '    '
                 else:
-                    tabs = '\t\t'
+                    tabs = '        '
                 ret_val += '%s%s: %s\n' % (tabs, blkt_key,
                                            self.blockettes[key][blkt_key])
         ret_val += '\nCALCULATED VALUES\n'
-        ret_val += '\tCorrected Starttime: %s\n' % self.corrected_starttime
+        ret_val += '    Corrected Starttime: %s\n' % self.corrected_starttime
         return ret_val
 
     def _repr_pretty_(self, p, cycle):

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <EventParameters publicID="smi:eu.emsc/unid">
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <preferredOriginID>smi:ch.ethz.sed/origin/2054</preferredOriginID>
+      <preferredMagnitudeID>smi:ch.ethz.sed/magnitude/1015</preferredMagnitudeID>
+      <preferredFocalMechanismID>smi:ch.ethz.sed/fm/23151</preferredFocalMechanismID>
+      <type>earthquake</type>
+      <typeCertainty>suspected</typeCertainty>
+      <creationInfo>
+        <agencyID>EMSC</agencyID>
+        <agencyURI>smi:smi-registry/organization/EMSC</agencyURI>
+        <author>Erika Mustermann</author>
+        <authorURI>smi:smi-registry/organization/EMSC</authorURI>
+        <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
+        <version>1.0.1</version>
+      </creationInfo>
+      <description>
+        <text>1906 San Francisco Earthquake</text>
+        <type>earthquake name</type>
+      </description>
+      <description>
+        <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <description>
+        <text>free-form string</text>
+        <type>region name</type>
+      </description>
+      <comment>
+        <text>Relocated after re-evaluation</text>
+        <creationInfo>
+          <agencyID>EMSC</agencyID>
+        </creationInfo>
+      </comment>
+      <comment>
+        <text>Another comment</text>
+        <id>smi:some/comment/id/number_3</id>
+      </comment>
+    </event>
+  </EventParameters>
+</seiscomp>

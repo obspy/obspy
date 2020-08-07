@@ -5,14 +5,14 @@ obspy.io.segy - SEG Y and SU read and write support for ObsPy
 
 The obspy.io.segy package contains methods in order to read and write files
 in the
-`SEG Y (rev. 1) <http://www.seg.org/documents/10161/77915/seg_y_rev1.pdf>`_
+`SEG Y (rev. 1) <https://www.seg.org/documents/10161/77915/seg_y_rev1.pdf>`_
 and SU (Seismic Unix) format.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 .. note::
     The module can currently read files that are in accordance to the SEG Y
@@ -29,14 +29,17 @@ file formats usually used in observatories (GSE2, MiniSEED, ...). The
 of ObsPy are therefore not fully suited to handle them. Nonetheless they work
 well enough if some potential problems are kept in mind.
 
-SEG Y files can be read in three different ways that have different
+SEG Y files can be read in four different ways that have different
 advantages/disadvantages. Most of the following also applies to SU files with
 some changes (keep in mind that SU files have no file wide headers).
 
 1. Using the standard :func:`~obspy.core.stream.read` function.
-2. Using the :mod:`obspy.io.segy` specific :func:`obspy.io.segy.core._read_segy`
-   function.
+2. Using the :mod:`obspy.io.segy` specific
+   :func:`obspy.io.segy.core._read_segy` function.
 3. Using the internal :func:`obspy.io.segy.segy._read_segy` function.
+4. Some SEG-Y files are too large to be read into memory. The
+   :func:`obspy.io.segy.segy.iread_segy` function reads a large file trace
+   by trace circumventing this problem.
 
 Reading using methods 1 and 2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -124,6 +127,21 @@ tab completion, but data are read directly from the disk when it is accessed:
 >>> segy = _read_segy(filename, headonly=True)
 >>> print(len(segy.traces[0].data))
 2001
+
+
+Iteratively reading a file using method 4
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If a file is too big to be read into memory in one go (as all the other
+methods do), read the file trace by trace using the
+:func:`obspy.io.segy.segy.iread_segy` function:
+
+>>> from obspy.io.segy.segy import iread_segy
+>>> for trace in iread_segy(filename):
+...    # Do something meaningful.
+...    print(int(trace.data.sum() * 1E9))
+-5
+
 
 Writing
 -------
@@ -238,11 +256,6 @@ _i + 1
     print stream.stats.binary_file_header.trace_sorting_code
     print st1.stats.binary_file_header.trace_sorting_code
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from struct import pack, unpack
 
-from struct import unpack
-
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 
 
 # Import shared libsegy
-clibsegy = _load_CDLL("segy")
+clibsegy = _load_cdll("segy")
 
 
 def unpack_header_value(endian, packed_value, length, special_format):
@@ -36,3 +32,20 @@ def unpack_header_value(endian, packed_value, length, special_format):
     # Should not happen
     else:
         raise Exception
+
+
+def _pack_attribute_nicer_exception(obj, name, format):
+    """
+    packs obj.name with the given format but raises a nicer error message.
+    """
+    x = getattr(obj, name)
+    try:
+        return pack(format, x)
+    except Exception as e:
+        msg = ("Failed to pack header value `%s` (%s) with format `%s` due "
+               "to: `%s`")
+        try:
+            format = format.decode()
+        except AttributeError:
+            pass
+        raise ValueError(msg % (name, str(x), format, e.args[0]))

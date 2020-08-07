@@ -6,13 +6,8 @@ SH bindings to ObsPy core module.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import io
 import os
 
@@ -20,11 +15,15 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import loadtxt
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
           'OCT', 'NOV', 'DEC']
+
+MONTHS_DE = ['JAN', 'FEB', 'MAR', 'APR', 'MAI', 'JUN', 'JUL', 'AUG', 'SEP',
+             'OKT', 'NOV', 'DEZ']
 
 SH_IDX = {
     'LENGTH': 'L001',
@@ -85,7 +84,7 @@ def _is_asc(filename):
     try:
         with open(filename, 'rb') as f:
             temp = f.read(6)
-    except:
+    except Exception:
         return False
     if temp != b'DELTA:':
         return False
@@ -195,7 +194,7 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
             elif key == 'START':
                 # 01-JAN-2009_01:01:01.0
                 # 1-OCT-2009_12:46:01.000
-                header['starttime'] = toUTCDateTime(value)
+                header['starttime'] = to_utcdatetime(value)
             else:
                 # everything else gets stored into sh entry
                 if key in SH_KEYS_INT:
@@ -267,7 +266,7 @@ def _write_asc(stream, filename, included_headers=None, npl=4,
         # special format for start time
         if "START" in included_headers:
             dt = trace.stats.starttime
-            sio.write("START: %s\n" % from_UTCDateTime(dt))
+            sio.write("START: %s\n" % from_utcdatetime(dt))
         # component must be split
         if len(trace.stats.channel) > 2 and "COMP" in included_headers:
             sio.write("COMP: %c\n" % trace.stats.channel[2])
@@ -315,7 +314,7 @@ def _is_q(filename):
     try:
         with open(filename, 'rb') as f:
             temp = f.read(5)
-    except:
+    except Exception:
         return False
     if temp != b'43981':
         return False
@@ -384,24 +383,21 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             raise IOError(msg % data_file)
         fh_data = open(data_file, 'rb')
     # loop through read header file
-    fh = open(filename, 'rt')
-    line = fh.readline()
-    cmtlines = int(line[5:7]) - 1
-    # comment lines
-    comments = []
-    for _i in range(0, cmtlines):
-        comments += [fh.readline()]
+    with open(filename, 'rt') as fh:
+        lines = fh.read().splitlines()
+    # number of comment lines
+    cmtlines = int(lines[0][5:7])
     # trace lines
     traces = {}
     i = -1
     id = ''
-    for line in fh:
+    for line in lines[cmtlines:]:
         cid = int(line[0:2])
         if cid != id:
             id = cid
             i += 1
         traces.setdefault(i, '')
-        traces[i] += line[3:].strip()
+        traces[i] += line[3:]
     # create stream object
     stream = Stream()
     for id in sorted(traces.keys()):
@@ -414,8 +410,8 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
         channel = ['', '', '']
         npts = 0
         for item in traces[id].split('~'):
-            key = item.strip()[0:4]
-            value = item.strip()[5:].strip()
+            key = item.lstrip()[0:4]
+            value = item.lstrip()[5:]
             if key == 'L001':
                 npts = header['npts'] = int(value)
             elif key == 'L000':
@@ -438,13 +434,13 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             elif key == 'S021':
                 # 01-JAN-2009_01:01:01.0
                 # 1-OCT-2009_12:46:01.000
-                header['starttime'] = toUTCDateTime(value)
+                header['starttime'] = to_utcdatetime(value)
             elif key == 'S022':
-                header['sh']['P-ONSET'] = toUTCDateTime(value)
+                header['sh']['P-ONSET'] = to_utcdatetime(value)
             elif key == 'S023':
-                header['sh']['S-ONSET'] = toUTCDateTime(value)
+                header['sh']['S-ONSET'] = to_utcdatetime(value)
             elif key == 'S024':
-                header['sh']['ORIGIN'] = toUTCDateTime(value)
+                header['sh']['ORIGIN'] = to_utcdatetime(value)
             elif key:
                 key = INVERTED_SH_IDX.get(key, key)
                 if key in SH_KEYS_INT:
@@ -466,14 +462,13 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
                 continue
             # read data
             data = fh_data.read(npts * 4)
-            dtype = native_str(byteorder + 'f4')
-            data = np.fromstring(data, dtype=dtype)
+            dtype = byteorder + 'f4'
+            data = from_buffer(data, dtype=dtype)
             # convert to system byte order
-            data = np.require(data, native_str('=f4'))
+            data = np.require(data, '=f4')
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
-    fh.close()
     return stream
 
 
@@ -516,7 +511,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             trcs = _read_q(filename_header, headonly=True)
             mode = 'ab'
             count_offset = len(trcs)
-        except:
+        except Exception:
             raise Exception("Target filename '%s' not readable!" % filename)
     else:
         append = False
@@ -547,18 +542,18 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             temp += "C002:%c~ " % trace.stats.channel[1]
         # special format for start time
         dt = trace.stats.starttime
-        temp += "S021:%s~ " % from_UTCDateTime(dt)
+        temp += "S021:%s~ " % from_utcdatetime(dt)
         for key, value in trace.stats.get('sh', {}).items():
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
             # convert UTCDateTimes into strings
             if isinstance(value, UTCDateTime):
-                value = from_UTCDateTime(value)
+                value = from_utcdatetime(value)
             temp += "%s:%s~ " % (SH_IDX[key], value)
         headers.append(temp)
         # get maximal number of trclines
-        nol = len(temp) / 74 + 1
+        nol = len(temp) // 74 + 1
         if nol > minnol:
             minnol = nol
     # first line: magic number, cmtlines, trclines
@@ -574,18 +569,18 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             try:
                 line = "%02d|%s\n" % ((i + 1 + count_offset) % 100, temp[j])
                 fh.write(line.encode('ascii', 'strict'))
-            except:
+            except Exception:
                 line = "%02d|\n" % ((i + 1 + count_offset) % 100)
                 fh.write(line.encode('ascii', 'strict'))
         # write data in given byte order
-        dtype = native_str(byteorder + 'f4')
+        dtype = byteorder + 'f4'
         data = np.require(trace.data, dtype=dtype)
         fh_data.write(data.data)
     fh.close()
     fh_data.close()
 
 
-def toUTCDateTime(value):
+def to_utcdatetime(value):
     """
     Converts time string used within Seismic Handler into a UTCDateTime.
 
@@ -595,17 +590,17 @@ def toUTCDateTime(value):
 
     .. rubric:: Example
 
-    >>> toUTCDateTime(' 2-JAN-2008_03:04:05.123')
+    >>> to_utcdatetime(' 2-JAN-2008_03:04:05.123')
     UTCDateTime(2008, 1, 2, 3, 4, 5, 123000)
-    >>> toUTCDateTime('2-JAN-2008')
+    >>> to_utcdatetime('2-JAN-2008')
     UTCDateTime(2008, 1, 2, 0, 0)
-    >>> toUTCDateTime('2-JAN-08')
+    >>> to_utcdatetime('2-JAN-08')
     UTCDateTime(2008, 1, 2, 0, 0)
-    >>> toUTCDateTime('2-JAN-99')
+    >>> to_utcdatetime('2-JAN-99')
     UTCDateTime(1999, 1, 2, 0, 0)
-    >>> toUTCDateTime('2-JAN-2008_1')
+    >>> to_utcdatetime('2-JAN-2008_1')
     UTCDateTime(2008, 1, 2, 1, 0)
-    >>> toUTCDateTime('2-JAN-2008_1:1')
+    >>> to_utcdatetime('2-JAN-2008_1:1')
     UTCDateTime(2008, 1, 2, 1, 1)
     """
     try:
@@ -624,7 +619,10 @@ def toUTCDateTime(value):
         if len(time) == 2:
             mins = time[1]
     day = int(day)
-    month = MONTHS.index(month.upper()) + 1
+    try:
+        month = MONTHS.index(month.upper()) + 1
+    except ValueError:
+        month = MONTHS_DE.index(month.upper()) + 1
     if len(year) == 2:
         if int(year) < 70:
             year = "20" + year
@@ -637,7 +635,7 @@ def toUTCDateTime(value):
     return UTCDateTime(year, month, day, hour, mins) + secs
 
 
-def from_UTCDateTime(dt):
+def from_utcdatetime(dt):
     """
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
@@ -649,7 +647,7 @@ def from_UTCDateTime(dt):
 
     >>> from obspy import UTCDateTime
     >>> dt = UTCDateTime(2008, 1, 2, 3, 4, 5, 123456)
-    >>> print(from_UTCDateTime(dt))
+    >>> print(from_utcdatetime(dt))
      2-JAN-2008_03:04:05.123
     """
     pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"

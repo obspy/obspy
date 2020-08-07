@@ -1,18 +1,17 @@
 """
+obspy.io.sac.sacpz - SACPZ write support for ObsPy
+==================================================
+
 Module for SAC poles and zero (SACPZ) file I/O.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import numpy as np
+import warnings
 
 from obspy import UTCDateTime
 from obspy.core import AttribDict
@@ -44,7 +43,17 @@ def _write_sacpz(inventory, file_or_file_object):
             for cha in sta:
                 resp = cha.response
                 sens = resp.instrument_sensitivity
-                paz = resp.get_paz()
+                try:
+                    paz = resp.get_paz()
+                except Exception:
+                    msg = "{}.{}.{}.{} {} has no paz. Skipping.".format(
+                        net.code,
+                        sta.code,
+                        cha.location_code,
+                        cha.code,
+                        cha.start_date)
+                    warnings.warn(msg)
+                    continue
                 input_unit = sens.input_units.upper()
                 if input_unit == "M":
                     pass
@@ -53,8 +62,16 @@ def _write_sacpz(inventory, file_or_file_object):
                 elif input_unit in ["M/S**2", "M/SEC**2"]:
                     paz.zeros.extend([0j, 0j])
                 else:
-                    msg = "Encountered unrecognized input units in response: "
-                    raise NotImplementedError(msg + str(input_unit))
+                    msg = "{}.{}.{}.{} {} ".format(
+                        net.code,
+                        sta.code,
+                        cha.location_code,
+                        cha.code,
+                        cha.start_date)
+                    msg += "has unrecognized input units in "
+                    msg += "response: {}. Skipping".format(input_unit)
+                    warnings.warn(msg)
+                    continue
                 out.append("* " + "*" * 50)
                 out.append("* NETWORK     : %s" % net.code)
                 out.append("* STATION     : %s" % sta.code)
@@ -110,7 +127,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     displacement and vice versa is still under construction. It works
     but I cannot guarantee that the values are correct. For more
     information on the SAC-pole-zero format see:
-    http://www.iris.edu/files/sac-manual/commands/transfer.html. For a
+    https://ds.iris.edu/files/sac-manual/commands/transfer.html. For a
     useful discussion on polezero files and transfer functions in
     general see:
     http://seis-uk.le.ac.uk/equipment/downloads/data_management/\
@@ -156,7 +173,7 @@ seisuk_instrument_resp_removal.pdf
     poles = []
     zeros = []
 
-    if isinstance(paz_file, (str, native_str)):
+    if isinstance(paz_file, str):
         paz_file = open(paz_file, 'r')
         is_filename = True
     else:
@@ -308,11 +325,9 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     sensitivity
     t_shift
     zeros
-    >>> print(tr.stats.paz.poles)  # doctest: +SKIP
-    [(-0.15931644664884559+0.15931644664884559j),
-     (-0.15931644664884559-0.15931644664884559j),
-     (-314.15926535897933+202.31856689118268j),
-     (-314.15926535897933-202.31856689118268j)]
+    >>> print(tr.stats.paz.poles)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    [(-0.15931...+0.15931...j), (-0.15931...-0.15931...j),
+     (-314.159...+202.318...j), (-314.159...-202.318...j)]
     """
     if not hasattr(resp_file, 'write'):
         resp_filep = open(resp_file, 'r')

@@ -1,6 +1,6 @@
 .TH MS_READMSR 3 2011/01/06 "Libmseed API"
-.SH DESCRIPTION
-Read Mini-SEED data from files
+.SH NAME
+ms_readmsr - Read Mini-SEED data from files
 
 .SH SYNOPSIS
 .nf
@@ -73,7 +73,7 @@ file position (offset from the beginning in bytes) from where the
 returned record was read.  As a special case, if \fIfpos\fP is not
 NULL and the value it points to is less than zero it will be
 interpreted as the (positive) offset in the file at which to begin
-reading data; this feauture does not work with packed files.
+reading data; this feature does not work with packed files.
 
 If the \fIlast\fP pointer is not NULL the value will be set to 1 when
 the record at the end of the file is being returned, otherwise it will

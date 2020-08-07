@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 import obspy
 from obspy.clients.arclink import Client
-from obspy.signal.trigger import recursive_STALTA, trigger_onset
+from obspy.signal.trigger import recursive_sta_lta, trigger_onset
 
 
 # Retrieve waveforms via ArcLink
@@ -16,7 +16,7 @@ tr = st[0]  # only one trace in mseed volume
 df = tr.stats.sampling_rate
 
 # Characteristic function and trigger onsets
-cft = recursive_STALTA(tr.data, int(2.5 * df), int(10. * df))
+cft = recursive_sta_lta(tr.data, int(2.5 * df), int(10. * df))
 on_of = trigger_onset(cft, 3.5, 0.5)
 
 # Plotting the results
