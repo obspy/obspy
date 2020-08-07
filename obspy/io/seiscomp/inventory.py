@@ -391,7 +391,18 @@ def _read_channel(instrumentation_register, cha_element, _ns):
 
     # Information is also kept within the parent <sensorLocation> element
     sen_loc_element = cha_element.getparent()
+    sen_sta_element = sen_loc_element.getparent()
+    sen_net_element = sen_sta_element.getparent()
+
+    network_code = sen_net_element.get("code")
+    station_code = sen_sta_element.get("code")
     location_code = sen_loc_element.get("code")
+    seed_id = '{}.{}.{}.{}'.format(
+        network_code,
+        station_code,
+        location_code,
+        code
+    )
 
     # get site info from the <sensorLocation> element
     longitude = _read_floattype(sen_loc_element, _ns("longitude"), Longitude,
@@ -446,12 +457,23 @@ def _read_channel(instrumentation_register, cha_element, _ns):
         if len(response_elements) == 0:
             msg = ("Could not find response tag with public ID "
                    "'{}'.".format(response_id))
-            raise obspy.ObsPyException(msg)
+            #raise obspy.ObsPyException(msg)
+            print ('{} - Response ERROR:'.format(seed_id))
+            print (msg)
+            print (' -> Omitting response information from Inventory')
+            print ('')
+            response_element = None
         elif len(response_elements) > 1:
             msg = ("Found multiple matching response tags with the same "
                    "public ID '{}'.".format(response_id))
-            raise obspy.ObsPyException(msg)
-        response_element = response_elements[0]
+            #raise obspy.ObsPyException(msg)
+            print ('{} - Response ERROR:'.format(seed_id))
+            print (msg)
+            print (' -> Omitting response information from Inventory')
+            print ('')
+            response_element = None
+        else:
+            response_element = response_elements[0]
     else:
         response_element = None
 
