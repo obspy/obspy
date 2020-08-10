@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 IASPEI Seismic Format (ISF) support for ObsPy
@@ -685,8 +684,3 @@ def __is_ims10_bulletin(fh, **kwargs):  # NOQA
     if first_line.strip().upper() == 'DATA_TYPE BULLETIN IMS1.0:SHORT':
         return True
     return False
-
-
-if __name__ == '__main__':  # pragma: no cover
-    import doctest
-    doctest.testmod(exclude_empty=True)

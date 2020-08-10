@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 obspy.clients.fdsn.routing - Routing services for FDSN web services
@@ -19,8 +18,3 @@ obspy.clients.fdsn.routing - Routing services for FDSN web services
 # See https://bugs.python.org/issue7980
 import time
 time.strptime("2000/11/30", "%Y/%m/%d")
-
-
-if __name__ == '__main__':  # pragma: no cover
-    import doctest
-    doctest.testmod(exclude_empty=True)

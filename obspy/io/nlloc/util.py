@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 NonLinLoc file format support for ObsPy
@@ -48,8 +47,3 @@ def read_nlloc_scatter(filename, coordinate_converter=None):
         data["x"], data["y"], data["z"] = coordinate_converter(
             data["x"], data["y"], data["z"])
     return data
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

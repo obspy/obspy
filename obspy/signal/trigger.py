@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: trigger.py
@@ -775,8 +774,3 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
         coincidence_triggers.append(event)
         last_off_time = off
     return coincidence_triggers
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

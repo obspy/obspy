@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 HEADER_STARTS = {
     'origins': ['date', 'time', 'err', 'rms'],
@@ -64,8 +63,3 @@ def fixed_flag(my_char):
     if len(my_char) != 1:
         raise ValueError()
     return my_char.lower() == 'f'
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

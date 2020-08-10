@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 ObsPy implementation for parsing the sc3ml format to an Inventory object.
