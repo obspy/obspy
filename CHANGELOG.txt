@@ -18,6 +18,10 @@ Changes:
      (see #2678)
    * properly take into account native system byteorder, should fix reading
      rt130 data on big endian systems (see #2678)
+ - obspy.io.seiscomp:
+   * Modification so that _read_sc3ml continues parsing the XML file instead 
+     of exiting, when errors in the response part of the SC3 XML are encountered. 
+     The response information is omitted from the Inventory object (see #2695)
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
