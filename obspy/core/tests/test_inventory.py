@@ -663,40 +663,34 @@ class InventoryTestCase(unittest.TestCase):
 
     def test_add(self):
         """
-        Test deep and shallow copies for inventory addition
+        Test shallow copies for inventory addition
         """
         inv1 = read_inventory()
         inv2 = read_inventory()
 
-        # __add__ creates two deep copies
+        # __add__ creates two shallow copies
         inv_sum = inv1 + inv2
-        self.assertEqual(len({id(net) for net in inv_sum} &
-                             {id(net) for net in inv1}), 0)
-        self.assertEqual(len({id(net) for net in inv_sum} &
-                             {id(net) for net in inv2}), 0)
+        self.assertEqual({id(net) for net in inv_sum},
+                         {id(net) for net in inv1} | {id(net) for net in inv2})
 
-        # __iadd__ creates a deep copy of other but keeps self
+        # __iadd__ creates a shallow copy of other and keeps self
         ids1 = {id(net) for net in inv1}
         inv1 += inv2
-        self.assertEqual(len({id(net) for net in inv1} &
-                             {id(net) for net in inv2}), 0)
-        self.assertEqual({id(net) for net in inv1} &
-                         ids1, ids1)
+        self.assertEqual({id(net) for net in inv1},
+                         ids1 | {id(net) for net in inv2})
 
-        # __add__ with a network creates two deep copies
+        # __add__ with a network appends the network to a shallow copy of
+        # the inventory
         net1 = Network('N1')
         inv_sum = inv1 + net1
-        self.assertEqual(len({id(net) for net in inv_sum} &
-                             {id(net) for net in inv1}), 0)
-        self.assertEqual(len({id(net) for net in inv_sum} &
-                             {id(net1)}), 0)
+        self.assertEqual({id(net) for net in inv_sum},
+                         {id(net) for net in inv1} | {id(net1)})
 
-        # __iadd__ with a network creates a deep copy of other but keeps self
+        # __iadd__ with a network appends the network to the inventory
         net1 = Network('N1')
         ids1 = {id(net) for net in inv1}
         inv1 += net1
-        self.assertEqual(len({id(net) for net in inv1} & {id(net1)}), 0)
-        self.assertEqual({id(net) for net in inv1} & ids1, ids1)
+        self.assertEqual({id(net) for net in inv1}, ids1 | {id(net1)})
 
     def test_extend_metadata(self):
         """

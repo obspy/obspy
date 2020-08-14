@@ -172,18 +172,16 @@ class Inventory(ComparingObject):
         return not self.__eq__(other)
 
     def __add__(self, other):
-        new = copy.deepcopy(self)
+        new = copy.copy(self)
         new += other
         return new
 
     def __iadd__(self, other):
         if isinstance(other, Inventory):
-            other = copy.deepcopy(other)
             self.networks.extend(other.networks)
             # This is a straight inventory merge.
             self.__copy_inventory_metadata(other)
         elif isinstance(other, Network):
-            other = copy.deepcopy(other)
             self.networks.append(other)
         else:
             msg = ("Only Inventory and Network objects can be added to "
@@ -304,7 +302,8 @@ class Inventory(ComparingObject):
 
     def extend(self, network_list):
         """
-        Extends the current Inventory object with another Inventory or a list of Network objects.
+        Extends the current Inventory object with another Inventory or a list
+        of Network objects.
         """
         if isinstance(network_list, list):
             for _i in network_list:
