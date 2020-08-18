@@ -84,6 +84,9 @@ class NLLOCTestCase(unittest.TestCase):
         filename = get_example_file("nlloc_custom.hyp")
         cat = read_nlloc_hyp(filename,
                              coordinate_converter=_mock_coordinate_converter)
+        # reset pick channel codes, these got automatically mapped upon reading
+        for pick in cat[0].picks:
+            pick.waveform_id.channel_code = None
         with open(get_example_file("nlloc_custom.qml"), 'rb') as tf:
             quakeml_expected = tf.read().decode()
         with NamedTemporaryFile() as tf:
