@@ -17,13 +17,14 @@ from obspy import UTCDateTime
 from obspy.core.event import (
     Catalog, Event, Origin, Magnitude, Pick, WaveformStreamID, Arrival,
     OriginQuality)
-from obspy.core.inventory.util import _add_resolve_seedid_doc, _resolve_seedid
+from obspy.core.inventory.util import (
+    _add_resolve_seedid_doc, _add_resolve_seedid_ph2comp_doc, _resolve_seedid)
 
 
 DEG2KM = 111.2
 
 
-def _block2event(block, ph2comp, eventid_map, **kwargs):
+def _block2event(block, eventid_map, **kwargs):
     """
     Read HypoDD event block
     """
@@ -42,8 +43,7 @@ def _block2event(block, ph2comp, eventid_map, **kwargs):
     arrivals = []
     for line in lines[1:]:
         sta, reltime, weight, phase = line.split()
-        comp = ph2comp.get(phase, '')
-        widargs = _resolve_seedid(sta, comp, time=time, **kwargs)
+        widargs = _resolve_seedid(sta, '', time=time, phase=phase, **kwargs)
         wid = WaveformStreamID(*widargs)
         pick = Pick(waveform_id=wid, phase_hint=phase,
                     time=time + float(reltime))
@@ -93,9 +93,9 @@ def _is_pha(filename):
         return True
 
 
+@_add_resolve_seedid_ph2comp_doc
 @_add_resolve_seedid_doc
-def _read_pha(filename, ph2comp={'P': 'Z', 'S': 'N'}, eventid_map=None,
-              encoding='utf-8', **kwargs):
+def _read_pha(filename, eventid_map=None, encoding='utf-8', **kwargs):
     """
     Read a HypoDD PHA file and returns an ObsPy Catalog object.
 
@@ -120,7 +120,7 @@ def _read_pha(filename, ph2comp={'P': 'Z', 'S': 'N'}, eventid_map=None,
         eventid_map = {v: k for k, v in eventid_map.items()}
     with io.open(filename, 'r', encoding=encoding) as f:
         text = f.read()
-    events = [_block2event(block, ph2comp, eventid_map, **kwargs)
+    events = [_block2event(block, eventid_map, **kwargs)
               for block in text.split('#')[1:]]
     return Catalog(events)
 

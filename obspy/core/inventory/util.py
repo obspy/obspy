@@ -1105,16 +1105,29 @@ def _add_resolve_seedid_doc(func):
     return func
 
 
+def _add_resolve_seedid_ph2comp_doc(func):
+    """
+    :param dict ph2comp: mapping of phases to components if format does not
+        specify the component or if the component ends with '?'.
+        (default: {'P': 'Z', 'S': 'N'})
+    """
+    func.__doc__ = func.__doc__ + __doc__
+    return func
+
+
 def _resolve_seedid(station, component, inventory=None,
-        time=None, seedid_map=None, default_seedid=None,
-        key='{sta.code}', id_map=None, id_default=None,
-        unused_kwargs=False, warn=True, **kwargs):
+                    time=None, seedid_map=None, default_seedid=None,
+                    key='{sta.code}', id_map=None, id_default=None,
+                    phase=None, ph2comp={'P': 'Z', 'S': 'N'},
+                    unused_kwargs=False, warn=True, **kwargs):
     if not unused_kwargs and len(kwargs) > 0:
         raise ValueError(f'Unexpected arguments: {kwargs}')
     if id_map is not None:  # backwards compatibility
         seedid_map = id_map
     if id_default is not None:  # backwards compatibility
         default_seedid = id_default
+    if phase is not None and (component == '' or component.endswith('?')):
+        component = component[:-1] + ph2comp.get(phase.upper(), '')
     seedid = None
     if seedid_map is not None and station in seedid_map:
         seedid = seedid_map[station].format(station, component)
