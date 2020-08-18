@@ -157,7 +157,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
           <value>2010-05-27T16:56:25.930000Z</value>
           <uncertainty>0.02</uncertainty>
         </time>
-        <waveformID channelCode="?" stationCode="UH3"></waveformID>
+        <waveformID channelCode="?" networkCode="" stationCode="UH3"></waveformID>
         <phaseHint>P</phaseHint>
       </pick>
       <pick publicID="smi:local/3a0bde89-d7e6-45ef-a08a-4b950720f7be">
@@ -165,7 +165,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
           <value>2010-05-27T16:56:27.100000Z</value>
           <uncertainty>0.06</uncertainty>
         </time>
-        <waveformID channelCode="?" stationCode="UH3"></waveformID>
+        <waveformID channelCode="?" networkCode="" stationCode="UH3"></waveformID>
         <phaseHint>S</phaseHint>
       </pick>
       <pick publicID="smi:local/95492f79-0db4-4bba-a198-6c08db43dd83">
@@ -173,7 +173,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
           <value>2010-05-27T16:56:26.040000Z</value>
           <uncertainty>0.03</uncertainty>
         </time>
-        <waveformID channelCode="?" stationCode="UH2"></waveformID>
+        <waveformID channelCode="?" networkCode="" stationCode="UH2"></waveformID>
         <phaseHint>P</phaseHint>
       </pick>
       <pick publicID="smi:local/75ca039c-bfca-41c3-8fd3-9d70341a23fe">
@@ -181,7 +181,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
           <value>2010-05-27T16:56:27.270000Z</value>
           <uncertainty>0.06</uncertainty>
         </time>
-        <waveformID channelCode="?" stationCode="UH2"></waveformID>
+        <waveformID channelCode="?" networkCode="" stationCode="UH2"></waveformID>
         <phaseHint>S</phaseHint>
       </pick>
       <pick publicID="smi:local/550537fb-922c-4742-9bcc-504c1d330480">
@@ -189,7 +189,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
           <value>2010-05-27T16:56:26.130000Z</value>
           <uncertainty>0.02</uncertainty>
         </time>
-        <waveformID channelCode="?" stationCode="UH1"></waveformID>
+        <waveformID channelCode="?" networkCode="" stationCode="UH1"></waveformID>
         <phaseHint>P</phaseHint>
       </pick>
       <pick publicID="smi:local/0783bf9f-6862-40a3-baeb-ed247b73ca6f">
@@ -197,7 +197,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
           <value>2010-05-27T16:56:27.460000Z</value>
           <uncertainty>0.03</uncertainty>
         </time>
-        <waveformID channelCode="?" stationCode="UH1"></waveformID>
+        <waveformID channelCode="?" networkCode="" stationCode="UH1"></waveformID>
         <phaseHint>S</phaseHint>
       </pick>
       <pick publicID="smi:local/d6fa4a8a-6e4c-48a1-9ab9-e84b60038f4b">
@@ -205,7 +205,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
           <value>2010-05-27T16:56:26.930000Z</value>
           <uncertainty>0.06</uncertainty>
         </time>
-        <waveformID channelCode="?" stationCode="UH4"></waveformID>
+        <waveformID channelCode="?" networkCode="" stationCode="UH4"></waveformID>
         <phaseHint>P</phaseHint>
       </pick>
       <pick publicID="smi:local/b0b74d7c-bd9e-4183-abcb-5c784a53f8b0">
@@ -213,7 +213,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
           <value>2010-05-27T16:56:28.900000Z</value>
           <uncertainty>0.11</uncertainty>
         </time>
-        <waveformID channelCode="?" stationCode="UH4"></waveformID>
+        <waveformID channelCode="?" networkCode="" stationCode="UH4"></waveformID>
         <phaseHint>S</phaseHint>
       </pick>
     </event>

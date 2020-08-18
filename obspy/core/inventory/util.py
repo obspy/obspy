@@ -1124,7 +1124,7 @@ def _resolve_seedid(station, component, inventory=None,
     if seedid is None and default_seedid is not None:
         seedid = default_seedid.format(station, component)
     if seedid is None:
-        return None, station, None, component
+        return '', station, None, component
     else:
         return tuple(seedid.split('.'))
 

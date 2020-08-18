@@ -732,7 +732,7 @@ class InventoryTestCase(unittest.TestCase):
                                 default_seedid='.{}..{}'))
         with self.assertWarnsRegex(UserWarning, 'No matching'):
             self.assertEqual(
-                    (None, 'FUR', None, 'HHZ'),
+                    ('', 'FUR', None, 'HHZ'),
                     _resolve_seedid('FUR', 'HHZ', inv, time=t_invalid))
         # make a copy, but stripping channels. network lookup should still
         # work, location code lookup obviously not
@@ -761,7 +761,7 @@ class InventoryTestCase(unittest.TestCase):
         inv[-1].code = 'XX'
         with self.assertWarnsRegex(UserWarning, 'No matching'):
             self.assertEqual(
-                    (None, 'FUR', None, 'HHZ'),
+                    ('', 'FUR', None, 'HHZ'),
                     _resolve_seedid('FUR', 'HHZ', inv, time=t_valid))
         # now add some ambiguity in location code only
         inv.networks = [inv[0]]

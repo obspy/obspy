@@ -247,7 +247,7 @@ class NLLOCTestCase(unittest.TestCase):
                 self.assertEqual(wid.network_code, 'XX')
                 self.assertEqual(wid.location_code, '')
             else:
-                self.assertEqual(wid.network_code, None)
+                self.assertEqual(wid.network_code, '')
                 self.assertEqual(wid.location_code, None)
 
     def test_is_nlloc_hyp(self):
