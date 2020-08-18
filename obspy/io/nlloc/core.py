@@ -17,7 +17,8 @@ from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
                               WaveformStreamID)
-from obspy.core.inventory.util import _resolve_seedid, _add_resolve_seedid_doc
+from obspy.core.inventory.util import (
+    _add_resolve_seedid_doc, _add_resolve_seedid_ph2comp_doc, _resolve_seedid)
 from obspy.geodetics import kilometer2degrees
 
 
@@ -41,6 +42,7 @@ def is_nlloc_hyp(filename):
     return True
 
 
+@_add_resolve_seedid_ph2comp_doc
 @_add_resolve_seedid_doc
 def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     """
@@ -333,8 +335,8 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         # when reading the .hyp file.. if an inventory is provided, a lookup
         # is done
         widargs = _resolve_seedid(
-            station=station, component=channel, time=t, unused_kwargs=True,
-            **kwargs)
+            station=station, component=channel, time=t, phase=phase,
+            unused_kwargs=True, **kwargs)
         wid = WaveformStreamID(*widargs)
         pick.waveform_id = wid
         pick.time_errors.uncertainty = float(line[10])

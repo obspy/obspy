@@ -1108,8 +1108,8 @@ def _add_resolve_seedid_doc(func):
 def _add_resolve_seedid_ph2comp_doc(func):
     """
     :param dict ph2comp: mapping of phases to components if format does not
-        specify the component or if the component ends with '?'.
-        (default: {'P': 'Z', 'S': 'N'})
+        specify the component or if the component ends with '?'. Set it to
+        `None` for no mapping of components. (default: {'P': 'Z', 'S': 'N'})
     """
     func.__doc__ = func.__doc__ + __doc__
     return func
@@ -1126,7 +1126,8 @@ def _resolve_seedid(station, component, inventory=None,
         seedid_map = id_map
     if id_default is not None:  # backwards compatibility
         default_seedid = id_default
-    if phase is not None and (component == '' or component.endswith('?')):
+    if phase is not None and ph2comp is not None and (
+            component == '' or component.endswith('?')):
         component = component[:-1] + ph2comp.get(phase.upper(), '')
     seedid = None
     if seedid_map is not None and station in seedid_map:
