@@ -722,6 +722,9 @@ class Network(BaseNode):
                                channel=channel, time=time,
                                starttime=starttime, endtime=endtime)
 
+        if not matching.stations:
+            raise ObsPyException("No channel match in inventory for the given filters.")
+
         for sta in matching.stations:
             for cha in sta.channels:
                 label = _response_plot_label(

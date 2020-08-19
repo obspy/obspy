@@ -1116,6 +1116,9 @@ class Inventory(ComparingObject):
                                location=location, channel=channel, time=time,
                                starttime=starttime, endtime=endtime)
 
+        if not matching.networks:
+            raise ObsPyException("No channel match in inventory for the given filters.")
+
         for net in matching.networks:
             for sta in net.stations:
                 for cha in sta.channels:
