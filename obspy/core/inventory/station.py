@@ -545,6 +545,10 @@ class Station(BaseNode):
         matching = self.select(location=location, channel=channel, time=time,
                                starttime=starttime, endtime=endtime)
 
+        if not matching.channels:
+                msg = "No matching channels for the given filters"
+                warnings.warn(msg, UserWarning)
+
         for cha in matching.channels:
             try:
                 cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
@@ -561,7 +565,7 @@ class Station(BaseNode):
                 warnings.warn(msg % (str(e), str(cha)), UserWarning)
 
         # final adjustments to plot if we created the figure in here
-        if not axes:
+        if not axes and matching.channels:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, plot_degrees=plot_degrees,
                                      show=False)

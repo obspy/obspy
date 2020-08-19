@@ -723,7 +723,8 @@ class Network(BaseNode):
                                starttime=starttime, endtime=endtime)
 
         if not matching.stations:
-            raise ObsPyException("No channel match in inventory for the given filters.")
+                msg = "No matching channels for the given filters"
+                warnings.warn(msg, UserWarning)
 
         for sta in matching.stations:
             for cha in sta.channels:
@@ -742,7 +743,7 @@ class Network(BaseNode):
                     warnings.warn(msg % (str(e), str(cha)), UserWarning)
 
         # final adjustments to plot if we created the figure in here
-        if not axes:
+        if not axes and matching.stations:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, show=False)
 

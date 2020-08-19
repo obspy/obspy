@@ -1117,7 +1117,8 @@ class Inventory(ComparingObject):
                                starttime=starttime, endtime=endtime)
 
         if not matching.networks:
-            raise ObsPyException("No channel match in inventory for the given filters.")
+                msg = "No matching channels for the given filters"
+                warnings.warn(msg, UserWarning)
 
         for net in matching.networks:
             for sta in net.stations:
@@ -1138,7 +1139,7 @@ class Inventory(ComparingObject):
                         msg = "Skipping plot of channel (%s):\n%s"
                         warnings.warn(msg % (str(e), str(cha)), UserWarning)
         # final adjustments to plot if we created the figure in here
-        if axes is None:
+        if axes is None and matching.networks:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, plot_degrees, show=False)
         if outfile:
