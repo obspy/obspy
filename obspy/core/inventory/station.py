@@ -546,8 +546,8 @@ class Station(BaseNode):
                                starttime=starttime, endtime=endtime)
 
         if not matching.channels:
-                msg = "No matching channels for the given filters"
-                warnings.warn(msg, UserWarning)
+            msg = "No matching channels for the given filters"
+            warnings.warn(msg, UserWarning)
 
         for cha in matching.channels:
             try:

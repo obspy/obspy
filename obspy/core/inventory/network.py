@@ -723,8 +723,8 @@ class Network(BaseNode):
                                starttime=starttime, endtime=endtime)
 
         if not matching.stations:
-                msg = "No matching channels for the given filters"
-                warnings.warn(msg, UserWarning)
+            msg = "No matching channels for the given filters"
+            warnings.warn(msg, UserWarning)
 
         for sta in matching.stations:
             for cha in sta.channels:

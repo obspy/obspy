@@ -1117,8 +1117,8 @@ class Inventory(ComparingObject):
                                starttime=starttime, endtime=endtime)
 
         if not matching.networks:
-                msg = "No matching channels for the given filters"
-                warnings.warn(msg, UserWarning)
+            msg = "No matching channels for the given filters"
+            warnings.warn(msg, UserWarning)
 
         for net in matching.networks:
             for sta in net.stations:
