@@ -1101,7 +1101,8 @@ def _add_resolve_seedid_doc(func):
     :param bool warn: Whether or not to warn on failed look ups
        (no matching data found or ambiguous results) in the inventory
     """
-    func.__doc__ = func.__doc__ + __doc__
+    if func.__doc__ is not None:
+        func.__doc__ = func.__doc__ + __doc__
     return func
 
 
@@ -1111,7 +1112,8 @@ def _add_resolve_seedid_ph2comp_doc(func):
         specify the component or if the component ends with '?'. Set it to
         `None` for no mapping of components. (default: {'P': 'Z', 'S': 'N'})
     """
-    func.__doc__ = func.__doc__ + __doc__
+    if func.__doc__ is not None:
+        func.__doc__ = func.__doc__ + __doc__
     return func
 
 

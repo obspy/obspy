@@ -548,7 +548,7 @@ def _add_format_plugin_table(func, group, method, numspaces=4):
     """
     A function to populate the docstring of func with its plugin table.
     """
-    if '%s' in func.__doc__:
+    if func.__doc__ is not None and '%s' in func.__doc__:
         func.__doc__ = func.__doc__ % make_format_plugin_table(
             group, method, numspaces=numspaces)
 

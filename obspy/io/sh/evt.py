@@ -240,4 +240,5 @@ def _read_evt(filename, encoding='utf-8', **kwargs):
                    description='Created from SeismicHandler EVT format')
 
 
-_read_evt.__doc__ = _read_evt.__doc__ % (SUPPORTED_KEYS,)
+if _read_evt.__doc__ is not None and '%s' in _read_evt.__doc__:
+    _read_evt.__doc__ = _read_evt.__doc__ % (SUPPORTED_KEYS,)
