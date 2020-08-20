@@ -1030,7 +1030,8 @@ class Inventory(ComparingObject):
                       label_epoch_dates=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
-        inventory's channels.
+        inventory's channels. If the subset of channels is empty, a warning
+        is emitted and the plot will be empty.
 
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.

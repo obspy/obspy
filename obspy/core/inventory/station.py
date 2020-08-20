@@ -472,7 +472,8 @@ class Station(BaseNode):
              unwrap_phase=False, plot_degrees=False, show=True, outfile=None):
         """
         Show bode plot of instrument response of all (or a subset of) the
-        station's channels.
+        station's channels. If the subset of channels is empty, a warning
+        is emitted and the plot will be empty.
 
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.
