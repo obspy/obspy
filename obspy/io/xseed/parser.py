@@ -187,6 +187,8 @@ class Parser(object):
                 with open(data, "r") as fh:
                     data = fh.read()
                     data = io.BytesIO(data.encode())
+        elif isinstance(data, (str, native_str)) and data[0] == "#":
+            self._parse_resp(data)
         else:
             data = io.BytesIO(data)
 
