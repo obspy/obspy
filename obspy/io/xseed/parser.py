@@ -177,6 +177,7 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
 
+        # Assume bytes objects contain raw data
         if not isinstance(data, bytes):
             if _is_resp(data):
                 with open(data, "r") as fh:
@@ -187,8 +188,10 @@ class Parser(object):
                 with open(data, "r") as fh:
                     data = fh.read()
                     data = io.BytesIO(data.encode())
-        elif isinstance(data, (str, native_str)) and data[0] == "#":
-            self._parse_resp(data)
+        elif chr(data[0]) == "#":
+            # _parse_resp takes a string
+            self._parse_resp(data.decode())
+            return
         else:
             data = io.BytesIO(data)
 
