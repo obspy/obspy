@@ -120,7 +120,8 @@ class Parser(object):
         self.stations = []
         # if a file name is given, read it directly to the parser object
         if data:
-            self.read(data)
+            from obspy.core.util.base import _generic_reader
+            _generic_reader(data, self.read)
 
     def __str__(self):
         """
@@ -175,41 +176,21 @@ class Parser(object):
         if getattr(self, "_format", None):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
-        # try to transform everything into BytesIO object
-        if isinstance(data, (str, native_str)):
-            if re.search(r"://", data) is not None:
-                url = data
-                data = io.BytesIO()
-                download_to_file(url=url, filename_or_buffer=data)
-                data.seek(0, 0)
-            elif os.path.isfile(data):
-                if _is_resp(data):
-                    # RESP filename
-                    with open(data, 'r') as f:
-                        data = f.read()
+
+        if not isinstance(data, bytes):
+            if _is_resp(data):
+                with open(data, "r") as fh:
+                    data = fh.read()
                     self._parse_resp(data)
                     return
-                else:
-                    with open(data, 'rb') as f:
-                        data = f.read()
-                    data = io.BytesIO(data)
-            elif data.startswith('#'):
-                # RESP data
-                self._parse_resp(data)
-                return
             else:
-                try:
-                    data = data.encode()
-                except Exception:
-                    pass
-                try:
-                    data = io.BytesIO(data)
-                except Exception:
-                    raise IOError("data is neither filename nor valid URL")
-        # but could also be a big string with data
-        elif isinstance(data, bytes):
+                with open(data, "r") as fh:
+                    data = fh.read()
+                    data = io.BytesIO(data.encode())
+        else:
             data = io.BytesIO(data)
-        elif not hasattr(data, "read"):
+
+        if not hasattr(data, "read"):
             raise TypeError
 
         # check first byte of data BytesIO object
