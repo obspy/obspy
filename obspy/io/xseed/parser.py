@@ -119,7 +119,12 @@ class Parser(object):
         self.abbreviations = None
         self.stations = []
         # if a file name is given, read it directly to the parser object
-        if data:
+
+        if isinstance(data, (str, native_str)):
+            if (data.strip().startswith(("<", "#")) or
+                re.find("[0-9]", data.strip())):
+                self.read(data.encode())
+        elif data:
             from obspy.core.util.base import _generic_reader
             _generic_reader(data, self.read)
 
