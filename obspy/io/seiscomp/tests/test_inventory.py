@@ -308,10 +308,9 @@ class SC3MLTestCase(unittest.TestCase):
 
     def test_omit_response(self):
         """
-        Test SC3ML inventory with response information that leads to 
-        ObspyException.
-        
-        Read up to channel level and omit response stages information
+        Test SC3ML inventory with response information that leads to
+        ObspyException. Read up to channel level and omit response stages
+        information.
         """
         inv = read_inventory(os.path.join(self.data_dir, "IM.I31KZ.sc3ml"))
 
