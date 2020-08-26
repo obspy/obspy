@@ -459,7 +459,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
                 "Could not find response tag with public ID '{response}'. "
                 "Omitting response stage information from Inventory for "
                 "channel '{channel}'.".format(response=response_id,
-                    channel=seed_id)
+                                                channel=seed_id)
             )
             warnings.warn(msg)
             response_element = None
@@ -469,7 +469,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
                 "public ID '{response}'. "
                 "Omitting response stage information from Inventory for "
                 "channel '{channel}'.".format(response=response_id,
-                    channel=seed_id)
+                                                channel=seed_id)
             )
             warnings.warn(msg)
             response_element = None
