@@ -455,19 +455,22 @@ def _read_channel(instrumentation_register, cha_element, _ns):
                 response_elements.append(found_response)
 
         if len(response_elements) == 0:
-            msg = ("Found multiple matching response tags with the same "
-                   "public ID '{response}'. "
-                   "Omitting response stage information from Inventory for "
-                   "channel '{channel}'.".format(response=response_id, 
-                                                    channel=seed_id))
+            msg = (
+                "Could not find response tag with public ID '{response}'. "
+                "Omitting response stage information from Inventory for "
+                "channel '{channel}'.".format(response=response_id,
+                channel=seed_id)
+            )
             warnings.warn(msg)
             response_element = None
         elif len(response_elements) > 1:
-            msg = ("Found multiple matching response tags with the same "
-                   "public ID '{response}'. "
-                   "Omitting response stage information from Inventory for "
-                   "channel '{channel}'.".format(response=response_id, 
-                                                    channel=seed_id))
+            msg = (
+                "Found multiple matching response tags with the same "
+                "public ID '{response}'. "
+                "Omitting response stage information from Inventory for "
+                "channel '{channel}'.".format(response=response_id,
+                channel=seed_id)
+            )
             warnings.warn(msg)
             response_element = None
         else:
