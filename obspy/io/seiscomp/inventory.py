@@ -458,16 +458,16 @@ def _read_channel(instrumentation_register, cha_element, _ns):
             msg = ("Found multiple matching response tags with the same "
                    "public ID '{response}'. "
                    "Omitting response stage information from Inventory for "
-                   "channel '{channel}'.".format(response=response_id,channel=seed_id)
-                   )
+                   "channel '{channel}'.".format(response=response_id, 
+                                                    channel=seed_id))
             warnings.warn(msg)
             response_element = None
         elif len(response_elements) > 1:
             msg = ("Found multiple matching response tags with the same "
                    "public ID '{response}'. "
                    "Omitting response stage information from Inventory for "
-                   "channel '{channel}'.".format(response=response_id,channel=seed_id)
-                   )
+                   "channel '{channel}'.".format(response=response_id, 
+                                                    channel=seed_id))
             warnings.warn(msg)
             response_element = None
         else:
