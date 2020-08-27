@@ -151,6 +151,83 @@ class ParserTestCase(unittest.TestCase):
         """
         self.assertRaises(IOError, Parser, "XYZ")
 
+    def test_xseed_as_string(self):
+        """
+        Test parsing the contents of an xseed file as string
+        """
+        path = os.path.join(self.path, "dataless.seed.BW_DHFO")
+        with open(path) as fp:
+            data = fp.read()
+        p = Parser(data)
+        self.assertNotEqual(p, None)
+        self.assertTrue(p.blockettes)
+
+        xml = p.get_xseed()
+        p = Parser(xml)
+        self.assertNotEqual(p, None)
+        self.assertTrue(p.blockettes)
+
+    def test_dlseed_as_string(self):
+        """
+        Test parsing the contents of a dlseed file as string
+        """
+        path = os.path.join(self.path, "dataless.seed.BW_DHFO")
+        with open(path) as fp:
+            data = fp.read()
+        p = Parser(data)
+        self.assertNotEqual(p, None)
+        self.assertTrue(p.blockettes)
+
+    def test_resp_as_string(self):
+        """
+        Test parsing the contents of a RESP file as string
+        """
+        path = os.path.join(self.path, "RESP.BN.WR0..SHZ")
+        with open(path) as fp:
+            data = fp.read()
+        p = Parser(data)
+        self.assertNotEqual(p, None)
+        self.assertTrue(p.blockettes)
+
+    def test_xseed_as_bytes(self):
+        """
+        Test parsing the contents of an xseed file as bytes
+        """
+        path = os.path.join(self.path, "dataless.seed.BW_DHFO")
+        with open(path) as fp:
+            data = fp.read()
+        p = Parser(data.encode())
+        self.assertNotEqual(p, None)
+        self.assertTrue(p.blockettes)
+
+        xml = p.get_xseed().decode()
+        p = Parser(xml.encode())
+
+        self.assertNotEqual(p, None)
+        self.assertTrue(p.blockettes)
+
+    def test_dlseed_as_bytes(self):
+        """
+        Test parsing the contents of a dlseed file as bytes
+        """
+        path = os.path.join(self.path, "dataless.seed.BW_DHFO")
+        with open(path) as fp:
+            data = fp.read()
+        p = Parser(data.encode())
+        self.assertNotEqual(p, None)
+        self.assertTrue(p.blockettes)
+
+    def test_resp_as_bytes(self):
+        """
+        Test parsing the contents of a RESP file as bytes
+        """
+        path = os.path.join(self.path, "RESP.BN.WR0..SHZ")
+        with open(path) as fp:
+            data = fp.read()
+        p = Parser(data.encode())
+        self.assertNotEqual(p, None)
+        self.assertTrue(p.blockettes)
+
     def test_blockette_starts_after_record(self):
         """
         '... 058003504 1.00000E+00 0.00000E+0000 000006S*0543864 ... '
