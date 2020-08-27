@@ -189,9 +189,9 @@ class Parser(object):
                     self._parse_resp(data)
                     return
             else:
-                with open(data, "r") as fh:
+                with open(data, "rb") as fh:
                     data = fh.read()
-                    data = io.BytesIO(data.encode())
+                    data = io.BytesIO(data)
         elif chr(data[0]) == "#":
             # _parse_resp takes a string
             self._parse_resp(data.decode())
