@@ -55,7 +55,7 @@ jobs:
         run: |
           pip install wheel
           pip install flake8
-          python -m flake8 obspy
+          python -m flake8 obspy -v
 
   # Runs the tests on combinations of the supported python/os matrix.
   test_code:
