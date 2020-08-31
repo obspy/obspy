@@ -384,7 +384,7 @@ def _write_stationtxt(inventory, path_or_file_object, level='channel',
 
     :type inventory: :class:`~obspy.core.inventory.Inventory`
     :param inventory: The inventory instance to be written.
-    :param file_or_file_object: The file or file-like object to be written to.
+    :param path_or_file_object: The file or file-like object to be written to.
     :param level: Specify level of detail using one of: ``'network'``,
         ``'station'`` or ``'channel'``.
     """
