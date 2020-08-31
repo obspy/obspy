@@ -661,6 +661,49 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(inv2[0][0][0].latitude, original_latitude + 1)
         self.assertNotEqual(inv[0][0][0].latitude, inv2[0][0][0].latitude)
 
+    def test_add(self):
+        """
+        Test shallow copies for inventory addition
+        """
+        inv1 = read_inventory()
+        inv2 = read_inventory()
+
+        # __add__ creates two shallow copies
+        inv_sum = inv1 + inv2
+        self.assertEqual({id(net) for net in inv_sum},
+                         {id(net) for net in inv1} | {id(net) for net in inv2})
+
+        # __iadd__ creates a shallow copy of other and keeps self
+        ids1 = {id(net) for net in inv1}
+        inv1 += inv2
+        self.assertEqual({id(net) for net in inv1},
+                         ids1 | {id(net) for net in inv2})
+
+        # __add__ with a network appends the network to a shallow copy of
+        # the inventory
+        net1 = Network('N1')
+        inv_sum = inv1 + net1
+        self.assertEqual({id(net) for net in inv_sum},
+                         {id(net) for net in inv1} | {id(net1)})
+
+        # __iadd__ with a network appends the network to the inventory
+        net1 = Network('N1')
+        ids1 = {id(net) for net in inv1}
+        inv1 += net1
+        self.assertEqual({id(net) for net in inv1}, ids1 | {id(net1)})
+
+    def test_extend_metadata(self):
+        """
+        Test that extend merges the metadata of the Inventories
+        """
+        inv1 = Inventory([], source='S1', sender='T1')
+        inv2 = Inventory([], source='S2', sender='T2')
+
+        inv1.extend(inv2)
+
+        self.assertEqual(inv1.source, 'S1,S2')
+        self.assertEqual(inv1.sender, 'T1,T2')
+
     def test_read_inventory_with_wildcard(self):
         """
         Tests the read_inventory() function with a filename wild card.

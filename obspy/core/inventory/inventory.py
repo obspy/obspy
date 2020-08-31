@@ -172,7 +172,7 @@ class Inventory(ComparingObject):
         return not self.__eq__(other)
 
     def __add__(self, other):
-        new = copy.deepcopy(self)
+        new = copy.copy(self)
         new += other
         return new
 
@@ -302,17 +302,19 @@ class Inventory(ComparingObject):
 
     def extend(self, network_list):
         """
-        Extends the current Catalog object with a list of Network objects.
+        Extends the current Inventory object with another Inventory or a list
+        of Network objects.
         """
         if isinstance(network_list, list):
             for _i in network_list:
-                # Make sure each item in the list is a event.
+                # Make sure each item in the list is a Network.
                 if not isinstance(_i, Network):
                     msg = 'Extend only accepts a list of Network objects.'
                     raise TypeError(msg)
             self.networks.extend(network_list)
         elif isinstance(network_list, Inventory):
             self.networks.extend(network_list.networks)
+            self.__copy_inventory_metadata(network_list)
         else:
             msg = 'Extend only supports a list of Network objects as argument.'
             raise TypeError(msg)
