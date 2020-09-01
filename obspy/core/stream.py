@@ -3504,9 +3504,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         td = self.select(network=network, station=station, location=location)
         td = (st.select(channel=channels[0]) + st.select(channel=channels[1]) +
               st.select(channel=channels[2]))
-        # remove the original unrotated traces from the stream
-        # for tr in st.traces:
-        #     self.remove(tr)
         # cut data so that we end up with a set of matching pieces for the tree
         # components (i.e. cut away any parts where one of the three components
         # has no data)
@@ -3542,11 +3539,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             # references than in self, can't use
             # self.remove() on contents of td
             # so check for value equality manually...
-            for tr0 in td.traces:
-                for tr1 in self.traces:
-                    if tr0 == tr1:
-                        self.remove(tr1)
-                        break
+            # Surely there is a better way to do this??
+            tmp = [tr0 for tr0 in self.traces
+                   for tr1 in td.traces
+                   if tr0 == tr1]
+            for tr in tmp:
+                self.remove(tr)
             for tr, new_data, component in zip(traces, zne, "ZNE"):
                 tr.data = new_data
                 tr.stats.channel = tr.stats.channel[:-1] + component
