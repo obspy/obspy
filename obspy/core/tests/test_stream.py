@@ -2065,6 +2065,9 @@ class StreamTestCase(unittest.TestCase):
                           back_azimuth=30)
         # having traces with different timespans or sampling rates will fail
         st = read()
+        size = len(st)
+        st.rotate(method='LQT->ZNE', back_azimuth=30)
+        self.assertEqual(size, len(st))
         st[1].stats.sampling_rate = 2.0
         self.assertRaises(ValueError, st.rotate, method='NE->RT')
         st = read()
