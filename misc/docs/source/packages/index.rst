@@ -138,6 +138,7 @@ categories.*
     obspy.io.focmec
     obspy.io.gse2
     obspy.io.hypodd
+    obspy.io.hyposat
     obspy.io.iaspei
     obspy.io.json
     obspy.io.kml
