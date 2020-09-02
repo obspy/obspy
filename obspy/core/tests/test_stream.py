@@ -2068,17 +2068,22 @@ class StreamTestCase(unittest.TestCase):
         size = len(st)
         st.rotate(method='LQT->ZNE', back_azimuth=30)
         self.assertEqual(size, len(st))
+        st = read()
         st[1].stats.sampling_rate = 2.0
         self.assertRaises(ValueError, st.rotate, method='NE->RT')
+        self.assertEqual(size, len(st))
         st = read()
         st[1].stats.starttime += 1
         self.assertRaises(ValueError, st.rotate, method='NE->RT')
+        self.assertEqual(size, len(st))
         st = read()
         st[1].stats.sampling_rate = 2.0
         self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
+        self.assertEqual(size, len(st))
         st = read()
         st[1].stats.starttime += 1
         self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
+        self.assertEqual(size, len(st))
 
     def test_plot(self):
         """
