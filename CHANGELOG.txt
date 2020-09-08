@@ -24,6 +24,13 @@ Changes:
  - obspy.clients.fdsn:
    * introduce fine-grained FDSN client exceptions (see #2653)
 
+maintenance_1.2.x
+=================
+
+Changes:
+ - obspy.core:
+   * Inventory addition now consistently uses shallow copies (#2675, #2694)
+
 1.2.2 (doi: 10.5281/zenodo.3921997)
 ===================================
 
@@ -44,11 +51,12 @@ Changes:
      code (see #2636)
  - obspy.clients.neic:
    * Make client socket blocking (see #2617)
+ - obspy.io.hypodd:
+   * Allow 60.0 seconds in the second field of origin times, allow NaN in
+     the magnitude field for pha format (see #2627)
  - obspy.io.nordic:
    * Fixed a bug raising an exception when reading a nordic file with a non
      positive-definite covariance matrix (see #2593)
-   * Allow 60.0 seconds in the second field of origin times, allow NaN in
-     the magnitude field (see #2627)
  - obspy.io.seiscomp:
    * Fixed an issue where a response has zero zeros or poles (see #2633)
 
