@@ -1406,6 +1406,8 @@ class TraceTestCase(unittest.TestCase):
         Test if the correct times array is returned for normal traces and
         traces with gaps.
         """
+        from distutils.version import LooseVersion
+        from matplotlib import __version__
         tr = Trace(data=np.ones(100))
         tr.stats.sampling_rate = 20
         delta = tr.stats.delta
@@ -1442,9 +1444,13 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_allclose(got[:5], expected, rtol=1e-17)
         got = tr.times("matplotlib")
         expected = np.array([
-            730120.00000000000000000000, 730120.00000057870056480169,
-            730120.00000115740112960339, 730120.00000173610169440508,
-            730120.00000231480225920677])
+                10957.000000000000, 10957.000000578704, 10957.000001157407,
+                10957.000001736111, 10957.000002314815])
+        if LooseVersion(__version__) < LooseVersion('3.3'):
+            expected = np.array([
+                730120.00000000000000000000, 730120.00000057870056480169,
+                730120.00000115740112960339, 730120.00000173610169440508,
+                730120.00000231480225920677])
         np.testing.assert_allclose(got[:5], expected, rtol=1e-17)
 
     def test_modulo_operation(self):
