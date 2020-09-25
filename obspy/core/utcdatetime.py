@@ -1706,8 +1706,8 @@ class UTCDateTime(object):
         :meth:`obspy.core.stream.Stream.plot()`.
 
         >>> t = UTCDateTime("2009-08-24T00:20:07.700000Z")
-        >>> t.matplotlib_date
-        733643.0139780092
+        >>> t.matplotlib_date  # doctest: +SKIP
+        14480.01397800926
 
         :rtype: float
         """

@@ -25,8 +25,13 @@ from obspy.geodetics.base import mean_longitude
 
 
 if BASEMAP_VERSION:
-    from mpl_toolkits.basemap import Basemap
-    HAS_BASEMAP = True
+    try:
+        from mpl_toolkits.basemap import Basemap
+    except ImportError as ex:
+        warnings.warn("Basemap installation not working: %s" % ex)
+        HAS_BASEMAP = False
+    else:
+        HAS_BASEMAP = True
     if BASEMAP_VERSION < [1, 0, 4]:
         warnings.warn("All basemap version < 1.0.4 contain a serious bug "
                       "when rendering countries and continents. ObsPy will "

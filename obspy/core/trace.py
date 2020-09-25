@@ -2533,9 +2533,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         array([  1.25107320e+09,   1.25107320e+09,   1.25107320e+09, ...,
                  1.25107323e+09,   1.25107323e+09,   1.25107323e+09])
 
-        >>> tr.times("matplotlib")
-        array([ 733643.01392361,  733643.01392373,  733643.01392384, ...,
-                733643.01427049,  733643.0142706 ,  733643.01427072])
+        >>> tr.times("matplotlib")  # doctest: +SKIP
+        array([ 14480.01392361,  14480.01392373,  14480.01392384, ...,
+                14480.01427049,  14480.0142706 ,  14480.01427072])
 
         :type type: str
         :param type: Determines type of returned time array, see above for

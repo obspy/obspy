@@ -25,6 +25,7 @@ from obspy.core.util import (
 from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
+from obspy.imaging.maps import HAS_BASEMAP
 
 
 class NetworkTestCase(unittest.TestCase):
@@ -308,7 +309,7 @@ class NetworkTestCase(unittest.TestCase):
         self.assertEqual(inv, inv2)
 
 
-@unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+@unittest.skipIf(not HAS_BASEMAP, 'no or invalid basemap installation')
 @unittest.skipIf(
     BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
     'matplotlib 3.0.1 is not compatible with basemap')

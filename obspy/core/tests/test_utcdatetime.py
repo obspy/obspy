@@ -1078,11 +1078,18 @@ class UTCDateTimeTestCase(unittest.TestCase):
         Test convenience method and property for conversion to matplotlib
         datetime float numbers.
         """
-        for t_, expected in zip(
+        from distutils.version import LooseVersion
+        from matplotlib import __version__
+
+        for t_, expected_old, expected in zip(
                 ("1986-05-02T13:44:12.567890Z", "2009-08-24T00:20:07.700000Z",
                  "2026-11-27T03:12:45.4"),
-                (725128.5723676839, 733643.0139780092, 739947.1338587963)):
+                (725128.5723676839, 733643.0139780092, 739947.1338587963),
+                (5965.57236768, 14480.013978, 20784.1338588),
+                ):
             t = UTCDateTime(t_)
+            if LooseVersion(__version__) < LooseVersion('3.3'):
+                expected = expected_old
             np.testing.assert_almost_equal(
                 t.matplotlib_date, expected, decimal=8)
 
