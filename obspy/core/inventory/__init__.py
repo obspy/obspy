@@ -97,7 +97,7 @@ Channel 'EHZ', Location ''
    Sensor: Streckeisen STS-2/N seismometer
    Response information available
 
->>> print(cha.response)  # doctest: +NORMALIZE_WHITESPACE + ELLIPSIS
+>>> print(cha.response)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
 Channel Response
    From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
    Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
