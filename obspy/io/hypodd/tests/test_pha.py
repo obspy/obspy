@@ -3,7 +3,7 @@ import os
 import unittest
 import warnings
 
-from obspy import read_events, read_inventory, UTCDateTime as UTC
+from obspy import read_events, read_inventory, UTCDateTime
 from obspy.core.event import Catalog, Event, Origin, Pick, WaveformStreamID
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.hypodd import pha
@@ -134,8 +134,9 @@ class PHATestCase(unittest.TestCase):
         self.assertEqual(filedata2.replace(' ', ''), filedata.replace(' ', ''))
 
     def test_write_pha_minimal(self):
-        ori = Origin(time=UTC(0), latitude=42, longitude=43, depth=10000)
-        pick = Pick(time=UTC(10), phase_hint='S',
+        ori = Origin(time=UTCDateTime(0), latitude=42, longitude=43,
+                     depth=10000)
+        pick = Pick(time=UTCDateTime(10), phase_hint='S',
                     waveform_id=WaveformStreamID(station_code='STA'))
         del ori.latitude_errors
         del ori.longitude_errors
