@@ -38,7 +38,7 @@ Inventory created at 2013-12-07T18:00:42.878000Z
         Stations (1):
             BW.RJOB (Jochberg, Bavaria, BW-Net)
         Channels (3):
-            BW.RJOB..EHE, BW.RJOB..EHN, BW.RJOB..EHZ
+            BW.RJOB..EHZ, BW.RJOB..EHN, BW.RJOB..EHE
 
 The file format in principle is autodetected. However, the autodetection uses
 the official StationXML XSD schema and unfortunately many real world files
