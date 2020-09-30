@@ -682,9 +682,9 @@ def run(argv=None, interactive=True):
         # raise user and deprecation warnings
         warnings.simplefilter("error", UserWarning)
     # ignore specific warnings
-    warnings.filterwarnings("ignore",
-            message='Matplotlib is currently using agg, which is a'
-                    ' non-GUI backend, so cannot show the figure.')
+    msg = ('Matplotlib is currently using agg, which is a non-GUI backend, '
+           'so cannot show the figure.')
+    warnings.filterwarnings("ignore", message=msg)
     # check for send report option or environmental settings
     if args.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
