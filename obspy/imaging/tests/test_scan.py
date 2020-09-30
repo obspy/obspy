@@ -218,8 +218,6 @@ class ScanTestCase(unittest.TestCase):
 
             with image_comp as ic:
 
-                obspy_scan(files + ['--output', ic.name, '--print-gaps'])
-
                 with CatchOutput() as out:
                     obspy_scan(files + ['--output', ic.name, '--print-gaps'])
 

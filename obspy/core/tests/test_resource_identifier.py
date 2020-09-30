@@ -53,7 +53,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         call. However, if an object is set to a resource_id that is not
         equal to the last object set it should issue a warning.
         """
-        warnings.simplefilter('default')
         object_a = UTCDateTime(1000)
         object_b = UTCDateTime(1000)
         object_c = UTCDateTime(1001)
@@ -528,7 +527,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         not specified and the default uuid is used.
         """
         rid = ResourceIdentifier()
-        with WarningsCapture() as w:
+        with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('default')
             rid.id = 'Another string that will mess up the hash. Bad.'
 
@@ -542,7 +541,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         manually specified.
         """
         rid = ResourceIdentifier('a very unique string indeed')
-        with WarningsCapture() as w:
+        with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('default')
             rid.id = 'Another string that will mess up the hash. Bad.'
 

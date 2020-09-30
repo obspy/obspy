@@ -1891,7 +1891,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
         # headonly
         tr = read(headonly=True)[0]
-        self.assertFalse(tr.data)
+        self.assertEqual(len(tr.data), 0)
 
         # 2 - via http
         # now in separate test case "test_read_url_via_network"
@@ -2752,6 +2752,12 @@ class StreamTestCase(unittest.TestCase):
         st[2].stats.array1 = 'no array here'
         for tr in st:
             tr.stats.array2 = np.array([3, 4])
+        st[0].stats.sub1 = {'a': 1}
+        st[1].stats.sub1 = {'b': np.array([1, 2])}
+        st[2].stats.sub1 = 5
+        sub2_dict = {'a': 'b', 'b': 'c', 'nd': np.array([1, 2])}
+        for tr in st:
+            tr.stats.sub2 = sub2_dict
         st2 = st.copy().stack()
         self.assertEqual(st2[0].stats.station, st[0].stats.station)
         self.assertEqual(st2[0].stats.inclination, st[0].stats.inclination)
@@ -2760,6 +2766,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertNotIn('back_azimuth', st2[0].stats)
         self.assertNotIn('array1', st2[0].stats)
         self.assertIn('array2', st2[0].stats)
+        self.assertNotIn('sub1', st2[0].stats)
+        self.assertIn('sub2', st2[0].stats)
+        self.assertEqual(st2[0].stats.sub2.keys(), sub2_dict.keys())
         st[1].stats.starttime += 10
         st2 = st.copy().stack()
         self.assertEqual(st2[0].stats.starttime, UTCDateTime(0))

@@ -804,10 +804,10 @@ class QuakeMLTestCase(unittest.TestCase):
         See #662.
         Tests if _read_quakeml() and read_events() return the same results.
         """
-        warnings.simplefilter("ignore", UserWarning)
-        cat1 = read_events(self.neries_filename)
-        cat2 = _read_quakeml(self.neries_filename)
-        warnings.filters.pop(0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            cat1 = read_events(self.neries_filename)
+            cat2 = _read_quakeml(self.neries_filename)
         self.assertEqual(cat1, cat2)
 
     def test_reading_twice_raises_no_warning(self):

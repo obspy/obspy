@@ -15,9 +15,16 @@ from obspy.io.nlloc.util import read_nlloc_scatter
 
 
 def _coordinate_conversion(x, y, z):
-    proj_wgs84 = pyproj.Proj(init="epsg:4326")
-    proj_gk4 = pyproj.Proj(init="epsg:31468")
-    x, y = pyproj.transform(proj_gk4, proj_wgs84, x * 1e3, y * 1e3)
+    try:
+        transformer = pyproj.Transformer.from_crs("epsg:31468", "epsg:4326",
+                                                  always_xy=True)
+    except Exception:
+        # pyproj version < 2.2
+        proj_wgs84 = pyproj.Proj(init="epsg:4326")
+        proj_gk4 = pyproj.Proj(init="epsg:31468")
+        x, y = pyproj.transform(proj_gk4, proj_wgs84, x * 1e3, y * 1e3)
+    else:
+        x, y = transformer.transform(x * 1e3, y * 1e3)
     return x, y, z
 
 

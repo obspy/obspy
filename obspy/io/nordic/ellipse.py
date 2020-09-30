@@ -159,8 +159,8 @@ class Ellipse:
 
         >>> str(Ellipse(20, 10))
         'Ellipse(20, 10, 0)'
-        >>>str(Ellipse(20, 10, 45, (3,4)))
-        'Ellipse(20, 10, 45, (3,4)>'
+        >>> str(Ellipse(20, 10, 45, (3,4)))
+        'Ellipse(20, 10, 45, (3,4))'
         """
         s = 'Ellipse({:.3g}, {:.3g}'.format(self.a, self.b)
         s += ', {:.3g}'.format(self.theta)
