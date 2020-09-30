@@ -69,8 +69,8 @@ if requests.__version__ in ('2.12.0', '2.12.1', '2.12.2'):
 if int(sys.version[0]) < 3:
     raise ImportError("""You are running ObsPy >= 2.0 on Python 2
 
-ObsPy version 2.0 and above is not compatible with Python 2, and you still 
-ended up with this version installed. This should not have happened. 
+ObsPy version 2.0 and above is not compatible with Python 2, and you still
+ended up with this version installed. This should not have happened.
 Make sure you have pip >= 9.0 and setuptools >= 24.2:
 
  $ pip install pip setuptools --upgrade

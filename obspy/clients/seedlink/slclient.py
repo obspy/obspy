@@ -107,11 +107,11 @@ class SLClient(object):
         """
         Creates a new instance of SLClient with the specified logging object
         """
-        numeric_level = getattr(logging, loglevel.upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % loglevel)
-        logging.basicConfig(level=numeric_level)
-        logger.setLevel(numeric_level)
+#        numeric_level = getattr(logging, loglevel.upper(), None)
+#        if not isinstance(numeric_level, int):
+#            raise ValueError('Invalid log level: %s' % loglevel)
+#        logging.basicConfig(level=numeric_level)
+#        logger.setLevel(numeric_level)
 
         self.verbose = 0
         self.ppackets = False

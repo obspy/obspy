@@ -86,6 +86,8 @@ import copy
 import doctest
 import glob
 import importlib
+import logging
+import logging.config
 import operator
 import os
 import platform
@@ -658,11 +660,20 @@ def run(argv=None, interactive=True):
                              'diff images (but not images that passed the '
                              'corresponding test).')
     args = parser.parse_args(argv)
+
     # set correct verbosity level
     if args.verbose:
         verbosity = 2
         # raise all NumPy warnings
         np.seterr(all='warn')
+        conf = {'version': 1,
+                'formatters': {'test': {
+                        'format': '%(levelname)s:%(message)s'}},
+                'handlers': {'console': {'class': 'logging.StreamHandler',
+                                         'formatter': 'test'}},
+                'loggers': {'obspy': {'level': 'INFO',
+                                      'handlers': ['console']}}}
+        logging.config.dictConfig(conf)
     elif args.quiet:
         verbosity = 0
         # ignore user and deprecation warnings
@@ -670,12 +681,14 @@ def run(argv=None, interactive=True):
         warnings.simplefilter("ignore", UserWarning)
         # don't ask to send a report
         args.dontask = True
+        logging.basicConfig(handlers=[logging.NullHandler()])
     else:
         verbosity = 1
         # show all NumPy warnings
         np.seterr(all='print')
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
+        logging.basicConfig(handlers=[logging.NullHandler()])
     # whether to raise any warning that's appearing
     if args.raise_all_warnings:
         # raise all NumPy warnings
