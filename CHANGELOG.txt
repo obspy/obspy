@@ -23,6 +23,9 @@ Changes:
      encountered (see #2668)
  - obspy.clients.fdsn:
    * introduce fine-grained FDSN client exceptions (see #2653)
+ - obspy.scripts:
+   * SDS report extended to check for input power voltage and number of GPS
+     satellites (see #2676)
 
 maintenance_1.2.x
 =================

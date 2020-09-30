@@ -24,6 +24,9 @@ For a subsequent update of latency only:
     $ obspy-sds-report -r /bay200/mseed_online/archive -o /tmp/sds_report \
 --update
 
+New options have been added, to also check state-of-health files for input
+power voltage (channel `VEI`) and number of GPS satellites (channel `GNS`).
+
 Screenshot of resulting html page (cut off at the bottom):
 
 .. image:: /_static/sds_report.png
@@ -57,18 +60,18 @@ p.monospace_wide_columns
      -webkit-column-count: 4;
      -moz-column-count: 4;
      column-count: 4;
-     -webkit-column-width: 480px;
-     -moz-column-width: 480px;
-     column-width: 480px;
+     -webkit-column-width: {column_width_wide}px;
+     -moz-column-width: {column_width_wide}px;
+     column-width: {column_width_wide}px;
      }}
 p.monospace_narrow_columns
     {{font-family: "Lucida Console", Monaco, monospace;
-     -webkit-column-count: 8;
-     -moz-column-count: 8;
-     column-count: 8;
-     -webkit-column-width: 250px;
-     -moz-column-width: 250px;
-     column-width: 250px;
+     -webkit-column-count: 10;
+     -moz-column-count: 10;
+     column-count: 10;
+     -webkit-column-width: {column_width_narrow}px;
+     -moz-column-width: {column_width_narrow}px;
+     column-width: {column_width_narrow}px;
      }}
 </style>
 </head>
@@ -93,7 +96,7 @@ p.monospace_narrow_columns
   <span style="background-color: {latency_error_color}">
       {latency_error_info:*<40s}</span><br>
   <span style="background-color: {outdated_color}">
-      {outdated_info:*<40s}</span><br>
+      {outdated_info:*<40s}</span><br>{legend_volt}{legend_gps}
 </p>
   <img src="{output_basename}.png" alt="obspy-scan image broken!">
 </body>
@@ -102,7 +105,14 @@ p.monospace_narrow_columns
 HTML_LINE = (
     '<span style="background-color: {color}">'
     '{network:*<2s} {station:*<6s} {location:*<2s} {channel:*<3s} '
-    '{latency_string} {percentage_string} {gap_count_string}</span><br>\n')
+    '{latency_string} {percentage_string} {gap_count_string} {volt_string} '
+    '{gps_count_string}</span><br>\n')
+HTML_LEGEND_VOLT = """
+  <span style="background-color: {volt_warn_color}">
+      {volt_warn_info:*<40s}</span><br>"""
+HTML_LEGEND_GPS = """
+  <span style="background-color: {gps_warn_color}">
+      {gps_warn_info:*<40s}</span><br>"""
 
 
 def _latency_to_tuple(latency):
@@ -155,12 +165,13 @@ def _latency_info_string(latency, only_days=False, pad=True):
 
 
 def _latency_line_html(latency_tuple, args, color=None, only_days=False,
-                       gap_info=True):
+                       gap_info=True, volt_info=True, gps_info=True):
     """
     Format a single latency information tuple (net, sta, loc, cha, latency,
     percentage, gap count) as a html line.
     """
-    net, sta, loc, cha, latency, percentage, gap_count = latency_tuple
+    net, sta, loc, cha, latency, percentage, gap_count, volt, gps_count = \
+        latency_tuple
     if not color:
         if (latency is None or np.isinf(latency) or
                 latency > args.check_back_days * 24 * 3600):
@@ -169,11 +180,17 @@ def _latency_line_html(latency_tuple, args, color=None, only_days=False,
             color = args.latency_error_color
         elif latency > args.latency_warn:
             color = args.latency_warn_color
+        elif args.volt_warn and volt is not None and volt < args.volt_warn:
+            color = args.volt_warn_color
+        elif args.gps_warn and gps_count is not None and \
+                gps_count < args.gps_warn:
+            color = args.gps_warn_color
         elif (percentage * 1e2 < args.percentage_warn or
               gap_count > args.gaps_warn):
             color = args.data_quality_warn_color
         else:
             color = args.ok_color
+
     if np.isinf(latency):
         latency_string = "{:*>3d}+d".format(int(args.check_back_days))
     else:
@@ -184,25 +201,66 @@ def _latency_line_html(latency_tuple, args, color=None, only_days=False,
         else:
             percentage_string = '*' * 6
         if gap_count > args.gaps_warn:
-            gap_count_string = "{:*>4d}#".format(gap_count)
+            gap_count_string = '{:*>4d}#'.format(gap_count)
         else:
             gap_count_string = '*' * 5
     else:
         percentage_string = ''
         gap_count_string = ''
+
+    if volt_info:
+        if args.volt_warn:
+            if np.isinf(volt):
+                volt_string = '***?V'
+            elif volt > args.volt_warn:
+                volt_string = '*' * 5
+            else:
+                volt_string = '{:*>4.1f}V'.format(volt)
+        else:
+            volt_string = '*' * 5
+    else:
+        volt_string = ''
+
+    if gps_info:
+        if args.gps_warn:
+            if np.isinf(gps_count):
+                gps_count_string = '*?'
+            elif gps_count > args.gps_warn:
+                gps_count_string = '*' * 2
+            else:
+                # gps count is a float, round up for the text display
+                gps_count_string = '{:*>2d}'.format(int(gps_count) + 1)
+        else:
+            gps_count_string = '*' * 2
+    else:
+        gps_count_string = ''
+
     line = HTML_LINE.format(
         network=net, station=sta, location=loc, channel=cha, color=color,
         latency_string=latency_string, percentage_string=percentage_string,
-        gap_count_string=gap_count_string).replace(
+        gap_count_string=gap_count_string, volt_string=volt_string,
+        gps_count_string=gps_count_string).replace(
             "*", "&nbsp;")
     return line
 
 
 def _format_html(args, data_normal, data_outdated):
+    # need to adjust column width, depending on whether voltage/gps info is
+    # included
+    column_width_wide = 480
+    column_width_narrow = 220
+    if args.volt_warn:
+        column_width_wide += 28
+    if args.gps_warn:
+        column_width_wide += 14
+
     lines_normal = "".join(
-        [_latency_line_html(data, args) for data in data_normal])
+        [_latency_line_html(data, args, volt_info=args.volt_warn,
+                            gps_info=args.gps_warn)
+         for data in data_normal])
     lines_outdated = "".join(
-        [_latency_line_html(data, args, only_days=True, gap_info=False)
+        [_latency_line_html(data, args, only_days=True, gap_info=False,
+                            volt_info=False, gps_info=False)
          for data in data_outdated])
     html_legend = {}
     html_legend['latency_error_info'] = (
@@ -217,11 +275,49 @@ def _format_html(args, data_normal, data_outdated):
         "No data within {check_back_days:d} days").format(**vars(args))
     html_legend['output_basename'] = os.path.basename(args.output)
     html_legend.update(vars(args))
+
+    if args.volt_warn:
+        html_legend['legend_volt'] = HTML_LEGEND_VOLT.format(
+            volt_warn_info="Voltage < {!s}V".format(args.volt_warn),
+            volt_warn_color=args.volt_warn_color)
+    else:
+        html_legend['legend_volt'] = ''
+    if args.gps_warn:
+        html_legend['legend_gps'] = HTML_LEGEND_GPS.format(
+            gps_warn_info="< {!s} satellites".format(args.gps_warn),
+            gps_warn_color=args.gps_warn_color)
+    else:
+        html_legend['legend_gps'] = ''
     html = HTML_TEMPLATE.format(
         time=UTCDateTime().strftime("%c"), lines_normal=lines_normal,
-        lines_outdated=lines_outdated, **html_legend)
+        lines_outdated=lines_outdated, column_width_wide=column_width_wide,
+        column_width_narrow=column_width_narrow, **html_legend)
     html = html.replace("*", "&nbsp;")
     return html
+
+
+def get_voltage(net, sta, client, time):
+    st = client.get_waveforms(net, sta, '*', 'VEI', time - 3600, time)
+    if st:
+        # voltage is given in millivolt, just use whatever values we get
+        # returned
+        volt = np.mean(np.concatenate([tr.data for tr in st])) / 1e3
+    else:
+        # inf signifies, a check was requested, but no info could be found
+        volt = np.inf
+    return volt
+
+
+def get_gps_count(net, sta, client, time):
+    st = client.get_waveforms(net, sta, '*', 'GNS', time - (5 * 3600), time)
+    if st:
+        # just use whatever values we get returned
+        gps_count = np.mean(np.concatenate([tr.data for tr in st]))
+    else:
+        # inf signifies, a check was requested, but no info could be found
+        gps_count = np.inf
+
+    return gps_count
 
 
 def main(argv=None):
@@ -328,13 +424,30 @@ def main(argv=None):
         help='Color for background of page (valid HTML color string).')
     parser.add_argument(
         '-V', '--version', action='version', version='%(prog)s ' + __version__)
+    parser.add_argument(
+        '--volt-warn', dest='volt_warn', default=0, type=float,
+        help='Warn if mean of recent voltage is below given value in Volt. '
+             'Checks channel VEI (any location code), assuming millivolt '
+             'stored. Compares against the mean value of the past hour.')
+    parser.add_argument(
+        '--volt-warn-color', dest='volt_warn_color', default="#42f5ec",
+        help='Low voltage warning color.')
+    parser.add_argument(
+        '--gps-warn', dest='gps_warn', default=0, type=int,
+        help='Warn if number of satellites drops below given value, e.g. set '
+             '"--gps-warn 4" to give a warning if value drops below 4. Checks '
+             'channel GNS (any location code) and compares against the mean '
+             'value of the last 5 hours')
+    parser.add_argument(
+        '--gps-warn-color', dest='gps_warn_color', default="#FF8C00",
+        help='Low number of satellites warning color.')
 
     args = parser.parse_args(argv)
 
     now = UTCDateTime()
     stop_time = now - args.check_back_days * 24 * 3600
     client = Client(args.sds_root)
-    dtype_streamfile = np.dtype("U10, U30, U10, U10, f8, f8, i8")
+    dtype_streamfile = np.dtype("U10, U30, U10, U10, f8, f8, i8, f8, f8")
     availability_check_endtime = now - 3600
     availability_check_starttime = (
         availability_check_endtime - (args.check_quality_days * 24 * 3600))
@@ -403,17 +516,30 @@ def main(argv=None):
             percentage, gap_count = client.get_availability_percentage(
                 net, sta, loc, cha, availability_check_starttime,
                 availability_check_endtime)
-            nslc_.append((net, sta, loc, cha, latency, percentage, gap_count))
+            if args.volt_warn:
+                volt = get_voltage(net, sta, client, now)
+            else:
+                # nan means no check was requested
+                volt = np.nan
+            if args.gps_warn:
+                gps_count = get_gps_count(net, sta, client, now)
+            else:
+                # nan means no check was requested
+                gps_count = np.nan
+            nslc_.append((
+                net, sta, loc, cha, latency, percentage, gap_count, volt,
+                gps_count))
         nslc = nslc_
         # write stream list and availability information to file
         nslc = np.array(sorted(nslc), dtype=dtype_streamfile)
         np.savetxt(streams_file, nslc, delimiter=",",
-                   fmt=["%s", "%s", "%s", "%s", "%f", "%f", "%d"])
+                   fmt=["%s", "%s", "%s", "%s", "%.1f", "%.4f", "%d", "%.1f",
+                        "%.1f"])
         # generate obspy-scan image
         files = []
         seed_ids = set()
         for nslc_ in nslc:
-            net, sta, loc, cha, latency, _, _ = nslc_
+            net, sta, loc, cha, latency, _, _, _, _ = nslc_
             if np.isinf(latency) or latency > args.check_back_days * 24 * 3600:
                 continue
             seed_ids.add(".".join((net, sta, loc, cha)))
@@ -427,12 +553,15 @@ def main(argv=None):
 
     # request and assemble current latency information
     data = []
-    for net, sta, loc, cha, latency, percentage, gap_count in nslc:
+    for net, sta, loc, cha, latency, percentage, gap_count, volt, gps_count \
+            in nslc:
         if args.update:
             latency = client.get_latency(net, sta, loc, cha,
                                          stop_time=stop_time)
             latency = latency or np.inf
-        data.append((net, sta, loc, cha, latency, percentage, gap_count))
+        data.append((
+            net, sta, loc, cha, latency, percentage, gap_count, volt,
+            gps_count))
 
     # separate out the long dead streams
     data_normal = []
