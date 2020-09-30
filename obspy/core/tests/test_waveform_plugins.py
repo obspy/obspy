@@ -328,7 +328,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         Test for issue #193: if non-contiguous array is written correctly.
         """
-        warnings.filterwarnings("ignore", "Detected non contiguous data")
         # test all plugins with both read and write method
         formats_write = \
             set(_get_default_eps('obspy.plugin.waveform', 'writeFormat'))

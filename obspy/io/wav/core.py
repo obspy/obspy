@@ -162,7 +162,7 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
                 data = data.astype(np.float64)
                 data = data / abs(data).max() * maxint
             data = np.require(data, dtype=dtype)
-            w.writeframes(data.tostring())
+            w.writeframes(data.tobytes())
         finally:
             w.close()
         i += 1

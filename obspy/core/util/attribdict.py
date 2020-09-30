@@ -11,7 +11,32 @@ AttribDict class for ObsPy.
 import copy
 import warnings
 
+import numpy as np
+
 from .. import compatibility
+
+
+def _attribdict_equal(v1, v2, depth=5):
+    """
+    Robust comparison of possibly nested AttribDict entries or AttribDicts
+    """
+    if depth == 0:
+        return False
+    elif isinstance(v1, AttribDict) and isinstance(v2, AttribDict):
+        keys = set(v1.keys()) | set(v2.keys())
+        return all(_attribdict_equal(v1.get(k), v2.get(k), depth=depth-1)
+                   for k in keys)
+    elif isinstance(v1, AttribDict) or isinstance(v2, AttribDict):
+        return False
+    elif isinstance(v1, np.ndarray) and isinstance(v2, np.ndarray):
+        return np.shape(v1) == np.shape(v2) and np.all(v1 == v2)
+    elif isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
+        return False
+    else:
+        try:
+            return v1 == v2
+        except Exception:
+            return False
 
 
 class AttribDict(compatibility.collections_abc.MutableMapping):

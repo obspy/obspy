@@ -544,10 +544,10 @@ class BulletinTestCase(unittest.TestCase):
                 'amp': slice(94, 104),
             },
         }
-        warnings.simplefilter("ignore", UserWarning)
-        catalog = _read_gse2(filename, fields=fields,
-                             event_point_separator=True)
-        warnings.filters.pop(0)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            catalog = _read_gse2(filename, fields=fields,
+                                 event_point_separator=True)
         self.assertEqual(len(catalog), 2)
         event = catalog[0]
         self.assertEqual(len(event.origins), 1)
@@ -588,10 +588,10 @@ class BulletinTestCase(unittest.TestCase):
                 'amp': slice(94, 104),
             },
         }
-        warnings.simplefilter("ignore", UserWarning)
-        catalog = _read_gse2(filename, inventory, fields=fields,
-                             event_point_separator=True)
-        warnings.filters.pop(0)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            catalog = _read_gse2(filename, inventory, fields=fields,
+                                 event_point_separator=True)
         self.assertEqual(len(catalog), 2)
         # Test a station present in the inventory
         event = catalog[0]
@@ -628,10 +628,10 @@ class BulletinTestCase(unittest.TestCase):
                 'amp': slice(94, 104),
             },
         }
-        warnings.simplefilter("ignore", UserWarning)
-        catalog = _read_gse2(filename, inventory, fields=fields,
-                             event_point_separator=True)
-        warnings.filters.pop(0)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            catalog = _read_gse2(filename, inventory, fields=fields,
+                                 event_point_separator=True)
         self.assertEqual(len(catalog), 2)
         # Test a station present in the inventory
         event = catalog[0]

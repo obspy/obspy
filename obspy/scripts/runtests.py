@@ -656,7 +656,6 @@ def run(argv=None, interactive=True):
                              'only store failed images and the corresponding '
                              'diff images (but not images that passed the '
                              'corresponding test).')
-
     args = parser.parse_args(argv)
     # set correct verbosity level
     if args.verbose:
@@ -682,6 +681,10 @@ def run(argv=None, interactive=True):
         np.seterr(all='raise')
         # raise user and deprecation warnings
         warnings.simplefilter("error", UserWarning)
+    # ignore specific warnings
+    warnings.filterwarnings("ignore",
+            message='Matplotlib is currently using agg, which is a'
+                    ' non-GUI backend, so cannot show the figure.')
     # check for send report option or environmental settings
     if args.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
@@ -702,7 +705,6 @@ def run(argv=None, interactive=True):
     # All arguments are used by the test runner and should not interfere
     # with any other module that might also parse them, e.g. flake8.
     sys.argv = sys.argv[:1]
-
     return run_tests(verbosity, args.tests, report, args.log, args.server,
                      args.test_all_modules, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,

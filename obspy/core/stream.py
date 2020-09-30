@@ -3225,11 +3225,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a copy of your stream object.
         """
         from obspy.signal.util import stack as stack_func
+        from obspy.core.util.attribdict import _attribdict_equal
         groups = self._groupby(group_by)
         stacks = []
         for groupid, traces in groups.items():
             header = {k: v for k, v in traces[0].stats.items()
-                      if all(np.all(tr.stats.get(k) == v) for tr in traces)}
+                      if all(_attribdict_equal(tr.stats.get(k), v)
+                             for tr in traces)}
             header.pop('endtime', None)
             if 'sampling_rate' not in header:
                 msg = 'Sampling rate of traces to stack is different'

@@ -156,7 +156,7 @@ class SEGYTestCase(unittest.TestCase):
                 new_packed_data = new_packed_data[non_normalized]
                 length = len(new_packed_data)
                 f = io.BytesIO()
-                f.write(new_packed_data.tostring())
+                f.write(new_packed_data.tobytes())
                 f.seek(0, 0)
                 new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
                     f, length, endian)
@@ -165,7 +165,7 @@ class SEGYTestCase(unittest.TestCase):
                 packed_data = packed_data[non_normalized]
                 length = len(packed_data)
                 f = io.BytesIO()
-                f.write(packed_data.tostring())
+                f.write(packed_data.tobytes())
                 f.seek(0, 0)
                 old_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
                     f, length, endian)
@@ -377,8 +377,8 @@ class SEGYTestCase(unittest.TestCase):
                 org_data[960:][non_normalized_samples] = \
                     new_data[960:][non_normalized_samples]
                 # Create strings again.
-                org_data = org_data.tostring()
-                new_data = new_data.tostring()
+                org_data = org_data.tobytes()
+                new_data = new_data.tobytes()
             # Just patch both headers - this tests something different.
             org_data = _patch_header(org_data)
             new_data = _patch_header(new_data)

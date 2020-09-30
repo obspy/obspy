@@ -704,7 +704,7 @@ class SeedLinkConnection(object):
         """
         Terminate the collection loop.
         """
-        logger.warn("terminating collect loop")
+        logger.warning("terminating collect loop")
         self.disconnect()
         self.state = SLState()
         self.info_request_string = None

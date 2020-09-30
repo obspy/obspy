@@ -77,6 +77,7 @@ class PHATestCase(unittest.TestCase):
     def test_populate_waveform_id(self):
         inv = read_inventory()
         with warnings.catch_warnings(record=True) as ws:
+            warnings.resetwarnings()
             cat = read_events(self.fname, inventory=inv)
             self.assertEqual(len(ws), 2)
             for w in ws:

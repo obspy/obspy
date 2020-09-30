@@ -3,14 +3,10 @@ import io
 import json
 import os
 import unittest
-import warnings
 
 from obspy.io.json.default import Default
 from obspy.io.json.core import get_dump_kwargs, _write_json
 from obspy.io.quakeml.core import _read_quakeml
-
-
-warnings.filterwarnings("ignore")
 
 
 class JSONTestCase(unittest.TestCase):

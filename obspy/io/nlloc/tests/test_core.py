@@ -280,7 +280,8 @@ class NLLOCTestCase(unittest.TestCase):
         """
 
         # modify the example file to contain an hour 24 and second 60
-        nll_str = open(get_example_file('nlloc.hyp')).read().splitlines()
+        with open(get_example_file('nlloc.hyp')) as f:
+            nll_str = f.read().splitlines()
         # first add a line with hour 24
         str_list = list(nll_str[-3])
         str_list[37:41] = '2400'

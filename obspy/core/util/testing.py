@@ -127,7 +127,7 @@ def write_png(arr, filename):
     import zlib
     import struct
 
-    buf = arr[::-1, :, :].tostring()
+    buf = arr[::-1, :, :].tobytes()
     height, width, _ = arr.shape
 
     # reverse the vertical line order and add null bytes at the start

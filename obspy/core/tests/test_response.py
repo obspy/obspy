@@ -477,7 +477,7 @@ class ResponseTestCase(unittest.TestCase):
         inv = read_inventory(os.path.join(self.data_dir, "DK.BSD..BHZ.xml"))
         np.testing.assert_allclose(
             inv[0][0][0].response.get_evalresp_response_for_frequencies(
-                [0.1, 1.0, 10.0]),
+                [0.1, 1.0, 10.0], hide_sensitivity_mismatch_warning=True),
             [6.27191825e+08 + 1.38925202e+08j,
              6.51826202e+08 + 1.28404787e+07j,
              2.00067263e+04 - 2.63711751e+03j])

@@ -753,7 +753,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
             else:
                 locator = None
                 formatter = None
-        cb = Colorbar(cm_ax, scatter, cmap=colormap,
+        cb = Colorbar(cm_ax, scatter,
                       orientation='horizontal',
                       ticks=locator,
                       format=formatter)
