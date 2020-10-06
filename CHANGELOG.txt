@@ -8,11 +8,11 @@ Changes:
      to solve test issues (#2900)
    * added python 3.9 tests for all platforms, required to disable image
      comparisons for 3.9 (#2925)
- - obspy.clients.seishub:
-   * added deprecation message
- - obspy.db:
-   * added deprecation message
-   * removed from default test suite
+   * removed individual logging configurations in Obspy, logging can be
+     configured by the user, see documentation of Pythons logging module,
+     only the FDSN mass downloader automatically configures logging as before,
+     but this behavior can be turned off now. The loglevel keywords are
+     therefore deprecated and have no effect anymore (see #2720)
  - obspy.core:
    * read_inventory(): add "level" option to read files faster when less level
      of detail is needed. currently only implemented for StationXML reading
@@ -35,6 +35,11 @@ Changes:
      FDSN server URLs (#2878)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
+ - obspy.clients.seishub:
+   * added deprecation message
+ - obspy.db:
+   * added deprecation message
+   * removed from default test suite
  - obspy.io
    * add support to resolve the SEED id of picks for nlloc hyp files and
      nordic files, refactor the same functionality for SeismicHandler evt
@@ -80,6 +85,10 @@ Changes:
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
+ - obspy.scripts
+   * obspy-runtests can take one or two -v flags for a more smooth verbosity
+     control (see #2720)
+   * fix broken "--raise-all-warnings" flag in obspy-runtests (see #2720)
  - obspy.signal.array_analysis
    * fixed an issue in array_processing function returning wrong times
      for matplotlib versions >= 3.3 due to the epoch change in matplotlib
