@@ -86,7 +86,6 @@ import copy
 import doctest
 import glob
 import importlib
-import logging
 import logging.config
 import operator
 import os
@@ -596,13 +595,15 @@ def run(argv=None, interactive=True):
                                         'ObsPy tests.')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + get_git_version())
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='verbose mode')
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+                        help='set verbosity (up to two -v flags)')
     parser.add_argument('-q', '--quiet', action='store_true',
                         help='quiet mode')
     parser.add_argument('--raise-all-warnings', action='store_true',
-                        help='All warnings are raised as exceptions when this '
-                             'flag is set. Only for debugging purposes.')
+                        help='All UserWarnings are raised as exceptions when '
+                             'this flag is set. Only for debugging purposes. '
+                             'With two -v flags also raises '
+                             'DeprecationWarnings.')
 
     # filter options
     filter = parser.add_argument_group('Module Filter',
@@ -660,41 +661,46 @@ def run(argv=None, interactive=True):
                              'diff images (but not images that passed the '
                              'corresponding test).')
     args = parser.parse_args(argv)
-
-    # set correct verbosity level
-    if args.verbose:
-        verbosity = 2
-        # raise all NumPy warnings
-        np.seterr(all='warn')
-        conf = {'version': 1,
-                'formatters': {'test': {
-                        'format': '%(levelname)s:%(message)s'}},
-                'handlers': {'console': {'class': 'logging.StreamHandler',
-                                         'formatter': 'test'}},
-                'loggers': {'obspy': {'level': 'INFO',
-                                      'handlers': ['console']}}}
-        logging.config.dictConfig(conf)
-    elif args.quiet:
-        verbosity = 0
+    conf = {'version': 1,
+            'formatters': {'test': {
+                    'format': '%(levelname)s:%(message)s'}},
+            'handlers': {'null': {'class': 'logging.NullHandler'},
+                         'console': {'class': 'logging.StreamHandler',
+                                     'formatter': 'test'}},
+            'loggers': {'obspy': {'level': 'WARNING',
+                                  'handlers': ['console']}},
+            'root': {'handlers': ['null']}}
+    verbosity = 0 if args.quiet else args.verbose + 1
+    if verbosity == 0:
         # ignore user and deprecation warnings
         warnings.simplefilter("ignore", DeprecationWarning)
         warnings.simplefilter("ignore", UserWarning)
         # don't ask to send a report
         args.dontask = True
-        logging.basicConfig(handlers=[logging.NullHandler()])
-    else:
-        verbosity = 1
+        del conf['loggers']
+    elif verbosity == 1:
         # show all NumPy warnings
         np.seterr(all='print')
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
-        logging.basicConfig(handlers=[logging.NullHandler()])
+        del conf['loggers']
+    elif verbosity == 2:
+        verbosity = 1
+        # raise all NumPy warnings
+        np.seterr(all='warn')
+    else:
+        verbosity = 2
+        np.seterr(all='warn')
+        conf['loggers']['obspy']['level'] = 'DEBUG'
+    logging.config.dictConfig(conf)
     # whether to raise any warning that's appearing
     if args.raise_all_warnings:
         # raise all NumPy warnings
         np.seterr(all='raise')
-        # raise user and deprecation warnings
+        # raise user warnings
         warnings.simplefilter("error", UserWarning)
+        if verbosity == 2:
+            warnings.simplefilter("error", DeprecationWarning)
     # ignore specific warnings
     msg = ('Matplotlib is currently using agg, which is a non-GUI backend, '
            'so cannot show the figure.')
