@@ -16,10 +16,9 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import logging
 import sys
-import traceback
 
+from obspy.core.util.decorator import deprecated_keywords
 from .client.seedlinkconnection import SeedLinkConnection
 from .seedlinkexception import SeedLinkException
 from .slpacket import SLPacket
@@ -55,10 +54,6 @@ USAGE = """
 <[host]:port>  Address of the SeedLink server in host:port format
                if host is omitted (i.e. ':18000'), localhost is assumed
 """
-
-
-# default logger
-logger = logging.getLogger('obspy.clients.seedlink')
 
 
 class SLClient(object):
@@ -103,16 +98,11 @@ class SLClient(object):
     PROGRAM_NAME = "SLClient v" + VERSION
     VERSION_INFO = PROGRAM_NAME + " (" + VERSION_DATE + ")"
 
-    def __init__(self, loglevel='DEBUG', timeout=None):
+    @deprecated_keywords({"loglevel": None})
+    def __init__(self, loglevel=None, timeout=None):
         """
         Creates a new instance of SLClient with the specified logging object
         """
-#        numeric_level = getattr(logging, loglevel.upper(), None)
-#        if not isinstance(numeric_level, int):
-#            raise ValueError('Invalid log level: %s' % loglevel)
-#        logging.basicConfig(level=numeric_level)
-#        logger.setLevel(numeric_level)
-
         self.verbose = 0
         self.ppackets = False
         self.streamfile = None
@@ -341,16 +331,12 @@ class SLClient(object):
         Main method - creates and runs an SLClient using the specified
         command line arguments
         """
-        try:
-            sl_client = SLClient()
-            rval = sl_client.parse_cmd_line_args(args)
-            if (rval != 0):
-                sys.exit(rval)
-            sl_client.initialize()
-            sl_client.run()
-        except Exception as e:
-            logger.critical(e)
-            traceback.print_exc()
+        sl_client = SLClient()
+        rval = sl_client.parse_cmd_line_args(args)
+        if (rval != 0):
+            sys.exit(rval)
+        sl_client.initialize()
+        sl_client.run()
 
 
 if __name__ == '__main__':
