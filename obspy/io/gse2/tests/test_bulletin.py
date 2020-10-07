@@ -263,7 +263,7 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(mag_1.evaluation_status, None)
         self.assertNotEqual(mag_1.creation_info, None)
         self.assertEqual(len(mag_1.comments), 0)
-        self.assertEqual(len(mag_1.station_magnitude_contributions), 0)
+        self.assertEqual(len(mag_1.station_magnitude_contributions), 3)
         # Test second Magnitude
         mag_2 = magnitudes[1]
         self.assertEqual(
@@ -278,8 +278,8 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(mag_2.evaluation_mode, None)
         self.assertEqual(mag_2.evaluation_status, None)
         self.assertNotEqual(mag_2.creation_info, None)
-        self.assertEqual(len(mag_1.comments), 0)
-        self.assertEqual(len(mag_1.station_magnitude_contributions), 0)
+        self.assertEqual(len(mag_2.comments), 0)
+        self.assertEqual(len(mag_2.station_magnitude_contributions), 1)
 
     def test_station_magnitude(self):
         """
