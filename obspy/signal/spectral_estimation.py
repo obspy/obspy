@@ -48,6 +48,9 @@ dtiny = np.finfo(0.0).tiny
 
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
+# SCAFFOLD
+NOISE_MODEL_FILE_INF = os.path.join(os.path.dirname(__file__),
+                                "data", "idc_noise_models.npz")
 
 earthquake_models = {
     (1.5, 10): [[7.0700000e-01, 1.4140000e+00, 2.8280000e+00, 5.6600000e+00,
@@ -307,11 +310,10 @@ class PPSD(object):
     # Add current version as a class attribute to avoid hard coding it.
     _CURRENT_VERSION = 3
 
-    def __init__(self, stats, metadata, skip_on_gaps=False,
-                 db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
+    def __init__(self, stats, metadata, skip_on_gaps=False, ppsd_length=3600.0, overlap=0.5,
                  special_handling=None, period_smoothing_width_octaves=1.0,
                  period_step_octaves=0.125, period_limits=None,
-                 **kwargs):  # @UnusedVariable
+                 **kwargs):  # @UnusedVariable # SCAFFOLD: removed db_bins=(-200, -50, 1.) from arguments
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -401,7 +403,14 @@ class PPSD(object):
 
         # save things related to kwargs
         self.skip_on_gaps = skip_on_gaps
+        
+        # SCAFFOLD - change the range for infrasound channels, moved the db_bins defintion out of the args
+        if stats.channel == 'BDF' or stats.channel == 'HDF':
+            db_bins = (-100, 40, 1.)
+        else:
+            db_bins = (-200, -50, 1.)
         self.db_bins = db_bins
+        
         self.ppsd_length = ppsd_length
         self.overlap = overlap
         self.special_handling = special_handling and special_handling.lower()
@@ -1823,7 +1832,7 @@ class PPSD(object):
              max_percentage=None, period_lim=(0.01, 179), show_mode=False,
              show_mean=False, cmap=obspy_sequential, cumulative=False,
              cumulative_number_of_colors=20, xaxis_frequency=False,
-             show_earthquakes=None):
+             show_earthquakes=None, infrasound = False):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -1942,8 +1951,15 @@ class PPSD(object):
                 color = "black"
             ax.plot(xdata, mean_, color=color, zorder=9)
 
+        # SCAFFOLD
+        if infrasound:
+            # Re-name noise model file
+            mod = NOISE_MODEL_FILE_INF
+        else:
+            mod = NOISE_MODEL_FILE
+
         if show_noise_models:
-            for periods, noise_model in (get_nhnm(), get_nlnm()):
+            for periods, noise_model in (get_nhnm(mod), get_nlnm(mod)):
                 if xaxis_frequency:
                     xdata = 1.0 / periods
                 else:
@@ -2184,23 +2200,27 @@ class PPSD(object):
         ax.autoscale_view()
 
 
-def get_nlnm():
+def get_nlnm(mod_fl):
     """
     Returns periods and psd values for the New Low Noise Model.
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
-    data = np.load(NOISE_MODEL_FILE)
+    # SCAFFOLD
+    #data = np.load(NOISE_MODEL_FILE)
+    data = np.load(mod_fl)
     periods = data['model_periods']
     nlnm = data['low_noise']
     return (periods, nlnm)
 
 
-def get_nhnm():
+def get_nhnm(mod_fl):
     """
     Returns periods and psd values for the New High Noise Model.
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
-    data = np.load(NOISE_MODEL_FILE)
+    # SCAFFOLD
+    #data = np.load(NOISE_MODEL_FILE)
+    data = np.load(mod_fl)
     periods = data['model_periods']
     nhnm = data['high_noise']
     return (periods, nhnm)
