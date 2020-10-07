@@ -21,7 +21,9 @@ from obspy.core.event import (Amplitude, Arrival, Catalog, Comment,
                               CreationInfo, Event, EventDescription,
                               Magnitude, Origin, OriginQuality,
                               OriginUncertainty, Pick, ResourceIdentifier,
-                              StationMagnitude, WaveformStreamID)
+                              StationMagnitude,
+                              StationMagnitudeContribution,
+                              WaveformStreamID)
 from obspy.core.event.header import (
     EvaluationMode, EventDescriptionType, EventType, EventTypeCertainty,
     OriginDepthType, OriginUncertaintyDescription, PickOnset, PickPolarity)
@@ -616,6 +618,12 @@ class Unpickler(object):
 
         return origin, origin_res_id
 
+    def _find_magnitude_by_type(self, event, origin_res_id, magnitude_type):
+        for mag in event.magnitudes:
+            if mag.origin_id == origin_res_id \
+                    and mag.magnitude_type == magnitude_type:
+                return mag
+
     def _parse_second_line_origin(self, line, event, origin, magnitudes):
         magnitude_errors = []
 
@@ -912,6 +920,15 @@ class Unpickler(object):
                     public_id = "magnitude/station/%s/%s" % (line_id, i)
                     sta_mag.resource_id = self._get_res_id(public_id)
                     event.station_magnitudes.append(sta_mag)
+
+                    # Associate station mag with network mag of same type
+                    mag = self._find_magnitude_by_type(event, origin_res_id,
+                                                       magnitude_types[i])
+                    if mag:
+                        contrib = StationMagnitudeContribution()
+                        contrib.station_magnitude_id = sta_mag.resource_id
+                        contrib.weight = 1.0
+                        mag.station_magnitude_contributions.append(contrib)
             except ValueError:
                 pass
 
