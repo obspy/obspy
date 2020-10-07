@@ -328,7 +328,6 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(waveform_2.location_code, None)
         self.assertEqual(waveform_2.resource_uri, None)
 
-
     def test_amplitude(self):
         """
         Test Amplitude object.
