@@ -20,6 +20,7 @@ Functions for Array Analysis
 import math
 import warnings
 
+from matplotlib.dates import datestr2num
 import numpy as np
 from scipy.integrate import cumtrapz
 
@@ -890,8 +891,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
         the timestamp in seconds since 1970-01-01T00:00:00, 'mlabday'
         returns the timestamp in days (decimals represent hours, minutes
-        and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
-        date plotting (see e.g. matplotlib's num2date)
+        and seconds) since the start of the used matplotlib time epoch
     :type method: int
     :param method: the method to use 0 == bf, 1 == capon
     :type store: function
@@ -1018,8 +1018,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     if timestamp == 'julsec':
         pass
     elif timestamp == 'mlabday':
-        # 719163 == days between 1970 and 0001 + 1
-        res[:, 0] = res[:, 0] / (24. * 3600) + 719163
+        res[:, 0] = res[:, 0] / (24. * 3600) + datestr2num('1970-01-01')
     else:
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)
