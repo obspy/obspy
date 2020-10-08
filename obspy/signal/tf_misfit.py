@@ -24,6 +24,15 @@ from obspy.imaging.cm import obspy_sequential, obspy_divergent
 from obspy.signal import util
 
 
+def _pcolormesh_same_dim(ax, x, y, v, **kwargs):
+    # x, y, v must have the same dimension
+    try:
+        return ax.pcolormesh(x, y, v, shading='nearest', **kwargs)
+    except TypeError:
+        # matplotlib versions < 3.3
+        return ax.pcolormesh(x, y, v[:-1, :-1], **kwargs)
+
+
 def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     """
     Continuous Wavelet Transformation in the Frequency Domain.
@@ -1015,8 +1024,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            _tfem[itr].shape[0]))
-        img_tfem = ax_tfem.pcolormesh(x, y, _tfem[itr], cmap=cmap,
-                                      shading='auto')
+        img_tfem = _pcolormesh_same_dim(ax_tfem, x, y, _tfem[itr], cmap=cmap)
         img_tfem.set_rasterized(True)
         ax_tfem.set_yscale("log")
         ax_tfem.set_ylim(fmin, fmax)
@@ -1034,8 +1042,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         ax_tfpm = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
 
         x, y = np.meshgrid(t, f)
-        img_tfpm = ax_tfpm.pcolormesh(x, y, _tfpm[itr], cmap=cmap,
-                                      shading='auto')
+        img_tfpm = _pcolormesh_same_dim(ax_tfpm, x, y, _tfpm[itr], cmap=cmap)
         img_tfpm.set_rasterized(True)
         ax_tfpm.set_yscale("log")
         ax_tfpm.set_ylim(f[0], f[-1])
@@ -1277,8 +1284,7 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            _tfeg[itr].shape[0]))
-        img_tfeg = ax_tfeg.pcolormesh(x, y, _tfeg[itr], cmap=cmap,
-                                      shading='auto')
+        img_tfeg = _pcolormesh_same_dim(ax_tfeg, x, y, _tfeg[itr], cmap=cmap)
         img_tfeg.set_rasterized(True)
         ax_tfeg.set_yscale("log")
         ax_tfeg.set_ylim(fmin, fmax)
@@ -1296,8 +1302,7 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         ax_tfpg = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
 
         x, y = np.meshgrid(t, f)
-        img_tfpg = ax_tfpg.pcolormesh(x, y, _tfpg[itr], cmap=cmap,
-                                      shading='auto')
+        img_tfpg = _pcolormesh_same_dim(ax_tfpg, x, y, _tfpg[itr], cmap=cmap)
         img_tfpg.set_rasterized(True)
         ax_tfpg.set_yscale("log")
         ax_tfpg.set_ylim(f[0], f[-1])
@@ -1498,8 +1503,7 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            _tfr[itr].shape[0]))
-        img_tfr = ax_tfr.pcolormesh(x, y, _tfr[itr], cmap=cmap,
-                                    shading='auto')
+        img_tfr = _pcolormesh_same_dim(ax_tfr, x, y, _tfr[itr], cmap=cmap)
         img_tfr.set_rasterized(True)
         ax_tfr.set_yscale("log")
         ax_tfr.set_ylim(fmin, fmax)
