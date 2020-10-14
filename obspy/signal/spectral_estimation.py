@@ -2202,8 +2202,8 @@ def get_nhnm():
     """
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
-    nlnm = data['high_noise']
-    return (periods, nlnm)
+    nhnm = data['high_noise']
+    return (periods, nhnm)
 
 
 def _check_npz_ppsd_version(ppsd, npzfile):
