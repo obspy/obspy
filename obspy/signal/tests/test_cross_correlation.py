@@ -9,14 +9,13 @@ import unittest
 import warnings
 
 from obspy import UTCDateTime, read, Trace
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (
     correlate, correlate_template, correlate_stream_template,
     correlation_detector,
     xcorr_pick_correction, xcorr_3c, xcorr_max,
-    xcorr, _xcorr_padzeros, _xcorr_slice, _find_peaks)
+    _xcorr_padzeros, _xcorr_slice, _find_peaks)
 from obspy.signal.trigger import coincidence_trigger
 
 
@@ -33,60 +32,6 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.a = np.sin(np.linspace(0, 10, 101))
         self.b = 5 * np.roll(self.a, 5)
         self.c = 5 * np.roll(self.a[:81], 5)
-
-    def test_xcorr(self):
-        """
-        This tests the old, deprecated xcorr() function.
-        """
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=ObsPyDeprecationWarning)
-            # example 1 - all samples are equal
-            np.random.seed(815)  # make test reproducible
-            tr1 = np.random.randn(10000).astype(np.float32)
-            tr2 = tr1.copy()
-            shift, corr = xcorr(tr1, tr2, 100)
-            self.assertEqual(shift, 0)
-            self.assertAlmostEqual(corr, 1, 2)
-            # example 2 - all samples are different
-            tr1 = np.ones(10000, dtype=np.float32)
-            tr2 = np.zeros(10000, dtype=np.float32)
-            shift, corr = xcorr(tr1, tr2, 100)
-            self.assertEqual(shift, 0)
-            self.assertAlmostEqual(corr, 0, 2)
-            # example 3 - shift of 10 samples
-            tr1 = np.random.randn(10000).astype(np.float32)
-            tr2 = np.concatenate((np.zeros(10), tr1[0:-10]))
-            shift, corr = xcorr(tr1, tr2, 100)
-            self.assertEqual(shift, -10)
-            self.assertAlmostEqual(corr, 1, 2)
-            shift, corr = xcorr(tr2, tr1, 100)
-            self.assertEqual(shift, 10)
-            self.assertAlmostEqual(corr, 1, 2)
-            # example 4 - shift of 10 samples + small sine disturbance
-            tr1 = (np.random.randn(10000) * 100).astype(np.float32)
-            var = np.sin(np.arange(10000, dtype=np.float32) * 0.1)
-            tr2 = np.concatenate((np.zeros(10), tr1[0:-10])) * 0.9
-            tr2 += var
-            shift, corr = xcorr(tr1, tr2, 100)
-            self.assertEqual(shift, -10)
-            self.assertAlmostEqual(corr, 1, 2)
-            shift, corr = xcorr(tr2, tr1, 100)
-            self.assertEqual(shift, 10)
-            self.assertAlmostEqual(corr, 1, 2)
-
-    def test_correlate_deprecated_domain_keyword(self):
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always", category=ObsPyDeprecationWarning)
-            a = [1, 2, 3]
-            b = [1, 2]
-            correlate(a, b, 5, domain='freq')
-            correlate(a, b, 5, domain='time')
-        # on py37, scipy 1.1.0 this also catch FutureWarning from scipy
-        # internals, so we need to filter the warning messages
-        domain_warn = [x for x in w if 'keyword of correlate function'
-                       in str(x.message)]
-        self.assertEqual(len(domain_warn), 2)
 
     def test_correlate_normalize_true_false(self):
         a = read()[0].data[500:]
