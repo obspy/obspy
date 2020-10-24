@@ -25,6 +25,8 @@ class CoreTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.filename_css = os.path.join(self.path, 'test_css.wfdisc')
         self.filename_nnsa = os.path.join(self.path, 'test_nnsa.wfdisc')
+        self.filename_css_2 = os.path.join(self.path, 'test_css_2.wfdisc')
+        self.filename_css_3 = os.path.join(self.path, 'test_css_3.wfdisc')
         # set up stream for validation
         header = {}
         header['station'] = 'TEST'
@@ -80,6 +82,12 @@ class CoreTestCase(unittest.TestCase):
             fh.close()
             assert(not _is_nnsa_kb_core(tempfile))
 
+    def test_is_not_this_format_core(self):
+        # check that NNSA files are not recognized as CSS
+        assert(not _is_css(self.filename_nnsa))
+        # check that CSS file is not recognized as NNSA_KB_CORE
+        assert(not _is_nnsa_kb_core(self.filename_css))
+
     def test_css_read_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
@@ -117,6 +125,26 @@ class CoreTestCase(unittest.TestCase):
         for tr in self.st_result_nnsa:
             tr.stats.pop('_format')
         self.assertEqual(st, self.st_result_nnsa)
+
+    def test_css_2_read_via_module(self):
+        """
+        Read files via obspy.io.css.core._read_css function.
+        Read gzipped waveforms.
+        """
+        # 1
+        st = _read_css(self.filename_css_2)
+        # _format entry is not present when using low-level function
+        for tr in self.st_result_css:
+            tr.stats.pop('_format')
+        self.assertEqual(st, self.st_result_css)
+
+    def test_css_3_read_via_module(self):
+        """
+        Read files via obspy.io.css.core._read_css function.
+        Exception if waveform file is missing.
+        """
+        # 1
+        self.assertRaises(FileNotFoundError, _read_css, self.filename_css_3)
 
 
 def suite():
