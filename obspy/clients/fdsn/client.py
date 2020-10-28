@@ -701,7 +701,7 @@ class Client(object):
             the raw data from the webservices.
         :type format: str
         :param format: The format in which to request station information.
-            ``"xml"`` (StationXML) or ``"text"`` (FDSN station test format).
+            ``"xml"`` (StationXML) or ``"text"`` (FDSN station text format).
             XML has more information but text is much faster.
 
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`

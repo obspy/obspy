@@ -336,7 +336,8 @@ class Client(object):
             return False
         elif type_ == SLPacket.TYPE_SLINFT:
             if self.debug:
-                print("Complete INFO:" + self.slconn.get_info_string())
+                print("Complete INFO:",
+                      self._slclient.slconn.get_info_string())
             return False
 
         # process packet data

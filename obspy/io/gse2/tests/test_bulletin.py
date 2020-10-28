@@ -259,7 +259,7 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(mag_1.evaluation_status, None)
         self.assertNotEqual(mag_1.creation_info, None)
         self.assertEqual(len(mag_1.comments), 0)
-        self.assertEqual(len(mag_1.station_magnitude_contributions), 0)
+        self.assertEqual(len(mag_1.station_magnitude_contributions), 3)
         # Test second Magnitude
         mag_2 = magnitudes[1]
         self.assertEqual(
@@ -274,8 +274,8 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(mag_2.evaluation_mode, None)
         self.assertEqual(mag_2.evaluation_status, None)
         self.assertNotEqual(mag_2.creation_info, None)
-        self.assertEqual(len(mag_1.comments), 0)
-        self.assertEqual(len(mag_1.station_magnitude_contributions), 0)
+        self.assertEqual(len(mag_2.comments), 0)
+        self.assertEqual(len(mag_2.station_magnitude_contributions), 1)
 
     def test_station_magnitude(self):
         """
@@ -295,9 +295,16 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(sta_mag_1.station_magnitude_type, 'ML')
         self.assertEqual(sta_mag_1.amplitude_id, 'smi:local/amplitude/3586432')
         self.assertEqual(sta_mag_1.method_id, None)
-        self.assertEqual(sta_mag_1.waveform_id, None)
         self.assertNotEqual(sta_mag_1.creation_info, None)
         self.assertEqual(len(sta_mag_1.comments), 0)
+
+        waveform_1 = sta_mag_1.waveform_id
+        self.assertEqual(waveform_1.network_code, 'XX')
+        self.assertEqual(waveform_1.station_code, 'GERES')
+        self.assertEqual(waveform_1.channel_code, None)
+        self.assertEqual(waveform_1.location_code, None)
+        self.assertEqual(waveform_1.resource_uri, None)
+
         # Test second StationMagnitude
         sta_mag_2 = station_magnitudes[1]
         self.assertEqual(
@@ -307,9 +314,15 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(sta_mag_2.station_magnitude_type, 'mb')
         self.assertEqual(sta_mag_2.amplitude_id, 'smi:local/amplitude/3586555')
         self.assertEqual(sta_mag_2.method_id, None)
-        self.assertEqual(sta_mag_2.waveform_id, None)
         self.assertNotEqual(sta_mag_2.creation_info, None)
         self.assertEqual(len(sta_mag_2.comments), 0)
+
+        waveform_2 = sta_mag_2.waveform_id
+        self.assertEqual(waveform_2.network_code, 'XX')
+        self.assertEqual(waveform_2.station_code, 'FINES')
+        self.assertEqual(waveform_2.channel_code, None)
+        self.assertEqual(waveform_2.location_code, None)
+        self.assertEqual(waveform_2.resource_uri, None)
 
     def test_amplitude(self):
         """
