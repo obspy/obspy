@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Helpers for the mass downloader.
@@ -1236,8 +1235,3 @@ class ClientDownloadHelper(object):
         self.logger.info("Client '%s' - Found %i stations (%i channels)." % (
             self.client_name, len(self.stations),
             sum([len(_i.channels) for _i in self.stations.values()])))
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

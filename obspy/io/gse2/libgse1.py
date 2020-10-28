@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -------------------------------------------------------------------
 # Filename: libgse1.py
 #  Purpose: Python wrapper for reading GSE1 files
@@ -16,7 +15,6 @@ Low-level module internally used for handling GSE1 files
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import doctest
 
 from obspy import UTCDateTime
 
@@ -113,7 +111,3 @@ def read_header(fh):
                           for k, v in header['gse1'].items())
     return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                 for k, v in header.items())
-
-
-if __name__ == '__main__':
-    doctest.testmod(exclude_empty=True)

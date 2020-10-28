@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Parsing of the text files from the FDSN station web services.
@@ -398,8 +397,3 @@ def _write_stationtxt(inventory, path_or_file_object, level='channel',
     finally:
         if not hasattr(path_or_file_object, 'write'):
             f.close()
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

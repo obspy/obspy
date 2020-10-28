@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: array.py
@@ -1023,8 +1022,3 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)
     return np.array(res)
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

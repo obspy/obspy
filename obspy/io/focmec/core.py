@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 FOCMEC file format support for ObsPy
@@ -373,8 +372,3 @@ def _read_common_header(lines):
     # get rid of those common lines already parsed
     lines = lines[4:]
     return event, lines
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

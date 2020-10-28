@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Some Seismogram Interpolating Functions.
@@ -436,8 +435,3 @@ def plot_lanczos_windows(a, filename=None):
     else:
         plt.savefig(filename)
         plt.close()
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

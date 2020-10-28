@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 NonLinLoc file format support for ObsPy
@@ -424,8 +423,3 @@ def write_nlloc_obs(catalog, filename, **kwargs):
     # Close if a file has been opened by this function.
     if file_opened is True:
         fh.close()
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Calculations for 3D ray paths.
@@ -132,8 +131,3 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
                                      magnitude, event_id, origin_id))
 
     return greatcircles
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

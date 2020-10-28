@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Routing client for the EIDAWS routing service.
@@ -199,8 +198,3 @@ class EIDAWSRoutingClient(BaseRoutingClient):
             split[current_key].append(line)
 
         return {k: "\n".join(v) for k, v in split.items()}
-
-
-if __name__ == '__main__':  # pragma: no cover
-    import doctest
-    doctest.testmod(exclude_empty=True)

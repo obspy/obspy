@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 SCARDEC file format support for ObsPy.
@@ -453,8 +452,3 @@ def _internal_write_single_scardec(buf, event, **kwargs):  # @UnusedVariable
 
     np.savetxt(buf, np.asarray([times, samples]).T,
                fmt=' %16.9E %16.9E'.encode('ascii', 'strict'))
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

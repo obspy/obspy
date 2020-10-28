@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 CMTSOLUTION file format support for ObsPy.
@@ -499,8 +498,3 @@ def _internal_write_single_cmtsolution(buf, event, **kwargs):
 
     # Write to a buffer/file opened in binary mode.
     buf.write(template.encode())
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

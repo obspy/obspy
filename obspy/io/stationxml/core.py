@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Functions dealing with reading and writing StationXML.
@@ -1691,8 +1690,3 @@ def _read_extra(element, obj):
         extra[name] = {'value': str(value),
                        'namespace': '%s' % ns,
                        'type': 'attribute'}
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)
