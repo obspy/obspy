@@ -4,6 +4,8 @@ maintenance_1.2.x
 Changes:
  - obspy.core:
    * Inventory addition now consistently uses shallow copies (#2675, #2694)
+ - obspy.clients.seedlink:
+   * Fix a bug in basic client when printing debug output (see #2734)
  - obspy.io.gse2:
    * When reading GSE2 bulletins, station magnitudes now include waveform IDs
      and have associated station magnitude contributions (see #2718)
