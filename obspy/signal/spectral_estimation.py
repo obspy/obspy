@@ -48,7 +48,8 @@ dtiny = np.finfo(0.0).tiny
 
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
-# SCAFFOLD
+
+# Noise models for special_handling="infrasound"
 NOISE_MODEL_FILE_INF = os.path.join(os.path.dirname(__file__),
                                 "data", "idc_noise_models.npz")
 
@@ -310,10 +311,11 @@ class PPSD(object):
     # Add current version as a class attribute to avoid hard coding it.
     _CURRENT_VERSION = 3
 
-    def __init__(self, stats, metadata, skip_on_gaps=False, ppsd_length=3600.0, overlap=0.5,
+    def __init__(self, stats, metadata, skip_on_gaps=False, db_bins=(-200, -50, 1.),
+                 ppsd_length=3600.0, overlap=0.5,
                  special_handling=None, period_smoothing_width_octaves=1.0,
                  period_step_octaves=0.125, period_limits=None,
-                 **kwargs):  # @UnusedVariable # SCAFFOLD: removed db_bins=(-200, -50, 1.) from arguments
+                 **kwargs):  # @UnusedVariable 
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -404,13 +406,6 @@ class PPSD(object):
         # save things related to kwargs
         self.skip_on_gaps = skip_on_gaps
         
-        # SCAFFOLD - change the range for infrasound channels, moved the db_bins defintion out of the args
-        if stats.channel == 'BDF' or stats.channel == 'HDF':
-            db_bins = (-100, 40, 1.)
-        else:
-            db_bins = (-200, -50, 1.)
-        self.db_bins = db_bins
-        
         self.ppsd_length = ppsd_length
         self.overlap = overlap
         self.special_handling = special_handling and special_handling.lower()
@@ -421,6 +416,9 @@ class PPSD(object):
                        "stating the overall sensitivity`.")
                 raise TypeError(msg)
         elif self.special_handling == 'hydrophone':
+            pass
+        # Add special handling option for infrasound
+        elif self.special_handling == 'infrasound':
             pass
         elif self.special_handling is not None:
             msg = "Unsupported value for 'special_handling' parameter: %s"
@@ -915,6 +913,7 @@ class PPSD(object):
         :returns: `True` if segment was successfully processed,
             `False` otherwise.
         """
+                
         # XXX DIRTY HACK!!
         if len(tr) == self.len + 1:
             tr.data = tr.data[:-1]
@@ -941,6 +940,7 @@ class PPSD(object):
         # Yes, you should avoid removing the response until after you
         # have estimated the spectra to avoid elevated lp noise
 
+
         spec, _freq = mlab.psd(tr.data, self.nfft, self.sampling_rate,
                                detrend=mlab.detrend_linear, window=fft_taper,
                                noverlap=self.nlap, sides='onesided',
@@ -951,7 +951,7 @@ class PPSD(object):
 
         # working with the periods not frequencies later so reverse spectrum
         spec = spec[::-1]
-
+        #""
         # Here we remove the response using the same conventions
         # since the power is squared we want to square the sensitivity
         # we can also convert to acceleration if we have non-rotational data
@@ -981,10 +981,12 @@ class PPSD(object):
             w = w[::-1]
             # Here we do the response removal
             # Do not differentiate when `special_handling="hydrophone"`
-            if self.special_handling == "hydrophone":
+            if self.special_handling == "hydrophone" or self.special_handling == "infrasound":
                 spec = spec / respamp
             else:
                 spec = (w ** 2) * spec / respamp
+        #""
+        
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny
@@ -1645,7 +1647,7 @@ class PPSD(object):
             ax.grid()
 
         if self.special_handling is None:
-            cb.ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+            cb.ax.set_ylabel('Amplitude [$Pa^2/s^4/Hz$] [dB]')
         else:
             cb.ax.set_ylabel('Amplitude [dB]')
         ax.set_ylabel('Period [s]')
@@ -1832,7 +1834,7 @@ class PPSD(object):
              max_percentage=None, period_lim=(0.01, 179), show_mode=False,
              show_mean=False, cmap=obspy_sequential, cumulative=False,
              cumulative_number_of_colors=20, xaxis_frequency=False,
-             show_earthquakes=None, infrasound = False):
+             show_earthquakes=None):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -1951,8 +1953,8 @@ class PPSD(object):
                 color = "black"
             ax.plot(xdata, mean_, color=color, zorder=9)
 
-        # SCAFFOLD
-        if infrasound:
+        # Choose the correct noise moel for infrasound
+        if self.special_handling == "infrasound":
             # Re-name noise model file
             mod = NOISE_MODEL_FILE_INF
         else:
@@ -2042,7 +2044,7 @@ class PPSD(object):
         ax.set_xlim(period_lim)
         ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
         if self.special_handling is None:
-            ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+            ax.set_ylabel('Amplitude [$Pa^2/s^4/Hz$] [dB]')
         else:
             ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%g"))
@@ -2205,8 +2207,7 @@ def get_nlnm(mod_fl):
     Returns periods and psd values for the New Low Noise Model.
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
-    # SCAFFOLD
-    #data = np.load(NOISE_MODEL_FILE)
+    # The 'mod_fl' argument chooses between sesimic or infrasound noise models
     data = np.load(mod_fl)
     periods = data['model_periods']
     nlnm = data['low_noise']
@@ -2218,8 +2219,7 @@ def get_nhnm(mod_fl):
     Returns periods and psd values for the New High Noise Model.
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
-    # SCAFFOLD
-    #data = np.load(NOISE_MODEL_FILE)
+    # The 'mod_fl' argument chooses between sesimic or infrasound noise models
     data = np.load(mod_fl)
     periods = data['model_periods']
     nhnm = data['high_noise']
