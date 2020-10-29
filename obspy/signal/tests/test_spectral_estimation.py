@@ -565,6 +565,18 @@ class PsdTestCase(unittest.TestCase):
             caption = 'M%.1f\n%dkm' % (magnitude, distance)
             self.assertEqual(ax.texts[0].get_text(), caption)
 
+    def test_ppsd_infrasound(self):
+        """
+        Test computing and plotting psds on infrasound data
+        """
+        st = read('data/AV.ADKI.01.HDF_2020_10_27.sac')
+        inv = read_inventory('data/AV.ADKI.01.HDF_2020_10_27.xml')
+        tr = st[0]
+        ppsd = PPSD(tr.stats, metadata = inv, special_handling = 'infrasound', db_bins = (-100, 40, 1.))
+        ppsd.add(st)
+        ppsd.plot(xaxis_frequency = True,  period_lim = (0.01, 10))
+
+        
     def test_ppsd_add_npz(self):
         """
         Test PPSD.add_npz().
