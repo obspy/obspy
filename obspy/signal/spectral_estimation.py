@@ -1647,7 +1647,9 @@ class PPSD(object):
             ax.grid()
 
         if self.special_handling is None:
-            cb.ax.set_ylabel('Amplitude [$Pa^2/s^4/Hz$] [dB]')
+            cb.ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        elif self.special_handling == "infrasound":
+            ax.set_ylabel('Amplitude [$Pa^2/Hz$] [dB]')
         else:
             cb.ax.set_ylabel('Amplitude [dB]')
         ax.set_ylabel('Period [s]')
@@ -1812,6 +1814,8 @@ class PPSD(object):
 
         if self.special_handling is None:
             ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        elif self.special_handling == "infrasound":
+            ax.set_ylabel('Amplitude [$Pa^2/Hz$] [dB]')
         else:
             ax.set_ylabel('Amplitude [dB]')
 
@@ -2044,7 +2048,9 @@ class PPSD(object):
         ax.set_xlim(period_lim)
         ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
         if self.special_handling is None:
-            ax.set_ylabel('Amplitude [$Pa^2/s^4/Hz$] [dB]')
+            ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        elif self.special_handling == "infrasound":
+            ax.set_ylabel('Amplitude [$Pa^2/Hz$] [dB]')
         else:
             ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%g"))
