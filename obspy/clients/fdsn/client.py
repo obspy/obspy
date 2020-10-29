@@ -31,7 +31,8 @@ import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.core.compatibility import urlparse, collections_abc
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
-                     OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
+                     OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
+                     URL_DEFAULT_SUBPATH, URL_MAPPINGS, URL_MAPPING_SUBPATHS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_SERVICES,
                      FDSNException, FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
@@ -219,12 +220,16 @@ class Client(object):
         self.__version_cache = {}
 
         if base_url.upper() in URL_MAPPINGS:
-            base_url = URL_MAPPINGS[base_url.upper()]
+            url_mapping = base_url.upper()
+            base_url = URL_MAPPINGS[url_mapping]
+            url_subpath = URL_MAPPING_SUBPATHS.get(
+                url_mapping, URL_DEFAULT_SUBPATH)
         else:
             if base_url.isalpha():
                 msg = "The FDSN service shortcut `{}` is unknown."\
                       .format(base_url)
                 raise ValueError(msg)
+            url_subpath = URL_DEFAULT_SUBPATH
 
         # Make sure the base_url does not end with a slash.
         base_url = base_url.strip("/")
@@ -235,6 +240,7 @@ class Client(object):
             raise ValueError(msg)
 
         self.base_url = base_url
+        self.url_subpath = url_subpath
 
         self._set_opener(user, password)
 
@@ -375,8 +381,9 @@ class Client(object):
                 raise ValueError(msg)
 
         # force https so that we don't send around tokens unsecurely
-        url = 'https://{}/fdsnws/dataselect/1/auth'.format(
-            urlparse(self.base_url).netloc + urlparse(self.base_url).path)
+        url = 'https://{}{}/dataselect/1/auth'.format(
+            urlparse(self.base_url).netloc + urlparse(self.base_url).path,
+            self.url_subpath)
         # paranoid: check again that we only send the token to https
         if urlparse(url).scheme != "https":
             msg = 'This should not happen, please file a bug report.'
@@ -1410,7 +1417,8 @@ class Client(object):
                 resource_type = "queryauth"
         return build_url(self.base_url, service, self.major_versions[service],
                          resource_type, parameters,
-                         service_mappings=self._service_mappings)
+                         service_mappings=self._service_mappings,
+                         subpath=self.url_subpath)
 
     def _discover_services(self):
         """
@@ -1637,7 +1645,7 @@ def convert_to_string(value):
 
 
 def build_url(base_url, service, major_version, resource_type,
-              parameters=None, service_mappings=None):
+              parameters=None, service_mappings=None, subpath='fdsnws'):
     """
     URL builder for the FDSN webservices.
 
@@ -1683,8 +1691,13 @@ def build_url(base_url, service, major_version, resource_type,
     if service in service_mappings:
         url = "/".join((service_mappings[service], resource_type))
     else:
-        url = "/".join((base_url, "fdsnws", service,
-                        str(major_version), resource_type))
+        if subpath is None:
+            parts = (base_url, service, str(major_version),
+                     resource_type)
+        else:
+            parts = (base_url, subpath.lstrip('/'), service,
+                     str(major_version), resource_type)
+        url = "/".join(parts)
 
     if parameters:
         # Strip parameters.
