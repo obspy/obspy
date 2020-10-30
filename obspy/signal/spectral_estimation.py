@@ -46,12 +46,12 @@ from obspy.signal.invsim import paz_to_freq_resp, evalresp
 
 dtiny = np.finfo(0.0).tiny
 
-NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
-                                "data", "noise_models.npz")
+NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__), "data",
+                                "noise_models.npz")
 
 # Noise models for special_handling="infrasound"
-NOISE_MODEL_FILE_INF = os.path.join(os.path.dirname(__file__),
-                                "data", "idc_noise_models.npz")
+NOISE_MODEL_FILE_INF = os.path.join(os.path.dirname(__file__), "data",
+                                    "idc_noise_models.npz")
 
 earthquake_models = {
     (1.5, 10): [[7.0700000e-01, 1.4140000e+00, 2.8280000e+00, 5.6600000e+00,
@@ -315,7 +315,7 @@ class PPSD(object):
                  ppsd_length=3600.0, overlap=0.5,
                  special_handling=None, period_smoothing_width_octaves=1.0,
                  period_step_octaves=0.125, period_limits=None,
-                 **kwargs):  # @UnusedVariable 
+                 **kwargs):  # @UnusedVariable
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -405,7 +405,7 @@ class PPSD(object):
 
         # save things related to kwargs
         self.skip_on_gaps = skip_on_gaps
-        
+
         self.ppsd_length = ppsd_length
         self.overlap = overlap
         self.special_handling = special_handling and special_handling.lower()
@@ -913,7 +913,7 @@ class PPSD(object):
         :returns: `True` if segment was successfully processed,
             `False` otherwise.
         """
-                
+
         # XXX DIRTY HACK!!
         if len(tr) == self.len + 1:
             tr.data = tr.data[:-1]
@@ -940,7 +940,6 @@ class PPSD(object):
         # Yes, you should avoid removing the response until after you
         # have estimated the spectra to avoid elevated lp noise
 
-
         spec, _freq = mlab.psd(tr.data, self.nfft, self.sampling_rate,
                                detrend=mlab.detrend_linear, window=fft_taper,
                                noverlap=self.nlap, sides='onesided',
@@ -951,7 +950,7 @@ class PPSD(object):
 
         # working with the periods not frequencies later so reverse spectrum
         spec = spec[::-1]
-        #""
+
         # Here we remove the response using the same conventions
         # since the power is squared we want to square the sensitivity
         # we can also convert to acceleration if we have non-rotational data
@@ -981,11 +980,11 @@ class PPSD(object):
             w = w[::-1]
             # Here we do the response removal
             # Do not differentiate when `special_handling="hydrophone"`
-            if self.special_handling == "hydrophone" or self.special_handling == "infrasound":
+            if self.special_handling == "hydrophone" or \
+               self.special_handling == "infrasound":
                 spec = spec / respamp
             else:
                 spec = (w ** 2) * spec / respamp
-        #""
         
         # avoid calculating log of zero
         idx = spec < dtiny
@@ -2214,6 +2213,7 @@ def get_nlnm(mod_fl):
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
     # The 'mod_fl' argument chooses between sesimic or infrasound noise models
+    # For information of the IDC infrasound noise models, see [Brown2012]
     data = np.load(mod_fl)
     periods = data['model_periods']
     nlnm = data['low_noise']
@@ -2226,6 +2226,7 @@ def get_nhnm(mod_fl):
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
     # The 'mod_fl' argument chooses between sesimic or infrasound noise models
+    # For information of the IDC infrasound noise models, see [Brown2012]
     data = np.load(mod_fl)
     periods = data['model_periods']
     nhnm = data['high_noise']
