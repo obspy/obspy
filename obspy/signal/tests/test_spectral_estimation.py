@@ -569,8 +569,12 @@ class PsdTestCase(unittest.TestCase):
         """
         Test computing and plotting psds on infrasound data
         """
-        st = read('data/AV.ADKI.01.HDF_2020_10_27.sac')
-        inv = read_inventory('data/AV.ADKI.01.HDF_2020_10_27.xml')
+        wf = os.path.join(
+            PATH, 'AV.ADKI.01.HDF_2020_10_27.sac')
+        md = os.path.join(
+            PATH, 'AV.ADKI.01.HDF_2020_10_27.xml')
+        st = read(wf)
+        inv = read_inventory(md)
         tr = st[0]
         ppsd = PPSD(tr.stats, metadata = inv, special_handling = 'infrasound', db_bins = (-100, 40, 1.))
         ppsd.add(st)

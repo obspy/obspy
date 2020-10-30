@@ -985,7 +985,7 @@ class PPSD(object):
                 spec = spec / respamp
             else:
                 spec = (w ** 2) * spec / respamp
-        
+
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny
