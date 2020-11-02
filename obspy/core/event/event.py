@@ -122,7 +122,11 @@ class Event(__Event):
             out += '%s | %s, %s' % (time, lat_str, lon_str)
         if self.magnitudes:
             magnitude = self.preferred_magnitude() or self.magnitudes[0]
-            out += ' | %s %-2s' % (magnitude.mag,
+            try:
+                mag_string = '%3.1f' % magnitude.mag
+            except TypeError:
+                mag_string = str(magnitude.mag)
+            out += ' | %s %-2s' % (mag_string,
                                    magnitude.magnitude_type)
         if origin and origin.evaluation_mode:
             out += ' | %s' % (origin.evaluation_mode)
