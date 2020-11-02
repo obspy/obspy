@@ -979,9 +979,10 @@ class PPSD(object):
             w = 2.0 * math.pi * _freq[1:]
             w = w[::-1]
             # Here we do the response removal
-            # Do not differentiate when `special_handling="hydrophone"`
-            if self.special_handling == "hydrophone" or \
-               self.special_handling == "infrasound":
+            # Do not differentiate when `special_handling="hydrophone, infrasound"`
+            #if self.special_handling == "hydrophone" or \
+            #   self.special_handling == "infrasound":
+            if self.special_handling in ("hydrophone", "infrasound"):
                 spec = spec / respamp
             else:
                 spec = (w ** 2) * spec / respamp
@@ -1956,15 +1957,16 @@ class PPSD(object):
                 color = "black"
             ax.plot(xdata, mean_, color=color, zorder=9)
 
-        # Choose the correct noise moel for infrasound
+        # Choose the correct noise model
         if self.special_handling == "infrasound":
-            # Re-name noise model file
-            mod = NOISE_MODEL_FILE_INF
+            # Use IDC global infrasound models
+            models = (get_idc_infra_hi_noise(), get_idc_infra_low_noise())
         else:
-            mod = NOISE_MODEL_FILE
+            # Use Peterson NHNM and NLNM
+            models = (get_nhnm(), get_nlnm()) 
 
         if show_noise_models:
-            for periods, noise_model in (get_nhnm(mod), get_nlnm(mod)):
+            for periods, noise_model in models:
                 if xaxis_frequency:
                     xdata = 1.0 / periods
                 else:
@@ -2207,27 +2209,45 @@ class PPSD(object):
         ax.autoscale_view()
 
 
-def get_nlnm(mod_fl):
+def get_nlnm():
     """
     Returns periods and psd values for the New Low Noise Model.
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
-    # The 'mod_fl' argument chooses between sesimic or infrasound noise models
-    # For information of the IDC infrasound noise models, see [Brown2012]
-    data = np.load(mod_fl)
+    data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
     nlnm = data['low_noise']
     return (periods, nlnm)
 
 
-def get_nhnm(mod_fl):
+def get_nhnm():
     """
     Returns periods and psd values for the New High Noise Model.
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
-    # The 'mod_fl' argument chooses between sesimic or infrasound noise models
-    # For information of the IDC infrasound noise models, see [Brown2012]
-    data = np.load(mod_fl)
+    data = np.load(NOISE_MODEL_FILE)
+    periods = data['model_periods']
+    nlnm = data['high_noise']
+    return (periods, nlnm)
+
+
+def get_idc_infra_low_noise():
+    """
+    Returns periods and psd values for the IDC infrasound global low noise model.
+    For information on the IDC noise models, see [Brown2012]_.
+    """
+    data = np.load(NOISE_MODEL_FILE_INF)
+    periods = data['model_periods']
+    nlnm = data['low_noise']
+    return (periods, nlnm)
+
+
+def get_idc_infra_hi_noise():
+    """
+    Returns periods and psd values for the IDC infrasound global high noise model.
+    For information on the IDC noise models, see [Brown2012]_.
+    """
+    data = np.load(NOISE_MODEL_FILE_INF)
     periods = data['model_periods']
     nhnm = data['high_noise']
     return (periods, nhnm)
