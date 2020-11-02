@@ -570,9 +570,9 @@ class PsdTestCase(unittest.TestCase):
         Test computing and plotting psds on infrasound data
         """
         wf = os.path.join(
-            PATH, 'AV.ADKI.01.HDF_2020_10_27.sac')
+            PATH, 'IM.I59H1..BDF_2020_10_31.mseed')
         md = os.path.join(
-            PATH, 'AV.ADKI.01.HDF_2020_10_27.xml')
+            PATH, 'IM.I59H1..BDF_2020_10_31.xml')
         st = read(wf)
         inv = read_inventory(md)
         tr = st[0]
