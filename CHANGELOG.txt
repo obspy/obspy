@@ -5,6 +5,8 @@ Changes:
  - obspy.core:
    * add option to suppress evalresp sensitivity mismatch warning when removing
      instrument response (see #2677)
+   * round magnitudes in Catalog/Event string representation to one decimal
+     (see #2742)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.io.hypodd
