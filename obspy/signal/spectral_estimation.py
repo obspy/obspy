@@ -2230,7 +2230,7 @@ def get_nhnm():
 
 def get_idc_infra_low_noise():
     """
-    Returns periods and psd values for the IDC infrasound global low noise 
+    Returns periods and psd values for the IDC infrasound global low noise
     model. For information on the IDC noise models, see [Brown2012]_.
     """
     data = np.load(NOISE_MODEL_FILE_INF)
