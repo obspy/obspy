@@ -14,6 +14,7 @@ import io
 import os
 import unittest
 import warnings
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
@@ -697,6 +698,14 @@ class InventoryTestCase(unittest.TestCase):
         # with wildcard
         got = read_inventory(os.path.join(self.path, "IU_*_00*.xml"))
         self.assertEqual(expected, got)
+
+    def test_read_inventory_with_path(self):
+        """
+        Tests that pathlib.Path objects works for input to read_inventory().
+        """
+        path1 = Path(self.station_xml1)
+        inv1 = read_inventory(path1)
+        self.assertEqual(inv1, read_inventory(self.station_xml1))
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
