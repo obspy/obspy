@@ -22,6 +22,8 @@ from obspy.core.util.testing import (
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
 from obspy.signal.spectral_estimation import earthquake_models
+from obspy.signal.spectral_estimation import get_idc_infra_low_noise
+from obspy.signal.spectral_estimation import get_idc_infra_hi_noise
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -567,7 +569,7 @@ class PsdTestCase(unittest.TestCase):
 
     def test_ppsd_infrasound(self):
         """
-        Test computing and plotting psds on infrasound data
+        Test plotting psds on infrasound data
         """
         wf = os.path.join(
             PATH, 'IM.I59H1..BDF_2020_10_31.mseed')
@@ -578,7 +580,25 @@ class PsdTestCase(unittest.TestCase):
         tr = st[0]
         ppsd = PPSD(tr.stats, metadata = inv, special_handling = 'infrasound', db_bins = (-100, 40, 1.))
         ppsd.add(st)
-        ppsd.plot(xaxis_frequency = True,  period_lim = (0.01, 10))
+        fig = ppsd.plot(xaxis_frequency = True,  period_lim = (0.01, 10), show = False)
+        models = (get_idc_infra_hi_noise(), get_idc_infra_low_noise())
+        lines = fig.axes[0].lines
+        freq1 = lines[0].get_xdata()
+        per1 = []
+        for f in freq1:
+            per1.append(1/f)
+        hn = lines[0].get_ydata()
+        freq2 = lines[1].get_xdata()
+        per2 = []
+        for f in freq2:
+            per2.append(1/f)
+        ln = lines[1].get_ydata()
+        per1_m, hn_m = models[0] 
+        per2_m, ln_m = models[1]
+        self.assertEqual(list(hn), list(hn_m))
+        self.assertEqual(list(ln), list(ln_m))
+        self.assertEqual(per1, list(per1_m))
+        self.assertEqual(per2, list(per2_m))
 
         
     def test_ppsd_add_npz(self):
