@@ -311,8 +311,8 @@ class PPSD(object):
     # Add current version as a class attribute to avoid hard coding it.
     _CURRENT_VERSION = 3
 
-    def __init__(self, stats, metadata, skip_on_gaps=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600.0, overlap=0.5,
+    def __init__(self, stats, metadata, skip_on_gaps=False,
+                 db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
                  special_handling=None, period_smoothing_width_octaves=1.0,
                  period_step_octaves=0.125, period_limits=None,
                  **kwargs):  # @UnusedVariable
@@ -979,9 +979,6 @@ class PPSD(object):
             w = 2.0 * math.pi * _freq[1:]
             w = w[::-1]
             # Here we do the response removal
-            # Do not differentiate when `special_handling="hydrophone, infrasound"`
-            #if self.special_handling == "hydrophone" or \
-            #   self.special_handling == "infrasound":
             if self.special_handling in ("hydrophone", "infrasound"):
                 spec = spec / respamp
             else:
@@ -1963,7 +1960,7 @@ class PPSD(object):
             models = (get_idc_infra_hi_noise(), get_idc_infra_low_noise())
         else:
             # Use Peterson NHNM and NLNM
-            models = (get_nhnm(), get_nlnm()) 
+            models = (get_nhnm(), get_nlnm())
 
         if show_noise_models:
             for periods, noise_model in models:
@@ -2233,8 +2230,8 @@ def get_nhnm():
 
 def get_idc_infra_low_noise():
     """
-    Returns periods and psd values for the IDC infrasound global low noise model.
-    For information on the IDC noise models, see [Brown2012]_.
+    Returns periods and psd values for the IDC infrasound global low noise 
+    model. For information on the IDC noise models, see [Brown2012]_.
     """
     data = np.load(NOISE_MODEL_FILE_INF)
     periods = data['model_periods']
@@ -2244,8 +2241,8 @@ def get_idc_infra_low_noise():
 
 def get_idc_infra_hi_noise():
     """
-    Returns periods and psd values for the IDC infrasound global high noise model.
-    For information on the IDC noise models, see [Brown2012]_.
+    Returns periods and psd values for the IDC infrasound global high noise
+    model. For information on the IDC noise models, see [Brown2012]_.
     """
     data = np.load(NOISE_MODEL_FILE_INF)
     periods = data['model_periods']
