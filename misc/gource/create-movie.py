@@ -39,7 +39,7 @@ def fetch_avatar():
     try:
         log = subprocess.check_output(['git', 'log',
                                        '--pretty=format:%ae!%an'])
-    except OSError, subprocess.CalledProcessError:
+    except (OSError, subprocess.CalledProcessError):
         print('ERROR: Unable to read git log.')
         exit(1)
 

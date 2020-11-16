@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
 from obspy import read_events
