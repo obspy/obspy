@@ -773,11 +773,11 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
-    :type pathname_or_url: str or StringIO.StringIO
-    :param pathname_or_url: String containing a file name or a URL or a open
-        file-like object. Wildcards are allowed for a file name. If this
-        attribute is omitted, an example :class:`~obspy.core.event.Catalog`
-        object will be returned.
+    :type pathname_or_url: str, pathlib.Path, or StringIO.StringIO, optional
+    :param pathname_or_url: String containing a file name or a URL, Path
+        object, or an open file-like object. Wildcards are allowed for a file
+        name. If this attribute is omitted, an example
+        :class:`~obspy.core.event.Catalog` object will be returned.
     :type format: str
     :param format: Format of the file to read (e.g. ``"QUAKEML"``). See the
         `Supported Formats`_ section below for a list of supported formats.

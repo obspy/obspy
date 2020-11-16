@@ -1954,9 +1954,9 @@ class StreamTestCase(unittest.TestCase):
         """
         base_path = Path(__file__).parent / 'data'
         data_path = base_path / 'IU_ULN_00_LH1_2015-07-18T02.mseed'
-        assert data_path.exists()
+        self.assertTrue(data_path.exists())
         st = read(data_path)
-        assert isinstance(st, Stream)
+        self.assertIsInstance(st, Stream)
 
     def test_copy(self):
         """
