@@ -75,12 +75,14 @@ def _str_conv(number, rounded=False):
     12.3
     >>> print(_str_conv(12.34546, rounded=1))
     12.3
+    >>> print(_str_conv(0))
+    0
     >>> print(_str_conv(None))
     <BLANKLINE>
     >>> print(_str_conv(1123040))
     11.2e5
     """
-    if not number:
+    if number is None:
         return str(' ')
     if not rounded and isinstance(number, (float, int)):
         if number < 100000:
