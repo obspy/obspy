@@ -60,7 +60,7 @@ The :func:`~obspy.core.event.read_events` method is used to read NDK files to
 >>> cat = obspy.read_events("/path/to/C200604092050A.ndk")
 >>> print(cat)
 1 Event(s) in Catalog:
-2006-04-09T20:50:51.300000Z | -20.460,  -70.730 | 5.73 Mwc
+2006-04-09T20:50:51.300000Z | -20.460,  -70.730 | 5.7 Mwc
 
 One of the main purposes of this module is the conversion to QuakeML which
 can easily be achieved with ObsPy.
