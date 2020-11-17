@@ -405,6 +405,7 @@ class PPSD(object):
 
         # save things related to kwargs
         self.skip_on_gaps = skip_on_gaps
+        self.db_bins = db_bins
 
         self.ppsd_length = ppsd_length
         self.overlap = overlap

@@ -9,6 +9,8 @@ Changes:
      (see #2742)
    * add support for pathlib.Path objects in read(), read_inventory() and
      read_events() functions (see #2743)
+ - obspy.clients.fdsn:
+   * introduce fine-grained FDSN client exceptions (see #2653)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.io.hypodd
@@ -25,8 +27,6 @@ Changes:
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
- - obspy.clients.fdsn:
-   * introduce fine-grained FDSN client exceptions (see #2653)
  - obspy.signal.array_analysis
    * fixed an issue in array_processing function returning wrong times
      for matplotlib versions >= 3.3 due to the epoch change in matplotlib
@@ -34,6 +34,9 @@ Changes:
  - obspy.signal.cross_correlation:
    * Remove deprecated xcorr function, remove deprecated domain keyword
      argument in correlate function (see #1979)
+ - obspy.signal.spectral_estimation.PPSD:
+   * Added special handling option for infrasound data and global infrasound noise
+     models for plotting (see #2740)
 
 maintenance_1.2.x
 =================
