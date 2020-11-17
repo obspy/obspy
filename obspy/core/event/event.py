@@ -123,7 +123,10 @@ class Event(__Event):
         if self.magnitudes:
             magnitude = self.preferred_magnitude() or self.magnitudes[0]
             try:
-                mag_string = '%3.1f' % magnitude.mag
+                if round(magnitude.mag, 1) == magnitude.mag:
+                    mag_string = '%3.1f ' % magnitude.mag
+                else:
+                    mag_string = '%4.2f' % magnitude.mag
             except TypeError:
                 mag_string = str(magnitude.mag)
             out += ' | %s %-2s' % (mag_string,
