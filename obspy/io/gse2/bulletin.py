@@ -1129,8 +1129,8 @@ def _read_gse2(filename, inventory=None, default_network_code='XX',
     ... fields=fields, event_point_separator=True)
     >>> print(catalog)
     2 Event(s) in Catalog:
-    1995-01-16T07:26:52.400000Z | +39.450,  +20.440 | 3.6 mb | manual
-    1995-01-16T07:27:07.300000Z | +50.772, -129.760 | 1.2 Ml | manual
+    1995-01-16T07:26:52.400000Z | +39.450,  +20.440 | 3.6  mb | manual
+    1995-01-16T07:27:07.300000Z | +50.772, -129.760 | 1.2  Ml | manual
     """
     return Unpickler(inventory, default_network_code, default_location_code,
                      default_channel_code, res_id_prefix, fields,

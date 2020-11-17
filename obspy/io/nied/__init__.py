@@ -22,12 +22,12 @@ It works by utilizing ObsPy's :func:`~obspy.core.event.read_events` function.
 >>> cat = obspy.read_events("/path/to/FNETMTCATALOG")
 >>> print(cat)
 1 Event(s) in Catalog:
-2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 8.7 Mw
+2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 8.7  Mw
 
 The event will contain a couple of origins and magnitudes.
 
 >>> print(cat[0])  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-Event:  2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 8.7 Mw
+Event:  2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 8.7  Mw
 <BLANKLINE>
                    resource_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/event")
                     event_type: 'earthquake'

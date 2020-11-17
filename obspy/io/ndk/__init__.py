@@ -60,7 +60,7 @@ The :func:`~obspy.core.event.read_events` method is used to read NDK files to
 >>> cat = obspy.read_events("/path/to/C200604092050A.ndk")
 >>> print(cat)
 1 Event(s) in Catalog:
-2006-04-09T20:50:51.300000Z | -20.460,  -70.730 | 5.7 Mwc
+2006-04-09T20:50:51.300000Z | -20.460,  -70.730 | 5.73 Mwc
 
 One of the main purposes of this module is the conversion to QuakeML which
 can easily be achieved with ObsPy.
@@ -75,11 +75,11 @@ case to the solutions from February 2011).
 ...                         "feb11.ndk")  # doctest: +SKIP
 >>> print(cat)  # doctest: +SKIP
 135 Event(s) in Catalog:
-2011-02-01T03:32:08.600000Z | +22.520, +144.790 | 5.02 Mwc
-2011-02-01T08:16:31.700000Z | +24.190, +121.730 | 5.33 Mwc
+2011-02-01T03:32:08.600000Z | +22.520, +144.790 | 5.02  Mwc
+2011-02-01T08:16:31.700000Z | +24.190, +121.730 | 5.33  Mwc
 ...
-2011-02-28T20:45:45.700000Z | -20.520,  -69.440 | 5.27 Mwc
-2011-02-28T23:42:21.500000Z | -29.650, -112.280 | 5.54 Mwc
+2011-02-28T20:45:45.700000Z | -20.520,  -69.440 | 5.27  Mwc
+2011-02-28T23:42:21.500000Z | -29.650, -112.280 | 5.54  Mwc
 To see all events call 'print(CatalogObject.__str__(print_all=True))'
 >>> cat.plot()  # doctest: +SKIP
 
@@ -95,11 +95,11 @@ It can also deal with large amounts of data, though it might take a while.
 >>> cat = obspy.read_events("/path/to/jan76_dec10.ndk")  # doctest: +SKIP
 >>> print(cat)  # doctest: +SKIP
 33872 Event(s) in Catalog:
-1976-01-01T01:29:53.400000Z | -29.250, -176.960 | 7.25 Mwc
-1976-01-05T02:31:44.700000Z | -13.420,  -75.140 | 5.65 Mwc
+1976-01-01T01:29:53.400000Z | -29.250, -176.960 | 7.25  Mwc
+1976-01-05T02:31:44.700000Z | -13.420,  -75.140 | 5.65  Mwc
 ...
-2010-12-31T04:11:08.400000Z | -18.980, +167.590 | 5.07 Mwc
-2010-12-31T16:30:59.700000Z |  +0.810,  -26.060 | 5.45 Mwc
+2010-12-31T04:11:08.400000Z | -18.980, +167.590 | 5.07  Mwc
+2010-12-31T16:30:59.700000Z |  +0.810,  -26.060 | 5.45  Mwc
 To see all events call 'print(CatalogObject.__str__(print_all=True))'
 >>> cat.plot()  # doctest: +SKIP
 
