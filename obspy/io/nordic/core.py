@@ -1393,7 +1393,7 @@ def nordpick(event, high_accuracy=True):
             if arrival.time_weight is None:
                 weight = ' '
             else:
-                weight = _str_conv(int(arrival.time_weight or 0))
+                weight = _str_conv(int(arrival.time_weight))
             # Extract azimuth residual
             if arrival.backazimuth_residual is not None:
                 azimuthres = _str_conv(int(arrival.backazimuth_residual))
