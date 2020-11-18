@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Module to create and use a connection to a SeedLink server using a
 SeedLinkConnection object.
@@ -61,7 +60,7 @@ USAGE = """
 logger = logging.getLogger('obspy.clients.seedlink')
 
 
-class SLClient(object):
+class SLClient:
     """
     Basic class to create and use a connection to a SeedLink server using a
     SeedLinkConnection object.

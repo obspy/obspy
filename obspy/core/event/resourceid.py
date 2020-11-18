@@ -19,7 +19,7 @@ from weakref import WeakKeyDictionary, WeakValueDictionary
 from obspy.core.util.decorator import deprecated
 
 
-class _ResourceKey(object):
+class _ResourceKey:
     """
     A private semi-singleton class used to refer id strings to objects.
 
@@ -50,7 +50,7 @@ class _ResourceKey(object):
         return _ResourceKey._singleton_cache[unique_id]
 
 
-class _ResourceKeyDescriptor(object):
+class _ResourceKeyDescriptor:
     """
     A private descriptor for initializing _Resource_Key instances.
     """
@@ -70,7 +70,7 @@ class _ResourceKeyDescriptor(object):
             setattr(instance, self.name, _ResourceKey.get_resource_key(value))
 
 
-class ResourceIdentifier(object):
+class ResourceIdentifier:
     r"""
     Unique identifier referring to a resource.
 
@@ -537,7 +537,7 @@ class ResourceIdentifier(object):
         result = re.match(regex, str(id))
         if result is not None:
             return id
-        id = 'smi:%s/%s' % (authority_id, str(id))
+        id = 'smi:{}/{}'.format(authority_id, str(id))
         # Check once again just to be sure no weird symbols are stored in the
         # ID.
         result = re.match(regex, id)

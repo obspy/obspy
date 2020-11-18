@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 WIN/DATAMARK format bindings to ObsPy.
 """
@@ -26,7 +25,7 @@ def _is_win(filename, century="20"):  # @UnusedVariable
         with open(filename, "rb") as fpin:
             fpin.read(4)
             buff = fpin.read(6)
-            yy = "%s%02x" % (century, ord(buff[0:1]))
+            yy = "{}{:02x}".format(century, ord(buff[0:1]))
             mm = "%x" % ord(buff[1:2])
             dd = "%x" % ord(buff[2:3])
             hh = "%x" % ord(buff[3:4])
@@ -85,7 +84,7 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
             buff = fpin.read(6)
             leng += 6
 
-            yy = "%s%02x" % (century, ord(buff[0:1]))
+            yy = "{}{:02x}".format(century, ord(buff[0:1]))
             mm = "%x" % ord(buff[1:2])
             dd = "%x" % ord(buff[2:3])
             hh = "%x" % ord(buff[3:4])
@@ -103,7 +102,7 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                 leng += 4
                 flag = '%02x' % ord(buff[0:1])
                 chanum = '%02x' % ord(buff[1:2])
-                chanum = "%02s%02s" % (flag, chanum)
+                chanum = f"{flag:02}{chanum:02}"
                 datawide = int('%x' % (ord(buff[2:3]) >> 4))
                 srate = ord(buff[3:4])
                 xlen = (srate - 1) * datawide
@@ -139,24 +138,24 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                                          np.int8)[0] << 4) >> 4
                         output[chanum].append(idata2)
                 elif datawide == 1:
-                    for i in range((xlen // datawide)):
+                    for i in range(xlen // datawide):
                         idata2 = output[chanum][-1] +\
                             from_buffer(sdata[i:i + 1], np.int8)[0]
                         output[chanum].append(idata2)
                 elif datawide == 2:
-                    for i in range((xlen // datawide)):
+                    for i in range(xlen // datawide):
                         idata2 = output[chanum][-1] +\
                             from_buffer(sdata[2 * i:2 * (i + 1)],
                                         '>h')[0]
                         output[chanum].append(idata2)
                 elif datawide == 3:
-                    for i in range((xlen // datawide)):
+                    for i in range(xlen // datawide):
                         idata2 = output[chanum][-1] +\
                             from_buffer(sdata[3 * i:3 * (i + 1)] + b' ',
                                         '>i')[0] >> 8
                         output[chanum].append(idata2)
                 elif datawide == 4:
-                    for i in range((xlen // datawide)):
+                    for i in range(xlen // datawide):
                         idata2 = output[chanum][-1] +\
                             from_buffer(sdata[4 * i:4 * (i + 1)],
                                         '>i')[0]

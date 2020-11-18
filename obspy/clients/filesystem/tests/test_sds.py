@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import imghdr
 import inspect
 import os
@@ -15,7 +14,7 @@ from obspy.clients.filesystem.sds import SDS_FMTSTR, Client
 from obspy.scripts.sds_html_report import main as sds_report
 
 
-class TemporarySDSDirectory(object):
+class TemporarySDSDirectory:
     """
     Handles creation and deletion of a temporary SDS directory structure.
     To be used with "with" statement.
@@ -173,7 +172,7 @@ class SDSTestCase(unittest.TestCase):
             # create the report
             output_basename = "sds_report"
             argv = [
-                "-r={}".format(temp_sds.tempdir),
+                f"-r={temp_sds.tempdir}",
                 "-o={}".format(os.path.join(os.curdir, output_basename)),
                 "-l=", "-l=00", "-l=10", "-c=HHZ", "-c=BHZ", "-i=AB.XYZ..BHE",
                 "--check-quality-days=1"]

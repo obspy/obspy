@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Utility functions for Nordic file format support for ObsPy
 
@@ -77,19 +76,19 @@ def _str_conv(number, rounded=False):
     11.2e5
     """
     if not number:
-        return str(' ')
+        return ' '
     if not rounded and isinstance(number, (float, int)):
         if number < 100000:
             string = str(number)
         else:
-            exponent = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
+            exponent = int(f'{number:.2E}'.split('E+')[-1]) - 1
             divisor = 10 ** exponent
-            string = '{0:.1f}'.format(number / divisor) + 'e' + str(exponent)
+            string = '{:.1f}'.format(number / divisor) + 'e' + str(exponent)
     elif rounded and isinstance(number, (float, int)):
         if number < 100000:
             string = "{:.{precision}f}".format(number, precision=rounded)
         else:
-            exponent = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
+            exponent = int(f'{number:.2E}'.split('E+')[-1]) - 1
             divisor = 10 ** exponent
             string = "{:.{precision}f}".format(
                 number / divisor, precision=rounded) + 'e' + str(exponent)

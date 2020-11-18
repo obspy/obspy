@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Defines the libmseed structures and blockettes.
 """
@@ -773,7 +772,7 @@ __clibmseed.ms_nomsamprate.argtypes = [
 __clibmseed.ms_nomsamprate.restype = C.c_double
 
 
-class _LibmseedWrapper(object):
+class _LibmseedWrapper:
     """
     Wrapper object around libmseed that tries to guarantee that all warnings
     and errors within libmseed are properly converted to their Python

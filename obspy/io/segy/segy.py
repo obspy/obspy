@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 #  Filename: seg.py
 #  Purpose: Routines for reading and writing SEG Y files.
@@ -80,7 +79,7 @@ class SEGYInvalidTextualHeaderWarning(SEGYWarning):
     pass
 
 
-class SEGYFile(object):
+class SEGYFile:
     """
     Class that internally handles SEG Y files.
     """
@@ -278,7 +277,7 @@ class SEGYFile(object):
         self.binary_file_header.seg_y_format_revision_number = 256
         # Set the fixed length flag to zero if all traces have NOT the same
         # length. Leave unchanged otherwise.
-        if len(set([len(tr.data) for tr in self.traces])) != 1:
+        if len({len(tr.data) for tr in self.traces}) != 1:
             self.binary_file_header.fixed_length_trace_flag = 0
         # Extended textual headers are not supported by ObsPy so far.
         self.binary_file_header.\
@@ -424,7 +423,7 @@ class SEGYFile(object):
                 break
 
 
-class SEGYBinaryFileHeader(object):
+class SEGYBinaryFileHeader:
     """
     Parses the binary file header at the given starting position.
     """
@@ -475,7 +474,7 @@ class SEGYBinaryFileHeader(object):
         """
         final_str = ["Binary File Header:"]
         for item in BINARY_FILE_HEADER_FORMAT:
-            final_str.append("\t%s: %s" % (item[1],
+            final_str.append("\t{}: {}".format(item[1],
                                            str(getattr(self, item[1]))))
         return "\n".join(final_str)
 
@@ -523,7 +522,7 @@ class SEGYBinaryFileHeader(object):
             setattr(self, name, 0)
 
 
-class SEGYTrace(object):
+class SEGYTrace:
     """
     Convenience class that internally handles a single SEG Y trace.
     """
@@ -778,7 +777,7 @@ class SEGYTrace(object):
         return trace
 
 
-class SEGYTraceHeader(object):
+class SEGYTraceHeader:
     """
     Convenience class that handles reading and writing of the trace headers.
     """
@@ -842,7 +841,7 @@ class SEGYTraceHeader(object):
             length, name, special_format, _ = item
             # Use special format if necessary.
             if special_format:
-                format = ('%s%s' % (endian,
+                format = ('{}{}'.format(endian,
                                     special_format)).encode('ascii',
                                                             'strict')
                 file.write(pack(format, getattr(self, name)))
@@ -1031,18 +1030,16 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
             hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
-            for tr in _internal_iread_segy(
+            yield from _internal_iread_segy(
                     open_file, endian=endian,
                     textual_header_encoding=textual_header_encoding,
-                    unpack_headers=unpack_headers, headonly=headonly):
-                yield tr
+                    unpack_headers=unpack_headers, headonly=headonly)
             return
     # Otherwise just read it.
-    for tr in _internal_iread_segy(
+    yield from _internal_iread_segy(
             file, endian=endian,
             textual_header_encoding=textual_header_encoding,
-            unpack_headers=unpack_headers, headonly=headonly):
-        yield tr
+            unpack_headers=unpack_headers, headonly=headonly)
 
 
 def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
@@ -1111,16 +1108,14 @@ def iread_su(file, endian=None, unpack_headers=False, headonly=False):
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
             hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
-            for tr in _internal_iread_su(
+            yield from _internal_iread_su(
                     open_file, endian=endian,
-                    unpack_headers=unpack_headers, headonly=headonly):
-                yield tr
+                    unpack_headers=unpack_headers, headonly=headonly)
             return
     # Otherwise just read it.
-    for tr in _internal_iread_su(
+    yield from _internal_iread_su(
             file, endian=endian,
-            unpack_headers=unpack_headers, headonly=headonly):
-        yield tr
+            unpack_headers=unpack_headers, headonly=headonly)
 
 
 def _internal_iread_su(file, endian=None, unpack_headers=False,
@@ -1145,7 +1140,7 @@ def _internal_iread_su(file, endian=None, unpack_headers=False,
         yield tr
 
 
-class SUFile(object):
+class SUFile:
     """
     Convenience class that internally handles Seismic Unix data files. It
     currently can only read IEEE 4 byte float encoded SU data files.

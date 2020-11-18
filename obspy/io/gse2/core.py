@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 GSE2/GSE1 bindings to ObsPy core module.
 """

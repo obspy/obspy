@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 MiniSEED specific utilities.
 """
@@ -552,12 +551,12 @@ def _decode_header_field(name, content):
         return content.decode("ascii", errors="strict")
     except UnicodeError:
         r = content.decode("ascii", errors="ignore")
-        msg = (u"Failed to decode {name} code as ASCII. "
-               u"Code in file: '{result}' (\ufffd indicates characters "
-               u"that could not be decoded). "
-               u"Will be interpreted as: '{f_result}'. "
-               u"This is an invalid MiniSEED file - please "
-               u"contact your data provider.")
+        msg = ("Failed to decode {name} code as ASCII. "
+               "Code in file: '{result}' (\ufffd indicates characters "
+               "that could not be decoded). "
+               "Will be interpreted as: '{f_result}'. "
+               "This is an invalid MiniSEED file - please "
+               "contact your data provider.")
         warnings.warn(msg.format(
             name=name,
             result=content.decode("ascii", errors="replace"),
@@ -1005,7 +1004,7 @@ def set_flags_in_fixed_headers(filename, flags):
     from .core import _is_mseed
     # Basic check
     if not os.path.isfile(filename) or not _is_mseed(filename):
-        raise IOError("File %s is not a valid MiniSEED file" % filename)
+        raise OSError("File %s is not a valid MiniSEED file" % filename)
     filesize = os.path.getsize(filename)
 
     # Nested dictionaries to allow empty strings as wildcards
@@ -1205,7 +1204,7 @@ def set_flags_in_fixed_headers(filename, flags):
 
             if reclen_pow is None:
                 msg = "Invalid MiniSEED file. No blockette 1000 was found."
-                raise IOError(msg)
+                raise OSError(msg)
             else:
                 reclen_pow = unpack("B", reclen_pow)[0]
                 reclen = 2**reclen_pow

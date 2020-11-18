@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Base utilities and constants for ObsPy.
 
@@ -115,7 +114,7 @@ class NamedTemporaryFile(io.BufferedIOBase):
         return self._fileobj.tell(*args, **kwargs)
 
     def close(self, *args, **kwargs):
-        super(NamedTemporaryFile, self).close(*args, **kwargs)
+        super().close(*args, **kwargs)
         self._fileobj.close()
 
     def __enter__(self):
@@ -417,7 +416,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             # search isFormat for given entry point
             is_format = buffered_load_entry_point(
                 format_ep.dist.key,
-                'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
+                f'obspy.plugin.{plugin_type}.{format_ep.name}',
                 'isFormat')
             # If it is a file-like object, store the position and restore it
             # later to avoid that the isFormat() functions move the file
@@ -447,7 +446,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         # search readFormat for given entry point
         read_format = buffered_load_entry_point(
             format_ep.dist.key,
-            'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
+            f'obspy.plugin.{plugin_type}.{format_ep.name}',
             'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
@@ -515,7 +514,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     mod_list = []
     for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
+        ep_list = [ep.dist.key, f"obspy.plugin.{group}.{name}", method]
         entry_info = str(get_entry_info(*ep_list))
         func_str = ':func:`%s`' % entry_info.split(' = ')[1].replace(':', '.')
         mod_list.append((name, module_short, func_str))
@@ -551,7 +550,7 @@ def _add_format_plugin_table(func, group, method, numspaces=4):
             group, method, numspaces=numspaces)
 
 
-class ComparingObject(object):
+class ComparingObject:
     """
     Simple base class that implements == and != based on self.__dict__
     """
@@ -568,7 +567,7 @@ def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
     """
     Specifies deprecated command-line arguments to scripts
     """
-    message = '%s has been deprecated. Please use %s in the future.' % (
+    message = '{} has been deprecated. Please use {} in the future.'.format(
         old_name, new_name
     )
 
@@ -637,7 +636,7 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
                 continue
             filename_or_buffer.write(chunk)
     else:
-        with io.open(filename_or_buffer, "wb") as fh:
+        with open(filename_or_buffer, "wb") as fh:
             for chunk in r.iter_content(chunk_size=chunk_size):
                 if not chunk:
                     continue
@@ -680,7 +679,7 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
             if glob.has_magic(pathname) and not glob.glob(pathname):
                 raise Exception("No file matching file pattern: %s" % pathname)
             elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
-                raise IOError(2, "No such file or directory", pathname)
+                raise OSError(2, "No such file or directory", pathname)
 
         generic = callback_func(pathnames[0], **kwargs)
         if len(pathnames) > 1:
@@ -716,10 +715,10 @@ class CatchAndAssertWarnings(warnings.catch_warnings):
         self.show_all = show_all
         # always record warnings, obviously..
         kwargs['record'] = True
-        super(CatchAndAssertWarnings, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def __enter__(self):
-        self.warnings = super(CatchAndAssertWarnings, self).__enter__()
+        self.warnings = super().__enter__()
         if self.registries_to_clear:
             for modulename in self.registries_to_clear:
                 self.clear_warning_registry(modulename)
@@ -730,7 +729,7 @@ class CatchAndAssertWarnings(warnings.catch_warnings):
         return self.warnings
 
     def __exit__(self, *exc_info):
-        super(CatchAndAssertWarnings, self).__exit__(self, *exc_info)
+        super().__exit__(self, *exc_info)
         # after cleanup, check expected warnings
         self._assert_warnings()
 

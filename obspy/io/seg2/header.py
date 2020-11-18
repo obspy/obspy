@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Headers for obspy.io.seg2.
 

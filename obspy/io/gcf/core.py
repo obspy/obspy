@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 GCF bindings to ObsPy core module.
 """

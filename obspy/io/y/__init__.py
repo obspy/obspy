@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.y - Nanometrics Y file read support for ObsPy
 ======================================================

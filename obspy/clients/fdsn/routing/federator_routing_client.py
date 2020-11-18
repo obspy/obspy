@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Routing client for the IRIS federator routing service.
 
@@ -102,7 +101,7 @@ class FederatorRoutingClient(BaseRoutingClient):
         `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
         for details.
         """
-        return super(FederatorRoutingClient, self).get_stations(**kwargs)
+        return super().get_stations(**kwargs)
 
     @_assert_filename_not_in_kwargs
     def get_stations_bulk(self, bulk, **kwargs):

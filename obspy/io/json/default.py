@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 JSON Encoder default function
 
@@ -23,7 +22,7 @@ from obspy.core.event import Catalog, ResourceIdentifier
 from obspy.core.util import AttribDict
 
 
-class Default(object):
+class Default:
     """
     Class to create a "default" function for the
     :py:func:`json.dump`/:py:func:`json.dumps` functions

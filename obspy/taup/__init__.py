@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.taup - Ray theoretical travel times and paths
 ===================================================

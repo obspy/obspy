@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Build a quality control HTML page.
 
@@ -131,24 +130,24 @@ def _latency_info_string(latency, only_days=False, pad=True):
     days, hours, minutes, seconds = _latency_to_tuple(latency)
     if days:
         if pad:
-            latency_string += '{:*>4d}d '.format(days)
+            latency_string += f'{days:*>4d}d '
         else:
-            latency_string += '{:d}d '.format(days)
+            latency_string += f'{days:d}d '
     elif pad:
         latency_string += '*' * 6
     if not only_days:
         if hours:
             if pad:
-                latency_string += '{:*>2d}h '.format(hours)
+                latency_string += f'{hours:*>2d}h '
             else:
-                latency_string += '{:d}h '.format(hours)
+                latency_string += f'{hours:d}h '
         elif pad:
             latency_string += '*' * 4
         if minutes:
             if pad:
-                latency_string += '{:*>2d}m'.format(minutes)
+                latency_string += f'{minutes:*>2d}m'
             else:
-                latency_string += '{:d}m'.format(minutes)
+                latency_string += f'{minutes:d}m'
         elif pad:
             latency_string += '*' * 3
     return latency_string
@@ -184,7 +183,7 @@ def _latency_line_html(latency_tuple, args, color=None, only_days=False,
         else:
             percentage_string = '*' * 6
         if gap_count > args.gaps_warn:
-            gap_count_string = "{:*>4d}#".format(gap_count)
+            gap_count_string = f"{gap_count:*>4d}#"
         else:
             gap_count_string = '*' * 5
     else:
@@ -351,7 +350,7 @@ def main(argv=None):
             msg = ("Update flag specified, but no output of previous full run "
                    "was present in the expected location (as determined by "
                    "``--output`` flag: {})").format(streams_file)
-            raise IOError(msg)
+            raise OSError(msg)
         # use existing list of streams and availability information, just
         # update latency
         nslc = np.loadtxt(streams_file, delimiter=",", dtype=dtype_streamfile)

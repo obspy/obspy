@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Classes related to instrument responses.
 
@@ -152,7 +151,7 @@ class ResponseStage(ComparingObject):
             gain=self.stage_gain if self.stage_gain is not None else "UNKNOWN",
             gain_freq=("%.2f" % self.stage_gain_frequency) if
             self.stage_gain_frequency is not None else "UNKNOWN",
-            name_desc="\t%s %s\n" % (
+            name_desc="\t{} {}\n".format(
                 self.name, "(%s)" % self.description
                 if self.description else "") if self.name else "",
             resource_id=("\tResource Id: %s" % self.resource_id
@@ -224,7 +223,7 @@ class PolesZerosResponseStage(ResponseStage):
         self.normalization_factor = float(normalization_factor)
         self.zeros = zeros
         self.poles = poles
-        super(PolesZerosResponseStage, self).__init__(
+        super().__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
             output_units=output_units,
@@ -241,7 +240,7 @@ class PolesZerosResponseStage(ResponseStage):
             decimation_correction=decimation_correction)
 
     def __str__(self):
-        ret = super(PolesZerosResponseStage, self).__str__()
+        ret = super().__str__()
         ret += (
             "\n"
             "\tTransfer function type: {transfer_fct_type}\n"
@@ -361,7 +360,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
         self.cf_transfer_function_type = cf_transfer_function_type
         self.numerator = numerator
         self.denominator = denominator
-        super(CoefficientsTypeResponseStage, self).__init__(
+        super().__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
             output_units=output_units,
@@ -378,7 +377,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             decimation_correction=decimation_correction)
 
     def __str__(self):
-        ret = super(CoefficientsTypeResponseStage, self).__str__()
+        ret = super().__str__()
         ret += (
             "\n"
             "\tTransfer function type: {transfer_fct_type}\n"
@@ -481,7 +480,7 @@ class ResponseListResponseStage(ResponseStage):
                  decimation_factor=None, decimation_offset=None,
                  decimation_delay=None, decimation_correction=None):
         self.response_list_elements = response_list_elements or []
-        super(ResponseListResponseStage, self).__init__(
+        super().__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
             output_units=output_units,
@@ -578,7 +577,7 @@ class FIRResponseStage(ResponseStage):
                  decimation_correction=None):
         self._symmetry = symmetry
         self.coefficients = coefficients or []
-        super(FIRResponseStage, self).__init__(
+        super().__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
             output_units=output_units,
@@ -673,7 +672,7 @@ class PolynomialResponseStage(ResponseStage):
         # XXX StationXML 1.1 does not allow stage gain in Polynomial response
         # stages. Maybe we should we warn here.. but this could get very
         # verbose when reading StationXML 1.0 files, so maybe not
-        super(PolynomialResponseStage, self).__init__(
+        super().__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
             output_units=output_units,
@@ -718,7 +717,7 @@ class PolynomialResponseStage(ResponseStage):
         self._coefficients = new_values
 
     def __str__(self):
-        ret = super(PolynomialResponseStage, self).__str__()
+        ret = super().__str__()
         ret += (
             "\n"
             "\tPolynomial approximation type: {approximation_type}\n"
@@ -1453,12 +1452,12 @@ class Response(ComparingObject):
             # complains again.
             if isinstance(blockette, PolesZerosResponseStage) and \
                     blockette.stage_gain and \
-                    None in set([
+                    None in {
                         blockette.decimation_correction,
                         blockette.decimation_delay,
                         blockette.decimation_factor,
                         blockette.decimation_input_sample_rate,
-                        blockette.decimation_offset]):
+                        blockette.decimation_offset}:
                 # Don't modify the original object.
                 blockette = copy.deepcopy(blockette)
                 blockette.decimation_correction = 0.0
@@ -1479,11 +1478,11 @@ class Response(ComparingObject):
                     blockette.decimation_input_sample_rate = 1.0
 
             # Parse the decimation if is given.
-            decimation_values = set([
+            decimation_values = {
                 blockette.decimation_correction,
                 blockette.decimation_delay, blockette.decimation_factor,
                 blockette.decimation_input_sample_rate,
-                blockette.decimation_offset])
+                blockette.decimation_offset}
             if None in decimation_values:
                 if len(decimation_values) != 1:
                     msg = ("If a decimation is given, all values must "
@@ -1968,10 +1967,10 @@ def paz_to_sacpz_string(paz, instrument_sensitivity):
     out = []
     out.append("ZEROS %i" % len(paz.zeros))
     for c in paz.zeros:
-        out.append(" %+.6e %+.6e" % (c.real, c.imag))
+        out.append(f" {c.real:+.6e} {c.imag:+.6e}")
     out.append("POLES %i" % len(paz.poles))
     for c in paz.poles:
-        out.append(" %+.6e %+.6e" % (c.real, c.imag))
+        out.append(f" {c.real:+.6e} {c.imag:+.6e}")
     constant = paz.normalization_factor * instrument_sensitivity.value
     out.append("CONSTANT %.6e" % constant)
     return "\n".join(out)
@@ -2176,7 +2175,7 @@ class FilterCoefficient(FloatWithUncertainties):
         :type number: int, optional
         :param number: Number to indicate the position of the coefficient.
         """
-        super(FilterCoefficient, self).__init__(value)
+        super().__init__(value)
         self.number = number
 
     @property
@@ -2206,7 +2205,7 @@ class CoefficientWithUncertainties(FloatWithUncertainties):
         :type upper_uncertainty: float
         :param upper_uncertainty: Upper uncertainty (aka plusError)
         """
-        super(CoefficientWithUncertainties, self).__init__(
+        super().__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty)
         self.number = number

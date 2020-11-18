@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.nied.knet - K-NET/KiK-net read support for ObsPy
 =========================================================

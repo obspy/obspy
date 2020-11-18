@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 The obspy.clients.fdsn.client test suite.
 
@@ -84,7 +83,7 @@ def failmsg(got, expected, ignore_lines=[]):
         else:
             return ""
     else:
-        return "\nGot:\n%s\nExpected:\n%s" % (str(got), str(expected))
+        return "\nGot:\n{}\nExpected:\n{}".format(str(got), str(expected))
 
 
 def normalize_version_number(string):
@@ -274,7 +273,7 @@ class ClientTestCase(unittest.TestCase):
         # where removed by this function!
         for service in ["station", "dataselect"]:
             for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
-                        u"", u" ", u"  ", u"--"]:
+                        "", " ", "  ", "--"]:
                 self.assertIn(
                     "location=--",
                     self.client._create_url_from_parameters(
@@ -283,7 +282,7 @@ class ClientTestCase(unittest.TestCase):
 
         # Also check the full call with a mock test.
         for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
-                    u"", u" ", u"  ", u"--"]:
+                    "", " ", "  ", "--"]:
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 self.client.get_stations(0, 0, location=loc,
                                          filename=mock.Mock())
@@ -356,26 +355,26 @@ class ClientTestCase(unittest.TestCase):
         """
         client = self.client
         self.assertEqual(set(client.services.keys()),
-                         set(("dataselect", "event", "station",
+                         {"dataselect", "event", "station",
                               "available_event_contributors",
-                              "available_event_catalogs")))
+                              "available_event_catalogs"})
 
         # The test sets are copied from the IRIS webpage.
         self.assertEqual(
             set(client.services["dataselect"].keys()),
-            set(("starttime", "endtime", "network", "station", "location",
-                 "channel", "quality", "minimumlength", "longestonly")))
+            {"starttime", "endtime", "network", "station", "location",
+                 "channel", "quality", "minimumlength", "longestonly"})
         self.assertEqual(
             set(client.services["station"].keys()),
-            set(("starttime", "endtime", "startbefore", "startafter",
+            {"starttime", "endtime", "startbefore", "startafter",
                  "endbefore", "endafter", "network", "station", "location",
                  "channel", "minlatitude", "maxlatitude", "minlongitude",
                  "maxlongitude", "latitude", "longitude", "minradius",
                  "maxradius", "level", "includerestricted", "format",
-                 "includeavailability", "updatedafter", "matchtimeseries")))
+                 "includeavailability", "updatedafter", "matchtimeseries"})
         self.assertEqual(
             set(client.services["event"].keys()),
-            set(("starttime", "endtime", "minlatitude", "maxlatitude",
+            {"starttime", "endtime", "minlatitude", "maxlatitude",
                  "minlongitude", "maxlongitude", "latitude", "longitude",
                  "maxradius", "minradius", "mindepth", "maxdepth",
                  "minmagnitude", "maxmagnitude",
@@ -385,7 +384,7 @@ class ClientTestCase(unittest.TestCase):
                  "includearrivals", "eventid",
                  "originid"  # XXX: This is currently just specified in the
                              #      WADL.
-                 )))
+                 })
 
         # Also check an exemplary value in more detail.
         minradius = client.services["event"]["minradius"]
@@ -403,7 +402,7 @@ class ClientTestCase(unittest.TestCase):
         Tests the parsing of the available event catalogs.
         """
         self.assertEqual(set(self.client.services["available_event_catalogs"]),
-                         set(("GCMT", "ISC", "NEIC PDE")))
+                         {"GCMT", "ISC", "NEIC PDE"})
 
     def test_iris_event_contributors_availability(self):
         """
@@ -445,9 +444,9 @@ class ClientTestCase(unittest.TestCase):
               <Catalog>UofW</Catalog>
               <Catalog>NEIC PDE</Catalog>
             </Catalogs>""")
-        self.assertEqual(catalogs, {"catalogs": set(("ANF", "GCMT", "TEST",
+        self.assertEqual(catalogs, {"catalogs": {"ANF", "GCMT", "TEST",
                                                      "ISC", "UofW",
-                                                     "NEIC PDE"))})
+                                                     "NEIC PDE"}})
 
     def test_iris_example_queries_event(self):
         """
@@ -518,7 +517,7 @@ class ClientTestCase(unittest.TestCase):
                 dist = locations2degrees(sta.latitude, sta.longitude,
                                          -56.1, -26.7)
                 # small tolerance for WGS84.
-                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
+                self.assertGreater(15.1, dist, "{}.{}".format(net.code,
                                                           sta.code))
 
         # Misc query.
@@ -530,7 +529,7 @@ class ClientTestCase(unittest.TestCase):
         for net in inv:
             self.assertGreater(len(net.stations), 0)  # at least one station
             for sta in net:
-                msg = "%s.%s" % (net.code, sta.code)
+                msg = f"{net.code}.{sta.code}"
                 self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
                                    msg)
                 if sta.end_date is not None:
@@ -706,7 +705,7 @@ class ClientTestCase(unittest.TestCase):
                 dist = locations2degrees(sta.latitude, sta.longitude,
                                          -56.1, -26.7)
                 # small tolerance for WGS84.
-                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
+                self.assertGreater(15.1, dist, "{}.{}".format(net.code,
                                                           sta.code))
 
         # Misc query.
@@ -718,7 +717,7 @@ class ClientTestCase(unittest.TestCase):
         for net in inv:
             self.assertGreater(len(net.stations), 0)  # at least one station
             for sta in net:
-                msg = "%s.%s" % (net.code, sta.code)
+                msg = f"{net.code}.{sta.code}"
                 self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
                                    msg)
                 if sta.end_date is not None:
@@ -1031,7 +1030,7 @@ class ClientTestCase(unittest.TestCase):
             channels = []
             for station in inv[0]:
                 for channel in station:
-                    channels.append("IU.%s.%s.%s" % (
+                    channels.append("IU.{}.{}.{}".format(
                         station.code, channel.location_code,
                         channel.code))
             self.assertEqual(
@@ -1460,7 +1459,7 @@ class ClientTestCase(unittest.TestCase):
                 # URL downloading comes before the error and can be checked now
                 url = m.call_args[0][0]
             url_parts = url.replace(url_base, '').split("&")
-            self.assertIn('{}='.format(key), url_parts)
+            self.assertIn(f'{key}=', url_parts)
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_no_data_exception(self, download_url_mock):

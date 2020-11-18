@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 
 from obspy.db.util import parse_mapping_data

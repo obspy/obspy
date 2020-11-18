@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Keyhole Markup Language (KML) output support in ObsPy
 

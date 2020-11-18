@@ -1,10 +1,9 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 import csv
 import os
 
 
-class FlinnEngdahl(object):
+class FlinnEngdahl:
     """
     Load data from asc files and allow to resolve coordinates or region numbers
     to Flinn Engdahl region names.
@@ -32,10 +31,10 @@ class FlinnEngdahl(object):
     def __init__(self):
         self.quads_index = []
 
-        with open(self.names_file, 'r') as fh:
+        with open(self.names_file) as fh:
             self.names = [name.strip() for name in fh]
 
-        with open(self.quadsindex_file, 'r') as fh:
+        with open(self.quadsindex_file) as fh:
             indexes = []
             for index in fh:
                 indexes += [n.strip() for n in index.split(' ') if n != '']
@@ -65,7 +64,7 @@ class FlinnEngdahl(object):
         self.fenums = {}
         for quad, sect_file in zip(self.quads_order, self.sect_files):
             sect = []
-            with open(sect_file, 'r') as fh:
+            with open(sect_file) as fh:
                 for line in fh:
                     sect += [int(v) for v in line.strip().split(' ')
                              if v != '']
@@ -83,7 +82,7 @@ class FlinnEngdahl(object):
             self.lons[quad] = lons
             self.fenums[quad] = fenums
 
-        with open(self.numbers_file, 'rt') as csvfile:
+        with open(self.numbers_file) as csvfile:
             fe_csv = csv.reader(csvfile, delimiter=';',
                                 quotechar='#',
                                 skipinitialspace=True)

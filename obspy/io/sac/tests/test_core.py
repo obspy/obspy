@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The sac.core test suite.
 """
@@ -706,7 +705,7 @@ class CoreTestCase(unittest.TestCase):
         """
         with io.StringIO() as buf:
             # Read file to BytesIO.
-            with open(self.filexy, "rt") as fh:
+            with open(self.filexy) as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
             self.assertRaises(ValueError, _is_sac_xy, buf)
@@ -725,7 +724,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Tests that the _is_sac_xy function for open files in text mode fails.
         """
-        with open(self.filexy, "rt") as fh:
+        with open(self.filexy) as fh:
             self.assertRaises(ValueError, _is_sac_xy, fh)
 
     def test_writing_to_file_like_objects_with_obspy(self):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 A command-line program that runs all ObsPy tests.
 
@@ -385,10 +384,10 @@ class _TextTestResult(unittest.TextTestResult):
 
     def startTest(self, test):  # noqa
         self.start = time.time()
-        super(_TextTestResult, self).startTest(test)
+        super().startTest(test)
 
     def stopTest(self, test):  # noqa
-        super(_TextTestResult, self).stopTest(test)
+        super().stopTest(test)
         self.timer.append((test, time.time() - self.start))
 
 
@@ -421,7 +420,7 @@ class _TextTestRunner(unittest.TextTestRunner):
     resultclass = _TextTestResult
 
     def __init__(self, timeit=False, *args, **kwargs):
-        super(_TextTestRunner, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.timeit = timeit
 
     def run(self, suites):
@@ -521,7 +520,7 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
     """
     if tests is None:
         tests = []
-    print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
+    print(f"Running {__file__}, ObsPy version '{obspy.__version__}'")
     if test_all_modules:
         tests = copy.copy(ALL_MODULES)
     elif not tests:
@@ -562,7 +561,7 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
     sorted_tests = sorted_tests[::-1]
 
     if slowest:
-        slowest_tests = ["%0.3fs: %s" % (dt, desc)
+        slowest_tests = [f"{dt:0.3f}s: {desc}"
                          for (desc, dt) in sorted_tests[:slowest]]
         print()
         print("Slowest Tests")

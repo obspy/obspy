@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.ah - AH (Ad Hoc) read support for ObsPy
 ================================================

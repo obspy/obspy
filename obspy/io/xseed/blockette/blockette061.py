@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop, VariableString
 from ..utils import lookup_code, format_resp

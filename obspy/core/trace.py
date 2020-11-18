@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module for handling ObsPy Trace objects.
 
@@ -167,7 +166,7 @@ class Stats(AttribDict):
     def __init__(self, header={}):
         """
         """
-        super(Stats, self).__init__(header)
+        super().__init__(header)
 
     def __setitem__(self, key, value):
         """
@@ -188,7 +187,7 @@ class Stats(AttribDict):
                 if not isinstance(value, int):
                     value = int(value)
             # set current key
-            super(Stats, self).__setitem__(key, value)
+            super().__setitem__(key, value)
             # set derived value: delta
             try:
                 delta = 1.0 / float(self.sampling_rate)
@@ -215,9 +214,9 @@ class Stats(AttribDict):
             warnings.warn(msg, UserWarning)
         # all other keys
         if isinstance(value, dict):
-            super(Stats, self).__setitem__(key, AttribDict(value))
+            super().__setitem__(key, AttribDict(value))
         else:
-            super(Stats, self).__setitem__(key, value)
+            super().__setitem__(key, value)
 
     __setattr__ = __setitem__
 
@@ -225,9 +224,9 @@ class Stats(AttribDict):
         """
         """
         if key == 'component':
-            return super(Stats, self).__getitem__('channel', default)[-1:]
+            return super().__getitem__('channel', default)[-1:]
         else:
-            return super(Stats, self).__getitem__(key, default)
+            return super().__getitem__(key, default)
 
     def __str__(self):
         """
@@ -269,11 +268,11 @@ def _add_processing_info(func, *args, **kwargs):
         function=func.__name__)
     arguments = []
     arguments += \
-        ["%s=%s" % (k, repr(v)) if not isinstance(v, str) else
-         "%s='%s'" % (k, v) for k, v in callargs.items()]
+        ["{}={}".format(k, repr(v)) if not isinstance(v, str) else
+         f"{k}='{v}'" for k, v in callargs.items()]
     arguments += \
-        ["%s=%s" % (k, repr(v)) if not isinstance(v, str) else
-         "%s='%s'" % (k, v) for k, v in kwargs_.items()]
+        ["{}={}".format(k, repr(v)) if not isinstance(v, str) else
+         f"{k}='{v}'" for k, v in kwargs_.items()]
     arguments.sort()
     info = info % "::".join(arguments)
     self = args[0]
@@ -284,7 +283,7 @@ def _add_processing_info(func, *args, **kwargs):
     return result
 
 
-class Trace(object):
+class Trace:
     """
     An object containing data of a continuous series, such as a seismic trace.
 
@@ -336,7 +335,7 @@ class Trace(object):
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
         # set data without changing npts in stats object (for headonly option)
-        super(Trace, self).__setattr__('data', data)
+        super().__setattr__('data', data)
 
     @property
     def meta(self):
@@ -480,7 +479,7 @@ class Trace(object):
             if self._always_contiguous:
                 value = np.require(value, requirements=['C_CONTIGUOUS'])
             self.stats.npts = len(value)
-        return super(Trace, self).__setattr__(key, value)
+        return super().__setattr__(key, value)
 
     def __getitem__(self, index):
         """
@@ -1749,7 +1748,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=np.int32)
         n_large_f = num // 2 + 1
         large_f = d_large_f * np.arange(0, n_large_f, dtype=np.int32)
-        large_y = np.zeros((2 * n_large_f))
+        large_y = np.zeros(2 * n_large_f)
         large_y[::2] = np.interp(large_f, f, x_r)
         large_y[1::2] = np.interp(large_f, f, x_i)
 
@@ -2566,7 +2565,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             time_array = (
                 date2num(self.stats.starttime.datetime) + time_array / 86400.0)
         else:
-            msg = "Invalid `type`: {}".format(type)
+            msg = f"Invalid `type`: {type}"
             raise ValueError(msg)
         # Check if the data is a ma.maskedarray
         if isinstance(self.data, np.ma.masked_array):
@@ -2851,7 +2850,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             ax1b.set_ylabel("'pre_filt' taper fraction", bbox=bbox2)
             evalresp_info = "\n".join(
                 ['output: %s' % output] +
-                ['%s: %s' % (key, value) for key, value in kwargs.items()])
+                [f'{key}: {value}' for key, value in kwargs.items()])
             ax2.text(0.05, 0.1, evalresp_info, ha="left",
                      va="bottom", transform=ax2.transAxes,
                      fontsize="large", zorder=5, bbox=bbox)

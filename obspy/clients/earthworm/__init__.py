@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.earthworm - Earthworm Wave Server client for ObsPy.
 =================================================================

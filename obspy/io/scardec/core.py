@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SCARDEC file format support for ObsPy.
 These files contain source solutions calculated at IPGP using the
@@ -33,7 +32,7 @@ def _get_resource_id(scardecname, res_type, tag=None):
     """
     Helper function to create consistent resource ids.
     """
-    res_id = "smi:local/scardec/%s/%s" % (scardecname, res_type)
+    res_id = f"smi:local/scardec/{scardecname}/{res_type}"
     if tag is not None:
         res_id += "#" + tag
     return res_id

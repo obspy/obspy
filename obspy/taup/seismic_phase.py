@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Objects and functions dealing with seismic phases.
 """
@@ -39,7 +38,7 @@ _ACTIONS = Enum([
 ])
 
 
-class SeismicPhase(object):
+class SeismicPhase:
     """
     Stores and transforms seismic phase names to and from their
     corresponding sequence of branches. Will maybe contain "expert" mode
@@ -417,13 +416,13 @@ class SeismicPhase(object):
                         self.add_to_branch(
                             tau_model, self.current_branch, discon_branch,
                             is_p_wave, end_action)
-                    elif ((prev_leg[0] == "v" and
+                    elif (prev_leg[0] == "v" and
                             discon_branch < closest_branch_to_depth(
                                 tau_model, prev_leg[1:]) or
                            (prev_leg == "m" and
                                discon_branch < tau_model.moho_branch) or
                            (prev_leg == "c" and
-                               discon_branch < tau_model.cmb_branch))):
+                               discon_branch < tau_model.cmb_branch)):
                         end_action = _ACTIONS["reflect_underside"]
                         self.add_to_branch(
                             tau_model, self.current_branch, discon_branch,
@@ -719,7 +718,7 @@ class SeismicPhase(object):
                 tau_model.get_tau_branch(from_branch + 1,
                                          not is_p_to_s).max_ray_param)
         else:
-            raise TauModelError("Illegal end_action = {}".format(end_action))
+            raise TauModelError(f"Illegal end_action = {end_action}")
 
     def add_to_branch(self, tau_model, start_branch, end_branch, is_p_wave,
                       end_action):
@@ -767,7 +766,7 @@ class SeismicPhase(object):
                 self.max_ray_param,
                 tau_model.get_tau_branch(end_branch, is_p_wave).min_ray_param)
         else:
-            raise TauModelError("Illegal end_action: {}".format(end_action))
+            raise TauModelError(f"Illegal end_action: {end_action}")
 
         if is_down_going:
             if start_branch > end_branch:

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 A command-line program that indexes seismogram files into a database.
 
@@ -62,7 +61,7 @@ class MyHandler(http_server.BaseHTTPRequestHandler):
 """
         out += '<table>'
         for key, value in sorted(self.server.options.__dict__.items()):
-            out += "<tr><th>%s</th><td>%s</td></tr>" % (key, value)
+            out += f"<tr><th>{key}</th><td>{value}</td></tr>"
         if self.server.mappings:
             out += "<tr><th>mapping rules</th><td>%s</td></tr>" % \
                    (self.server.mappings)
@@ -100,7 +99,7 @@ class WaveformIndexer(http_server.HTTPServer, WaveformFileCrawler):
 
 
 def _run_indexer(options):
-    logging.info("Starting indexer %s:%s ..." % (options.host, options.port))
+    logging.info(f"Starting indexer {options.host}:{options.port} ...")
     # initialize crawler
     service = WaveformIndexer((options.host, options.port), MyHandler)
     service.log = logging
@@ -115,7 +114,7 @@ def _run_indexer(options):
             return
         # prepare map file
         if options.mapping_file:
-            with open(options.mapping_file, 'r') as f:
+            with open(options.mapping_file) as f:
                 data = f.readlines()
             mappings = parse_mapping_data(data)
             logging.info("Parsed %d lines from mapping file %s" %

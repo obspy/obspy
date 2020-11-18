@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Provides the Inventory class.
 
@@ -266,10 +265,10 @@ class Inventory(ComparingObject):
             module_uri = self.module_uri
             if module_uri and len(module_uri) > 70:
                 module_uri = textwrap.wrap(module_uri, width=67)[0] + "..."
-            ret_str += ("\tCreated by: %s%s\n" % (
+            ret_str += ("\tCreated by: {}{}\n".format(
                 self.module,
                 "\n\t\t    %s" % (module_uri if module_uri else "")))
-        ret_str += "\tSending institution: %s%s\n" % (
+        ret_str += "\tSending institution: {}{}\n".format(
             self.source, " (%s)" % self.sender if self.sender else "")
         contents = self.get_contents()
         ret_str += "\tContains:\n"
@@ -967,10 +966,10 @@ class Inventory(ComparingObject):
 
         if color_per_network and not isinstance(color_per_network, dict):
             from matplotlib.cm import get_cmap
-            codes = set([n.code for n in inv])
+            codes = {n.code for n in inv}
             cmap = get_cmap(name=colormap, lut=len(codes))
-            color_per_network = dict([(code, cmap(i))
-                                      for i, code in enumerate(sorted(codes))])
+            color_per_network = {code: cmap(i)
+                                      for i, code in enumerate(sorted(codes))}
 
         for net in inv:
             for sta in net:

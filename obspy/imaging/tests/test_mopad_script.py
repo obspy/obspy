@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy-mopad script test suite.
 """
@@ -143,7 +142,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         expected = os.path.join(self.path, exp_file)
 
         # Test headers
-        with open(expected, 'rt') as expf:
+        with open(expected) as expf:
             bio = out.stdout
             # expf.read().splitlines() differs to expf.readlines() ?!?!?!
             for exp_line, out_line in zip_longest(expf.read().splitlines(),

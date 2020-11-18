@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Non-geographical restrictions and constraints for the mass downloader.
 
@@ -14,7 +13,7 @@ from obspy.core.compatibility import collections_abc
 import obspy
 
 
-class Restrictions(object):
+class Restrictions:
     """
     Class storing non-domain restrictions for a query. This is best explained
     with two examples. See the list below for a more detailed explanation

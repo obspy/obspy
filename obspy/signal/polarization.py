@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Functions for polarization analysis.
 
@@ -419,8 +418,8 @@ def _get_s_point(stream, stime, etime):
         msg = "Specified end time is after earliest end time in stream"
         raise ValueError(msg)
     for i in range(nostat):
-        offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
-        negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
+        offset = int((stime - slatest) / stream[i].stats.delta + 1.)
+        negoffset = int((eearliest - etime) / stream[i].stats.delta + 1.)
         diffstart = slatest - stream[i].stats.starttime
         frac, _ = math.modf(diffstart)
         spoint[i] = int(diffstart)

@@ -179,7 +179,7 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
         Compare with http://www.seismic-handler.org/wiki/ShmDocFileEvt
     """
     seed_map = _seed_id_map(inventory, id_map)
-    with io.open(filename, 'r', encoding=encoding) as f:
+    with open(filename, 'r', encoding=encoding) as f:
         temp = f.read()
     # first create phases and phases_o dictionaries for different phases
     # and phases with origin information

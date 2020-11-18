@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 
 from .blockette import Blockette
@@ -77,7 +76,7 @@ class Blockette062(Blockette):
             '#\t\t+              +-----------------------' + \
             '----------------+                      +\n' + \
             '#\t\t+              |   Polynomial response,' + \
-            '%6s ch %s   |                      +\n' % (station, channel) + \
+            f'{station:>6} ch {channel}   |                      +\n' + \
             '#\t\t+              +-----------------------' + \
             '----------------+                      +\n' + \
             '#\t\t\n' + \

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Optional feature generators for ObsPy Trace objects.
 
@@ -11,7 +10,7 @@ Optional feature generators for ObsPy Trace objects.
 from obspy.core.util import score_at_percentile
 
 
-class BandpassPreviewFeature(object):
+class BandpassPreviewFeature:
     """
     Bandpass filter (freqmin=0.1, freqmax=20.0) all trace previews.
     """
@@ -26,7 +25,7 @@ class BandpassPreviewFeature(object):
         return {}
 
 
-class MinMaxAmplitudeFeature(object):
+class MinMaxAmplitudeFeature:
     """
     Generates statistics about the amplitude values.
     """

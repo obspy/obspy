@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # ----------------------------------------------------------------------
 # Filename: _sosfilt.py
 #  Purpose: Backport of Second-Order Section Filtering from SciPy 0.16.0

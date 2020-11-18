@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -129,18 +128,18 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         self.assertEqual(len(st), 12)
         # Test initialization.
         self.assertEqual(p.call_count, 4)
-        self.assertEqual(set(_i[0][0] for _i in p.call_args_list),
+        self.assertEqual({_i[0][0] for _i in p.call_args_list},
                          set(split.keys()))
-        self.assertEqual(set(_i[1]["debug"] for _i in p.call_args_list),
-                         set([False]))
-        self.assertEqual(set(_i[1]["timeout"] for _i in p.call_args_list),
-                         set([240]))
+        self.assertEqual({_i[1]["debug"] for _i in p.call_args_list},
+                         {False})
+        self.assertEqual({_i[1]["timeout"] for _i in p.call_args_list},
+                         {240})
 
         # Waveform download.
         wf_bulk = mock_instance.get_waveforms_bulk
         self.assertEqual(wf_bulk.call_count, 4)
-        self.assertEqual(set(_i[0][0] for _i in wf_bulk.call_args_list),
-                         set(["test1=a\n1234"]))
+        self.assertEqual({_i[0][0] for _i in wf_bulk.call_args_list},
+                         {"test1=a\n1234"})
         for _i in wf_bulk.call_args_list:
             self.assertEqual(_i[1], {})
 
@@ -185,18 +184,18 @@ class BaseRoutingClientTestCase(unittest.TestCase):
 
         # Test initialization.
         self.assertEqual(p.call_count, 4)
-        self.assertEqual(set(_i[0][0] for _i in p.call_args_list),
+        self.assertEqual({_i[0][0] for _i in p.call_args_list},
                          set(split.keys()))
-        self.assertEqual(set(_i[1]["debug"] for _i in p.call_args_list),
-                         set([False]))
-        self.assertEqual(set(_i[1]["timeout"] for _i in p.call_args_list),
-                         set([240]))
+        self.assertEqual({_i[1]["debug"] for _i in p.call_args_list},
+                         {False})
+        self.assertEqual({_i[1]["timeout"] for _i in p.call_args_list},
+                         {240})
 
         # Station download.
         wf_bulk = mock_instance.get_stations_bulk
         self.assertEqual(wf_bulk.call_count, 4)
-        self.assertEqual(set(_i[0][0] for _i in wf_bulk.call_args_list),
-                         set(["test1=a\n1234"]))
+        self.assertEqual({_i[0][0] for _i in wf_bulk.call_args_list},
+                         {"test1=a\n1234"})
         for _i in wf_bulk.call_args_list:
             self.assertEqual(_i[1], {})
 

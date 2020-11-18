@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 import os
 import pickle
@@ -454,8 +453,8 @@ class CatalogTestCase(unittest.TestCase):
                   1., 50, 40, 20)
         for attr, value in zip(attrs, values):
             attr_filter = attr.split('.')[-1]
-            cat_smaller = cat.filter('%s < %s' % (attr_filter, value))
-            cat_bigger = cat.filter('%s >= %s' % (attr_filter, value))
+            cat_smaller = cat.filter(f'{attr_filter} < {value}')
+            cat_bigger = cat.filter(f'{attr_filter} >= {value}')
             self.assertTrue(all(True if a is None else a < value
                                 for event in cat_smaller
                                 for a in [getattrs(event, attr)]))
@@ -465,11 +464,11 @@ class CatalogTestCase(unittest.TestCase):
             self.assertTrue(all(event in cat
                                 for event in (cat_smaller + cat_bigger)))
             cat_smaller_inverse = cat.filter(
-                '%s < %s' % (attr_filter, value), inverse=True)
+                f'{attr_filter} < {value}', inverse=True)
             self.assertTrue(all(event in cat_bigger
                                 for event in cat_smaller_inverse))
             cat_bigger_inverse = cat.filter(
-                '%s >= %s' % (attr_filter, value), inverse=True)
+                f'{attr_filter} >= {value}', inverse=True)
             self.assertTrue(all(event in cat_smaller
                                 for event in cat_bigger_inverse))
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Test suite for the inventory class.
 
@@ -115,10 +114,10 @@ class InventoryTestCase(unittest.TestCase):
         """
         Test extracting coordinates
         """
-        expected = {u'latitude': 47.737166999999999,
-                    u'longitude': 12.795714,
-                    u'elevation': 860.0,
-                    u'local_depth': 0.0}
+        expected = {'latitude': 47.737166999999999,
+                    'longitude': 12.795714,
+                    'elevation': 860.0,
+                    'local_depth': 0.0}
         channels = [Channel(code='EHZ',
                             location_code='',
                             start_date=UTCDateTime('2007-01-01'),
@@ -147,8 +146,8 @@ class InventoryTestCase(unittest.TestCase):
         """
         Test extracting orientation
         """
-        expected = {u'azimuth': 90.0,
-                    u'dip': 0.0}
+        expected = {'azimuth': 90.0,
+                    'dip': 0.0}
         channels = [Channel(code='EHZ',
                             location_code='',
                             start_date=UTCDateTime('2007-01-01'),
@@ -522,44 +521,44 @@ class InventoryTestCase(unittest.TestCase):
         Tests helper routine that compresses inventory content lists.
         """
         contents = (
-            [u'IU.ULN (Ulaanbaatar, Mongolia)',
-             u'IU.ULN (Ulaanbaatar, Mongolia)',
-             u'IU.ULN (Ulaanbaatar, Mongolia)'],
-            [u'IU.ULN.00.BH1', u'IU.ULN.00.BH2', u'IU.ULN.00.BHE',
-             u'IU.ULN.00.BHE', u'IU.ULN.00.BHE', u'IU.ULN.00.BHE',
-             u'IU.ULN.00.BHN', u'IU.ULN.00.BHN', u'IU.ULN.00.BHN',
-             u'IU.ULN.00.BHN', u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ',
-             u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ',
-             u'IU.ULN.00.LH1', u'IU.ULN.00.LH2', u'IU.ULN.00.LHE',
-             u'IU.ULN.00.LHE', u'IU.ULN.00.LHE', u'IU.ULN.00.LHE',
-             u'IU.ULN.00.LHN', u'IU.ULN.00.LHN', u'IU.ULN.00.LHN',
-             u'IU.ULN.00.LHN', u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ',
-             u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ',
-             u'IU.ULN.00.UHE', u'IU.ULN.00.UHE', u'IU.ULN.00.UHN',
-             u'IU.ULN.00.UHN', u'IU.ULN.00.UHZ', u'IU.ULN.00.UHZ',
-             u'IU.ULN.00.VE1', u'IU.ULN.00.VE1', u'IU.ULN.00.VH1',
-             u'IU.ULN.00.VH2', u'IU.ULN.00.VHE', u'IU.ULN.00.VHE',
-             u'IU.ULN.00.VHE', u'IU.ULN.00.VHE', u'IU.ULN.00.VHN',
-             u'IU.ULN.00.VHN', u'IU.ULN.00.VHN', u'IU.ULN.00.VHN',
-             u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ',
-             u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ', u'IU.ULN.00.VK1',
-             u'IU.ULN.00.VK1', u'IU.ULN.00.VM1', u'IU.ULN.00.VM2',
-             u'IU.ULN.00.VME', u'IU.ULN.00.VME', u'IU.ULN.00.VMN',
-             u'IU.ULN.00.VMN', u'IU.ULN.00.VMZ', u'IU.ULN.00.VMZ',
-             u'IU.ULN.00.VMZ'])
+            ['IU.ULN (Ulaanbaatar, Mongolia)',
+             'IU.ULN (Ulaanbaatar, Mongolia)',
+             'IU.ULN (Ulaanbaatar, Mongolia)'],
+            ['IU.ULN.00.BH1', 'IU.ULN.00.BH2', 'IU.ULN.00.BHE',
+             'IU.ULN.00.BHE', 'IU.ULN.00.BHE', 'IU.ULN.00.BHE',
+             'IU.ULN.00.BHN', 'IU.ULN.00.BHN', 'IU.ULN.00.BHN',
+             'IU.ULN.00.BHN', 'IU.ULN.00.BHZ', 'IU.ULN.00.BHZ',
+             'IU.ULN.00.BHZ', 'IU.ULN.00.BHZ', 'IU.ULN.00.BHZ',
+             'IU.ULN.00.LH1', 'IU.ULN.00.LH2', 'IU.ULN.00.LHE',
+             'IU.ULN.00.LHE', 'IU.ULN.00.LHE', 'IU.ULN.00.LHE',
+             'IU.ULN.00.LHN', 'IU.ULN.00.LHN', 'IU.ULN.00.LHN',
+             'IU.ULN.00.LHN', 'IU.ULN.00.LHZ', 'IU.ULN.00.LHZ',
+             'IU.ULN.00.LHZ', 'IU.ULN.00.LHZ', 'IU.ULN.00.LHZ',
+             'IU.ULN.00.UHE', 'IU.ULN.00.UHE', 'IU.ULN.00.UHN',
+             'IU.ULN.00.UHN', 'IU.ULN.00.UHZ', 'IU.ULN.00.UHZ',
+             'IU.ULN.00.VE1', 'IU.ULN.00.VE1', 'IU.ULN.00.VH1',
+             'IU.ULN.00.VH2', 'IU.ULN.00.VHE', 'IU.ULN.00.VHE',
+             'IU.ULN.00.VHE', 'IU.ULN.00.VHE', 'IU.ULN.00.VHN',
+             'IU.ULN.00.VHN', 'IU.ULN.00.VHN', 'IU.ULN.00.VHN',
+             'IU.ULN.00.VHZ', 'IU.ULN.00.VHZ', 'IU.ULN.00.VHZ',
+             'IU.ULN.00.VHZ', 'IU.ULN.00.VHZ', 'IU.ULN.00.VK1',
+             'IU.ULN.00.VK1', 'IU.ULN.00.VM1', 'IU.ULN.00.VM2',
+             'IU.ULN.00.VME', 'IU.ULN.00.VME', 'IU.ULN.00.VMN',
+             'IU.ULN.00.VMN', 'IU.ULN.00.VMZ', 'IU.ULN.00.VMZ',
+             'IU.ULN.00.VMZ'])
         expected = (
-            [u'IU.ULN (Ulaanbaatar, Mongolia) (3x)'],
-            [u'IU.ULN.00.BHZ (5x)', u'IU.ULN.00.BHN (4x)',
-             u'IU.ULN.00.BHE (4x)', u'IU.ULN.00.BH1', u'IU.ULN.00.BH2',
-             u'IU.ULN.00.LHZ (5x)', u'IU.ULN.00.LHN (4x)',
-             u'IU.ULN.00.LHE (4x)', u'IU.ULN.00.LH1', u'IU.ULN.00.LH2',
-             u'IU.ULN.00.UHZ (2x)', u'IU.ULN.00.UHN (2x)',
-             u'IU.ULN.00.UHE (2x)', u'IU.ULN.00.VE1 (2x)',
-             u'IU.ULN.00.VHZ (5x)', u'IU.ULN.00.VHN (4x)',
-             u'IU.ULN.00.VHE (4x)', u'IU.ULN.00.VH1', u'IU.ULN.00.VH2',
-             u'IU.ULN.00.VK1 (2x)', u'IU.ULN.00.VMZ (3x)',
-             u'IU.ULN.00.VMN (2x)', u'IU.ULN.00.VME (2x)', u'IU.ULN.00.VM1',
-             u'IU.ULN.00.VM2'])
+            ['IU.ULN (Ulaanbaatar, Mongolia) (3x)'],
+            ['IU.ULN.00.BHZ (5x)', 'IU.ULN.00.BHN (4x)',
+             'IU.ULN.00.BHE (4x)', 'IU.ULN.00.BH1', 'IU.ULN.00.BH2',
+             'IU.ULN.00.LHZ (5x)', 'IU.ULN.00.LHN (4x)',
+             'IU.ULN.00.LHE (4x)', 'IU.ULN.00.LH1', 'IU.ULN.00.LH2',
+             'IU.ULN.00.UHZ (2x)', 'IU.ULN.00.UHN (2x)',
+             'IU.ULN.00.UHE (2x)', 'IU.ULN.00.VE1 (2x)',
+             'IU.ULN.00.VHZ (5x)', 'IU.ULN.00.VHN (4x)',
+             'IU.ULN.00.VHE (4x)', 'IU.ULN.00.VH1', 'IU.ULN.00.VH2',
+             'IU.ULN.00.VK1 (2x)', 'IU.ULN.00.VMZ (3x)',
+             'IU.ULN.00.VMN (2x)', 'IU.ULN.00.VME (2x)', 'IU.ULN.00.VM1',
+             'IU.ULN.00.VM2'])
         for contents_, expected_ in zip(contents, expected):
             self.assertEqual(expected_, _unified_content_strings(contents_))
 
@@ -572,14 +571,14 @@ class InventoryTestCase(unittest.TestCase):
         contents = (
             ['II.ABKT (Alibek, Turkmenistan)',
              'II.ALE (Alert, N.W.T., Canada)'],
-            [u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
-             u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
-             u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)'],
+            ['IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
+             'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
+             'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)'],
         )
         expected = (
             ['II.ABKT (Alibek, Turkmenistan)',
              'II.ALE (Alert, N.W.T., Canada)'],
-            [u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia) (3x)'],
+            ['IU.ULN (Ulaanbaatar, A.B.C., Mongolia) (3x)'],
         )
         for contents_, expected_ in zip(contents, expected):
             self.assertEqual(expected_, _unified_content_strings(contents_))

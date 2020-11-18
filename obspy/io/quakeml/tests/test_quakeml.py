@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 import math
 import os
@@ -33,7 +32,7 @@ def assert_no_extras(obj, verbose=False):
     """
     assert getattr(obj, 'extra', None) is None
     if verbose:
-        print('no extras in {!s}'.format(obj))
+        print(f'no extras in {obj!s}')
     if isinstance(obj, Catalog):
         for event in obj:
             assert_no_extras(event, verbose=verbose)
@@ -143,7 +142,7 @@ class QuakeMLTestCase(unittest.TestCase):
             UTCDateTime("2012-04-04T16:40:50+00:00"))
         self.assertEqual(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename) as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -246,7 +245,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c.semi_major_axis_length, 0.123)
         self.assertEqual(c.major_axis_azimuth, 4.123)
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename) as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -292,7 +291,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(mag.creation_info.creation_time, None)
         self.assertEqual(mag.creation_info.version, None)
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename) as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -327,7 +326,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(stat_contrib.residual, 0.)
 
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename) as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -366,7 +365,7 @@ class QuakeMLTestCase(unittest.TestCase):
                              resource_uri="smi:ch.ethz.sed/waveform/201754"))
         self.assertEqual(mag.creation_info, None)
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename) as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -409,7 +408,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(du[2].shortest_period, 125.0)
 
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename) as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -446,7 +445,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(ar.comments), 1)
         self.assertEqual(ar.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename) as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -485,7 +484,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(pick.comments), 2)
         self.assertEqual(pick.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename) as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -985,9 +984,9 @@ class QuakeMLTestCase(unittest.TestCase):
         def _tostr(x):
             if isinstance(x, bool):
                 if x:
-                    return str('true')
+                    return 'true'
                 else:
-                    return str('false')
+                    return 'false'
             elif isinstance(x, AttribDict):
                 for key, value in x.items():
                     x[key].value = _tostr(value['value'])
@@ -1179,10 +1178,10 @@ class QuakeMLTestCase(unittest.TestCase):
         properly.
         """
         custom1 = {
-            'value': u'11111',
+            'value': '11111',
             'namespace': 'http://quakeml.org/xmlns/bed/9.99'}
         custom2 = {
-            'value': u'22222',
+            'value': '22222',
             'namespace': 'http://quakeml.org/xmlns/quakeml/8.87'}
         extra = {'custom1': custom1, 'custom2': custom2}
 

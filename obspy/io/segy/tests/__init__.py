@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 
 from obspy.core.util import add_doctests, add_unittests
@@ -19,7 +18,7 @@ def _patch_header(header, ebcdic=False):
         end_header = "C40 END EBCDIC        ".encode("EBCDIC-CP-BE")
     else:
         revnum = revnum.encode("ascii")
-        end_header = "C40 END TEXTUAL HEADER".encode("ascii")
+        end_header = b"C40 END TEXTUAL HEADER"
 
     header = header[:3200-160] + revnum + header[3200-146:]
     header = header[:3200-80] + end_header + header[3200-58:]

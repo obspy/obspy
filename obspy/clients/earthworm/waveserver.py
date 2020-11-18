@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Low-level Earthworm Wave Server tools.
 
@@ -48,7 +47,7 @@ def get_numpy_type(tpstr):
     return tp
 
 
-class TraceBuf2(object):
+class TraceBuf2:
     """
     """
     byteswap = False
@@ -206,7 +205,7 @@ def get_menu(server, port, scnl=None, timeout=None):
     rid = 'get_menu'
     if scnl:
         # only works on regular waveservers (not winston)
-        getstr = 'MENUSCNL: %s %s %s %s %s\n' % (
+        getstr = 'MENUSCNL: {} {} {} {} {}\n'.format(
             rid, scnl[0], scnl[1], scnl[2], scnl[3])
     else:
         # added SCNL not documented but required
@@ -255,7 +254,7 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None,
     """
     rid = 'rwserv'
     scnlstr = '%s %s %s %s' % scnl
-    reqstr = 'GETSCNLRAW: %s %s %f %f\n' % (rid, scnlstr, start, end)
+    reqstr = f'GETSCNLRAW: {rid} {scnlstr} {start:f} {end:f}\n'
     sock = send_sock_req(server, port, reqstr.encode('ascii', 'strict'),
                          timeout=timeout)
     r = get_sock_char_line(sock, timeout=timeout)

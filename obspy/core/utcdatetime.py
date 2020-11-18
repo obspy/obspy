@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module containing a UTC-based datetime class.
 
@@ -62,7 +61,7 @@ YJHMS = ('year', 'julday', 'hour', 'minute', 'second')
 YMDHMS_FORMAT = "%04d-%02d-%02dT%02d:%02d:%02d"
 
 
-class UTCDateTime(object):
+class UTCDateTime:
     """
     A UTC-based datetime object.
 
@@ -1031,7 +1030,7 @@ class UTCDateTime(object):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
                      86400) * 10**6) / 1e6
-        return UTCDateTime(ns=self._ns - int(round((value * 1e9))))
+        return UTCDateTime(ns=self._ns - int(round(value * 1e9)))
 
     def __str__(self):
         """
@@ -1264,7 +1263,7 @@ class UTCDateTime(object):
             warnings.warn(msg, ObsPyDeprecationWarning)
             # only issue the warning once per object
             self.__dict__['_has_warned'] = True
-        super(UTCDateTime, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     def strftime(self, format):
         """
@@ -1317,7 +1316,7 @@ class UTCDateTime(object):
             if strftime_key not in strftime_string:
                 continue
             strftime_string = strftime_string.replace(
-                strftime_key, '{%s:%s}' % (property_name, format_spec))
+                strftime_key, f'{{{property_name}:{format_spec}}}')
             replacement = getattr(self, property_name)
             if func is not None:
                 replacement = func(replacement)

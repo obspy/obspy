@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import glob
 import inspect
 import os
@@ -75,7 +74,7 @@ class UtilsTestCase(unittest.TestCase):
             expected = os.path.basename(filename) in resp_filenames
             self.assertEqual(
                 got, expected,
-                "_is_resp() returns %s for file %s" % (got, filename))
+                f"_is_resp() returns {got} for file {filename}")
 
 
 def suite():

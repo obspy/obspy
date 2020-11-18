@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Helpers for the mass downloader.
 
@@ -35,7 +34,7 @@ STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists",
                "download_partially_failed"])
 
 
-class _SlotsEqualityComparisionObject(object):
+class _SlotsEqualityComparisionObject:
     """
     Helper object with an equality comparision method simply comparing all
     slotted attributes.
@@ -133,7 +132,7 @@ class Station(_SlotsEqualityComparisionObject):
                 if ti.status != STATUS.DOWNLOADED or not ti.filename:
                     continue
                 if os.path.exists(ti.filename):
-                    logger.info("Deleting MiniSEED file '%s'. Reason: %s" % (
+                    logger.info("Deleting MiniSEED file '{}'. Reason: {}".format(
                         ti.filename, reason))
                     utils.safe_delete(ti.filename)
 
@@ -192,11 +191,11 @@ class Station(_SlotsEqualityComparisionObject):
             filename=self.stationxml_filename,
             status="exists" if (self.stationxml_filename and os.path.exists(
                 self.stationxml_filename)) else "does not yet exist",
-            want=", ".join(["%s.%s" % (_i[0], _i[1]) for _i in
+            want=", ".join(["{}.{}".format(_i[0], _i[1]) for _i in
                             self.want_station_information.keys()]),
-            has=", ".join(["%s.%s" % (_i[0], _i[1]) for _i in
+            has=", ".join(["{}.{}".format(_i[0], _i[1]) for _i in
                           self.have_station_information.keys()]),
-            miss=", ".join(["%s.%s" % (_i[0], _i[1]) for _i in
+            miss=", ".join(["{}.{}".format(_i[0], _i[1]) for _i in
                            self.miss_station_information.keys()]),
             channels=channels)
 
@@ -411,7 +410,7 @@ class Channel(_SlotsEqualityComparisionObject):
         requiring station information. This does not yet mean that station
         information will be downloaded. That is decided at a later stage.
         """
-        status = set([_i.status for _i in self.intervals])
+        status = {_i.status for _i in self.intervals}
         if STATUS.DOWNLOADED in status or STATUS.EXISTS in status:
             return True
         return False
@@ -464,7 +463,7 @@ class TimeInterval(_SlotsEqualityComparisionObject):
                    status=str(self.status))
 
 
-class ClientDownloadHelper(object):
+class ClientDownloadHelper:
     """
     :type client: :class:`obspy.fdsn.client.Client`
     :param client: An initialized FDSN client.
@@ -1123,14 +1122,14 @@ class ClientDownloadHelper(object):
                     self.client_name)
                 return
             self.logger.error(
-                "Client '{0}' - Failed getting availability: %s".format(
+                "Client '{}' - Failed getting availability: %s".format(
                     self.client_name), str(e))
             return
         # This sometimes fires if a service returns some random stuff which
         # is not a valid station file.
         except Exception as e:
             self.logger.error(
-                "Client '{0}' - Failed getting availability due to "
+                "Client '{}' - Failed getting availability due to "
                 "unexpected exception: %s".format(self.client_name), str(e))
             return
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 # Filename: reftekrescue.py
 #  Purpose: Restore REFTEK data from raw binary data dumps
@@ -75,7 +74,7 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
     event_info = {}
 
     # memory map the file
-    with open(input_file, 'r') as f:
+    with open(input_file) as f:
         fno = f.fileno()
         access = mmap.ACCESS_READ
         with contextlib.closing(mmap.mmap(fno, 0, access=access)) as m:

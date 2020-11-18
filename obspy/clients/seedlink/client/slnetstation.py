@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module to hold a SeedLink stream descriptions (selectors) for network/station.
 
@@ -14,7 +13,7 @@ JSeedLink of Anthony Lomax
 from obspy.core.utcdatetime import UTCDateTime
 
 
-class SLNetStation(object):
+class SLNetStation:
     """
     Class to hold a SeedLink stream selectors for a network/station.
 

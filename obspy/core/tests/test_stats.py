@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import copy
 import io
 import pickle
@@ -301,7 +300,7 @@ class StatsTestCase(unittest.TestCase):
         native_str type.
         """
         nbytes = bytes('HHZ', 'utf8')
-        the_strs = ['HHZ', nbytes, u'HHZ']
+        the_strs = ['HHZ', nbytes, 'HHZ']
 
         stats = Stats()
 

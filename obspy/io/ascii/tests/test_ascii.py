@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import unittest
 
@@ -276,7 +275,7 @@ class ASCIITestCase(unittest.TestCase):
             # write
             _write_tspair(stream_orig, tmpfile)
             # look at the raw data
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines = f.readlines()
             self.assertEqual(
                 lines[0].strip(),
@@ -303,9 +302,9 @@ class ASCIITestCase(unittest.TestCase):
             np.testing.assert_array_almost_equal(stream[0].data, data,
                                                  decimal=2)
             # compare raw header
-            with open(testfile, 'rt') as f:
+            with open(testfile) as f:
                 lines_orig = f.readlines()
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
@@ -323,7 +322,7 @@ class ASCIITestCase(unittest.TestCase):
             # write
             _write_tspair(stream_orig, tmpfile, custom_fmt='%3.14f')
             # look at the raw data
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines = f.readlines()
             self.assertEqual(
                 lines[0].strip(),
@@ -350,9 +349,9 @@ class ASCIITestCase(unittest.TestCase):
             np.testing.assert_array_almost_equal(stream[0].data, data,
                                                  decimal=2)
             # compare raw header
-            with open(testfile, 'rt') as f:
+            with open(testfile) as f:
                 lines_orig = f.readlines()
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
@@ -369,7 +368,7 @@ class ASCIITestCase(unittest.TestCase):
             _write_tspair(stream_orig, tmpfile, custom_fmt='%+r')
             self.assertRaises(NotImplementedError, _read_tspair, tmpfile)
             # look at the raw data
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines = f.readlines()
             self.assertEqual(
                 lines[0].strip(),
@@ -390,7 +389,7 @@ class ASCIITestCase(unittest.TestCase):
             # write
             _write_tspair(stream_orig, tmpfile)
             # look at the raw data
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines = f.readlines()
             self.assertTrue(lines[0].startswith('TIMESERIES'))
             self.assertIn('TSPAIR', lines[0])
@@ -448,7 +447,7 @@ class ASCIITestCase(unittest.TestCase):
             # write
             _write_slist(stream_orig, tmpfile)
             # look at the raw data
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines = f.readlines()
             self.assertEqual(
                 lines[0].strip(),
@@ -476,9 +475,9 @@ class ASCIITestCase(unittest.TestCase):
             np.testing.assert_array_almost_equal(stream[0].data, data,
                                                  decimal=2)
             # compare raw header
-            with open(testfile, 'rt') as f:
+            with open(testfile) as f:
                 lines_orig = f.readlines()
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
@@ -496,7 +495,7 @@ class ASCIITestCase(unittest.TestCase):
             # write
             _write_slist(stream_orig, tmpfile, custom_fmt='%3.14f')
             # look at the raw data
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines = f.readlines()
             self.assertEqual(
                 lines[0].strip(),
@@ -525,9 +524,9 @@ class ASCIITestCase(unittest.TestCase):
             np.testing.assert_array_almost_equal(stream[0].data, data,
                                                  decimal=2)
             # compare raw header
-            with open(testfile, 'rt') as f:
+            with open(testfile) as f:
                 lines_orig = f.readlines()
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
@@ -544,7 +543,7 @@ class ASCIITestCase(unittest.TestCase):
             _write_slist(stream_orig, tmpfile, custom_fmt='%+r')
             self.assertRaises(NotImplementedError, _read_slist, tmpfile)
             # look at the raw data
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines = f.readlines()
             self.assertEqual(
                 lines[0].strip(),
@@ -567,7 +566,7 @@ class ASCIITestCase(unittest.TestCase):
             # write
             _write_slist(stream_orig, tmpfile)
             # look at the raw data
-            with open(tmpfile, 'rt') as f:
+            with open(tmpfile) as f:
                 lines = f.readlines()
             self.assertTrue(lines[0].startswith('TIMESERIES'))
             self.assertIn('SLIST', lines[0])
@@ -691,9 +690,9 @@ class ASCIITestCase(unittest.TestCase):
             # Write as TSPAIR
             read(mseed_file).write(tf.name, format="TSPAIR")
             # Check all lines aside from the first as they differ.
-            with open(tf.name, "rt") as fh:
+            with open(tf.name) as fh:
                 actual_lines = fh.readlines()[1:]
-            with open(mseed2ascii_file, "rt") as fh:
+            with open(mseed2ascii_file) as fh:
                 expected_lines = fh.readlines()[1:]
 
         for actual, expected in zip(actual_lines, expected_lines):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.pdas - PDAS file read support for ObsPy
 ================================================

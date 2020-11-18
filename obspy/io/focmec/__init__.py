@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.focmec - FOCMEC file format support for ObsPy
 ======================================================

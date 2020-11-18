@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module for basemap related plotting in ObsPy.
 

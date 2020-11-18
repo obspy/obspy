@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.arclink - ArcLink/WebDC request client for ObsPy
 ==============================================================

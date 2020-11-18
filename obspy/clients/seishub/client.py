@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SeisHub database client for ObsPy.
 
@@ -72,7 +71,7 @@ def _objectify_result_to_dicts(root):
     return result
 
 
-class Client(object):
+class Client:
     """
     SeisHub database request Client class.
 
@@ -245,7 +244,7 @@ class Client(object):
         return objectify.fromstring(doc)
 
 
-class _BaseRESTClient(object):
+class _BaseRESTClient:
     def __init__(self, client):
         self.client = client
 
@@ -323,7 +322,7 @@ class _BaseRESTClient(object):
             url, method="DELETE", headers=headers)
 
 
-class _WaveformMapperClient(object):
+class _WaveformMapperClient:
     """
     Interface to access the SeisHub Waveform Web service.
 
@@ -918,7 +917,7 @@ master/seishub/plugins/seismology/event.py
             # scale marker size to magnitude if this information is present
             if mag:
                 mag = float(mag)
-                label = "%s: %.1f" % (date, mag)
+                label = f"{date}: {mag:.1f}"
                 try:
                     icon_size = 1.2 * log(1.5 + mag)
                 except ValueError:
@@ -946,7 +945,7 @@ master/seishub/plugins/seismology/event.py
             for key in interesting_keys:
                 if key not in event_dict:
                     continue
-                descrip_str += "\n%s: %s" % (key, event_dict[key])
+                descrip_str += "\n{}: {}".format(key, event_dict[key])
             SubElement(placemark, "description").text = descrip_str
 
         # generate and return KML string

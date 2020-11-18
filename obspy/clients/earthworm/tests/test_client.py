@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.clients.earthworm.client test suite.
 """
@@ -108,7 +107,7 @@ class ClientTestCase(unittest.TestCase):
     @skip_on_network_error
     def test_availability(self):
         data = self.client.get_availability()
-        seeds = ["%s.%s.%s.%s" % (d[0], d[1], d[2], d[3]) for d in data]
+        seeds = ["{}.{}.{}.{}".format(d[0], d[1], d[2], d[3]) for d in data]
         self.assertIn('AV.ACH.--.BHZ', seeds)
 
 

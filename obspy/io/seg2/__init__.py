@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.seg2 - SEG-2 read support for ObsPy
 ============================================

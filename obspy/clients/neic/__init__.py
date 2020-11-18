@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.neic - CWB query module for ObsPy
 ===============================================

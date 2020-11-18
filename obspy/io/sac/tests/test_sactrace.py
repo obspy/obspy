@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 import os
 import unittest
@@ -369,7 +368,7 @@ class SACTraceTestCase(unittest.TestCase):
             self.assertIsNone(getattr(sac, hdr))
 
             # get/set value too long
-            too_long = "{}_1234567890".format(hdr)
+            too_long = f"{hdr}_1234567890"
             # will raise "UserWarning: Alphanumeric headers longer than 8
             # characters are right-truncated"
             with warnings.catch_warnings(record=True) as w:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.zmap - ZMAP read and write support for ObsPy
 =====================================================

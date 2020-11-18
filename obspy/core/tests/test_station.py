@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Test suite for the station handling.
 
@@ -74,7 +73,7 @@ class StationTestCase(unittest.TestCase):
         # Basic assertions to make sure the test data does not change.
         self.assertEqual(len(sta), 12)
         self.assertEqual(sta.code, "FUR")
-        self.assertEqual(sorted(["%s.%s" % (_i.location_code, _i.code) for _i
+        self.assertEqual(sorted([f"{_i.location_code}.{_i.code}" for _i
                                  in sta]),
                          ['.BHE', '.BHN', '.BHZ', '.HHE', '.HHN', '.HHZ',
                           '.LHE', '.LHN', '.LHZ', '.VHE', '.VHN', '.VHZ'])
@@ -92,14 +91,14 @@ class StationTestCase(unittest.TestCase):
         sta_2 = sta.select(channel="*Z")
         self.assertEqual(len(sta_2), 4)
         self.assertEqual(sta_2.code, "FUR")
-        self.assertEqual(sorted(["%s.%s" % (_i.location_code, _i.code) for _i
+        self.assertEqual(sorted([f"{_i.location_code}.{_i.code}" for _i
                                  in sta_2]), ['.BHZ', '.HHZ', '.LHZ', '.VHZ'])
 
         # Only BH channels.
         sta_2 = sta.select(channel="BH?")
         self.assertEqual(len(sta_2), 3)
         self.assertEqual(sta_2.code, "FUR")
-        self.assertEqual(sorted(["%s.%s" % (_i.location_code, _i.code) for _i
+        self.assertEqual(sorted([f"{_i.location_code}.{_i.code}" for _i
                                  in sta_2]), ['.BHE', '.BHN', '.BHZ'])
 
         # All location codes.
@@ -152,7 +151,7 @@ class StationTestCase(unittest.TestCase):
         self.assertEqual(len(sta.select(sampling_rate=1.0)), 3)
         self.assertEqual(len(sta.select(sampling_rate=0.1)), 3)
 
-        self.assertEqual(sorted(["%s.%s" % (_i.location_code, _i.code) for _i
+        self.assertEqual(sorted([f"{_i.location_code}.{_i.code}" for _i
                                  in sta.select(sampling_rate=100.0)]),
                          ['.HHE', '.HHN', '.HHZ'])
 

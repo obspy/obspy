@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 HEADER_STARTS = {
     'origins': ['date', 'time', 'err', 'rms'],
     'bibliography': ['year', 'volume', 'page1', 'page2'],

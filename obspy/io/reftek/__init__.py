@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.reftek - REFTEK130 read support for ObsPy
 ==================================================

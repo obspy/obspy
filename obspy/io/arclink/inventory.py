@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ObsPy implementation for parsing the arclink inventory format
 to an Inventory object.
@@ -121,7 +120,7 @@ def _ns(tagname):
 
     :param tagname: name of tag to be extracted
     """
-    return "{%s}%s" % (SCHEMA_NAMESPACE, tagname)
+    return f"{{{SCHEMA_NAMESPACE}}}{tagname}"
 
 
 def _read_inventory_xml(path_or_file_object):
@@ -791,7 +790,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             # so that a proper stationXML can be formatted
             for c in coeffs:
                 temp = _read_float_var(c, FilterCoefficient,
-                                       additional_mapping={str("number"): i})
+                                       additional_mapping={"number": i})
                 coeffs_float.append(temp)
                 i += 1
 
@@ -814,7 +813,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             # so that a proper stationXML can be formatted
             for c in coeffs:
                 temp = _read_float_var(c, FilterCoefficient,
-                                       additional_mapping={str("number"): i})
+                                       additional_mapping={"number": i})
                 coeffs_float.append(temp)
                 i += 1
 

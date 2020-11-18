@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Object dealing with branches in the model.
 """
@@ -12,7 +11,7 @@ from .helper_classes import (SlownessLayer, SlownessModelError,
 from .slowness_layer import bullen_depth_for, bullen_radial_slowness
 
 
-class TauBranch(object):
+class TauBranch:
     """
     Provides storage and methods for distance, time and tau increments for a
     branch. A branch is a group of layers bounded by discontinuities or

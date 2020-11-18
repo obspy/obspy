@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.quakeml - QuakeML read and write support for ObsPy
 ===========================================================

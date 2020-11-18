@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: hoctavbands.py
 #   Author: Conny Hammer

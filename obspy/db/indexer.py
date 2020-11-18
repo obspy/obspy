@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 A waveform indexer collecting metadata from a file based waveform archive and
 storing in into a standard SQL database.
@@ -21,7 +20,7 @@ from obspy.db.db import (WaveformChannel, WaveformFeatures, WaveformFile,
                          WaveformGaps, WaveformPath)
 
 
-class WaveformFileCrawler(object):
+class WaveformFileCrawler:
     """
     A waveform file crawler.
 
@@ -95,7 +94,7 @@ class WaveformFileCrawler(object):
             session.rollback()
             self.log.error(str(e))
         else:
-            self.log.debug("%s '%s' in '%s'" % (msg, data['file'],
+            self.log.debug("{} '{}' in '{}'".format(msg, data['file'],
                                                 data['path']))
         session.close()
 
@@ -118,7 +117,7 @@ class WaveformFileCrawler(object):
                 msg = "Error deleting file '%s' in '%s': %s"
                 self.log.error(msg % (file, path, e))
             else:
-                self.log.debug("Deleting file '%s' in '%s'" % (file, path))
+                self.log.debug(f"Deleting file '{file}' in '{path}'")
         else:
             query = session.query(WaveformPath)
             query = query.filter(WaveformPath.path == path)
@@ -129,7 +128,7 @@ class WaveformFileCrawler(object):
                 session.commit()
             except Exception as e:
                 session.rollback()
-                self.log.error("Error deleting path '%s': %s" % (path, e))
+                self.log.error(f"Error deleting path '{path}': {e}")
             else:
                 self.log.debug("Deleting path '%s'" % (path))
         session.close()
@@ -424,7 +423,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
             kwargs = {'verify_chksum': False}
             for feature in features:
                 if feature not in all_features:
-                    log_queue.append('%s: Unknown feature %s' % (filepath,
+                    log_queue.append('{}: Unknown feature {}'.format(filepath,
                                                                  feature))
                     continue
                 kwargs.update(all_features[feature]['indexer_kwargs'])

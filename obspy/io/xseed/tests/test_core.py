@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import collections
 import io
 import itertools
@@ -240,10 +239,10 @@ class CoreTestCase(unittest.TestCase):
 
         # Merge A + B to get a multi-response file.
         with NamedTemporaryFile() as tf:
-            with io.open(filename_a, "rb") as fh:
+            with open(filename_a, "rb") as fh:
                 tf.write(fh.read())
             tf.write(b"\n")
-            with io.open(filename_b, "rb") as fh:
+            with open(filename_b, "rb") as fh:
                 tf.write(fh.read())
             tf.seek(0, 0)
             inv = obspy.read_inventory(tf.name)
@@ -425,7 +424,7 @@ class CoreTestCase(unittest.TestCase):
                 # but they use exactly the same code under the hood here so it
                 # is okay - if we ever have our own response calculation code
                 # this will have to be changed.
-                np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+                np.testing.assert_equal(e_r, i_r, f"{filename} - {unit}")
 
     def test_response_calculation_from_seed_and_xseed(self):
         """
@@ -494,11 +493,11 @@ class CoreTestCase(unittest.TestCase):
                                               np.abs(i_r).max())
                             np.testing.assert_allclose(
                                 e_r.real, i_r.real,
-                                err_msg="real - %s - %s" % (filename, unit),
+                                err_msg=f"real - {filename} - {unit}",
                                 rtol=1E-6, atol=atol)
                             np.testing.assert_allclose(
                                 e_r.imag, i_r.imag,
-                                err_msg="imag - %s - %s" % (filename, unit),
+                                err_msg=f"imag - {filename} - {unit}",
                                 rtol=1E-6, atol=atol)
 
                             # Bonus: Also read the RESP file directly with
@@ -510,12 +509,12 @@ class CoreTestCase(unittest.TestCase):
                                 frequencies=frequencies, output=unit)
                             np.testing.assert_allclose(
                                 e_r.real, i_r_r.real,
-                                err_msg="RESP real - %s - %s" % (filename,
+                                err_msg="RESP real - {} - {}".format(filename,
                                                                  unit),
                                 rtol=1E-6, atol=atol)
                             np.testing.assert_allclose(
                                 e_r.imag, i_r_r.imag,
-                                err_msg="RESP imag - %s - %s" % (filename,
+                                err_msg="RESP imag - {} - {}".format(filename,
                                                                  unit),
                                 rtol=1E-6, atol=atol)
 
@@ -702,7 +701,7 @@ class CoreTestCase(unittest.TestCase):
                 date=t, units=unit)
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
-            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+            np.testing.assert_equal(e_r, i_r, f"{filename} - {unit}")
 
     def test_response_of_strain_meter(self):
         filename = os.path.join(self.data_path, "RESP.strain_meter")
@@ -718,7 +717,7 @@ class CoreTestCase(unittest.TestCase):
                 date=t, units=unit)
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
-            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+            np.testing.assert_equal(e_r, i_r, f"{filename} - {unit}")
 
     def test_response_multiple_gain_blockettes(self):
         """
@@ -740,7 +739,7 @@ class CoreTestCase(unittest.TestCase):
                 date=t, units=unit)
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
-            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+            np.testing.assert_equal(e_r, i_r, f"{filename} - {unit}")
 
     def test_response_regression_1(self):
         """
@@ -759,7 +758,7 @@ class CoreTestCase(unittest.TestCase):
                 date=t, units=unit)
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
-            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+            np.testing.assert_equal(e_r, i_r, f"{filename} - {unit}")
 
     def test_response_regression_2(self):
         """
@@ -778,7 +777,7 @@ class CoreTestCase(unittest.TestCase):
             r = obspy.read_inventory(filename)[0][0][0].response
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
-            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+            np.testing.assert_equal(e_r, i_r, f"{filename} - {unit}")
 
     def test_response_regression_segfault(self):
         """
@@ -819,7 +818,7 @@ class CoreTestCase(unittest.TestCase):
             r = obspy.read_inventory(filename)[0][0][0].response
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
-            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+            np.testing.assert_equal(e_r, i_r, f"{filename} - {unit}")
 
 
 def suite():

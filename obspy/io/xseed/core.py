@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Integration with ObsPy's core classes.
 
@@ -41,9 +40,9 @@ def _is_seed(filename):
             finally:
                 filename.seek(pos, 0)
         else:
-            with io.open(filename, "rb") as fh:
+            with open(filename, "rb") as fh:
                 buf = fh.read(128)
-    except IOError:
+    except OSError:
         return False
 
     # Minimum record size.
@@ -87,7 +86,7 @@ def _is_resp(filename):
     try:
         with open(filename, "rb") as fh:
             return _internal_is_resp(fh)
-    except (IOError, TypeError):
+    except (OSError, TypeError):
         return False
 
 
@@ -166,7 +165,7 @@ def _read_resp(filename, skip_invalid_responses=True, *args, **kwargs):
     if hasattr(filename, "read"):
         data = filename.read()
     else:
-        with io.open(filename, "rb") as fh:
+        with open(filename, "rb") as fh:
             data = fh.read()
     if hasattr(data, "decode"):
         data = data.decode()
@@ -393,7 +392,7 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
             try:
                 # Epoch string used to generate nice warning and error
                 # messages.
-                epoch_str = "%s.%s.%s.%s [%s - %s]" % (
+                epoch_str = "{}.{}.{}.{} [{} - {}]".format(
                     network_code, s.code, c.location_code, c.code,
                     c.start_date, c.end_date)
                 resp = p.get_response_for_channel(
@@ -401,7 +400,7 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
             except InvalidResponseError as e:
                 if not skip_invalid_responses:
                     raise
-                trace_id = "%s.%s.%s.%s" % (network_code, s.code,
+                trace_id = "{}.{}.{}.{}".format(network_code, s.code,
                                             c.location_code, c.code)
                 msg = ("Failed to calculate response for %s with epoch "
                        "%s - %s because: %s" % (trace_id, c.start_date,

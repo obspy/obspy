@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.hypodd - HypoDD read support for ObsPy
 ===============================================

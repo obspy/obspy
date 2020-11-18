@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from obspy import UTCDateTime
 from .blockette import Blockette
 from ..fields import Float, Integer, VariableString

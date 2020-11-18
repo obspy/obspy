@@ -121,7 +121,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         if verbose or not quiet:
             print("Can not read %s" % (file))
         return counter
-    s = "%s %s" % (counter, file)
+    s = f"{counter} {file}"
     if verbose and not quiet:
         sys.stdout.write("%s\n" % s)
         for line in str(stream).split("\n"):
@@ -139,7 +139,7 @@ def add_stream_to_dict(data_dict, samp_int_dict, stream, verbose=False):
             delta = 1. / (24 * 3600 * tr.stats.sampling_rate)
         except ZeroDivisionError:
             if verbose:
-                print("Skipping trace with zero samlingrate: {!s}".format(tr))
+                print(f"Skipping trace with zero samlingrate: {tr!s}")
             continue
         _id = tr.get_id()
         _samp_int_list = samp_int_dict.setdefault(_id, [])
@@ -214,7 +214,7 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-class Scanner(object):
+class Scanner:
     """
     Class to scan contents of waveform files, file by file or recursively
     across directory trees.
@@ -495,7 +495,7 @@ class Scanner(object):
                     continue
                 gap_info.append((starttime, endtime))
                 if print_gaps:
-                    print("%s %s %s %.3f" % (
+                    print("{} {} {} {:.3f}".format(
                         _id, starttime, endtime, endtime - starttime))
                 continue
             # restrict plotting of results to given start/end time

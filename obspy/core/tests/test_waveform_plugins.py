@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 import os
 import threading
@@ -245,7 +244,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             self.assertEqual(len(false_positives), 0)
         except Exception:  # pragma: no cover
             msg = 'False positives for isFormat:\n'
-            msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in
+            msg += '\n'.join(['\tFormat {}: {}'.format(_i[0], _i[1]) for _i in
                               false_positives])
             raise Exception(msg)
 

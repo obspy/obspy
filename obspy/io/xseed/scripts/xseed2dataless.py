@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 A command-line program that converts XML-SEED into Dataless SEED files.
 """

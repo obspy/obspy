@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 obspy.io.stationtxt - FDSNWS station text file read and write support for ObsPy
 ===============================================================================

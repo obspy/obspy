@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Velocity model class.
 """
@@ -10,7 +9,7 @@ from .velocity_layer import VelocityLayer, evaluate_velocity_at
 from . import _DEFAULT_VALUES
 
 
-class VelocityModel(object):
+class VelocityModel:
     def __init__(self, model_name, radius_of_planet, min_radius, max_radius,
                  moho_depth, cmb_depth, iocb_depth, is_spherical,
                  layers=None):
@@ -229,49 +228,49 @@ class VelocityModel(object):
         """
         # Is radius_of_planet positive?
         if self.radius_of_planet <= 0.0:
-            raise ValueError("Radius of the planet is not positive: %f" % (
-                self.radius_of_planet, ))
+            raise ValueError("Radius of the planet is not positive: {:f}".format(
+                self.radius_of_planet))
 
         # Is moho_depth non-negative?
         if self.moho_depth < 0.0:
-            raise ValueError("moho_depth is not non-negative: %f" % (
-                self.moho_depth, ))
+            raise ValueError("moho_depth is not non-negative: {:f}".format(
+                self.moho_depth))
 
         # Is cmb_depth >= moho_depth?
         if self.cmb_depth < self.moho_depth:
-            raise ValueError("cmb_depth (%f) < moho_depth (%f)" % (
+            raise ValueError("cmb_depth ({:f}) < moho_depth ({:f})".format(
                 self.cmb_depth,
                 self.moho_depth))
 
         # Is cmb_depth positive?
         if self.cmb_depth <= 0.0:
-            raise ValueError("cmb_depth is not positive: %f" % (
-                self.cmb_depth, ))
+            raise ValueError("cmb_depth is not positive: {:f}".format(
+                self.cmb_depth))
 
         # Is iocb_depth >= cmb_depth?
         if self.iocb_depth < self.cmb_depth:
-            raise ValueError("iocb_depth (%f) < cmb_depth (%f)" % (
+            raise ValueError("iocb_depth ({:f}) < cmb_depth ({:f})".format(
                 self.iocb_depth,
                 self.cmb_depth))
 
         # Is iocb_depth positive?
         if self.iocb_depth <= 0.0:
-            raise ValueError("iocb_depth is not positive: %f" % (
-                self.iocb_depth, ))
+            raise ValueError("iocb_depth is not positive: {:f}".format(
+                self.iocb_depth))
 
         # Is min_radius non-negative?
         if self.min_radius < 0.0:
-            raise ValueError("min_radius is not non-negative: %f " % (
-                self.min_radius, ))
+            raise ValueError("min_radius is not non-negative: {:f} ".format(
+                self.min_radius))
 
         # Is max_radius non-negative?
         if self.max_radius <= 0.0:
-            raise ValueError("max_radius is not positive: %f" % (
-                self.max_radius, ))
+            raise ValueError("max_radius is not positive: {:f}".format(
+                self.max_radius))
 
         # Is max_radius > min_radius?
         if self.max_radius <= self.min_radius:
-            raise ValueError("max_radius (%f) <= min_radius (%f)" % (
+            raise ValueError("max_radius ({:f}) <= min_radius ({:f})".format(
                 self.max_radius,
                 self.min_radius))
 

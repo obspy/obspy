@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Helpers to download potentially big data sets across a number of FDSN web
 services in an automated fashion.
@@ -44,7 +43,7 @@ class FDSNMassDownloaderException(FDSNException):
     pass
 
 
-class MassDownloader(object):
+class MassDownloader:
     """
     Class facilitating data acquisition across all FDSN web service
     implementations.

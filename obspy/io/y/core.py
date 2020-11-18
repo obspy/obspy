@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Y bindings to ObsPy core module.
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Calculations for 3D ray paths.
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tools for creating and merging previews.
 

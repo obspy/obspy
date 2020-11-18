@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -----------------------------------------------
 # Filename: mopad_wrapper.py
 #  Purpose: Wrapper for mopad

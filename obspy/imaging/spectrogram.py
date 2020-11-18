@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: spectrogram.py
 #  Purpose: Plotting spectrogram of Seismograms.

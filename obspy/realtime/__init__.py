@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.realtime - Real time support for ObsPy
 ============================================

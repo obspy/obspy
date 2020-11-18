@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 C wrappers for some crucial inner loops of TauPy written in C.
 """

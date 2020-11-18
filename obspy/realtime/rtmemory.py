@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module for handling ObsPy RtMemory objects.
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: tf_misfit.py
 #  Purpose: Various Time Frequency Misfit Functions
@@ -1072,7 +1071,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         img_tfem.set_clim(-clim, clim)
 
         # add text box for EM + PM
-        textstr = 'EM = %.2f\nPM = %.2f' % (_em[itr], _pm[itr])
+        textstr = 'EM = {:.2f}\nPM = {:.2f}'.format(_em[itr], _pm[itr])
         props = dict(boxstyle='round', facecolor='white')
         ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
                     verticalalignment='center', horizontalalignment='left',
@@ -1332,7 +1331,7 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         img_tfeg.set_clim(0., clim)
 
         # add text box for EG + PG
-        textstr = 'EG = %2.2f\nPG = %2.2f' % (_eg[itr], _pg[itr])
+        textstr = 'EG = {:2.2f}\nPG = {:2.2f}'.format(_eg[itr], _pg[itr])
         props = dict(boxstyle='round', facecolor='white')
         ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
                     verticalalignment='center', horizontalalignment='left',

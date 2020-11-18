@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: source.py
 #  Purpose: Computes and plots radiation patterns
@@ -168,7 +167,7 @@ def plot_radiation_pattern(
             fname_beachlines=fname_beachlines)
 
     else:
-        raise NotImplementedError('{:s} not implemented yet'.format(kind))
+        raise NotImplementedError(f'{kind:s} not implemented yet')
 
 
 def _plot_radiation_pattern_sphere(
@@ -251,7 +250,7 @@ def _plot_radiation_pattern_sphere(
              xticklabels=['South', 'North'],
              yticklabels=['West', 'East'],
              zticklabels=['Up', 'Down'],
-             title='{} wave farfield'.format(type))
+             title=f'{type} wave farfield')
     ax3d.view_init(elev=-110., azim=0.)
 
 
@@ -310,7 +309,7 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
              xticklabels=['South', 'North'],
              yticklabels=['West', 'East'],
              zticklabels=['Up', 'Down'],
-             title='{} wave farfield'.format(type))
+             title=f'{type} wave farfield')
     ax3d.view_init(elev=-110., azim=0.)
 
 
@@ -448,20 +447,20 @@ def _write_radiation_pattern_vtk(
                      'radiation pattern vector field\n' + \
                      'ASCII\n' + \
                      'DATASET UNSTRUCTURED_GRID\n' + \
-                     'POINTS {:d} float\n'.format(npoints)
+                     f'POINTS {npoints:d} float\n'
 
         vtk_file.write(vtk_header)
         # write point locations
         for x, y, z in np.transpose(points):
-            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+            vtk_file.write(f'{x:.3e} {y:.3e} {z:.3e}\n')
         # write vector field
-        vtk_file.write('POINT_DATA {:d}\n'.format(npoints))
+        vtk_file.write(f'POINT_DATA {npoints:d}\n')
         vtk_file.write('VECTORS s_radiation float\n')
         for x, y, z in np.transpose(disps):
-            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+            vtk_file.write(f'{x:.3e} {y:.3e} {z:.3e}\n')
         vtk_file.write('VECTORS p_radiation float\n')
         for x, y, z in np.transpose(dispp):
-            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+            vtk_file.write(f'{x:.3e} {y:.3e} {z:.3e}\n')
 
     # write nodal lines
     with open(fname_beachlines, 'w') as vtk_file:
@@ -472,14 +471,14 @@ def _write_radiation_pattern_vtk(
                      'beachball nodal lines\n' + \
                      'ASCII\n' + \
                      'DATASET UNSTRUCTURED_GRID\n' + \
-                     'POINTS {:d} float\n'.format(npts_tot)
+                     f'POINTS {npts_tot:d} float\n'
 
         vtk_file.write(vtk_header)
         # write point locations
         for x, y, z in np.transpose(neg_nodalline):
-            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+            vtk_file.write(f'{x:.3e} {y:.3e} {z:.3e}\n')
         for x, y, z in np.transpose(pos_nodalline):
-            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+            vtk_file.write(f'{x:.3e} {y:.3e} {z:.3e}\n')
 
         # write line segments
         vtk_file.write('\nCELLS 2 {:d}\n'.format(npts_tot + 4))
@@ -489,7 +488,7 @@ def _write_radiation_pattern_vtk(
         for ipoint in ipoints:
             if ipoint % 30 == 29:
                 vtk_file.write('\n')
-            vtk_file.write('{:d} '.format(ipoint))
+            vtk_file.write(f'{ipoint:d} ')
         vtk_file.write('\n')
 
         ipoints = list(range(0, npts_pos)) + [0]

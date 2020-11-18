@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # reads Guralp Compressed Format (GCF) Files
 # By Ran Novitsky Nof @ BSL, 2016
 # ran.nof@gmail.com

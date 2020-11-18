@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Evt (Kinemetrics) format support for ObsPy.
 
@@ -42,7 +41,7 @@ HEADER_STRUCT6 = b"cBh" * 15
 HEADER_STRUCT7 = b"64s16s16s16s16s16s24s24s24s24s3B3b5h4xH46s"
 
 
-class Evt(object):
+class Evt:
     """
     Class to read Evt (Kinemetrics) formatted files.
     """
@@ -142,7 +141,7 @@ class Evt(object):
         return Stream(traces=traces)
 
 
-class EvtData(object):
+class EvtData:
     """
     Class to manage data in Evt file
     """

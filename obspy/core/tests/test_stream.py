@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import inspect
 import io
 import os
@@ -2686,7 +2685,7 @@ class StreamTestCase(unittest.TestCase):
         result = st.rotate("->ZNE", inventory=inv,
                            components='Z12')
         # check that rotation to ZNE worked..
-        self.assertEqual(set(tr.stats.channel[-1] for tr in result),
+        self.assertEqual({tr.stats.channel[-1] for tr in result},
                          set('ZNE'))
 
     def test_write_empty_stream(self):

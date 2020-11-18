@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.event.event - The Event class definition
 ===================================================
@@ -100,7 +99,7 @@ class Event(__Event):
     do_not_warn_on = ["_format", "extra"]
 
     def __init__(self, *args, **kwargs):
-        super(Event, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.scope_resource_ids()
 
     def short_str(self):
@@ -119,7 +118,7 @@ class Event(__Event):
             lat, lon, time = origin.latitude, origin.longitude, origin.time
             lat_str = '%+7.3f' % lat if lat is not None else 'None'
             lon_str = '%+8.3f' % lon if lon is not None else 'None'
-            out += '%s | %s, %s' % (time, lat_str, lon_str)
+            out += f'{time} | {lat_str}, {lon_str}'
         if self.magnitudes:
             magnitude = self.preferred_magnitude() or self.magnitudes[0]
             try:
@@ -129,7 +128,7 @@ class Event(__Event):
                     mag_string = '%4.2f' % magnitude.mag
             except TypeError:
                 mag_string = str(magnitude.mag)
-            out += ' | %s %-2s' % (mag_string,
+            out += ' | {} {:<2}'.format(mag_string,
                                    magnitude.magnitude_type)
         if origin and origin.evaluation_mode:
             out += ' | %s' % (origin.evaluation_mode)
@@ -139,15 +138,15 @@ class Event(__Event):
         """
         Print a short summary at the top.
         """
-        return "Event:\t%s\n\n%s" % (
+        return "Event:\t{}\n\n{}".format(
             self.short_str(),
-            "\n".join(super(Event, self).__str__().split("\n")[1:]))
+            "\n".join(super().__str__().split("\n")[1:]))
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
     def __repr__(self):
-        return super(Event, self).__str__(force_one_line=True)
+        return super().__str__(force_one_line=True)
 
     def preferred_origin(self):
         """

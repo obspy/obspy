@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 # Filename: spectral_estimation.py
 #  Purpose: Various Routines Related to Spectral Estimation
@@ -197,7 +196,7 @@ def welch_window(n):
     return taper
 
 
-class PPSD(object):
+class PPSD:
     """
     Class to compile probabilistic power spectral densities for one combination
     of network/station/location/channel/sampling_rate.
@@ -1770,7 +1769,7 @@ class PPSD(object):
                 label = "{:.2g}-{:.2g} [Hz]".format(
                     1.0 / period_max, 1.0 / period_min)
             else:
-                label = "{:.2g}-{:.2g} [s]".format(period_min, period_max)
+                label = f"{period_min:.2g}-{period_max:.2g} [s]"
 
             for i, (times_, psd_values) in enumerate(
                     self._split_lists(times, psd_values)):

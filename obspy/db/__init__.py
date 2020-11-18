@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.db - A seismic waveform indexer and database for ObsPy
 ============================================================

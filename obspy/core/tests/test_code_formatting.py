@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import codecs
 import fnmatch
 import os

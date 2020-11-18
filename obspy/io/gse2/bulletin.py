@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 GSE2.0 bulletin read support.
 
@@ -120,7 +119,7 @@ def _is_gse2(filename):
     return True
 
 
-class LinesIterator(object):
+class LinesIterator:
     """
     Iterator to iterate file lines and count lines. Usefull for warning
     messages.
@@ -137,7 +136,7 @@ class LinesIterator(object):
         return next(self.lines)
 
 
-class Unpickler(object):
+class Unpickler:
     """
     De-serialize a GSE2.0 string into an ObsPy Catalog object.
     """
@@ -239,7 +238,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :return: ObsPy Catalog object.
         """
-        with open(filename, 'r') as f:
+        with open(filename) as f:
             self.lines = LinesIterator(f.readlines())
         return self._deserialize()
 
@@ -252,7 +251,7 @@ class Unpickler(object):
         :rtype: str
         :return: Message with line number.
         """
-        return "%s, line %s" % (message, self.lines.line_nb)
+        return f"{message}, line {self.lines.line_nb}"
 
     def _warn(self, message):
         """
@@ -300,7 +299,7 @@ class Unpickler(object):
         elif parent_res_id:
             prefix = parent_res_id.id
 
-        public_id = "%s/%s" % (prefix, ident)
+        public_id = f"{prefix}/{ident}"
         return ResourceIdentifier(public_id)
 
     def _comment(self, text):
@@ -399,8 +398,8 @@ class Unpickler(object):
 
                 return network.code, None
 
-            channel = next((channel for channel in channels
-                           if channel.code == code))
+            channel = next(channel for channel in channels
+                           if channel.code == code)
 
             self._warn('Several stations, location codes or channels have '
                        'been found, choose %s.%s.%s.%s' %
@@ -914,7 +913,7 @@ class Unpickler(object):
                     sta_mag.station_magnitude_type = magnitude_types[i]
                     sta_mag.mag = magnitude_values[i]
                     sta_mag.waveform_id = pick.waveform_id
-                    public_id = "magnitude/station/%s/%s" % (line_id, i)
+                    public_id = f"magnitude/station/{line_id}/{i}"
                     sta_mag.resource_id = self._get_res_id(public_id)
                     event.station_magnitudes.append(sta_mag)
 

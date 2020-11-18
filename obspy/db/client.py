@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Client for a database created by obspy.db.
 
@@ -19,7 +18,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.db.db import Base, WaveformChannel, WaveformFile, WaveformPath
 
 
-class Client(object):
+class Client:
     """
     Client for a database created by obspy.db.
     """
@@ -158,7 +157,7 @@ class Client(object):
         session.close()
         adict = {}
         for result in results:
-            key = '%s.%s.%s.%s' % (result[0], result[1], result[2], result[3])
+            key = '{}.{}.{}.{}'.format(result[0], result[1], result[2], result[3])
             adict[key] = UTCDateTime(result[4])
         return adict
 
@@ -210,7 +209,7 @@ class Client(object):
         file_dict = {}
         for result in results:
             fname = os.path.join(result[0], result[1])
-            key = '%s.%s.%s.%s' % (result[2], result[3], result[4], result[5])
+            key = '{}.{}.{}.{}'.format(result[2], result[3], result[4], result[5])
             file_dict.setdefault(key, []).append(fname)
         return file_dict
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: konnoohmachismoothing.py
 #  Purpose: Small module to smooth spectra with the so called Konno & Ohmachi

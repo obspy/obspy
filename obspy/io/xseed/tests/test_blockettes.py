@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import importlib
 import io
 import os
@@ -39,7 +38,7 @@ class BlocketteTestCase(unittest.TestCase):
         # Create a new empty list to store all information of the test in it.
         test_examples = []
         # Now read the corresponding file and parse it.
-        with io.open(blkt_file, 'rt') as fh:
+        with open(blkt_file, 'rt') as fh:
             # Helper variable to parse the file. Might be a little bit slow but
             # its just for tests.
             cur_stat = None

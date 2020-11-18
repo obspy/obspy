@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Convenience class for iterating over miniSEED records in a file.
 
@@ -11,7 +10,7 @@ from obspy.io.mseed.headers import (HPTMODULUS, MS_NOERROR, MS_ENDOFFILE,
                                     MSFileParam, MSRecord, clibmseed)
 
 
-class _MSRIterator(object):
+class _MSRIterator:
     """
     Class for iterating through miniSEED records in a file.
 

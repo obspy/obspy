@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Various additional utilities for ObsPy.
 
@@ -224,7 +223,7 @@ except TypeError:
         # lets get the data
         try:
             data = np.loadtxt(*args, **kwargs)
-        except IOError as e:
+        except OSError as e:
             # raises in older versions if no data could be read
             if 'reached before encountering data' in str(e):
                 # return empty array
@@ -268,7 +267,7 @@ def get_untracked_files_from_git():
 
 class CaptureIO(io.TextIOWrapper):
     def __init__(self):
-        super(CaptureIO, self).__init__(io.BytesIO(), encoding='utf-8',
+        super().__init__(io.BytesIO(), encoding='utf-8',
                                         newline='\n', write_through=True)
 
     def getvalue(self):
@@ -507,7 +506,7 @@ def get_window_times(starttime, endtime, window_length, step, offset,
     return [(t(_i[0]), t(_i[1])) for _i in windows]
 
 
-class MatplotlibBackend(object):
+class MatplotlibBackend:
     """
     A helper class for switching the matplotlib backend.
 
@@ -682,22 +681,18 @@ def _yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
             # Iterate through basic built-in types.
             if isinstance(obj, (list, tuple)):
                 for val in obj:
-                    for out in func(val, attr=attr, parent=obj):
-                        yield out
+                    yield from func(val, attr=attr, parent=obj)
             elif isinstance(obj, dict):
                 for item, val in obj.items():
-                    for out in func(val, attr=item, parent=obj):
-                        yield out
+                    yield from func(val, attr=item, parent=obj)
             # Iterate through non built-in object attributes.
             elif hasattr(obj, '__slots__'):
                 for attr in obj.__slots__:
                     val = getattr(obj, attr)
-                    for out in func(val, attr=attr, parent=obj):
-                        yield out
+                    yield from func(val, attr=attr, parent=obj)
             elif hasattr(obj, '__dict__'):
                 for item, val in obj.__dict__.items():
-                    for out in func(val, attr=item, parent=obj):
-                        yield out
+                    yield from func(val, attr=item, parent=obj)
 
     return func(obj)
 
@@ -726,13 +721,11 @@ def _yield_resource_id_parent_attr(obj):
             # Iterate through basic built-in types.
             elif isinstance(obj, (list, tuple)):
                 for val in obj:
-                    for out in func(val, obj, attr):
-                        yield out
+                    yield from func(val, obj, attr)
             # Iterate through non built-in object attributes.
             elif hasattr(obj, '__dict__'):
                 for item, val in obj.__dict__.items():
-                    for out in func(val, obj, item):
-                        yield out
+                    yield from func(val, obj, item)
 
     return func(obj)
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 CMTSOLUTION file format support for ObsPy.
 
@@ -26,7 +25,7 @@ def _get_resource_id(cmtname, res_type, tag=None):
     """
     Helper function to create consistent resource ids.
     """
-    res_id = "smi:local/cmtsolution/%s/%s" % (cmtname, res_type)
+    res_id = f"smi:local/cmtsolution/{cmtname}/{res_type}"
     if tag is not None:
         res_id += "#" + tag
     return res_id

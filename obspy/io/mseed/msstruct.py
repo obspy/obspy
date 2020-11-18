@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Convenience class for handling MSRecord and MSFileparam.
 """
@@ -39,7 +38,7 @@ def _get_ms_file_info(f, real_name):
     return info
 
 
-class _MSStruct(object):
+class _MSStruct:
     """
     Class for handling MSRecord and MSFileparam.
 

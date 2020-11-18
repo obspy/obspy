@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Base class for all FDSN routers.
 
@@ -91,7 +90,7 @@ def _try_download_bulk(r):
     except Exception:
         reason = "".join(traceback.format_exception(*sys.exc_info()))
         warnings.warn(
-            "Failed to download data of type '%s' from '%s' due to: \n%s" % (
+            "Failed to download data of type '{}' from '{}' due to: \n{}".format(
                 r["data_type"], r["endpoint"], reason))
         return None
 
@@ -128,7 +127,7 @@ def _download_bulk(r):
     kwargs = {k: v for k, v in r["kwargs"].items() if k in service}
     bulk_str = ""
     for key, value in kwargs.items():
-        bulk_str += "%s=%s\n" % (key, str(value))
+        bulk_str += "{}={}\n".format(key, str(value))
     try:
         return fct(bulk_str + r["bulk_str"])
     except FDSNException:

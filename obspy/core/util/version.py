@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Author: Douglas Creager <dcreager@dcreager.net>
 # This file is placed into the public domain.
 
@@ -100,7 +99,7 @@ def call_git_describe(abbrev=10, dirty=True,
                 remote = None
             if remote is not None:
                 remote_tracking_branch = re.sub(r'[^A-Za-z0-9._-]', r'_',
-                                                '%s-%s' % (remote, branch))
+                                                f'{remote}-{branch}')
         except (IndexError, OSError, ValueError, CalledProcessError):
             pass
 
@@ -124,15 +123,15 @@ def call_git_describe(abbrev=10, dirty=True,
 
 def read_release_version():
     try:
-        with io.open(VERSION_FILE, "rt") as fh:
+        with open(VERSION_FILE, "rt") as fh:
             version = fh.readline()
         return version.strip()
-    except IOError:
+    except OSError:
         return None
 
 
 def write_release_version(version):
-    with io.open(VERSION_FILE, "wb") as fh:
+    with open(VERSION_FILE, "wb") as fh:
         fh.write(("%s\n" % version).encode('ascii', 'strict'))
 
 

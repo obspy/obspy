@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.filesystem.sds - read support for SeisComP Data Structure
 =======================================================================
@@ -55,7 +54,7 @@ SDS_FMTSTR = os.path.join(
 FORMAT_STR_PLACEHOLDER_REGEX = r"{(\w+?)?([!:].*?)?}"
 
 
-class Client(object):
+class Client:
     """
     Request client for SeisComP Data Structure archive on local filesystem.
 
@@ -105,7 +104,7 @@ class Client(object):
         """
         if not os.path.isdir(sds_root):
             msg = ("SDS root is not a local directory: " + sds_root)
-            raise IOError(msg)
+            raise OSError(msg)
         self.sds_root = sds_root
         self.sds_type = sds_type
         self.format = format and format.upper()

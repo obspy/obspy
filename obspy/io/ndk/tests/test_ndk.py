@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import inspect
 import io
 import os
@@ -106,7 +105,7 @@ class NDKTestCase(unittest.TestCase):
         Tests reading from StringIO.
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
-        with open(filename, "rt") as fh:
+        with open(filename) as fh:
             file_object = io.StringIO(fh.read())
 
         cat = read_events(file_object)
@@ -138,7 +137,7 @@ class NDKTestCase(unittest.TestCase):
         Tests reading from an open file in text mode.
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
-        with open(filename, "rt") as fh:
+        with open(filename) as fh:
             cat = read_events(fh)
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
@@ -235,7 +234,7 @@ class NDKTestCase(unittest.TestCase):
         reference = os.path.join(self.datapath, "C200604092050A.xml")
         ref_cat = read_events(reference)
 
-        with io.open(filename, "rt") as fh:
+        with open(filename, "rt") as fh:
             data = fh.read()
 
         self.assertTrue(_is_ndk(data))
@@ -252,7 +251,7 @@ class NDKTestCase(unittest.TestCase):
         reference = os.path.join(self.datapath, "C200604092050A.xml")
         ref_cat = read_events(reference)
 
-        with io.open(filename, "rb") as fh:
+        with open(filename, "rb") as fh:
             data = fh.read()
 
         self.assertTrue(_is_ndk(data))
@@ -264,7 +263,7 @@ class NDKTestCase(unittest.TestCase):
         """
         Tests the raised warning if an event has less then 5 lines.
         """
-        with open(os.path.join(self.datapath, "multiple_events.ndk"), "rt") \
+        with open(os.path.join(self.datapath, "multiple_events.ndk")) \
                 as fh:
             lines = [_i.rstrip() for _i in fh.readlines()]
 
@@ -302,7 +301,7 @@ class NDKTestCase(unittest.TestCase):
         The parser is fairly relaxed and will skip invalid files. This test
         assures that an exception is raised if every event has been skipped.
         """
-        with open(os.path.join(self.datapath, "C200604092050A.ndk"), "rt") \
+        with open(os.path.join(self.datapath, "C200604092050A.ndk")) \
                 as fh:
             lines = [_i.rstrip() for _i in fh.readlines()]
 

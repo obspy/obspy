@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Test suite for the StationXML reader and writer.
 
@@ -60,7 +59,7 @@ class StationXMLTestCase(unittest.TestCase):
 
             def callback(pattern):
                 part2 = " ".join(sorted(pattern.group(2).split(" ")))
-                return "<%s %s>" % (pattern.group(1), part2)
+                return "<{} {}>".format(pattern.group(1), part2)
 
             # resort attributes alphabetically
             org_line = re.sub(regex, callback, org_line, count=1)
@@ -922,7 +921,7 @@ class StationXMLTestCase(unittest.TestCase):
         nested_tag.value.my_nested_tag2 = AttribDict()
         nested_tag.value.my_nested_tag2.namespace = ns
         nested_tag.value.my_nested_tag2.value = True
-        nested_tag.value.my_nested_tag2.attrib = {'{%s}%s' % (
+        nested_tag.value.my_nested_tag2.attrib = {'{{{}}}{}'.format(
             ns, 'nestedAttribute1'): 'nestedAttributeValue1'}
         channel.extra['nested'] = nested_tag
         with NamedTemporaryFile() as tf:

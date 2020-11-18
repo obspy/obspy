@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SeedLink request client for ObsPy.
 
@@ -18,7 +17,7 @@ from .slclient import SLClient, SLPacket
 from .client.seedlinkconnection import SeedLinkConnection
 
 
-class Client(object):
+class Client:
     """
     SeedLink request client.
 
@@ -137,14 +136,14 @@ class Client(object):
                 info = self.get_info(network=network, station=station,
                                      location=location, channel=channel,
                                      level='channel', cache=True)
-                multiselect = ["%s_%s:%s%s" % (net, sta, loc, cha)
+                multiselect = [f"{net}_{sta}:{loc}{cha}"
                                for net, sta, loc, cha in info]
             # otherwise keep location/channel wildcards and do request on
             # station level only
             else:
                 info = self.get_info(network=network, station=station,
                                      level='station', cache=True)
-                multiselect = ["%s_%s:%s%s" % (net, sta, location, channel)
+                multiselect = [f"{net}_{sta}:{location}{channel}"
                                for net, sta in info]
             multiselect = ','.join(multiselect)
             return self._multiselect_request(multiselect, starttime, endtime)
@@ -160,10 +159,10 @@ class Client(object):
                    "untested.")
             warnings.warn(msg)
         if location:
-            loccha = "%2s%3s" % (location, channel)
+            loccha = f"{location:>2}{channel:>3}"
         else:
             loccha = channel
-        seedlink_id = "%s_%s:%s" % (network, station, loccha)
+        seedlink_id = f"{network}_{station}:{loccha}"
         return self._multiselect_request(seedlink_id, starttime, endtime)
 
     def _multiselect_request(self, multiselect, starttime, endtime):

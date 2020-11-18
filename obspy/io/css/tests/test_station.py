@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Test suite for the CSS station writer.
 
@@ -40,9 +39,9 @@ class CSSStationTestCase(unittest.TestCase):
             self.assertEqual(expected_files, actual_files)
 
             for expected, actual in zip(expected_files, actual_files):
-                with open(os.path.join(self.data_dir, expected), 'rt') as f:
+                with open(os.path.join(self.data_dir, expected)) as f:
                     expected_text = f.readlines()
-                with open(os.path.join(tempdir, actual), 'rt') as f:
+                with open(os.path.join(tempdir, actual)) as f:
                     actual_text = f.readlines()
 
                 self.assertEqual(expected_text, actual_text)

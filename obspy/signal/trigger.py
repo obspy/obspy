@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: trigger.py
 #  Purpose: Python trigger/picker routines for seismology.

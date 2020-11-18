@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.inventory - Classes for handling station metadata
 ============================================================

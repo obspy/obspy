@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Provides the Station class.
 
@@ -126,7 +125,7 @@ class Station(BaseNode):
         self.selected_number_of_channels = selected_number_of_channels
         self.external_references = []
         self.water_level = water_level
-        super(Station, self).__init__(
+        super().__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
@@ -214,12 +213,12 @@ class Station(BaseNode):
         site_name = None
         if self.site and self.site.name:
             site_name = self.site.name
-        desc = "%s%s" % (self.code, " (%s)" % (site_name if site_name else ""))
+        desc = "{}{}".format(self.code, " (%s)" % (site_name if site_name else ""))
         content_dict = {"stations": [desc], "channels": []}
 
         for channel in self.channels:
             content_dict["channels"].append(
-                "%s.%s.%s" % (self.code, channel.location_code, channel.code))
+                f"{self.code}.{channel.location_code}.{channel.code}")
         return content_dict
 
     @property

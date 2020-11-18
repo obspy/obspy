@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import math
 import os
 import pickle
@@ -2160,7 +2159,7 @@ class TraceTestCase(unittest.TestCase):
 
         # downsample with custom window
         tr = tr0.copy()
-        window = np.ones((tr.stats.npts))
+        window = np.ones(tr.stats.npts)
         tr.resample(0.5, window=window, no_filter=True)
 
         # downsample with bad window

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.json - JSON write support for ObsPy
 ============================================

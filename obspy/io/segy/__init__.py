@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.segy - SEG Y and SU read and write support for ObsPy
 =============================================================

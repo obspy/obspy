@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import sys
 import tempfile
@@ -260,7 +259,7 @@ class UtilMiscTestCase(unittest.TestCase):
         Setup a complex data structure and ensure recursive search function
         finds all target objects.
         """
-        class Slots(object):
+        class Slots:
             """
             A simple class with slots
             """

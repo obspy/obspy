@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module for ObsPy's default colormaps.
 
@@ -262,7 +261,7 @@ def _get_cmap(file_name, lut=None, reverse=False):
             data = data[::-1]
         cmap = ListedColormap(data, name=name)
     else:
-        raise ValueError('file suffix {} not recognized.'.format(suffix))
+        raise ValueError(f'file suffix {suffix} not recognized.')
 
     return cmap
 
@@ -546,8 +545,8 @@ def _colormap_plot_beamforming_time(cmaps):
             ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
             ax.xaxis.set_major_locator(xlocator)
             ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
-        fig.suptitle('AGFA skyscraper blasting in Munich %s' % (
-            stime.strftime('%Y-%m-%d'), ))
+        fig.suptitle('AGFA skyscraper blasting in Munich {}'.format(
+            stime.strftime('%Y-%m-%d')))
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2,
                             hspace=0)

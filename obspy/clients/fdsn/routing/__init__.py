@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.fdsn.routing - Routing services for FDSN web services
 ===================================================================

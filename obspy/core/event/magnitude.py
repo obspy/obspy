@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.event.magnitude - The Magnitude class definition
 ===========================================================

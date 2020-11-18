@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SC3ML function used for both inventory and event module.
 

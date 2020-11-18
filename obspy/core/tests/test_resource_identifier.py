@@ -581,7 +581,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         a new object adopts the old object's python id.
         """
         # Create a simple class for resource_ids to refere to.
-        class Simple(object):
+        class Simple:
 
             def __init__(self, value):
                 self.value = value

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Internal TauModel class.
 """
@@ -16,7 +15,7 @@ from .tau_branch import TauBranch
 from .velocity_model import VelocityModel
 
 
-class TauModel(object):
+class TauModel:
     """
     Provides storage of all the TauBranches comprising a model.
     """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ObsPy implementation for parsing the sc3ml format to an Inventory object.
 
@@ -44,7 +43,7 @@ def _get_schema_namespace(version_string):
     >>> print(_get_schema_namespace('0.6'))
     http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.6
     """
-    namespace = "%s/%s" % (SCHEMA_NAMESPACE_BASE, version_string)
+    namespace = f"{SCHEMA_NAMESPACE_BASE}/{version_string}"
     return namespace
 
 
@@ -92,13 +91,13 @@ def _read_sc3ml(path_or_file_object):
     # Code can be used for version 0.7, 0.8, and 0.9
     for version in SCHEMA_VERSION:
         namespace = _get_schema_namespace(version)
-        if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
+        if root.find("{{{}}}{}".format(namespace, "Inventory")) is not None:
             break
     else:
         raise ValueError("Schema version not supported.")
 
     def _ns(tagname):
-        return "{%s}%s" % (namespace, tagname)
+        return f"{{{namespace}}}{tagname}"
 
     # This needs to be tested, did not find an inventory
     # with the journal entry.
@@ -867,7 +866,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
             # so that a proper stationXML can be formatted
             for c in coeffs:
                 temp = _read_float_var(c, FilterCoefficient,
-                                       additional_mapping={str("number"): i})
+                                       additional_mapping={"number": i})
                 coeffs_float.append(temp)
                 i += 1
 
@@ -890,7 +889,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
             # so that a proper stationXML can be formatted
             for c in coeffs:
                 temp = _read_float_var(c, FilterCoefficient,
-                                       additional_mapping={str("number"): i})
+                                       additional_mapping={"number": i})
                 coeffs_float.append(temp)
                 i += 1
 

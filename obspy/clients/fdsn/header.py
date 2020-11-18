@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Header files for the FDSN webservice.
 
@@ -29,7 +28,7 @@ class FDSNException(Exception):
                                    "Detailed response of server:",
                                    "",
                                    server_info])
-        super(FDSNException, self).__init__(value)
+        super().__init__(value)
 
 
 class FDSNNoDataException(FDSNException):
@@ -123,7 +122,7 @@ FDSNWS = ("dataselect", "event", "station")
 encoding = sys.getdefaultencoding() or "UTF-8"
 platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
 # The default User Agent that will be sent with every request.
-DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (
+DEFAULT_USER_AGENT = "ObsPy/{} ({}, Python {})".format(
     __version__, platform_, platform.python_version())
 
 

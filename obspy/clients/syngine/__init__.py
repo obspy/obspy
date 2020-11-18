@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.syngine - IRIS Syngine client for ObsPy
 =====================================================

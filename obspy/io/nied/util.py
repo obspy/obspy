@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     """
     Generate an event ID following the SeisComP3 convention. By default it

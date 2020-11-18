@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 import locale
 import os
 import struct
@@ -125,7 +124,7 @@ if __name__ == '__main__':
         All traces referenced by the given wfdisc file will be converted
         to ASCII
         """)
-    except IOError:
+    except OSError:
         print("Cannot access file \"%s\"!" % sys.argv[1])
 
     main(wfdisc)

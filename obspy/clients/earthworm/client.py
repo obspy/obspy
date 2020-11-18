@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Earthworm Wave Server client for ObsPy.
 
@@ -16,7 +15,7 @@ from obspy import Stream, UTCDateTime
 from obspy.clients.earthworm.waveserver import get_menu, read_wave_server_v
 
 
-class Client(object):
+class Client:
     """
     A Earthworm Wave Server client.
 

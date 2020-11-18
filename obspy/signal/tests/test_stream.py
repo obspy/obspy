@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 from copy import deepcopy
 import platform
@@ -85,7 +84,7 @@ class StreamTestCase(unittest.TestCase):
                     self.assertIn("filter", tr.stats.processing[0])
                     self.assertIn(filt_type, tr.stats.processing[0])
                     for key, value in filt_ops.items():
-                        self.assertTrue("'%s': %s" % (key, value)
+                        self.assertTrue(f"'{key}': {value}"
                                         in tr.stats.processing[0])
                 st.filter(filt_type, **filt_ops)
                 for i, tr in enumerate(st):
@@ -95,7 +94,7 @@ class StreamTestCase(unittest.TestCase):
                         self.assertIn("filter", proc_info)
                         self.assertIn(filt_type, proc_info)
                         for key, value in filt_ops.items():
-                            self.assertTrue("'%s': %s" % (key, value)
+                            self.assertTrue(f"'{key}': {value}"
                                             in proc_info)
 
         # some tests that should raise an Exception

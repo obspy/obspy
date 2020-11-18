@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Get the Flinn-Engdahl region name from longitude and latitude.
 """

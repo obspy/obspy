@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Tests the high level obspy.taup.tau interface.
 """
@@ -400,7 +399,7 @@ class TauPyModelTestCase(unittest.TestCase):
         expected = collections.defaultdict(list)
         all_phases = []
 
-        with open(filename, "rt") as fh:
+        with open(filename) as fh:
             for line in fh:
                 line = line.strip()
                 if not line or line.startswith("----"):
@@ -454,7 +453,7 @@ class TauPyModelTestCase(unittest.TestCase):
         """
         filename = os.path.join(DATA, "java_taup_pierce_h10_deg35_ttall")
         expected = collections.defaultdict(list)
-        with open(filename, "rt") as fh:
+        with open(filename) as fh:
             for line in fh:
                 line = line.strip()
                 if not line:
@@ -472,7 +471,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                        phase_list=["ttall"])
 
         # Make sure the same stuff is available.
-        arrival_phases = sorted(set([_i.name for _i in arrivals]))
+        arrival_phases = sorted({_i.name for _i in arrivals})
         self.assertEqual(expected_phases, arrival_phases)
 
         actual = collections.defaultdict(list)
@@ -782,7 +781,7 @@ class TauPyModelTestCase(unittest.TestCase):
             m = TauPyModel(model=model)
             filename = os.path.join(DATA, table)
 
-            with open(filename, "rt") as fh:
+            with open(filename) as fh:
                 for line in fh:
                     _, distance, depth, phase, time, ray_param, _, _ \
                         = line.split()

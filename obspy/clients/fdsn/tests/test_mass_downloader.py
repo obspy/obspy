@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 The obspy.clients.fdsn.download_helpers test suite.
 
@@ -108,7 +107,7 @@ class RestrictionsTestCase(unittest.TestCase):
     Test case for the restrictions object.
     """
     def __init__(self, *args, **kwargs):
-        super(RestrictionsTestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.path = os.path.dirname(__file__)
         self.data = os.path.join(self.path, "data")
 
@@ -308,7 +307,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
     Test cases for utility functionality for the download helpers.
     """
     def __init__(self, *args, **kwargs):
-        super(DownloadHelpersUtilTestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.path = os.path.dirname(__file__)
         self.data = os.path.join(self.path, "data")
 

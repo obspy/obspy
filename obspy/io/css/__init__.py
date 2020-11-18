@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.css - CSS read support for ObsPy
 =========================================

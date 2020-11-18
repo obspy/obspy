@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.nordic - Nordic file format support for ObsPy
 ======================================================

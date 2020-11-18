@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 High-level interface to travel-time calculation routines.
 """
@@ -75,7 +74,7 @@ class Arrivals(list):
     __slots__ = ["model"]
 
     def __init__(self, arrivals, model):
-        super(Arrivals, self).__init__()
+        super().__init__()
         self.model = model
         self.extend(arrivals)
 
@@ -84,7 +83,7 @@ class Arrivals(list):
             other = Arrivals([other], model=self.model)
         if not isinstance(other, Arrivals):
             raise TypeError
-        return self.__class__(super(Arrivals, self).__add__(other),
+        return self.__class__(super().__add__(other),
                               model=self.model)
 
     def __iadd__(self, other):
@@ -114,29 +113,29 @@ class Arrivals(list):
     def __setitem__(self, index, arrival):
         if (isinstance(index, slice) and
                 all(isinstance(x, Arrival) for x in arrival)):
-            super(Arrivals, self).__setitem__(index, arrival)
+            super().__setitem__(index, arrival)
         elif isinstance(arrival, Arrival):
-            super(Arrivals, self).__setitem__(index, arrival)
+            super().__setitem__(index, arrival)
         else:
             msg = 'Only Arrival objects can be assigned.'
             raise TypeError(msg)
 
     def __setslice__(self, i, j, seq):
         if all(isinstance(x, Arrival) for x in seq):
-            super(Arrivals, self).__setslice__(i, j, seq)
+            super().__setslice__(i, j, seq)
         else:
             msg = 'Only Arrival objects can be assigned.'
             raise TypeError(msg)
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            return self.__class__(super(Arrivals, self).__getitem__(index),
+            return self.__class__(super().__getitem__(index),
                                   model=self.model)
         else:
-            return super(Arrivals, self).__getitem__(index)
+            return super().__getitem__(index)
 
     def __getslice__(self, i, j):
-        return self.__class__(super(Arrivals, self).__getslice__(i, j),
+        return self.__class__(super().__getslice__(i, j),
                               model=self.model)
 
     def __str__(self):
@@ -151,13 +150,13 @@ class Arrivals(list):
 
     def append(self, arrival):
         if isinstance(arrival, Arrival):
-            super(Arrivals, self).append(arrival)
+            super().append(arrival)
         else:
             msg = 'Append only supports a single Arrival object as argument.'
             raise TypeError(msg)
 
     def copy(self):
-        return self.__class__(super(Arrivals, self).copy(),
+        return self.__class__(super().copy(),
                               model=self.model)
 
     def plot_times(self, phase_list=None, plot_all=True, legend=False,
@@ -401,7 +400,7 @@ class Arrivals(list):
                         arrowprops=arrowprops,
                         clip_on=False)
             if label_arrivals:
-                name = ','.join(sorted(set(ray.name for ray in arrivals)))
+                name = ','.join(sorted({ray.name for ray in arrivals}))
                 # We cannot just set the text of the annotations above because
                 # it changes the arrow path.
                 t = _SmartPolarText(np.deg2rad(distance),
@@ -463,7 +462,7 @@ class Arrivals(list):
                     markeredgecolor="0.3", clip_on=False,
                     transform=station_marker_transform)
             if label_arrivals:
-                name = ','.join(sorted(set(ray.name for ray in arrivals)))
+                name = ','.join(sorted({ray.name for ray in arrivals}))
                 ax.annotate(name,
                             xy=(distance, arrivals[0].receiver_depth),
                             xytext=(0, ms * 1.5),
@@ -507,7 +506,7 @@ class Arrivals(list):
             ax.set_xlabel("Distance [deg]")
             ax.set_ylabel("Depth [km]")
         else:
-            msg = "Plot type '{}' is not a valid option.".format(plot_type)
+            msg = f"Plot type '{plot_type}' is not a valid option."
             raise ValueError(msg)
         if show:
             plt.show()
@@ -575,7 +574,7 @@ class Arrivals(list):
                               phase_list=("ttall",))
 
 
-class TauPyModel(object):
+class TauPyModel:
     """
     Representation of a seismic model and methods for ray paths through it.
     """

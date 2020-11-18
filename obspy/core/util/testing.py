@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Testing utilities for ObsPy.
 
@@ -187,7 +186,7 @@ def compare_images(expected, actual, tol):
         raise Exception(msg)
 
     if not os.path.exists(expected):
-        raise IOError('Baseline image %r does not exist.' % expected)
+        raise OSError('Baseline image %r does not exist.' % expected)
 
     # Open the images. Will be opened as RGBA as float32 ranging from 0 to 1.
     expected_image = matplotlib.image.imread(expected)
@@ -211,7 +210,7 @@ def compare_images(expected, actual, tol):
                   float(expected_image.size))
 
     base, ext = os.path.splitext(actual)
-    diff_image = '%s-%s%s' % (base, 'failed-diff', ext)
+    diff_image = '{}-{}{}'.format(base, 'failed-diff', ext)
 
     if rms <= tol:
         if os.path.exists(diff_image):
@@ -308,7 +307,7 @@ class ImageComparison(NamedTemporaryFile):
                  plt_close_all_exit=True, style=None, no_uploads=False, *args,
                  **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
-        super(ImageComparison, self).__init__(suffix=self.suffix, *args,
+        super().__init__(suffix=self.suffix, *args,
                                               **kwargs)
         self.image_name = image_name
         self.baseline_image = os.path.join(image_path, image_name)
@@ -425,7 +424,7 @@ class ImageComparison(NamedTemporaryFile):
                 raise ImageComparisonException(msg)
             raise
         # we can still upload actual image if baseline image does not exist
-        except IOError as e:
+        except OSError as e:
             failed = True
             if "Baseline image" in msg and "does not exist." in msg:
                 msg = str(e) + "\n"
@@ -651,7 +650,7 @@ def remove_unique_ids(xml_string, remove_creation_time=False):
     for prefix in prefixes:
         xml_string = re.sub("%s='.*?'" % prefix, '%s=""' % prefix, xml_string)
         xml_string = re.sub('%s=".*?"' % prefix, '%s=""' % prefix, xml_string)
-        xml_string = re.sub("<%s>.*?</%s>" % (prefix, prefix),
+        xml_string = re.sub(f"<{prefix}>.*?</{prefix}>",
                             '<%s/>' % prefix, xml_string)
     return xml_string
 
@@ -672,7 +671,7 @@ def get_all_py_files():
     return sorted(py_files)
 
 
-class WarningsCapture(object):
+class WarningsCapture:
     """
     Try hard to capture all warnings.
 

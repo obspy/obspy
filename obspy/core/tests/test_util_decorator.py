@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 
 from obspy.core.util import get_example_file

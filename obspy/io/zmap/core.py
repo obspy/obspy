@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ZMAP read/write support.
 
@@ -24,7 +23,7 @@ _STD_ZMAP_COLUMNS = ('lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',
 _EXT_ZMAP_COLUMNS = ('h_err', 'z_err', 'm_err')
 
 
-class Pickler(object):
+class Pickler:
 
     def __init__(self, with_uncertainties=False):
         # This is ZMAP column order, don't change it
@@ -165,7 +164,7 @@ class Pickler(object):
         return zmap
 
 
-class Unpickler(object):
+class Unpickler:
 
     def load(self, filename):
         """

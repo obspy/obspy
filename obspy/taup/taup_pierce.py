@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Pierce point calculations.
 """
@@ -11,7 +10,7 @@ class TauPPierce(TauPTime):
     relating to the different arrivals.
     """
     def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0):
-        super(TauPPierce, self).__init__(
+        super().__init__(
             model=model, phase_list=phase_list, depth=depth, degrees=degrees,
             receiver_depth=receiver_depth)
         self.only_turn_points = False

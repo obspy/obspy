@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: invsim.py
 #  Purpose: Python Module for Instrument Correction (Seismology)
@@ -121,20 +120,20 @@ def cosine_taper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
         # cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
         cos_win[idx1:idx2 + 1] = 0.5 * (
-            1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - float(idx1)) /
-                          (idx2 - idx1))))
+            1.0 - np.cos(np.pi * (np.arange(idx1, idx2 + 1) - float(idx1)) /
+                          (idx2 - idx1)))
         cos_win[idx2 + 1:idx3] = 1.0
         cos_win[idx3:idx4 + 1] = 0.5 * (
-            1.0 + np.cos((np.pi * (float(idx3) - np.arange(idx3, idx4 + 1)) /
-                          (idx4 - idx3))))
+            1.0 + np.cos(np.pi * (float(idx3) - np.arange(idx3, idx4 + 1)) /
+                          (idx4 - idx3)))
     else:
         cos_win[idx1:idx2 + 1] = np.cos(-(
             np.pi / 2.0 * (float(idx2) -
                            np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = np.cos((
+        cos_win[idx3:idx4 + 1] = np.cos(
             np.pi / 2.0 * (float(idx3) -
-                           np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
+                           np.arange(idx3, idx4 + 1)) / (idx4 - idx3))
 
     # if indices are identical division by zero
     # causes NaN values in cos_win

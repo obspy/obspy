@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.event.source - Classes for handling seismic source characteristics
 =============================================================================
@@ -496,9 +495,9 @@ def farfield(mt, points, type):
 
 def _fullmt(mt):
     """takes 6 comp moment tensor and returns full 3x3 moment tensor"""
-    mt_full = np.array(([[mt[0], mt[3], mt[4]],
+    mt_full = np.array([[mt[0], mt[3], mt[4]],
                          [mt[3], mt[1], mt[5]],
-                         [mt[4], mt[5], mt[2]]]))
+                         [mt[4], mt[5], mt[2]]])
     return mt_full
 
 

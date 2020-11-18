@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.gcf - Guralp Compressed Format read support for ObsPy
 ==============================================================

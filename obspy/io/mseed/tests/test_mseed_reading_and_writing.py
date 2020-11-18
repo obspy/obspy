@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import copy
 import glob
 import io
@@ -66,7 +65,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         XXX: This tests is a straight port from an old libmseed test. Redundant
         to some other tests.
         """
-        mseed_file = os.path.join(self.path, 'data', str('gaps.mseed'))
+        mseed_file = os.path.join(self.path, 'data', 'gaps.mseed')
         # list of known data samples
         starttime = [1199145599915000, 1199145604035000, 1199145610215000,
                      1199145618455000]
@@ -87,10 +86,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             i += 1
         del stream
         # Also test unicode file names.
-        mseed_filenames = [str('BW.BGLD.__.EHE.D.2008.001.first_record'),
-                           str('qualityflags.mseed'),
-                           str('test.mseed'),
-                           str('timingquality.mseed')]
+        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_record',
+                           'qualityflags.mseed',
+                           'test.mseed',
+                           'timingquality.mseed']
         samprate = [200.0, 200.0, 40.0, 200.0]
         station = ['BGLD', 'BGLD', 'HGN', 'BGLD']
         npts = [412, 412, 11947, 41604, 1]
@@ -285,26 +284,26 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Also test it from an open file.
         for _i in mseed_filenames:
             filename = os.path.join(self.path, 'data', _i)
-            with io.open(filename, "rb") as fh:
+            with open(filename, "rb") as fh:
                 is_mseed = _is_mseed(fh)
             self.assertTrue(is_mseed)
         for _i in non_mseed_filenames:
             filename = os.path.join(self.path, _i)
-            with io.open(filename, "rb") as fh:
+            with open(filename, "rb") as fh:
                 is_mseed = _is_mseed(fh)
             self.assertFalse(is_mseed)
 
         # And from a BytesIO.
         for _i in mseed_filenames:
             filename = os.path.join(self.path, 'data', _i)
-            with io.open(filename, "rb") as fh:
+            with open(filename, "rb") as fh:
                 with io.BytesIO(fh.read()) as buf:
                     buf.seek(0, 0)
                     is_mseed = _is_mseed(buf)
             self.assertTrue(is_mseed)
         for _i in non_mseed_filenames:
             filename = os.path.join(self.path, _i)
-            with io.open(filename, "rb") as fh:
+            with open(filename, "rb") as fh:
                 with io.BytesIO(fh.read()) as buf:
                     buf.seek(0, 0)
                     is_mseed = _is_mseed(buf)
@@ -348,7 +347,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(stream[0].data[_i], data[_i])
 
         # Make sure it can also read from open files.
-        with io.open(testfile, "rb") as fh:
+        with open(testfile, "rb") as fh:
             stream = _read_mseed(fh)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'NL')
@@ -361,7 +360,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(stream[0].data[_i], data[_i])
 
         # And from BytesIO.
-        with io.open(testfile, "rb") as fh:
+        with open(testfile, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 stream = _read_mseed(buf)
@@ -1354,7 +1353,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
                 if "text-encoded" not in reference:
                     data = []
-                    with io.open(reference, "rt") as fh:
+                    with open(reference, "rt") as fh:
                         header = fh.readline().strip()
                         # np.loadtxt cannot deal with varying column lenghts.
                         for line in fh:
@@ -1364,7 +1363,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     np.testing.assert_allclose(tr.data, data,
                                                err_msg=filename)
                 else:
-                    with io.open(reference, "rt") as fh:
+                    with open(reference, "rt") as fh:
                         header = fh.readline().strip()
                         data = fh.read()
 
@@ -1398,7 +1397,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 self.assertEqual(len(st), 1, msg=filename)
                 tr = st[0]
 
-                with io.open(reference, "rt") as fh:
+                with open(reference, "rt") as fh:
                     _id, _, dq = fh.readline().strip().split()
                     _id = _id.rstrip(",").replace("_", ".")
 
@@ -1443,7 +1442,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                         warnings.simplefilter('ignore', InternalMSEEDWarning)
                         read(filename, headonly=True)
 
-                with io.open(reference, "rt") as fh:
+                with open(reference, "rt") as fh:
                     err_msg = fh.readlines()[-1]
                 err_msg = re.sub(r"^Error:\s", "", err_msg).strip()
                 self.assertEqual(err_msg, e.exception.args[0].splitlines()[1])
@@ -1457,7 +1456,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 self.assertEqual(len(st), 1, msg=filename)
                 tr = st[0]
 
-                with io.open(reference, "rt") as fh:
+                with open(reference, "rt") as fh:
                     fh.readline()
                     _id, starttime, endtime, _, sr, npts = \
                         fh.readline().split()
@@ -1492,7 +1491,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         count = 0
 
         for filename in tests:
-            with io.open(filename, "rt") as fh:
+            with open(filename, "rt") as fh:
                 content = fh.read().strip()
 
             # Only do the parsing tests for now.
@@ -1537,7 +1536,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
         with io.BytesIO() as buf:
             for d in data_files:
-                with io.open(d, "rb") as fh:
+                with open(d, "rb") as fh:
                     buf.write(fh.read())
             buf.seek(0, 0)
             st = read(buf)

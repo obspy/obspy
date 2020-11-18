@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Routing client for the EIDAWS routing service.
 
@@ -145,7 +144,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
         for details.
         """
-        return super(EIDAWSRoutingClient, self).get_stations(**kwargs)
+        return super().get_stations(**kwargs)
 
     @_assert_filename_not_in_kwargs
     def get_stations_bulk(self, bulk, **kwargs):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.signal - Signal processing routines for ObsPy
 ===================================================

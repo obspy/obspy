@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import ctypes as C  # NOQA
 
 import numpy as np

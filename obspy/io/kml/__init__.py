@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.kml - Keyhole Markup Language (KML) write support for ObsPy
 ====================================================================

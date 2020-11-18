@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: beachball.py
 #  Purpose: Draws a beach ball diagram of an earthquake focal mechanism.
@@ -933,7 +932,7 @@ def mt2axes(mt):
     return (t, n, p)
 
 
-class PrincipalAxis(object):
+class PrincipalAxis:
     """
     A principal axis.
 
@@ -953,7 +952,7 @@ class PrincipalAxis(object):
         self.dip = dip
 
 
-class NodalPlane(object):
+class NodalPlane:
     """
     A nodal plane.
 
@@ -973,7 +972,7 @@ class NodalPlane(object):
         self.rake = rake
 
 
-class MomentTensor(object):
+class MomentTensor:
     """
     A moment tensor.
 

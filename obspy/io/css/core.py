@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 CSS bindings to ObsPy core module.
 """

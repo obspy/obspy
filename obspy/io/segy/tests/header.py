@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Information about files/segy useful for all tests.
 """

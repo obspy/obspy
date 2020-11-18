@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import unittest
 import warnings
@@ -126,9 +125,9 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             _write_asc(stream1, tempfile, STANDARD_ASC_HEADERS + ['COMMENT'])
             # read both files and compare the content
-            with open(origfile, 'rt') as f:
+            with open(origfile) as f:
                 text1 = f.readlines()
-            with open(tempfile, 'rt') as f:
+            with open(tempfile) as f:
                 text2 = f.readlines()
             self.assertEqual(text1, text2)
             # read again

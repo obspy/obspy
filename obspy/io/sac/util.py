@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SAC module helper functions and data.
 
@@ -422,7 +421,7 @@ def get_sac_reftime(header):
         nzmsec = header['nzmsec']
     except KeyError as e:
         # header doesn't have all the keys
-        msg = "Not enough time information: {}".format(e)
+        msg = f"Not enough time information: {e}"
         raise SacHeaderTimeError(msg)
 
     if 0 <= yr <= 99:

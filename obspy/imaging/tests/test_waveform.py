@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.imaging.waveform test suite.
 """
@@ -242,9 +241,9 @@ class WaveformTestCase(unittest.TestCase):
         Plots with labels.
         """
         st = read()
-        st.label = u"Title #1 üöä?"
+        st.label = "Title #1 üöä?"
         st[0].label = 'Hello World!'
-        st[1].label = u'Hällö Wörld & Marß'
+        st[1].label = 'Hällö Wörld & Marß'
         st[2].label = '*' * 80
         # create and compare image
         with ImageComparison(self.path, 'waveform_labels.png') as ic:

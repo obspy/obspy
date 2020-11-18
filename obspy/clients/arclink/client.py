@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ArcLink/WebDC client for ObsPy.
 
@@ -40,7 +39,7 @@ class ArcLinkException(Exception):
     """
 
 
-class Client(object):
+class Client:
     """
     DEPRECATED -- ArcLink protocol is officially deprecated
 
@@ -118,7 +117,7 @@ class Client(object):
         self._hello()
         self.debug = debug
         if self.debug:
-            print('\nConnected to %s:%s' % (self._client.host,
+            print('\nConnected to {}:{}'.format(self._client.host,
                                             str(self._client.port)))
         # check for dcid_key_file
         if not dcid_key_file:
@@ -128,7 +127,7 @@ class Client(object):
             dcid_key_file = DCID_KEY_FILE
         # parse dcid_key_file
         try:
-            with open(dcid_key_file, 'rt') as fp:
+            with open(dcid_key_file) as fp:
                 lines = fp.readlines()
         except Exception:
             pass
@@ -188,7 +187,7 @@ class Client(object):
         self.version = self._read_ln(b')')
         self.node = self._read_ln()
         if self.password:
-            self._write_ln('USER %s %s' % (self.user, self.password))
+            self._write_ln(f'USER {self.user} {self.password}')
         else:
             self._write_ln('USER %s' % self.user)
         self._read_ln(b'OK')
@@ -310,7 +309,7 @@ class Client(object):
                 # parse XML for reason
                 xml_doc = objectify.fromstring(xml_doc[:-3])
                 msg = xml_doc.request.volume.line.get('message')
-                raise ArcLinkException("%s %s" % (err_code, msg))
+                raise ArcLinkException(f"{err_code} {msg}")
         if b'status="NODATA"' in xml_doc:
             # cleanup
             self._write_ln('PURGE %d' % req_id)

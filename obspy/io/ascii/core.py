@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple ASCII time series formats
 
@@ -72,7 +71,7 @@ def _is_slist(filename):
     True
     """
     try:
-        with open(filename, 'rt') as f:
+        with open(filename) as f:
             temp = f.readline()
     except Exception:
         return False
@@ -98,7 +97,7 @@ def _is_tspair(filename):
     True
     """
     try:
-        with open(filename, 'rt') as f:
+        with open(filename) as f:
             temp = f.readline()
     except Exception:
         return False
@@ -130,7 +129,7 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/slist.ascii')
     """
-    with open(filename, 'rt') as fh:
+    with open(filename) as fh:
         # read file and split text into channels
         buf = []
         key = False
@@ -198,7 +197,7 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/tspair.ascii')
     """
-    with open(filename, 'rt') as fh:
+    with open(filename) as fh:
         # read file and split text into channels
         buf = []
         key = False

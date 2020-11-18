@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.clients.syngine test suite.
 """
@@ -17,7 +16,7 @@ from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
 BASE_URL = "http://service.iris.edu/irisws/syngine/1"
 
 
-class RequestsMockResponse(object):
+class RequestsMockResponse:
     def __init__(self):
         self.text = ""
         self.content = b""

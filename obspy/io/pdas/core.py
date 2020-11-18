@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 PDAS bindings to ObsPy core module.
 
@@ -76,7 +75,7 @@ def _read_pdas(filename, **kwargs):
         else:
             year = "19" + year
     time = items[5][1].decode()
-    t = UTCDateTime("%s-%s-%sT%s" % (year, month, day, time))
+    t = UTCDateTime(f"{year}-{month}-{day}T{time}")
     sampling_rate = 1.0 / float(items[6][1].decode())
     dtype = items[1][1].decode()
     if dtype.upper() == "LONG":

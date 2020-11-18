@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.clients.iris.client test suite.
 """
@@ -160,7 +159,7 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap',
                             filename=tempfile)
-            with open(tempfile, 'rt') as fp:
+            with open(tempfile) as fp:
                 self.assertEqual(fp.readline(),
                                  '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # cs as ASCII file
@@ -169,7 +168,7 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='cs',
                             filename=tempfile)
-            with open(tempfile, 'rt') as fp:
+            with open(tempfile) as fp:
                 self.assertEqual(fp.readline(),
                                  '1.000000E-05  -1.055896E+04  1.473054E+02\n')
         # fap & def as ASCII file
@@ -178,7 +177,7 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='def',
                             filename=tempfile)
-            with open(tempfile, 'rt') as fp:
+            with open(tempfile) as fp:
                 self.assertEqual(fp.readline(),
                                  '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # fap & dis as ASCII file
@@ -187,7 +186,7 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='dis',
                             filename=tempfile)
-            with open(tempfile, 'rt') as fp:
+            with open(tempfile) as fp:
                 self.assertEqual(fp.readline(),
                                  '1.000000E-05 6.635035E-01 2.692007E+02\n')
         # fap & vel as ASCII file
@@ -196,7 +195,7 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='vel',
                             filename=tempfile)
-            with open(tempfile, 'rt') as fp:
+            with open(tempfile) as fp:
                 self.assertEqual(fp.readline(),
                                  '1.000000E-05 1.055999E+04 1.792007E+02\n')
         # fap & acc as ASCII file
@@ -205,7 +204,7 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='acc',
                             filename=tempfile)
-            with open(tempfile, 'rt') as fp:
+            with open(tempfile) as fp:
                 self.assertEqual(fp.readline(),
                                  '1.000000E-05 1.680674E+08 8.920073E+01\n')
         # fap as NumPy ndarray

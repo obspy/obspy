@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Main module containing XML-SEED, dataless SEED and RESP parser.
 
@@ -69,7 +68,7 @@ INDEX_FIELDS = {30: 'data_format_identifier_code',
                 35: 'beam_lookup_code'}
 
 
-class Parser(object):
+class Parser:
     """
     Class parsing dataless and full SEED, X-SEED, and RESP files.
 
@@ -131,12 +130,12 @@ class Parser(object):
         # Sort alphabetically.
         networks = sorted(inv["networks"], key=lambda x: x["network_code"])
         for network in networks:
-            ret_str += "\t%s (%s)\n" % (
+            ret_str += "\t{} ({})\n".format(
                 network["network_code"], network["network_name"])
         stations = sorted(inv["stations"], key=lambda x: x["station_id"])
         ret_str += "Stations:\n"
         for station in stations:
-            ret_str += "\t%s (%s)\n" % (
+            ret_str += "\t{} ({})\n".format(
                 station["station_id"], station["station_name"])
         channels = sorted(inv["channels"], key=lambda x: x["channel_id"])
         ret_str += "Channels:\n"
@@ -180,7 +179,7 @@ class Parser(object):
             elif os.path.isfile(data):
                 if _is_resp(data):
                     # RESP filename
-                    with open(data, 'r') as f:
+                    with open(data) as f:
                         data = f.read()
                     self._parse_resp(data)
                     return
@@ -200,7 +199,7 @@ class Parser(object):
                 try:
                     data = io.BytesIO(data)
                 except Exception:
-                    raise IOError("data is neither filename nor valid URL")
+                    raise OSError("data is neither filename nor valid URL")
         # but could also be a big string with data
         elif isinstance(data, bytes):
             data = io.BytesIO(data)
@@ -229,7 +228,7 @@ class Parser(object):
                 raise
             self._format = 'XSEED'
         else:
-            raise IOError("First byte of data must be in [0-9<]")
+            raise OSError("First byte of data must be in [0-9<]")
 
     def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
@@ -323,7 +322,7 @@ class Parser(object):
                 if isinstance(key, datetime.datetime):
                     # past meta data - append timestamp
                     fn = filename.split('.xml')[0]
-                    fn = "%s.%s.xml" % (filename, UTCDateTime(key).timestamp)
+                    fn = "{}.{}.xml".format(filename, UTCDateTime(key).timestamp)
                 else:
                     # current meta data - leave original file name
                     fn = filename
@@ -1007,10 +1006,10 @@ class Parser(object):
         """
         # Function generating more descriptive warning and error messages.
         def _epoch_warn_msg(msg):
-            return "Epoch %s: %s" % (epoch_str, msg)
+            return f"Epoch {epoch_str}: {msg}"
 
         # Return if there is not response.
-        if set(_i.id for _i in blockettes_for_channel).issubset({52, 59}):
+        if {_i.id for _i in blockettes_for_channel}.issubset({52, 59}):
             return None
 
         transform_map = {'A': 'LAPLACE (RADIANS/SECOND)',
@@ -1570,7 +1569,7 @@ class Parser(object):
                     decimation_correction=b57.correction_applied))
             # Response list stage.
             elif blkts[0].id == 55:
-                assert set(b_.id for b_ in blkts).issubset({55, 57, 58})
+                assert {b_.id for b_ in blkts}.issubset({55, 57, 58})
                 b57 = [_i for _i in blkts if _i.id == 57]
                 if len(b57):
                     b57 = b57[0]
@@ -1875,7 +1874,7 @@ class Parser(object):
             if self.debug:
                 if not record_continuation:
                     print("========")
-                print((record[0:8]))
+                print(record[0:8])
             record = data.read(self.record_length)
         # Use parse once again.
         self._parse_merged_data(merged_data.strip(), record_type)
@@ -1907,7 +1906,7 @@ class Parser(object):
                     if cur_nw not in info["networks"]:
                         info["networks"].append(cur_nw)
                     current_station = blkt.station_call_letters.strip()
-                    cur_stat = {"station_id": "%s.%s" % (current_network,
+                    cur_stat = {"station_id": "{}.{}".format(current_network,
                                                          current_station),
                                 "station_name": blkt.site_name}
                     if cur_stat not in info["stations"]:
@@ -1919,7 +1918,7 @@ class Parser(object):
                     chan_info = {}
                     channel = blkt.channel_identifier.strip()
                     location = blkt.location_identifier.strip()
-                    chan_info["channel_id"] = "%s.%s.%s.%s" % (
+                    chan_info["channel_id"] = "{}.{}.{}.{}".format(
                         current_network, current_station, location, channel)
                     chan_info["sampling_rate"] = blkt.sample_rate
                     chan_info["instrument"] = \
@@ -2383,12 +2382,12 @@ class Parser(object):
             msg = "Stream needs to have three components."
             raise ValueError(msg)
         # Network, station and location need to be identical for all three.
-        is_unique = len(set([(i.stats.starttime.timestamp,
+        is_unique = len({(i.stats.starttime.timestamp,
                               i.stats.endtime.timestamp,
                               i.stats.npts,
                               i.stats.network,
                               i.stats.station,
-                              i.stats.location) for i in stream])) == 1
+                              i.stats.location) for i in stream}) == 1
         if not is_unique:
             msg = ("All the Traces need to cover the same time span and have "
                    "the same network, station, and location.")
