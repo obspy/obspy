@@ -19,9 +19,9 @@
       <name>Catalog</name>
       <open>1</open>
       <description>3 Event(s) in Catalog:
-2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
-2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
-2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual</description>
+2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  mb | manual
+2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
+2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0  ML | manual</description>
       <Style>
         <ListStyle>
           <listItemType>check</listItemType>
@@ -43,7 +43,7 @@
         <Point>
           <coordinates>79.689000,41.818000,0</coordinates>
         </Point>
-        <description>Event:	2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
+        <description>Event:	2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  mb | manual
 
 	            resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000041")
 	             event_type: 'not reported'
@@ -70,7 +70,7 @@
         <Point>
           <coordinates>41.044000,39.342000,0</coordinates>
         </Point>
-        <description>Event:	2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        <description>Event:	2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
 
 	            resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000038")
 	             event_type: 'not reported'
@@ -97,7 +97,7 @@
         <Point>
           <coordinates>37.736000,38.017000,0</coordinates>
         </Point>
-        <description>Event:	2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
+        <description>Event:	2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0  ML | manual
 
 	            resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000039")
 	             event_type: 'not reported'

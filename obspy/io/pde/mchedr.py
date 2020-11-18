@@ -1079,7 +1079,7 @@ def _read_mchedr(filename):
     >>> cat = read_events('/path/to/mchedr.dat')
     >>> print(cat)
     1 Event(s) in Catalog:
-    2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb
+    2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2  Mb
     """
     return Unpickler().load(filename)
 

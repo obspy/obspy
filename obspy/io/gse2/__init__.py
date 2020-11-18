@@ -99,7 +99,7 @@ Read support works via the ObsPy plugin structure:
 >>> catalog = read_events('/path/to/bulletin/gse_2.0_standard.txt')
 >>> print(catalog)
 1 Event(s) in Catalog:
-1995-01-16T07:26:52.400000Z | +39.450,  +20.440 | 3.6 mb | manual
+1995-01-16T07:26:52.400000Z | +39.450,  +20.440 | 3.6  mb | manual
 
 For details on further parameters see
 :meth:`~obspy.io.gse2.bulletin._read_gse2`

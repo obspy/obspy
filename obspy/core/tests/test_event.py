@@ -49,7 +49,7 @@ class EventTestCase(unittest.TestCase):
         event = read_events()[1]
         s = event.short_str()
         self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
-                         " | 4.3 ML | manual", s)
+                         " | 4.3  ML | manual", s)
 
     def test_str_empty_origin(self):
         """
@@ -264,7 +264,8 @@ class CatalogTestCase(unittest.TestCase):
         """
         catalog = read_events()
         self.assertTrue(catalog.__str__().startswith("3 Event(s) in Catalog:"))
-        self.assertTrue(catalog.__str__().endswith("37.736 | 3.0 ML | manual"))
+        self.assertTrue(catalog.__str__().endswith(
+            "37.736 | 3.0  ML | manual"))
 
     def test_read_events(self):
         """

@@ -40,7 +40,7 @@ class MchedrTestCase(unittest.TestCase):
         self.assertEqual(
             str(self.catalog),
             '''1 Event(s) in Catalog:
-2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb'''
+2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2  Mb'''
         )
 
     def test_event(self):

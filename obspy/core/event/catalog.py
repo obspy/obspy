@@ -300,25 +300,25 @@ class Catalog(object):
         >>> cat = read_events()
         >>> print(cat)
         3 Event(s) in Catalog:
-        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
-        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
-        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
+        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  mb | manual
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
+        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0  ML | manual
         >>> cat2 = cat.filter("magnitude >= 4.0", "latitude < 40.0")
         >>> print(cat2)
         1 Event(s) in Catalog:
-        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
         >>> cat3 = cat.filter("time > 2012-04-04T14:10",
         ...                   "time < 2012-04-04T14:20")
         >>> print(cat3)
         1 Event(s) in Catalog:
-        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
         >>> cat4 = cat.filter("time > 2012-04-04T14:10",
         ...                   "time < 2012-04-04T14:20",
         ...                   inverse=True)
         >>> print(cat4)
         2 Event(s) in Catalog:
-        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
-        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
+        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  mb | manual
+        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0  ML | manual
         """
         # Helper functions. Only first argument might be None. Avoid
         # unorderable types by checking first shortcut on positive is None

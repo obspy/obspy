@@ -22,8 +22,8 @@ mechanisms including format autodetection.
 >>> cat = read_events('/path/to/zmap_events.txt')
 >>> print(cat)
 2 Event(s) in Catalog:
-2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 None
-2012-04-04T14:21:42.300000Z | +41.822,  +79.684 | 5.1 None
+2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  None
+2012-04-04T14:21:42.300000Z | +41.822,  +79.684 | 5.1  None
 >>> cat.write('example.txt', format='ZMAP')  # doctest: +SKIP
 
 

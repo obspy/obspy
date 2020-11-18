@@ -1816,8 +1816,8 @@ def _read_quakeml(filename):
     >>> cat = read_events('/path/to/iris_events.xml')
     >>> print(cat)
     2 Event(s) in Catalog:
-    2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
-    2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8 MS
+    2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1  MW
+    2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8  MS
     """
     return Unpickler().load(filename)
 

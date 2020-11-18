@@ -714,7 +714,7 @@ class QuakeMLTestCase(unittest.TestCase):
         assert_no_extras(catalog)
         self.assertEqual(len(catalog), 1)
         ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 " + \
-                 "| 2.0 MW"
+                 "| 2.0  MW"
         self.assertIn(ev_str, str(catalog.events[0]))
         # testing ids
         ev = catalog.events[0]
