@@ -130,8 +130,6 @@ KEYWORDS = [
     'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
     'XSEED']
 
-# when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
-
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-flinn-engdahl = obspy.scripts.flinnengdahl:main',
