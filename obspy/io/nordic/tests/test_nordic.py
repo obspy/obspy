@@ -1074,15 +1074,8 @@ class TestNordicMethods:
     def ellispe_color_cycle(self):
         """Fixture to get collors for ellipse plot."""
         import matplotlib.pyplot as plt
-        try:
-            prop_cycle = plt.rcParams['axes.prop_cycle']
-        # prop_cycle was introduced at some point between mpl 1.x and 2.0 it
-        # seems
-        # XXX workaround can be removed when mpl is bumped to certain version
-        except KeyError:
-            colors = plt.rcParams['axes.color_cycle']
-        else:
-            colors = prop_cycle.by_key()['color']
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color']
         color_cycle = cycle(colors)
         return color_cycle
 
