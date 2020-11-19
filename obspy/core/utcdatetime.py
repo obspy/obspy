@@ -13,6 +13,7 @@ import calendar
 import math
 import operator
 import re
+import sys
 import time
 import warnings
 
@@ -38,6 +39,9 @@ _ISO8601_REGEX = re.compile(r"""
     )?
     $
     """, re.VERBOSE)
+# Regular expression used in the init function of the UTCDateTime objects which
+# is called a lot. Thus pre-compile it.
+_YEAR0REGEX = re.compile(r"^(\d{1,3}[-/,])(.*)$")
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
@@ -337,6 +341,12 @@ class UTCDateTime(object):
                     value = value.decode()
                 # got a string instance
                 value = value.strip()
+
+                # Raising in the case where the leading string is less than 4
+                # chars; linked to #2167
+                if re.match(_YEAR0REGEX, value):
+                    raise ValueError(
+                        "'%s' does not start with a 4 digit year" % value)
 
                 # check for ISO8601 date string
                 if iso8601 is True or (iso8601 is None and
@@ -1261,6 +1271,8 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
+        if sys.platform.startswith("linux"):
+            format = format.replace("%Y", "%04Y")
         return self.datetime.strftime(format)
 
     @staticmethod
