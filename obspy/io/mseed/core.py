@@ -784,6 +784,9 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
             # int64 data not supported; if possible downcast to int32, else
             # create error message. After bumping up to numpy 1.9.0 this check
             # can be replaced by numpy.can_cast()
+            # -- actually not sure, it even looks like can_cast() does not
+            # check individual values in arrays, so it might be better to keep
+            # the current check using iinfo().
             elif trace.data.dtype.type == np.int64:
                 # check if data can be safely downcast to int32
                 ii32 = np.iinfo(np.int32)
