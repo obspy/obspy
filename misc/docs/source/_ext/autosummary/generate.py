@@ -171,18 +171,18 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
 
             if doc.objtype == 'module':
                 ns['members'] = dir(obj)
-                ns['functions'], ns['all_functions'] = \
-                                   get_members(obj, 'function')
-                ns['classes'], ns['all_classes'] = \
-                                 get_members(obj, 'class')
-                ns['exceptions'], ns['all_exceptions'] = \
-                                   get_members(obj, 'exception')
+                funcs = get_members(obj, 'function')
+                ns['functions'], ns['all_functions'] = funcs
+                classes = get_members(obj, 'class')
+                ns['classes'], ns['all_classes'] = classes
+                excptions = get_members(obj, 'exception')
+                ns['exceptions'], ns['all_exceptions'] = excptions
             elif doc.objtype == 'class':
                 ns['members'] = dir(obj)
-                ns['methods'], ns['all_methods'] = \
-                                 get_members(obj, 'method', ['__init__'])
-                ns['attributes'], ns['all_attributes'] = \
-                                 get_members(obj, 'attribute')
+                methods = get_members(obj, 'method', ['__init__'])
+                ns['methods'], ns['all_methods'] = methods
+                attribs = get_members(obj, 'attribute')
+                ns['attributes'], ns['all_attributes'] = attribs
 
             parts = name.split('.')
             if doc.objtype in ('method', 'attribute'):
@@ -297,8 +297,8 @@ def find_autosummary_in_lines(lines, module=None, filename=None):
                 name = m.group(1).strip()
                 if name.startswith('~'):
                     name = name[1:]
-                if current_module and \
-                       not name.startswith(current_module + '.'):
+                condition = not name.startswith(current_module + '.')
+                if current_module and condition:
                     name = "%s.%s" % (current_module, name)
                 documented.append((name, toctree, template))
                 continue

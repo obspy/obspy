@@ -4,6 +4,7 @@ import os
 import pickle
 import unittest
 import warnings
+from pathlib import Path
 
 from matplotlib import rcParams
 import numpy as np
@@ -504,6 +505,14 @@ class CatalogTestCase(unittest.TestCase):
         event2 = read_events(bio)[0]
         # saved and loaded event should be equal
         self.assertEqual(event1, event2)
+
+    def test_read_path(self):
+        """
+        Ensure read_events works with pathlib.Path objects.
+        """
+        path = Path(self.iris_xml)
+        cat = read_events(path)
+        self.assertEqual(cat, read_events(self.iris_xml))
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')

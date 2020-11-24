@@ -54,11 +54,11 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
     objects.
 
-    :type pathname_or_url: str or io.BytesIO, optional
-    :param pathname_or_url: String containing a file name or a URL or a open
-        file-like object. Wildcards are allowed for a file name. If this
-        attribute is omitted, an example :class:`~obspy.core.stream.Stream`
-        object will be returned.
+    :type pathname_or_url: str, io.BytesIO, or pathlib.Path, optional
+    :param pathname_or_url: String containing a file name or a URL, a Path
+        object, or a open file-like object. Wildcards are allowed for a file
+        name. If this attribute is omitted, an example
+        :class:`~obspy.core.stream.Stream` object will be returned.
     :type format: str, optional
     :param format: Format of the file to read (e.g. ``"MSEED"``). See
         the `Supported Formats`_ section below for a list of supported formats.

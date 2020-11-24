@@ -7,6 +7,7 @@ Changes:
      instrument response (see #2677)
    * round magnitudes in Catalog/Event string representation to one decimal
      (see #2742)
+   * add support for pathlib.Path objects in read functions (see #2743)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.io.hypodd

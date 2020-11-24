@@ -7,6 +7,7 @@ import platform
 import unittest
 import warnings
 from copy import deepcopy
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
@@ -25,7 +26,6 @@ class StreamTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.stream.Stream.
     """
-
     def setUp(self):
         # set specific seed value such that random numbers are reproducible
         np.random.seed(815)
@@ -1342,7 +1342,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_pickle(self):
         """
-        Testing pickling of Stream objects..
+        Testing pickling of Stream objects.
         """
         tr = Trace(data=np.random.randn(1441))
         st = Stream([tr])
@@ -1365,7 +1365,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_cpickle(self):
         """
-        Testing pickling of Stream objects..
+        Testing pickling of Stream objects.
         """
         tr = Trace(data=np.random.randn(1441))
         st = Stream([tr])
@@ -1947,6 +1947,16 @@ class StreamTestCase(unittest.TestCase):
         # headonly
         tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
         self.assertEqual(tr.data.size, 0)
+
+    def test_read_path(self):
+        """
+        Test for reading a pathlib object.
+        """
+        base_path = Path(__file__).parent / 'data'
+        data_path = base_path / 'IU_ULN_00_LH1_2015-07-18T02.mseed'
+        self.assertTrue(data_path.exists())
+        st = read(data_path)
+        self.assertIsInstance(st, Stream)
 
     def test_copy(self):
         """

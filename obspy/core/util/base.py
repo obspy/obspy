@@ -20,6 +20,7 @@ import tempfile
 import unicodedata
 import warnings
 from collections import OrderedDict
+from pathlib import PurePath
 
 import numpy as np
 import pkg_resources
@@ -646,6 +647,9 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
 
 def _generic_reader(pathname_or_url=None, callback_func=None,
                     **kwargs):
+    # convert pathlib.Path objects to str for compatibility.
+    if isinstance(pathname_or_url, PurePath):
+        pathname_or_url = str(pathname_or_url)
     if not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
         try:

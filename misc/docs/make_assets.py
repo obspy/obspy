@@ -2,14 +2,10 @@
 """
 USAGE: make_assets.py [-f] [-c]
 """
-
-from __future__ import print_function, unicode_literals
-from future.builtins import *  # @UnusedWildImport
-from future.moves.urllib import request
-
 import os
 import shutil
 import sys
+from urllib import request
 
 
 CDN_URL = 'https://netdna.bootstrapcdn.com/bootstrap/3.1.1/'
@@ -60,7 +56,7 @@ for asset, url in ASSETS.items():
         try:
             print('Deleting %s ...' % (asset))
             os.remove(asset)
-        except:
+        except Exception:
             if force:
                 pass
             else:
