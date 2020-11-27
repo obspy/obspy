@@ -27,7 +27,6 @@ for seismology.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import requests
 import sys
 import warnings
 
@@ -58,13 +57,6 @@ _add_format_plugin_table(read_inventory, "inventory", "read", numspaces=4)
 _add_format_plugin_table(Stream.write, "waveform", "write", numspaces=8)
 _add_format_plugin_table(Catalog.write, "event", "write", numspaces=8)
 _add_format_plugin_table(Inventory.write, "inventory", "write", numspaces=8)
-
-
-if requests.__version__ in ('2.12.0', '2.12.1', '2.12.2'):
-    msg = ("ObsPy has some known issues with 'requests' version {} (see "
-           "github issue #1599). Please consider updating module 'requests' "
-           "to a newer version.").format(requests.__version__)
-    warnings.warn(msg)
 
 if int(sys.version[0]) < 3:
     raise ImportError("""You are running ObsPy >= 1.3 on Python 2
