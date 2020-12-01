@@ -11,6 +11,8 @@ Changes:
      read_events() functions (see #2743)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
+ - obspy.io.css:
+   * open CSS waveforms even if gzip-compressed (see #2736)
  - obspy.io.hypodd
    * add PHA write support (see #2687)
    * add read support for horizontal and vertical origin uncertainty (see #2687)

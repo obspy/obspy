@@ -9,6 +9,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
 
+import gzip
 
 DTYPE = {
     # Big-endian integers
@@ -124,8 +125,8 @@ def _read_css(filename, **kwargs):
     for line in lines:
         npts = int(line[79:87])
         dirname = line[148:212].strip().decode()
-        filename = line[213:245].strip().decode()
-        filename = os.path.join(basedir, dirname, filename)
+        wfdisc_dfile = line[213:245].strip().decode()
+        dfilename = os.path.join(basedir, dirname, wfdisc_dfile)
         offset = int(line[246:256])
         dtype = DTYPE[line[143:145]]
         if isinstance(dtype, tuple):
@@ -134,11 +135,25 @@ def _read_css(filename, **kwargs):
         else:
             read_fmt = np.dtype(dtype)
             fmt = read_fmt
-        with open(filename, "rb") as fh:
-            fh.seek(offset)
-            data = fh.read(read_fmt.itemsize * npts)
-            data = from_buffer(data, dtype=read_fmt)
-            data = np.require(data, dtype=fmt)
+
+        try:
+            # assumed that the waveform file is not compressed
+            fh = open(dfilename, "rb")
+        except FileNotFoundError as e:
+            # If does not find the waveform file referenced in the wfdisc,
+            # it will try to open a compressed .gz suffix file instead.
+            try:
+                fh = gzip.open(dfilename + '.gz', "rb")
+            except FileNotFoundError:
+                raise e
+
+        # Read one segment of binary data
+        fh.seek(offset)
+        data = fh.read(read_fmt.itemsize * npts)
+        fh.close()
+        data = from_buffer(data, dtype=read_fmt)
+        data = np.require(data, dtype=fmt)
+
         header = {}
         header['station'] = line[0:6].strip().decode()
         header['channel'] = line[7:15].strip().decode()
