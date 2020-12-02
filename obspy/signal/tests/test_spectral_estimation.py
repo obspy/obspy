@@ -597,6 +597,17 @@ class PsdTestCase(unittest.TestCase):
         np.testing.assert_array_equal(ln, ln_m)
         np.testing.assert_array_equal(per1, per1_m)
         np.testing.assert_array_equal(per2, per2_m)
+        # test calculated psd values
+        psd = ppsd.psd_values[0]
+        self.assertEqual(len(psd), 73)
+        psd = psd[:20]
+        expected = np.array([
+            -63.424206, -64.07918, -64.47593, -64.77374, -65.09937,
+            -67.17343, -66.36576, -65.75002, -65.34155, -64.58012,
+            -63.72327, -62.615784, -61.612656, -61.085754, -60.09534,
+            -58.949272, -57.600315, -56.43776, -55.448067, -54.242218],
+            dtype=np.float32)
+        np.testing.assert_array_almost_equal(psd, expected, decimal=2)
 
     def test_ppsd_add_npz(self):
         """
