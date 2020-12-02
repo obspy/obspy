@@ -579,28 +579,24 @@ class PsdTestCase(unittest.TestCase):
         inv = read_inventory(md)
         tr = st[0]
         ppsd = PPSD(tr.stats, metadata=inv, special_handling='infrasound',
-                    db_bins=(-100, 40, 1.))
+                    db_bins=(-100, 40, 1.), ppsd_length=300, overlap=0.5)
         ppsd.add(st)
         fig = ppsd.plot(xaxis_frequency=True,  period_lim=(0.01, 10),
                         show=False)
         models = (get_idc_infra_hi_noise(), get_idc_infra_low_noise())
         lines = fig.axes[0].lines
         freq1 = lines[0].get_xdata()
-        per1 = []
-        for f in freq1:
-            per1.append(1/f)
+        per1 = 1 / freq1
         hn = lines[0].get_ydata()
         freq2 = lines[1].get_xdata()
-        per2 = []
-        for f in freq2:
-            per2.append(1/f)
+        per2 = 1 / freq2
         ln = lines[1].get_ydata()
         per1_m, hn_m = models[0]
         per2_m, ln_m = models[1]
-        self.assertEqual(list(hn), list(hn_m))
-        self.assertEqual(list(ln), list(ln_m))
-        self.assertEqual(per1, list(per1_m))
-        self.assertEqual(per2, list(per2_m))
+        np.testing.assert_array_equal(hn, hn_m)
+        np.testing.assert_array_equal(ln, ln_m)
+        np.testing.assert_array_equal(per1, per1_m)
+        np.testing.assert_array_equal(per2, per2_m)
 
     def test_ppsd_add_npz(self):
         """
