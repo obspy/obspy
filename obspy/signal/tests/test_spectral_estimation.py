@@ -22,6 +22,8 @@ from obspy.core.util.testing import (
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
 from obspy.signal.spectral_estimation import earthquake_models
+from obspy.signal.spectral_estimation import get_idc_infra_low_noise
+from obspy.signal.spectral_estimation import get_idc_infra_hi_noise
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -564,6 +566,48 @@ class PsdTestCase(unittest.TestCase):
             self.assertEqual(list(line.get_xdata()), list(periods))
             caption = 'M%.1f\n%dkm' % (magnitude, distance)
             self.assertEqual(ax.texts[0].get_text(), caption)
+
+    def test_ppsd_infrasound(self):
+        """
+        Test plotting psds on infrasound data
+        """
+        wf = os.path.join(
+            PATH, 'IM.I59H1..BDF_2020_10_31.mseed')
+        md = os.path.join(
+            PATH, 'IM.I59H1..BDF_2020_10_31.xml')
+        st = read(wf)
+        inv = read_inventory(md)
+        tr = st[0]
+        ppsd = PPSD(tr.stats, metadata=inv, special_handling='infrasound',
+                    db_bins=(-100, 40, 1.), ppsd_length=300, overlap=0.5)
+        ppsd.add(st)
+        fig = ppsd.plot(xaxis_frequency=True,  period_lim=(0.01, 10),
+                        show=False)
+        models = (get_idc_infra_hi_noise(), get_idc_infra_low_noise())
+        lines = fig.axes[0].lines
+        freq1 = lines[0].get_xdata()
+        per1 = 1 / freq1
+        hn = lines[0].get_ydata()
+        freq2 = lines[1].get_xdata()
+        per2 = 1 / freq2
+        ln = lines[1].get_ydata()
+        per1_m, hn_m = models[0]
+        per2_m, ln_m = models[1]
+        np.testing.assert_array_equal(hn, hn_m)
+        np.testing.assert_array_equal(ln, ln_m)
+        np.testing.assert_array_equal(per1, per1_m)
+        np.testing.assert_array_equal(per2, per2_m)
+        # test calculated psd values
+        psd = ppsd.psd_values[0]
+        self.assertEqual(len(psd), 73)
+        psd = psd[:20]
+        expected = np.array([
+            -63.424206, -64.07918, -64.47593, -64.77374, -65.09937,
+            -67.17343, -66.36576, -65.75002, -65.34155, -64.58012,
+            -63.72327, -62.615784, -61.612656, -61.085754, -60.09534,
+            -58.949272, -57.600315, -56.43776, -55.448067, -54.242218],
+            dtype=np.float32)
+        np.testing.assert_array_almost_equal(psd, expected, decimal=2)
 
     def test_ppsd_add_npz(self):
         """
