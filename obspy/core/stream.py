@@ -962,6 +962,38 @@ class Stream(object):
             Defaults to ``0.5``.
         :param grid_linestyle: Grid line style.
             Defaults to ``':'``
+        :param plot_time_marks: Boolean value. If True the plot method will
+            search for a ``trace.stats.timemarks`` attribute. The attribute
+            must be an iterable-container of lists/tuples. Each single element
+            must cotain 2 element: an UTCDateTime object and a dictionary
+            containing matplotlib attributes for individual customizations.
+            The defaults change based on plot type selected (currently this
+            option is not supported by ``dayplot`` type only)
+            Example::
+
+
+                tr.stats.timemarks=[
+                    ( UTCDateTime(...), {marker:"|", color:"r" ...}),
+                    ( UTCDateTime(...), {marker:"o", markersize:10, ...})
+                    ...
+                    ]
+
+
+            The defaults plotting attribute are called when the dictionary is
+            set to either ``None`` or ``{}``.
+            Example::
+
+
+                tr.stats.timemarks=[
+                    ( UTCDateTime(...), {}),
+                    ]
+
+
+            It set to True but no timemarks attributes are found, This option
+            is simply ignored and will not raise any error.
+            Defaults to ``False``
+
+
 
         **Dayplot Parameters**
 
