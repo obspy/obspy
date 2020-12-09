@@ -464,7 +464,7 @@ def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
     :type byteorder: int or str
     :param keep_sac_header: Whether to merge the ``Stats`` header with an
         existing ``Stats.sac`` SAC header, if one exists.
-        See :func:`~obspy.io.sac.util.obspy_to_sac_header` for more information.
+        See :func:`~obspy.io.sac.util.obspy_to_sac_header` for more.
     :type keep_sac_header: bool
     """
     if byteorder in ("<", 0, "0"):
