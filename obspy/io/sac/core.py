@@ -462,6 +462,10 @@ def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
         little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
         Defaults to little endian.
     :type byteorder: int or str
+    :param keep_sac_header: Whether to merge the ``Stats`` header with an
+        existing ``Stats.sac`` SAC header, if one exists.
+        See :func:`~obspy.io.sac.util.obspy_to_sac_header` for more information.
+    :type keep_sac_header: bool
     """
     if byteorder in ("<", 0, "0"):
         byteorder = 'little'
@@ -470,5 +474,7 @@ def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
     else:
         msg = "Invalid byte order. It must be either '<', '>', 0 or 1"
         raise ValueError(msg)
-    sac = SACTrace.from_obspy_trace(trace)
+
+    keep_sac_header = kwargs.get('keep_sac_header', True)
+    sac = SACTrace.from_obspy_trace(trace, keep_sac_header)
     sac.write(buf, ascii=False, byteorder=byteorder)

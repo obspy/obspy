@@ -265,6 +265,10 @@ Changes:
    * Add support for custom tags (see #2284).
  - obspy.io.sh:
    * fix appending traces to existing Q file (see #2870)
+ - obspy.io.sac:
+   * expose a `keep_sac_header` flag to the `write` plugin, which allows users
+     to write a "fresh" SAC header, instead of attempting to merge information
+     from an old SAC header, if one exists. (see #2760)
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
