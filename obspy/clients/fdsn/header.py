@@ -101,6 +101,7 @@ URL_MAPPINGS = {
     "INGV": "http://webservices.ingv.it",
     "IPGP": "http://ws.ipgp.fr",
     "IRIS": "http://service.iris.edu",
+    "IRISPH5": "http://service.iris.edu",
     "ISC": "http://isc-mirror.iris.washington.edu",
     "KNMI": "http://rdsa.knmi.nl",
     "KOERI": "http://eida.koeri.boun.edu.tr",
@@ -117,6 +118,10 @@ URL_MAPPINGS = {
     "UIB-NORSAR": "http://eida.geo.uib.no",
     "USGS": "http://earthquake.usgs.gov",
     "USP": "http://sismo.iag.usp.br"}
+URL_MAPPING_SUBPATHS = {
+    "IRISPH5": "/ph5ws",
+    }
+URL_DEFAULT_SUBPATH = '/fdsnws'
 
 FDSNWS = ("dataselect", "event", "station")
 

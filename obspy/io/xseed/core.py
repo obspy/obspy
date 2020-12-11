@@ -230,6 +230,10 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
         elevation = last_or_none("elevation")
         site_name = last_or_none("site_name")
 
+        # handle None in mandatory elevation field with obvious bogus value
+        if elevation is None:
+            elevation = 123456.0
+
         # Take the first start-date and the last end-date.
         start_effective_date = station_info["start_effective_date"][0] \
             if "start_effective_date" in station_info else None
@@ -254,9 +258,10 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
         s = obspy.core.inventory.Station(
             code=station_call_letters,
             # Set to bogus values if not set.
+            # elevation bogus is handled above
             latitude=latitude or 0.0,
             longitude=longitude or 0.0,
-            elevation=elevation or 123456.0,
+            elevation=elevation,
             channels=None,
 
             site=obspy.core.inventory.Site(name=site_name),

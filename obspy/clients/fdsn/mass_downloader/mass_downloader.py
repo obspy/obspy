@@ -50,11 +50,13 @@ class MassDownloader(object):
     implementations.
 
     :param providers: List of FDSN client names or service URLS. Will use
-        all FDSN implementations known to ObsPy except RASPISHAKE if set to
-        None. The order in the list also determines their priority, if data
-        is available at more then one provider it will always be downloaded
-        from the provider that comes first in the list. To include RASPISHAKE,
-        you must set this parameter to
+        all FDSN implementations known to ObsPy except RASPISHAKE (generally
+        worse quality data) and IRISPH5 (active source / nodal experiments that
+        might match a very large amount of data occasionally) if set to None.
+        The order in the list also determines their priority, if data is
+        available at more then one provider it will always be downloaded from
+        the provider that comes first in the list. To include RASPISHAKE and
+        IRISPH5, you must set this parameter to
         `obspy.clients.fdsn.header.URL_MAPPINGS` explicitly.
     :param debug: Debug flag passed to the underlying FDSN web service clients.
     :type providers: list of str or :class:`~obspy.clients.fdsn.client.Client`
@@ -90,6 +92,11 @@ class MassDownloader(object):
                 del providers["ORFEUS"]
             else:
                 has_orfeus = False
+
+            # leave out IRISPH5 which is for nodal experiments and might match
+            # insanely large datasets, depending on restrictions
+            if "IRISPH5" in providers:
+                del providers["IRISPH5"]
 
             _p = sorted(providers)
             if has_orfeus:
