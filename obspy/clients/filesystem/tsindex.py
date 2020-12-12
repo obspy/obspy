@@ -1295,8 +1295,8 @@ class TSIndexDatabaseHandler(object):
                     raise OSError("Database path '{}' does not exist."
                                   .format(db_dirpath))
                 elif not os.path.isfile(self.database):
-                    logger.warning("No sqlite3 database file exists at `{}`."
-                                   .format(self.database))
+                    logger.info("No sqlite3 database file exists at `{}`."
+                                .format(self.database))
             else:
                 raise ValueError("database must be a string.")
             db_path = "sqlite:///{}".format(self.database)
