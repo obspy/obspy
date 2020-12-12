@@ -1189,8 +1189,7 @@ class Indexer(object):
             else:
                 raise OSError("No leap seconds file exists at `{}`. "
                               .format(leap_seconds_file))
-            os.environ["LIBMSEED_LEAPSECOND_FILE"] = os.path.abspath(
-                                                        leap_seconds_file)
+            os.environ["LIBMSEED_LEAPSECOND_FILE"] = leap_seconds_file
         else:
             # warn user and don't use a leap seconds file
             logger.warning("No leap second file specified. This is highly "
