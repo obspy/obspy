@@ -116,7 +116,8 @@ def is_fdsn_station_text_file(path_or_file_object):
     return False
 
 
-def read_fdsn_station_text_file(path_or_file_object):
+def read_fdsn_station_text_file(
+        path_or_file_object, **kwargs):  # @UnusedVariable
     """
     Function reading a FDSN station text file to an inventory object.
 
