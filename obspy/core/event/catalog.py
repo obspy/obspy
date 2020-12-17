@@ -27,7 +27,6 @@ from obspy.core.util import _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS, _generic_reader
 from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
-from obspy.imaging.cm import obspy_sequential
 
 from .base import CreationInfo
 from obspy.core.event import ResourceIdentifier
@@ -697,6 +696,7 @@ class Catalog(object):
 
         # Create the colormap for date based plotting.
         if colormap is None:
+            from obspy.imaging.cm import obspy_sequential
             colormap = obspy_sequential
 
         if title is None:
