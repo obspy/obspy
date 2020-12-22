@@ -14,7 +14,6 @@ Functions to compute and plot radiation patterns
 """
 
 import numpy as np
-from matplotlib.cm import get_cmap
 
 from itertools import chain
 
@@ -230,6 +229,7 @@ def _plot_radiation_pattern_sphere(
     :param type: 'P' or 'S' (P or S wave).
     """
     import matplotlib.pyplot as plt
+    from matplotlib.cm import get_cmap
     type = type.upper()
     if type not in ("P", "S"):
         msg = ("type must be 'P' or 'S'")
@@ -311,6 +311,7 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
     :param type: 'P' or 'S' (P or S wave).
     """
     import matplotlib.pyplot as plt
+    from matplotlib.cm import get_cmap
 
     type = type.upper()
     if type not in ("P", "S"):
@@ -369,6 +370,7 @@ def _plot_beachball(ax2d, rtp_mt):
     :param rtp_mt: moment tensor in RTP convention
     """
     import matplotlib.pyplot as plt
+    from matplotlib.cm import get_cmap
     norm = plt.Normalize(-1., 1.)
     cmap = get_cmap('bwr')
     bball = beach(rtp_mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
