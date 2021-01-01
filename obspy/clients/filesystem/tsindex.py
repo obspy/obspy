@@ -11,7 +11,7 @@ The obspy.clients.filesystem.tsindex module includes a timeseries extraction
 <https://github.com/iris-edu/mseedindex/wiki/Database-Schema/>`_\.
 
 :copyright:
-    Nick Falco, Chad Trabant, IRISDMC, 2018
+    Nick Falco, Chad Trabant, IRISDMC, 2021
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
@@ -151,6 +151,7 @@ from future.utils import native_str
 
 import copyreg
 import datetime
+import time
 import logging
 import os
 import requests
@@ -939,8 +940,9 @@ class Indexer(object):
         :type leap_seconds_file: str
         :param leap_seconds_file: Path to leap seconds file. If set to
             "SEARCH" (default), then the program looks for a leap seconds file
-            in the same directory as the sqlite3 database. If set to `None`
-            then no leap seconds file will be used.
+            in the same directory as the sqlite3 database. If set to "DOWNLOAD",
+            the leap seconds file will be downloaded from the IETF (if expired).
+            If set to `None` then no leap seconds file will be used.
 
             In :meth:`~Indexer.run` the leap
             seconds listed in this file will be used to adjust the time
@@ -1127,7 +1129,7 @@ class Indexer(object):
         try:
             logger.info("Downloading leap seconds file from the IETF.")
             r = self._download(
-                        "http://www.ietf.org/timezones/data/leap-seconds.list")
+                        "https://www.ietf.org/timezones/data/leap-seconds.list")
             if file_path is None:
                 file_path = os.path.join(
                             os.path.dirname(self.request_handler.database),
@@ -1178,31 +1180,84 @@ class Indexer(object):
         :param leap_seconds_file: Leap second file options defined in the
             :class:`~Indexer` constructor.
         """
+        file_path = None
+
         if leap_seconds_file is not None:
-            if leap_seconds_file == "SEARCH":
+            if leap_seconds_file == "SEARCH" or leap_seconds_file == "DOWNLOAD":
                 dbpath = os.path.dirname(self.request_handler.database)
-                file_path = os.path.join(dbpath, "leap-seconds.list")
-                # leap seconds file will be downloaded when calling mseedindex
-                if os.path.isfile(file_path):
-                    leap_seconds_file = os.path.abspath(file_path)
-                else:
-                    leap_seconds_file = "NONE"
-                    logger.warning("Leap seconds file `{}` not found. "
-                                   "No leap seconds file will be used for "
-                                   "indexing.".format(file_path))
+                default_path = os.path.join(dbpath, "leap-seconds.list")
+
+                # Search for existing file at default path
+                if os.path.isfile(default_path):
+                    file_path = os.path.abspath(default_path)
+
+                if leap_seconds_file == "DOWNLOAD":
+                    if file_path is not None:
+                        expired = self._leap_seconds_file_expired(file_path)
+                        if expired:
+                            logger.info("Leap seconds file `{}` expired, "
+                                        "refresing.".format(file_path))
+
+                    if file_path is None or expired:
+                        logger.info("Downloading leap seconds file `{}`".format(file_path))
+                        file_path = self.download_leap_seconds_file(file_path=file_path)
+                        file_path = os.path.abspath(file_path)
+
+                if file_path is None:
+                    logger.warning("Leap seconds file `{}` not found.".format(default_path))
+                    logger.warning("No leap seconds file will be used for indexing.")
+                    file_path = "NONE"
+
             elif os.path.isfile(leap_seconds_file):
-                # use leap seconds file provided by user
-                leap_seconds_file = os.path.abspath(leap_seconds_file)
+                # Use absolute path to leap seconds file provided by user
+                file_path = os.path.abspath(leap_seconds_file)
             else:
                 raise OSError("No leap seconds file exists at `{}`. "
                               .format(leap_seconds_file))
-            os.environ["LIBMSEED_LEAPSECOND_FILE"] = leap_seconds_file
+
+            logger.debug("Using leap second file: {}".format(file_path))
+            os.environ["LIBMSEED_LEAPSECOND_FILE"] = file_path
         else:
             # warn user and don't use a leap seconds file
-            logger.warning("No leap second file specified. This is highly "
-                           "recommended.")
+            logger.warning("No leap second file specified. Use is recommended.")
             os.environ["LIBMSEED_LEAPSECOND_FILE"] = "NONE"
-        return leap_seconds_file
+        return file_path
+
+    def _leap_seconds_file_expired(self, file_path):
+        """
+        Test expiration status of specified leap seconds file.
+
+        The file is expected to be a leap-seconds.list as published by the
+        Internet Engineering Task Force (IETF), which contains a line starting
+        with `#@` followed by the expiration time stamp in NTP format.
+
+        :type file_path: str
+        :param file_path: Path to leap seconds file to test
+
+        :rtype: boolean
+        :returns: Expiration status of leap seconds file.
+        """
+
+        # The expiration is expected as a line like the following, with time in NTP format:
+        # "#@	3833827200"
+        # The NTP time scale is offset from the POSIX epoch by 2208988800
+        # NTP 3833827200 == POSIX 1624838400 == 2021-06-28T00:00:00Z
+
+        expired = None
+
+        logger.info("Testing expiration of leap seconds file: {}".format(file_path))
+        with open(file_path) as fp:
+            for line in fp:
+                if line.startswith('#@'):
+                    expiration = int(line.split()[1]) - 2208988800
+                    expired = expiration < int(time.time())
+                    logger.debug("Leap second file ({}) expires: {}, expired: {}"
+                                 .format(file_path,
+                                         datetime.datetime.utcfromtimestamp(expiration).isoformat(),
+                                         expired))
+                    break
+
+        return expired
 
     def _is_index_cmd_installed(self):
         """
