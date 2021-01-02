@@ -1010,7 +1010,12 @@ class Indexer(object):
                     "mseedindex at https://github.com/iris-edu/mseedindex/."
                     .format(self.index_cmd))
         self.request_handler._set_sqlite_pragma()
-        file_paths = self.build_file_list(relative_paths, reindex)
+
+        try:
+            file_paths = self.build_file_list(relative_paths, reindex)
+        except OSError as error:
+            print(error)
+            return
 
         # always keep the original file paths as specified. absolute and
         # relative paths are determined in the build_file_list method
