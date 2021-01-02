@@ -1375,7 +1375,7 @@ class TSIndexDatabaseHandler(object):
             otherwise it will be created by querying the tsindex table.
         """
         session = self.session()
-        tsindex_summary_cte_name = "tsindex_summary"
+        tsindex_summary_cte_name = "tsindex_summary_cte"
         if self.has_tsindex_summary():
             # get tsindex summary cte by querying tsindex_summary table
             tsindex_summary_cte = \
