@@ -121,6 +121,10 @@ The :class:`~Indexer` provides a high level
 API for indexing a directory tree of miniSEED files using the IRIS
 `mseedindex <https://github.com/iris-edu/mseedindex/>`_ software.
 
+An important feature of this module is the ability to index data files
+in parallel, making it convenient for indexing large data sets of many
+files.
+
 Initialize an indexer object by supplying the root path to data to be indexed.
 
 >>> from obspy.clients.filesystem.tsindex import Indexer
