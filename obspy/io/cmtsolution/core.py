@@ -359,9 +359,9 @@ def _internal_write_single_cmtsolution(buf, event, **kwargs):
 
     # Attempt to get the body and surface wave magnitudes.
     mb_candidates = \
-        [_i for _i in event.magnitudes if _i.magnitude_type == "Mb"]
+        [_i for _i in event.magnitudes if _i.magnitude_type.lower() == "mb"]
     ms_candidates = \
-        [_i for _i in event.magnitudes if _i.magnitude_type == "MS"]
+        [_i for _i in event.magnitudes if _i.magnitude_type.lower() == "ms"]
 
     if not mb_candidates:
         warnings.warn("No body wave magnitude found. Will be replaced by the "
