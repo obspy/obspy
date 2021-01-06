@@ -1,1 +1,1 @@
-obspy/CONTRIBUTORS.txt
+Lei LI
