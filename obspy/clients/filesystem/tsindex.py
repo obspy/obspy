@@ -174,21 +174,7 @@ from obspy.clients.filesystem.db import _get_tsindex_table, \
     _get_tsindex_summary_table
 from obspy.core.stream import Stream
 
-
 logger = logging.getLogger('obspy.clients.filesystem.tsindex')
-
-
-try:
-    import sqlalchemy
-    if sqlalchemy.__version__ < '1.0.0':
-        raise ImportError
-except ImportError:
-    msg = ('TSIndex module expects sqlalchemy version >1.0.0. Some '
-           'functionality might not work.')
-    warnings.warn(msg)
-    _sqlalchemy_version_insufficient = True
-else:
-    _sqlalchemy_version_insufficient = False
 
 
 def _pickle_method(m):
@@ -1376,7 +1362,8 @@ class TSIndexDatabaseHandler(object):
         :returns: Returns a common table expression (CTE) containing the
             tsindex summary information. If a tsindex summary table has been
             created in the database it will be used as the source for the CTE,
-            otherwise it will be created by querying the tsindex table.
+            otherwise it will be created by querying the tsindex table directly
+            as a, potentially slow, fallback method.
         """
         session = self.session()
         tsindex_summary_cte_name = "tsindex_summary_cte"
@@ -1473,9 +1460,7 @@ class TSIndexDatabaseHandler(object):
             in the database.
         """
         table_names = sa.inspect(self.engine).get_table_names()
-        temp_table_names = sa.inspect(self.engine).get_temp_table_names()
-        if self.tsindex_summary_table in table_names or \
-                self.tsindex_summary_table in temp_table_names:
+        if self.tsindex_summary_table in table_names:
             return True
         else:
             return False
@@ -1489,9 +1474,7 @@ class TSIndexDatabaseHandler(object):
             in the database.
         """
         table_names = sa.inspect(self.engine).get_table_names()
-        temp_table_names = sa.inspect(self.engine).get_temp_table_names()
-        if self.tsindex_table in table_names or \
-                self.tsindex_table in temp_table_names:
+        if self.tsindex_table in table_names:
             return True
         else:
             return False
@@ -1529,7 +1512,7 @@ class TSIndexDatabaseHandler(object):
         request_cte_name = "raw_request_cte"
 
         result = []
-        # Create temporary table and load request
+        # Create a CTE that contains the request
         try:
             stmts = [
                 sa.select([
@@ -1688,7 +1671,7 @@ class TSIndexDatabaseHandler(object):
     def _fetch_summary_rows(self, query_rows):
         '''
         Fetch summary rows matching specified request. A temporary tsindex
-        summary table is created if one does not exists. This method is marked
+        summary is created if one does not exists. This method is marked
         as private because the index schema is subject to change.
 
         Returns rows as list of named tuples containing:
@@ -1708,7 +1691,7 @@ class TSIndexDatabaseHandler(object):
         session = self.session()
         query_rows = self._clean_query_rows(query_rows)
         tsindex_summary_cte = self.get_tsindex_summary_cte()
-        # Create temporary table and load request
+        # Create a CTE that contains the request
         try:
             request_cte_name = "request_cte"
             stmts = [
@@ -1879,8 +1862,6 @@ class TSIndexDatabaseHandler(object):
             session.execute('PRAGMA case_sensitive_like = ON')
             # enable Write-Ahead Log for better concurrency support
             session.execute('PRAGMA journal_mode=WAL')
-            # Store temporary table(s) in memory
-            session.execute("PRAGMA temp_store=MEMORY")
         except Exception:
             raise OSError("Failed to setup sqlite3 database for indexing.")
 
