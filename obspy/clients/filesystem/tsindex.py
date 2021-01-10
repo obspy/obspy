@@ -39,7 +39,7 @@ The first step is always to initialize a client object.
 >>> # create a new Client instance
 >>> client = Client(db_path, datapath_replace=("^", filepath))
 
-The example below uses the test SQLite3 tsindex database included with ObsPy to
+The example below uses the test SQLite tsindex database included with ObsPy to
 illustrate how to do the following:
 
 * Determine what data is available in the tsindex database using
@@ -205,7 +205,7 @@ class Client(object):
 
         :type database: str or
             :class:`~TSIndexDatabaseHandler`
-        :param database: Path to sqlite tsindex database or a
+        :param database: Path to SQLite tsindex database or a
             TSIndexDatabaseHandler object
         :type datapath_replace: tuple(str, str)
         :param datapath_replace: A ``tuple(str, str)``, where any
@@ -921,13 +921,13 @@ class Indexer(object):
         :param root_path: Root path to the directory structure to index.
         :type database: str or
             :class:`~TSIndexDatabaseHandler`
-        :param database: Path to sqlite tsindex database or a
+        :param database: Path to SQLite tsindex database or a
             TSIndexDatabaseHandler object. A database will be created
             if one does not already exists at the specified path.
         :type leap_seconds_file: str
         :param leap_seconds_file: Path to leap seconds file. If set to
             "SEARCH" (default), then the program looks for a leap seconds file
-            in the same directory as the sqlite3 database. If set to "DOWNLOAD",
+            in the same directory as the SQLite database. If set to "DOWNLOAD",
             the leap seconds file will be downloaded from the IETF (if expired).
             If set to `None` then no leap seconds file will be used.
 
@@ -1003,7 +1003,8 @@ class Indexer(object):
                     "Required program '{}' is not installed. Hint: Install "
                     "mseedindex at https://github.com/iris-edu/mseedindex/."
                     .format(self.index_cmd))
-        self.request_handler._set_sqlite_pragma()
+        if self.request_handler.sqlite:
+            self.request_handler._set_sqlite_pragma()
 
         try:
             file_paths = self.build_file_list(relative_paths, reindex)
@@ -1327,6 +1328,7 @@ class TSIndexDatabaseHandler(object):
         logging.basicConfig(level=numeric_level)
         logger.setLevel(numeric_level)
 
+        self.database = None
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table
         self.TSIndexTable = _get_tsindex_table(self.tsindex_table)
@@ -1349,7 +1351,7 @@ class TSIndexDatabaseHandler(object):
                     raise OSError("Database path '{}' does not exist."
                                   .format(db_dirpath))
                 elif not os.path.isfile(self.database):
-                    logger.info("No sqlite3 database file exists at `{}`."
+                    logger.info("No SQLite database file exists at `{}`."
                                 .format(self.database))
             else:
                 raise ValueError("database must be a string.")
@@ -1359,6 +1361,8 @@ class TSIndexDatabaseHandler(object):
         else:
             raise ValueError("Either a database path or an existing "
                              "database session object must be supplied.")
+
+        self.sqlite = True if 'sqlite' in self.engine.dialect.name.lower() else False
 
     def get_tsindex_summary_cte(self):
         """
@@ -1854,10 +1858,10 @@ class TSIndexDatabaseHandler(object):
 
     def _set_sqlite_pragma(self):
         """
-        Setup a sqlite3 database for indexing.
+        Setup a SQLite database for indexing.
         """
         try:
-            logger.debug('Setting up sqlite3 database at %s' % self.database)
+            logger.debug('Setting up SQLite database {}'.format(self.database if self.database else ""))
             # setup the sqlite database
             session = self.session()
             # https://www.sqlite.org/foreignkeys.html
@@ -1867,7 +1871,7 @@ class TSIndexDatabaseHandler(object):
             # enable Write-Ahead Log for better concurrency support
             session.execute('PRAGMA journal_mode=WAL')
         except Exception:
-            raise OSError("Failed to setup sqlite3 database for indexing.")
+            raise OSError("Failed to setup SQLite database for indexing.")
 
 
 if __name__ == '__main__':
