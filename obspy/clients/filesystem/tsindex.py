@@ -162,7 +162,6 @@ import requests
 import sqlalchemy as sa
 import subprocess
 import types
-import warnings
 
 from collections import namedtuple
 from glob import glob
@@ -180,6 +179,7 @@ from obspy.clients.filesystem.db import _get_tsindex_table, \
 from obspy.core.stream import Stream
 
 logger = logging.getLogger('obspy.clients.filesystem.tsindex')
+
 
 def _pickle_method(m):
     """
@@ -928,7 +928,7 @@ class Indexer(object):
         :param leap_seconds_file: Path to leap seconds file. If set to
             "SEARCH" (default), then the program looks for a leap seconds file
             in the same directory as the SQLite database. If set to "DOWNLOAD",
-            the leap seconds file will be downloaded from the IETF (if expired).
+            a leap seconds file will be downloaded from the IETF (if expired).
             If set to `None` then no leap seconds file will be used.
 
             In :meth:`~Indexer.run` the leap
@@ -1015,11 +1015,13 @@ class Indexer(object):
         # always keep the original file paths as specified. absolute and
         # relative paths are determined in the build_file_list method
         self.bulk_params["-kp"] = None
+
         if self.bulk_params.get("-table") is None:
-            # set db table to write to
             self.bulk_params["-table"] = self.request_handler.tsindex_table
-        if self.bulk_params.get("-sqlite") is None:
-            # set path to sqlite database
+
+        if (self.bulk_params.get("-sqlite") is None and
+                self.request_handler.sqlite and
+                self.request_handler.database is not None):
             self.bulk_params['-sqlite'] = self.request_handler.database
 
         pool = Pool(processes=self.parallel)
@@ -1104,45 +1106,55 @@ class Indexer(object):
                                   self.root_path))
         return result
 
-    def download_leap_seconds_file(self, file_path=None):
+    def download_leap_seconds_file(self, file_path=None, url=None):
         """
         Attempt to download leap-seconds.list from Internet Engineering Task
         Force (IETF) and save to a file.
 
         :type file_path: str
-        :param file_path: Optional path to file path where leap seconds
-            file should be downloaded. By default the file is downloaded to
-            the same directory as the
+        :param file_path: Optional path to where the leap seconds file should
+            be downloaded. By default the file is downloaded to the same
+            directory as the
             :class:`~Indexer` instances
             sqlite3 timeseries index database path.
+        :type url: str
+        :param url: Optional URL to download from, default is from the IETF:
+            https://www.ietf.org/timezones/data/leap-seconds.list
 
         :rtype: str
         :returns: Path to downloaded leap seconds file.
         """
+        if url is None:
+            url = "https://www.ietf.org/timezones/data/leap-seconds.list"
+
         try:
-            logger.info("Downloading leap seconds file from the IETF.")
-            r = self._download(
-                        "https://www.ietf.org/timezones/data/leap-seconds.list")
             if file_path is None:
-                file_path = os.path.join(
-                            os.path.dirname(self.request_handler.database),
-                            "leap-seconds.list")
-                logger.debug("No leap seconds file path specified. Attempting "
-                             "to create a leap seconds file at {}."
-                             .format(file_path))
+                if self.request_handler.database is not None:
+                    file_path = os.path.join(
+                                os.path.dirname(self.request_handler.database),
+                                "leap-seconds.list")
+                    logger.debug("No leap seconds file path specified. "
+                                 "Attempting to create a leap seconds file "
+                                 "at {}."
+                                 .format(file_path))
+                else:
+                    raise OSError("No leap seconds file specified and no "
+                                  "database path to generate one from")
+
+            logger.info("Downloading leap seconds file from {}.".format(url))
+            r = self._download(url)
         except Exception as e:  # pragma: no cover
             raise OSError(
                 ("Failed to download leap seconds file due to: {}. "
                  "No leap seconds file will be used.").format(str(e)))
         try:
-            logger.debug("Writing IETF leap seconds info to a file at {}."
-                         .format(file_path))
+            logger.debug("Writing leap seconds file to {}.".format(file_path))
             with open(file_path, "w") as fh:
                 fh.write(r.text)
         except Exception as e:  # pragma: no cover
             raise OSError("Failed to create leap seconds file at {} due to {}."
                           .format(file_path, str(e)))
-        return file_path
+        return os.path.abspath(file_path)
 
     def _get_rootpath_files(self, relative_paths=False):
         """
@@ -1176,45 +1188,74 @@ class Indexer(object):
         file_path = None
 
         if leap_seconds_file is not None:
-            if leap_seconds_file == "SEARCH" or leap_seconds_file == "DOWNLOAD":
-                dbpath = os.path.dirname(self.request_handler.database)
-                default_path = os.path.join(dbpath, "leap-seconds.list")
-
-                # Search for existing file at default path
-                if os.path.isfile(default_path):
-                    file_path = os.path.abspath(default_path)
-
-                if leap_seconds_file == "DOWNLOAD":
-                    if file_path is not None:
-                        expired = self._leap_seconds_file_expired(file_path)
-                        if expired:
-                            logger.info("Leap seconds file `{}` expired, "
-                                        "refresing.".format(file_path))
-
-                    if file_path is None or expired:
-                        logger.info("Downloading leap seconds file `{}`".format(file_path))
-                        file_path = self.download_leap_seconds_file(file_path=file_path)
-                        file_path = os.path.abspath(file_path)
-
-                if file_path is None:
-                    logger.warning("Leap seconds file `{}` not found.".format(default_path))
-                    logger.warning("No leap seconds file will be used for indexing.")
-                    file_path = "NONE"
-
-            elif os.path.isfile(leap_seconds_file):
-                # Use absolute path to leap seconds file provided by user
-                file_path = os.path.abspath(leap_seconds_file)
-            else:
+            if leap_seconds_file == "SEARCH":
+                file_path = self._find_leap_seconds_file(None, download=False)
+            elif leap_seconds_file == "DOWNLOAD":
+                file_path = self._find_leap_seconds_file(None, download=True)
+            elif not os.path.isfile(leap_seconds_file):
                 raise OSError("No leap seconds file exists at `{}`. "
                               .format(leap_seconds_file))
+            else:
+                file_path = self._find_leap_seconds_file(leap_seconds_file)
 
-            logger.debug("Using leap second file: {}".format(file_path))
+            if file_path is None:
+                logger.warning("No leap second file found, none will be used")
+                file_path = "NONE"
+            else:
+                logger.debug("Using leap second file: {}".format(file_path))
             os.environ["LIBMSEED_LEAPSECOND_FILE"] = file_path
         else:
             # warn user and don't use a leap seconds file
-            logger.warning("No leap second file specified. Use is recommended.")
+            logger.warning("No leap second file specified. "
+                           "Use is recommended.")
             os.environ["LIBMSEED_LEAPSECOND_FILE"] = "NONE"
         return file_path
+
+    def _find_leap_seconds_file(self, leap_seconds_file=None, download=False,
+                                download_url=None):
+        """Search for leap seconds file and return path.
+
+        :type leap_seconds_file: str or None
+        :param leap_seconds_file: Leap seconds file location.  If ``None``
+            a file location will be generated in same directory as a
+            SQLite database location if present.
+        :type download: bool
+        :param download: If ``download`` is ``True`` and any existing file
+            has expired, a new file will be downloaded.
+        :type download_url: str or None
+        :param download_url: URL to download from, passed to
+            :meth:`~Indexer.download_leap_seconds_file`.
+
+        """
+
+        if leap_seconds_file is None:
+            # Determine file location from database location if not set
+            if self.request_handler.database is not None:
+                dbpath = os.path.dirname(self.request_handler.database)
+                leap_seconds_file = os.path.join(dbpath, "leap-seconds.list")
+            # Otherwise there is nothing to find
+            else:
+                return None
+
+        expired = True
+        exists = os.path.isfile(leap_seconds_file)
+
+        if exists:
+            expired = self._leap_seconds_file_expired(leap_seconds_file)
+            if expired:
+                logger.warning("Leap seconds file `{}` expired".
+                               format(leap_seconds_file))
+
+        if download and (not exists or expired):
+            leap_seconds_file = self.download_leap_seconds_file(
+                file_path=leap_seconds_file, url=download_url)
+
+        if os.path.isfile(leap_seconds_file):
+            return os.path.abspath(leap_seconds_file)
+        else:
+            logger.warning("Leap seconds file `{}` not found.".
+                           format(leap_seconds_file))
+            return None
 
     def _leap_seconds_file_expired(self, file_path):
         """
@@ -1231,24 +1272,28 @@ class Indexer(object):
         :returns: Expiration status of leap seconds file.
         """
 
-        # The expiration is expected as a line like the following, with time in NTP format:
+        # The expiration is expected as a line like the following,
+        # with time in NTP format:
         # "#@	3833827200"
         # The NTP time scale is offset from the POSIX epoch by 2208988800
         # NTP 3833827200 == POSIX 1624838400 == 2021-06-28T00:00:00Z
 
         expired = None
 
-        logger.info("Testing expiration of leap seconds file: {}".format(file_path))
+        logger.info("Testing expiration of leap seconds file: {}".
+                    format(file_path))
         with open(file_path) as fp:
             for line in fp:
                 if line.startswith('#@'):
                     expiration = int(line.split()[1]) - 2208988800
                     expired = expiration < int(time.time())
-                    logger.debug("Leap second file ({}) expires: {}, expired: {}"
-                                 .format(file_path,
-                                         datetime.datetime.utcfromtimestamp(expiration).isoformat(),
-                                         expired))
                     break
+
+        if expired is not None:
+            isostring = (datetime.datetime.
+                         utcfromtimestamp(expiration).isoformat())
+            logger.debug("Leap seconds file `{}` expires: {}, expired: {}".
+                         format(file_path, isostring, expired))
 
         return expired
 
@@ -1301,8 +1346,11 @@ class Indexer(object):
 
 
 class TSIndexDatabaseHandler(object):
-    """
-    Supports direct tsindex database data access and manipulation.
+    """Supports direct tsindex database data access and manipulation.
+
+    .. warning:: Direct use of this class is experimental.  It cannot yet
+    be used to support TSIndex operation on other databases.
+
     """
 
     def __init__(self, database=None, tsindex_table="tsindex",
@@ -1362,7 +1410,8 @@ class TSIndexDatabaseHandler(object):
             raise ValueError("Either a database path or an existing "
                              "database session object must be supplied.")
 
-        self.sqlite = True if 'sqlite' in self.engine.dialect.name.lower() else False
+        self.sqlite = True if 'sqlite' in self.engine.dialect.name.lower() \
+            else False
 
     def get_tsindex_summary_cte(self):
         """
@@ -1861,7 +1910,8 @@ class TSIndexDatabaseHandler(object):
         Setup a SQLite database for indexing.
         """
         try:
-            logger.debug('Setting up SQLite database {}'.format(self.database if self.database else ""))
+            logger.debug('Setting up SQLite database {}'.
+                         format(self.database if self.database else ""))
             # setup the sqlite database
             session = self.session()
             # https://www.sqlite.org/foreignkeys.html
