@@ -405,10 +405,11 @@ class Client(object):
                    latitude=None, longitude=None, minradius=None,
                    maxradius=None, mindepth=None, maxdepth=None,
                    minmagnitude=None, maxmagnitude=None, magnitudetype=None,
-                   includeallorigins=None, includeallmagnitudes=None,
-                   includearrivals=None, eventid=None, limit=None, offset=None,
-                   orderby=None, catalog=None, contributor=None,
-                   updatedafter=None, filename=None, **kwargs):
+                   eventtype=None, includeallorigins=None,
+                   includeallmagnitudes=None, includearrivals=None,
+                   eventid=None, limit=None, offset=None, orderby=None,
+                   catalog=None, contributor=None, updatedafter=None,
+                   filename=None, **kwargs):
         """
         Query the event service of the client.
 
@@ -475,6 +476,12 @@ class Client(object):
         :type magnitudetype: str, optional
         :param magnitudetype: Specify a magnitude type to use for testing the
             minimum and maximum limits.
+        :type eventtype: str, optional
+        :param eventtype: Limit to events with a specified event type.
+            Multiple types are comma-separated (e.g.,
+            ``"earthquake,quarry blast"``). Allowed values are from QuakeML.
+            See :const:`obspy.core.event.header.EventType` for a list of
+            allowed event types.
         :type includeallorigins: bool, optional
         :param includeallorigins: Specify if all origins for the event should
             be included, default is data center dependent but is suggested to
