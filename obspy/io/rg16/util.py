@@ -50,9 +50,11 @@ def _read(fi, position, length, dtype, left_part=True):
         return _read_bcd(fi, length, left_part)
     elif dtype == 'binary':
         return _read_binary(fi, length, left_part)
-    elif dtype == 'IEEE':
-        data = np.frombuffer(fi.read(int(length)), '>f4')
-        return data[0] if len(data) == 1 else data
+    if dtype == 'IEEE':
+        dtype = '>f4'
+    # dtype should be understood by numpy, dispatch to frombuffer
+    data = np.frombuffer(fi.read(int(length)), dtype)
+    return data[0] if len(data) == 1 else data
 
 
 def _read_bcd(fi, length, left_part):
