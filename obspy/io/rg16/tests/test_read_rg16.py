@@ -19,6 +19,8 @@ THREE_CHAN_FCNT = os.path.join(TEST_FCNT_DIRECTORY,
                                'three_chans_six_traces.fcnt')
 BAD_ALIAS_FILTER = os.path.join(TEST_FCNT_DIRECTORY,
                                 'channel_set_bad_alias_filter.dat')
+HEADER_BLOCK_SAME_RU_CODE = os.path.join(TEST_FCNT_DIRECTORY,
+                                         'header_3_chan_one_code.dat')
 FCNT_FILES = [ONE_CHAN_FCNT, THREE_CHAN_FCNT]
 
 
@@ -548,6 +550,15 @@ class TestReadRG16Headers(unittest.TestCase):
             out = rc._read_channel_set(fi, 0)
         alias_freq = out['alias_filter_frequency']
         self.assertEqual(alias_freq, 207)
+
+    def test_3_channel_header(self):
+        """
+        Tests for header which has three traces but identical RU channel
+        number.
+        """
+        with open(HEADER_BLOCK_SAME_RU_CODE, 'rb') as fi:
+            num_records = rc._cmp_nbr_records(fi)
+        self.assertEqual(num_records, 2180 * 3)
 
 
 def suite():

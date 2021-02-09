@@ -102,7 +102,9 @@ def _cmp_nbr_records(fi):
     channels_number = set()
 
     for _, val in channel_sets_descriptor.items():
-        channels_number.add(val['RU_channel_number'])
+        chan_num = val['RU_channel_number'] or val['channel_set_number']
+        channels_number.add(chan_num)
+
     nbr_component = len(channels_number)
     extended_header_2 = initial_header['extended_headers']['2']
     nbr_time_slices = extended_header_2['nbr_time_slices']
@@ -510,6 +512,7 @@ def _is_rg16(filename, **kwargs):
     :return: True if the file object is a rg16 file.
     """
     try:
+        sample_format = _read(filename, 2, 2, 'bcd')
         sample_format = _read(filename, 2, 2, 'bcd')
         manufacturer_code = _read(filename, 16, 1, 'bcd')
         version = _read(filename, 42, 2, 'binary')
