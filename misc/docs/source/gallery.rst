@@ -78,17 +78,17 @@ Gallery
     :target: tutorial/code_snippets/beachball_plot.html
     :alt: Beachball Plot
 
-.. plot:: tutorial/code_snippets/basemap_plot_with_beachballs.py
-    :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
-    :alt: Basemap Plot with Beachballs
+.. plot:: tutorial/code_snippets/cartopy_plot_with_beachballs.py
+    :target: tutorial/code_snippets/cartopy_plot_with_beachballs.html
+    :alt: Bartopy Plot with Beachballs
 
-.. plot:: tutorial/code_snippets/basemap_plot_with_beachballs2.py
-    :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
-    :alt: Second Basemap Plot with Beachballs
+.. plot:: tutorial/code_snippets/cartopy_plot_with_beachballs2.py
+    :target: tutorial/code_snippets/cartopy_plot_with_beachballs.html
+    :alt: Second Bartopy Plot with Beachballs
 
-.. plot:: tutorial/code_snippets/basemap_with_beachball_read_events.py
-    :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
-    :alt: Basemap Plot with Beachball read_events
+.. plot:: tutorial/code_snippets/cartopy_with_beachball_read_events.py
+    :target: tutorial/code_snippets/cartopy_plot_with_beachballs.html
+    :alt: Bartopy Plot with Beachball read_events
 
 .. plot:: tutorial/code_snippets/merging_seismograms.py
     :target: tutorial/code_snippets/merging_seismograms.html
@@ -189,7 +189,7 @@ Gallery
 
 .. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
-    :alt: Basemap preview plot of Inventory class
+    :alt: Bartopy preview plot of Inventory class
 
     from obspy import read_inventory
     inv = read_inventory()
@@ -197,7 +197,7 @@ Gallery
 
 .. plot::
     :target: packages/autogen/obspy.core.inventory.network.Network.plot.html
-    :alt: Basemap preview plot of Network class
+    :alt: Bartopy preview plot of Network class
 
     from obspy import read_inventory
     net = read_inventory()[0]
@@ -205,7 +205,7 @@ Gallery
 
 .. plot::
     :target: packages/autogen/obspy.core.event.catalog.Catalog.plot.html
-    :alt: Basemap preview plot of Catalog class
+    :alt: Bartopy preview plot of Catalog class
 
     from obspy import read_events
     cat = read_events()
@@ -248,7 +248,7 @@ Gallery
 
 .. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
-    :alt: Basemap plot of station and event data together
+    :alt: Bartopy plot of station and event data together
 
     from obspy import read_inventory, read_events
     inv = read_inventory()

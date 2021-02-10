@@ -1,6 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+import cartopy.crs as ccrs
 
 from obspy import read_events
 from obspy.imaging.beachball import beach
@@ -15,19 +14,18 @@ tensor = focmec.moment_tensor.tensor
 moment_list = [tensor.m_rr, tensor.m_tt, tensor.m_pp,
                tensor.m_rt, tensor.m_rp, tensor.m_tp]
 
-m = Basemap(projection='cyl', lon_0=origin.longitude, lat_0=origin.latitude,
-            resolution='c')
+projection = ccrs.PlateCarree(central_longitude=0.0)
+x, y = projection.transform_point(x=origin.longitude, y=origin.latitude,
+                                  src_crs=ccrs.Geodetic())
 
-m.drawcoastlines()
-m.fillcontinents()
-m.drawparallels(np.arange(-90., 120., 30.))
-m.drawmeridians(np.arange(0., 420., 60.))
-m.drawmapboundary()
+fig = plt.figure(dpi=150)
+ax = fig.add_subplot(111, projection=projection)
+ax.set_extent((-180, 180, -90, 90))
+ax.coastlines()
+ax.gridlines()
 
-x, y = m(origin.longitude, origin.latitude)
-
-ax = plt.gca()
-b = beach(moment_list, xy=(x, y), width=20, linewidth=1, alpha=0.85)
+b = beach(moment_list, xy=(x, y), width=20, linewidth=1, alpha=0.85, zorder=10)
 b.set_zorder(10)
 ax.add_collection(b)
-plt.show()
+
+fig.show()

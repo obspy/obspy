@@ -158,7 +158,7 @@ DOC = {
                   * IEX (Other explosion)
                   * INU (Nuclear explosion)
                   * INC (Nuclear cavity collapse)
-                  * IO\_ (Other source of known origin)
+                  * IO_ (Other source of known origin)
                   * IR (Regional event of unknown origin)
                   * IT (Teleseismic event of unknown origin)
                   * IU (Undetermined or conflicting information)

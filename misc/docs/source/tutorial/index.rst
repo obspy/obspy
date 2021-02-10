@@ -48,7 +48,7 @@ Introduction to ObsPy
    code_snippets/export_seismograms_to_ascii
    code_snippets/anything_to_miniseed
    code_snippets/beachball_plot
-   code_snippets/basemap_plot_with_beachballs
+   code_snippets/cartopy_plot_with_beachballs
    code_snippets/interfacing_r_from_python
    code_snippets/coordinate_conversions
    code_snippets/hierarchical_clustering.rst

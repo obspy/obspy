@@ -1,0 +1,13 @@
+sphinx>=4.2.0
+m2r2>=0.2.7 # m2r is not maintained anymore, this fork is
+pybtex>=0.24.2
+sphinx_rtd_theme
+matplotlib
+numpy # required by cartopy
+cython # required by cartopy
+cartopy >= 0.20
+obspy
+
+# deps used in tutorial but not working anymore
+# basemap
+# mlpy
