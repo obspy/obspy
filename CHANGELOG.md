@@ -3,26 +3,92 @@ master
 
 *Changes*
 
-- obspy.clients.filesystem
+- obspy.core:
+  * add option to suppress evalresp sensitivity mismatch warning when removing
+    instrument response (see #2677)
+  * round magnitudes in Catalog/Event string representation to one decimal
+    (see #2742)
+  * add support for pathlib.Path objects in read(), read_inventory() and
+    read_events() functions (see #2743)
+- obspy.clients.fdsn:
+  * introduce fine-grained FDSN client exceptions (see #2653)
+- obspy.clients.filesystem:
   * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
-
+- obspy.io.css:
+  * open CSS waveforms even if gzip-compressed (see #2736)
+- obspy.io.hypodd
+  * add PHA write support (see #2687)
+  * add read support for horizontal and vertical origin uncertainty (see #2687)
+- obspy.io.reftek:
+  * enable reading data with floating point sampling rates like low sampling
+    rate state-of-health channels (see #2678)
+  * fix reading data in '16' and '32' encodings, when packets do not use
+    the fixed maximum amount of available number of samples per data packet
+    (see #2678)
+  * properly take into account native system byteorder, should fix reading
+    rt130 data on big endian systems (see #2678)
+- obspy.io.xseed:
+  * fix a bug reading SEED blockettes 48 and 58 which was likely never
+    encountered (see #2668)
+- obspy.signal.array_analysis
+  * fixed an issue in array_processing function returning wrong times
+    for matplotlib versions >= 3.3 due to the epoch change in matplotlib
+    (see #2723)
+- obspy.signal.cross_correlation:
+  * Remove deprecated xcorr function, remove deprecated domain keyword
+    argument in correlate function (see #1979)
+- obspy.signal.spectral_estimation.PPSD:
+  * Added special handling option for infrasound data and global infrasound noise
+    models for plotting (see #2740)
 
 maintenance_1.2.x
 =================
 
-- obspy.core
+*Changes*
+
+- obspy.core:
+  * Inventory addition now consistently uses shallow copies (#2675, #2694)
+- obspy.clients.fdsn:
+  * add URL mapping for IRISPH5 (see #2739)
+- obspy.clients.seedlink:
+  * Fix a bug in basic client when printing debug output (see #2734)
+- obspy.io.gse2:
+  * When reading GSE2 bulletins, station magnitudes now include waveform IDs
+    and have associated station magnitude contributions (see #2718)
+- obspy.io.xseed:
+  * Properly read a given value of 0.0 in station elevation and not replace it
+    with bogus value (see #2763)
+
+
+1.2.2 (doi: 10.5281/zenodo.3921997)
+===================================
+
+*Changes*
+
+- obspy.core:
   * Fix wrong values in Stats object after deepcopy or pickle of Stats object
     for edge cases (see #2601)
-- obspy.clients.fdsn
+- obspy.clients.fdsn:
   * EIDA routing client: fix an issue that leaded to a request of *all* EIDA
     data when requesting an invalid, out-of-epochs time window for a valid
     station (see #2611)
   * update RASPISHAKE URL mapping to use https
-- obspy.clients.neic
+  * fix a bug of not handling HTTPException in mass_downloader (see #2606)
+  * use the client's set timeout in service discovery, too (see #2656)
+  * add URL mapping for FDSNWS at UIB-NORSAR (see #2659)
+- obspy.clients.filesystem:
+  * sds: continue get_all_stations() even if encountering an invalid channel
+    code (see #2636)
+- obspy.clients.neic:
   * Make client socket blocking (see #2617)
-- obspy.io.nordic
+- obspy.io.hypodd:
+  * Allow 60.0 seconds in the second field of origin times, allow NaN in
+    the magnitude field for pha format (see #2627)
+- obspy.io.nordic:
   * Fixed a bug raising an exception when reading a nordic file with a non
     positive-definite covariance matrix (see #2593)
+- obspy.io.seiscomp:
+  * Fixed an issue where a response has zero zeros or poles (see #2633)
 
 
 1.2.1
