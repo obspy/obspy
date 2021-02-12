@@ -4,11 +4,12 @@ on: [push, pull_request]
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }} for Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-20.04, windows-2019, macOS-10.15]
+        python: [3.7, 3.8]
     env:
         CIBW_BUILD: cp37* cp38*
         CIBW_SKIP: "*aarch64 *ppc64le *s390x"
@@ -16,6 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: ${{ matrix.python }}
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==1.9.0
 
