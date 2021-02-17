@@ -157,8 +157,9 @@ DEFAULT_EVENT_PARAMETERS = [
 
 OPTIONAL_EVENT_PARAMETERS = [
     "latitude", "longitude", "minradius", "maxradius", "magnitudetype",
-    "includeallorigins", "includeallmagnitudes", "includearrivals", "eventid",
-    "limit", "offset", "catalog", "contributor", "updatedafter"]
+    "eventtype", "includeallorigins", "includeallmagnitudes",
+    "includearrivals", "eventid", "limit", "offset", "catalog", "contributor",
+    "updatedafter"]
 
 DEFAULT_PARAMETERS = {
     "dataselect": DEFAULT_DATASELECT_PARAMETERS,
@@ -226,6 +227,7 @@ DEFAULT_TYPES = {
     "includearrivals": bool,
     "matchtimeseries": bool,
     "eventid": str,
+    "eventtype": str,
     "limit": int,
     "offset": int,
     "orderby": str,
@@ -269,6 +271,7 @@ DEFAULT_VALUES = {
     "includearrivals": False,
     "matchtimeseries": False,
     "eventid": None,
+    "eventtype": None,
     "limit": None,
     "offset": 1,
     "orderby": "time",
