@@ -94,8 +94,7 @@ jobs:
       - name: print package info
         shell: bash -l {0}
         run: |
-          conda info -a
-          conda list
+          python -m pip list
 
       - name: download test config
         uses: actions/download-artifact@v1
