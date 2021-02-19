@@ -1402,7 +1402,7 @@ class PPSD(object):
             PPSDs. This is only required for npz files written by ObsPy
             versions less than 1.2.0.
         """
-        with np.load(filename) as data:
+        with np.load(filename, allow_pickle=allow_pickle) as data:
             # the information regarding stats is set from the npz
             ppsd = PPSD(Stats(), metadata=metadata)
             # check ppsd_version version and raise if higher than current
@@ -1471,7 +1471,7 @@ class PPSD(object):
         """
         See :meth:`PPSD.add_npz()`.
         """
-        with np.load(filename) as data:
+        with np.load(filename, allow_pickle=allow_pickle) as data:
             # check ppsd_version version and raise if higher than current
             _check_npz_ppsd_version(self, data)
             # check if all metadata agree
