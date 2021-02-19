@@ -85,13 +85,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup conda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Setup python
+        uses: actions/setup-python@v2
         with:
-          miniconda-version: 'latest'
           python-version: ${{ matrix.python-version }}
-          activate-environment: test
-          environment-file: .github/test_conda_env.yml
+          architecture: x64
 
       - name: print package info
         shell: bash -l {0}
