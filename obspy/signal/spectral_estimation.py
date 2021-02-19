@@ -1471,7 +1471,7 @@ class PPSD(object):
         """
         See :meth:`PPSD.add_npz()`.
         """
-        with np.load(filename, allow_pickle=allow_pickle) as data:
+        def _add(data):
             # check ppsd_version version and raise if higher than current
             _check_npz_ppsd_version(self, data)
             # check if all metadata agree
@@ -1526,6 +1526,15 @@ class PPSD(object):
                        "(time ranges already covered).")
                 msg = msg % (duplicates, len(_times_processed), filename)
                 warnings.warn(msg)
+
+        try:
+            with np.load(filename, allow_pickle=allow_pickle) as data:
+                _add(data)
+        except ValueError:
+            msg = ("Loading PPSD results saved with ObsPy versions < "
+                   "1.2 requires setting the allow_pickle parameter "
+                   "of PPSD.load_npz to True (needs numpy>=1.10).")
+            raise ValueError(msg)
 
     def _split_lists(self, times, psds):
         """
