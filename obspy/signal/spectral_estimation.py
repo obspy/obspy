@@ -1402,7 +1402,7 @@ class PPSD(object):
             PPSDs. This is only required for npz files written by ObsPy
             versions less than 1.2.0.
         """
-        with np.load(filename, allow_pickle=allow_pickle) as data:
+        def _load(data):
             # the information regarding stats is set from the npz
             ppsd = PPSD(Stats(), metadata=metadata)
             # check ppsd_version version and raise if higher than current
@@ -1440,7 +1440,16 @@ class PPSD(object):
                 setattr(ppsd, key, data_)
             # we converted all data, so update ppsd version
             ppsd.ppsd_version = PPSD._CURRENT_VERSION
-        return ppsd
+            return ppsd
+
+        try:
+            with np.load(filename, allow_pickle=allow_pickle) as data:
+                return _load(data)
+        except ValueError:
+            msg = ("Loading PPSD results saved with ObsPy versions < "
+                   "1.2 requires setting the allow_pickle parameter "
+                   "of PPSD.load_npz to True")
+            raise ValueError(msg)
 
     def add_npz(self, filename, allow_pickle=False):
         """
@@ -1533,7 +1542,7 @@ class PPSD(object):
         except ValueError:
             msg = ("Loading PPSD results saved with ObsPy versions < "
                    "1.2 requires setting the allow_pickle parameter "
-                   "of PPSD.load_npz to True (needs numpy>=1.10).")
+                   "of PPSD.load_npz to True")
             raise ValueError(msg)
 
     def _split_lists(self, times, psds):
