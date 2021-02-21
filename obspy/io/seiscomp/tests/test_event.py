@@ -41,9 +41,9 @@ class EventTestCase(unittest.TestCase):
             self.io_directory, 'seiscomp', 'data',
             'quakeml_1.2__sc3ml_0.11.xsl')
         self.schema_pattern = re.compile(
-            'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[\d\.]+'
+            r'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[\d\.]+'
         )
-        self.version_pattern = re.compile('version="[\d\.]+"')
+        self.version_pattern = re.compile(r'version="[\d\.]+"')
 
     def change_reading_version(self, filename, version):
         """
@@ -57,7 +57,8 @@ class EventTestCase(unittest.TestCase):
             # able to read the file.
             data = data.replace('<?xml version="1.0" encoding="UTF-8"?>\n', '')
             data = self.schema_pattern.sub(
-                'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/%s' % version,
+                "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/%s"
+                % version,
                 data,
             )
             data = self.version_pattern.sub('version="%s"' % version, data)
