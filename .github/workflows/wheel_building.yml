@@ -1,15 +1,18 @@
 name: Build wheels
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request: null
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }} for Python ${{ matrix.python }}
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-20.04, windows-2019, macOS-10.15]
-        python: [3.7, 3.8]
     env:
         CIBW_BUILD: cp37* cp38*
         CIBW_SKIP: "*aarch64 *ppc64le *s390x"
@@ -19,7 +22,7 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: ${{ matrix.python }}
+          python-version: 3.8
 
       - name: Install Visual C++ for Python 2.7
         if: runner.os == 'Windows'
