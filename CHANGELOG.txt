@@ -28,6 +28,9 @@ Changes:
      (see #2678)
    * properly take into account native system byteorder, should fix reading
      rt130 data on big endian systems (see #2678)
+ - obspy.io.seiscomp:
+   * Add support for SC3ML 0.11 (see #2284).
+   * Add support for custom tags (see #2284).
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
