@@ -1,10 +1,12 @@
-name: Build wheels
+name: Build wheels & release them
 
 on:
   push:
     branches:
       - master
-  pull_request: null
+  release:
+    types:
+      - published
 
 jobs:
   build_wheels:
