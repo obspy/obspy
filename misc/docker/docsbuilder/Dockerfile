@@ -31,7 +31,7 @@ RUN python -m pip install --upgrade --no-cache-dir pip && \
         'pep8-naming' \
         'cryptography' \
         'pyshp' \
-        'sphinx>=3.1.1' \
+        'sphinx>=3.5.1' \
         'm2r2>=0.2.7' \
         'pybtex>=0.22.2' \
         'sphinx_rtd_theme' \
