@@ -281,6 +281,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     :param keep_sac_header: If keep_sac_header is True, old stats.sac
         header values are kept, and a minimal set of values are updated from
         the stats dictionary according to these guidelines:
+
         * npts, delta always come from stats
         * If a valid old reftime is found, the new b and e will be made
           and properly referenced to it. All other old SAC headers are simply
@@ -297,6 +298,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         * If 'kstnm', 'knetwk', 'kcmpnm', or 'khole' are not set or differ
           from Stats values 'station', 'network', 'channel', or 'location',
           they are taken from the Stats values.
+
         If keep_sac_header is False, a new SAC header is constructed from only
         information found in the Stats dictionary, with some other default
         values introduced.  It will be an iztype 9 ("ib") file, with small
