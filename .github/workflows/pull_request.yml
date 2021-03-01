@@ -100,7 +100,7 @@ jobs:
           conda list
 
       - name: download test config
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2.0.8
         with:
           name: obspy_ci_config
 
