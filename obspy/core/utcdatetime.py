@@ -1417,14 +1417,12 @@ class UTCDateTime(object):
 
     def isocalendar(self):
         """
-        Returns a (named) tuple containing (ISO year, ISO week number, ISO weekday).
+        Returns a tuple containing (ISO year, ISO week number, ISO weekday).
 
         :rtype: tuple of ints
-        :return: Returns a (named) tuple containing ISO year, ISO week number and ISO
-            weekday. Depending on the Python version it either returns a tuple (Py<3.9)
-            or named tuple (Py>=3.9).
-
-        .. note:: Python >=3.9: Result changed from a tuple to a named tuple.
+        :return: Returns a (named) tuple containing ISO year, ISO week number
+            and ISO weekday. Depending on the used Python version it either
+            returns a tuple (Py<3.9) or named tuple (Py>=3.9).
 
         .. rubric:: Example
 
