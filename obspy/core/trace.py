@@ -2565,8 +2565,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         elif type == "timestamp":
             time_array = time_array + self.stats.starttime.timestamp
         elif type == "utcdatetime":
-            time_array = np.vectorize(lambda t: self.stats.starttime + t)(
-                time_array)
+            time_array = np.vectorize(
+                lambda t: self.stats.starttime + t,
+                otypes=[UTCDateTime])(time_array)
         elif type == "matplotlib":
             from matplotlib.dates import date2num
             time_array = (
