@@ -1420,13 +1420,14 @@ class UTCDateTime(object):
         Returns a tuple containing (ISO year, ISO week number, ISO weekday).
 
         :rtype: tuple of ints
-        :return: Returns a tuple containing ISO year, ISO week number and ISO
-            weekday.
+        :return: Returns a (named) tuple containing ISO year, ISO week number
+            and ISO weekday. Depending on the used Python version it either
+            returns a tuple (Py<3.9) or named tuple (Py>=3.9).
 
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.isocalendar()
+        >>> tuple(dt.isocalendar())
         (2008, 40, 3)
         """
         return self.datetime.isocalendar()
