@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 import os
 import re
@@ -102,12 +101,12 @@ class IASPEITestCase(unittest.TestCase):
         """
         Test reading IMS10 bulletin format from open files.
         """
-        with io.open(self.path_to_ims, "rb") as fh:
+        with open(self.path_to_ims, "rb") as fh:
             cat = _read_ims10_bulletin(fh, _no_uuid_hashes=True)
         self.assertEqual(len(cat), 1)
         _assert_catalog(cat)
 
-        with io.open(self.path_to_ims, "rt", encoding="UTF-8") as fh:
+        with open(self.path_to_ims, "rt", encoding="UTF-8") as fh:
             cat = _read_ims10_bulletin(fh, _no_uuid_hashes=True)
         self.assertEqual(len(cat), 1)
         _assert_catalog(cat)
@@ -116,7 +115,7 @@ class IASPEITestCase(unittest.TestCase):
         """
         Test reading IMS10 bulletin format from bytes io object.
         """
-        with io.open(self.path_to_ims, "rb") as fh:
+        with open(self.path_to_ims, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 cat = _read_ims10_bulletin(buf, _no_uuid_hashes=True)
@@ -143,13 +142,13 @@ class IASPEITestCase(unittest.TestCase):
         with open(self.path_to_ims, "rb") as fh:
             self.assertTrue(_is_ims10_bulletin(fh))
 
-        with open(self.path_to_ims, "rt", encoding="utf-8") as fh:
+        with open(self.path_to_ims, encoding="utf-8") as fh:
             self.assertTrue(_is_ims10_bulletin(fh))
 
         with open(path_to_quakeml, "rb") as fh:
             self.assertFalse(_is_ims10_bulletin(fh))
 
-        with open(path_to_quakeml, "rt", encoding="utf-8") as fh:
+        with open(path_to_quakeml, encoding="utf-8") as fh:
             self.assertFalse(_is_ims10_bulletin(fh))
 
     def test_is_ims10_bulltin_from_bytes_io(self):

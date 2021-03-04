@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r"""
 obspy.clients.filesystem.tsindex - IRIS TSIndex Client and Indexer
 ==================================================================
@@ -201,7 +200,7 @@ def _pickle_method(m):
 copyreg.pickle(types.MethodType, _pickle_method)
 
 
-class Client(object):
+class Client:
     """
     Time series extraction client for IRIS tsindex database schema.
     """
@@ -661,7 +660,7 @@ class Client(object):
         except NoDataError:
             logger.debug("No data matched selection")
 
-        logger.debug("Wrote {} bytes".format(total_bytes))
+        logger.debug(f"Wrote {total_bytes} bytes")
 
         if merge:
             st.merge(merge)
@@ -908,7 +907,7 @@ class Client(object):
         return timespans
 
 
-class Indexer(object):
+class Indexer:
     """
     Build an index for miniSEED data using IRIS's mseedindex program.
     Recursively search for files matching ``filename_pattern`` starting
@@ -1027,7 +1026,7 @@ class Indexer(object):
         try:
             proccesses = []
             for file_name in file_paths:
-                logger.debug("Indexing file '{}'.".format(file_name))
+                logger.debug(f"Indexing file '{file_name}'.")
                 proc = pool.apply_async(Indexer._run_index_command,
                                         args=(self.index_cmd,
                                               self.root_path,
@@ -1040,7 +1039,7 @@ class Indexer(object):
             for proc in proccesses:
                 cmd, rc, out, err = proc.get(timeout=999999)
                 if rc:
-                    logger.warning("FAIL [{0}] '{1}' out: '{2}' err: '{3}'"
+                    logger.warning("FAIL [{}] '{}' out: '{}' err: '{}'"
                                    .format(rc, cmd, out, err))
             pool.join()
         except KeyboardInterrupt:
@@ -1248,7 +1247,7 @@ class Indexer(object):
             raise OSError(msg)
 
 
-class TSIndexDatabaseHandler(object):
+class TSIndexDatabaseHandler:
     """
     Supports direct tsindex database data access and manipulation.
     """
@@ -1302,7 +1301,7 @@ class TSIndexDatabaseHandler(object):
                                    .format(self.database))
             else:
                 raise ValueError("database must be a string.")
-            db_path = "sqlite:///{}".format(self.database)
+            db_path = f"sqlite:///{self.database}"
             self.engine = sa.create_engine(db_path, poolclass=QueuePool)
             self.session = sessionmaker(bind=self.engine)
         else:
@@ -1337,7 +1336,7 @@ class TSIndexDatabaseHandler(object):
                            .format(self.tsindex_summary_table,
                                    self.tsindex_table))
             logger.info("For improved performance create a permanent "
-                        "{0} table by running the "
+                        "{} table by running the "
                         "TSIndexDatabaseHandler.build_tsindex_summary() "
                         "instance method."
                         .format(self.tsindex_summary_table))

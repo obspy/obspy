@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.cnv - CNV file format support for ObsPy
 ================================================

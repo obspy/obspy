@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.clients.seedlink.slclient test suite.
 """

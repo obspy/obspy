@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SEISAN bindings to ObsPy core module.
 

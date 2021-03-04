@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.arclink - Arclink inventory files read support for ObsPy
 =================================================================

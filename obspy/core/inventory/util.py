@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Utility objects.
 
@@ -273,7 +272,7 @@ class DataAvailability(ComparingObject):
             span_info = 'no time span information'
         else:
             span_info = '%d time spans with details' % len(self.spans)
-        return "Data Availability from %s to %s, %s." % (self.start,
+        return "Data Availability from {} to {}, {}.".format(self.start,
                                                          self.end, span_info)
 
     def _repr_pretty_(self, p, cycle):
@@ -793,7 +792,7 @@ class Latitude(FloatWithUncertaintiesFixedUnit):
         """
         """
         self.datum = datum
-        super(Latitude, self).__init__(
+        super().__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty)
 
@@ -822,7 +821,7 @@ class Longitude(FloatWithUncertaintiesFixedUnit):
         """
         """
         self.datum = datum
-        super(Longitude, self).__init__(
+        super().__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty)
 
@@ -844,7 +843,7 @@ class Distance(FloatWithUncertaintiesAndUnit):
     """
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
                  unit="METERS"):
-        super(Distance, self).__init__(
+        super().__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty)
         self._unit = unit
@@ -957,7 +956,7 @@ def _unified_content_strings(contents):
     contents_unique = sorted(set(contents), key=_seed_id_keyfunction)
     contents_counts = [
         (item, contents.count(item)) for item in contents_unique]
-    items = [item if count == 1 else "{} ({}x)".format(item, count)
+    items = [item if count == 1 else f"{item} ({count}x)"
              for item, count in contents_counts]
     return items
 
@@ -1054,7 +1053,7 @@ def _response_plot_label(network, station, channel, label_epoch_dates):
             end = 'open'
         else:
             end = str(end.date)
-        label += '\n{} -- {}'.format(start, end)
+        label += f'\n{start} -- {end}'
     return label
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 import os
 import warnings
@@ -23,7 +22,7 @@ class BlocketteParserException(Exception):
     pass
 
 
-class Blockette(object):
+class Blockette:
     """
     General blockette handling.
     """
@@ -62,7 +61,7 @@ class Blockette(object):
         """
         Pretty prints the informations stored in the blockette.
         """
-        temp = 'Blockette %s: %s Blockette' % (
+        temp = 'Blockette {}: {} Blockette'.format(
             self.blockette_id, utils.to_string(self.blockette_name)) + \
             os.linesep
         keys = self.__dict__.keys()
@@ -70,7 +69,7 @@ class Blockette(object):
         for key in keys:
             if key in utils.IGNORE_ATTR:
                 continue
-            temp += '%30s: %s' % (utils.to_string(key), self.__dict__[key])
+            temp += '{:>30}: {}'.format(utils.to_string(key), self.__dict__[key])
             temp += os.linesep
         return temp.strip()
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 NEIC PDE mchedr (machine-readable Earthquake Data Report) read support.
 
@@ -65,7 +64,7 @@ def _is_mchedr(filename):
                 return False
 
 
-class Unpickler(object):
+class Unpickler:
     """
     De-serializes a mchedr string into an ObsPy Catalog object.
     """

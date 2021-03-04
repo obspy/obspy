@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Travel time calculations.
 """
@@ -7,7 +6,7 @@ from .seismic_phase import SeismicPhase
 from .utils import parse_phase_list
 
 
-class TauPTime(object):
+class TauPTime:
     """
     Calculate travel times for different branches using linear interpolation
     between known slowness samples.

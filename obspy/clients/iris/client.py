@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 IRIS Web service client for ObsPy.
 
@@ -18,7 +17,7 @@ from obspy import Stream, UTCDateTime, __version__, read
 from obspy.core.util import NamedTemporaryFile, loadtxt
 
 
-DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (__version__,
+DEFAULT_USER_AGENT = "ObsPy/{} ({}, Python {})".format(__version__,
                                                    platform.platform(),
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
@@ -28,7 +27,7 @@ DEFAULT_SERVICE_VERSIONS = {"timeseries": 1, "sacpz": 1, "resp": 1,
                             "distaz": 1}
 
 
-class Client(object):
+class Client:
     """
     IRIS Web service request client.
 
@@ -114,7 +113,7 @@ class Client(object):
                 options += '&'
             options += urlencode(params)
         if options:
-            remoteaddr = "%s?%s" % (remoteaddr, options)
+            remoteaddr = f"{remoteaddr}?{options}"
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
         req = urllib_request.Request(url=remoteaddr, data=data,

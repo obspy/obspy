@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 REFTEK130 read support, core routines.
 """
@@ -111,7 +110,7 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
         raise Reftek130Exception(msg.format(filename))
 
 
-class Reftek130(object):
+class Reftek130:
     _info_header = "Reftek130 ({:d} packets{})"
     _info_compact_header = [
         "Packet Sequence  Byte Count  Data Fmt  Sampling Rate      Time",
@@ -126,7 +125,7 @@ class Reftek130(object):
         self._filename = None
 
     def __str__(self, compact=True):
-        filename = self._filename and ', file: {}'.format(self._filename) or ''
+        filename = self._filename and f', file: {self._filename}' or ''
         info = [self._info_header.format(len(self._data), filename)]
         if compact:
             info += copy.deepcopy(self._info_compact_header)
@@ -141,7 +140,7 @@ class Reftek130(object):
 
     @staticmethod
     def from_file(filename):
-        with io.open(filename, "rb") as fh:
+        with open(filename, "rb") as fh:
             string = fh.read()
         rt = Reftek130()
         rt._data = _initial_unpack_packets(string)

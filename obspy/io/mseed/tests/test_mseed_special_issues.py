@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import ctypes as C  # NOQA
 import io
 import multiprocessing
@@ -1065,7 +1064,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
 
-        with io.open(filename, 'rb') as fh:
+        with open(filename, 'rb') as fh:
             data = fh.read()
 
         data = data[:-257]
@@ -1094,7 +1093,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
 
-        with io.open(filename, 'rb') as fh:
+        with open(filename, 'rb') as fh:
             data = fh.read()
 
         data = data[:-256]
@@ -1124,7 +1123,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
 
-        with io.open(filename, 'rb') as fh:
+        with open(filename, 'rb') as fh:
             data = fh.read()
 
         # Reading at exactly 128 bytes offset will result in a truncation
@@ -1174,7 +1173,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         # This file has two 4096 bytes records.
         filename = os.path.join(self.path, 'data', 'test.mseed')
-        with io.open(filename, "rb") as fh:
+        with open(filename, "rb") as fh:
             rec1 = fh.read(4096)
             rec2 = fh.read(4096)
 

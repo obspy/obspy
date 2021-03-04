@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 AH bindings to ObsPy core module.
 
@@ -368,7 +367,7 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
     packer.pack_int(chansize)
     packer.pack_fstring(chansize, tr.stats.channel.encode('utf-8'))
     packer.pack_int(stypesize)
-    packer.pack_fstring(stypesize, 'null'.encode('utf-8'))
+    packer.pack_fstring(stypesize, b'null')
     # There is no information about latitude, longitude, elevation,
     # gain and normalization in the basic stream object,  are set to 0
     packer.pack_float(0)
@@ -396,7 +395,7 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
     packer.pack_float(0)
 
     packer.pack_int(comsize)
-    packer.pack_fstring(comsize, 'null'.encode('utf-8'))
+    packer.pack_fstring(comsize, b'null')
 
     # record info
     dtype = type(tr.data[0])
@@ -423,9 +422,9 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
 
     packer.pack_float(0)
     packer.pack_int(comsize)
-    packer.pack_fstring(comsize, 'null'.encode('utf-8'))
+    packer.pack_fstring(comsize, b'null')
     packer.pack_int(logsize)
-    packer.pack_fstring(logsize, 'null'.encode('utf-8'))
+    packer.pack_fstring(logsize, b'null')
 
     # # extras
     packer.pack_array(np.zeros(21).tolist(), packer.pack_float)

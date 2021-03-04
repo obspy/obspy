@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Decorator used in ObsPy.
 
@@ -123,7 +122,7 @@ def skip_on_network_error(func, *args, **kwargs):
         if str(e) == "timed out":
             raise unittest.SkipTest(str(e))
     ###################################################
-    except socket.error as e:
+    except OSError as e:
         if str(e) == "[Errno 110] Connection timed out":
             raise unittest.SkipTest(str(e))
     # general except to be able to generally reraise
@@ -142,7 +141,7 @@ def uncompress_file(func, filename, *args, **kwargs):
         return func(filename, *args, **kwargs)
     elif not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
-        raise IOError(msg)
+        raise OSError(msg)
     # check if we got a compressed file or archive
     obj_list = []
     if tarfile.is_tarfile(filename):
@@ -262,7 +261,7 @@ def map_example_filename(arg_kwarg_name):
                         kwargs[arg_kwarg_name] = \
                             get_example_file(kwargs[arg_kwarg_name][9:])
                     # file not found by get_example_file:
-                    except IOError:
+                    except OSError:
                         pass
         # check args
         else:
@@ -286,7 +285,7 @@ def map_example_filename(arg_kwarg_name):
                             args[ind] = get_example_file(args[ind][9:])
                             args = tuple(args)
                         # file not found by get_example_file:
-                        except IOError:
+                        except OSError:
                             pass
         return func(*args, **kwargs)
     return _map_example_filename

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Data extraction and transfer from miniSEED files
 """
@@ -159,7 +158,7 @@ class _FileDataSegment(_ExtractedDataSegment):
         return self.src_name
 
 
-class _MiniseedDataExtractor(object):
+class _MiniseedDataExtractor:
     """
     Component for extracting, trimming, and validating data.
     """
@@ -284,7 +283,7 @@ class _MiniseedDataExtractor(object):
 
         # Get & return the actual data
         for nrow in request_rows:
-            logger.debug("Extracting %s (%s - %s) from %s" % (nrow.srcname,
+            logger.debug("Extracting {} ({} - {}) from {}".format(nrow.srcname,
                                                               nrow.starttime,
                                                               nrow.endtime,
                                                               nrow.filename))

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.shapefile - ESRI shapefile write support for ObsPy
 ===========================================================

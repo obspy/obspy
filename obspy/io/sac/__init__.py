@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.sac - SAC read and write support for ObsPy
 ===================================================

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 Quick and dirty conversion routine from CSS 2.8 to Seismic Handler ASCII format
@@ -51,7 +50,7 @@ if __name__ == '__main__':
     # echo data
     for dat in data:
         # CALIB factor
-        print("%e" % (dat * SH["CALIB"],))
+        print("{:e}".format(dat * SH["CALIB"]))
 
     # inspection plot
     try:

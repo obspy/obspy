@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.iris - IRIS web service client for ObsPy
 ======================================================

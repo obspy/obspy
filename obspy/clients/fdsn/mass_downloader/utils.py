@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Utility functions required for the download helpers.
 
@@ -259,7 +258,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     return sorted(open_files.keys())
 
 
-class SphericalNearestNeighbour(object):
+class SphericalNearestNeighbour:
     """
     Spherical nearest neighbour queries using scipy's fast kd-tree
     implementation.
@@ -349,7 +348,7 @@ def safe_delete(filename):
     try:
         os.remove(filename)
     except Exception as e:
-        raise ValueError("Could not delete '%s' because: %s" % (filename,
+        raise ValueError("Could not delete '{}' because: {}".format(filename,
                                                                 str(e)))
 
 

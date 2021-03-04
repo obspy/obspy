@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 A simplified interface to the obspy.clients.seedlink module.
 
@@ -69,7 +68,7 @@ class EasySeedLinkClientException(Exception):
     pass
 
 
-class EasySeedLinkClient(object):
+class EasySeedLinkClient:
     """
     An easy-to-use SeedLink client.
 

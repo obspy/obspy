@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Base classes for uniform Client interfaces.
 
@@ -61,10 +60,10 @@ import obspy
 encoding = sys.getdefaultencoding() or "UTF-8"
 platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
 # The default User Agent that will be sent with every request.
-DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (
+DEFAULT_USER_AGENT = "ObsPy/{} ({}, Python {})".format(
     obspy.__version__, platform_, platform.python_version())
 # The user agent tests should use by default.
-DEFAULT_TESTING_USER_AGENT = "ObsPy/%s (test suite) (%s, Python %s)" % (
+DEFAULT_TESTING_USER_AGENT = "ObsPy/{} (test suite) ({}, Python {})".format(
     obspy.__version__, platform_, platform.python_version())
 
 
@@ -86,7 +85,7 @@ class ClientHTTPException(ClientException,
     pass
 
 
-class BaseClient(object):
+class BaseClient:
     """
     Base class for common methods.
     """
@@ -247,7 +246,7 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
                     continue
                 filename.write(chunk)
         else:
-            with io.open(filename, "wb") as fh:
+            with open(filename, "wb") as fh:
                 for chunk in r.iter_content(chunk_size=_chunk_size):
                     if not chunk:
                         continue

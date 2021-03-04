@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -----------------------------------------------------------------
 # Filename: freqattributes.py
 #   Author: Conny Hammer

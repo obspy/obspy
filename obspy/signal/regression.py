@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Python Module for (Weighted) Linear Regression.
 

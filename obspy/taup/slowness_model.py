@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Slowness model class.
 """
@@ -24,7 +23,7 @@ def _fix_critical_depths(critical_depths, layer_num, is_p_wave):
     critical_depths[name][mask] += 1
 
 
-class SlownessModel(object):
+class SlownessModel:
     """
     Storage and methods for generating slowness-depth pairs.
     """

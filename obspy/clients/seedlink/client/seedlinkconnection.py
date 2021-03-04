@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module to manage a connection to a SeedLink server using a Socket.
 
@@ -33,7 +32,7 @@ if False:
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-class SeedLinkConnection(object):
+class SeedLinkConnection:
     """
     Class to manage a connection to a SeedLink server using a Socket.
 
@@ -341,12 +340,12 @@ class SeedLinkConnection(object):
         # Open the stream list file
         streamfile_file = None
         try:
-            streamfile_file = open(streamfile, 'r')
-        except IOError as ioe:
+            streamfile_file = open(streamfile)
+        except OSError as ioe:
             logger.error("cannot open state file %s" % (ioe))
             return 0
         except Exception as e:
-            msg = "%s: opening state file: %s" % (e, streamfile)
+            msg = f"{e}: opening state file: {streamfile}"
             logger.critical(msg)
             raise SeedLinkException(msg)
         logger.info(
@@ -388,10 +387,10 @@ class SeedLinkConnection(object):
             if (stacount == 0):
                 logger.error("no streams defined in %s" % (streamfile))
             else:
-                logger.debug("Read %s streams from %s" % (stacount,
+                logger.debug("Read {} streams from {}".format(stacount,
                                                           streamfile))
-        except IOError as e:
-            msg = "%s: reading stream list file: %s" % (e, streamfile)
+        except OSError as e:
+            msg = f"{e}: reading stream list file: {streamfile}"
             logger.critical(msg)
             raise SeedLinkException(msg)
         finally:
@@ -577,12 +576,12 @@ class SeedLinkConnection(object):
         # open the state file
         statefile_file = None
         try:
-            statefile_file = open(self.statefile, 'r')
-        except IOError as ioe:
+            statefile_file = open(self.statefile)
+        except OSError as ioe:
             logger.error("cannot open state file: %s" % (ioe))
             return 0
         except Exception as e:
-            msg = "%s: opening state file: %s" % (e, statefile)
+            msg = f"{e}: opening state file: {statefile}"
             logger.critical(msg)
             raise SeedLinkException(msg)
 
@@ -645,8 +644,8 @@ class SeedLinkConnection(object):
             else:
                 msg = "recovered state for %s streams in %s"
                 logger.debug(msg % (stacount, self.statefile))
-        except IOError as e:
-            msg = "%s: reading state file: %s" % (e, self.statefile)
+        except OSError as e:
+            msg = f"{e}: reading state file: {self.statefile}"
             logger.critical(msg)
             raise SeedLinkException(msg)
         finally:
@@ -670,11 +669,11 @@ class SeedLinkConnection(object):
         statefile_file = None
         try:
             statefile_file = open(self.statefile, 'w')
-        except IOError as ioe:
+        except OSError as ioe:
             logger.error("cannot open state file: %s" % (ioe))
             return 0
         except Exception as e:
-            msg = "%s: opening state file: %s" % (e, statefile)
+            msg = f"{e}: opening state file: {statefile}"
             logger.critical(msg)
             raise SeedLinkException(msg)
         logger.debug("saving connection state to state file")
@@ -689,8 +688,8 @@ class SeedLinkConnection(object):
                         curstream.net + " " +
                         curstream.station + " " + str(curstream.seqnum) +
                         " " + curstream.btime.format_seedlink() + "\n")
-        except IOError as e:
-            msg = "%s: writing state file: %s" % (e, self.statefile)
+        except OSError as e:
+            msg = f"{e}: writing state file: {self.statefile}"
             logger.critical(msg)
             raise SeedLinkException(msg)
         finally:
@@ -788,7 +787,7 @@ class SeedLinkConnection(object):
                     self.state.query_mode = SLState.KEEP_ALIVE_QUERY
                     self.state.expect_info = True
                     self.state.keepalive_trig = -1
-                except IOError:
+                except OSError:
                     msg = "I/O error, reconnecting in %ss"
                     logger.warn(msg % (self.netdly))
                     self.disconnect()
@@ -802,7 +801,7 @@ class SeedLinkConnection(object):
                     self.send_info_request(self.info_request_string, 1)
                     self.state.query_mode = SLState.INFO_QUERY
                     self.state.expect_info = True
-                except IOError:
+                except OSError:
                     self.state.query_mode = SLState.NO_QUERY
                     msg = "I/O error, reconnecting in %ss"
                     logger.warn(msg % (self.netdly))
@@ -833,7 +832,7 @@ class SeedLinkConnection(object):
                         self.send_info_request(self.info_request_string, 1)
                         self.state.query_mode = SLState.INFO_QUERY
                         self.state.expect_info = True
-                    except IOError:
+                    except OSError:
                         msg = "SeedLink version does not support INFO requests"
                         logger.info(msg)
                         self.state.query_mode = SLState.NO_QUERY
@@ -963,7 +962,7 @@ class SeedLinkConnection(object):
                 try:
                     bytesread = self.receive_data(self.state.bytes_remaining(),
                                                   self.sladdr)
-                except IOError as ioe:
+                except OSError as ioe:
                     msg = "socket read error: %s, reconnecting in %sss"
                     logger.error(msg % (ioe, self.netdly))
                     self.disconnect()
@@ -1080,7 +1079,7 @@ class SeedLinkConnection(object):
             except Exception:
                 pass
             raise sle
-        except IOError as ioe:
+        except OSError as ioe:
             # traceback.print_exc()
             try:
                 self.socket.close()
@@ -1096,7 +1095,7 @@ class SeedLinkConnection(object):
         if self.socket is not None:
             try:
                 self.socket.close()
-            except IOError as ioe:
+            except OSError as ioe:
                 logger.error("network socket close failed: %s" % (ioe))
             self.socket = None
             logger.info("network socket closed")
@@ -1160,7 +1159,7 @@ class SeedLinkConnection(object):
         # print("DEBUG: sendbytes:", repr(sendbytes))
         try:
             self.socket.send(sendbytes)
-        except IOError as ioe:
+        except OSError as ioe:
             raise ioe
 
         if resplen <= 0:
@@ -1201,7 +1200,7 @@ class SeedLinkConnection(object):
             # self.socket.setblocking(0)
             bytesread = self.socket.recv(maxbytes)
             # self.socket.setblocking(1)
-        except IOError as ioe:
+        except OSError as ioe:
             # traceback.print_exc()
             raise ioe
         # print("DEBUG: bytesread:", repr(bytesread))
@@ -1622,4 +1621,4 @@ class SeedLinkConnection(object):
             stream.seqnum = seqnum
             stream.btime = btime
         elif not wildcarded:
-            logger.error("unexpected data received: %s %s" % (net, station))
+            logger.error(f"unexpected data received: {net} {station}")

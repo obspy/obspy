@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .blockette import Blockette
 from ..fields import Float, Integer, VariableString
 from ..utils import format_resp
@@ -33,7 +32,7 @@ class Blockette047(Blockette):
             '#\t\t+                      +------------------------------+' + \
             '                       +\n' + \
             '#\t\t+                      |   Decimation,' + \
-            '%6s ch %s   |                       +\n' % (station, channel) + \
+            f'{station:>6} ch {channel}   |                       +\n' + \
             '#\t\t+                      +------------------------------+' + \
             '                       +\n' + \
             '#\t\t\n' + \

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Defines the header structures and some other dictionaries needed for SEG Y read
 and write support.

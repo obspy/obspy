@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 #  Filename: recordanalyzer.py
 #  Purpose: A command-line tool to analyze Mini-SEED records for development
@@ -28,7 +27,7 @@ from struct import unpack
 from obspy import UTCDateTime, __version__
 
 
-class RecordAnalyser(object):
+class RecordAnalyser:
     """
     Analyses a Mini-SEED file on a per record basis.
 
@@ -87,7 +86,7 @@ class RecordAnalyser(object):
         self.record_number += 1
         try:
             self._parse_header()
-        except IOError as e:
+        except OSError as e:
             msg = "IOError while trying to read record number %i: %s"
             raise StopIteration(msg % (self.record_number, str(e)))
 
@@ -104,7 +103,7 @@ class RecordAnalyser(object):
             record_number * 2 ** self.blockettes[1000]['Data Record Length'])
         try:
             self._parse_header()
-        except IOError as e:
+        except OSError as e:
             msg = "IOError while trying to read record number %i: %s"
             raise StopIteration(msg % (self.record_number, str(e)))
         self.did_goto = True
@@ -141,7 +140,7 @@ class RecordAnalyser(object):
         except Exception:
             if len(year_raw) == 0:
                 msg = "Unexpected end of file."
-                raise IOError(msg)
+                raise OSError(msg)
             raise
         if year >= 1900 and year <= 2050:
             self.endian = '>'
@@ -167,7 +166,7 @@ class RecordAnalyser(object):
         except Exception:
             if len(fixed_header) == 0:
                 msg = "Unexpected end of file."
-                raise IOError(msg)
+                raise OSError(msg)
             raise
         # Write values to dictionary.
         self.fixed_header['Sequence number'] = \
@@ -229,7 +228,7 @@ class RecordAnalyser(object):
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
-                    raise IOError(msg)
+                    raise OSError(msg)
                 raise
             blkt_type = int(blkt_type)
             next_blockette = int(next_blockette)
@@ -255,7 +254,7 @@ class RecordAnalyser(object):
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
-                    raise IOError(msg)
+                    raise OSError(msg)
                 raise
             blkt_dict['Sampling Rate'] = float(unpack_values[0])
         elif blkt_type == 300:
@@ -267,7 +266,7 @@ class RecordAnalyser(object):
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
-                    raise IOError(msg)
+                    raise OSError(msg)
                 raise
             blkt_dict['Calibration Start Time'] = \
                 UTCDateTime(year=int(unpack_values[0]),
@@ -305,7 +304,7 @@ class RecordAnalyser(object):
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
-                    raise IOError(msg)
+                    raise OSError(msg)
                 raise
             blkt_dict['Calibration Start Time'] = \
                 UTCDateTime(year=int(unpack_values[0]),
@@ -342,7 +341,7 @@ class RecordAnalyser(object):
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
-                    raise IOError(msg)
+                    raise OSError(msg)
                 raise
             blkt_dict['Calibration Start Time'] = \
                 UTCDateTime(year=int(unpack_values[0]),
@@ -377,7 +376,7 @@ class RecordAnalyser(object):
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
-                    raise IOError(msg)
+                    raise OSError(msg)
                 raise
             blkt_dict['Encoding Format'] = int(unpack_values[0])
             blkt_dict['Word Order'] = int(unpack_values[1])
@@ -390,7 +389,7 @@ class RecordAnalyser(object):
             except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
-                    raise IOError(msg)
+                    raise OSError(msg)
                 raise
             blkt_dict['Timing quality'] = int(unpack_values[0])
             blkt_dict['mu_sec'] = int(unpack_values[1])
@@ -452,7 +451,7 @@ class RecordAnalyser(object):
         for key in self.fixed_header.keys():
             # Don't print empty values to ease testing.
             if self.fixed_header[key] != "":
-                ret_val += '    %s: %s\n' % (key, self.fixed_header[key])
+                ret_val += '    {}: {}\n'.format(key, self.fixed_header[key])
             else:
                 ret_val += '    %s:\n' % (key)
         ret_val += '\nBLOCKETTES\n'
@@ -465,7 +464,7 @@ class RecordAnalyser(object):
                     tabs = '    '
                 else:
                     tabs = '        '
-                ret_val += '%s%s: %s\n' % (tabs, blkt_key,
+                ret_val += '{}{}: {}\n'.format(tabs, blkt_key,
                                            self.blockettes[key][blkt_key])
         ret_val += '\nCALCULATED VALUES\n'
         ret_val += '    Corrected Starttime: %s\n' % self.corrected_starttime

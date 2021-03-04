@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 CSS bindings to ObsPy station module.
 
@@ -96,7 +95,7 @@ def _write_css(inventory, basename):
         network.append(network_line)
 
         for sta in net:
-            affiliation_line = '%-8.8s %-6.6s %-17.17s' % (
+            affiliation_line = '{:<8.8} {:<6.6} {:<17.17}'.format(
                 net.code,
                 sta.code,
                 lddate)
@@ -129,9 +128,9 @@ def _write_css(inventory, basename):
                     _yearday(cha.end_date),
                     'b' if 'BEAM' in cha.types else '-',
                     cha.depth,
-                    ('%6.1f' % (cha.azimuth, )
+                    (f'{cha.azimuth:6.1f}'
                         if cha.azimuth is not None else 'NaN'),
-                    ('%6.1f' % (cha.dip, )
+                    (f'{cha.dip:6.1f}'
                         if cha.dip is not None else 'NaN'),
                     (cha.description.replace('\n', ' ')
                         if cha.description else '-'),

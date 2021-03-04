@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module to manage SeedLinkConnection state.
 
@@ -15,7 +14,7 @@ from ..seedlinkexception import SeedLinkException
 from ..slpacket import SLPacket
 
 
-class SLState(object):
+class SLState:
     """
     Class to manage SeedLinkConnection state.
 

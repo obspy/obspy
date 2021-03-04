@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Library name handling for ObsPy.
 
@@ -51,7 +50,7 @@ def _get_lib_name(lib, add_extension_suffix):
         file we have to add this suffix, but not during building.
     """
     # our custom defined part of the extension file name
-    libname = "lib%s_%s_%s_py%s" % (
+    libname = "lib{}_{}_{}_py{}".format(
         lib, platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
     libname = cleanse_pymodule_filename(libname)

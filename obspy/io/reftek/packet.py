@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Routines for handling of Reftek130 packets.
 
@@ -97,7 +96,7 @@ else:
     SWAPFLAG = 0
 
 
-class Packet(object):
+class Packet:
     _headers = ('experiment_number', 'unit_id', 'byte_count',
                 'packet_sequence', 'time')
 
@@ -174,7 +173,7 @@ class EHPacket(Packet):
                 value = getattr(self, key)
                 if key in ("unit_id", "data_format"):
                     value = value.decode()
-                info.append("{}: {}".format(key, value))
+                info.append(f"{key}: {value}")
             info.append("-" * 20)
             for key in sorted(EH_PAYLOAD.keys()):
                 value = getattr(self, key)
@@ -182,7 +181,7 @@ class EHPacket(Packet):
                            "first_sample_time", "last_sample_time"):
                     if value is not None:
                         value = UTCDateTime(ns=value)
-                info.append("{}: {}".format(key, value))
+                info.append(f"{key}: {value}")
             info = "{} Packet\n\t{}".format(self.type.decode(),
                                             "\n\t".join(info))
         return info
@@ -212,7 +211,7 @@ class DTPacket(Packet):
                 value = getattr(self, key)
                 if key in ("unit_id", "data_format"):
                     value = value.decode()
-                info.append("{}: {}".format(key, value))
+                info.append(f"{key}: {value}")
             info = "{} Packet\n\t{}".format(self.type.decode(),
                                             "\n\t".join(info))
         return info
@@ -279,7 +278,7 @@ def _unpack_C0_C2_data(packets, encoding):  # noqa
     elif encoding == 'C2':
         encoding_bytes = b'C2'
     else:
-        msg = "Unregonized encoding: '{}'".format(encoding)
+        msg = f"Unregonized encoding: '{encoding}'"
         raise ValueError(msg)
     if np.any(packets['data_format'] != encoding_bytes):
         differing_formats = np.unique(
@@ -332,7 +331,7 @@ def _unpack_C0_C2_data_fast(packets, encoding):  # noqa
     elif encoding == 'C2':
         decode_steim = clibmseed.msr_decode_steim2
     else:
-        msg = "Unregonized encoding: '{}'".format(encoding)
+        msg = f"Unregonized encoding: '{encoding}'"
         raise ValueError(msg)
     npts = packets["number_of_samples"].sum()
     unpacked_data = np.empty(npts, dtype=np.int32)
@@ -373,7 +372,7 @@ def _unpack_C0_C2_data_safe(packets, encoding):  # noqa
     elif encoding == 'C2':
         decode_steim = clibmseed.msr_decode_steim2
     else:
-        msg = "Unregonized encoding: '{}'".format(encoding)
+        msg = f"Unregonized encoding: '{encoding}'"
         raise ValueError(msg)
     npts = packets["number_of_samples"].sum()
     unpacked_data = np.empty(npts, dtype=np.int32)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 HypoDD PHA read support.
 
@@ -140,7 +139,7 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
     if eventid_map is not None:
         eventid_map = {v: k for k, v in eventid_map.items()}
     seed_map = _seed_id_map(inventory, id_map)
-    with io.open(filename, 'r', encoding=encoding) as f:
+    with open(filename, 'r', encoding=encoding) as f:
         text = f.read()
     events = [_block2event(block, seed_map, id_default, ph2comp, eventid_map)
               for block in text.split('#')[1:]]

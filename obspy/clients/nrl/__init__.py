@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.nrl - Nominal Response Library client for ObsPy
 =============================================================

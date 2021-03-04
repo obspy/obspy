@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Provides the Network class.
 
@@ -86,7 +85,7 @@ class Network(BaseNode):
         self.selected_number_of_stations = selected_number_of_stations
         self.operators = operators or []
 
-        super(Network, self).__init__(
+        super().__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
@@ -197,9 +196,9 @@ class Network(BaseNode):
         for station in self.stations:
             contents = station.get_contents()
             content_dict["stations"].extend(
-                "%s.%s" % (self.code, _i) for _i in contents["stations"])
+                f"{self.code}.{_i}" for _i in contents["stations"])
             content_dict["channels"].extend(
-                "%s.%s" % (self.code, _i) for _i in contents["channels"])
+                f"{self.code}.{_i}" for _i in contents["channels"])
         return content_dict
 
     @property

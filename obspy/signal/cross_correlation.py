@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: cross_correlation.py
 #   Author: Moritz Beyreuther, Tobias Megies, Tom Eulenfeld
@@ -489,7 +488,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
             (trace1.stats.sampling_rate, trace2.stats.sampling_rate)
         raise Exception(msg)
     if trace1.id != trace2.id:
-        msg = "Trace ids do not match: %s != %s" % (trace1.id, trace2.id)
+        msg = f"Trace ids do not match: {trace1.id} != {trace2.id}"
         warnings.warn(msg)
     samp_rate = trace1.stats.sampling_rate
     # don't modify existing traces with filters
@@ -619,7 +618,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
             ax2.plot(tmp_t, np.polyval(coeffs, tmp_t), "b", label="fit")
             ax2.axvline(-dt, color="g", label="vertex")
             ax2.axhline(coeff, color="g")
-            ax2.set_xlabel("%.2f at %.3f seconds correction" % (coeff, -dt))
+            ax2.set_xlabel("{:.2f} at {:.3f} seconds correction".format(coeff, -dt))
             ax2.set_ylabel("correlation coefficient")
             ax2.set_ylim(-1, 1)
             ax2.set_xlim(cc_t[0], cc_t[-1])
@@ -698,8 +697,8 @@ def templates_max_similarity(st, time, streams_templates):
                    "when comparing template ({}) and data streams ({}).")
             warnings.warn(msg.format(
                 st_tmpl[0].stats.station,
-                ', '.join(sorted(set(tr.id for tr in st_tmpl))),
-                ', '.join(sorted(set(tr.id for tr in st_)))))
+                ', '.join(sorted({tr.id for tr in st_tmpl})),
+                ', '.join(sorted({tr.id for tr in st_}))))
             continue
         # determine best (combined) shift of multi-component data
         for id_ in ids:
@@ -985,9 +984,9 @@ def _plot_detections(detections, similarities, stream=None, heights=None,
             if isinstance(height, (float, int)):
                 ax[num1 + i].axhline(height)
         template_name = _get_item(template_names, i)
-        text = ('similarity {}'.format(template_name) if template_name else
+        text = (f'similarity {template_name}' if template_name else
                 'similarity' if num2 == 1 else
-                'similarity template {}'.format(i))
+                f'similarity template {i}')
         ax[num1 + i].annotate(text, **akw)
     try:
         _set_xaxis_obspy_dates(ax[-1])
@@ -1090,7 +1089,7 @@ def correlation_detector(stream, templates, heights, distance,
                                             template_time=template_time,
                                             **cckwargs)
         except ValueError as ex:
-            msg = '{} -> do not use template {}'.format(ex, template_id)
+            msg = f'{ex} -> do not use template {template_id}'
             warnings.warn(msg)
             similarities.append(None)
             continue

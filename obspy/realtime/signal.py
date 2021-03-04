@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Signal processing functions for RtMemory objects.
 

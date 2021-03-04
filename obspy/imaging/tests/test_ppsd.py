@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Image test(s) for obspy.signal.spectral_exstimation.PPSD.
 """

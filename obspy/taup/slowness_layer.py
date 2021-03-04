@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Functions acting on slowness layers.
 """

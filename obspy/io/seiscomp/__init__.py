@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.seiscomp - SeisComP3 inventory and event file support for ObsPy
 ========================================================================

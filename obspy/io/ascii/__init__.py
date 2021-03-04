@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.ascii - SLIST and TSPAIR support for ObsPy
 ===================================================

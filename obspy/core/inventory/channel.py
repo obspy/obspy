@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Provides the Channel class.
 
@@ -170,7 +169,7 @@ class Channel(BaseNode):
             equipments = [equipments]
         self.equipments = equipments or []
         self.response = response
-        super(Channel, self).__init__(
+        super().__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
@@ -245,7 +244,7 @@ class Channel(BaseNode):
                                if self.types else ""),
                 sampling_rate=("\tSampling Rate: %.2f Hz\n" %
                                self.sample_rate if self.sample_rate else ""),
-                sensor=("\tSensor (Description): %s (%s)\n" % (
+                sensor=("\tSensor (Description): {} ({})\n".format(
                         self.sensor.type, self.sensor.description)
                         if self.sensor else ""),
                 response=("\tResponse information available"

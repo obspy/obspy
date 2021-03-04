@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 The obspy.io.kinemetrics.core test suite.
 """

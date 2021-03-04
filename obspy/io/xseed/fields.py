@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Helper module containing xseed fields.
 
@@ -22,7 +21,7 @@ class SEEDTypeException(Exception):
     pass
 
 
-class Field(object):
+class Field:
     """
     General SEED field.
     """
@@ -102,7 +101,7 @@ class Field(object):
         rx = "|".join(rx_list)
         sn = "".join(re.findall(rx, sn))
         if re.match("(" + rx + ")*$", sn) is None:
-            msg = "Can't convert string %s with flags %s" % (s, self.flags)
+            msg = f"Can't convert string {s} with flags {self.flags}"
             raise SEEDTypeException(msg)
         return sn
 
@@ -127,7 +126,7 @@ class Field(object):
         self.data = text
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, text))
+            print(f'  {self}: {text}')
 
     def get_seed(self, blockette, pos=0):
         """
@@ -145,7 +144,7 @@ class Field(object):
             result = result[pos]
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, result))
+            print(f'  {self}: {result}')
         return self.write(result, strict=blockette.strict)
 
     def get_xml(self, blockette, pos=0):
@@ -191,7 +190,7 @@ class Field(object):
             node.text = str(result).strip()
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, [node]))
+            print('  {}: {}'.format(self, [node]))
         return [node]
 
     def parse_xml(self, blockette, xml_doc, pos=0):
@@ -203,7 +202,7 @@ class Field(object):
             setattr(blockette, self.attribute_name, self.default_value)
             # debug
             if blockette.debug:
-                print('  %s: set to default value %s' % (self,
+                print('  {}: set to default value {}'.format(self,
                                                          self.default_value))
             return
         # Parse X-Path if necessary. The isdigit test assures legacy support
@@ -220,7 +219,7 @@ class Field(object):
         setattr(blockette, self.attribute_name, self.convert(text))
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, text))
+            print(f'  {self}: {text}')
 
 
 class Integer(Field):

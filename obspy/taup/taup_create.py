@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Class to create new models.
 """
@@ -18,7 +17,7 @@ __DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
     inspect.currentframe()))), "data")
 
 
-class TauPCreate(object):
+class TauPCreate:
     """
     The seismic travel time calculation method of [Buland1983]_.
 
@@ -49,7 +48,7 @@ class TauPCreate(object):
             print("filename =", filename)
         self.v_mod = VelocityModel.read_velocity_file(filename)
         if self.v_mod is None:
-            raise IOError("Velocity model file not found: " + filename)
+            raise OSError("Velocity model file not found: " + filename)
         # If model was read:
         if self.debug:
             print("Done reading velocity model.")
@@ -126,7 +125,7 @@ class TauPCreate(object):
             self.tau_model.serialize(self.output_filename)
             if self.debug:
                 print("Done Saving " + self.output_filename)
-        except IOError as e:
+        except OSError as e:
             print("Tried to write!\n Caught IOError. Do you have write "
                   "permission in this directory?", e)
         except KeyError as e:

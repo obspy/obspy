@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.xseed - (X)SEED and RESP support for ObsPy
 ===================================================

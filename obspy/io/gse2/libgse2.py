@@ -543,8 +543,8 @@ def compile_sta2(stats):
     coordsys = stats['gse2'].get('coordsys')
     line = fmt1 % (
         stats['network'],
-        lat is not None and '{:9.5f}'.format(lat) or '',
-        lon is not None and '{:10.5f}'.format(lon) or '',
+        lat is not None and f'{lat:9.5f}' or '',
+        lon is not None and f'{lon:10.5f}' or '',
         coordsys or '')
     if len(line) != 49:
         msg = ("GSE2: Invalid header values, unable to compile valid "
@@ -556,8 +556,8 @@ def compile_sta2(stats):
     elev = stats['gse2'].get('elev')
     edepth = stats['gse2'].get('edepth')
     line = line + fmt2 % (
-        elev is not None and '{:5.3f}'.format(elev) or '',
-        edepth is not None and '{:5.3f}'.format(edepth) or '')
+        elev is not None and f'{elev:5.3f}' or '',
+        edepth is not None and f'{edepth:5.3f}' or '')
     for key, value in zip(('elev', 'edepth'), (elev, edepth)):
         if value is None:
             continue

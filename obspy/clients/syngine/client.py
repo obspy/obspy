@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ObsPy client for the IRIS Syngine service.
 
@@ -576,7 +575,7 @@ class Client(WaveformClient, HTTPClient):
                         for _i in ("networkcode", "stationcode",
                                    "locationcode"):
                             if _i in item:
-                                bulk_item += " %s=%s" % (_map[_i], item[_i])
+                                bulk_item += " {}={}".format(_map[_i], item[_i])
                     elif "station" in item and "network" in item:
                         bulk_item = "{network} {station}".format(
                             **item)
@@ -588,7 +587,7 @@ class Client(WaveformClient, HTTPClient):
                     if len(item) != 2:
                         raise ValueError("Item '%s' in bulk must have two "
                                          "entries." % str(item))
-                    bulk_item = "%s %s" % (item[0], item[1])
+                    bulk_item = "{} {}".format(item[0], item[1])
                 else:
                     raise ValueError("Item '%s' in bulk cannot be parsed." %
                                      str(item))

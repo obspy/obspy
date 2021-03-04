@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 QuakeML read and write support.
 
@@ -122,7 +121,7 @@ def _is_quakeml(filename):
     return True
 
 
-class Unpickler(object):
+class Unpickler:
     """
     De-serializes a QuakeML string into an ObsPy Catalog object.
     """
@@ -1058,7 +1057,7 @@ class Unpickler(object):
                            'type': 'attribute'}
 
 
-class Pickler(object):
+class Pickler:
     """
     Serializes an ObsPy Catalog object into QuakeML format.
     """
@@ -1213,7 +1212,7 @@ class Pickler(object):
             attrib = item.get("attrib", {})
             type_ = item.get("type", "element")
             self._add_namespace(ns)
-            tag = "{%s}%s" % (ns, key)
+            tag = f"{{{ns}}}{key}"
             # add either as subelement or attribute
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)

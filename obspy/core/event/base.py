@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.event.base - Classes for handling event metadata
 ===========================================================
@@ -53,7 +52,7 @@ class QuantityError(AttribDict):
 
     def __init__(self, uncertainty=None, lower_uncertainty=None,
                  upper_uncertainty=None, confidence_level=None):
-        super(QuantityError, self).__init__()
+        super().__init__()
         self.uncertainty = uncertainty
         self.lower_uncertainty = lower_uncertainty
         self.upper_uncertainty = upper_uncertainty
@@ -85,7 +84,7 @@ class QuantityError(AttribDict):
     def __eq__(self, other):
         if other is None and not bool(self):
             return True
-        return super(QuantityError, self).__eq__(other)
+        return super().__eq__(other)
 
     # Python 2 compatibility
     __nonzero__ = __bool__
@@ -229,7 +228,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
                     setattr(self, key, QuantityError())
 
         def clear(self):
-            super(AbstractEventType, self).clear()
+            super().clear()
             self.__init__(force_resource_id=False)
 
         def __str__(self, force_one_line=False):
@@ -279,7 +278,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
             # single line.
             if len(attributes) <= 3 and not containers or\
                force_one_line:
-                att_strs = ["%s=%s" % (_i, get_value_repr(_i))
+                att_strs = ["{}={}".format(_i, get_value_repr(_i))
                             for _i in attributes if _bool(getattr(self, _i))]
                 ret_str += "(%s)" % ", ".join(att_strs)
                 return ret_str
@@ -398,7 +397,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
     class AbstractEventTypeWithResourceID(AbstractEventType):
         def __init__(self, force_resource_id=True, *args, **kwargs):
             kwargs["force_resource_id"] = force_resource_id
-            super(AbstractEventTypeWithResourceID, self).__init__(*args,
+            super().__init__(*args,
                                                                   **kwargs)
 
     if "resource_id" in [item[0] for item in class_attributes]:
@@ -668,7 +667,7 @@ class WaveformStreamID(__WaveformStreamID):
                                             location_code, channel_code]]):
                 network_code, station_code, location_code, channel_code = \
                     4 * [None]
-        super(WaveformStreamID, self).__init__(network_code=network_code,
+        super().__init__(network_code=network_code,
                                                station_code=station_code,
                                                location_code=location_code,
                                                channel_code=channel_code,
@@ -681,7 +680,7 @@ class WaveformStreamID(__WaveformStreamID):
         The seed string is of the form:
             network.station.location.channel
         """
-        return "%s.%s.%s.%s" % (
+        return "{}.{}.{}.{}".format(
             self.network_code if self.network_code else "",
             self.station_code if self.station_code else "",
             self.location_code if self.location_code else "",

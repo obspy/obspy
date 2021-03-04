@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.fdsn - FDSN web service client for ObsPy
 ======================================================

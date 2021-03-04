@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 The Rotate test suite.
 """
@@ -392,8 +391,8 @@ class RotateTestCase(unittest.TestCase):
                 # Three horizontal components are linearly dependent, as are
                 # Z, Q, and L.
                 if a[2] == b[2] == c[2] == 0 or \
-                        set([_i[3] for _i in (a, b, c)]) == \
-                        set(["Z", "Q", "L"]):
+                        {_i[3] for _i in (a, b, c)} == \
+                        {"Z", "Q", "L"}:
                     with self.assertRaises(ValueError) as err:
                         rotate2zne(a[0], a[1], a[2],
                                    b[0], b[1], b[2],
@@ -476,7 +475,7 @@ class RotateTestCase(unittest.TestCase):
         for a, b, c in itertools.permutations([x, y, z, u], 3):
             # Except if "X" and "Y" are both part of it because they don't
             # really contain any data (vertical step table).
-            if set(["X", "Y"]).issubset(set([a[-1], b[-1], c[-1]])):
+            if {"X", "Y"}.issubset({a[-1], b[-1], c[-1]}):
                 failure_count += 1
                 continue
 

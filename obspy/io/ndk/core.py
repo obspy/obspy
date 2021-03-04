@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 NDK file support for ObsPy
 
@@ -44,7 +43,7 @@ def _get_resource_id(cmtname, res_type, tag=None):
     """
     Helper function to create consistent resource ids.
     """
-    res_id = "smi:local/ndk/%s/%s" % (cmtname, res_type)
+    res_id = f"smi:local/ndk/{cmtname}/{res_type}"
     if tag is not None:
         res_id += "#" + tag
     return res_id
@@ -87,7 +86,7 @@ def _is_ndk(filename):
     if not hasattr(filename, "readline"):
         # Check if it exists, otherwise assume its a string.
         try:
-            with open(filename, "rt") as fh:
+            with open(filename) as fh:
                 first_line = fh.readline()
         except Exception:
             try:
@@ -145,7 +144,7 @@ def _read_ndk(filename, *args, **kwargs):  # @UnusedVariable
     if not hasattr(filename, "read"):
         # Check if it exists, otherwise assume its a string.
         try:
-            with open(filename, "rt") as fh:
+            with open(filename) as fh:
                 data = fh.read()
         except Exception:
             try:
@@ -537,7 +536,7 @@ def _read_lines(line1, line2, line3, line4, line5):
     elif timestamp.startswith("O-"):
         rec["cmt_type"] = "unknown"
     else:
-        msg = "Invalid CMT timestamp '%s' for event %s." % (
+        msg = "Invalid CMT timestamp '{}' for event {}.".format(
             timestamp, rec["cmt_event_name"])
         raise ObsPyNDKException(msg)
 

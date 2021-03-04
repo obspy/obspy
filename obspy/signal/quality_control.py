@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Quality control module for ObsPy.
 
@@ -48,10 +47,10 @@ class DataQualityEncoder(json.JSONEncoder):
         elif isinstance(obj, UTCDateTime):
             return str(obj)
         else:
-            return super(DataQualityEncoder, self).default(obj)
+            return super().default(obj)
 
 
-class MSEEDMetadata(object):
+class MSEEDMetadata:
     """
     A container for MiniSEED specific metadata, including quality control
     parameters.
@@ -378,12 +377,12 @@ class MSEEDMetadata(object):
 
         # The following are lists and may contain multiple unique entries.
         meta['sample_rate'] = \
-            sorted(list(set([tr.stats.sampling_rate for tr in self.data])))
+            sorted(list({tr.stats.sampling_rate for tr in self.data}))
         meta['record_length'] = \
-            sorted(list(set([tr.stats.mseed.record_length
-                             for tr in self.data])))
+            sorted(list({tr.stats.mseed.record_length
+                             for tr in self.data}))
         meta['encoding'] = \
-            sorted(list(set([tr.stats.mseed.encoding for tr in self.data])))
+            sorted(list({tr.stats.mseed.encoding for tr in self.data}))
 
     def _extract_mseed_flags(self):
         flags = get_flags(self.files, starttime=self.starttime,
@@ -606,7 +605,7 @@ class MSEEDMetadata(object):
         schema_path = os.path.join(os.path.dirname(__file__), "data",
                                    "wf_metadata_schema.json")
 
-        with io.open(schema_path, "rt") as fh:
+        with open(schema_path, "rt") as fh:
             schema = json.load(fh)
 
         # If passed as a dictionary, serialize and derialize to get the

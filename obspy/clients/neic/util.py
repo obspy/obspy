@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from datetime import datetime
 
 
@@ -32,7 +31,7 @@ def get_property(filename, key):
     """
     Given a property filename get the value of the given key
     """
-    with open(filename, 'r') as fh:
+    with open(filename) as fh:
         lines = fh.readlines()
     for line in lines:
         line = line.strip()

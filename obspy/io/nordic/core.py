@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Nordic file format support for ObsPy
 
@@ -65,7 +64,7 @@ def _is_sfile(sfile, encoding='latin-1'):
     """
     if not hasattr(sfile, "readline"):
         try:
-            with open(sfile, 'r', encoding=encoding) as f:
+            with open(sfile, encoding=encoding) as f:
                 tags = _get_line_tags(f=f, report=False)
         except Exception:
             return False
@@ -108,7 +107,7 @@ def readheader(sfile, encoding='latin-1'):
 
     :returns: :class:`~obspy.core.event.event.Event`
     """
-    with open(sfile, 'r', encoding=encoding) as f:
+    with open(sfile, encoding=encoding) as f:
         tagged_lines = _get_line_tags(f)
         if len(tagged_lines['1']) == 0:
             raise NordicParsingError("No header lines found")
@@ -201,10 +200,10 @@ def _read_origin(line):
     if new_event.origins[0].depth:
         new_event.origins[0].depth *= 1000.
     if line[43].strip():
-        warnings.warn("Depth indicator {0} has not been mapped "
+        warnings.warn("Depth indicator {} has not been mapped "
                       "to the event".format(line[43]))
     if line[44].strip():
-        warnings.warn("Origin location indicator {0} has not been mapped "
+        warnings.warn("Origin location indicator {} has not been mapped "
                       "to the event".format(line[44]))
     if line[10] == "F":
         new_event.origins[0].time_fixed = True
@@ -258,7 +257,7 @@ def read_spectral_info(sfile, encoding='latin-1'):
         list of dictionaries of spectral information, units as in seisan
         manual, expect for logs which have been converted to floats.
     """
-    with open(sfile, 'r', encoding=encoding) as f:
+    with open(sfile, encoding=encoding) as f:
         tagged_lines = _get_line_tags(f=f)
         spec_inf = _read_spectral_info(tagged_lines=tagged_lines)
     return spec_inf
@@ -375,7 +374,7 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1'):
     """
     if not hasattr(select_file, "readline"):
         try:
-            f = open(select_file, 'r', encoding=encoding)
+            f = open(select_file, encoding=encoding)
         except Exception:
             try:
                 f = select_file.decode(encoding)
@@ -600,7 +599,7 @@ def _read_moment_tensors(tagged_lines, event):
     for mt_ind in range(len(mt_lines) // 2):
         mt_line_1 = mt_lines[mt_ind * 2][0]
         mt_line_2 = mt_lines[(mt_ind * 2) + 1][0]
-        if not str(mt_line_2[1:3]) == str('MT'):
+        if not str(mt_line_2[1:3]) == 'MT':
             raise NordicParsingError("Matching moment tensor lines not found.")
         sfile_seconds = int(mt_line_1[16:18])
         if sfile_seconds == 60:
@@ -796,7 +795,7 @@ def readwavename(sfile, encoding='latin-1'):
     :returns: List of strings of wave paths
     :rtype: list
     """
-    with open(sfile, 'r', encoding=encoding) as f:
+    with open(sfile, encoding=encoding) as f:
         tagged_lines = _get_line_tags(f=f)
         if len(tagged_lines['6']) == 0:
             msg = ('No waveform files in sfile %s' % sfile)
@@ -1044,15 +1043,15 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         sfilename = filename
     # Write the header info.
     if origin.latitude is not None:
-        lat = '{0:.3f}'.format(origin.latitude)
+        lat = f'{origin.latitude:.3f}'
     else:
         lat = ''
     if origin.longitude is not None:
-        lon = '{0:.3f}'.format(origin.longitude)
+        lon = f'{origin.longitude:.3f}'
     else:
         lon = ''
     if origin.depth is not None:
-        depth = '{0:.1f}'.format(origin.depth / 1000.0)
+        depth = '{:.1f}'.format(origin.depth / 1000.0)
     else:
         depth = ''
     if event.creation_info:
@@ -1069,7 +1068,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         agency = agency[0:3]
     # Cope with differences in event uncertainty naming
     if origin.quality and origin.quality['standard_error']:
-        timerms = '{0:.1f}'.format(origin.quality['standard_error'])
+        timerms = '{:.1f}'.format(origin.quality['standard_error'])
     else:
         timerms = '0.0'
     conv_mags = []
@@ -1086,7 +1085,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             if event.magnitudes[mag_ind].resource_id in mt_ids:
                 raise IndexError("Repeated magnitude")
                 # This magnitude will get put in with the moment tensor
-            mag_info['mag'] = '{0:.1f}'.format(
+            mag_info['mag'] = '{:.1f}'.format(
                 event.magnitudes[mag_ind].mag) or ''
             mag_info['type'] = _evmagtonor(event.magnitudes[mag_ind].
                                            magnitude_type) or ''
@@ -1112,8 +1111,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     else:
         sfile = string_io
     sfile.write(
-        " {0} {1}{2} {3}{4} {5}.{6} {7}{8}{9}{10}  {11}{12}{13}{14}{15}{16}"
-        "{17}{18}{19}{20}{21}{22}1\n".format(
+        " {} {}{} {}{} {}.{} {}{}{}{}  {}{}{}{}{}{}"
+        "{}{}{}{}{}{}1\n".format(
             evtime.year, str(evtime.month).rjust(2), str(evtime.day).rjust(2),
             str(evtime.hour).rjust(2), str(evtime.minute).rjust(2),
             str(evtime.second).rjust(2), str(evtime.microsecond).ljust(1)[0:1],
@@ -1127,8 +1126,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             conv_mags[2]['agency'][0:3].rjust(3)))
     if len(conv_mags) > 3:
         sfile.write(
-            " {0} {1}{2} {3}{4} {5}.{6} {7}                      {8}       "
-            "{9}{10}{11}{12}{13}{14}{15}{16}{17}1\n".format(
+            " {} {}{} {}{} {}.{} {}                      {}       "
+            "{}{}{}{}{}{}{}{}{}1\n".format(
                 evtime.year, str(evtime.month).rjust(2),
                 str(evtime.day).rjust(2), str(evtime.hour).rjust(2),
                 str(evtime.minute).rjust(2), str(evtime.second).rjust(2),
@@ -1162,7 +1161,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                 pass
     # Write line 2 (type: I) of s-file
     sfile.write(
-        " Action:ARG {0} OP:{1} STATUS:               ID:{2}     I\n".format(
+        " Action:ARG {} OP:{} STATUS:               ID:{}     I\n".format(
             datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
             userid.ljust(4)[0:4], evtime.strftime("%Y%m%d%H%M%S")))
     # Write line-type 6 of s-file
@@ -1472,7 +1471,7 @@ def nordpick(event, high_accuracy=True):
             coda = ' '
         eval_mode = INV_EVALUTATION_MAPPING.get(pick.evaluation_mode, None)
         if eval_mode is None:
-            warnings.warn("Evaluation mode {0} is not mappable".format(
+            warnings.warn("Evaluation mode {} is not mappable".format(
                 pick.evaluation_mode))
             eval_mode = " "
         # Generate a print string and attach it to the list
@@ -1483,7 +1482,7 @@ def nordpick(event, high_accuracy=True):
             days_diff = (pick.time.date - origin_date).days
             if days_diff > 1:
                 raise NordicParsingError(
-                    "Pick is {0} days from the origin, must be < 48 "
+                    "Pick is {} days from the origin, must be < 48 "
                     "hours".format(days_diff))
             pick_hour += 24
         pick_seconds = pick.time.second + (pick.time.microsecond / 1e6)

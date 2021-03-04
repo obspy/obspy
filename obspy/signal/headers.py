@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Defines the libsignal and evalresp structures and blockettes.
 """

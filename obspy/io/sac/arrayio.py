@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Low-level array interface to the SAC file format.
 
@@ -68,7 +67,7 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
             hs.fill(HD.SNULL)
             out.append(hs)
         else:
-            raise ValueError("Unrecognized header array type {}".format(itype))
+            raise ValueError(f"Unrecognized header array type {itype}")
 
     return out
 
@@ -136,7 +135,7 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
             if is_file_name:
                 f.close()
             # specified but not valid. you dun messed up.
-            raise SacIOError("Incorrect byteorder {}".format(byteorder))
+            raise SacIOError(f"Incorrect byteorder {byteorder}")
         else:
             # not valid, but not specified.
             # swap the dtype interpretation (dtype.byteorder), but keep the
@@ -214,7 +213,7 @@ def read_sac_ascii(source, headonly=False):
     except TypeError:
         fh = source
         is_file_name = False
-    except IOError:
+    except OSError:
         raise SacIOError("No such file: " + source)
     finally:
         contents = fh.read()
@@ -324,7 +323,7 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     except TypeError:
         f = dest
         is_file_name = False
-    except IOError:
+    except OSError:
         raise SacIOError("Cannot open file: " + dest)
 
     # TODO: make sure all data have the same/desired byte order
@@ -384,7 +383,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
     try:
         f = open(dest, fmode)
         is_file_name = True
-    except IOError:
+    except OSError:
         raise SacIOError("Cannot open file: " + dest)
     except TypeError:
         f = dest
@@ -519,7 +518,7 @@ def dict_to_header_arrays(header=None, byteorder='='):
                     #                                          'strict')
                     hs[HD.STRHDRS.index(hdr)] = value.ljust(8)
             else:
-                msg = "Unrecognized header name: {}. Ignored.".format(hdr)
+                msg = f"Unrecognized header name: {hdr}. Ignored."
                 warnings.warn(msg)
 
     return hf, hi, hs
@@ -596,7 +595,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
         for hdr in HD.ACCEPTED_VALS:
             enval = hi[HD.INTHDRS.index(hdr)]
             if not is_valid_enum_int(hdr, enval, allow_null=True):
-                msg = "Invalid enumerated value, '{}': {}".format(hdr, enval)
+                msg = f"Invalid enumerated value, '{hdr}': {enval}"
                 raise SacInvalidContentError(msg)
 
     if 'reftime' in tests:
@@ -638,7 +637,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
                 raise SacInvalidContentError(msg.format(hdr, iztype_val))
 
         else:
-            msg = "Invalid iztype: {}".format(iztype_val)
+            msg = f"Invalid iztype: {iztype_val}"
             raise SacInvalidContentError(msg)
 
     return

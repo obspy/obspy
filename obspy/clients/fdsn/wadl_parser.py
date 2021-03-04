@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 A class parsing WADL files describing FDSN web services.
 
@@ -23,7 +22,7 @@ from .header import (DEFAULT_PARAMETERS, DEFAULT_TYPES,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED)
 
 
-class WADLParser(object):
+class WADLParser:
     def __init__(self, wadl_string):
         doc = etree.parse(io.BytesIO(wadl_string)).getroot()
         self.nsmap = doc.nsmap
@@ -227,7 +226,7 @@ class WADLParser(object):
             # insert prefixes for default namespace
             for x in expr.split("/"):
                 if x != "" and ":" not in x:
-                    x = "%s:%s" % (default_abbreviation, x)
+                    x = f"{default_abbreviation}:{x}"
                 parts.append(x)
             expr = "/".join(parts)
             # adapt nsmap accordingly

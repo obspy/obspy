@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.seedlink - SeedLink client for ObsPy
 ==================================================

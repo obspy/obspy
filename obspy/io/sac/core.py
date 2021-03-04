@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SAC bindings to ObsPy core module.
 

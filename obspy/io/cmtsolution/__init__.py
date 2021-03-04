@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 obspy.io.cmtsolution - CMTSOLUTION file format support for ObsPy
 ================================================================

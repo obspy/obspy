@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Various additional utilities for ObsPy xseed.
 
@@ -60,7 +59,7 @@ def datetime_2_string(dt, compact=False):
         dt = UTCDateTime(dt)
         return dt.format_seed(compact)
     except Exception:
-        raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
+        raise Exception("Invalid datetime {}: {}".format(type(dt), str(dt)))
 
 
 def compare_seed(seed1, seed2):

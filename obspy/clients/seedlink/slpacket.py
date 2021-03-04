@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module to hold and decode a SeedLink packet.
 
@@ -24,7 +23,7 @@ from obspy.io.mseed.util import (_convert_msr_to_dict,
 from .seedlinkexception import SeedLinkException
 
 
-class SLPacket(object):
+class SLPacket:
     """
     Class to hold and decode a SeedLink packet.
 

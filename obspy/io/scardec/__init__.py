@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 obspy.io.scardec - SCARDEC file format support for ObsPy
 ================================================================

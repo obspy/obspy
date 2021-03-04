@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 obspy.io.ndk - NDK file support for ObsPy
 =========================================

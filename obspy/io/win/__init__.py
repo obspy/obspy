@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.win - WIN read support for ObsPy
 =========================================

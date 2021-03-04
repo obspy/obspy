@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module for handling ObsPy Stream objects.
 
@@ -213,7 +212,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
                             pathname_or_url)
         elif not has_magic(pathname_or_url) and \
                 not os.path.isfile(pathname_or_url):
-            raise IOError(2, "No such file or directory", pathname_or_url)
+            raise OSError(2, "No such file or directory", pathname_or_url)
         # Only raise error if no start/end time has been set. This
         # will return an empty stream if the user chose a time window with
         # no data in it.
@@ -296,7 +295,7 @@ def _create_example_stream(headonly=False):
     return st
 
 
-class Stream(object):
+class Stream:
     """
     List like object of multiple ObsPy Trace objects.
 
@@ -1266,7 +1265,7 @@ class Stream(object):
         Total: 0 gap(s) and 1 overlap(s)
         """
         result = self.get_gaps(min_gap, max_gap)
-        print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
+        print("{:<17} {:<27} {:<27} {:<15} {:<8}".format('Source', 'Last Sample',
                                                 'Next Sample', 'Delta',
                                                 'Samples'))
         gaps = 0
@@ -3307,7 +3306,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         Returns a dictionary with information on common channels.
         """
         # get all ids down to location code
-        ids_ = set([tr.id.rsplit(".", 1)[0] for tr in self])
+        ids_ = {tr.id.rsplit(".", 1)[0] for tr in self}
         all_channels = {}
         # work can be separated by net.sta.loc, so iterate over each
         for id_ in ids_:
@@ -3420,15 +3419,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             components = [components]
 
         for component_pair in components:
-            st = self.select(component="[{}]".format(component_pair))
-            netstaloc = sorted(set(
-                [(tr.stats.network, tr.stats.station, tr.stats.location)
-                 for tr in st]))
+            st = self.select(component=f"[{component_pair}]")
+            netstaloc = sorted({
+                (tr.stats.network, tr.stats.station, tr.stats.location)
+                 for tr in st})
             for net, sta, loc in netstaloc:
-                channels = set(
-                    [tr.stats.channel
+                channels = {
+                    tr.stats.channel
                      for tr in st.select(network=net, station=sta,
-                                         location=loc)])
+                                         location=loc)}
                 common_channels = {}
                 for channel in channels:
                     if channel == "":
@@ -3512,7 +3511,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             # rotation run
             traces = [st.pop() for i in range(3)]
             # paranoid.. do a quick check of the channels again.
-            if set([tr.stats.channel for tr in traces]) != set(channels):
+            if {tr.stats.channel for tr in traces} != set(channels):
                 msg = ("Unexpected behavior in rotation. Please file a bug "
                        "report on github.")
                 raise NotImplementedError(msg)

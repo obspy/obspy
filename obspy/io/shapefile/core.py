@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import re
 import warnings
@@ -249,7 +248,7 @@ def _add_inventory_layer(writer, inventory, extra_fields=None):
     i = 0
     for net in inventory:
         for sta in net:
-            channel_list = ",".join(["%s.%s" % (cha.location_code, cha.code)
+            channel_list = ",".join([f"{cha.location_code}.{cha.code}"
                                      for cha in sta])
 
             feature = {}
@@ -342,7 +341,7 @@ def _create_layer(writer, field_definitions, extra_fields=None):
     if extra_fields is not None:
         for name, type_, width, precision, _ in extra_fields:
             if name in field_names:
-                msg = "Conflict with existing field named '{}'.".format(name)
+                msg = f"Conflict with existing field named '{name}'."
                 raise ValueError(msg)
             _add_field(writer, name, type_, width, precision)
 

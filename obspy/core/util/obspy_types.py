@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Various types used in ObsPy.
 
@@ -17,7 +16,7 @@ except ImportError:
     pass
 
 
-class Enum(object):
+class Enum:
     """
     Enumerated type (enum) implementation for Python.
 
@@ -97,14 +96,14 @@ class Enum(object):
         try:
             return self.get(name)
         except KeyError:
-            raise AttributeError("'%s'" % (name, ))
+            raise AttributeError(f"'{name}'")
 
     def __setattr__(self, name, value):
         if name == '_Enum__enums':
             self.__dict__[name] = value
             return
         elif name == '_Enum__replace':
-            super(Enum, self).__setattr__(name, value)
+            super().__setattr__(name, value)
             return
         raise NotImplementedError
 
@@ -159,7 +158,7 @@ class Enum(object):
               "industrial explosion"])
         """
         def _repr_list_of_keys(keys):
-            return ", ".join('"{}"'.format(_i) for _i in keys)
+            return ", ".join(f'"{_i}"' for _i in keys)
 
         keys = list(self.__enums.keys())
         key_repr = _repr_list_of_keys(keys)
@@ -171,7 +170,7 @@ class Enum(object):
             index -= 1
             key_repr = (_repr_list_of_keys(keys[:index]) + ", ..., " +
                         _repr_list_of_keys(keys[-index:]))
-        return "Enum([{}])".format(key_repr)
+        return f"Enum([{key_repr}])"
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
@@ -183,7 +182,7 @@ class CustomComplex(complex):
     extendable.
     """
     def __new__(cls, *args):
-        return super(CustomComplex, cls).__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     def __init__(self, *args):
         pass
@@ -205,7 +204,7 @@ class CustomFloat(float):
     extendable.
     """
     def __new__(cls, *args):
-        return super(CustomFloat, cls).__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     def __init__(self, *args):
         pass
@@ -234,7 +233,7 @@ class FloatWithUncertainties(CustomFloat):
             msg = "value %s out of bounds (%s, %s)"
             msg = msg % (value, cls._minimum, cls._maximum)
             raise ValueError(msg)
-        return super(FloatWithUncertainties, cls).__new__(cls, value)
+        return super().__new__(cls, value)
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
                  measurement_method=None):
@@ -271,7 +270,7 @@ class FloatWithUncertaintiesFixedUnit(FloatWithUncertainties):
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
                  measurement_method=None):
-        super(FloatWithUncertaintiesFixedUnit, self).__init__(
+        super().__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty,
             measurement_method=measurement_method)
@@ -304,7 +303,7 @@ class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
     """
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
                  unit=None, measurement_method=None):
-        super(FloatWithUncertaintiesAndUnit, self).__init__(
+        super().__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty,
             measurement_method=measurement_method)
@@ -349,16 +348,16 @@ class _ComplexUncertainty(complex):
                 cargs.append(cls._none)
             else:
                 cargs.append(0)
-        return super(_ComplexUncertainty, cls).__new__(cls, *cargs)
+        return super().__new__(cls, *cargs)
 
     @property
     def real(self):
-        _real = super(_ComplexUncertainty, self).real
+        _real = super().real
         return self._decode(_real)
 
     @property
     def imag(self):
-        _imag = super(_ComplexUncertainty, self).imag
+        _imag = super().imag
         return self._decode(_imag)
 
 
@@ -406,7 +405,7 @@ class ComplexWithUncertainties(CustomComplex):
         self._upper_uncertainty = self._uncertainty(value)
 
     def __new__(cls, *args, **kwargs):
-        return super(ComplexWithUncertainties, cls).__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     def __init__(self, *args, **kwargs):
         """
@@ -451,7 +450,7 @@ class ComplexWithUncertainties(CustomComplex):
 
     @property
     def real(self):
-        _real = super(ComplexWithUncertainties, self).real
+        _real = super().real
         _lower = self._attr(self.lower_uncertainty, 'real')
         _upper = self._attr(self.upper_uncertainty, 'real')
         return FloatWithUncertainties(
@@ -460,7 +459,7 @@ class ComplexWithUncertainties(CustomComplex):
 
     @property
     def imag(self):
-        _imag = super(ComplexWithUncertainties, self).imag
+        _imag = super().imag
         _lower = self._attr(self.lower_uncertainty, 'imag')
         _upper = self._attr(self.upper_uncertainty, 'imag')
         return FloatWithUncertainties(

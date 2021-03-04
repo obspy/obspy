@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.imaging.scripts.scan / obspy-scan test suite.
 """

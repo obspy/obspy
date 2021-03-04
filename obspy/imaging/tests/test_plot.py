@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.imaging.scripts.plot / obspy-plot test suite.
 """

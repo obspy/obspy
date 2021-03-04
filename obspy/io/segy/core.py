@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SEG Y bindings to ObsPy core module.
 
@@ -600,7 +599,7 @@ def _write_su(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
         # Set some special attributes, e.g. the sample count and other stuff.
         new_trace_header.number_of_samples_in_this_trace = trace.stats.npts
         new_trace_header.sample_interval_in_ms_for_this_trace = \
-            int(round((trace.stats.delta * 1E6)))
+            int(round(trace.stats.delta * 1E6))
         # Set the date of the Trace if it is not UTCDateTime(0).
         if starttime == UTCDateTime(0):
             new_trace.header.year_data_recorded = 0
@@ -704,8 +703,8 @@ class LazyTraceHeaderAttribDict(AttribDict):
         ad = self.__class__(
             unpacked_header=deepcopy(self.__dict__['unpacked_header']),
             unpacked_header_endian=deepcopy(self.__dict__['endian']),
-            data=dict((k, deepcopy(v)) for k, v in self.__dict__.items()
-                      if k not in self.readonly))
+            data={k: deepcopy(v) for k, v in self.__dict__.items()
+                      if k not in self.readonly})
         return ad
 
 

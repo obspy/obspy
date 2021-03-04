@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SH bindings to ObsPy core module.
 
@@ -129,7 +128,7 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
     .TEST..BHE | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
     .WET..HHZ  | 2010-01-01T01:01:05.999000Z - ... | 100.0 Hz, 4001 samples
     """
-    fh = open(filename, 'rt')
+    fh = open(filename)
     # read file and split text into channels
     channels = []
     headers = {}
@@ -262,7 +261,7 @@ def _write_asc(stream, filename, included_headers=None, npl=4,
         for key, value in trace.stats.get('sh', {}).items():
             if included_headers and key not in included_headers:
                 continue
-            sio.write("%s: %s\n" % (key, value))
+            sio.write(f"{key}: {value}\n")
         # special format for start time
         if "START" in included_headers:
             dt = trace.stats.starttime
@@ -285,7 +284,7 @@ def _write_asc(stream, filename, included_headers=None, npl=4,
         delimiter.append('\n')
         for (sample, delim) in zip(trace.data, delimiter):
             value = custom_format % (sample)
-            sio.write("%s %s" % (value, delim))
+            sio.write(f"{value} {delim}")
         sio.write("\n")
     if append:
         mode = 'ab'
@@ -380,10 +379,10 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             data_file = os.path.join(data_directory, data_file + '.QBN')
         if not os.path.isfile(data_file):
             msg = "Can't find corresponding QBN file at %s."
-            raise IOError(msg % data_file)
+            raise OSError(msg % data_file)
         fh_data = open(data_file, 'rb')
     # loop through read header file
-    with open(filename, 'rt') as fh:
+    with open(filename) as fh:
         lines = fh.read().splitlines()
     # number of comment lines
     cmtlines = int(lines[0][5:7])
@@ -550,7 +549,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             # convert UTCDateTimes into strings
             if isinstance(value, UTCDateTime):
                 value = from_utcdatetime(value)
-            temp += "%s:%s~ " % (SH_IDX[key], value)
+            temp += "{}:{}~ ".format(SH_IDX[key], value)
         headers.append(temp)
         # get maximal number of trclines
         nol = len(temp) // 74 + 1

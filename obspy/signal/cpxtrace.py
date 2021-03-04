@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: cpxtrace.py
 #   Author: Conny Hammer

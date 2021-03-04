@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SEG-2 support for ObsPy.
 
@@ -45,7 +44,7 @@ class SEG2InvalidFileError(SEG2BaseError):
     pass
 
 
-class SEG2(object):
+class SEG2:
     """
     Class to read SEG 2 formatted files.
 

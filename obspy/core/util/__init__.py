@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.util - Various utilities for ObsPy
 =============================================

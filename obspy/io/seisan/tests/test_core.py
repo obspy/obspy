@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The seisan.core test suite.
 """

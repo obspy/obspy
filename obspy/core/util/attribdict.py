@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 AttribDict class for ObsPy.
 
@@ -88,7 +87,7 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
         self.update(dict(*args, **kwargs))
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, self.__dict__)
+        return f"{self.__class__.__name__}({self.__dict__})"
 
     def __getitem__(self, name, default=None):
         try:

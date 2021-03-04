@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 NEIC CWB Query service client for ObsPy.
 
@@ -18,7 +17,7 @@ from obspy.clients.neic.util import ascdate, asctime
 from obspy.clients.httpproxy import get_proxy_tuple, http_proxy_connect
 
 
-class Client(object):
+class Client:
     """
     NEIC CWB QueryServer request client for waveform data
 
@@ -117,7 +116,7 @@ class Client(object):
             msg = "channel expression matches less than 3 characters " + \
                   "(use e.g. 'BHZ', 'BH?', 'BH[Z12]', 'B??')"
             raise Exception(msg)
-        seedname = '%-2s%-5s%s%-2s' % (network, station, channel, location)
+        seedname = f'{network:<2}{station:<5}{channel}{location:<2}'
         # allow UNIX style "?" wildcard
         seedname = seedname.replace("?", ".")
         return self.get_waveforms_nscl(seedname, starttime,
@@ -224,7 +223,7 @@ class Client(object):
                                 totlen += len(data)
                                 tf.write(data)
                                 slept = 0
-                        except socket.error:
+                        except OSError:
                             if slept > maxslept:
                                 print(ascdate(), asctime(),
                                       "Timeout on connection",
@@ -233,7 +232,7 @@ class Client(object):
                                 s.close()
                             sleep(0.05)
                             slept += 1
-            except socket.error:
+            except OSError:
                 print(traceback.format_exc())
                 print("CWB QueryServer at " + self.host + "/" + str(self.port))
                 raise

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop, VariableString
 from ..utils import blockette_34_lookup, format_resp
@@ -48,7 +47,7 @@ class Blockette044(Blockette):
             '#\t\t+               +----------------------------------------' +\
             '---+                 +\n' + \
             '#\t\t+               |   Response (Coefficients),' + \
-            '%6s ch %s   |                 +\n' % (station, channel) + \
+            f'{station:>6} ch {channel}   |                 +\n' + \
             '#\t\t+               +----------------------------------------' +\
             '---+                 +\n' + \
             '#\t\t\n' + \
@@ -71,12 +70,12 @@ class Blockette044(Blockette):
             if self.number_of_numerators > 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_numerators):
-                    string += 'B044F09-10  %3s %13s %13s\n' % (
+                    string += 'B044F09-10  {:>3} {:>13} {:>13}\n'.format(
                         _i,
                         format_resp(self.numerator_coefficient[_i], 6),
                         format_resp(self.numerator_error[_i], 6))
             else:
-                string += 'B044F09-10  %3s %13s %13s\n' % (
+                string += 'B044F09-10  {:>3} {:>13} {:>13}\n'.format(
                     0,
                     format_resp(self.numerator_coefficient, 6),
                     format_resp(self.numerator_error, 6))
@@ -87,12 +86,12 @@ class Blockette044(Blockette):
             if self.number_of_denominators > 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_numerators):
-                    string += 'B044F12-13  %3s %13s %13s\n' % (
+                    string += 'B044F12-13  {:>3} {:>13} {:>13}\n'.format(
                         _i,
                         format_resp(self.denominator_coefficient[_i], 6),
                         format_resp(self.denominator_error[_i], 6))
             else:
-                string += 'B044F12-13  %3s %13s %13s\n' % (
+                string += 'B044F12-13  {:>3} {:>13} {:>13}\n'.format(
                     0,
                     format_resp(self.denominator_coefficient, 6),
                     format_resp(self.denominator_error, 6))

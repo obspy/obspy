@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.event - Classes for handling event metadata
 ======================================================

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 CNV file format support for ObsPy
 
@@ -58,7 +57,7 @@ def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
     else:
         values = set(phase_mapping.values())
         values.update(("P", "S"))
-        if values != set(("P", "S")):
+        if values != {"P", "S"}:
             msg = ("Values of phase mapping should only be 'P' or 'S'")
             raise ValueError(msg)
     if ifx_list is None:

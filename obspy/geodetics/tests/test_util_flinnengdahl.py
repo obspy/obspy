@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 import os
 import unittest
 
@@ -18,7 +17,7 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
         )
 
     def test_coordinates(self):
-        with open(self.samples_file, 'r') as fh:
+        with open(self.samples_file) as fh:
             for line in fh:
                 longitude, latitude, checked_region = line.strip().split('\t')
                 longitude = float(longitude)
@@ -28,7 +27,7 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
                 self.assertEqual(
                     region,
                     checked_region,
-                    msg="(%f, %f) got %s instead of %s" % (
+                    msg="({:f}, {:f}) got {} instead of {}".format(
                         longitude,
                         latitude,
                         region,
@@ -37,7 +36,7 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
                 )
 
     def test_script(self):
-        with open(self.samples_file, 'r') as fh:
+        with open(self.samples_file) as fh:
             # Testing once is sufficient.
             line = fh.readline()
             longitude, latitude, checked_region = line.strip().split('\t')
@@ -49,7 +48,7 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
             self.assertEqual(
                 region,
                 checked_region,
-                msg='(%s, %s) got %s instead of %s' % (
+                msg='({}, {}) got {} instead of {}'.format(
                     longitude,
                     latitude,
                     region,

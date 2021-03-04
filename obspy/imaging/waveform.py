@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: waveform.py
 #  Purpose: Waveform plotting for obspy.Stream objects
@@ -45,7 +44,7 @@ DATELOCATOR_WARNING_MSG = (
     "AutoDateLocator's intervald dictionary.")
 
 
-class WaveformPlotting(object):
+class WaveformPlotting:
     """
     Class that provides several solutions for plotting large and small waveform
     data sets.
@@ -523,7 +522,7 @@ class WaveformPlotting(object):
             if mag is None:
                 mag = ""
             else:
-                mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
+                mag = f"{mag.mag:.1f} {mag.magnitude_type}"
 
             region = FlinnEngdahl().get_region(origin.longitude,
                                                origin.latitude)
@@ -596,7 +595,7 @@ class WaveformPlotting(object):
                         # Arrow style
                         arrowprops=dict(
                             arrowstyle="-",
-                            connectionstyle="arc3, rad=%s%.1f" % (
+                            connectionstyle="arc3, rad={}{:.1f}".format(
                                 arc_sign, arc_strength),
                             relpos=relpos, shrinkB=7),
                         zorder=10)
@@ -1022,7 +1021,7 @@ class WaveformPlotting(object):
         self.axis[0].set_xticks(ticks)
         self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation,
                                      size=self.x_labels_size)
-        self.axis[0].set_xlabel('%s %s' % (localization_dict['time in'],
+        self.axis[0].set_xlabel('{} {}'.format(localization_dict['time in'],
                                            time_type), size=self.x_labels_size)
 
     def __dayplot_set_y_ticks(self, *args, **kwargs):  # @UnusedVariable
@@ -1132,7 +1131,7 @@ class WaveformPlotting(object):
         if not self.sect_dist_degree:
             self.set_offset_label('Offset [km]')
         else:
-            self.set_offset_label(u'Offset [°]')
+            self.set_offset_label('Offset [°]')
         if ticks is not None:
             self.set_offset_ticklabels(ticks)
         ax.minorticks_on()
@@ -1398,14 +1397,14 @@ class WaveformPlotting(object):
             suptitle = ("Time in seconds relative to %s" %
                         _timestring(self.reftime))
         elif self.type == 'dayplot':
-            suptitle = '%s %s' % (self.stream[0].id,
+            suptitle = '{} {}'.format(self.stream[0].id,
                                   self.starttime.strftime('%Y-%m-%d'))
         elif self.type == 'section':
             suptitle = 'Network: %s [%s] - (%i traces / %s)' % \
                 (self.stream[-1].stats.network, self.stream[-1].stats.channel,
                  len(self.stream), _timestring(self.starttime))
         else:
-            suptitle = '%s  -  %s' % (_timestring(self.starttime),
+            suptitle = '{}  -  {}'.format(_timestring(self.starttime),
                                       _timestring(self.endtime))
         # add suptitle
         y = (self.height - 15.0) / self.height

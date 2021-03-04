@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: calibration.py
 #  Purpose: Functions for relative calibration (e.g. Huddle test calibration)

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 seiscomp.event test suite.
 
@@ -45,7 +44,7 @@ class EventTestCase(unittest.TestCase):
         Change the version number of a SC3ML file and return an etree
         document.
         """
-        with open(filename, 'r') as f:
+        with open(filename) as f:
             data = f.read()
             # Remove encoding declaration otherwise lxml will not be
             # able to read the file.

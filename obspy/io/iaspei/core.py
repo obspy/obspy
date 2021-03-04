@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 IASPEI Seismic Format (ISF) support for ObsPy
 
@@ -63,7 +62,7 @@ def _decode_if_possible(value, encoding="UTF-8"):
         return value
 
 
-class ISFReader(object):
+class ISFReader:
     encoding = 'UTF-8'
     resource_id_prefix = 'smi:local'
 
@@ -206,13 +205,13 @@ class ISFReader(object):
                 continue
         finally:
             # check event types/certainties for consistency
-            event_types = set(type_ for type_, _ in event_types_certainties)
+            event_types = {type_ for type_, _ in event_types_certainties}
             event_types.discard(None)
             if len(event_types) == 1:
                 event_type = event_types.pop()
-                certainties = set(
+                certainties = {
                     cert for type_, cert in event_types_certainties
-                    if type_ == event_type)
+                    if type_ == event_type}
                 if "known" in certainties:
                     event_type_certainty = "known"
                 elif "suspected" in certainties:

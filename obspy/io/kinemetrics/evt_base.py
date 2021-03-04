@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Evt (Kinemetrics) support for ObsPy.
 Base classes (cannot be directly called)
@@ -40,7 +39,7 @@ class EvtEOFError(EvtBaseError):
     pass
 
 
-class EvtVirtual(object):
+class EvtVirtual:
     """
     class for parameters reading.
     The dictionary has this structure :

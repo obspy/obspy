@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Python interface to the Seismic Analysis Code (SAC) file format.
 
@@ -356,7 +355,7 @@ from . import arrayio as _io
 # https://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
 #   5758381/raw/descriptor_writeup.ipynb
 
-class SACHeader(object):
+class SACHeader:
     def __init__(self, name):
         try:
             self.__doc__ = HD.DOC[name]
@@ -401,7 +400,7 @@ class RelativeTimeHeader(FloatHeader):
         else:
             offset = value
         # reuse the normal floatheader setter.
-        super(RelativeTimeHeader, self).__set__(instance, offset)
+        super().__set__(instance, offset)
 
 
 # Factory function for setting geographic header values
@@ -409,7 +408,7 @@ class RelativeTimeHeader(FloatHeader):
 # that will check lcalda and calculate and set dist, az, baz, gcarc
 class GeographicHeader(FloatHeader):
     def __set__(self, instance, value):
-        super(GeographicHeader, self).__set__(instance, value)
+        super().__set__(instance, value)
         if instance.lcalda:
             try:
                 instance._set_distances()
@@ -439,7 +438,7 @@ class IntHeader(SACHeader):
 class BoolHeader(IntHeader):
     def __get__(self, instance, instance_type):
         # value can be an int or None
-        value = super(BoolHeader, self).__get__(instance, instance_type)
+        value = super().__get__(instance, instance_type)
         return bool(value) if value in (0, 1) else value
 
     def __set__(self, instance, value):
@@ -448,7 +447,7 @@ class BoolHeader(IntHeader):
             raise ValueError(msg)
         # booleans are subclasses of integers.  They will be set (cast)
         # directly into an integer array as 0 or 1.
-        super(BoolHeader, self).__set__(instance, value)
+        super().__set__(instance, value)
         if self.name == 'lcalda':
             if value:
                 try:
@@ -459,7 +458,7 @@ class BoolHeader(IntHeader):
 
 class EnumHeader(IntHeader):
     def __get__(self, instance, instance_type):
-        value = super(EnumHeader, self).__get__(instance, instance_type)
+        value = super().__get__(instance, instance_type)
         # value is int or None
         if value is None:
             name = None
@@ -485,7 +484,7 @@ class EnumHeader(IntHeader):
         else:
             msg = 'Unrecognized enumerated value "{}" for header "{}"'
             raise ValueError(msg.format(value, self.name))
-        super(EnumHeader, self).__set__(instance, value)
+        super().__set__(instance, value)
 
 
 class StringHeader(SACHeader):
@@ -530,7 +529,7 @@ class StringHeader(SACHeader):
 class DataHeader(SACHeader):
     def __init__(self, name, func):
         self.func = func
-        super(DataHeader, self).__init__(name)
+        super().__init__(name)
 
     def __get__(self, instance, instance_type):
         if instance is None:
@@ -554,7 +553,7 @@ class DataHeader(SACHeader):
         return value
 
     def __set__(self, instance, value):
-        msg = "{} is read-only".format(self.name)
+        msg = f"{self.name} is read-only"
         raise AttributeError(msg)
 
 
@@ -616,7 +615,7 @@ def _iztype_reftime(sactrace, iztype):
         # remove the 'i' (first character) in the iztype to get the header name
         ref_val = getattr(sactrace, iztype[1:])
         if ref_val is None:
-            msg = "Reference header for iztype '{}' is not set".format(iztype)
+            msg = f"Reference header for iztype '{iztype}' is not set"
             raise SacError(msg)
 
     # 2. set a new reference time,
@@ -668,7 +667,7 @@ def _set_kevnm(self, value):
 
 
 # -------------------------- SAC OBJECT INTERFACE -----------------------------
-class SACTrace(object):
+class SACTrace:
     __doc__ = """
     Convenient and consistent in-memory representation of Seismic Analysis Code
     (SAC) files.
@@ -1354,7 +1353,7 @@ class SACTrace(object):
             hdrlist = ('a', 'b', 'e', 'f', 'o', 't0', 't1', 't2', 't3', 't4',
                        't5', 't6', 't7', 't8', 't9')
         else:
-            msg = "Unrecognized hdrlist '{}'".format(hdrlist)
+            msg = f"Unrecognized hdrlist '{hdrlist}'"
             raise ValueError(msg)
 
         # start building header string
@@ -1388,7 +1387,7 @@ class SACTrace(object):
         elif iztype == 'iunkn':
             header_str.append("\tiztype IUNKN (Unknown)")
         else:
-            header_str.append("\tunrecognized iztype: {}".format(iztype))
+            header_str.append(f"\tunrecognized iztype: {iztype}")
         #
         # non-null headers
         hdrfmt = "{:10.10s} = {}"

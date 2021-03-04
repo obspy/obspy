@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.gse2 - GSE2/GSE1 and GSE2 bulletin support for ObsPy
 =============================================================

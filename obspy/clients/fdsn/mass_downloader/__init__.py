@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Mass Downloader for FDSN Compliant Web Services
 ===============================================

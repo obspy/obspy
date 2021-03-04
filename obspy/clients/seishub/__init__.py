@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.clients.seishub - SeisHub database client for ObsPy
 =========================================================

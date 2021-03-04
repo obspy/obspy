@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from collections import namedtuple
 
 import sqlalchemy as sa
@@ -172,7 +171,7 @@ class ClientTestCase(unittest.TestCase):
     def test_get_nslc(self):
         client = get_test_client()
         # test using actual sqlite3 test database
-        expected_nslc = [(u'CU', u'TGUH', u'00', u'BHZ')]
+        expected_nslc = [('CU', 'TGUH', '00', 'BHZ')]
 
         actual_nslc = client.get_nslc("I*,CU",
                                       "ANMO,COL?,T*",
@@ -228,10 +227,10 @@ class ClientTestCase(unittest.TestCase):
     def test_get_availability_extent(self):
         client = get_test_client()
         # test using actual sqlite test database
-        expected_nslc = [(u'IU', u'ANMO', u'10', u'BHZ',
+        expected_nslc = [('IU', 'ANMO', '10', 'BHZ',
                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
                           UTCDateTime(2018, 1, 1, 0, 0, 59, 994536)),
-                         (u'IU', u'COLA', u'10', u'BHZ',
+                         ('IU', 'COLA', '10', 'BHZ',
                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
                           UTCDateTime(2018, 1, 1, 0, 0, 59, 994538))]
 
@@ -373,10 +372,10 @@ class ClientTestCase(unittest.TestCase):
     def test_get_availability(self):
         client = get_test_client()
         # test using actual sqlite test database
-        expected_avail = [(u'IU', u'ANMO', u'10', u'BHZ',
+        expected_avail = [('IU', 'ANMO', '10', 'BHZ',
                            UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
                            UTCDateTime(2018, 1, 1, 0, 0, 59, 994536)),
-                          (u'IU', u'COLA', u'10', u'BHZ',
+                          ('IU', 'COLA', '10', 'BHZ',
                            UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
                            UTCDateTime(2018, 1, 1, 0, 0, 59, 994538))]
 
@@ -406,31 +405,31 @@ class ClientTestCase(unittest.TestCase):
                # 2018-08-10T22:00:54 to 2018-08-10T22:15:53
                # 2018-08-10T22:05:54 to 2018-08-10T22:20:53 (MERGE)
                NamedRow(
-                   network=u'AK', station=u'BAGL',
-                   location=u'', channel=u'LCC',
-                   starttime=u'2018-08-10T22:00:54.000000',
-                   endtime=u'2018-08-10T22:20:53.000000',
+                   network='AK', station='BAGL',
+                   location='', channel='LCC',
+                   starttime='2018-08-10T22:00:54.000000',
+                   endtime='2018-08-10T22:20:53.000000',
                    samplerate=1.0,
-                   timespans=u'[1533938454.000000:1533939353.000000],'
-                             u'[1533938754.000000:1533939653.000000]'),
+                   timespans='[1533938454.000000:1533939353.000000],'
+                             '[1533938754.000000:1533939653.000000]'),
                # 2018-08-10T22:20:53.999000 to 2018-08-12T22:20:53 (JOIN)
                # 2018-08-12T23:20:53 to 2018-09-01T23:20:53
                NamedRow(
-                   network=u'AK', station=u'BAGL',
-                   location=u'', channel=u'LCC',
-                   starttime=u'2018-08-10T22:20:53.999000',
-                   endtime=u'2018-09-01T23:20:53.000000',
+                   network='AK', station='BAGL',
+                   location='', channel='LCC',
+                   starttime='2018-08-10T22:20:53.999000',
+                   endtime='2018-09-01T23:20:53.000000',
                    samplerate=1.0,
-                   timespans=u'[1533939653.999000:1534112453.000000],'
-                             u'[1534116053.000000:1535844053.000000]'),
+                   timespans='[1533939653.999000:1534112453.000000],'
+                             '[1534116053.000000:1535844053.000000]'),
                # (MERGE IF INCL SAMPLE RATE IS TRUE)
                # 2018-08-27T00:00:00 to 2018-09-11T00:00:00
-               NamedRow(network=u'AK', station=u'BAGL',
-                        location=u'', channel=u'LCC',
-                        starttime=u'2018-08-27T00:00:00.000000',
-                        endtime=u'2018-09-11T00:00:00.000000',
+               NamedRow(network='AK', station='BAGL',
+                        location='', channel='LCC',
+                        starttime='2018-08-27T00:00:00.000000',
+                        endtime='2018-09-11T00:00:00.000000',
                         samplerate=10.0,
-                        timespans=u'[1535328000.0:1536624000.0]')
+                        timespans='[1535328000.0:1536624000.0]')
             ]
         client._get_tsindex_rows = \
             mock.MagicMock(return_value=mocked_tsindex_rows)
@@ -828,9 +827,9 @@ class IndexerTestCase(unittest.TestCase):
 
     def test_run(self):
         my_uuid = uuid.uuid4().hex
-        fname = 'test_timeseries_{}'.format(my_uuid)
+        fname = f'test_timeseries_{my_uuid}'
         filepath = get_test_data_filepath()
-        database = '{}{}.sqlite'.format(filepath, fname)
+        database = f'{filepath}{fname}.sqlite'
         try:
             indexer = Indexer(filepath,
                               database=database,
@@ -890,7 +889,7 @@ class IndexerTestCase(unittest.TestCase):
         except Exception as err:
             raise(err)
         finally:
-            purge(filepath, '^{}.*$'.format(fname))
+            purge(filepath, f'^{fname}.*$')
 
 
 @unittest.skipIf(_sqlalchemy_version_insufficient,
@@ -964,7 +963,7 @@ class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
         filepath = get_test_data_filepath()
         db_path = os.path.join(filepath, 'timeseries.sqlite')
         # supply an existing session
-        engine = sa.create_engine("sqlite:///{}".format(db_path))
+        engine = sa.create_engine(f"sqlite:///{db_path}")
         session = sessionmaker(bind=engine)
         request_handler = TSIndexDatabaseHandler(session=session,
                                                  loglevel="ERROR")

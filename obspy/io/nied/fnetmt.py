@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.nied.fnet - F-net moment tensor file read support for ObsPy
 ====================================================================
@@ -28,7 +27,7 @@ def _get_resource_id(name, res_type, tag=None):
     """
     Helper function to create consistent resource ids.
     """
-    res_id = "smi:local/fnetmt/%s/%s" % (name, res_type)
+    res_id = f"smi:local/fnetmt/{name}/{res_type}"
     if tag is not None:
         res_id += "#" + tag
     return res_id

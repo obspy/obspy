@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Waveform plotting utilities.
 
@@ -96,7 +95,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
         # class prior to matplotlib version 1.2
-        super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # Reset the scale to make it reproducible across matplotlib versions.
         self.scaled = {}
         self.scaled[1.0] = '%b %d %Y'

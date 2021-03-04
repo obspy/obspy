@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from struct import pack, unpack
 
 from obspy.core.util.libnames import _load_cdll
@@ -14,7 +13,7 @@ def unpack_header_value(endian, packed_value, length, special_format):
     """
     # Use special format if necessary.
     if special_format:
-        fmt = ('%s%s' % (endian, special_format)).encode('ascii', 'strict')
+        fmt = (f'{endian}{special_format}').encode('ascii', 'strict')
         return unpack(fmt, packed_value)[0]
     # Unpack according to different lengths.
     elif length == 2:

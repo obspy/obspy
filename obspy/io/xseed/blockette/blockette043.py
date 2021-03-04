@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop, VariableString
 from ..utils import blockette_34_lookup, format_resp
@@ -60,7 +59,7 @@ class Blockette043(Blockette):
             '+-----------------------------------------' + \
             '---+                +\n' + \
             '#\t\t+               |   Response (Poles & Zeros),' + \
-            '%6s ch %s   |                +\n' % (station, channel) + \
+            f'{station:>6} ch {channel}   |                +\n' + \
             '#\t\t+               ' + \
             '+-----------------------------------------' + \
             '---+                +\n' + \
@@ -87,14 +86,14 @@ class Blockette043(Blockette):
             if self.number_of_complex_zeros != 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_complex_zeros):
-                    string += 'B043F11-14 %4s %13s %13s %13s %13s\n' % (
+                    string += 'B043F11-14 {:>4} {:>13} {:>13} {:>13} {:>13}\n'.format(
                         _i,
                         format_resp(self.real_zero[_i], 6),
                         format_resp(self.imaginary_zero[_i], 6),
                         format_resp(self.real_zero_error[_i], 6),
                         format_resp(self.imaginary_zero_error[_i], 6))
             else:
-                string += 'B043F11-14 %4s %13s %13s %13s %13s\n' % (
+                string += 'B043F11-14 {:>4} {:>13} {:>13} {:>13} {:>13}\n'.format(
                     0,
                     format_resp(self.real_zero, 6),
                     format_resp(self.imaginary_zero, 6),
@@ -106,14 +105,14 @@ class Blockette043(Blockette):
             if self.number_of_complex_poles != 1:
                 # Loop over all poles.
                 for _i in range(self.number_of_complex_poles):
-                    string += 'B043F16-19 %4s %13s %13s %13s %13s\n' % (
+                    string += 'B043F16-19 {:>4} {:>13} {:>13} {:>13} {:>13}\n'.format(
                         _i,
                         format_resp(self.real_pole[_i], 6),
                         format_resp(self.imaginary_pole[_i], 6),
                         format_resp(self.real_pole_error[_i], 6),
                         format_resp(self.imaginary_pole_error[_i], 6))
             else:
-                string += 'B043F16-19 %4s %13s %13s %13s %13s\n' % (
+                string += 'B043F16-19 {:>4} {:>13} {:>13} {:>13} {:>13}\n'.format(
                     0,
                     format_resp(self.real_pole, 6),
                     format_resp(self.imaginary_pole, 6),

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import copy
 import datetime
 import os
@@ -167,7 +166,7 @@ def _close_shapefile_reader(reader):
         if attribute is not None:
             try:
                 attribute.close()
-            except (AttributeError, IOError):
+            except (AttributeError, OSError):
                 pass
 
 

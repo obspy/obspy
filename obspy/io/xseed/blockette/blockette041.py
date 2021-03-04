@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 import os
 
@@ -106,7 +105,7 @@ class Blockette041(Blockette):
             '#\t\t+                     +--------------------------------+' + \
             '                      +\n' + \
             '#\t\t+                     |   FIR response,' + \
-            '%6s ch %s   |                      +\n' % (station, channel) + \
+            f'{station:>6} ch {channel}   |                      +\n' + \
             '#\t\t+                     +--------------------------------+' + \
             '                      +\n' + \
             '#\t\t\n' + \

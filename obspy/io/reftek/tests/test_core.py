@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import inspect
 import io
 import os
@@ -443,7 +442,7 @@ class ReftekTestCase(unittest.TestCase):
         Test string representations of Reftek object and Packets
         """
         expected = [
-            "Reftek130 (29 packets, file: {})".format(self.reftek_file),
+            f"Reftek130 (29 packets, file: {self.reftek_file})",
             "Packet Sequence  Byte Count  Data Fmt  Sampling Rate      Time",
             "  | Packet Type   |  Event #  | Station | Channel #         |",
             "  |   |  Unit ID  |    | Data Stream #  |   |  # of samples |",

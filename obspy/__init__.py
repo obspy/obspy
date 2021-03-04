@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 #  Purpose: Convenience imports for obspy
 #   Author: Robert Barsch

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.event.origin - The Origin class definition
 =====================================================

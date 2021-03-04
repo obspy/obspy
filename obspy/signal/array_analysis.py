@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: array.py
 #  Purpose: Functions for Array Analysis

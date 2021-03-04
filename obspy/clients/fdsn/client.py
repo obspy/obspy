@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 FDSN Web service client for ObsPy.
 
@@ -70,8 +69,8 @@ class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
         # be conciliant with URIs containing a space
         newurl = newurl.replace(' ', '%20')
         content_headers = ("content-length", "content-type")
-        newheaders = dict((k, v) for k, v in req.headers.items()
-                          if k.lower() not in content_headers)
+        newheaders = {k: v for k, v in req.headers.items()
+                          if k.lower() not in content_headers}
 
         # Also redirect the data of the request which the standard library
         # interestingly enough does not do.
@@ -97,7 +96,7 @@ class NoRedirectionHandler(urllib_request.HTTPRedirectHandler):
             "when initializing the Client.")
 
 
-class Client(object):
+class Client:
     """
     FDSN Web service request client.
 
@@ -263,7 +262,7 @@ class Client(object):
             if self._service_mappings:
                 print("Custom service mappings:")
                 for key, value in self._service_mappings.items():
-                    print("\t%s: '%s'" % (key, value))
+                    print(f"\t{key}: '{value}'")
             print("Request Headers: %s" % str(self.request_headers))
 
         if _discover_services:
@@ -350,7 +349,7 @@ class Client(object):
         # Don't install globally to not mess with other codes.
         self._url_opener = urllib_request.build_opener(*handlers)
         if self.debug:
-            print('Installed new opener with handlers: {!s}'.format(handlers))
+            print(f'Installed new opener with handlers: {handlers!s}')
 
     def _resolve_eida_token(self, token, validate=True):
         """
@@ -396,7 +395,7 @@ class Client(object):
 
         user, password = response.decode().split(':')
         if self.debug:
-            print('Got temporary user/pw: {}/{}'.format(user, password))
+            print(f'Got temporary user/pw: {user}/{password}')
 
         return user, password
 
@@ -1252,7 +1251,7 @@ class Client(object):
             try:
                 value = this_type(value)
             except Exception:
-                msg = "'%s' could not be converted to type '%s'." % (
+                msg = "'{}' could not be converted to type '{}'.".format(
                     str(value), this_type.__name__)
                 raise TypeError(msg)
             # Now convert to a string that is accepted by the webservice.
@@ -1263,9 +1262,9 @@ class Client(object):
                                parameters=final_parameter_set)
 
     def __str__(self):
-        versions = dict([(s, self._get_webservice_versionstring(s))
-                         for s in self.services if s in FDSNWS])
-        services_string = ["'%s' (v%s)" % (s, versions[s])
+        versions = {s: self._get_webservice_versionstring(s)
+                         for s in self.services if s in FDSNWS}
+        services_string = ["'{}' (v{})".format(s, versions[s])
                            for s in FDSNWS if s in self.services]
         other_services = sorted([s for s in self.services if s not in FDSNWS])
         services_string += ["'%s'" % s for s in other_services]
@@ -1341,7 +1340,7 @@ class Client(object):
 
             def _param_info_string(name):
                 param = self.services[service][name]
-                name = "%s (%s)" % (name, param["type"].__name__.replace(
+                name = "{} ({})".format(name, param["type"].__name__.replace(
                     'new', ''))
                 req_def = ""
                 if param["required"]:
@@ -1776,8 +1775,8 @@ def raise_on_error(code, data):
         if "timeout" in str(data).lower() or "timed out" in str(data).lower():
             raise FDSNTimeoutException("Timed Out")
         else:
-            raise FDSNException("Unknown Error (%s): %s" % (
-                (str(data.__class__.__name__), str(data))))
+            raise FDSNException("Unknown Error ({}): {}".format(
+                str(data.__class__.__name__), str(data)))
     # Catch any non 200 codes.
     elif code != 200:
         raise FDSNException("Unknown HTTP code: %i" % code, server_info)
@@ -1798,7 +1797,7 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
     Performs a http GET if data=None, otherwise a http POST.
     """
     if debug is True:
-        print("Downloading %s %s requesting gzip compression" % (
+        print("Downloading {} {} requesting gzip compression".format(
             url, "with" if use_gzip else "without"))
         if data:
             print("Sending along the following payload:")
@@ -1915,7 +1914,7 @@ def get_bulk_string(bulk, arguments):
     if isinstance(bulk, collections_abc.Iterable) \
             and not hasattr(bulk, "read") \
             and not isinstance(bulk, str):
-        tmp = ["%s=%s" % (key, convert_to_string(value))
+        tmp = ["{}={}".format(key, convert_to_string(value))
                for key, value in arguments.items() if value is not None]
         # empty location codes have to be represented by two dashes
         tmp += [" ".join((net, sta, loc or "--", cha,
@@ -1933,7 +1932,7 @@ def get_bulk_string(bulk, arguments):
         elif isinstance(bulk, str):
             # check if bulk is a local file
             if "\n" not in bulk and os.path.isfile(bulk):
-                with open(bulk, 'r') as fh:
+                with open(bulk) as fh:
                     tmp = fh.read()
                 bulk = tmp
             # just use bulk as input data

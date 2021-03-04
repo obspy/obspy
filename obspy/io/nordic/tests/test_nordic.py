@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Functions for testing the obspy.io.nordic functions
 """
@@ -323,7 +322,7 @@ class TestNordicMethods(unittest.TestCase):
             head_1 = readheader(os.path.join(self.testing_path,
                                              '01-0411-15L.S201309'))
         with open(os.path.join(self.testing_path,
-                               '01-0411-15L.S201309'), 'r') as f:
+                               '01-0411-15L.S201309')) as f:
             # raises "UserWarning: AIN in header, currently unsupported"
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
@@ -341,7 +340,7 @@ class TestNordicMethods(unittest.TestCase):
 
     def test_reading_string_io(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
-        with open(filename, "rt") as fh:
+        with open(filename) as fh:
             file_object = io.StringIO(fh.read())
 
         # raises "UserWarning: AIN in header, currently unsupported"
@@ -371,7 +370,7 @@ class TestNordicMethods(unittest.TestCase):
 
     def test_corrupt_header(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
-        f = open(filename, 'r')
+        f = open(filename)
         with NamedTemporaryFile(suffix='.sfile') as tmp_file:
             fout = open(tmp_file.name, 'w')
             for line in f:
@@ -591,12 +590,12 @@ class TestNordicMethods(unittest.TestCase):
         self.assertEqual(len(spec_inf), 5)
         # This should actually test that what we are reading in is correct.
         average = spec_inf[('AVERAGE', '')]
-        check_av = {u'channel': '', u'corner_freq': 5.97, u'decay': 0.0,
-                    u'moment': 12589254117.941662, u'moment_mag': 0.7,
-                    u'source_radius': 0.231,
-                    u'spectral_level': 0.3981071705534972,
-                    u'station': 'AVERAGE', u'stress_drop': 0.006,
-                    u'window_length': 1.6}
+        check_av = {'channel': '', 'corner_freq': 5.97, 'decay': 0.0,
+                    'moment': 12589254117.941662, 'moment_mag': 0.7,
+                    'source_radius': 0.231,
+                    'spectral_level': 0.3981071705534972,
+                    'station': 'AVERAGE', 'stress_drop': 0.006,
+                    'window_length': 1.6}
         for key in average.keys():
             if isinstance(average.get(key), str):
                 self.assertEqual(average.get(key), check_av.get(key))
@@ -1058,7 +1057,7 @@ class TestNordicMethods(unittest.TestCase):
                                         fig=fig,
                                         color=next(color_cycle),
                                         print_angle=True,
-                                        ellipse_name='E{:d}'.format(angle),
+                                        ellipse_name=f'E{angle:d}',
                                         outfile=outfile)
         # Test multi-station figure
         fig = None
@@ -1079,7 +1078,7 @@ class TestNordicMethods(unittest.TestCase):
                                         fig=fig,
                                         color=next(color_cycle),
                                         print_angle=True,
-                                        pt_name='pt{:d}'.format(angle),
+                                        pt_name=f'pt{angle:d}',
                                         outfile=outfile)
 
     def test_read_uncert_ellipse(self):
@@ -1189,8 +1188,8 @@ def _test_similarity(event_1, event_2):
             if key not in ["resource_id", "pick_id", "waveform_id", "snr",
                            "magnitude_hint", 'type']:
                 if not amp_1[key] == amp_2[key]:
-                    return ("{0} is not the same as {1} for key "
-                            "{2}\n{3}\n{4}".format(
+                    return ("{} is not the same as {} for key "
+                            "{}\n{}\n{}".format(
                                 amp_1[key], amp_2[key], key, amp_1, amp_2))
             elif key == "waveform_id":
                 if pick_1[key].station_code != pick_2[key].station_code:

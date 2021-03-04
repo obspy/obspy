@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SQLAlchemy ORM definitions (database layout) for obspy.db.
 

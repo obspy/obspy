@@ -69,7 +69,7 @@ def _write_sacpz(inventory, file_or_file_object):
                         cha.code,
                         cha.start_date)
                     msg += "has unrecognized input units in "
-                    msg += "response: {}. Skipping".format(input_unit)
+                    msg += f"response: {input_unit}. Skipping"
                     warnings.warn(msg)
                     continue
                 out.append("* " + "*" * 50)
@@ -99,9 +99,9 @@ def _write_sacpz(inventory, file_or_file_object):
                 out.append("* INPUT UNIT  : M")
                 out.append("* OUTPUT UNIT : %s" % sens.output_units)
                 out.append("* INSTTYPE    : %s" % cha.sensor.type)
-                out.append("* INSTGAIN    : %s (%s)" % (paz.stage_gain,
+                out.append("* INSTGAIN    : {} ({})".format(paz.stage_gain,
                                                         sens.input_units))
-                out.append("* SENSITIVITY : %s (%s)" % (sens.value,
+                out.append("* SENSITIVITY : {} ({})".format(sens.value,
                                                         sens.input_units))
                 out.append("* A0          : %s" % paz.normalization_factor)
                 out.append("* " + "*" * 50)
@@ -174,7 +174,7 @@ seisuk_instrument_resp_removal.pdf
     zeros = []
 
     if isinstance(paz_file, str):
-        paz_file = open(paz_file, 'r')
+        paz_file = open(paz_file)
         is_filename = True
     else:
         is_filename = False
@@ -330,7 +330,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
      (-314.159...+202.318...j), (-314.159...-202.318...j)]
     """
     if not hasattr(resp_file, 'write'):
-        resp_filep = open(resp_file, 'r')
+        resp_filep = open(resp_file)
     else:
         resp_filep = resp_file
 

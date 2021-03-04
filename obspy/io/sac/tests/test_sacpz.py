@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The sac.sacpz test suite.
 """

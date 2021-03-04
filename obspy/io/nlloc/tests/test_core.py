@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import inspect
 import io
 import os
@@ -253,7 +252,7 @@ class NLLOCTestCase(unittest.TestCase):
         self.assertEqual(got[1].origins[0].latitude, -15.0823)
         self.assertEqual(got[2].origins[0].latitude, -15.1529)
         for item in got.events + [e.origins[0] for e in got.events]:
-            self.assertEqual(item.creation_info.author, u'Océane Foix')
+            self.assertEqual(item.creation_info.author, 'Océane Foix')
         for event in got.events:
             self.assertEqual(event.comments[0].text,
                              "Central Vanuatu (3D tomo 2016)")

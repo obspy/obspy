@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: mopad.py
 #  Purpose: Moment tensor Plotting and Decomposition tool
@@ -504,14 +503,14 @@ class MomentTensor:
         M_DC3 = 1. / 3. * (eigenw[2] - eigenw[0]) * (np.outer(a3, a3) -
                                                      np.outer(a1, a1))
 
-        M_DC1_perc = int(100 * abs((eigenw[0] - eigenw[1])) /
-                         (abs((eigenw[1] - eigenw[2])) +
-                          abs((eigenw[1] - eigenw[2])) +
-                          abs((eigenw[2] - eigenw[0]))))
-        M_DC2_perc = int(100 * abs((eigenw[1] - eigenw[2])) /
-                         (abs((eigenw[1] - eigenw[2])) +
-                          abs((eigenw[1] - eigenw[2])) +
-                          abs((eigenw[2] - eigenw[0]))))
+        M_DC1_perc = int(100 * abs(eigenw[0] - eigenw[1]) /
+                         (abs(eigenw[1] - eigenw[2]) +
+                          abs(eigenw[1] - eigenw[2]) +
+                          abs(eigenw[2] - eigenw[0])))
+        M_DC2_perc = int(100 * abs(eigenw[1] - eigenw[2]) /
+                         (abs(eigenw[1] - eigenw[2]) +
+                          abs(eigenw[1] - eigenw[2]) +
+                          abs(eigenw[2] - eigenw[0])))
 
         self._DC = M_DC1
         self._DC2 = M_DC2
@@ -833,7 +832,7 @@ class MomentTensor:
         if np.linalg.norm(enodes) < 1e-10:
             enodes = exs
         enodess = rotmat * enodes
-        cos_alpha = float((ez.T * ezs))
+        cos_alpha = float(ez.T * ezs)
         if cos_alpha > 1.:
             cos_alpha = 1.
         if cos_alpha < -1.:
@@ -1811,9 +1810,9 @@ def fancy_matrix(m_in):
     except Exception:
         pass
 
-    return "\n  / %5.2F %5.2F %5.2F \\\n" % (m[0, 0], m[0, 1], m[0, 2]) + \
-           "  | %5.2F %5.2F %5.2F  |\n" % (m[1, 0], m[1, 1], m[1, 2]) + \
-           "  \\ %5.2F %5.2F %5.2F /\n" % (m[2, 0], m[2, 1], m[2, 2])
+    return "\n  / {:5.2F} {:5.2F} {:5.2F} \\\n".format(m[0, 0], m[0, 1], m[0, 2]) + \
+           "  | {:5.2F} {:5.2F} {:5.2F}  |\n".format(m[1, 0], m[1, 1], m[1, 2]) + \
+           "  \\ {:5.2F} {:5.2F} {:5.2F} /\n".format(m[2, 0], m[2, 1], m[2, 2])
 
 
 def fancy_vector(v):

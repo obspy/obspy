@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Holds various helper classes to keep the file number manageable.
 """
@@ -99,7 +98,7 @@ SplitLayerInfo = namedtuple(
 )
 
 
-class Arrival(object):
+class Arrival:
     """
     Convenience class for storing parameters associated with a phase arrival.
 
@@ -160,7 +159,7 @@ class Arrival(object):
         self.path = None
 
     def __str__(self):
-        return "%s phase arrival at %.3f seconds" % (self.phase.name,
+        return "{} phase arrival at {:.3f} seconds".format(self.phase.name,
                                                      self.time)
 
     @property

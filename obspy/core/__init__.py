@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 #  Purpose: Core classes of ObsPy: Python for Seismological Observatories
 #   Author: Robert Barsch

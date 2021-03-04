@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Library name handling for ObsPy.
 

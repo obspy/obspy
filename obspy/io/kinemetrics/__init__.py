@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.io.kinemetrics - Evt format support for ObsPy
 ===================================================

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Establish a socket connection through an HTTP proxy.
 Author: Fredrik Østrem <frx.apps@gmail.com>
@@ -82,7 +81,7 @@ def http_proxy_connect(address, proxy, auth=None, timeout=None):
     fp = s.makefile('rw')
 
     fp.write('CONNECT %s:%d HTTP/1.0\r\n' % address)
-    fp.write('\r\n'.join('%s: %s' % (k, v) for (k, v) in headers.items()) +
+    fp.write('\r\n'.join(f'{k}: {v}' for (k, v) in headers.items()) +
              '\r\n\r\n')
     fp.flush()
 
@@ -91,18 +90,18 @@ def http_proxy_connect(address, proxy, auth=None, timeout=None):
     if statusline.count(' ') < 2:
         fp.close()
         s.close()
-        raise IOError('Bad response. statusline: {}'.format(statusline))
+        raise OSError(f'Bad response. statusline: {statusline}')
     version, status, statusmsg = statusline.split(' ', 2)
     if version not in ('HTTP/1.0', 'HTTP/1.1'):
         fp.close()
         s.close()
-        raise IOError('Unsupported HTTP version: {}'.format(version))
+        raise OSError(f'Unsupported HTTP version: {version}')
     try:
         status = int(status)
     except ValueError:
         fp.close()
         s.close()
-        raise IOError('Bad response. status: {}'.format(status))
+        raise OSError(f'Bad response. status: {status}')
 
     response_headers = {}
 

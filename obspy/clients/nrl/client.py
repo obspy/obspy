@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Client for accessing the Nominal Response Library (http://ds.iris.edu/NRL/).
 
@@ -29,7 +28,7 @@ from obspy.core.inventory.util import _textwrap
 _remote_nrl_cache = {}
 
 
-class NRL(object):
+class NRL:
     """
     NRL client base class for accessing the Nominal Response Library.
 
@@ -44,16 +43,16 @@ class NRL(object):
         if root:
             scheme = urlparse(root).scheme
             if scheme in ('http', 'https'):
-                return super(NRL, cls).__new__(RemoteNRL)
+                return super().__new__(RemoteNRL)
             # Check if it's really a folder on the file-system.
             if not os.path.isdir(root):
                 msg = ("Provided path '{}' seems to be a local file path "
                        "but the directory does not exist.").format(root)
                 raise ValueError(msg)
-            return super(NRL, cls).__new__(LocalNRL)
+            return super().__new__(LocalNRL)
         # Otherwise delegate to the remote NRL client to deal with all kinds
         # of remote resources (currently only HTTP).
-        return super(NRL, cls).__new__(RemoteNRL)
+        return super().__new__(RemoteNRL)
 
     def __init__(self):
         sensor_index = self._join(self.root, 'sensors', self._index)
@@ -112,7 +111,7 @@ class NRL(object):
             if section.lower() == 'main':
                 if options not in (['question'],
                                    ['detail', 'question']):  # pragma: no cover
-                    msg = "Unexpected structure of NRL file '{}'".format(path)
+                    msg = f"Unexpected structure of NRL file '{path}'"
                     raise NotImplementedError(msg)
                 nrl_dict._question = self._clean_str(cp.get(section,
                                                             'question'))
@@ -136,7 +135,7 @@ class NRL(object):
                     nrl_dict[section] = (descr, resp_path)
                     continue
                 else:  # pragma: no cover
-                    msg = "Unexpected structure of NRL file '{}'".format(path)
+                    msg = f"Unexpected structure of NRL file '{path}'"
                     raise NotImplementedError(msg)
         return nrl_dict
 
@@ -236,7 +235,7 @@ class NRLDict(dict):
                 info = ['{} ({} items):'.format(self._question, len(self))]
             else:
                 info = ['{} items:'.format(len(self))]
-            texts = ["'{}'".format(k) for k in sorted(self.keys())]
+            texts = [f"'{k}'" for k in sorted(self.keys())]
             info.extend(_textwrap(", ".join(texts), initial_indent='  ',
                                   subsequent_indent='  '))
             return '\n'.join(_i.rstrip() for _i in info)
@@ -247,7 +246,7 @@ class NRLDict(dict):
         p.text(str(self))
 
     def __getitem__(self, name):
-        value = super(NRLDict, self).__getitem__(name)
+        value = super().__getitem__(name)
         # if encountering a not yet parsed NRL Path, expand it now
         if isinstance(value, NRLPath):
             value = self._nrl._parse_ini(value)
@@ -279,7 +278,7 @@ class LocalNRL(NRL):
 
     def _read_resp(self, path):
         # Returns Unicode string of RESP
-        with open(path, 'r') as f:
+        with open(path) as f:
             return f.read()
 
 

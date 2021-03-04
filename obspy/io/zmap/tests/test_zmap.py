@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import unittest
 
@@ -214,14 +213,14 @@ class ZMAPTestCase(unittest.TestCase):
         # redundantly defines the point in time within the year.
         test_events = [dict(e, year=int(float(e['year'])))
                        for e in test_events]
-        zmap_str = self._serialize((test_events))
+        zmap_str = self._serialize(test_events)
         catalog = zmap.Unpickler().loads(zmap_str)
         self._assert_zmap_equal(catalog, test_events)
 
     def test_read(self):
         # via file, file name, plugin interface
         test_events = [self.test_data, dict(self.test_data, lon='5.1')]
-        zmap_str = self._serialize((test_events))
+        zmap_str = self._serialize(test_events)
         with NamedTemporaryFile() as f:
             f.write(zmap_str.encode('utf-8'))
             catalog = zmap._read_zmap(f.name)
@@ -257,8 +256,8 @@ class ZMAPTestCase(unittest.TestCase):
             magnitude = event.preferred_magnitude()
             if any(k in test_dict for k in _MAGNITUDE_FIELDS):
                 self.assertNotEqual(None, magnitude)
-            d = dict((k, float(v) if v != 'NaN' else None)
-                     for (k, v) in test_dict.items())
+            d = {k: float(v) if v != 'NaN' else None
+                     for (k, v) in test_dict.items()}
             if 'lon' in d:
                 self.assertEqual(d['lon'], origin.longitude)
             if 'lat' in d:

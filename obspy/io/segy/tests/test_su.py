@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.io.segy Seismic Unix test suite.
 """

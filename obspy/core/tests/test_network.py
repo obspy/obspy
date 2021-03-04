@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Test suite for the network class.
 
@@ -96,10 +95,10 @@ class NetworkTestCase(unittest.TestCase):
         """
         Test extracting coordinates
         """
-        expected = {u'latitude': 47.737166999999999,
-                    u'longitude': 12.795714,
-                    u'elevation': 860.0,
-                    u'local_depth': 0.0}
+        expected = {'latitude': 47.737166999999999,
+                    'longitude': 12.795714,
+                    'elevation': 860.0,
+                    'local_depth': 0.0}
         channels = [Channel(code='EHZ',
                             location_code='',
                             start_date=UTCDateTime('2007-01-01'),

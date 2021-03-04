@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.geodetics - Various geodetic utilities for ObsPy
 ======================================================

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop
 from ..utils import lookup_code, format_resp
@@ -100,14 +99,14 @@ class Blockette053(Blockette):
             if self.number_of_complex_zeros != 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_complex_zeros):
-                    out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (
+                    out += 'B053F10-13 {:>4} {:>13} {:>13} {:>13} {:>13}\n'.format(
                         _i,
                         format_resp(self.real_zero[_i], 6),
                         format_resp(self.imaginary_zero[_i], 6),
                         format_resp(self.real_zero_error[_i], 6),
                         format_resp(self.imaginary_zero_error[_i], 6))
             else:
-                out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (
+                out += 'B053F10-13 {:>4} {:>13} {:>13} {:>13} {:>13}\n'.format(
                     0,
                     format_resp(self.real_zero, 6),
                     format_resp(self.imaginary_zero, 6),
@@ -120,14 +119,14 @@ class Blockette053(Blockette):
             if self.number_of_complex_poles != 1:
                 # Loop over all poles.
                 for _i in range(self.number_of_complex_poles):
-                    out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (
+                    out += 'B053F15-18 {:>4} {:>13} {:>13} {:>13} {:>13}\n'.format(
                         _i,
                         format_resp(self.real_pole[_i], 6),
                         format_resp(self.imaginary_pole[_i], 6),
                         format_resp(self.real_pole_error[_i], 6),
                         format_resp(self.imaginary_pole_error[_i], 6))
             else:
-                out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (
+                out += 'B053F15-18 {:>4} {:>13} {:>13} {:>13} {:>13}\n'.format(
                     0,
                     format_resp(self.real_pole, 6),
                     format_resp(self.imaginary_pole, 6),

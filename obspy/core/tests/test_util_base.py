@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import copy
 import shutil
@@ -29,7 +28,7 @@ class UtilBaseTestCase(unittest.TestCase):
 
         for version_string, expected in versions:
             with mock.patch('pkg_resources.get_distribution') as p:
-                class _D(object):
+                class _D:
                     version = version_string
                 p.return_value = _D()
                 got = get_dependency_version('matplotlib')

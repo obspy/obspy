@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 import os
 import unittest
 import zipfile
@@ -32,8 +31,8 @@ class ScriptTestCase(unittest.TestCase):
                 obspy_dataless2resp([self.dataless_file])
 
             expected = '''Found 1 files.
-Parsing file %s
-''' % (self.dataless_file,)
+Parsing file {}
+'''.format(self.dataless_file)
             self.assertEqual(expected, out.stdout)
 
             expected = ['RESP.BW.FURT..EHE',
@@ -48,8 +47,8 @@ Parsing file %s
                 obspy_dataless2resp(['--zipped', self.dataless_file])
 
             expected = '''Found 1 files.
-Parsing file %s
-''' % (self.dataless_file,)
+Parsing file {}
+'''.format(self.dataless_file)
             self.assertEqual(expected, out.stdout)
 
             self.assertTrue(os.path.exists('dataless.seed.BW_FURT.zip'))
@@ -72,15 +71,15 @@ Parsing file %s
                 obspy_dataless2xseed([self.dataless_file])
 
             expected = '''Found 1 files.
-Parsing file %s
-''' % (self.dataless_file,)
+Parsing file {}
+'''.format(self.dataless_file)
             self.assertEqual(expected, out.stdout)
 
             self.assertTrue(os.path.exists(self.xseed_name))
 
-            with open(self.xseed_file, 'rt') as fh:
+            with open(self.xseed_file) as fh:
                 expected = fh.read()
-            with open(self.xseed_name, 'rt') as fh:
+            with open(self.xseed_name) as fh:
                 actual = fh.read()
 
             self.assertEqual(expected, actual)
@@ -94,8 +93,8 @@ Parsing file %s
                                       dataless_multi_file])
 
             expected = '''Found 1 files.
-Parsing file %s
-''' % (dataless_multi_file,)
+Parsing file {}
+'''.format(dataless_multi_file)
             self.assertEqual(expected, out.stdout)
 
             expected = ['CL.AIO.dataless.xml',
@@ -116,8 +115,8 @@ Parsing file %s
                 obspy_xseed2dataless(['--output', tf.name, self.xseed_file])
 
             expected = '''Found 1 files.
-Parsing file %s
-''' % (self.xseed_file,)
+Parsing file {}
+'''.format(self.xseed_file)
             self.assertEqual(expected, out.stdout)
 
             with open(self.dataless_file, 'rb') as fh:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.event.catalog - The Catalog class definition
 =======================================================
@@ -38,7 +37,7 @@ EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
 EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
 
 
-class Catalog(object):
+class Catalog:
     """
     This class serves as a container for Event objects.
 
@@ -215,7 +214,7 @@ class Catalog(object):
         if not isinstance(index, str):
             self.events.__setitem__(index, event)
         else:
-            super(Catalog, self).__setitem__(index, event)
+            super().__setitem__(index, event)
 
     def __str__(self, print_all=False):
         """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Evt (Kinemetrics files) bindings to ObsPy's core classes.
 
@@ -48,7 +47,7 @@ def is_evt(filename_or_object):
                 if tag.verify(verbose=False) is False:
                     return False
                 return True
-            except (EvtBaseError, IOError):
+            except (EvtBaseError, OSError):
                 return False
 
 

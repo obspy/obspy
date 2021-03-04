@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Functions dealing with reading and writing StationXML.
 
@@ -154,7 +153,7 @@ def _read_stationxml(path_or_file_object):
     stationxml_version = root.attrib.get('schemaVersion')
 
     def _ns(tagname):
-        return "{%s}%s" % (namespace, tagname)
+        return f"{{{namespace}}}{tagname}"
 
     # Source and Created field must exist in a StationXML.
     source = root.find(_ns("Source")).text
@@ -1550,7 +1549,7 @@ def _write_element(parent, element, name):
     """
     Recursively write custom namespace elements.
     """
-    custom_name = "{%s}%s" % (
+    custom_name = "{{{}}}{}".format(
         element['namespace'], name)  # name of the attribute/tag
     attrib = element.get("attrib", {})
     if hasattr(element, "type") and \

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.clients.neic.client test suite.
 """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Parsing of the text files from the FDSN station web services.
 
@@ -82,7 +81,7 @@ def is_fdsn_station_text_file(path_or_file_object):
             cur_pos = path_or_file_object.tell()
             first_line = path_or_file_object.readline()
         else:
-            with open(path_or_file_object, "rt", encoding="utf8") as fh:
+            with open(path_or_file_object, encoding="utf8") as fh:
                 first_line = fh.readline()
     except Exception:
         return False
@@ -150,7 +149,7 @@ def read_fdsn_station_text_file(path_or_file_object):
     if hasattr(path_or_file_object, "read"):
         content = _read(path_or_file_object)
     else:
-        with open(path_or_file_object, "rt", newline="",
+        with open(path_or_file_object, newline="",
                   encoding="utf8") as fh:
             content = _read(fh)
 
@@ -233,7 +232,7 @@ def read_fdsn_station_text_file(path_or_file_object):
                     end_date=et, response=resp)
             except Exception as e:
                 warnings.warn(
-                    "Failed to parse channel %s.%s.%s.%s due to: %s" % (
+                    "Failed to parse channel {}.{}.{}.{} due to: {}".format(
                         net, sta, loc, chan, str(e)),
                     UserWarning)
                 continue

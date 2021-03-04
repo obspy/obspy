@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .blockette import Blockette
 from ..fields import Float, Integer, Loop, VariableString
 from ..utils import format_resp
@@ -37,7 +36,7 @@ class Blockette048(Blockette):
             '+---------------------------------------+' + \
             '                  +\n' + \
             '#\t\t+                  |   Channel Sensitivity,' + \
-            '%6s ch %s   |                  +\n' % (station, channel) + \
+            f'{station:>6} ch {channel}   |                  +\n' + \
             '#\t\t+                  ' + \
             '+---------------------------------------+' + \
             '                  +\n' + \
@@ -53,7 +52,7 @@ class Blockette048(Blockette):
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n'
             for i in range(self.number_of_history_values):
-                string += 'B048F08-09   %2s %13s %13s %s\n' % (
+                string += 'B048F08-09   {:>2} {:>13} {:>13} {}\n'.format(
                     i,
                     format_resp(self.sensitivity_for_calibration[i], 6),
                     format_resp(
@@ -63,7 +62,7 @@ class Blockette048(Blockette):
             string += \
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n' + \
-                'B048F08-09    0 %13s %13s %s\n' % (
+                'B048F08-09    0 {:>13} {:>13} {}\n'.format(
                     format_resp(self.sensitivity_for_calibration, 6),
                     format_resp(self.frequency_of_calibration_sensitivity, 6),
                     self.time_of_above_calibration.format_seed())

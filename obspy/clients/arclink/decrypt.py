@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Decryption class of ArcLink/WebDC client for ObsPy.
 

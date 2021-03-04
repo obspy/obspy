@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module for handling ObsPy RtTrace objects.
 
@@ -141,7 +140,7 @@ class RtTrace(Trace):
 
         # initialize parent Trace with no data or header - all data must be
         # added using append
-        super(RtTrace, self).__init__(data=np.array([]), header=None)
+        super().__init__(data=np.array([]), header=None)
 
     def __eq__(self, other):
         """
@@ -152,7 +151,7 @@ class RtTrace(Trace):
         # check if other object is a RtTrace
         if not isinstance(other, RtTrace):
             return False
-        return super(RtTrace, self).__eq__(other)
+        return super().__eq__(other)
 
     def __add__(self, **kwargs):  # @UnusedVariable
         """
@@ -362,7 +361,7 @@ class RtTrace(Trace):
         self.processing.append(entry)
 
         # add processing information to the stats dictionary
-        proc_info = "realtime_process:%s:%s" % (process_name, options)
+        proc_info = f"realtime_process:{process_name}:{options}"
         self._internal_add_processing_info(proc_info)
 
         return len(self.processing)

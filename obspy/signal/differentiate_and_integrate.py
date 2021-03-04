@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Integration and differentiation routines.
 

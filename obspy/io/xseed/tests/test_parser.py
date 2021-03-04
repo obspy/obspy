@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import gzip
 import io
 import os
@@ -565,14 +564,14 @@ class ParserTestCase(unittest.TestCase):
         """
         sts2_resp_file = os.path.join(self.path,
                                       'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
-        with open(sts2_resp_file, "rt") as fh:
+        with open(sts2_resp_file) as fh:
             p = Parser(fh.read())
         # Weak but at least tests that something has been read.
         assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
 
         rt130_resp_file = os.path.join(self.path,
                                        'RESP.XX.NR008..HHZ.130.1.100')
-        with open(rt130_resp_file, "rt") as fh:
+        with open(rt130_resp_file) as fh:
             p = Parser(fh.read())
         # Weak but at least tests that something has been read.
         assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}

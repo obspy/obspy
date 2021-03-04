@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Routines for error ellipses in seismological coordinates (N=0, W=90)
 
@@ -162,10 +161,10 @@ class Ellipse:
         >>> str(Ellipse(20, 10, 45, (3,4)))
         'Ellipse(20, 10, 45, (3,4))'
         """
-        s = 'Ellipse({:.3g}, {:.3g}'.format(self.a, self.b)
-        s += ', {:.3g}'.format(self.theta)
+        s = f'Ellipse({self.a:.3g}, {self.b:.3g}'
+        s += f', {self.theta:.3g}'
         if self.x != 0 or self.y != 0:
-            s += ', ({:.3g},{:.3g})'.format(self.x, self.y)
+            s += f', ({self.x:.3g},{self.y:.3g})'
         s += ')'
         return s
 
@@ -490,7 +489,7 @@ class Ellipse:
                 sub_angle = self.subtended_angle(pt)
                 ax.text(np.mean([pt[0], t0[0], t1[0]]),
                         np.mean([pt[1], t0[1], t1[1]]),
-                        '{:.1f}'.format(sub_angle),
+                        f'{sub_angle:.1f}',
                         fontsize=6, color=color,
                         va='center', ha='center')
         if isinstance(ellipse_name, str):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: rotate.py
 #  Purpose: Various Seismogram Rotation Functions
@@ -196,7 +195,7 @@ def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
             np.arange(3) * 3, 0, -90) # doctest: +NORMALIZE_WHITESPACE
     (array([ 0., 3., 6.]), array([ 0., 1., 2.]), array([ 0., 2., 4.]))
     """
-    if len(set(len(i_) for i_ in (data_1, data_2, data_3))) != 1:
+    if len({len(i_) for i_ in (data_1, data_2, data_3)}) != 1:
         msg = "All three data arrays must be of same length."
         raise ValueError(msg)
 

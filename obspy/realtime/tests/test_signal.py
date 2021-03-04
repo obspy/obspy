@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The obspy.realtime.signal test suite.
 """

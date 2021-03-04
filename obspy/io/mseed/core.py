@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 MSEED bindings to ObsPy core module.
 """
@@ -42,7 +41,7 @@ def _is_mseed(filename):
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, 'read'):
         file_size = os.path.getsize(filename)
-        with io.open(filename, 'rb') as fh:
+        with open(filename, 'rb') as fh:
             return __is_mseed(fh, file_size=file_size)
     else:
         initial_pos = filename.tell()
@@ -963,7 +962,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         f.close()
 
 
-class MST(object):
+class MST:
     """
     Class that transforms a ObsPy Trace object to a libmseed internal MSTrace
     struct.
