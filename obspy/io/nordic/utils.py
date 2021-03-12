@@ -23,6 +23,12 @@ INV_MAG_MAPPING = {item: key for key, item in MAG_MAPPING.items()}
 # info in that line will be.
 ACCEPTED_TAGS = ('1', '6', '7', 'E', ' ', 'F', 'M', '3', 'H')
 
+    
+ACCEPTED_1CHAR_PHASE_TAGS = ['P', 'p', 'S', 's', 'L', 'G', 'R', 'H', 'T', 'x',
+                             'r', 't', 'E']
+ACCEPTED_2CHAR_PHASE_TAGS = ['I ', 'Ip', 'Is', 'Ir']
+ACCEPTED_3CHAR_PHASE_TAGS = ['BAZ', 'END']
+
 
 def _int_conv(string):
     """
@@ -188,6 +194,33 @@ def _km_to_deg_lon(kilometers, latitude):
     degrees_lon = degrees_lat / cos(radians(latitude))
 
     return degrees_lon
+
+
+def _nordic_iasp_phase_ok(phase):
+    """
+    Function to check whether a phase-string is a valid IASPEI-compatible
+    phase in Seisan.
+    
+    :param phase: Phase string to check
+
+    :returns: bool, whether phase string is valid in Seisan.
+    """
+    phase_ok = False
+    p = phase[0:1]
+    pp = phase[0:2]
+    ppp = phase[0:3]
+    
+    if p in ACCEPTED_1CHAR_PHASE_TAGS:
+        phase_ok = True
+        return phase_ok
+    if pp in ACCEPTED_2CHAR_PHASE_TAGS:
+        phase_ok = True
+        return phase_ok    
+    if ppp in ACCEPTED_3CHAR_PHASE_TAGS:
+        phase_ok = True
+        return phase_ok
+
+    return phase_ok
 
 
 if __name__ == "__main__":
