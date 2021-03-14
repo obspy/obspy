@@ -45,7 +45,7 @@ RUN python -m pip install --upgrade --no-cache-dir pip && \
 
 COPY . /obspy
 
-RUN python -m pip install /obspy
+RUN python -m pip install -e /obspy
 
 WORKDIR /obspy/misc/docs
 
