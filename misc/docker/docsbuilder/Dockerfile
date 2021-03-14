@@ -10,7 +10,11 @@ LABEL schema-version="1.0.0"
 RUN apt-get update -yqq && \
     apt-get install -yqq --no-install-recommends \
         build-essential \
-        gcc && \
+        gcc \
+        libproj-dev \
+        proj-data \
+        libgeos-dev \
+        proj-bin && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -35,5 +39,15 @@ RUN python -m pip install --upgrade --no-cache-dir pip && \
         'm2r2>=0.2.7' \
         'pybtex>=0.22.2' \
         'sphinx_rtd_theme' \
-        'matplotlib' \
-        'obspy'
+        'matplotlib' && \
+    python -m pip install --no-cache-dir 'cartopy>=0.18.0' && \
+    mkdir /obspy
+
+COPY . /obspy
+
+RUN python -m pip install /obspy
+
+WORKDIR /obspy/misc/docs
+
+ENTRYPOINT ["make"]
+CMD ["html"]
