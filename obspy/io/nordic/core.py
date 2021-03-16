@@ -37,7 +37,8 @@ from obspy.core.event import (
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
-    _get_line_tags, _km_to_deg_lat, _km_to_deg_lon, _nordic_iasp_phase_ok)
+    _get_line_tags, _km_to_deg_lat, _km_to_deg_lon, _nordic_iasp_phase_ok,
+    _is_iasp_ampl_phase)
 from obspy.io.nordic.ellipse import Ellipse
 
 
@@ -660,14 +661,17 @@ def _read_picks(tagged_lines, new_event):
         except KeyError:
             pass
     header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
-    
+
     # is_new_nordic_format = False
-    is_new_nordic_format = check_nordic_format_version(pickline)
-    
-    if is_new_nordic_format:
+    nordic_format, phase_ok = check_nordic_format_version(pickline)
+
+    if nordic_format == 'NEW':
         new_event = _read_picks_nordic_new(pickline, new_event, header, evtime)
-    else:
+    elif nordic_format == 'OLD':
         new_event = _read_picks_nordic_old(pickline, new_event, header, evtime)
+    elif nordic_format == 'UKN':
+        print('Cannot check whether Nordic format is Old or New, is this '
+              + 'really a Nordic file?')
 
     return new_event
 
@@ -683,83 +687,84 @@ def check_nordic_format_version(pickline):
     :returns: bool, whether line contains an allowed phase or not.
     """
 
-    # The test should only need to be done on one single line; then it should
-    # be clear what is the format for the rest of the file.
+    # The test should only need to be done on one single pick-line per event or
+    # catalog; then it should be clear what is the format for the rest of the
+    # file.
 
     # Here is the basic logic for the Format check; based on subroutine
     # `check_if_phase_line_format` in Seisan:
-    #   1. Check whether New Nordic format
-    #     1.a  Check the format of the seconds
-    #     1.b Check phase-descriptor
-    #   2. Check whether Old Nordic format
-    #     2.a  Check the format of the seconds
-    #     2.b Check phase-descriptor
-    
+    #   1. Check weather New or Old format based on the seconds-string of the
+    #      old format.
+    #   2. Assure that it's really New Nordic format
+    #     2.a  Check the full format of the pick-time
+    #     2.b  Check phase-descriptor
+    #   3. Assure that it's really Old Nordic format
+    #     3.a  Check the full format of the pick-time
+    #     3.b  Check phase-descriptor
+
     # Let's  assume it's a New Nordic format for now.
     is_phase = False
     nordic_format = 'UKN'
     is_new_nordic = True
-    
+
     for line in pickline:
         # if whole line is blank, it cannot be a phase line
         if line.isspace():
             return nordic_format, is_phase
-        
-        old_format_secs = line[23:28]
+
+        old_format_secs = line[23:28].strip(' ')
         # Check whether the old-formatted seconds are a float rather than int.
         # If they are int, then it is probably new nordic format.
         try:
-            if str(int(old_format_secs)) == old_format_secs.strip(' '):
+            if str(int(old_format_secs.replace(' ', ''))) == old_format_secs:
                 nordic_format = 'NEW'
         except ValueError:
             nordic_format = 'OLD'
             pass
-        
+
         if nordic_format == 'NEW' or nordic_format == 'UKN':
-            hr = int(line[26:28])
-            min = int(line[28:30])
-            sec = float(line[30:37])
+            hr = int(line[26:28].strip() or 0)
+            min = int(line[28:30].strip() or 0)
+            sec = float(line[30:37].strip() or 0)
             if (line[9:10] == ' ' and
                line[14:15] == ' ' and
-               (line[26:27] == ' ' or line[26:27] == '0' or
-                line[26:27] == '1' or line[26:27] == '2') and
+               line[26:27] in ' 012' and
                hr >= 0 and hr <= 26 and
                min >= 0 and min <= 60 and
                sec >= 0.0 and sec <= 200 and
                not line[28:37].isspace()):
                 if (_nordic_iasp_phase_ok(line[16:25]) or
-                   line[16:19] == 'END' or
-                   line[16:19] == 'BAZ' or
-                   line[16:18] == 'IA' or
-                   line[16:18] == 'IV' or
-                   line[16:18] == 'AM' or
-                   line[16:18] == 'AP' or
-                   (line[16:17] == ' ' and
-                    line[15:16] == 'I' or line[15:16] == 'E')):
+                        line[16:19] == 'END' or
+                        line[16:19] == 'BAZ' or
+                        line[16:18] == 'IA' or
+                        line[16:18] == 'IV' or
+                        line[16:18] == 'AM' or
+                        line[16:18] == 'AP' or
+                        (line[16:17] == ' ' and
+                         line[15:16] == 'I' or line[15:16] == 'E')):
                     is_phase = True
                     nordic_format = 'NEW'
                     return nordic_format, is_phase
         else:
-            hr = int(line[18:20])
-            min = int(line[20:22])
-            sec = float(line[22:28])
-            if ((line[18:19] == ' ' or line[18:19] == '0' or
-                 line[18:19] == '1' or line[18:19] == '2') and
+            hr = int(line[18:20].strip() or 0)
+            min = int(line[20:22].strip() or 0)
+            sec = float(line[22:28].strip() or 0)
+            if (line[18:19] in ' 012' and
                hr >= 0 and hr <= 26 and
                min >= 0 and min <= 60 and
                sec >= 0.0 and sec <= 200):
                 if (_nordic_iasp_phase_ok(line[10:18]) or
-                   line[10:13] == 'END' or
-                   line[10:13] == 'BAZ' or
-                   line[10:12] == 'IA' or
-                   line[10:12] == 'IV' or
-                   line[10:12] == 'AM' or
-                   line[10:12] == 'AP' or
-                   (line[10:11] == ' ' and
-                    line[9:10] == 'I' or line[9:10] == 'E')):
+                        line[10:13] == 'END' or
+                        line[10:13] == 'BAZ' or
+                        line[10:12] == 'IA' or
+                        line[10:12] == 'IV' or
+                        line[10:12] == 'AM' or
+                        line[10:12] == 'AP' or
+                        (line[10:11] == ' ' and
+                         line[9:10] == 'I' or line[9:10] == 'E')):
                     is_phase = True
                     nordic_format = 'OLD'
-                    return nordic_format, is_phase 
+                    return nordic_format, is_phase
     # If neither New nor Old format, return "UKN"
     return nordic_format, is_phase
 
@@ -796,7 +801,7 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         # 00 or 24: this signifies a pick over a day boundary.
         pick_hour = int(line[18:20].strip() or 0)
         pick_minute = int(line[20:22].strip() or 0)
-        pick_seconds = float(line[22:29].strip() or 0) # 29 should be blank,
+        pick_seconds = float(line[22:29].strip() or 0)  # 29 should be blank,
         # but sometimes SEISAN appears to overflow here, see #2348
         if pick_hour == 0 and evtime.hour == 23:
             day_add = 86400
@@ -896,35 +901,26 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
     """
     for line in pickline:
         ain, snr = (None, None)
-        if line[18:28].strip() == '':  # If line is empty miss it
+        if line[14:37].strip() == '':  # If line is empty miss it
             continue
         if len(line) < 80:
             line = line.ljust(80)  # Pick-lines without a tag may be short.
-        weight = line[14]
-        if weight not in ' 012349_':  # Long phase name
-            weight = line[8]
-            if weight == ' ':
-                weight = 0
-            phase = line[10:17].strip()
-            polarity = ''
-        elif weight == '_':
-            phase = line[10:17]
+        weight = line[24]
+        if weight == ' ':
             weight = 0
-            polarity = ''
+        phase = line[16:24].strip()
+        if _nordic_iasp_phase_ok(phase) and phase not in ['END', 'BAZ']:
+            polarity = line[43]
         else:
-            phase = line[10:14].strip()
-            polarity = line[16]
-            if weight == ' ':
-                weight = 0
+            polarity = ''
         polarity = POLARITY_MAPPING.get(polarity, None)  # Empty could be None
         # or undecidable.
         # It is valid nordic for the origin to be hour 23 and picks to be hour
         # 00 or 24: this signifies a pick over a day boundary. Seisan also
         # allows empty hour/min/sec, which is equal to 00.
-        pick_hour = int(line[18:20].strip() or 0)
-        pick_minute = int(line[20:22].strip() or 0)
-        pick_seconds = float(line[22:29].strip() or 0) # 29 should be blank,
-        # but sometimes SEISAN appears to overflow here, see #2348
+        pick_hour = int(line[26:28].strip() or 0)
+        pick_minute = int(line[28:30].strip() or 0)
+        pick_seconds = float(line[31:37].strip() or 0)
         if pick_hour == 0 and evtime.hour == 23:
             day_add = 86400
         elif pick_hour >= 24:  # Nordic supports up to 48 hours advanced.
@@ -935,35 +931,36 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
         time = UTCDateTime(
             year=evtime.year, month=evtime.month, day=evtime.day,
             hour=pick_hour, minute=pick_minute) + (pick_seconds + day_add)
-        if header[57:60] == 'AIN':
-            ain = _float_conv(line[57:60])
-        elif header[57:60] == 'SNR':
-            snr = _float_conv(line[57:60])
+        if header[60:63] == 'AIN':
+            ain = _float_conv(line[60:63])
+        elif header[60:63] == 'SNR':
+            snr = _float_conv(line[60:63])
         else:
-            warnings.warn('%s is not currently supported' % header[57:60])
+            warnings.warn('%s is not currently supported' % header[60:63])
         # finalweight = _int_conv(line[68:70])
         # Create a new obspy.event.Pick class for this pick
         _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
-                                        channel_code=line[6:8].strip(),
-                                        network_code='NA')
+                                        channel_code=line[6:9].strip(),
+                                        network_code=line[10:12].strip(),
+                                        location_code=line[12:14].strip())
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
         try:
-            pick.onset = ONSET_MAPPING[line[9]]
+            pick.onset = ONSET_MAPPING[line[15]]
         except KeyError:
             pass
-        pick.evaluation_mode = EVALUATION_MAPPING.get(line[15], "manual")
+        pick.evaluation_mode = EVALUATION_MAPPING.get(line[25], "manual")
         # Note these two are not always filled - velocity conversion not yet
         # implemented, needs to be converted from km/s to s/deg
         # if not velocity == 999.0:
         #     new_event.picks[pick_index].horizontal_slowness = 1.0 / velocity
-        if _float_conv(line[46:51]) is not None:
-            pick.backazimuth = _float_conv(line[46:51])
+        if phase == 'BAZ' and _float_conv(line[37:44]) is not None:
+            pick.backazimuth = _float_conv(line[37:44])
         # Create new obspy.event.Amplitude class which references above Pick
         # only if there is an amplitude picked.
-        if _float_conv(line[33:40]) is not None:
-            _amplitude = Amplitude(generic_amplitude=_float_conv(line[33:40]),
-                                   period=_float_conv(line[41:45]),
+        if _is_iasp_ampl_phase(phase) and _float_conv(line[37:44]) is not None:
+            _amplitude = Amplitude(generic_amplitude=_float_conv(line[37:44]),
+                                   period=_float_conv(line[44:50]),
                                    pick_id=pick.resource_id,
                                    waveform_id=pick.waveform_id)
             if pick.phase_hint == 'IAML':
@@ -982,9 +979,9 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
             if snr:
                 _amplitude.snr = snr
             new_event.amplitudes.append(_amplitude)
-        elif _int_conv(line[29:33]) is not None:
+        elif phase == 'END' and _int_conv(line[37:44]) is not None:
             # Create an amplitude instance for coda duration also
-            _amplitude = Amplitude(generic_amplitude=_int_conv(line[29:33]),
+            _amplitude = Amplitude(generic_amplitude=_int_conv(line[37:44]),
                                    pick_id=pick.resource_id,
                                    waveform_id=pick.waveform_id)
             # Amplitude for coda magnitude
@@ -997,14 +994,15 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
                 _amplitude.snr = snr
             new_event.amplitudes.append(_amplitude)
         # Create new obspy.event.Arrival class referencing above Pick
-        if _float_conv(line[33:40]) is None:
+        if _float_conv(line[37:44]) is None:
             arrival = Arrival(phase=pick.phase_hint, pick_id=pick.resource_id)
             if weight is not None:
                 arrival.time_weight = weight
-            if _int_conv(line[60:63]) is not None:
-                arrival.backazimuth_residual = _int_conv(line[60:63])
-            if _float_conv(line[63:68]) is not None:
-                arrival.time_residual = _float_conv(line[63:68])
+            if _int_conv(line[63:68]) is not None:
+                if phase == 'BAZ':
+                    arrival.backazimuth_residual = _int_conv(line[63:68])
+                else:
+                    arrival.time_residual = _float_conv(line[63:68])
             if _float_conv(line[70:75]) is not None:
                 arrival.distance = kilometers2degrees(_float_conv(line[70:75]))
             if _int_conv(line[76:79]) is not None:
