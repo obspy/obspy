@@ -309,24 +309,6 @@ def _get_agency_id(item):
         agency_id = '   '
     agency_id = agency_id.rjust(3)[0:3]
     return agency_id
-=======
-    phase_ok = False
-    p = phase[0:1]
-    pp = phase[0:2]
-    ppp = phase[0:3]
-    
-    if p in ACCEPTED_1CHAR_PHASE_TAGS:
-        phase_ok = True
-        return phase_ok
-    if pp in ACCEPTED_2CHAR_PHASE_TAGS:
-        phase_ok = True
-        return phase_ok    
-    if ppp in ACCEPTED_3CHAR_PHASE_TAGS:
-        phase_ok = True
-        return phase_ok
-
-    return phase_ok
->>>>>>> 74dd6007f... add function to check whether phase is valid IASPEI phase in Seisan
 
 
 if __name__ == "__main__":
