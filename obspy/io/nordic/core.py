@@ -705,7 +705,6 @@ def check_nordic_format_version(pickline):
     # Let's  assume it's a New Nordic format for now.
     is_phase = False
     nordic_format = 'UKN'
-    is_new_nordic = True
 
     for line in pickline:
         # if whole line is blank, it cannot be a phase line
