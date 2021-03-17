@@ -1132,13 +1132,17 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
         f.write(' ' + write_wavfile + '6'.rjust(79 - len(write_wavfile)) +
                 '\n')
         # Write final line of s-file
-        f.write(" STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU" +
-                " VELO AIN AR TRES W  DIS CAZ7\n")
+        if version == 'OLD':
+            f.write(" STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU" +
+                    " VELO AIN AR TRES W  DIS CAZ7\n")
+        elif version == 'NEW':
+            f.write(" STAT COM NTLO IPHASE   W HHMM SS.SSS   PAR1  PAR2" +
+                    " AGA OPE  AIN  RES W  DIS CAZ7\n")
     return sfile
 
 
 def write_select(catalog, filename, userid='OBSP', evtype='L',
-                 wavefiles=None, high_accuracy=True):
+                 wavefiles=None, high_accuracy=True, version='OLD'):
     """
     Function to write a catalog to a select file in nordic format.
 
@@ -1159,14 +1163,20 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
     :param high_accuracy:
         Whether to output pick seconds at 6.3f (high_accuracy) or
         5.2f (standard)
+    :type version: str
+    :param version:
+        Version of Nordic format to be used for output, either OLD or NEW.
     """
+    if version not in ['OLD', 'NEW']:
+        raise ValueError('Nordic format can be ''OLD'' or ''NEW'', not '
+                         + version)
     if not wavefiles:
         wavefiles = ['DUMMY' for _i in range(len(catalog))]
     with open(filename, 'w') as fout:
         for event, wavfile in zip(catalog, wavefiles):
             select = io.StringIO()
             _write_nordic(event=event, filename=None, userid=userid,
-                          evtype=evtype, wavefiles=wavfile,
+                          evtype=evtype, wavefiles=wavfile, version=version,
                           string_io=select, high_accuracy=high_accuracy)
             select.seek(0)
             for line in select:
@@ -1175,7 +1185,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
 
 
 def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
-                  wavefiles='DUMMY', explosion=False,
+                  wavefiles='DUMMY', explosion=False, version='OLD',
                   overwrite=True, string_io=None, high_accuracy=True):
     """
     Write an :class:`~obspy.core.event.Event` to a nordic formatted s-file.
@@ -1198,6 +1208,9 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     :type explosion: bool
     :param explosion:
         Note if the event is an explosion, will be marked by an E.
+    :type version: str
+    :param version:
+        Version of Nordic format to be used for output, either OLD or NEW.
     :type overwrite: bool
     :param overwrite: force to overwrite old files, defaults to False
     :type string_io: io.StringIO
@@ -1408,7 +1421,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                 ' VELO AIN AR TRES W  DIS CAZ7\n')
     # Now call the populate sfile function
     if len(event.picks) > 0:
-        newpicks = '\n'.join(nordpick(event, high_accuracy=high_accuracy))
+        newpicks = '\n'.join(nordpick(event, high_accuracy=high_accuracy,
+                                      version=version))
         sfile.write(newpicks + '\n')
         sfile.write('\n'.rjust(81))
     if not string_io:
@@ -1560,7 +1574,7 @@ def _write_hyp_error_line(origin):
     return ''.join(error_line)
 
 
-def nordpick(event, high_accuracy=True):
+def nordpick(event, high_accuracy=True, version='OLD'):
     """
     Format picks in an :class:`~obspy.core.event.event.Event` to nordic.
 
@@ -1570,6 +1584,9 @@ def nordpick(event, high_accuracy=True):
     :param high_accuracy:
         Whether to output pick seconds at 6.3f (high_accuracy) or
         5.2f (standard).
+    :type version: str
+    :param version:
+        Version of Nordic format to be used for output, either OLD or NEW.
 
     :returns: List of String
 
@@ -1711,6 +1728,8 @@ def nordpick(event, high_accuracy=True):
             eval_mode = " "
         # Generate a print string and attach it to the list
         channel_code = pick.waveform_id.channel_code or '   '
+        network_code = pick.waveform_id.network_code or '  '
+        location_code = pick.waveform_id.location_code or '  '
         pick_hour = pick.time.hour
         if pick.time.date > origin_date:
             # pick hours up to 48 are supported
@@ -1721,48 +1740,108 @@ def nordpick(event, high_accuracy=True):
                     "hours".format(days_diff))
             pick_hour += 24
         pick_seconds = pick.time.second + (pick.time.microsecond / 1e6)
-        if len(phase_hint) > 4:
-            # Weight goes in 9 and phase_hint runs through 11-18
-            if polarity != ' ':
-                UserWarning("Polarity not written due to phase hint length")
-            phase_info = (
-                _str_conv(weight).rjust(1) + impulsivity + phase_hint.ljust(8))
+
+        # Differentiate based on Nordic format versions
+        if version == 'OLD':
+            if len(phase_hint) > 4:
+                # Weight goes in 9 and phase_hint runs through 11-18
+                if polarity != ' ':
+                    UserWarning(
+                        "Polarity not written due to phase hint length")
+                phase_info = (_str_conv(weight).rjust(1) + impulsivity
+                              + phase_hint.ljust(8))
+            else:
+                phase_info = (
+                    ' ' + impulsivity + phase_hint.ljust(4) +
+                    _str_conv(weight).rjust(1) + eval_mode +
+                    polarity.rjust(1) + ' ')
+            pick_string_formatter = (
+                " {station:5s}{instrument:1s}{component:1s}{phase_info:10s}"
+                "{hour:2d}{minute:2d}{seconds:>6s}{coda:5s}{amp:7s}{period:5s}"
+                "{azimuth:6s}{velocity:5s}{ain:4s}{azimuthres:3s}{timeres:5s}"
+                "  {distance:5s}{caz:4s} ")
+            # Note that pick seconds rounding only works because SEISAN does
+            # not enforce that seconds stay 0 <= seconds < 60, so rounding
+            # something like seconds = 59.997 to 2dp gets to 60.00, which
+            # SEISAN is happy with. It appears that SEISAN is happy with large
+            # numbers of seconds see #2348.
+            pick_strings.append(pick_string_formatter.format(
+                station=pick.waveform_id.station_code,
+                instrument=channel_code[0], component=channel_code[-1],
+                phase_info=phase_info, hour=pick_hour,
+                minute=pick.time.minute,
+                seconds=_str_conv(pick_seconds, rounded=pick_rounding),
+                coda=_str_conv(coda).rjust(5)[0:5],
+                amp=_str_conv(amp, rounded=1).rjust(7)[0:7],
+                period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],
+                azimuth=_str_conv(azimuth).rjust(6)[0:6],
+                velocity=_str_conv(velocity).rjust(5)[0:5],
+                ain=ain.rjust(4)[0:4],
+                azimuthres=_str_conv(azimuthres).rjust(3)[0:3],
+                timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
+                distance=distance.rjust(5)[0:5],
+                caz=_str_conv(caz).rjust(4)[0:4]))
+            # Note that currently finalweight is unsupported, nor is velocity,
+            # or angle of incidence.  This is because obspy.event stores
+            # slowness in s/deg and takeoff angle, which would require
+            # computation from the values stored in seisan.  Multiple weights
+            # are also not supported in Obspy.event
+        elif version == 'NEW':
+            # Define par1, par2, & residual depending on type of observation:
+            # Coda, backzimuth, amplitude, or other phase pick
+            if coda != '':
+                par1 = _str_conv(coda).rjust(7)[0:7]  # coda duration
+                par2 = '      '
+                residual = '     '
+            elif azimuth != '':                       # back-azimuth
+                par1 = _str_conv(azimuth).rjust(7)[0:7]
+                par2 = '    ' + velocity              # app.velocity (not supp)
+                if arrival.backazimuth_residual is not None:
+                    residual = _str_conv(
+                        arrival.backazimuth_residual, rounded=1).rjust(5)[0:5]
+            elif amp is not None:
+                par1 = _str_conv(amp, rounded=1).rjust(7)[0:7]
+                par2 = _str_conv(peri, rounded=peri_round).rjust(6)[0:6]
+                residual = '     '
+                # Obspy does not currently support to store a magnitude for
+                # each amplitude measurement like "amplitude.magnitude"
+            else:  # phase pick
+                par1 = '      ' + polarity
+                par2 = '      '
+                if arrival.time_residual is not None:
+                    residual = _str_conv(arrival.time_residual, rounded=1
+                                         ).rjust(5)[0:5]
+
+            if pick.creation_info is not None:
+                author = (pick.creation_info.author.rjust(3)[0:3] or '   ')
+                agency = (pick.creation_info.agency.rjust(3)[0:3] or '   ')
+            else:
+                author = '   '
+                agency = '   '
+            finalweight = "   "
+            pick_string_formatter = (
+                " {station:5s}{channel:3s} {network:2s}{location:2s} "
+                "{impulsivity:1s}{phase_hint:8s}{weight:1s}{eval_mode:1s}"
+                "{hour:2d}{minute:2d} {seconds:6s}"
+                "{par1:7s}{par2:6s} {author:3s} {agency:3s} "
+                "{ain:4s}{residual:5s}{finalweight:3s}"
+                "{distance:5s} {caz:3s} ")
+            pick_strings.append(pick_string_formatter.format(
+                station=pick.waveform_id.station_code, channel=channel_code,
+                network=network_code, location=location_code,
+                impulsivity=impulsivity, phase_hint=phase_hint,
+                weight=_str_conv(weight).rjust(1), eval_mode=eval_mode,
+                hour=pick_hour, minute=pick.time.minute,
+                seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
+                par1=par1, par2=par2, author=author, agency=agency,
+                ain=ain.rjust(4)[0:4], residual=residual,
+                finalweight=finalweight,
+                distance=distance.rjust(5)[0:5],
+                caz=_str_conv(caz).rjust(3)[0:3]))
         else:
-            phase_info = (
-                ' ' + impulsivity + phase_hint.ljust(4) +
-                _str_conv(weight).rjust(1) + eval_mode +
-                polarity.rjust(1) + ' ')
-        pick_string_formatter = (
-            " {station:5s}{instrument:1s}{component:1s}{phase_info:10s}"
-            "{hour:2d}{minute:2d}{seconds:>6s}{coda:5s}{amp:7s}{period:5s}"
-            "{azimuth:6s}{velocity:5s}{ain:4s}{azimuthres:3s}{timeres:5s}  "
-            "{distance:5s}{caz:4s} ")
-        # Note that pick seconds rounding only works because SEISAN does not
-        # enforce that seconds stay 0 <= seconds < 60, so rounding something
-        # like seconds = 59.997 to 2dp gets to 60.00, which SEISAN is happy
-        # with.  It appears that SEISAN is happy with large numbers of seconds
-        # see #2348.
-        pick_strings.append(pick_string_formatter.format(
-            station=pick.waveform_id.station_code,
-            instrument=channel_code[0], component=channel_code[-1],
-            phase_info=phase_info, hour=pick_hour,
-            minute=pick.time.minute,
-            seconds=_str_conv(pick_seconds, rounded=pick_rounding),
-            coda=_str_conv(coda).rjust(5)[0:5],
-            amp=_str_conv(amp, rounded=1).rjust(7)[0:7],
-            period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],
-            azimuth=_str_conv(azimuth).rjust(6)[0:6],
-            velocity=_str_conv(velocity).rjust(5)[0:5],
-            ain=ain.rjust(4)[0:4],
-            azimuthres=_str_conv(azimuthres).rjust(3)[0:3],
-            timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
-            distance=distance.rjust(5)[0:5],
-            caz=_str_conv(caz).rjust(4)[0:4]))
-        # Note that currently finalweight is unsupported, nor is velocity, or
-        # angle of incidence.  This is because obspy.event stores slowness in
-        # s/deg and takeoff angle, which would require computation from the
-        # values stored in seisan.  Multiple weights are also not supported in
-        # Obspy.event
+            raise ValueError('Nordic format can be ''OLD'' or ''NEW'', not '
+                             + version)
+
     return pick_strings
 
 
