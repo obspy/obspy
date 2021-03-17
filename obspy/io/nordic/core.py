@@ -670,8 +670,8 @@ def _read_picks(tagged_lines, new_event):
     elif nordic_format == 'OLD':
         new_event = _read_picks_nordic_old(pickline, new_event, header, evtime)
     elif nordic_format == 'UKN':
-        print('Cannot check whether Nordic format is Old or New, is this '
-              + 'really a Nordic file?')
+        warnings.warn('Cannot check whether Nordic format is Old or New, is '
+                      'this really a Nordic file?')
 
     return new_event
 
@@ -932,9 +932,9 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
             year=evtime.year, month=evtime.month, day=evtime.day,
             hour=pick_hour, minute=pick_minute) + (pick_seconds + day_add)
         if header[60:63] == 'AIN':
-            ain = _float_conv(line[60:63])
+            ain = _float_conv(line[58:63])
         elif header[60:63] == 'SNR':
-            snr = _float_conv(line[60:63])
+            snr = _float_conv(line[58:63])
         else:
             warnings.warn('%s is not currently supported' % header[60:63])
         # finalweight = _int_conv(line[68:70])
@@ -997,12 +997,13 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
             if snr is not None:
                 _amplitude.snr = snr
             new_event.amplitudes.append(_amplitude)
+
         # Create new obspy.event.Arrival class referencing above Pick
-        if _float_conv(line[37:44]) is None:
+        if not _is_iasp_ampl_phase(phase):
             arrival = Arrival(phase=pick.phase_hint, pick_id=pick.resource_id)
             if weight is not None:
                 arrival.time_weight = weight
-            if _int_conv(line[63:68]) is not None:
+            if _float_conv(line[63:68]) is not None:
                 if phase == 'BAZ':
                     arrival.backazimuth_residual = _int_conv(line[63:68])
                 else:
@@ -1801,11 +1802,11 @@ def nordpick(event, high_accuracy=True, version='OLD'):
         elif version == 'NEW':
             # Define par1, par2, & residual depending on type of observation:
             # Coda, backzimuth, amplitude, or other phase pick
-            if coda != '':
+            par2 = '      '
+            residual = '     '
+            if coda.strip() != '':
                 par1 = _str_conv(coda).rjust(7)[0:7]  # coda duration
-                par2 = '      '
-                residual = '     '
-            elif azimuth != '':                       # back-azimuth
+            elif azimuth.strip() != '':  # back-azimuth
                 par1 = _str_conv(azimuth).rjust(7)[0:7]
                 par2 = '    ' + velocity              # app.velocity (not supp)
                 if arrival.backazimuth_residual is not None:
@@ -1814,14 +1815,12 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             elif amp is not None:
                 par1 = _str_conv(amp, rounded=1).rjust(7)[0:7]
                 par2 = _str_conv(peri, rounded=peri_round).rjust(6)[0:6]
-                residual = '     '
                 # Obspy does not currently support to store a magnitude for
                 # each amplitude measurement like "amplitude.magnitude"
             else:  # phase pick
                 par1 = '      ' + polarity
-                par2 = '      '
                 if arrival.time_residual is not None:
-                    residual = _str_conv(arrival.time_residual, rounded=1
+                    residual = _str_conv(arrival.time_residual, rounded=2
                                          ).rjust(5)[0:5]
 
             if pick.creation_info is not None:
