@@ -945,6 +945,10 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
                                         location_code=line[12:14].strip())
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
+        # agency and operator / author / analyst
+        if line[51:54] != '   ' or line[55:58] != '   ':
+            pick.creation_info = CreationInfo(agency_id=line[51:54].strip(),
+                                              author=line[55:58].strip())
         try:
             pick.onset = ONSET_MAPPING[line[15]]
         except KeyError:
@@ -1055,7 +1059,8 @@ def _readwavename(tagged_lines):
     return wavename
 
 
-def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
+def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None,
+               version='OLD'):
     """
     Generate an empty s-file with a populated header for a given waveform.
 
@@ -1070,6 +1075,9 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
     :param overwrite: Overwrite an existing S-file, default=False
     :type evtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param evtime: If given this will set the timing of the S-file
+    :type version: str
+    :param version:
+        Version of Nordic format to be used for output, either OLD or NEW.
 
     :returns: str, S-file name
     """
@@ -1417,8 +1425,12 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         sfile.write(' ' + os.path.basename(wavefile) +
                     '6'.rjust(79 - len(os.path.basename(wavefile))) + '\n')
     # Write final line of s-file
-    sfile.write(' STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU' +
-                ' VELO AIN AR TRES W  DIS CAZ7\n')
+    if version == 'OLD':
+        sfile.write(" STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU" +
+                    " VELO AIN AR TRES W  DIS CAZ7\n")
+    elif version == 'NEW':
+        sfile.write(" STAT COM NTLO IPHASE   W HHMM SS.SSS   PAR1  PAR2" +
+                    " AGA OPE  AIN  RES W  DIS CAZ7\n")
     # Now call the populate sfile function
     if len(event.picks) > 0:
         newpicks = '\n'.join(nordpick(event, high_accuracy=high_accuracy,
@@ -1813,8 +1825,8 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                                          ).rjust(5)[0:5]
 
             if pick.creation_info is not None:
-                author = (pick.creation_info.author.rjust(3)[0:3] or '   ')
-                agency = (pick.creation_info.agency.rjust(3)[0:3] or '   ')
+                agency = (pick.creation_info.agency_id.ljust(3)[0:3] or '   ')
+                author = (pick.creation_info.author.ljust(3)[0:3] or '   ')
             else:
                 author = '   '
                 agency = '   '
@@ -1823,7 +1835,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 " {station:5s}{channel:3s} {network:2s}{location:2s} "
                 "{impulsivity:1s}{phase_hint:8s}{weight:1s}{eval_mode:1s}"
                 "{hour:2d}{minute:2d} {seconds:6s}"
-                "{par1:7s}{par2:6s} {author:3s} {agency:3s} "
+                "{par1:7s}{par2:6s} {agency:3s} {author:3s} "
                 "{ain:4s}{residual:5s}{finalweight:3s}"
                 "{distance:5s} {caz:3s} ")
             pick_strings.append(pick_string_formatter.format(
@@ -1833,7 +1845,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 weight=_str_conv(weight).rjust(1), eval_mode=eval_mode,
                 hour=pick_hour, minute=pick.time.minute,
                 seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
-                par1=par1, par2=par2, author=author, agency=agency,
+                par1=par1, par2=par2, agency=agency, author=author,
                 ain=ain.rjust(4)[0:4], residual=residual,
                 finalweight=finalweight,
                 distance=distance.rjust(5)[0:5],
