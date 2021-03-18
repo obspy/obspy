@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+DEPRECATED -- SeisHub database client is deprecated
+
 SeisHub database client for ObsPy.
 
 :copyright:
@@ -24,6 +26,7 @@ from lxml.etree import Element, SubElement, tostring
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.xseed import Parser
 from obspy.io.xseed.utils import SEEDParserException
 
@@ -74,6 +77,8 @@ def _objectify_result_to_dicts(root):
 
 class Client(object):
     """
+    DEPRECATED -- SeisHub database client is deprecated
+
     SeisHub database request Client class.
 
     The following classes are automatically linked with initialization.
@@ -105,6 +110,8 @@ class Client(object):
                  user="admin", password="admin", timeout=10, debug=False,
                  retries=3):
         """
+        DEPRECATED -- SeisHub database client is deprecated
+
         Initializes the SeisHub Web service client.
 
         :type base_url: str, optional
@@ -124,6 +131,9 @@ class Client(object):
         :type retries: int
         :param retries: Number of retries for failing requests.
         """
+        msg = "The module obspy.client.seishub is deprecated and will be removed " + \
+            "in the next major release."
+        warnings.warn(msg, ObsPyDeprecationWarning)
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
         self.station = _StationMapperClient(self)

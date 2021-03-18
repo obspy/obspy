@@ -77,10 +77,10 @@ the names of all available test cases.
         $ obspy-runtests --help
 
 Of course you may combine most of the options here, e.g. in order to test
-all modules except the module obspy.io.sh and obspy.clients.seishub, have a
+all modules except the module obspy.io.sh and obspy.clients.iris, have a
 verbose output and report everything, you would run::
 
-        $ obspy-runtests -r -v -x clients.seishub -x io.sh --all
+        $ obspy-runtests -r -v -x clients.iris -x io.sh --all
 """
 import copy
 import doctest
