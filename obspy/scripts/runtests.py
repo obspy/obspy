@@ -108,6 +108,7 @@ from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
 
 
+DEPRECATED_MODULES = ['clients.arclink', 'clients.seishub', 'db']
 HARD_DEPENDENCIES = [
     "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
     "sqlalchemy", "decorator", "requests"]
@@ -148,7 +149,7 @@ def _get_suites(verbosity=1, names=[]):
     status = True
     import_failures = {}
     for name in names:
-        if name == 'clients.arclink':
+        if name in DEPRECATED_MODULES:
             continue
         suite = []
         if name in ALL_MODULES:
