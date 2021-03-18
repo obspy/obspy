@@ -24,7 +24,7 @@ numpy
 scipy
 matplotlib
 ## for obspy.db:
-sqlalchemy
+sqlalchemy<1.4
 
 # Tutorial
 https://github.com/obspy/wheelhouse/raw/master/basemap-1.0.7-cp27-none-linux_x86_64.whl
