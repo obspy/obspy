@@ -1656,7 +1656,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             else:
                 azimuthres = ' '
             if arrival.takeoff_angle is not None:
-                ain = _str_conv(int(arrival.takeoff_angle))
+                ain = _str_conv(arrival.takeoff_angle, rounded=1)
             else:
                 ain = ' '
             # Extract time residual
@@ -1788,7 +1788,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],
                 azimuth=_str_conv(azimuth).rjust(6)[0:6],
                 velocity=_str_conv(velocity).rjust(5)[0:5],
-                ain=ain.rjust(4)[0:4],
+                ain=ain[:-2].rjust(4)[0:4],
                 azimuthres=_str_conv(azimuthres).rjust(3)[0:3],
                 timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
                 distance=distance.rjust(5)[0:5],
@@ -1833,8 +1833,8 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 " {station:5s}{channel:3s} {network:2s}{location:2s} "
                 "{impulsivity:1s}{phase_hint:8s}{weight:1s}{eval_mode:1s}"
                 "{hour:2d}{minute:2d} {seconds:6s}"
-                "{par1:7s}{par2:6s} {agency:3s} {author:3s} "
-                "{ain:4s}{residual:5s}{finalweight:3s}"
+                "{par1:7s}{par2:6s} {agency:3s} {author:3s}"
+                "{ain:5s}{residual:5s}{finalweight:3s}"
                 "{distance:5s} {caz:3s} ")
             pick_strings.append(pick_string_formatter.format(
                 station=pick.waveform_id.station_code, channel=channel_code,
@@ -1844,7 +1844,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 hour=pick_hour, minute=pick.time.minute,
                 seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
                 par1=par1, par2=par2, agency=agency, author=author,
-                ain=ain.rjust(4)[0:4], residual=residual,
+                ain=ain.rjust(5)[0:5], residual=residual,
                 finalweight=finalweight,
                 distance=distance.rjust(5)[0:5],
                 caz=_str_conv(caz).rjust(3)[0:3]))
