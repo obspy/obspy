@@ -118,8 +118,8 @@ class Client(object):
         :type retries: int
         :param retries: Number of retries for failing requests.
         """
-        msg = "The module obspy.client.seishub is deprecated and will be removed " + \
-            "in the next major release."
+        msg = "The module obspy.client.seishub is deprecated and will be " + \
+            "removed in the next major release."
         warnings.warn(msg, ObsPyDeprecationWarning)
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
