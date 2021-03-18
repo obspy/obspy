@@ -30,9 +30,9 @@ from math import sqrt
 from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import (
-    Event, Origin, Magnitude, Catalog, EventDescription, CreationInfo,
-    OriginQuality, OriginUncertainty, Pick, WaveformStreamID, Arrival,
-    Amplitude, FocalMechanism, MomentTensor, NodalPlane, NodalPlanes,
+    Event, Origin, Magnitude, StationMagnitude, Catalog, EventDescription,
+    CreationInfo, OriginQuality, OriginUncertainty, Pick, WaveformStreamID,
+    Arrival, Amplitude, FocalMechanism, MomentTensor, NodalPlane, NodalPlanes,
     QuantityError, Tensor, ResourceIdentifier)
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
@@ -982,6 +982,27 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
             if snr:
                 _amplitude.snr = snr
             new_event.amplitudes.append(_amplitude)
+            # Magnitude for single trace / station computed from amplitude
+            # if line[63:68].strip() != '':
+            mag_residual = _float_conv(line[63:68])
+            # assoc_mag = new_event.magnitudes[0]
+            assoc_mag = None
+            for mag in new_event.magnitudes:
+                if (mag.magnitude_type == _amplitude.magnitude_hint
+                        and mag.creation_info.agency_id
+                        == pick.creation_info.agency_id):
+                    assoc_mag = mag
+            if assoc_mag is not None:
+                _trace_mag = StationMagnitude(
+                    origin_id=assoc_mag.origin_id,
+                    mag=assoc_mag.mag - mag_residual,
+                    mag_errors=mag_residual,
+                    station_magnitude_type=assoc_mag.magnitude_type,
+                    amplitude_id=_amplitude.resource_id,
+                    method_id=assoc_mag.method_id,
+                    waveform_id=pick.waveform_id,
+                    creation_info=pick.creation_info)
+                new_event.station_magnitudes.append(_trace_mag)
         elif phase == 'END' and _int_conv(line[37:44]) is not None:
             # Create an amplitude instance for coda duration also
             _amplitude = Amplitude(generic_amplitude=_int_conv(line[37:44]),
@@ -1814,8 +1835,22 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             elif amp is not None:
                 par1 = _str_conv(amp, rounded=1).rjust(7)[0:7]
                 par2 = _str_conv(peri, rounded=peri_round).rjust(6)[0:6]
-                # Obspy does not currently support to store a magnitude for
-                # each amplitude measurement like "amplitude.magnitude"
+                # Get StationMagnitude that corresponds to the amplitude to
+                # print magnitude residual
+                tr_mag = [
+                    sta_mag for sta_mag in event.station_magnitudes
+                    if (sta_mag.amplitude_id == amplitude.resource_id
+                        and sta_mag.creation_info.agency_id
+                        == pick.creation_info.agency_id
+                        and sta_mag.station_magnitude_type
+                        == amplitude.magnitude_hint)]
+                if len(tr_mag) > 0:
+                    if len(tr_mag) > 1:
+                        msg = 'Nordic files need one trace-amplitude for ' + \
+                            'each trace / station-magnitude only.'
+                        warnings.warn(msg)
+                    mag_residual = tr_mag[0].mag_errors.uncertainty
+                    residual = _str_conv(mag_residual, rounded=2).rjust(5)[0:5]
             else:  # phase pick
                 par1 = '      ' + polarity
                 if arrival.time_residual is not None:
