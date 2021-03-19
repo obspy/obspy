@@ -2,6 +2,11 @@ master
 ======
 
 Changes:
+ - obspy.clients.seishub:
+   * added deprecation message
+ - obspy.db:
+   * added deprecation message
+   * removed from default test suite
  - obspy.core:
    * add option to suppress evalresp sensitivity mismatch warning when removing
      instrument response (see #2677)

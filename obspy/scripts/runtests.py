@@ -77,10 +77,10 @@ the names of all available test cases.
         $ obspy-runtests --help
 
 Of course you may combine most of the options here, e.g. in order to test
-all modules except the module obspy.io.sh and obspy.clients.seishub, have a
+all modules except the module obspy.io.sh and obspy.clients.iris, have a
 verbose output and report everything, you would run::
 
-        $ obspy-runtests -r -v -x clients.seishub -x io.sh --all
+        $ obspy-runtests -r -v -x clients.iris -x io.sh --all
 """
 import copy
 import doctest
@@ -108,6 +108,7 @@ from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
 
 
+DEPRECATED_MODULES = ['clients.arclink', 'clients.seishub', 'db']
 HARD_DEPENDENCIES = [
     "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
     "sqlalchemy", "decorator", "requests"]
@@ -148,7 +149,7 @@ def _get_suites(verbosity=1, names=[]):
     status = True
     import_failures = {}
     for name in names:
-        if name == 'clients.arclink':
+        if name in DEPRECATED_MODULES:
             continue
         suite = []
         if name in ALL_MODULES:

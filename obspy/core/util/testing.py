@@ -32,9 +32,7 @@ from obspy.core.util.misc import MatplotlibBackend
 # A checker routine should return either an empty string (tests can and will
 # be executed) or a message explaining why tests can not be executed (all
 # tests of corresponding module will be skipped).
-MODULE_TEST_SKIP_CHECKS = {
-    'clients.seishub':
-        'obspy.clients.seishub.tests.test_client._check_server_availability'}
+MODULE_TEST_SKIP_CHECKS = {}
 
 
 def add_unittests(testsuite, module_name):
