@@ -822,7 +822,7 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         # Create a new obspy.event.Pick class for this pick
         _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
                                         channel_code=line[6:8].strip(),
-                                        network_code='NA')
+                                        network_code='  ')
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
         try:
@@ -1263,9 +1263,10 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     """
     # First we need to work out what to call the s-file and open it
     # Check that user ID is the correct length
-    if len(userid) != 4:
-        raise NordicParsingError('%s User ID must be 4 characters long'
+    if len(userid) > 4:
+        raise NordicParsingError('%s User ID must be at most 4 characters long'
                                  % userid)
+    userid = userid.ljust(4)
     # Check that outdir exists
     if not os.path.isdir(outdir):
         raise NordicParsingError('Out path does not exist, I will not '
@@ -1681,10 +1682,10 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             else:
                 ain = ' '
             # Extract time residual
-            if arrival.time_residual is not None:
-                timeres = _str_conv(arrival.time_residual, rounded=2)
-            else:
-                timeres = ' '
+            timeres = ' '
+            if hasattr(arrival, 'time_residual'):
+                if arrival.time_residual is not None:
+                    timeres = _str_conv(arrival.time_residual, rounded=2)
             # Extract distance
             if arrival.distance is not None:
                 distance = degrees2kilometers(arrival.distance)
@@ -1761,6 +1762,10 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             eval_mode = " "
         # Generate a print string and attach it to the list
         channel_code = pick.waveform_id.channel_code or '   '
+        if len(channel_code) == 1:
+            channel_code = '  ' + channel_code[-1]
+        if len(channel_code) == 2:
+            channel_code = channel_code[0] + ' ' + channel_code[-1]
         network_code = pick.waveform_id.network_code or '  '
         location_code = pick.waveform_id.location_code or '  '
         pick_hour = pick.time.hour
@@ -1853,23 +1858,27 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                     residual = _str_conv(mag_residual, rounded=2).rjust(5)[0:5]
             else:  # phase pick
                 par1 = '      ' + polarity
-                if arrival.time_residual is not None:
-                    residual = _str_conv(arrival.time_residual, rounded=2
-                                         ).rjust(5)[0:5]
+                if hasattr(arrival, 'time_residual'):
+                    if arrival.time_residual is not None:
+                        residual = _str_conv(arrival.time_residual, rounded=2
+                                             ).rjust(5)[0:5]
 
+            agency = '   '
+            author = '   '
             if pick.creation_info is not None:
-                agency = (pick.creation_info.agency_id.ljust(3)[0:3] or '   ')
-                author = (pick.creation_info.author.ljust(3)[0:3] or '   ')
-            else:
-                author = '   '
-                agency = '   '
-            finalweight = "   "
+                if pick.creation_info.agency_id is not None:
+                    agency = (pick.creation_info.agency_id.ljust(3)[0:3]
+                              or '   ')
+                if pick.creation_info.author is not None:
+                    author = (pick.creation_info.author.ljust(3)[0:3] or '   ')
+
+            finalweight = "  "
             pick_string_formatter = (
                 " {station:5s}{channel:3s} {network:2s}{location:2s} "
                 "{impulsivity:1s}{phase_hint:8s}{weight:1s}{eval_mode:1s}"
                 "{hour:2d}{minute:2d} {seconds:6s}"
                 "{par1:7s}{par2:6s} {agency:3s} {author:3s}"
-                "{ain:5s}{residual:5s}{finalweight:3s}"
+                "{ain:5s}{residual:5s}{finalweight:2s}"
                 "{distance:5s} {caz:3s} ")
             pick_strings.append(pick_string_formatter.format(
                 station=pick.waveform_id.station_code, channel=channel_code,
