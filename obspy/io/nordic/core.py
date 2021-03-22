@@ -715,7 +715,8 @@ def check_nordic_format_version(pickline):
         # Check whether the old-formatted seconds are a float rather than int.
         # If they are int, then it is probably new nordic format.
         try:
-            if str(int(old_format_secs.replace(' ', ''))) == old_format_secs:
+            if str(int(old_format_secs.replace(' ', '').replace('A','')))\
+                    == old_format_secs:
                 nordic_format = 'NEW'
         except ValueError:
             nordic_format = 'OLD'
