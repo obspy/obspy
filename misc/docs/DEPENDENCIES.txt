@@ -9,7 +9,7 @@ sphinx-bootstrap-theme
 ## for 'make coverage' only:
 coverage==3.5
 ## for 'make citations' only:
-pybtex>=0.16
+pybtex>=0.16,<0.22
 ## for 'make docset' only:
 doc2dash
 
