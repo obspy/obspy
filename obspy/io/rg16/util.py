@@ -33,12 +33,15 @@ def _read(fi, position, length, dtype, left_part=True):
     """
     Read one or more bytes using provided datatype.
 
+    This function supports a few datatype options numpy does not support,
+    otherwise the arguments are just passed to numpy.
+
     :param fi: A buffer containing the bytes to read.
     :param position: Byte position to start reading.
     :type position: int
     :param length: Length, in bytes, of data to read.
     :type length: int or float
-    :param dtype: bcd, binary or IEEE
+    :param dtype: bcd, binary, IEEE or any numpy supported datatype.
     :type dtype: str
     :param left_part: If True, start the reading from the first half part
         of the byte position. If False, start the reading from the second
@@ -52,7 +55,7 @@ def _read(fi, position, length, dtype, left_part=True):
         return _read_binary(fi, length, left_part)
     if dtype == 'IEEE':
         dtype = '>f4'
-    # dtype should be understood by numpy, dispatch to frombuffer
+    # If we get here dtype should be understood by numpy
     data = np.frombuffer(fi.read(int(length)), dtype)
     return data[0] if len(data) == 1 else data
 
