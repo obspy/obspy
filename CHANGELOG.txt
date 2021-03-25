@@ -2,6 +2,11 @@ master
 ======
 
 Changes:
+ - obspy.clients.seishub:
+   * added deprecation message
+ - obspy.db:
+   * added deprecation message
+   * removed from default test suite
  - obspy.core:
    * add option to suppress evalresp sensitivity mismatch warning when removing
      instrument response (see #2677)
@@ -9,6 +14,10 @@ Changes:
      (see #2742)
    * add support for pathlib.Path objects in read(), read_inventory() and
      read_events() functions (see #2743)
+ - obspy.clients.fdsn:
+   * introduce fine-grained FDSN client exceptions (see #2653)
+   * support for "eventtype" parameter in get_events(), as specified in version
+     1.2 of the FDSN event web service (see #2780)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.io.css:
@@ -27,8 +36,6 @@ Changes:
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
- - obspy.clients.fdsn:
-   * introduce fine-grained FDSN client exceptions (see #2653)
  - obspy.signal.array_analysis
    * fixed an issue in array_processing function returning wrong times
      for matplotlib versions >= 3.3 due to the epoch change in matplotlib
@@ -36,6 +43,9 @@ Changes:
  - obspy.signal.cross_correlation:
    * Remove deprecated xcorr function, remove deprecated domain keyword
      argument in correlate function (see #1979)
+ - obspy.signal.spectral_estimation.PPSD:
+   * Added special handling option for infrasound data and global infrasound noise
+     models for plotting (see #2740)
 
 maintenance_1.2.x
 =================
@@ -43,11 +53,16 @@ maintenance_1.2.x
 Changes:
  - obspy.core:
    * Inventory addition now consistently uses shallow copies (#2675, #2694)
+ - obspy.clients.fdsn:
+   * add URL mapping for IRISPH5 (see #2739)
  - obspy.clients.seedlink:
    * Fix a bug in basic client when printing debug output (see #2734)
  - obspy.io.gse2:
    * When reading GSE2 bulletins, station magnitudes now include waveform IDs
      and have associated station magnitude contributions (see #2718)
+ - obspy.io.xseed:
+   * Properly read a given value of 0.0 in station elevation and not replace it
+     with bogus value (see #2763)
 
 1.2.2 (doi: 10.5281/zenodo.3921997)
 ===================================

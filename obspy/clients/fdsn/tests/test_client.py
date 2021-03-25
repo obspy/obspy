@@ -498,6 +498,18 @@ class ClientTestCase(unittest.TestCase):
             # does not only check the preferred magnitude..
             self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
 
+    def test_irisph5_event(self):
+        """
+        Tests the IRISPH5 URL mapping, which is special due to its custom
+        subpath.
+        """
+        client = Client('IRISPH5')
+
+        # Event id query.
+        cat = client.get_events(catalog='8A')
+        self.assertEqual(len(cat), 19)
+        self.assertEqual(cat[0].event_type, 'controlled explosion')
+
     def test_iris_example_queries_station(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.

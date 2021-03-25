@@ -36,17 +36,6 @@ class MinMaxAmplitudeFeature(object):
         Generates statistics about the amplitude values.
 
         This may take a while to calculate - use a moderate looping interval.
-
-        .. rubric:: Example
-
-        >>> from obspy import Trace
-        >>> import numpy as np
-        >>> tr = Trace(data=np.arange(-5,5))
-        >>> result = MinMaxAmplitudeFeature().process(tr)
-        >>> result['max']
-        4.0
-        >>> result['upper_quantile']
-        1.75
         """
         result = {}
         result['min'] = float(trace.data.min())

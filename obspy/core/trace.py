@@ -2510,6 +2510,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             plotting with absolute time on axes, see :mod:`matplotlib.dates`
             and :func:`matplotlib.dates.date2num`, ``type="matplotlib"``)
 
+        .. note::
+            The option ``type="utcdatetime"`` shouldn't be used for Traces with
+            a large sample size as it will generate an array of thousands of
+            :class:`UTCDateTime.timestamp <obspy.core.utcdatetime.UTCDateTime>`
+            objects.
+
         >>> from obspy import read, UTCDateTime
         >>> tr = read()[0]
 
@@ -2559,8 +2565,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         elif type == "timestamp":
             time_array = time_array + self.stats.starttime.timestamp
         elif type == "utcdatetime":
-            time_array = np.array(
-                [self.stats.starttime + t_ for t_ in time_array])
+            time_array = np.vectorize(
+                lambda t: self.stats.starttime + t,
+                otypes=[UTCDateTime])(time_array)
         elif type == "matplotlib":
             from matplotlib.dates import date2num
             time_array = (

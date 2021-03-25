@@ -46,8 +46,12 @@ from obspy.signal.invsim import paz_to_freq_resp, evalresp
 
 dtiny = np.finfo(0.0).tiny
 
-NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
-                                "data", "noise_models.npz")
+NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__), "data",
+                                "noise_models.npz")
+
+# Noise models for special_handling="infrasound"
+NOISE_MODEL_FILE_INF = os.path.join(os.path.dirname(__file__), "data",
+                                    "idc_noise_models.npz")
 
 earthquake_models = {
     (1.5, 10): [[7.0700000e-01, 1.4140000e+00, 2.8280000e+00, 5.6600000e+00,
@@ -402,6 +406,7 @@ class PPSD(object):
         # save things related to kwargs
         self.skip_on_gaps = skip_on_gaps
         self.db_bins = db_bins
+
         self.ppsd_length = ppsd_length
         self.overlap = overlap
         self.special_handling = special_handling and special_handling.lower()
@@ -412,6 +417,9 @@ class PPSD(object):
                        "stating the overall sensitivity`.")
                 raise TypeError(msg)
         elif self.special_handling == 'hydrophone':
+            pass
+        # Add special handling option for infrasound
+        elif self.special_handling == 'infrasound':
             pass
         elif self.special_handling is not None:
             msg = "Unsupported value for 'special_handling' parameter: %s"
@@ -906,6 +914,7 @@ class PPSD(object):
         :returns: `True` if segment was successfully processed,
             `False` otherwise.
         """
+
         # XXX DIRTY HACK!!
         if len(tr) == self.len + 1:
             tr.data = tr.data[:-1]
@@ -971,11 +980,11 @@ class PPSD(object):
             w = 2.0 * math.pi * _freq[1:]
             w = w[::-1]
             # Here we do the response removal
-            # Do not differentiate when `special_handling="hydrophone"`
-            if self.special_handling == "hydrophone":
+            if self.special_handling in ("hydrophone", "infrasound"):
                 spec = spec / respamp
             else:
                 spec = (w ** 2) * spec / respamp
+
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny
@@ -1637,6 +1646,8 @@ class PPSD(object):
 
         if self.special_handling is None:
             cb.ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        elif self.special_handling == "infrasound":
+            ax.set_ylabel('Amplitude [$Pa^2/Hz$] [dB]')
         else:
             cb.ax.set_ylabel('Amplitude [dB]')
         ax.set_ylabel('Period [s]')
@@ -1801,6 +1812,8 @@ class PPSD(object):
 
         if self.special_handling is None:
             ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        elif self.special_handling == "infrasound":
+            ax.set_ylabel('Amplitude [$Pa^2/Hz$] [dB]')
         else:
             ax.set_ylabel('Amplitude [dB]')
 
@@ -1942,8 +1955,16 @@ class PPSD(object):
                 color = "black"
             ax.plot(xdata, mean_, color=color, zorder=9)
 
+        # Choose the correct noise model
+        if self.special_handling == "infrasound":
+            # Use IDC global infrasound models
+            models = (get_idc_infra_hi_noise(), get_idc_infra_low_noise())
+        else:
+            # Use Peterson NHNM and NLNM
+            models = (get_nhnm(), get_nlnm())
+
         if show_noise_models:
-            for periods, noise_model in (get_nhnm(), get_nlnm()):
+            for periods, noise_model in models:
                 if xaxis_frequency:
                     xdata = 1.0 / periods
                 else:
@@ -2027,6 +2048,8 @@ class PPSD(object):
         ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
         if self.special_handling is None:
             ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        elif self.special_handling == "infrasound":
+            ax.set_ylabel('Amplitude [$Pa^2/Hz$] [dB]')
         else:
             ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%g"))
@@ -2201,6 +2224,28 @@ def get_nhnm():
     For information on New High/Low Noise Model see [Peterson1993]_.
     """
     data = np.load(NOISE_MODEL_FILE)
+    periods = data['model_periods']
+    nlnm = data['high_noise']
+    return (periods, nlnm)
+
+
+def get_idc_infra_low_noise():
+    """
+    Returns periods and psd values for the IDC infrasound global low noise
+    model. For information on the IDC noise models, see [Brown2012]_.
+    """
+    data = np.load(NOISE_MODEL_FILE_INF)
+    periods = data['model_periods']
+    nlnm = data['low_noise']
+    return (periods, nlnm)
+
+
+def get_idc_infra_hi_noise():
+    """
+    Returns periods and psd values for the IDC infrasound global high noise
+    model. For information on the IDC noise models, see [Brown2012]_.
+    """
+    data = np.load(NOISE_MODEL_FILE_INF)
     periods = data['model_periods']
     nhnm = data['high_noise']
     return (periods, nhnm)

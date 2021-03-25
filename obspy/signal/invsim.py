@@ -37,7 +37,8 @@ from obspy.signal.util import _npts2nfft
 
 
 # Sensitivity is 2080 according to:
-# P. Bormann: New Manual of Seismological Observatory Practice
+# Bormann, P. (ed.) (2002). IASPEI New Manual of Seismological Observatory
+# Practice (NMSOP), GeoForschungsZentrum Potsdam, ISBN: 3-9808780-0-7,
 # IASPEI Chapter 3, page 24
 # (PITSA has 2800)
 WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],

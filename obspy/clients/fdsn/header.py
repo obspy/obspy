@@ -101,6 +101,7 @@ URL_MAPPINGS = {
     "INGV": "http://webservices.ingv.it",
     "IPGP": "http://ws.ipgp.fr",
     "IRIS": "http://service.iris.edu",
+    "IRISPH5": "http://service.iris.edu",
     "ISC": "http://isc-mirror.iris.washington.edu",
     "KNMI": "http://rdsa.knmi.nl",
     "KOERI": "http://eida.koeri.boun.edu.tr",
@@ -117,6 +118,10 @@ URL_MAPPINGS = {
     "UIB-NORSAR": "http://eida.geo.uib.no",
     "USGS": "http://earthquake.usgs.gov",
     "USP": "http://sismo.iag.usp.br"}
+URL_MAPPING_SUBPATHS = {
+    "IRISPH5": "/ph5ws",
+    }
+URL_DEFAULT_SUBPATH = '/fdsnws'
 
 FDSNWS = ("dataselect", "event", "station")
 
@@ -152,8 +157,9 @@ DEFAULT_EVENT_PARAMETERS = [
 
 OPTIONAL_EVENT_PARAMETERS = [
     "latitude", "longitude", "minradius", "maxradius", "magnitudetype",
-    "includeallorigins", "includeallmagnitudes", "includearrivals", "eventid",
-    "limit", "offset", "catalog", "contributor", "updatedafter"]
+    "eventtype", "includeallorigins", "includeallmagnitudes",
+    "includearrivals", "eventid", "limit", "offset", "catalog", "contributor",
+    "updatedafter"]
 
 DEFAULT_PARAMETERS = {
     "dataselect": DEFAULT_DATASELECT_PARAMETERS,
@@ -221,6 +227,7 @@ DEFAULT_TYPES = {
     "includearrivals": bool,
     "matchtimeseries": bool,
     "eventid": str,
+    "eventtype": str,
     "limit": int,
     "offset": int,
     "orderby": str,
@@ -264,6 +271,7 @@ DEFAULT_VALUES = {
     "includearrivals": False,
     "matchtimeseries": False,
     "eventid": None,
+    "eventtype": None,
     "limit": None,
     "offset": 1,
     "orderby": "time",

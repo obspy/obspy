@@ -8,7 +8,7 @@ Epicenters (PDE) Bulletin.
 Currently, only the mchedr (machine readable Earthquake Data Report)
 format is supported.
 
-.. seealso:: http://earthquake.usgs.gov/data/pde.php
+.. seealso:: https://earthquake.usgs.gov/data/comcat/catalog/us/
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Claudio Satriano
