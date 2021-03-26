@@ -34,6 +34,7 @@ available providers are:
 >>> from obspy.clients.fdsn.header import URL_MAPPINGS
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<11} {1}".format(key,  URL_MAPPINGS[key]))
+AUSPASS     http://auspass.edu.au
 BGR         http://eida.bgr.de
 EMSC        http://www.seismicportal.eu
 ETH         http://eida.ethz.ch
