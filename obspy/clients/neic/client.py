@@ -164,7 +164,7 @@ class Client(object):
         IU.ANMO.00.BH... | 40.0 Hz, 401 samples
         """
         start = str(UTCDateTime(starttime)).replace("T", " ").replace("Z", "")
-        line = "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'\t" % \
+        line = "'-s' '%s' '-b' '%s' '-d' '%s'\t" % \
             (seedname, start, duration)
         if self.debug:
             print(ascdate() + " " + asctime() + " line=" + line)
