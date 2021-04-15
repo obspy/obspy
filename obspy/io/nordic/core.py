@@ -238,7 +238,7 @@ def _read_mags(line, event):
     for index in [59, 67, 75]:
         if not line[index].isspace():
             magnitudes.append(Magnitude(
-                mag=_float_conv(line[index - 3:index]),
+                mag=_float_conv(line[index - 4:index]),
                 magnitude_type=_nortoevmag(line[index]),
                 creation_info=CreationInfo(
                     agency_id=line[index + 1:index + 4].strip()),
