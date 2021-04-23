@@ -44,7 +44,7 @@
  OLDACT:UPS 21-01-22 12:12 OP:mls  STATUS:               ID:20210103034523 S   3
  ACTION:UPD 21-03-03 10:39 OP:mls  STATUS:               ID:20210103034523 S   I
  STAT COM NTLO IPHASE   W HHMM SS.SSS   PAR1  PAR2 AGA OPE  AIN  RES W  DIS CAZ7
- BAS17HHZ NS   IP          345 26.970      C       BER ml 147.0 0.4810 8.33 346 
+ BAS17HHZ NS   IP        A 345 26.970      C       BER ml 147.0 0.4810 8.33 346 
  BAS17HHE NS   ES          345 29.600              BER ml 147.0 1.2010 8.33 346 
  BAS17HHZ NS    IAML       345 29.670   27.7  0.09 BER mls     -0.30   8.33 346 
  BAS16HHZ NS   IP          345 27.850      C       BER ml 122.0 0.2510 18.5 317 
@@ -60,7 +60,7 @@
  ASK  HHN NS00 ES          345 35.910              BER ml  98.0-0.2910 42.1 344 
  ASK  HHZ NS00  IAML       345 36.690   12.9  0.14 BER mls     -0.20   42.1 344 
  BAS0DHHZ NS   IP          345 30.900      C       BER ml  98.0-0.3510 43.8 353 
- BAS0DHHE NS   ES          345 36.450              BER ml  98.0-0.2310 43.8 353 
+ BAS0DHHE NS   E           345 36.450              BER ml  98.0-0.2310 43.8 353 
  BAS0DHHZ NS    IAML       345 36.790   23.1  0.16 BER mls      0.00   43.8 353 
  BAS03HHZ NS   IP          345 31.930      C       BER ml  95.0-0.3710 50.9 340 
  BAS03HHE NS   ES          345 38.170              BER ml  95.0-0.3410 50.9 340 

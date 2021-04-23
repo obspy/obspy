@@ -49,6 +49,10 @@ INV_ONSET_MAPPING = {item: key for key, item in ONSET_MAPPING.items()}
 EVALUATION_MAPPING = {'A': 'automatic', ' ': 'manual'}
 INV_EVALUTATION_MAPPING = {
     item: key for key, item in EVALUATION_MAPPING.items()}
+OLD_PHASE_HEADER_LINE = (" STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU"
+                         " VELO AIN AR TRES W  DIS CAZ7\n")
+NEW_PHASE_HEADER_LINE = (" STAT COM NTLO IPHASE   W HHMM SS.SSS   PAR1  PAR2"
+                         " AGA OPE  AIN  RES W  DIS CAZ7\n")
 
 
 def _is_sfile(sfile, encoding='latin-1'):
@@ -715,8 +719,8 @@ def check_nordic_format_version(pickline):
         # Check whether the old-formatted seconds are a float rather than int.
         # If they are int, then it is probably new nordic format.
         try:
-            if str(int(old_format_secs.replace(' ', '').replace('A', '')))\
-                    == old_format_secs:
+            comp_str = old_format_secs.replace(' ', '').replace('A', '')
+            if str(int(comp_str)) == old_format_secs:
                 nordic_format = 'NEW'
         except ValueError:
             nordic_format = 'OLD'
@@ -822,8 +826,7 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         # finalweight = _int_conv(line[68:70])
         # Create a new obspy.event.Pick class for this pick
         _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
-                                        channel_code=line[6:8].strip(),
-                                        network_code='  ')
+                                        channel_code=line[6:8].strip())
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
         try:
@@ -1163,11 +1166,9 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None,
                 '\n')
         # Write final line of s-file
         if version == 'OLD':
-            f.write(" STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU" +
-                    " VELO AIN AR TRES W  DIS CAZ7\n")
+            f.write(OLD_PHASE_HEADER_LINE)
         elif version == 'NEW':
-            f.write(" STAT COM NTLO IPHASE   W HHMM SS.SSS   PAR1  PAR2" +
-                    " AGA OPE  AIN  RES W  DIS CAZ7\n")
+            f.write(NEW_PHASE_HEADER_LINE)
     return sfile
 
 
@@ -1449,11 +1450,9 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                     '6'.rjust(79 - len(os.path.basename(wavefile))) + '\n')
     # Write final line of s-file
     if version == 'OLD':
-        sfile.write(" STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU" +
-                    " VELO AIN AR TRES W  DIS CAZ7\n")
+        sfile.write(OLD_PHASE_HEADER_LINE)
     elif version == 'NEW':
-        sfile.write(" STAT COM NTLO IPHASE   W HHMM SS.SSS   PAR1  PAR2" +
-                    " AGA OPE  AIN  RES W  DIS CAZ7\n")
+        sfile.write(NEW_PHASE_HEADER_LINE)
     # Now call the populate sfile function
     if len(event.picks) > 0:
         newpicks = '\n'.join(nordpick(event, high_accuracy=high_accuracy,
