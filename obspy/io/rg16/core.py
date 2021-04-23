@@ -102,7 +102,9 @@ def _cmp_nbr_records(fi):
     channels_number = set()
 
     for _, val in channel_sets_descriptor.items():
-        channels_number.add(val['RU_channel_number'])
+        chan_num = val['RU_channel_number'] or val['channel_set_number']
+        channels_number.add(chan_num)
+
     nbr_component = len(channels_number)
     extended_header_2 = initial_header['extended_headers']['2']
     nbr_time_slices = extended_header_2['nbr_time_slices']
@@ -511,6 +513,7 @@ def _is_rg16(filename, **kwargs):
     """
     try:
         sample_format = _read(filename, 2, 2, 'bcd')
+        sample_format = _read(filename, 2, 2, 'bcd')
         manufacturer_code = _read(filename, 16, 1, 'bcd')
         version = _read(filename, 42, 2, 'binary')
     except ValueError:  # if file too small
@@ -602,6 +605,11 @@ def _read_channel_set(fi, start_byte):
     Extract information contained in the ith channel set descriptor.
     """
     nbr_32_ext = _read(fi, start_byte + 28, 0.5, 'binary', False)
+    # first read alias freq. This can be written as BCD or int32
+    try:
+        alias_filter_freq = _read(fi, start_byte + 12, 2, 'bcd')
+    except ValueError:
+        alias_filter_freq = _read(fi, start_byte + 12, 2, '>i2')
 
     channel_set = dict(
         scan_type_number=_read(fi, start_byte, 1, 'bcd'),
@@ -614,7 +622,7 @@ def _read_channel_set(fi, start_byte):
         channel_type_code=_read(fi, start_byte + 10, 0.5, 'binary'),
         nbr_sub_scans=_read(fi, start_byte + 11, 0.5, 'bcd'),
         gain_control_type=_read(fi, start_byte + 11, 0.5, 'bcd', False),
-        alias_filter_frequency=_read(fi, start_byte + 12, 2, 'bcd'),
+        alias_filter_frequency=alias_filter_freq,
         alias_filter_slope=_read(fi, start_byte + 14, 2, 'bcd'),
         low_cut_filter_freq=_read(fi, start_byte + 16, 2, 'bcd'),
         low_cut_filter_slope=_read(fi, start_byte + 18, 2, 'bcd'),
@@ -627,9 +635,7 @@ def _read_channel_set(fi, start_byte):
         vertical_stack_size=_read(fi, start_byte + 29, 1, 'binary'),
         RU_channel_number=_read(fi, start_byte + 30, 1, 'binary'),
         array_forming=_read(fi, start_byte + 31, 1, 'binary'),
-
     )
-
     return channel_set
 
 

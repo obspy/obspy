@@ -17,6 +17,10 @@ ONE_CHAN_FCNT = os.path.join(TEST_FCNT_DIRECTORY,
                              'one_channel_many_traces.fcnt')
 THREE_CHAN_FCNT = os.path.join(TEST_FCNT_DIRECTORY,
                                'three_chans_six_traces.fcnt')
+BAD_ALIAS_FILTER = os.path.join(TEST_FCNT_DIRECTORY,
+                                'channel_set_bad_alias_filter.dat')
+HEADER_BLOCK_SAME_RU_CODE = os.path.join(TEST_FCNT_DIRECTORY,
+                                         'header_3_chan_one_code.dat')
 FCNT_FILES = [ONE_CHAN_FCNT, THREE_CHAN_FCNT]
 
 
@@ -536,6 +540,25 @@ class TestReadRG16Headers(unittest.TestCase):
         self.assertEqual(extended_header_3['receiver_line_number'], 1)
         self.assertEqual(extended_header_3['receiver_point'], 1)
         self.assertEqual(extended_header_3['receiver_point_index'], 1)
+
+    def test_bad_alias_filter(self):
+        """
+        Tests for when alias filter is written as an int32 rather than BSD in
+        the channel descriptor block.
+        """
+        with open(BAD_ALIAS_FILTER, 'rb') as fi:
+            out = rc._read_channel_set(fi, 0)
+        alias_freq = out['alias_filter_frequency']
+        self.assertEqual(alias_freq, 207)
+
+    def test_3_channel_header(self):
+        """
+        Tests for header which has three traces but identical RU channel
+        number.
+        """
+        with open(HEADER_BLOCK_SAME_RU_CODE, 'rb') as fi:
+            num_records = rc._cmp_nbr_records(fi)
+        self.assertEqual(num_records, 2180 * 3)
 
 
 def suite():
