@@ -21,7 +21,10 @@ Changes:
    * add PHA write support (see #2687)
    * add read support for horizontal and vertical origin uncertainty (see #2687)
  - obspy.io.nordic:
-   * add read and write support for New Nordic format (see #....)
+   * add read and write support for New Nordic format (see #2814)
+   * fix bug where negative magnitudes were not read properly
+   * for reading picks in Old Nordic format, set network code to None
+     (was 'NA' previously)
  - obspy.io.reftek:
    * enable reading data with floating point sampling rates like low sampling
      rate state-of-health channels (see #2678)
