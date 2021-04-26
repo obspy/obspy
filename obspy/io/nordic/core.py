@@ -25,6 +25,7 @@ import warnings
 import datetime
 import os
 import io
+import re
 from math import sqrt
 
 from obspy import UTCDateTime, read
@@ -33,7 +34,7 @@ from obspy.core.event import (
     Event, Origin, Magnitude, StationMagnitude, Catalog, EventDescription,
     CreationInfo, OriginQuality, OriginUncertainty, Pick, WaveformStreamID,
     Arrival, Amplitude, FocalMechanism, MomentTensor, NodalPlane, NodalPlanes,
-    QuantityError, Tensor, ResourceIdentifier)
+    QuantityError, Tensor, ResourceIdentifier, Comment)
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
@@ -436,6 +437,7 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False):
     new_event = _read_highaccuracy(tagged_lines, new_event)
     new_event = _read_focal_mechanisms(tagged_lines, new_event)
     new_event = _read_moment_tensors(tagged_lines, new_event)
+    new_event = _read_comments(tagged_lines, new_event)
     if return_wavnames:
         wav_names.append(_readwavename(tagged_lines=tagged_lines['6']))
     new_event = _read_picks(tagged_lines=tagged_lines, new_event=new_event)
@@ -639,6 +641,35 @@ def _read_moment_tensors(tagged_lines, event):
                 method_id=ResourceIdentifier(
                     "smi:nc.anss.org/momentTensor/" + mt_line_1[70:77].strip()
                 ))))
+    return event
+
+
+def _read_comments(tagged_lines, event):
+    """
+    Read comment lines from s-file
+
+    :param tagged_lines: Lines keyed by line type
+    :type tagged_lines: dict
+    :returns: updated event
+    :rtype: :class:`~obspy.core.event.event.Event`
+    """
+    if '3' not in tagged_lines.keys():
+        return event
+    # Group Comment lines together
+    # com_lines = sorted(tagged_lines['3'], key=lambda tup: tup[1])
+    com_lines = tagged_lines['3']
+    # can contain XNEAR, XFAR, SDEP for hypocenter
+    # can contain SPEC
+    for seisan_comment, line in com_lines:
+        # Remove end-of-line characters and empty text
+        save_comment = re.sub('3\\n$', '', seisan_comment).strip()
+        event.comments.append(Comment(text=save_comment))
+
+    # Add waveform-file names as comment to event
+    wav_lines = tagged_lines['6']
+    for wav_line, line in wav_lines:
+        save_comment = 'WAVE: ' + re.sub('6\\n', '', wav_line).strip()
+        event.comments.append(Comment(text=save_comment))
     return event
 
 
@@ -1446,8 +1477,13 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             userid.ljust(4)[0:4], evtime.strftime("%Y%m%d%H%M%S")))
     # Write line-type 6 of s-file
     for wavefile in wavefiles:
+        # Do not write names that indicate there's not a waveform file
+        if wavefile == '' or wavefile == 'DUMMY' or wavefile is None:
+            continue
         sfile.write(' ' + os.path.basename(wavefile) +
                     '6'.rjust(79 - len(os.path.basename(wavefile))) + '\n')
+    for comment in event.comments:
+        sfile.write(_write_comment(comment) + '\n')
     # Write final line of s-file
     if version == 'OLD':
         sfile.write(OLD_PHASE_HEADER_LINE)
@@ -1606,6 +1642,34 @@ def _write_hyp_error_line(origin):
     error_line[32:38] = (_str_conv(errors['x_err'], 1)).rjust(6)
     error_line[38:43] = (_str_conv(errors['z_err'], 1)).rjust(5)
     return ''.join(error_line)
+
+
+def _write_comment(comment):
+    """
+    Write comment to s-file
+
+    :param comment: comment
+    :type comment: `~obspy.core.event.Comment`
+    :returns: List of String
+
+    """
+    comment_line = list(' ' * 79 + '3')
+    comment_str = comment.text
+    # Check if it's a comment line containing a Seisan-waveform
+    if comment_str.startswith('WAVE: '):
+        comment_str = re.sub('^WAVE: ', '', comment_str)
+        comment_line[-1] = '6'
+
+    n_comment_chars = len(comment_str)
+    if n_comment_chars > 78:
+        UserWarning('Writing of comment-lines to S-file does not currently'
+                    'support lines longer than 78 characters. Will cut line'
+                    'for printing to file.')
+        n_comment_chars = 78
+    comment_line[1:n_comment_chars+1] = comment_str[:n_comment_chars]
+    comment_line = ''.join(comment_line)
+    return comment_line
+
 
 
 def nordpick(event, high_accuracy=True, version='OLD'):
