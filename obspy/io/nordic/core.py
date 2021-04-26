@@ -1477,7 +1477,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     # Write line-type 6 of s-file
     for wavefile in wavefiles:
         # Do not write names that indicate there's not a waveform file
-        if wavefile == '' or wavefile == 'DUMMY' or wavefile is None:
+        if wavefile == '' or wavefile is None:
             continue
         sfile.write(' ' + os.path.basename(wavefile) +
                     '6'.rjust(79 - len(os.path.basename(wavefile))) + '\n')
