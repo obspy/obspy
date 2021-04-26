@@ -655,11 +655,10 @@ def _read_comments(tagged_lines, event):
     """
     if '3' not in tagged_lines.keys():
         return event
-    # Group Comment lines together
-    # com_lines = sorted(tagged_lines['3'], key=lambda tup: tup[1])
+    # Get comment lines
     com_lines = tagged_lines['3']
-    # can contain XNEAR, XFAR, SDEP for hypocenter
-    # can contain SPEC
+    # can contain SPEC which is read in as spectral information - 
+    # should such lines not be read as comments?
     for seisan_comment, line in com_lines:
         # Remove end-of-line characters and empty text
         save_comment = re.sub('3\\n$', '', seisan_comment).strip()
@@ -668,7 +667,7 @@ def _read_comments(tagged_lines, event):
     # Add waveform-file names as comment to event
     wav_lines = tagged_lines['6']
     for wav_line, line in wav_lines:
-        save_comment = 'WAVE: ' + re.sub('6\\n', '', wav_line).strip()
+        save_comment = 'Waveform-filename: ' + re.sub('6\\n', '', wav_line).strip()
         event.comments.append(Comment(text=save_comment))
     return event
 
@@ -1656,8 +1655,8 @@ def _write_comment(comment):
     comment_line = list(' ' * 79 + '3')
     comment_str = comment.text
     # Check if it's a comment line containing a Seisan-waveform
-    if comment_str.startswith('WAVE: '):
-        comment_str = re.sub('^WAVE: ', '', comment_str)
+    if comment_str.startswith('Waveform-filename: '):
+        comment_str = re.sub('^Waveform-filename: ', '', comment_str)
         comment_line[-1] = '6'
 
     n_comment_chars = len(comment_str)
