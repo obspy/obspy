@@ -25,6 +25,7 @@ Changes:
    * fix bug where negative magnitudes were not read properly
    * for reading picks in Old Nordic format, set network code to None
      (was 'NA' previously)
+   * stop writing waveform-file link to a DUMMY-file by default
  - obspy.io.reftek:
    * enable reading data with floating point sampling rates like low sampling
      rate state-of-health channels (see #2678)
