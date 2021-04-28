@@ -657,7 +657,7 @@ def _read_comments(tagged_lines, event):
         return event
     # Get comment lines
     com_lines = tagged_lines['3']
-    # can contain SPEC which is read in as spectral information - 
+    # can contain SPEC which is read in as spectral information -
     # should such lines not be read as comments?
     for seisan_comment, line in com_lines:
         # Remove end-of-line characters and empty text
@@ -667,7 +667,8 @@ def _read_comments(tagged_lines, event):
     # Add waveform-file names as comment to event
     wav_lines = tagged_lines['6']
     for wav_line, line in wav_lines:
-        save_comment = 'Waveform-filename: ' + re.sub('6\\n', '', wav_line).strip()
+        save_comment = 'Waveform-filename: ' + re.sub(
+            '6\\n', '', wav_line).strip()
         event.comments.append(Comment(text=save_comment))
     return event
 
@@ -1232,7 +1233,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
         raise ValueError('Nordic format can be ''OLD'' or ''NEW'', not '
                          + version)
     if not wavefiles:
-        wavefiles = ['DUMMY' for _i in range(len(catalog))]
+        wavefiles = ['' for _i in range(len(catalog))]
     with open(filename, 'w') as fout:
         for event, wavfile in zip(catalog, wavefiles):
             select = io.StringIO()
@@ -1246,7 +1247,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
 
 
 def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
-                  wavefiles='DUMMY', explosion=False, version='OLD',
+                  wavefiles=None, explosion=False, version='OLD',
                   overwrite=True, string_io=None, high_accuracy=True):
     """
     Write an :class:`~obspy.core.event.Event` to a nordic formatted s-file.
@@ -1668,7 +1669,6 @@ def _write_comment(comment):
     comment_line[1:n_comment_chars+1] = comment_str[:n_comment_chars]
     comment_line = ''.join(comment_line)
     return comment_line
-
 
 
 def nordpick(event, high_accuracy=True, version='OLD'):
