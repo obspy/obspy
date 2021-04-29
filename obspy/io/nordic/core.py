@@ -1483,7 +1483,10 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         sfile.write(' ' + os.path.basename(wavefile) +
                     '6'.rjust(79 - len(os.path.basename(wavefile))) + '\n')
     for comment in event.comments:
-        sfile.write(_write_comment(comment) + '\n')
+        nordic_comment = _write_comment(comment)
+        if nordic_comment is None:
+            continue
+        sfile.write(nordic_comment + '\n')
     # Write final line of s-file
     if version == 'OLD':
         sfile.write(OLD_PHASE_HEADER_LINE)
@@ -1654,6 +1657,8 @@ def _write_comment(comment):
 
     """
     comment_line = list(' ' * 79 + '3')
+    if comment.text is None:
+        return None
     comment_str = comment.text
     # Check if it's a comment line containing a Seisan-waveform
     if comment_str.startswith('Waveform-filename: '):
@@ -1809,7 +1814,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                     phase_hint = 'IAML'
                     impulsivity = ' '
             else:
-                coda = int(amplitude.generic_amplitude)
+                coda = str(int(amplitude.generic_amplitude))
                 peri = ' '
                 peri_round = False
                 amp = None
