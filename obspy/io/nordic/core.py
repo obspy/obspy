@@ -1478,7 +1478,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     # Write line-type 6 of s-file
     for wavefile in wavefiles:
         # Do not write names that indicate there's not a waveform file
-        if wavefile == '' or wavefile is None:
+        if wavefile == '' or wavefile == 'None' or wavefile is None:
             continue
         sfile.write(' ' + os.path.basename(wavefile) +
                     '6'.rjust(79 - len(os.path.basename(wavefile))) + '\n')
@@ -1899,6 +1899,8 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             residual = '     '
             if coda.strip() != '':
                 par1 = _str_conv(coda).rjust(7)[0:7]  # coda duration
+                phase_hint = 'END'
+                impulsivity = ''
             elif azimuth.strip() != '':  # back-azimuth
                 par1 = _str_conv(azimuth).rjust(7)[0:7]
                 par2 = '    ' + velocity              # app.velocity (not supp)
