@@ -150,7 +150,7 @@ def _evmagtonor(mag_type):
     >>> print(_evmagtonor('bob'))  # doctest: +SKIP
     <BLANKLINE>
     """
-    if mag_type == 'M':
+    if mag_type == 'M' or mag_type is None:
         warnings.warn('Converting generic magnitude to moment magnitude')
         return "W"
     mag = MAG_MAPPING.get(mag_type, '')
