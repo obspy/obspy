@@ -1611,7 +1611,10 @@ def _write_hyp_error_line(origin):
         origin.quality['standard_error'], 2)).rjust(6)
     # try:
     errors = dict()
+    add_uncertainty = False
     if hasattr(origin, 'origin_uncertainty'):
+        if origin.origin_uncertainty is not None:
+            add_uncertainty = True
         # Following will work once Ellipsoid class added
         # if hasattr(origin.origin_uncertainty, 'confidence_ellipsoid'):
         #     cov = Ellipsoid.from_confidence_ellipsoid(
@@ -1624,6 +1627,8 @@ def _write_hyp_error_line(origin):
         #     error_line[55:67] = ("%.4e" % (cov(0, 2) / 1.e06)).rjust(12)
         #     error_line[67:79] = ("%.4e" % (cov(1, 2) / 1.e06)).rjust(12)
         # else:
+
+    if add_uncertainty:
         cov = Ellipse.from_origin_uncertainty(origin.origin_uncertainty).\
               to_cov()
         errors['x_err'] = sqrt(cov(0, 0)) / 1000.0
