@@ -15,9 +15,13 @@ from obspy.io.nordic import NordicParsingError
 from obspy.geodetics.base import kilometers2degrees
 from numpy import cos, radians
 
-
-MAG_MAPPING = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
-               "MW": "W", "MbLg": "G", "Mc": "C"}
+# For a non-exhaustive list of magnitudes, see p. 11 in:
+# https://doi.org/10.2312/GFZ.NMSOP-2_IS_3.2
+MAG_MAPPING = {"ML": "L", "MLv": "L", "Ml": "l",
+               "mB": "B", "mb": "b", "MbLg": "G",
+               "Ms": "s", "MS": "S",
+               "MW": "W", "Mw": "w", "Mc": "C",
+               "MN": "N", "Mn": "n"}
 INV_MAG_MAPPING = {item: key for key, item in MAG_MAPPING.items()}
 # List of currently implemented line-endings, which in Nordic mark what format
 # info in that line will be.
