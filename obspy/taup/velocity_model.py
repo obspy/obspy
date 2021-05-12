@@ -2,7 +2,7 @@
 """
 Velocity model class.
 """
-import os
+from pathlib import Path
 
 import numpy as np
 
@@ -455,7 +455,7 @@ class VelocityModel(object):
         min_radius = 0
         max_radius = data[-1, 0]
         radius_of_planet = data[-1, 0]
-        model_name = os.path.splitext(os.path.basename(filename))[0]
+        model_name = Path(Path(filename).name[0]).suffix
 
         return VelocityModel(
             model_name=model_name,
@@ -594,7 +594,7 @@ class VelocityModel(object):
 
         radius_of_planet = data[-1, 0]
         max_radius = data[-1, 0]
-        model_name = os.path.splitext(os.path.basename(filename))[0]
+        model_name = Path(Path(filename).name).suffix[0]
         # I assume that this is a whole planet model
         # so the maximum depth ==  maximum radius == planet radius.
         return VelocityModel(
