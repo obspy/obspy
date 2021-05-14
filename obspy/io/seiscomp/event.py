@@ -72,7 +72,9 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
                 version, ', '.join(SCHEMA_VERSION))
             raise ValueError(message)
 
-    xslt_filename = Path(__file__).parent / 'data' / ('sc3ml_%s__quakeml_1.2.xsl' % version)
+    xslt_filename = Path(__file__).parent / 'data'
+    xslt_filename = xslt_filename / ('sc3ml_%s__quakeml_1.2.xsl' % version)
+
     transform = etree.XSLT(etree.parse(str(xslt_filename)))
     quakeml_doc = transform(sc3ml_doc,
                             ID_PREFIX=etree.XSLT.strparam(id_prefix))
@@ -109,7 +111,8 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     """
     nsmap_ = getattr(catalog, "nsmap", {})
     quakeml_doc = Pickler(nsmap=nsmap_).dumps(catalog)
-    xslt_filename = Path(__file__).parent / 'data' / 'quakeml_1.2__sc3ml_0.10.xsl'
+    xslt_filename = Path(__file__).parent / 'data' 
+    xslt_filename = xslt_filename / 'quakeml_1.2__sc3ml_0.10.xsl'
     transform = etree.XSLT(etree.parse(str(xslt_filename)))
     sc3ml_doc = transform(etree.parse(io.BytesIO(quakeml_doc)))
 

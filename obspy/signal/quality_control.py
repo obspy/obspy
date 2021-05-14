@@ -604,8 +604,6 @@ class MSEEDMetadata(object):
             raise ValueError(msg)
 
         schema_path = Path(__file__).parent/"data"/"wf_metadata_schema.json"
-
-
         with io.open(schema_path, "rt") as fh:
             schema = json.load(fh)
 

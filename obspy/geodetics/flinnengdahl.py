@@ -3,6 +3,7 @@
 import csv
 from pathlib import Path
 
+
 class FlinnEngdahl(object):
     """
     Load data from asc files and allow to resolve coordinates or region numbers

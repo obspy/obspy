@@ -1030,10 +1030,10 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                 evtype[0] + '.S' + (evtime + add_secs).\
                 datetime.strftime('%Y%m')
             if not (Path(outdir) / sfilename).is_file():
-                sfile_path = Path(outdir) / sfilename 
+                sfile_path = Path(outdir) / sfilename
                 break
             elif overwrite:
-                sfile_path = Path(outdir) / sfilename 
+                sfile_path = Path(outdir) / sfilename
                 break
         else:
             raise NordicParsingError(str(Path(outdir) / sfilename) +

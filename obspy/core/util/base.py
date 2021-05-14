@@ -672,8 +672,8 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
         # URL
         # extract extension if any
         suffix = Path(Path(pathname_or_url).name).suffix
-        if suffix=='':
-            suffix=".tmp"
+        if suffix == '':
+            suffix = ".tmp"
         with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
             download_to_file(url=pathname_or_url, filename_or_buffer=fh)
             generic = callback_func(fh.name, **kwargs)

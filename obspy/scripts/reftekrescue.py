@@ -115,7 +115,8 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
                     # all packets consist of 1024 bytes
                     packet = m[ind:(ind + 1024)]
                     # write to output folder, one file per recording event
-                    filename = Path(output_folder) / ("%s.%04d" % (reftek_id, event_no))
+                    filename = Path(output_folder) /\
+                        ("%s.%04d" % (reftek_id, event_no))
 
                     open(filename, "ab").write(packet)
                 # search for pattern in memory map starting right of last
@@ -132,7 +133,8 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
         else:
             filename_new += ".ok"
         filename_new += ".reftek"
-        Path(Path(output_folder) / filename_old).rename(Path(output_folder) / filename_new)
+        Path(Path(output_folder) / filename_old).rename(Path(output_folder) /
+                                                        filename_new)
 
 
 def main(argv=None):

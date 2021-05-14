@@ -12,7 +12,6 @@ import collections
 import copy
 import fnmatch
 import math
-import os
 import pickle
 import re
 import warnings
@@ -292,7 +291,7 @@ def _create_example_stream(headonly=False):
         else:
             st.append(Trace(header=header))
     from obspy import read_inventory
-    inv = read_inventory( data_dir / "BW_RJOB.xml")
+    inv = read_inventory(data_dir / "BW_RJOB.xml")
     st.attach_response(inv)
     return st
 

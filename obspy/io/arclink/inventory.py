@@ -93,7 +93,8 @@ def validate_arclink_xml(path_or_object):
         element.
     """
     # Get the schema location.
-    schema_location = str(Path(inspect.getfile(inspect.currentframe())).parent / "data" / "arclink_schema.xsd")
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
+    schema_location = str(schema_location / "data" / "arclink_schema.xsd")
 
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
 

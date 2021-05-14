@@ -232,11 +232,12 @@ def _get_cmap(file_name, lut=None, reverse=False):
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
     """
     file_name = file_name.strip()
-  
     file_path = Path(file_name)
     name = str(file_path.parent / file_path.stem)
     suffix = file_path.suffix
-    directory = Path(inspect.getfile(inspect.currentframe())).resolve().parent / "data" 
+    directory = Path(inspect.getfile(
+                                    inspect.currentframe()))
+    directory = directory.resolve().parent / "data"
     full_path = directory / file_name
     # check if it is npz -> segmented colormap or npy -> listed colormap
     # do it like matplotlib, append "_r" to reverted versions
@@ -276,7 +277,9 @@ def _get_all_cmaps():
     :rtype: dict
     """
     cmaps = {}
-    cm_file_pattern = str(Path(inspect.getfile(inspect.currentframe())).parent.resolve()/"data" / "*.np[yz]")
+    cm_file_pattern = Path(inspect.getfile(
+                                            inspect.currentframe()))
+    cm_file_pattern = str(cm_file_pattern.parent.resolve()/"data" / "*.np[yz]")
     for filename in glob.glob(cm_file_pattern):
         filename = Path(filename).name
         for reverse in (True, False):
