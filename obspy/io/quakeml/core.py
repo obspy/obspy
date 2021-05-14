@@ -1888,8 +1888,8 @@ def _validate(xml_file, verbose=False):
         warnings.warn(msg, UserWarning)
         return True
     # Get the schema location.
-    schema_location = Path(inspect.getfile(inspect.currentframe())).parent / "data" / \
-        "QuakeML-1.2.rng"
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
+    schema_location = schema_location / "data" / "QuakeML-1.2.rng"
 
     try:
         relaxng = RelaxNG(etree.parse(schema_location))

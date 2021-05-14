@@ -124,7 +124,6 @@ def _read_css(filename, **kwargs):
     for line in lines:
         npts = int(line[79:87])
         dirname = line[148:212].strip().decode()
-        wfdisc_dfile = line[213:245].strip().decode()
         dfilename = Path(basedir) / dirname / line[213:245].strip().decode()
         offset = int(line[246:256])
         dtype = DTYPE[line[143:145]]
@@ -189,7 +188,7 @@ def _read_nnsa_kb_core(filename, **kwargs):
         dirname = line[149:213].strip().decode()
         filename = Path(basedir) / dirname / \
             line[214:246].strip().decode()
-        
+
         offset = int(line[247:257])
         dtype = DTYPE[line[144:146]]
         if isinstance(dtype, tuple):

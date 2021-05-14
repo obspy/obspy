@@ -121,8 +121,10 @@ def validate_stationxml(path_or_object):
     version = _get_version_from_xmldoc(xmldoc)
 
     # Get the schema location.
-    schema_location = Path(inspect.getfile(inspect.currentframe())).parent / "data" /("fdsn-station-%s.xsd" % version )
-    schema_location = str(schema_location)
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
+
+    schema_location = schema_location / "data"
+    schema_location = str(schema_location / ("fdsn-station-%s.xsd" % version))
 
     if not Path(schema_location).exists():
         msg = "No schema file found to validate StationXML version '%s'"

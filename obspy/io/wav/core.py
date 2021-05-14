@@ -132,8 +132,6 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
         tries to autodetect width from data, uses 4 otherwise
     """
     i = 0
-
-
     file_path = Path(filename)
     base = file_path.parent / file_path.stem
     if width not in WIDTH2DTYPE.keys() and width is not None:

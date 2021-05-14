@@ -3,7 +3,7 @@
 Internal TauModel class.
 """
 from collections import OrderedDict
-from pathlib  import Path
+from pathlib import Path
 from copy import deepcopy
 from itertools import count
 from math import pi
@@ -630,5 +630,6 @@ class TauModel(object):
         if model_path.exists():
             filepath = model_path
         else:
-            filepath = Path(__file__).parent / "data"/(model_name.lower()+".npz" )
+            filepath = Path(__file__).parent / "data"
+            filepath = filepath / (model_name.lower()+".npz")
         return TauModel.deserialize(filepath, cache=cache)

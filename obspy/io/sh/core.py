@@ -375,7 +375,7 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
         if not data_directory:
             path = Path(filename)
             data_file = Path(path.parent) / (path.stem+".QBN")
-            
+
         else:
             path = Path(filename)
             data_file = Path(data_directory) / Path(filename).stem+".QBN"

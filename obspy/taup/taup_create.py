@@ -14,7 +14,8 @@ from obspy.taup.tau_model import TauModel
 from obspy.taup.velocity_model import VelocityModel
 
 # Most generic way to get the data directory.
-__DATA_DIR = Path(Path(inspect.getfile(inspect.currentframe())).resolve()).parent / "data"
+__DATA_DIR = Path(inspect.getfile(inspect.currentframe())).resolve()
+__DATA_DIR = __DATA_DIR.parent / "data"
 
 
 class TauPCreate(object):
