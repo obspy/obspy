@@ -3262,7 +3262,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         Helper method to create a dummy Stream object (with data always equal
         to one) from a string representation of the Stream, mostly for
         debugging purposes.
-
+        >>> import os
         >>> s = ['', '', '3 Trace(s) in Stream:',
         ...      'IU.GRFO..HH2 | 2016-01-07T00:00:00.008300Z - '
         ...      '2016-01-07T00:00:30.098300Z | 10.0 Hz, 301 samples',
