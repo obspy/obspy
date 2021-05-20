@@ -214,7 +214,7 @@ def _format_html(args, data_normal, data_outdated):
     html_legend['ok_info'] = "All checks pass"
     html_legend['outdated_info'] = (
         "No data within {check_back_days:d} days").format(**vars(args))
-    html_legend['output_basename'] = Path(args.output).parent
+    html_legend['output_basename'] = Path(args.output).name
     html_legend.update(vars(args))
     html = HTML_TEMPLATE.format(
         time=UTCDateTime().strftime("%c"), lines_normal=lines_normal,
