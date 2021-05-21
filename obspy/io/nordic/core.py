@@ -865,12 +865,12 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         except KeyError:
             pass
         pick.evaluation_mode = EVALUATION_MAPPING.get(line[15], "manual")
-        # Note these two are not always filled - velocity conversion not yet
-        # implemented, needs to be converted from km/s to s/deg
-        # if not velocity == 999.0:
-        #     new_event.picks[pick_index].horizontal_slowness = 1.0 / velocity
+        # Note BAZ and slowness are not always filled.
         if _float_conv(line[46:51]) is not None:
             pick.backazimuth = _float_conv(line[46:51])
+        app_velocity = _float_conv(line[51:56])
+        if app_velocity is not None and app_velocity != 999.0:
+            pick.horizontal_slowness = 1 / kilometers2degrees(app_velocity)
         # Create new obspy.event.Amplitude class which references above Pick
         # only if there is an amplitude picked.
         if _float_conv(line[33:40]) is not None:
@@ -988,15 +988,37 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
         except KeyError:
             pass
         pick.evaluation_mode = EVALUATION_MAPPING.get(line[25], "manual")
-        # Note these two are not always filled - velocity conversion not yet
-        # implemented, needs to be converted from km/s to s/deg
-        # if not velocity == 999.0:
-        #     new_event.picks[pick_index].horizontal_slowness = 1.0 / velocity
-        if phase == 'BAZ' and _float_conv(line[37:44]) is not None:
+        # Note that BAZ and apparent velocity are not always filled
+        found_baz_associated_pick = False
+        if 'BAZ' in phase and _float_conv(line[37:44]) is not None:
+            # Seisan phase name can be e.g. "BAZ-P"
+            baz_phase_type = phase.strip('BAZ-')
+            # Check if there is matching pick for the BAZ. THIS MEANS THAT
+            # THE BAZ-line in Nordic file has to follow the actual time pick!
+            for existing_pick in new_event.picks:
+                if (existing_pick.waveform_id == pick.waveform_id and
+                        existing_pick.phase_hint == baz_phase_type and
+                        existing_pick.time == pick.time):
+                    pick = existing_pick
+                    found_baz_associated_pick = True
+                    break
+            # BAZ-phase name doesn't have to specify the associated phase
+            # name - as a secondary resort, compare pick times only.
+            if not found_baz_associated_pick:
+                for existing_pick in new_event.picks:
+                    if (existing_pick.waveform_id == pick.waveform_id and
+                            existing_pick.time == pick.time):
+                        pick = existing_pick
+                        found_baz_associated_pick = True
+                        break
             pick.backazimuth = _float_conv(line[37:44])
+            app_velocity = _float_conv(line[44:50])
+            if app_velocity is not None and app_velocity != 999.0:
+                pick.horizontal_slowness = 1 / kilometers2degrees(app_velocity)
         # Create new obspy.event.Amplitude class which references above Pick
         # only if there is an amplitude picked.
-        if _is_iasp_ampl_phase(phase) and _float_conv(line[37:44]) is not None:
+        if (_is_iasp_ampl_phase(phase) and _float_conv(line[37:44]) is not None
+                and not found_baz_associated_pick):
             _amplitude = Amplitude(generic_amplitude=_float_conv(line[37:44]),
                                    period=_float_conv(line[44:50]),
                                    pick_id=pick.resource_id,
@@ -1055,22 +1077,37 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
 
         # Create new obspy.event.Arrival class referencing above Pick
         if not _is_iasp_ampl_phase(phase):
-            arrival = Arrival(phase=pick.phase_hint, pick_id=pick.resource_id)
-            if weight is not None:
-                arrival.time_weight = weight
+            # If there is a pick associated with a BAZ, then there's also an
+            # arrival for that pick already
+            if found_baz_associated_pick:
+                for existing_arrival in new_event.origins[0].arrivals:
+                    if existing_arrival.pick_id == pick.resource_id:
+                        arrival = existing_arrival
+                        break
+            else:
+                arrival = Arrival(phase=pick.phase_hint,
+                                  pick_id=pick.resource_id)
             if _float_conv(line[63:68]) is not None:
-                if phase == 'BAZ':
+                if 'BAZ' in phase:
                     arrival.backazimuth_residual = _int_conv(line[63:68])
                 else:
                     arrival.time_residual = _float_conv(line[63:68])
-            if _float_conv(line[70:75]) is not None:
-                arrival.distance = kilometers2degrees(_float_conv(line[70:75]))
-            if _int_conv(line[76:79]) is not None:
-                arrival.azimuth = _int_conv(line[76:79])
-            if ain is not None:
-                arrival.takeoff_angle = ain
-            new_event.origins[0].arrivals.append(arrival)
-        new_event.picks.append(pick)
+            # Add other information and append arrival itself only if it's new.
+            if not found_baz_associated_pick:
+                if weight is not None:
+                    arrival.time_weight = weight
+                if _float_conv(line[70:75]) is not None:
+                    arrival.distance = kilometers2degrees(_float_conv(
+                        line[70:75]))
+                if _int_conv(line[76:79]) is not None:
+                    arrival.azimuth = _int_conv(line[76:79])
+                if ain is not None:
+                    arrival.takeoff_angle = ain
+                new_event.origins[0].arrivals.append(arrival)
+        # Add the pick, but do not add it as new if the pick was only updated
+        # with new information (BAZ, slowness etc.)
+        if not found_baz_associated_pick:
+            new_event.picks.append(pick)
 
     return new_event
 
@@ -1727,13 +1764,12 @@ def nordpick(event, high_accuracy=True, version='OLD'):
         impulsivity = _str_conv(INV_ONSET_MAPPING.get(pick.onset))
         polarity = _str_conv(INV_POLARITY_MAPPING.get(pick.polarity))
         # Extract velocity: Note that horizontal slowness in quakeML is stored
-        # as s/deg
-        # if pick.horizontal_slowness is not None:
-        #     # velocity = 1.0 / pick.horizontal_slowness
-        #     velocity = ' '  # Currently this conversion is unsupported.
-        # else:
-        #     velocity = ' '
-        velocity = ' '
+        # as s/deg and Seisan stores apparent velocity in km/s
+        if pick.horizontal_slowness is not None:
+            velocity = _str_conv(degrees2kilometers(
+                1.0 / pick.horizontal_slowness))
+        else:
+            velocity = ' '
         azimuth = _str_conv(pick.backazimuth)
         # Extract the correct arrival info for this pick - assuming only one
         # arrival per pick...
@@ -1899,18 +1935,34 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             # are also not supported in Obspy.event
         elif version == 'NEW':
             # Define par1, par2, & residual depending on type of observation:
-            # Coda, backzimuth, amplitude, or other phase pick
+            # Coda, backzimuth (add extra line), amplitude, or other phase pick
+            add_BAZ_line = False
+            par1 = '       '
             par2 = '      '
             residual = '     '
+            # Phase pick
+            if polarity.strip() != '':
+                par1 = '      ' + polarity
+            if hasattr(arrival, 'time_residual'):
+                if arrival.time_residual is not None:
+                    residual = _str_conv(arrival.time_residual, rounded=2
+                                         ).rjust(5)[0:5]
+            # Coda
             if coda.strip() != '':
                 par1 = _str_conv(coda).rjust(7)[0:7]  # coda duration
                 phase_hint = 'END'
                 impulsivity = ''
             elif azimuth.strip() != '':  # back-azimuth
-                par1 = _str_conv(azimuth).rjust(7)[0:7]
-                par2 = '    ' + velocity              # app.velocity (not supp)
+                add_BAZ_line = True
+                if len(phase_hint) <= 4:  # max total phase name length is 8
+                    baz_phase_hint = 'BAZ-' + phase_hint
+                else:
+                    baz_phase_hint = phase_hint
+                baz_par1 = _str_conv(azimuth).rjust(7)[0:7]
+                baz_par2 = _str_conv(velocity).rjust(3)[0:3].rjust(6)
+                baz_residual = '     '
                 if arrival.backazimuth_residual is not None:
-                    residual = _str_conv(
+                    baz_residual = _str_conv(
                         arrival.backazimuth_residual, rounded=1).rjust(5)[0:5]
             elif amp is not None:
                 par1 = _str_conv(amp, rounded=1).rjust(7)[0:7]
@@ -1931,12 +1983,6 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                         warnings.warn(msg)
                     mag_residual = tr_mag[0].mag_errors.uncertainty
                     residual = _str_conv(mag_residual, rounded=2).rjust(5)[0:5]
-            else:  # phase pick
-                par1 = '      ' + polarity
-                if hasattr(arrival, 'time_residual'):
-                    if arrival.time_residual is not None:
-                        residual = _str_conv(arrival.time_residual, rounded=2
-                                             ).rjust(5)[0:5]
 
             agency = '   '
             author = '   '
@@ -1967,6 +2013,19 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 finalweight=finalweight,
                 distance=distance.rjust(5)[0:5],
                 caz=_str_conv(caz).rjust(3)[0:3]))
+            if add_BAZ_line:
+                pick_strings.append(pick_string_formatter.format(
+                    station=pick.waveform_id.station_code,
+                    channel=channel_code, network=network_code,
+                    location=location_code, impulsivity=' ',
+                    phase_hint=baz_phase_hint,
+                    weight=_str_conv(weight).rjust(1), eval_mode=eval_mode,
+                    hour=pick_hour, minute=pick.time.minute,
+                    seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
+                    par1=baz_par1, par2=baz_par2, agency=agency, author=author,
+                    ain='     ', residual=baz_residual,
+                    finalweight=finalweight, distance=distance.rjust(5)[0:5],
+                    caz=_str_conv(caz).rjust(3)[0:3]))
         else:
             raise ValueError('Nordic format can be ''OLD'' or ''NEW'', not '
                              + version)
