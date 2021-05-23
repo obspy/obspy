@@ -35,11 +35,14 @@ from obspy.core.event import (
     CreationInfo, OriginQuality, OriginUncertainty, Pick, WaveformStreamID,
     Arrival, Amplitude, FocalMechanism, MomentTensor, NodalPlane, NodalPlanes,
     QuantityError, Tensor, ResourceIdentifier, Comment)
+from obspy.core.event.header import EventType, EventTypeCertainty
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
     _get_line_tags, _km_to_deg_lat, _km_to_deg_lon, _nordic_iasp_phase_ok,
-    _is_iasp_ampl_phase)
+    _is_iasp_ampl_phase, EVENT_TYPE_MAPPING_FROM_SEISAN,
+    EVENT_TYPE_CERTAINTY_MAPPING_FROM_SEISAN, EVENT_TYPE_MAPPING_TO_SEISAN,
+    EVENT_TYPETAG_MAPPING_TO_SEISAN)
 from obspy.io.nordic.ellipse import Ellipse
 
 
@@ -197,6 +200,10 @@ def _read_origin(line):
         raise NordicParsingError("Couldn't read a date from sfile")
     # new_event.loc_mod_ind=line[20]
     new_event.event_descriptions.append(EventDescription(text=line[21:23]))
+    new_event.event_type = EventType(EVENT_TYPE_MAPPING_FROM_SEISAN.get(
+        line[22]))
+    new_event.event_type_certainty = EventTypeCertainty(
+        EVENT_TYPE_CERTAINTY_MAPPING_FROM_SEISAN.get(line[21]))
     for key, _slice in [('latitude', slice(23, 30)),
                         ('longitude', slice(30, 38)),
                         ('depth', slice(38, 43))]:
@@ -1346,6 +1353,15 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         raise NordicParsingError('Event type must be either L, R or D')
     if explosion:
         evtype += 'E'
+    elif event.event_type is not None:
+        nordic_evtype = EVENT_TYPETAG_MAPPING_TO_SEISAN.get(
+            event.event_type_certainty + ' ' + event.event_type)
+        if nordic_evtype is not None:
+            evtype += nordic_evtype
+        else:
+            nordic_evtype = EVENT_TYPE_MAPPING_TO_SEISAN.get(event.event_type)
+            if nordic_evtype is not None:
+                evtype += nordic_evtype
     # Check that there is one event
     if isinstance(event, Catalog) and len(event) == 1:
         event = event[0]
