@@ -861,7 +861,7 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
             snr = _float_conv(line[57:60])
         else:
             warnings.warn('%s is not currently supported' % header[57:60])
-        # finalweight = _int_conv(line[68:70])
+        finalweight = _int_conv(line[68:70])
         # Create a new obspy.event.Pick class for this pick
         _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
                                         channel_code=line[6:8].strip())
@@ -930,6 +930,8 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
                 arrival.azimuth = _int_conv(line[76:79])
             if ain is not None:
                 arrival.takeoff_angle = ain
+            if finalweight is not None:
+                arrival.time_weight = finalweight / 10
             new_event.origins[0].arrivals.append(arrival)
         new_event.picks.append(pick)
 
@@ -978,7 +980,7 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
             snr = _float_conv(line[58:63])
         else:
             warnings.warn('%s is not currently supported' % header[60:63])
-        # finalweight = _int_conv(line[68:70])
+        finalweight = _int_conv(line[68:70])
         # Create a new obspy.event.Pick class for this pick
         _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
                                         channel_code=line[6:9].strip(),
@@ -1110,6 +1112,8 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
                     arrival.azimuth = _int_conv(line[76:79])
                 if ain is not None:
                     arrival.takeoff_angle = ain
+                if finalweight is not None:
+                    arrival.time_weight = finalweight / 10
                 new_event.origins[0].arrivals.append(arrival)
         # Add the pick, but do not add it as new if the pick was only updated
         # with new information (BAZ, slowness etc.)
@@ -1752,12 +1756,10 @@ def nordpick(event, high_accuracy=True, version='OLD'):
 
     .. note::
 
-        Currently finalweight is unsupported, nor is velocity, or
-        angle of incidence.  This is because
-        :class:`~obspy.core.event.event.Event` stores slowness
-        in s/deg and takeoff angle, which would require computation
-        from the values stored in seisan.  Multiple weights are also
-        not supported.
+        Currently angle of incidence is unsupported. This is because
+        :class:`~obspy.core.event.event.Event` stores takeoff angle rather than
+        incident angle, which would require computation from the value stored
+        in seisan.  Multiple weights are also not supported.
     """
     # Nordic picks do not have a date associated with them - we need time
     # relative to some origin time.
@@ -1829,9 +1831,17 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 caz = _str_conv(int(arrival.azimuth))
             else:
                 caz = ' '
+            # Extract finalweight
+            if arrival.time_weight is not None:
+                finalweight = _str_conv(
+                    arrival.time_weight * 10, rounded=0).rjust(2)[0:2]
+            if azimuth != ' ':
+                if arrival.backazimuth_weight is not None:
+                    finalweight = _str_conv(arrival.backazimuth_weight * 10,
+                                            rounded=0).rjust(2)[0:2]
         else:
-            caz, distance, timeres, azimuthres, azimuth, weight, ain = (
-                ' ', ' ', ' ', ' ', ' ', 0, ' ')
+            (weight, caz, distance, timeres, azimuthres, azimuth, finalweight,
+             ain) = (0, ' ', ' ', ' ', ' ', ' ', '  ', ' ')
         phase_hint = pick.phase_hint or ' '
         # Extract amplitude: note there can be multiple amplitudes, but they
         # should be associated with different picks.
@@ -1922,7 +1932,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 " {station:5s}{instrument:1s}{component:1s}{phase_info:10s}"
                 "{hour:2d}{minute:2d}{seconds:>6s}{coda:5s}{amp:7s}{period:5s}"
                 "{azimuth:6s}{velocity:5s}{ain:4s}{azimuthres:3s}{timeres:5s}"
-                "  {distance:5s}{caz:4s} ")
+                "{finalweight:2s}{distance:5s}{caz:4s} ")
             # Note that pick seconds rounding only works because SEISAN does
             # not enforce that seconds stay 0 <= seconds < 60, so rounding
             # something like seconds = 59.997 to 2dp gets to 60.00, which
@@ -1942,12 +1952,11 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 ain=ain[:-2].rjust(4)[0:4],
                 azimuthres=_str_conv(azimuthres).rjust(3)[0:3],
                 timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
-                distance=distance.rjust(5)[0:5],
+                finalweight=finalweight, distance=distance.rjust(5)[0:5],
                 caz=_str_conv(caz).rjust(4)[0:4]))
-            # Note that currently finalweight is unsupported, nor is velocity,
-            # or angle of incidence.  This is because obspy.event stores
-            # slowness in s/deg and takeoff angle, which would require
-            # computation from the values stored in seisan.  Multiple weights
+            # Note that currently angle of incidence is not supported. This is
+            # because obspy.event stores takeoff angle, which would require
+            # computation from the value stored in seisan. Multiple weights
             # are also not supported in Obspy.event
         elif version == 'NEW':
             # Define par1, par2, & residual depending on type of observation:
@@ -1968,6 +1977,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 par1 = _str_conv(coda).rjust(7)[0:7]  # coda duration
                 phase_hint = 'END'
                 impulsivity = ''
+            # Back Azimuth
             elif azimuth.strip() != '':  # back-azimuth
                 add_BAZ_line = True
                 if len(phase_hint) <= 4:  # max total phase name length is 8
@@ -1977,9 +1987,14 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 baz_par1 = _str_conv(azimuth).rjust(7)[0:7]
                 baz_par2 = _str_conv(velocity).rjust(3)[0:3].rjust(6)
                 baz_residual = '     '
+                baz_finalweight = '  '
                 if arrival.backazimuth_residual is not None:
                     baz_residual = _str_conv(
                         arrival.backazimuth_residual, rounded=1).rjust(5)[0:5]
+                if arrival.backazimuth_weight is not None:
+                    baz_finalweight = _str_conv(
+                        arrival.backazimuth_weight*10, rounded=0).rjust[2][0:2]
+            # Amplitude
             elif amp is not None:
                 par1 = _str_conv(amp, rounded=1).rjust(7)[0:7]
                 par2 = _str_conv(peri, rounded=peri_round).rjust(6)[0:6]
@@ -2009,7 +2024,6 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                 if pick.creation_info.author is not None:
                     author = (pick.creation_info.author.ljust(3)[0:3] or '   ')
 
-            finalweight = "  "
             pick_string_formatter = (
                 " {station:5s}{channel:3s} {network:2s}{location:2s} "
                 "{impulsivity:1s}{phase_hint:8s}{weight:1s}{eval_mode:1s}"
@@ -2040,7 +2054,8 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                     seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
                     par1=baz_par1, par2=baz_par2, agency=agency, author=author,
                     ain='     ', residual=baz_residual,
-                    finalweight=finalweight, distance=distance.rjust(5)[0:5],
+                    finalweight=baz_finalweight,
+                    distance=distance.rjust(5)[0:5],
                     caz=_str_conv(caz).rjust(3)[0:3]))
         else:
             raise ValueError('Nordic format can be ''OLD'' or ''NEW'', not '
