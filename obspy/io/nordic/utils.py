@@ -23,10 +23,57 @@ MAG_MAPPING = {"ML": "L", "MLv": "L", "Ml": "l",
                "MW": "W", "Mw": "w", "Mc": "C",
                "MN": "N", "Mn": "n"}
 INV_MAG_MAPPING = {item: key for key, item in MAG_MAPPING.items()}
+
+# Event-type mapping:
+EVENT_TYPE_MAPPING_FROM_SEISAN = {
+    "E": "explosion",
+    "P": "explosion",
+    # not a great translation; V=volcanic event not allowed in obspy/QuakeML
+    "V": "earthquake",
+    "Q": "earthquake",
+    " ": "earthquake",
+    "L": "landslide",
+    "X": "landslide",  # Depreceated Nordic code
+    "S": "acoustic noise",  # not a great translation for "acoustic signal"
+    "I": "induced or triggered event",
+    "O": "other event",
+    "C": "ice quake",
+    "G": "ice quake"}
+
+EVENT_TYPE_CERTAINTY_MAPPING_FROM_SEISAN = {
+    "E": 'known',
+    "P": 'suspected',
+    "V": 'known',
+    "Q": 'known',
+    " ": 'suspected',
+    "L": 'known',
+    "X": 'known',
+    "S": 'known',
+    "I": 'known',
+    "O": 'known',
+    "C": 'known',
+    "G": 'known'}
+
+EVENT_TYPE_MAPPING_TO_SEISAN = {
+    "explosion": "E",
+    "earthquake": "Q",
+    "landslide": "L",
+    "acoustic noise": "S",
+    "induced or triggered event": "I",
+    "other event": "O",
+    "ice quake": "C",
+    "not reported": " "}
+
+# Nordic format condenses type and certainty into one letter in some cases
+EVENT_TYPE_AND_CERTAINTY_MAPPING_TO_SEISAN = {
+    "known explosion": "E",
+    "suspected explosion": "P",
+    "known earthquake": "Q",
+    "suspected earthquake": " "}
+
 # List of currently implemented line-endings, which in Nordic mark what format
 # info in that line will be.
 ACCEPTED_TAGS = ('1', '6', '7', 'E', ' ', 'F', 'M', '3', 'H')
-
 
 ACCEPTED_1CHAR_PHASE_TAGS = ['P', 'p', 'S', 's', 'L', 'G', 'R', 'H', 'T', 'x',
                              'r', 't', 'E']
