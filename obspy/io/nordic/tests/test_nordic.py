@@ -1225,7 +1225,7 @@ def _test_similarity(event_1, event_2, strict=False):
         exc_amp_keys = ["resource_id", "pick_id"]
     else:
         exc_amp_keys = ["resource_id", "pick_id", "waveform_id", "snr",
-                       "magnitude_hint", 'type']
+                        "magnitude_hint", 'type']
     for amp_1, amp_2 in zip(event_1.amplitudes, event_2.amplitudes):
         # Assuming same ordering of amplitudes
         for key in amp_1.keys():
