@@ -824,19 +824,17 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         weight = line[14]
         if weight not in ' 012349_':  # Long phase name
             weight = line[8]
-            if weight == ' ':
-                weight = 0
             phase = line[10:17].strip()
             polarity = ''
         elif weight == '_':
             phase = line[10:17]
-            weight = 0
+            weight = None
             polarity = ''
         else:
             phase = line[10:14].strip()
             polarity = line[16]
-            if weight == ' ':
-                weight = 0
+        if weight == ' ':
+            weight = None
         polarity = POLARITY_MAPPING.get(polarity, None)  # Empty could be None
         # or undecidable.
         # It is valid nordic for the origin to be hour 23 and picks to be hour
@@ -872,6 +870,12 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         except KeyError:
             pass
         pick.evaluation_mode = EVALUATION_MAPPING.get(line[15], "manual")
+        # Pick-weight from Seisan is not covered by Obspy/Quakeml standard
+        if weight is not None:
+            pick.extra = {
+                'nordic_pick_weight': weight,
+                'namespace':
+                    'https://seis.geus.net/software/seisan/node239.html'}
         # Note BAZ and slowness are not always filled.
         if _float_conv(line[46:51]) is not None:
             pick.backazimuth = _float_conv(line[46:51])
@@ -918,8 +922,6 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         # Create new obspy.event.Arrival class referencing above Pick
         if _float_conv(line[33:40]) is None:
             arrival = Arrival(phase=pick.phase_hint, pick_id=pick.resource_id)
-            if weight is not None:
-                arrival.time_weight = weight
             if _int_conv(line[60:63]) is not None:
                 arrival.backazimuth_residual = _int_conv(line[60:63])
             if _float_conv(line[63:68]) is not None:
@@ -950,7 +952,7 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
             line = line.ljust(80)  # Pick-lines without a tag may be short.
         weight = line[24]
         if weight == ' ':
-            weight = 0
+            weight = None
         phase = line[16:24].strip()
         if _nordic_iasp_phase_ok(phase) and phase not in ['END', 'BAZ']:
             polarity = line[43]
@@ -997,6 +999,12 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
         except KeyError:
             pass
         pick.evaluation_mode = EVALUATION_MAPPING.get(line[25], "manual")
+        # Pick-weight from Seisan is not covered by Obspy/Quakeml standard
+        if weight is not None:
+            pick.extra = {
+                'nordic_pick_weight': weight,
+                'namespace':
+                    'https://seis.geus.net/software/seisan/node94.html'}
         # Note that BAZ and apparent velocity are not always filled
         found_baz_associated_pick = False
         if 'BAZ' in phase and _float_conv(line[37:44]) is not None:
@@ -1098,13 +1106,11 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
                                   pick_id=pick.resource_id)
             if _float_conv(line[63:68]) is not None:
                 if 'BAZ' in phase:
-                    arrival.backazimuth_residual = _int_conv(line[63:68])
+                    arrival.backazimuth_residual = _float_conv(line[63:68])
                 else:
                     arrival.time_residual = _float_conv(line[63:68])
             # Add other information and append arrival itself only if it's new.
             if not found_baz_associated_pick:
-                if weight is not None:
-                    arrival.time_weight = weight
                 if _float_conv(line[70:75]) is not None:
                     arrival.distance = kilometers2degrees(_float_conv(
                         line[70:75]))
@@ -1781,6 +1787,11 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             continue
         impulsivity = _str_conv(INV_ONSET_MAPPING.get(pick.onset))
         polarity = _str_conv(INV_POLARITY_MAPPING.get(pick.polarity))
+        # Extract weight - should be stored as 0-4, or 9 for seisan.
+        try:
+            weight = pick.extra.get('nordic_pick_weight')
+        except AttributeError:
+            weight = ' '
         # Extract velocity: Note that horizontal slowness in quakeML is stored
         # as s/deg and Seisan stores apparent velocity in km/s
         if pick.horizontal_slowness is not None:
@@ -1797,8 +1808,6 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             if len(arrival) > 1:
                 warnings.warn("Multiple arrivals for pick - only writing one")
             arrival = arrival[0]
-            # Extract weight - should be stored as 0-4, or 9 for seisan.
-            weight = _str_conv(int(arrival.time_weight or 0))
             # Extract azimuth residual
             if arrival.backazimuth_residual is not None:
                 azimuthres = _str_conv(int(arrival.backazimuth_residual))
@@ -1832,16 +1841,17 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             else:
                 caz = ' '
             # Extract finalweight
+            finalweight = '  '
             if arrival.time_weight is not None:
-                finalweight = _str_conv(
-                    arrival.time_weight * 10, rounded=0).rjust(2)[0:2]
+                finalweight = _str_conv(int(round(
+                    arrival.time_weight * 10))).rjust(2)[0:2]
             if azimuth != ' ':
                 if arrival.backazimuth_weight is not None:
-                    finalweight = _str_conv(arrival.backazimuth_weight * 10,
-                                            rounded=0).rjust(2)[0:2]
+                    finalweight = _str_conv(int(round(
+                        arrival.backazimuth_weight * 10))).rjust(2)[0:2]
         else:
-            (weight, caz, distance, timeres, azimuthres, azimuth, finalweight,
-             ain) = (0, ' ', ' ', ' ', ' ', ' ', '  ', ' ')
+            (caz, distance, timeres, azimuthres, azimuth, finalweight,
+             ain) = (' ', ' ', ' ', ' ', ' ', '  ', ' ')
         phase_hint = pick.phase_hint or ' '
         # Extract amplitude: note there can be multiple amplitudes, but they
         # should be associated with different picks.
