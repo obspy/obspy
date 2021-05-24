@@ -295,6 +295,21 @@ def _is_iasp_ampl_phase(phase):
     return False
 
 
+def _get_agency_id(item):
+    """
+    Function to return a properly formatted 3-character agency ID from the
+    creation_info-property of an item.
+    """
+    agency_id = '   '
+    if hasattr(item, 'creation_info'):
+        if hasattr(item.creation_info, 'agency_id'):
+            agency_id = item.creation_info.get('agency_id')
+    if agency_id is None:
+        agency_id = '   '
+    agency_id = agency_id.rjust(3)[0:3]
+    return agency_id
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
