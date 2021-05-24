@@ -1162,6 +1162,7 @@ def _test_similarity(event_1, event_2):
             if key not in ["resource_id", "comments", "arrivals",
                            "method_id", "origin_uncertainty", "depth_type",
                            "quality", "creation_info", "evaluation_mode",
+                           "latitude_errors", "longitude_errors",
                            "depth_errors", "time_errors"]:
                 if ori_1[key] != ori_2[key]:
                     return ('%s is not the same as %s for key %s' %
