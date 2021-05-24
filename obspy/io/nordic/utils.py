@@ -137,7 +137,7 @@ def _str_conv(number, rounded=False):
     >>> print(_str_conv(1123040))
     11.2e5
     """
-    if not number:
+    if not number and number != 0:
         return str(' ')
     if not rounded and isinstance(number, (float, int)):
         if number < 100000:
