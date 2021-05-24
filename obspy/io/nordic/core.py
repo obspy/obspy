@@ -1717,12 +1717,12 @@ def _write_hyp_error_line(origin):
     add_simplified_uncertainty = False
     add_uncertainty = False
     if hasattr(origin, 'origin_uncertainty'):
-        if (hasattr(origin.origin_uncertainty, 'min_horizontal_uncertainty')
-                and hasattr(origin.origin_uncertainty,
-                            'max_horizontal_uncertainty'):
+        orig_unc = origin.origin_uncertainty
+        if (hasattr(orig_unc, 'min_horizontal_uncertainty')
+                and hasattr(orig_unc, 'max_horizontal_uncertainty')):
             # Even though uncertainty should not be Zero, such files exist.
-            if (origin.origin_uncertainty.min_horizontal_uncertainty == 0.0 or
-                  origin.origin_uncertainty.max_horizontal_uncertainty == 0.0):
+            if (orig_unc.min_horizontal_uncertainty == 0.0 or
+                    orig_unc.max_horizontal_uncertainty == 0.0):
                 add_simplified_uncertainty = True
             elif origin.origin_uncertainty is not None:
                 add_uncertainty = True
