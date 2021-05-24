@@ -1527,12 +1527,11 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
     if hasattr(event, 'focal_mechanisms'):
         for fm in event.focal_mechanisms:
             if hasattr(fm, 'moment_tensor') and hasattr(
-            fm.moment_tensor, 'moment_magnitude_id'):
+                    fm.moment_tensor, 'moment_magnitude_id'):
                 mt_ids.append(fm.moment_tensor.moment_magnitude_id)
     n_mags = 0
     mag_ind = 0
     while n_mags < 6:
-    # for mag_ind in range(6):
         mag_info = {}
         try:
             if event.magnitudes[mag_ind].resource_id in mt_ids:
@@ -1544,7 +1543,7 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
                 mag_info['mag'] = '{0:.1f}'.format(
                     event.magnitudes[mag_ind].mag) or ''
                 mag_info['type'] = _evmagtonor(event.magnitudes[mag_ind].
-                                            magnitude_type) or ''
+                                               magnitude_type) or ''
                 mag_info['agency'] = _get_agency_id(event.magnitudes[mag_ind])
                 conv_mags.append(mag_info)
             else:
@@ -2072,7 +2071,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             agency = '   '
             author = '   '
             if pick.creation_info is not None:
-                agency =_get_agency_id(pick)
+                agency = _get_agency_id(pick)
                 if pick.creation_info.author is not None:
                     author = (pick.creation_info.author.ljust(3)[0:3] or '   ')
 
