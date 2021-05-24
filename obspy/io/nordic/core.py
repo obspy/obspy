@@ -478,7 +478,9 @@ def _read_uncertainty(tagged_lines, event):
     except ValueError:
         pass
     orig = event.origins[0]
-    if errors['x_err'] is not None:
+    # If any value is Zero or None then no Ellipse can be constructed
+    if not [x for x in (errors['x_err'], errors['y_err'], errors['xy_cov'])
+            if not x]:
         e = Ellipse.from_uncerts(errors['x_err'],
                                  errors['y_err'],
                                  errors['xy_cov'])
@@ -488,11 +490,14 @@ def _read_uncertainty(tagged_lines, event):
                 min_horizontal_uncertainty=e.b * 1000.,
                 azimuth_max_horizontal_uncertainty=e.theta,
                 preferred_description="uncertainty ellipse")
-            orig.latitude_errors = QuantityError(
-                _km_to_deg_lat(errors['y_err']))
-            orig.longitude_errors = QuantityError(
-                _km_to_deg_lon(errors['x_err'], orig.latitude))
-            orig.depth_errors = QuantityError(errors['z_err'] * 1000.)
+    # But lat / lon / depth-errors may still be filled
+    if errors['y_err'] is not None:
+        orig.latitude_errors = QuantityError(_km_to_deg_lat(errors['y_err']))
+    if errors['x_err'] is not None:
+        orig.longitude_errors = QuantityError(_km_to_deg_lon(errors['x_err'],
+                                                             orig.latitude))
+    if errors['z_err'] is not None:
+        orig.depth_errors = QuantityError(errors['z_err'] * 1000.)
     try:
         gap = int(line[5:8])
     except ValueError:
@@ -1674,9 +1679,14 @@ def _write_hyp_error_line(origin):
         origin.quality['standard_error'], 2)).rjust(6)
     # try:
     errors = dict()
+    add_simplified_uncertainty = False
     add_uncertainty = False
     if hasattr(origin, 'origin_uncertainty'):
-        if origin.origin_uncertainty is not None:
+        # Even though uncertainty should not be Zero, such files exist.
+        if (origin.origin_uncertainty.min_horizontal_uncertainty == 0.0 or
+                origin.origin_uncertainty.max_horizontal_uncertainty == 0.0):
+            add_simplified_uncertainty = True
+        elif origin.origin_uncertainty is not None:
             add_uncertainty = True
         # Following will work once Ellipsoid class added
         # if hasattr(origin.origin_uncertainty, 'confidence_ellipsoid'):
@@ -1694,11 +1704,15 @@ def _write_hyp_error_line(origin):
     if add_uncertainty:
         cov = Ellipse.from_origin_uncertainty(origin.origin_uncertainty).\
               to_cov()
-        errors['x_err'] = sqrt(cov(0, 0)) / 1000.0
-        errors['y_err'] = sqrt(cov(1, 1)) / 1000.0
-        errors['z_err'] = origin.depth_errors / 1000.0
+        errors['x_err'] = sqrt(cov[0][0][0]) / 1000.0
+        errors['y_err'] = sqrt(cov[0][1][1]) / 1000.0
+        errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
         # xy covariance field
-        error_line[43:55] = ("%.4e" % (cov(0, 1) / 1.e06)).rjust(12)
+        error_line[43:55] = ("%.4e" % (cov[0][0][1] / 1.e06)).rjust(12)
+    elif add_simplified_uncertainty:  # Deal with Zero uncertainty
+        errors['x_err'] = 0.0
+        errors['y_err'] = 0.0
+        errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
     else:
         try:
             errors['x_err'] = origin.longitude_errors.uncertainty / \
