@@ -40,7 +40,7 @@ from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
     _get_line_tags, _km_to_deg_lat, _km_to_deg_lon, _nordic_iasp_phase_ok,
-    _is_iasp_ampl_phase, EVENT_TYPE_MAPPING_FROM_SEISAN,
+    _get_agency_id, _is_iasp_ampl_phase, EVENT_TYPE_MAPPING_FROM_SEISAN,
     EVENT_TYPE_CERTAINTY_MAPPING_FROM_SEISAN, EVENT_TYPE_MAPPING_TO_SEISAN,
     EVENT_TYPE_AND_CERTAINTY_MAPPING_TO_SEISAN)
 from obspy.io.nordic.ellipse import Ellipse
@@ -146,8 +146,9 @@ def _readheader(head_lines):
     for event in _cat:
         matched = False
         origin_times = [origin.time for origin in new_event.origins]
-        if event.origins[0].time in origin_times:
-            origin_index = origin_times.index(event.origins[0].time)
+        origin = event.origins[0]
+        if origin.time in origin_times:
+            origin_index = origin_times.index(origin.time)
             agency = new_event.origins[origin_index].creation_info.agency_id
             if event.creation_info.agency_id == agency:
                 event_desc = new_event.event_descriptions[origin_index].text
@@ -157,6 +158,17 @@ def _readheader(head_lines):
         if not matched:
             new_event.origins.append(event.origins[0])
             new_event.event_descriptions.append(event.event_descriptions[0])
+        else:
+            # If there's an extended origin line, fix the origin_ids of any
+            # associated magnitudes
+            for magnitude in event.magnitudes:
+                if magnitude.origin_id == origin.resource_id:
+                    magnitude.origin_id = new_event.origins[
+                        origin_index].resource_id
+    # Remove duplicated EventDescription-lines
+    new_event.event_descriptions = [
+        x for j, x in enumerate(new_event.event_descriptions)
+        if j == new_event.event_descriptions.index(x)]
     # Set the useful things like preferred magnitude and preferred origin
     new_event.preferred_origin_id = new_event.origins[0].resource_id
     try:
@@ -1420,109 +1432,23 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     else:
         sfile_path = os.path.join(outdir, filename)
         sfilename = filename
-    # Write the header info.
-    if origin.latitude is not None:
-        lat = '{0:.3f}'.format(origin.latitude)
-    else:
-        lat = ''
-    if origin.longitude is not None:
-        lon = '{0:.3f}'.format(origin.longitude)
-    else:
-        lon = ''
-    if origin.depth is not None:
-        depth = '{0:.1f}'.format(origin.depth / 1000.0)
-    else:
-        depth = ''
-    if event.creation_info:
-        try:
-            agency = event.creation_info.get('agency_id')
-            # If there is creation_info this may not raise an error annoyingly
-            if agency is None:
-                agency = ''
-        except AttributeError:
-            agency = ''
-    else:
-        agency = ''
-    if len(agency) > 3:
-        agency = agency[0:3]
-    # Cope with differences in event uncertainty naming
-    if origin.quality and origin.quality['standard_error']:
-        timerms = '{0:.1f}'.format(origin.quality['standard_error'])
-    else:
-        timerms = '0.0'
-    conv_mags = []
-    # Get up to six magnitudes
-    mt_ids = []
-    if hasattr(event, 'focal_mechanisms'):
-        for fm in event.focal_mechanisms:
-            if hasattr(fm, 'moment_tensor') and hasattr(
-               fm.moment_tensor, 'moment_magnitude_id'):
-                mt_ids.append(fm.moment_tensor.moment_magnitude_id)
-    for mag_ind in range(6):
-        mag_info = {}
-        try:
-            if event.magnitudes[mag_ind].resource_id in mt_ids:
-                raise IndexError("Repeated magnitude")
-                # This magnitude will get put in with the moment tensor
-            mag_info['mag'] = '{0:.1f}'.format(
-                event.magnitudes[mag_ind].mag) or ''
-            mag_info['type'] = _evmagtonor(event.magnitudes[mag_ind].
-                                           magnitude_type) or ''
-            if event.magnitudes[0].creation_info:
-                mag_info['agency'] = event.magnitudes[mag_ind].\
-                    creation_info.agency_id or ''
-            else:
-                mag_info['agency'] = ''
-        except IndexError:
-            mag_info.update({'mag': '', 'type': '', 'agency': ''})
-        conv_mags.append(mag_info)
-    conv_mags.sort(key=lambda d: d['mag'], reverse=True)
-    if conv_mags[3]['mag'] == '':
-        conv_mags = conv_mags[0:3]
-    # Work out how many stations were used
-    if len(event.picks) > 0:
-        stations = [pick.waveform_id.station_code for pick in event.picks]
-        ksta = str(len(set(stations)))
-    else:
-        ksta = ''
     if not string_io:
         sfile = open(sfile_path, 'w')
     else:
         sfile = string_io
-    sfile.write(
-        " {0} {1}{2} {3}{4} {5}.{6} {7}{8}{9}{10}  {11}{12}{13}{14}{15}{16}"
-        "{17}{18}{19}{20}{21}{22}1\n".format(
-            evtime.year, str(evtime.month).rjust(2), str(evtime.day).rjust(2),
-            str(evtime.hour).rjust(2), str(evtime.minute).rjust(2),
-            str(evtime.second).rjust(2), str(evtime.microsecond).ljust(1)[0:1],
-            evtype.ljust(2), lat.rjust(7), lon.rjust(8), depth.rjust(5),
-            agency.rjust(3)[0:3], ksta.rjust(3), timerms.rjust(4),
-            conv_mags[0]['mag'].rjust(4), conv_mags[0]['type'].rjust(1),
-            conv_mags[0]['agency'][0:3].rjust(3),
-            conv_mags[1]['mag'].rjust(4), conv_mags[1]['type'].rjust(1),
-            conv_mags[1]['agency'][0:3].rjust(3),
-            conv_mags[2]['mag'].rjust(4), conv_mags[2]['type'].rjust(1),
-            conv_mags[2]['agency'][0:3].rjust(3)))
-    if len(conv_mags) > 3:
-        sfile.write(
-            " {0} {1}{2} {3}{4} {5}.{6} {7}                      {8}       "
-            "{9}{10}{11}{12}{13}{14}{15}{16}{17}1\n".format(
-                evtime.year, str(evtime.month).rjust(2),
-                str(evtime.day).rjust(2), str(evtime.hour).rjust(2),
-                str(evtime.minute).rjust(2), str(evtime.second).rjust(2),
-                str(evtime.microsecond).ljust(1)[0:1], evtype.ljust(2),
-                agency.rjust(3)[0:3],
-                conv_mags[3]['mag'].rjust(4), conv_mags[3]['type'].rjust(1),
-                conv_mags[3]['agency'][0:3].rjust(3),
-                conv_mags[4]['mag'].rjust(4), conv_mags[4]['type'].rjust(1),
-                conv_mags[4]['agency'][0:3].rjust(3),
-                conv_mags[5]['mag'].rjust(4), conv_mags[5]['type'].rjust(1),
-                conv_mags[5]['agency'][0:3].rjust(3)))
+    # Write header line(s)
+    sfile.write(_write_header_line(
+        event, origin, evtype, is_preferred_origin=True))
     # Write hyp error line
     try:
         sfile.write(_write_hyp_error_line(origin) + '\n')
     except (NordicParsingError, TypeError):
         pass
+    # Write origin lines for additional origins
+    for add_origin in event.origins:
+        if not add_origin == origin:
+            sfile.write(_write_header_line(event, add_origin, evtype,
+                                           is_preferred_origin=False))
     # Write fault plane solution
     if hasattr(event, 'focal_mechanisms') and len(event.focal_mechanisms) > 0:
         for focal_mechanism in event.focal_mechanisms:
@@ -1573,6 +1499,119 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         return
 
 
+def _write_header_line(event, origin, evtype, is_preferred_origin=True):
+    """
+    Write one Seisan header line for origin. Needs to treat the preferred
+    origin a bit differently than additional origins.
+    """
+    # Write the header info.
+    if origin.latitude is not None:
+        lat = '{0:.3f}'.format(origin.latitude)
+    else:
+        lat = ''
+    if origin.longitude is not None:
+        lon = '{0:.3f}'.format(origin.longitude)
+    else:
+        lon = ''
+    if origin.depth is not None:
+        depth = '{0:.1f}'.format(origin.depth / 1000.0)
+    else:
+        depth = ''
+    conv_mags = []
+    if is_preferred_origin:
+        agency = _get_agency_id(event)
+    else:  # Addition (not preferred) origin - don't need to add magnitudes
+        agency = _get_agency_id(origin)
+    # Get up to six magnitudes
+    mt_ids = []
+    if hasattr(event, 'focal_mechanisms'):
+        for fm in event.focal_mechanisms:
+            if hasattr(fm, 'moment_tensor') and hasattr(
+            fm.moment_tensor, 'moment_magnitude_id'):
+                mt_ids.append(fm.moment_tensor.moment_magnitude_id)
+    n_mags = 0
+    mag_ind = 0
+    while n_mags < 6:
+    # for mag_ind in range(6):
+        mag_info = {}
+        try:
+            if event.magnitudes[mag_ind].resource_id in mt_ids:
+                mag_ind += 1
+                continue
+                # raise IndexError("Repeated magnitude")
+                # This magnitude will get put in with the moment tensor
+            if event.magnitudes[mag_ind].origin_id == origin.resource_id:
+                mag_info['mag'] = '{0:.1f}'.format(
+                    event.magnitudes[mag_ind].mag) or ''
+                mag_info['type'] = _evmagtonor(event.magnitudes[mag_ind].
+                                            magnitude_type) or ''
+                mag_info['agency'] = _get_agency_id(event.magnitudes[mag_ind])
+                conv_mags.append(mag_info)
+            else:
+                mag_ind += 1
+                continue
+        except IndexError:
+            mag_info.update({'mag': '', 'type': '', 'agency': ''})
+            conv_mags.append(mag_info)
+        n_mags += 1
+        mag_ind += 1
+    # Better not to sort magnitudes by their value, instead stick with
+    # their order:
+    # conv_mags.sort(key=lambda d: d['mag'], reverse=True)
+    if conv_mags[3]['mag'] == '':
+        conv_mags = conv_mags[0:3]
+    # Cope with differences in event uncertainty naming
+    if origin.quality and origin.quality['standard_error']:
+        timerms = '{0:.1f}'.format(origin.quality['standard_error'])
+    else:
+        timerms = '0.0'
+    # Work out how many stations were used
+    # if len(event.picks) > 0:
+    #     stations = [pick.waveform_id.station_code for pick in event.picks]
+    if len(origin.arrivals) > 0:
+        stations = [
+            arrival.pick_id.get_referred_object().waveform_id.station_code
+            for arrival in origin.arrivals]
+        ksta = str(len(set(stations)))
+    else:
+        ksta = ''
+    evtime = origin.time
+    if not evtime:
+        return
+
+    lines = []
+    lines.append(
+        " {0} {1}{2} {3}{4} {5}.{6} {7}{8}{9}{10}  {11}{12}{13}{14}{15}{16}"
+        "{17}{18}{19}{20}{21}{22}1\n".format(
+            evtime.year, str(evtime.month).rjust(2), str(evtime.day).rjust(2),
+            str(evtime.hour).rjust(2), str(evtime.minute).rjust(2),
+            str(evtime.second).rjust(2), str(evtime.microsecond).ljust(1)[0:1],
+            evtype.ljust(2), lat.rjust(7), lon.rjust(8), depth.rjust(5),
+            agency, ksta.rjust(3), timerms.rjust(4),
+            conv_mags[0]['mag'].rjust(4), conv_mags[0]['type'].rjust(1),
+            conv_mags[0]['agency'][0:3].rjust(3),
+            conv_mags[1]['mag'].rjust(4), conv_mags[1]['type'].rjust(1),
+            conv_mags[1]['agency'][0:3].rjust(3),
+            conv_mags[2]['mag'].rjust(4), conv_mags[2]['type'].rjust(1),
+            conv_mags[2]['agency'][0:3].rjust(3)))
+    if len(conv_mags) > 3:
+        lines.append(
+            " {0} {1}{2} {3}{4} {5}.{6} {7}                      {8}       "
+            "{9}{10}{11}{12}{13}{14}{15}{16}{17}1\n".format(
+                evtime.year, str(evtime.month).rjust(2),
+                str(evtime.day).rjust(2), str(evtime.hour).rjust(2),
+                str(evtime.minute).rjust(2), str(evtime.second).rjust(2),
+                str(evtime.microsecond).ljust(1)[0:1], evtype.ljust(2),
+                agency.rjust(3)[0:3],
+                conv_mags[3]['mag'].rjust(4), conv_mags[3]['type'].rjust(1),
+                conv_mags[3]['agency'][0:3].rjust(3),
+                conv_mags[4]['mag'].rjust(4), conv_mags[4]['type'].rjust(1),
+                conv_mags[4]['agency'][0:3].rjust(3),
+                conv_mags[5]['mag'].rjust(4), conv_mags[5]['type'].rjust(1),
+                conv_mags[5]['agency'][0:3].rjust(3)))
+    return ''.join([''.join(line) for line in lines])
+
+
 def _write_moment_tensor_line(focal_mechanism):
     """
     Generate the two lines required for moment tensor solutions in Nordic.
@@ -1595,14 +1634,10 @@ def _write_moment_tensor_line(focal_mechanism):
     lines[0][23:30] = _str_conv(origin.latitude, 3).rjust(7)
     lines[0][30:38] = _str_conv(origin.longitude, 3).rjust(8)
     lines[0][38:43] = _str_conv(origin.depth / 1000.0, 1).rjust(5)
-    if hasattr(origin, 'creation_info') and hasattr(
-            origin.creation_info, 'agency_id'):
-        lines[0][45:48] = origin.creation_info.agency_id.rjust(3)[0:3]
+    lines[0][45:48] = _get_agency_id(origin)
     lines[0][55:59] = _str_conv(magnitude.mag, 1).rjust(4)
     lines[0][59] = _evmagtonor(magnitude.magnitude_type)
-    if hasattr(magnitude, 'creation_info') and hasattr(
-            magnitude.creation_info, 'agency_id'):
-        lines[0][60:63] = magnitude.creation_info.agency_id.rjust(3)[0:3]
+    lines[0][60:63] = _get_agency_id(magnitude)
     lines[0][70:77] = (str(
         focal_mechanism.moment_tensor.method_id).split('/')[-1]).rjust(7)
     # Sort out the second line
@@ -1619,9 +1654,7 @@ def _write_moment_tensor_line(focal_mechanism):
         focal_mechanism.moment_tensor.tensor.m_rp, 3)[0:6].rjust(6)
     lines[1][38:44] = _str_conv(
         focal_mechanism.moment_tensor.tensor.m_tp, 3)[0:6].rjust(6)
-    if hasattr(magnitude, 'creation_info') and hasattr(
-            magnitude.creation_info, 'agency_id'):
-        lines[1][45:48] = magnitude.creation_info.agency_id.rjust(3)[0:3]
+    lines[1][45:48] = _get_agency_id(magnitude)
     lines[1][48] = 'S'
     lines[1][52:62] = (
         "%.3e" % focal_mechanism.moment_tensor.scalar_moment).rjust(10)
@@ -1653,10 +1686,7 @@ def _write_focal_mechanism_line(focal_mechanism):
     if hasattr(focal_mechanism, 'station_distribution_ratio'):
         line[50:55] = (_str_conv(
             focal_mechanism.station_distribution_ratio, 1)).rjust(5)
-    if hasattr(focal_mechanism, 'creation_info') and hasattr(
-            focal_mechanism.creation_info, 'agency_id'):
-        line[66:69] = (str(
-            focal_mechanism.creation_info.agency_id)).rjust(3)[0:3]
+    line[66:69] = _get_agency_id(focal_mechanism)
     if hasattr(focal_mechanism, 'method_id'):
         line[70:77] = (str(focal_mechanism.method_id).split('/')[-1]).rjust(7)
     return ''.join(line)
@@ -1675,9 +1705,7 @@ def _write_hyp_error_line(origin):
         raise NordicParsingError("Origin has no quality associated")
     error_line[1:5] = 'GAP='
     error_line[5:8] = str(int(origin.quality['azimuthal_gap'])).ljust(3)
-    if hasattr(origin, 'creation_info') and hasattr(
-            origin.creation_info, 'agency_id'):
-        error_line[11:14] = origin.creation_info.agency_id.rjust(3)
+    error_line[11:14] = _get_agency_id(origin)
     error_line[14:20] = (_str_conv(origin.time_errors.uncertainty, 2)).rjust(6)
     # try:
     errors = dict()
@@ -2044,9 +2072,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
             agency = '   '
             author = '   '
             if pick.creation_info is not None:
-                if pick.creation_info.agency_id is not None:
-                    agency = (pick.creation_info.agency_id.ljust(3)[0:3]
-                              or '   ')
+                agency =_get_agency_id(pick)
                 if pick.creation_info.author is not None:
                     author = (pick.creation_info.author.ljust(3)[0:3] or '   ')
 
