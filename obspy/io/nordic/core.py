@@ -1565,15 +1565,21 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
     else:
         timerms = '0.0'
     # Work out how many stations were used
-    # if len(event.picks) > 0:
-    #     stations = [pick.waveform_id.station_code for pick in event.picks]
+    stations = []
     if len(origin.arrivals) > 0:
-        stations = [
-            arrival.pick_id.get_referred_object().waveform_id.station_code
-            for arrival in origin.arrivals]
-        ksta = str(len(set(stations)))
-    else:
-        ksta = ''
+        try:
+            stations = [
+                arrival.pick_id.get_referred_object().waveform_id.station_code
+                for arrival in origin.arrivals]
+            ksta = str(len(set(stations)))
+        except AttributeError:
+            pass
+    if not stations:
+        if len(event.picks) > 0:
+            stations = [pick.waveform_id.station_code for pick in event.picks]
+            ksta = str(len(set(stations)))
+        else:
+            ksta = ''
     evtime = origin.time
     if not evtime:
         return
