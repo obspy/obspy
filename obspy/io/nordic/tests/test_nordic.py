@@ -329,7 +329,7 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 tagged_lines = _get_line_tags(f=f)
                 head_2 = _readheader(head_lines=tagged_lines['1'])
-        _assert_similarity(head_1, head_2)
+        _assert_similarity(head_1, head_2, strict=True)
 
     def test_missing_header(self):
         # Check that a suitable error is raised
@@ -352,7 +352,7 @@ class TestNordicMethods(unittest.TestCase):
             file_object.close()
 
             ref_cat = read_events(filename)
-            _assert_similarity(cat[0], ref_cat[0])
+            _assert_similarity(cat[0], ref_cat[0], strict=True)
 
     def test_reading_bytes_io(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
@@ -367,7 +367,7 @@ class TestNordicMethods(unittest.TestCase):
             file_object.close()
 
             ref_cat = read_events(filename)
-            _assert_similarity(cat[0], ref_cat[0])
+            _assert_similarity(cat[0], ref_cat[0], strict=True)
 
     def test_corrupt_header(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
@@ -522,7 +522,7 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
         for event_1, event_2 in zip(cat, cat_back):
-            _assert_similarity(event_1=event_1, event_2=event_2)
+            _assert_similarity(event_1=event_1, event_2=event_2, strict=False)
 
     def test_write_select_new(self):
         cat = read_events()
@@ -537,7 +537,7 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
         for event_1, event_2 in zip(cat, cat_back):
-            _assert_similarity(event_1=event_1, event_2=event_2)
+            _assert_similarity(event_1=event_1, event_2=event_2, strict=False)
 
     def test_write_plugin(self):
         cat = read_events()
@@ -552,7 +552,8 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
-                _assert_similarity(event_1=event_1, event_2=event_2)
+                _assert_similarity(event_1=event_1, event_2=event_2,
+                                   strict=False)
 
     def test_more_than_three_mags(self):
         cat = Catalog()
@@ -572,7 +573,7 @@ class TestNordicMethods(unittest.TestCase):
             for event_1, event_2 in zip(cat, cat_back):
                 self.assertTrue(
                     len(event_1.magnitudes) == len(event_2.magnitudes))
-                _assert_similarity(event_1, event_2)
+                _assert_similarity(event_1, event_2, strict=False)
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
@@ -702,7 +703,7 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 event_back = read_events(tf.name)
-        _assert_similarity(event, event_back[0])
+        _assert_similarity(event, event_back[0], strict=True)
 
     def test_write_preferred_origin(self):
         event = full_test_event()
@@ -836,7 +837,7 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 event_back = read_events(tf.name)[0]
-        _assert_similarity(event, event_back)
+        _assert_similarity(event, event_back, strict=True)
 
     def test_seconds_overflow(self):
         """
@@ -1128,16 +1129,16 @@ class TestNordicMethods(unittest.TestCase):
         self.assertAlmostEqual(azi_max, 102.0592301)
 
 
-def _assert_similarity(event_1, event_2):
+def _assert_similarity(event_1, event_2, strict=False):
     """
     Raise AssertionError if testing similarity fails
     """
-    similarity_output = _test_similarity(event_1, event_2)
+    similarity_output = _test_similarity(event_1, event_2, strict=strict)
     if similarity_output:
         raise AssertionError(similarity_output)
 
 
-def _test_similarity(event_1, event_2):
+def _test_similarity(event_1, event_2, strict=False):
     """
     Check the similarity of the components of obspy events, discounting
     resource IDs, which are not maintained in nordic files.
@@ -1157,13 +1158,17 @@ def _test_similarity(event_1, event_2):
     # Check origins
     if len(event_1.origins) != len(event_2.origins):
         return False
+    if strict:
+        exc_orig_keys = ["resource_id", "arrivals"]
+    else:
+        exc_orig_keys = [
+            "resource_id", "comments", "arrivals", "method_id",
+            "origin_uncertainty", "depth_type", "quality",
+            "creation_info", "evaluation_mode", "latitude_errors",
+            "longitude_errors", "depth_errors", "time_errors"]
     for ori_1, ori_2 in zip(event_1.origins, event_2.origins):
         for key in ori_1.keys():
-            if key not in ["resource_id", "comments", "arrivals",
-                           "method_id", "origin_uncertainty", "depth_type",
-                           "quality", "creation_info", "evaluation_mode",
-                           "latitude_errors", "longitude_errors",
-                           "depth_errors", "time_errors"]:
+            if key not in exc_orig_keys:
                 if ori_1[key] != ori_2[key]:
                     return ('%s is not the same as %s for key %s' %
                             (ori_1[key], ori_2[key], key))
@@ -1187,10 +1192,14 @@ def _test_similarity(event_1, event_2):
     # Check picks
     if len(event_1.picks) != len(event_2.picks):
         return 'Number of picks is not equal'
+    if strict:
+        exc_pick_keys = ['resource_id']
+    else:
+        exc_pick_keys = ['resource_id', 'waveform_id']
     for pick_1, pick_2 in zip(event_1.picks, event_2.picks):
         # Assuming same ordering of picks...
         for key in pick_1.keys():
-            if key not in ["resource_id", "waveform_id"]:
+            if key not in exc_pick_keys:
                 if pick_1[key] != pick_2[key]:
                     default = pick_default_mapper.get(key, None)
                     if pick_1[key] is None:
@@ -1212,11 +1221,15 @@ def _test_similarity(event_1, event_2):
     # Check amplitudes
     if not len(event_1.amplitudes) == len(event_2.amplitudes):
         return 'Not the same number of amplitudes'
+    if strict:
+        exc_amp_keys = ["resource_id", "pick_id"]
+    else:
+        exc_amp_keys = ["resource_id", "pick_id", "waveform_id", "snr",
+                       "magnitude_hint", 'type']
     for amp_1, amp_2 in zip(event_1.amplitudes, event_2.amplitudes):
         # Assuming same ordering of amplitudes
         for key in amp_1.keys():
-            if key not in ["resource_id", "pick_id", "waveform_id", "snr",
-                           "magnitude_hint", 'type']:
+            if key not in exc_amp_keys:
                 if not amp_1[key] == amp_2[key]:
                     return ("{0} is not the same as {1} for key "
                             "{2}\n{3}\n{4}".format(
