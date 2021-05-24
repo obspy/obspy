@@ -1717,24 +1717,27 @@ def _write_hyp_error_line(origin):
     add_simplified_uncertainty = False
     add_uncertainty = False
     if hasattr(origin, 'origin_uncertainty'):
-        # Even though uncertainty should not be Zero, such files exist.
-        if (origin.origin_uncertainty.min_horizontal_uncertainty == 0.0 or
-                origin.origin_uncertainty.max_horizontal_uncertainty == 0.0):
-            add_simplified_uncertainty = True
-        elif origin.origin_uncertainty is not None:
-            add_uncertainty = True
-        # Following will work once Ellipsoid class added
-        # if hasattr(origin.origin_uncertainty, 'confidence_ellipsoid'):
-        #     cov = Ellipsoid.from_confidence_ellipsoid(
-        #         origin.origin_uncertainty['confidence_ellipsoid']).to_cov()
-        #     errors['x_err'] = sqrt(cov(0, 0)) / 1000.0
-        #     errors['y_err'] = sqrt(cov(1, 1)) / 1000.0
-        #     errors['z_err'] = sqrt(cov(2, 2)) / 1000.0
-        #     # xy_, xz_, then yz_cov fields
-        #     error_line[43:55] = ("%.4e" % (cov(0, 1) / 1.e06)).rjust(12)
-        #     error_line[55:67] = ("%.4e" % (cov(0, 2) / 1.e06)).rjust(12)
-        #     error_line[67:79] = ("%.4e" % (cov(1, 2) / 1.e06)).rjust(12)
-        # else:
+        if (hasattr(origin.origin_uncertainty, 'min_horizontal_uncertainty')
+                and hasattr(origin.origin_uncertainty,
+                            'max_horizontal_uncertainty'):
+            # Even though uncertainty should not be Zero, such files exist.
+            if (origin.origin_uncertainty.min_horizontal_uncertainty == 0.0 or
+                  origin.origin_uncertainty.max_horizontal_uncertainty == 0.0):
+                add_simplified_uncertainty = True
+            elif origin.origin_uncertainty is not None:
+                add_uncertainty = True
+            # Following will work once Ellipsoid class added
+            # if hasattr(origin.origin_uncertainty, 'confidence_ellipsoid'):
+            #     cov = Ellipsoid.from_confidence_ellipsoid(
+            #       origin.origin_uncertainty['confidence_ellipsoid']).to_cov()
+            #     errors['x_err'] = sqrt(cov(0, 0)) / 1000.0
+            #     errors['y_err'] = sqrt(cov(1, 1)) / 1000.0
+            #     errors['z_err'] = sqrt(cov(2, 2)) / 1000.0
+            #     # xy_, xz_, then yz_cov fields
+            #     error_line[43:55] = ("%.4e" % (cov(0, 1) / 1.e06)).rjust(12)
+            #     error_line[55:67] = ("%.4e" % (cov(0, 2) / 1.e06)).rjust(12)
+            #     error_line[67:79] = ("%.4e" % (cov(1, 2) / 1.e06)).rjust(12)
+            # else:
 
     if add_uncertainty:
         cov = Ellipse.from_origin_uncertainty(origin.origin_uncertainty).\
@@ -2043,8 +2046,9 @@ def nordpick(event, high_accuracy=True, version='OLD'):
                     baz_phase_hint = 'BAZ-' + phase_hint
                 else:
                     baz_phase_hint = phase_hint
-                baz_par1 = _str_conv(azimuth).rjust(7)[0:7]
-                baz_par2 = _str_conv(velocity).rjust(3)[0:3].rjust(6)
+                baz_par1 = _str_conv(azimuth, rounded=1).rjust(7)[0:7]
+                baz_par2 = _str_conv(
+                    velocity, rounded=2).rjust(6)[0:5].rjust(6)
                 baz_residual = '     '
                 baz_finalweight = '  '
                 if arrival.backazimuth_residual is not None:
