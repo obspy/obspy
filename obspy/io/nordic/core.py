@@ -469,8 +469,8 @@ def _read_uncertainty(tagged_lines, event):
     # TODO: Convert this to ConfidenceEllipsoid
     errors = {'x_err': None}
     try:
-        errors = {'x_err': _float_conv(line[24:30]),
-                  'y_err': _float_conv(line[32:38]),
+        errors = {'x_err': _float_conv(line[32:38]),
+                  'y_err': _float_conv(line[24:30]),
                   'z_err': _float_conv(line[38:43]),
                   'xy_cov': _float_conv(line[43:55]),
                   'xz_cov': _float_conv(line[55:67]),
@@ -1370,7 +1370,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         evtype += 'E'
     elif event.event_type is not None:
         try:
-            evtype = EVENT_TYPE_AND_CERTAINTY_MAPPING_TO_SEISAN.get(
+            evtype += EVENT_TYPE_AND_CERTAINTY_MAPPING_TO_SEISAN.get(
                 event.event_type_certainty + ' ' + event.event_type)
         except TypeError:
             try:
@@ -1675,8 +1675,10 @@ def _write_hyp_error_line(origin):
         raise NordicParsingError("Origin has no quality associated")
     error_line[1:5] = 'GAP='
     error_line[5:8] = str(int(origin.quality['azimuthal_gap'])).ljust(3)
-    error_line[14:20] = (_str_conv(
-        origin.quality['standard_error'], 2)).rjust(6)
+    if hasattr(origin, 'creation_info') and hasattr(
+            origin.creation_info, 'agency_id'):
+        error_line[11:14] = origin.creation_info.agency_id.rjust(3)
+    error_line[14:20] = (_str_conv(origin.time_errors.uncertainty, 2)).rjust(6)
     # try:
     errors = dict()
     add_simplified_uncertainty = False
