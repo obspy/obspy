@@ -1125,7 +1125,7 @@ class TestNordicMethods(unittest.TestCase):
         azi_max = val['azimuth_max_horizontal_uncertainty']
         self.assertAlmostEqual(hor_max, 1120.674193646)
         self.assertAlmostEqual(hor_min, 451.762494786)
-        self.assertAlmostEqual(azi_max, 167.9407699)
+        self.assertAlmostEqual(azi_max, 102.0592301)
 
 
 def _assert_similarity(event_1, event_2):
