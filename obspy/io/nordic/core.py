@@ -1693,7 +1693,8 @@ def _write_focal_mechanism_line(focal_mechanism):
             focal_mechanism.station_distribution_ratio, 1)).rjust(5)
     line[66:69] = _get_agency_id(focal_mechanism)
     if hasattr(focal_mechanism, 'method_id'):
-        line[70:77] = (str(focal_mechanism.method_id).split('/')[-1]).rjust(7)
+        line[70:77] = (str(focal_mechanism.method_id).split('/')[-1]
+                       ).rjust(7)[0:7]
     return ''.join(line)
 
 
