@@ -890,9 +890,10 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         # Pick-weight from Seisan is not covered by Obspy/Quakeml standard
         if weight is not None:
             pick.extra = {
-                'nordic_pick_weight': weight,
-                'namespace':
-                    'https://seis.geus.net/software/seisan/node239.html'}
+                'nordic_pick_weight': {
+                    'value': weight,
+                    'namespace':
+                        'https://seis.geus.net/software/seisan/node239.html'}}
         # Note BAZ and slowness are not always filled.
         if _float_conv(line[46:51]) is not None:
             pick.backazimuth = _float_conv(line[46:51])
@@ -1019,9 +1020,10 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
         # Pick-weight from Seisan is not covered by Obspy/Quakeml standard
         if weight is not None:
             pick.extra = {
-                'nordic_pick_weight': weight,
-                'namespace':
-                    'https://seis.geus.net/software/seisan/node94.html'}
+                'nordic_pick_weight': {
+                    'value': weight,
+                    'namespace':
+                        'https://seis.geus.net/software/seisan/node239.html'}}
         # Note that BAZ and apparent velocity are not always filled
         found_baz_associated_pick = False
         if 'BAZ' in phase and _float_conv(line[37:44]) is not None:
@@ -1842,7 +1844,7 @@ def nordpick(event, high_accuracy=True, version='OLD'):
         polarity = _str_conv(INV_POLARITY_MAPPING.get(pick.polarity))
         # Extract weight - should be stored as 0-4, or 9 for seisan.
         try:
-            weight = pick.extra.get('nordic_pick_weight')
+            weight = pick.extra.get('nordic_pick_weight')['value']
         except AttributeError:
             weight = ' '
         # Extract velocity: Note that horizontal slowness in quakeML is stored
