@@ -170,7 +170,7 @@ class TestNordicMethods(unittest.TestCase):
                 _assert_similarity(event_1=event_1, event_2=event_2,
                                    strict=False)
         with NamedTemporaryFile(suffix='.out') as tf:
-            cat.write(tf.name, format='NORDIC', version='NEW')
+            cat.write(tf.name, format='NORDIC', nordic_format='NEW')
             cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
                 _assert_similarity(event_1=event_1, event_2=event_2,
@@ -538,7 +538,7 @@ class TestNordicMethods(unittest.TestCase):
             # raises "UserWarning: mb is not convertible"
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
-                write_select(cat, filename=tf.name, version='OLD')
+                write_select(cat, filename=tf.name, nordic_format='OLD')
             self.assertTrue(_is_sfile(tf.name))
             with warnings.catch_warnings():
                 # Type I warning
@@ -553,7 +553,7 @@ class TestNordicMethods(unittest.TestCase):
             # raises "UserWarning: mb is not convertible"
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
-                write_select(cat, filename=tf.name, version='NEW')
+                write_select(cat, filename=tf.name, nordic_format='NEW')
             self.assertTrue(_is_sfile(tf.name))
             with warnings.catch_warnings():
                 # Type I warning
@@ -794,7 +794,7 @@ class TestNordicMethods(unittest.TestCase):
             self.assertEqual(len(pick), 1)
             self.assertEqual(pick[0].time, value)
         with NamedTemporaryFile(suffix=".out") as tf:
-            write_select(cat, filename=tf.name, version='OLD')
+            write_select(cat, filename=tf.name, nordic_format='OLD')
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
@@ -834,7 +834,7 @@ class TestNordicMethods(unittest.TestCase):
         self.assertEqual(pick.phase_hint, "PKiKP")
         self.assertEqual(arrival.time_weight, 1)
         with NamedTemporaryFile(suffix=".out") as tf:
-            write_select(cat, filename=tf.name, version='OLD')
+            write_select(cat, filename=tf.name, nordic_format='OLD')
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
@@ -856,7 +856,8 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 # Evaluation mode mapping warning
                 warnings.simplefilter('ignore', UserWarning)
-                write_select(Catalog([event]), filename=tf.name, version='OLD')
+                write_select(Catalog([event]), filename=tf.name,
+                             nordic_format='OLD')
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 event_back = read_events(tf.name)[0]
@@ -879,7 +880,7 @@ class TestNordicMethods(unittest.TestCase):
             self.assertEqual(len(pick), 1)
             self.assertEqual(pick[0].time, value)
         with NamedTemporaryFile(suffix=".out") as tf:
-            write_select(cat, filename=tf.name, version='OLD')
+            write_select(cat, filename=tf.name, nordic_format='OLD')
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
