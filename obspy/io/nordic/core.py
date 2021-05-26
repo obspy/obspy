@@ -1732,9 +1732,11 @@ def _write_hyp_error_line(origin):
     if not hasattr(origin, 'quality'):
         raise NordicParsingError("Origin has no quality associated")
     error_line[1:5] = 'GAP='
-    error_line[5:8] = str(int(origin.quality['azimuthal_gap'])).ljust(3)
+    if origin.quality['azimuthal_gap']:
+        error_line[5:8] = str(int(origin.quality['azimuthal_gap'])).ljust(3)
     error_line[11:14] = _get_agency_id(origin)
-    error_line[14:20] = (_str_conv(origin.time_errors.uncertainty, 2)).rjust(6)
+    if origin.time_errors.uncertainty:
+        error_line[14:20] = _str_conv(origin.time_errors.uncertainty, 2).rjust(6)
     # try:
     errors = dict()
     add_simplified_uncertainty = False
@@ -1762,27 +1764,36 @@ def _write_hyp_error_line(origin):
             #     error_line[67:79] = ("%.4e" % (cov(1, 2) / 1.e06)).rjust(12)
             # else:
 
+    if origin.depth_errors.uncertainty:
+        errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
+    else:
+        errors['z_err'] = None
     if add_uncertainty:
         cov = Ellipse.from_origin_uncertainty(origin.origin_uncertainty).\
               to_cov()
         errors['x_err'] = sqrt(cov[0][0][0]) / 1000.0
         errors['y_err'] = sqrt(cov[0][1][1]) / 1000.0
-        errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
         # xy covariance field
         error_line[43:55] = ("%.4e" % (cov[0][0][1] / 1.e06)).rjust(12)
     elif add_simplified_uncertainty:  # Deal with Zero uncertainty
         errors['x_err'] = 0.0
         errors['y_err'] = 0.0
-        errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
     else:
-        try:
-            errors['x_err'] = origin.longitude_errors.uncertainty / \
-                              _km_to_deg_lon(1.0, origin.latitude)
-            errors['y_err'] = origin.latitude_errors.uncertainty / \
-                _km_to_deg_lat(1.0)
-            errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
-        except AttributeError:
+        # Only return without writing error-line when no errors available
+        if not (origin.longitude_errors.uncertainty and
+                origin.latitude_errors.uncertainty and
+                origin.depth_errors.uncertainty):
             return ''.join(error_line)
+        try:
+            errors['x_err'] = (origin.longitude_errors.uncertainty /
+                               _km_to_deg_lon(1.0, origin.latitude))
+        except AttributeError:
+            pass
+        try:
+            errors['y_err'] = (origin.latitude_errors.uncertainty /
+                               _km_to_deg_lat(1.0))
+        except AttributeError:
+            pass
 
     error_line[24:30] = (_str_conv(errors['y_err'], 1)).rjust(6)[0:6]
     error_line[32:38] = (_str_conv(errors['x_err'], 1)).rjust(6)[0:6]
