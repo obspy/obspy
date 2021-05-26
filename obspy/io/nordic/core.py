@@ -1736,7 +1736,8 @@ def _write_hyp_error_line(origin):
         error_line[5:8] = str(int(origin.quality['azimuthal_gap'])).ljust(3)
     error_line[11:14] = _get_agency_id(origin)
     if origin.time_errors.uncertainty:
-        error_line[14:20] = _str_conv(origin.time_errors.uncertainty, 2).rjust(6)
+        error_line[14:20] = _str_conv(
+            origin.time_errors.uncertainty, 2).rjust(6)
     # try:
     errors = dict()
     add_simplified_uncertainty = False
