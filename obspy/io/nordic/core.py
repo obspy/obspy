@@ -1783,9 +1783,9 @@ def _write_hyp_error_line(origin):
         except AttributeError:
             return ''.join(error_line)
 
-    error_line[24:30] = (_str_conv(errors['y_err'], 1)).rjust(6)
-    error_line[32:38] = (_str_conv(errors['x_err'], 1)).rjust(6)
-    error_line[38:43] = (_str_conv(errors['z_err'], 1)).rjust(5)
+    error_line[24:30] = (_str_conv(errors['y_err'], 1)).rjust(6)[0:6]
+    error_line[32:38] = (_str_conv(errors['x_err'], 1)).rjust(6)[0:6]
+    error_line[38:43] = (_str_conv(errors['z_err'], 1)).rjust(5)[0:5]
     return ''.join(error_line)
 
 
