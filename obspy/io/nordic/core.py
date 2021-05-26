@@ -736,7 +736,7 @@ def _read_picks(tagged_lines, new_event, nordic_format='UKN'):
             pass
     header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
 
-    if nordic_format=='UKN':
+    if nordic_format == 'UKN':
         nordic_format, phase_ok = check_nordic_format_version(pickline)
 
     if nordic_format == 'NEW':
@@ -1364,7 +1364,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         Note if the event is an explosion, will be marked by an E.
     :type nordic_format: str
     :param nordic_format:
-        nordic_format of Nordic format to be used for output, either OLD or NEW.
+        nordic_format of Nordic format to be used for output, either OLD or
+        NEW.
     :type overwrite: bool
     :param overwrite: force to overwrite old files, defaults to False
     :type string_io: io.StringIO
