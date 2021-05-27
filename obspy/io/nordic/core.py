@@ -1588,6 +1588,7 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
         timerms = '0.0'
     # Work out how many stations were used
     stations = []
+    # First try to count number of arrival-stations
     if len(origin.arrivals) > 0:
         try:
             stations = [
@@ -1596,12 +1597,16 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
             ksta = str(len(set(stations)))
         except AttributeError:
             pass
+    # If not successfull, count the number of pick-stations
     if not stations:
         if len(event.picks) > 0:
             stations = [pick.waveform_id.station_code for pick in event.picks]
             ksta = str(len(set(stations)))
         else:
             ksta = ''
+    # Nordic format supports only 3-letter number of stations
+    if len(ksta) > 3 and len(set(stations)) > 999:
+        ksta = '999'
     evtime = origin.time
     if not evtime:
         return
