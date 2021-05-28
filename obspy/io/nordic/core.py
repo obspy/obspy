@@ -1542,11 +1542,11 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
     conv_mags = []
     if is_preferred_origin:
         agency = _get_agency_id(event)
-        other_origin_ids = [orig.resource_id for orig in event.origins
-                            if orig != origin]
+        other_orig_ids = [orig.resource_id for orig in event.origins
+                          if orig != origin]
     else:  # Addition (not preferred) origin - don't need to add magnitudes
         agency = _get_agency_id(origin)
-        other_origin_ids = [mag.origin_id for mag in event.magnitudes]
+        other_orig_ids = [mag.origin_id for mag in event.magnitudes]
     # Get up to six magnitudes
     mt_ids = []
     if hasattr(event, 'focal_mechanisms'):
@@ -1565,7 +1565,7 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
                 # raise IndexError("Repeated magnitude")
                 # This magnitude will get put in with the moment tensor
             if (event.magnitudes[mag_ind].origin_id == origin.resource_id or
-                  event.magnitudes[mag_ind].origin_id not in other_origin_ids):
+                    event.magnitudes[mag_ind].origin_id not in other_orig_ids):
                 mag_info['mag'] = '{0:.1f}'.format(
                     event.magnitudes[mag_ind].mag) or ''
                 mag_info['type'] = _evmagtonor(event.magnitudes[mag_ind].
