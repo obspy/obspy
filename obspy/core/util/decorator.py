@@ -10,7 +10,7 @@ Decorator used in ObsPy.
 """
 import functools
 import inspect
-import os
+from pathlib import Path
 import re
 import socket
 import tarfile
@@ -140,7 +140,7 @@ def uncompress_file(func, filename, *args, **kwargs):
         return func(filename, *args, **kwargs)
     if not isinstance(filename, str):
         return func(filename, *args, **kwargs)
-    elif not os.path.exists(filename):
+    elif not Path(filename).exists():
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
     # check if we got a compressed file or archive

@@ -22,11 +22,10 @@ Nordic file format support for ObsPy
     in `origin.quality.used_station_count`
 """
 import warnings
-import datetime
-import os
+from pathlib import Path
 import io
 from math import sqrt
-
+import datetime
 from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import (
@@ -858,7 +857,7 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
         str(evtime.minute).zfill(2) + '-' + str(evtime.second).zfill(2) +\
         evtype + '.S' + str(evtime.year) + str(evtime.month).zfill(2)
     # Check is sfile exists
-    if os.path.isfile(sfile) and not overwrite:
+    if Path(sfile).is_file() and not overwrite:
         warnings.warn('Desired sfile: ' + sfile + ' exists, will not ' +
                       'overwrite')
         for i in range(1, 10):
@@ -867,7 +866,7 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
                 str(evtime.minute).zfill(2) + '-' +\
                 str(evtime.second + i).zfill(2) + evtype + '.S' +\
                 str(evtime.year) + str(evtime.month).zfill(2)
-            if not os.path.isfile(sfile):
+            if not Path(sfile).is_file():
                 break
         else:
             msg = ('Tried generated files up to 20s in advance and found ' +
@@ -894,7 +893,7 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
                 str(evtime.minute).zfill(2) + str(evtime.second).zfill(2) +
                 'I'.rjust(6) + '\n')
         # Write line 3 of s-file
-        write_wavfile = os.path.basename(wavefile)
+        write_wavfile = str(Path(wavefile).parent)
         f.write(' ' + write_wavfile + '6'.rjust(79 - len(write_wavfile)) +
                 '\n')
         # Write final line of s-file
@@ -991,7 +990,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         raise NordicParsingError('%s User ID must be 4 characters long'
                                  % userid)
     # Check that outdir exists
-    if not os.path.isdir(outdir):
+    if not Path(outdir).is_dir():
         raise NordicParsingError('Out path does not exist, I will not '
                                  'create this: ' + outdir)
     # Check that evtype is one of L,R,D
@@ -1030,17 +1029,17 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             sfilename = (evtime + add_secs).datetime.strftime('%d-%H%M-%S') +\
                 evtype[0] + '.S' + (evtime + add_secs).\
                 datetime.strftime('%Y%m')
-            if not os.path.isfile(os.path.join(outdir, sfilename)):
-                sfile_path = os.path.join(outdir, sfilename)
+            if not (Path(outdir) / sfilename).is_file():
+                sfile_path = Path(outdir) / sfilename
                 break
             elif overwrite:
-                sfile_path = os.path.join(outdir, sfilename)
+                sfile_path = Path(outdir) / sfilename
                 break
         else:
-            raise NordicParsingError(os.path.join(outdir, sfilename) +
+            raise NordicParsingError(str(Path(outdir) / sfilename) +
                                      ' already exists, will not overwrite')
     else:
-        sfile_path = os.path.join(outdir, filename)
+        sfile_path = Path(outdir) / filename
         sfilename = filename
     # Write the header info.
     if origin.latitude is not None:
@@ -1167,8 +1166,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             userid.ljust(4)[0:4], evtime.strftime("%Y%m%d%H%M%S")))
     # Write line-type 6 of s-file
     for wavefile in wavefiles:
-        sfile.write(' ' + os.path.basename(wavefile) +
-                    '6'.rjust(79 - len(os.path.basename(wavefile))) + '\n')
+        sfile.write(' ' + str(Path(wavefile).name) +
+                    '6'.rjust(79 - len(str(Path(wavefile).name))) + '\n')
     # Write final line of s-file
     sfile.write(' STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU' +
                 ' VELO AIN AR TRES W  DIS CAZ7\n')

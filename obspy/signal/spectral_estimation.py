@@ -20,7 +20,7 @@ Various Routines Related to Spectral Estimation
 import bisect
 import glob
 import math
-import os
+from pathlib import Path
 import warnings
 
 import numpy as np
@@ -46,12 +46,11 @@ from obspy.signal.invsim import paz_to_freq_resp, evalresp
 
 dtiny = np.finfo(0.0).tiny
 
-NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__), "data",
-                                "noise_models.npz")
+NOISE_MODEL_FILE = Path(__file__).parent / "data" / "noise_models.npz"
+
 
 # Noise models for special_handling="infrasound"
-NOISE_MODEL_FILE_INF = os.path.join(os.path.dirname(__file__), "data",
-                                    "idc_noise_models.npz")
+NOISE_MODEL_FILE_INF = Path(__file__).parent / "data" / "idc_noise_models.npz"
 
 earthquake_models = {
     (1.5, 10): [[7.0700000e-01, 1.4140000e+00, 2.8280000e+00, 5.6600000e+00,

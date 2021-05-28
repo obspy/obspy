@@ -29,9 +29,8 @@ Screenshot of resulting html page (cut off at the bottom):
 .. image:: /_static/sds_report.png
 
 """
-import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-
+from pathlib import Path
 import numpy as np
 
 from obspy import __version__, UTCDateTime
@@ -215,7 +214,7 @@ def _format_html(args, data_normal, data_outdated):
     html_legend['ok_info'] = "All checks pass"
     html_legend['outdated_info'] = (
         "No data within {check_back_days:d} days").format(**vars(args))
-    html_legend['output_basename'] = os.path.basename(args.output)
+    html_legend['output_basename'] = Path(args.output).name
     html_legend.update(vars(args))
     html = HTML_TEMPLATE.format(
         time=UTCDateTime().strftime("%c"), lines_normal=lines_normal,
@@ -347,7 +346,7 @@ def main(argv=None):
     # check whether to set up list of streams to check or use existing list
     # update list of streams once per day at nighttime
     if args.update:
-        if not os.path.isfile(streams_file):
+        if not Path(streams_file).is_file():
             msg = ("Update flag specified, but no output of previous full run "
                    "was present in the expected location (as determined by "
                    "``--output`` flag: {})").format(streams_file)

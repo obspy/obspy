@@ -12,6 +12,7 @@ Library name handling for ObsPy.
 # installation time)
 import ctypes
 import os
+from pathlib import Path
 import platform
 import re
 import warnings
@@ -87,22 +88,17 @@ def _load_cdll(name):
     """
     # our custom defined part of the extension file name
     libname = _get_lib_name(name, add_extension_suffix=True)
-    libdir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
-                          'lib')
-    libpath = os.path.join(libdir, libname)
-    # resolve parent directory '../' for windows
-    libpath = os.path.normpath(libpath)
-    libpath = os.path.abspath(libpath)
-    libpath = str(libpath)
+    libdir = Path(__file__).parent / os.pardir / os.pardir / 'lib'
+    libpath = (libdir / libname).resolve()
     try:
-        cdll = ctypes.CDLL(libpath)
+        cdll = ctypes.CDLL(str(libpath))
     except Exception as e:
         import textwrap
         dirlisting = textwrap.wrap(
-            ', '.join(sorted(os.path.dirname(libpath))))
+            ', '.join(sorted(libpath.parent)))
         msg = ['Could not load shared library "%s"' % libname,
                'Path: %s' % libpath,
-               'Current directory: %s' % os.path.abspath(os.curdir),
+               'Current directory: %s' % Path(os.curdir).resolve(),
                'ctypes error message: %s' % str(e),
                'Directory listing of lib directory:',
                '  ',

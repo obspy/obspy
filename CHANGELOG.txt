@@ -2,6 +2,8 @@ master
 ======
 
 Changes:
+ - obspy.*
+   * removed os.path calls with pathlib library calls (see #2751).
  - obspy.clients.seishub:
    * added deprecation message
  - obspy.db:

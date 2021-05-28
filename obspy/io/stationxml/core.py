@@ -12,7 +12,7 @@ import copy
 import inspect
 import io
 import math
-import os
+from pathlib import Path
 import re
 import warnings
 
@@ -121,11 +121,12 @@ def validate_stationxml(path_or_object):
     version = _get_version_from_xmldoc(xmldoc)
 
     # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "fdsn-station-%s.xsd" % version)
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
 
-    if not os.path.exists(schema_location):
+    schema_location = schema_location / "data"
+    schema_location = str(schema_location / ("fdsn-station-%s.xsd" % version))
+
+    if not Path(schema_location).exists():
         msg = "No schema file found to validate StationXML version '%s'"
         raise ValueError(msg % version)
 

@@ -12,10 +12,10 @@ import collections
 import copy
 import fnmatch
 import math
-import os
 import pickle
 import re
 import warnings
+from pathlib import Path
 from glob import glob, has_magic
 
 import numpy as np
@@ -212,7 +212,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
             raise Exception("No file matching file pattern: %s" %
                             pathname_or_url)
         elif not has_magic(pathname_or_url) and \
-                not os.path.isfile(pathname_or_url):
+                not Path(pathname_or_url).is_file():
             raise IOError(2, "No such file or directory", pathname_or_url)
         # Only raise error if no start/end time has been set. This
         # will return an empty stream if the user chose a time window with
@@ -270,9 +270,9 @@ def _create_example_stream(headonly=False):
                'zeros': [0j, 0j]}}
 
     """
-    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    data_dir = Path(__file__).parent / "data"
     if not headonly:
-        path = os.path.join(data_dir, "example.npz")
+        path = data_dir / "example.npz"
         data = np.load(path)
     st = Stream()
     for channel in ["EHZ", "EHN", "EHE"]:
@@ -291,7 +291,7 @@ def _create_example_stream(headonly=False):
         else:
             st.append(Trace(header=header))
     from obspy import read_inventory
-    inv = read_inventory(os.path.join(data_dir, "BW_RJOB.xml"))
+    inv = read_inventory(data_dir / "BW_RJOB.xml")
     st.attach_response(inv)
     return st
 
@@ -1437,7 +1437,7 @@ class Stream(object):
                 raise NotImplementedError(msg)
         if format is None:
             # try to guess format from file extension
-            _, format = os.path.splitext(filename)
+            format = Path(filename).suffix
             format = format[1:]
         format = format.upper()
         try:
@@ -3262,7 +3262,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         Helper method to create a dummy Stream object (with data always equal
         to one) from a string representation of the Stream, mostly for
         debugging purposes.
-
+        >>> import os
         >>> s = ['', '', '3 Trace(s) in Stream:',
         ...      'IU.GRFO..HH2 | 2016-01-07T00:00:00.008300Z - '
         ...      '2016-01-07T00:00:30.098300Z | 10.0 Hz, 301 samples',

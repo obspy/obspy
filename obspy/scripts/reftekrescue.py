@@ -39,7 +39,7 @@ conversion tools.
 """
 import contextlib
 import mmap
-import os
+from pathlib import Path
 import warnings
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from binascii import a2b_hex, b2a_hex
@@ -115,8 +115,9 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
                     # all packets consist of 1024 bytes
                     packet = m[ind:(ind + 1024)]
                     # write to output folder, one file per recording event
-                    filename = "%s.%04d" % (reftek_id, event_no)
-                    filename = os.path.join(output_folder, filename)
+                    filename = Path(output_folder) /\
+                        ("%s.%04d" % (reftek_id, event_no))
+
                     open(filename, "ab").write(packet)
                 # search for pattern in memory map starting right of last
                 # position
@@ -132,9 +133,8 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
         else:
             filename_new += ".ok"
         filename_new += ".reftek"
-        filename_old = os.path.join(output_folder, filename_old)
-        filename_new = os.path.join(output_folder, filename_new)
-        os.rename(filename_old, filename_new)
+        Path(Path(output_folder) / filename_old).rename(Path(output_folder) /
+                                                        filename_new)
 
 
 def main(argv=None):
@@ -170,7 +170,7 @@ def main(argv=None):
         msg += "REFTEK DAS ID."
         raise ValueError(msg)
     # check if output folder is empty (and implicitly if it is there at all)
-    if os.listdir(args.output_folder) != []:
+    if Path(args.output_folder).iterdir() != []:
         msg = "Output directory must be empty as data might get appended " + \
               "to existing files otherwise."
         raise Exception(msg)

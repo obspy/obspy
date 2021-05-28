@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import csv
-import os
+from pathlib import Path
 
 
 class FlinnEngdahl(object):
@@ -16,17 +16,18 @@ class FlinnEngdahl(object):
     GERMANY
     """
 
-    data_directory = os.path.join(os.path.dirname(__file__), 'data')
+    data_directory = Path(__file__).parent / 'data'
 
-    names_file = os.path.join(data_directory, 'names.asc')
-    quadsindex_file = os.path.join(data_directory, 'quadsidx.asc')
+    names_file = data_directory / 'names.asc'
+    quadsindex_file = data_directory / 'quadsidx.asc'
+
     sect_files = (
-        os.path.join(data_directory, 'nesect.asc'),
-        os.path.join(data_directory, 'nwsect.asc'),
-        os.path.join(data_directory, 'sesect.asc'),
-        os.path.join(data_directory, 'swsect.asc')
+        data_directory / 'nesect.asc',
+        data_directory / 'nwsect.asc',
+        data_directory / 'sesect.asc',
+        data_directory / 'swsect.asc'
     )
-    numbers_file = os.path.join(data_directory, 'Flinn-Engdahl.csv')
+    numbers_file = data_directory / 'Flinn-Engdahl.csv'
     quads_order = ('ne', 'nw', 'se', 'sw')
 
     def __init__(self):

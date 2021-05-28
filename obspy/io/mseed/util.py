@@ -5,6 +5,7 @@ MiniSEED specific utilities.
 import collections
 import ctypes as C  # NOQA
 import os
+from pathlib import Path
 import sys
 import warnings
 from datetime import datetime
@@ -1004,9 +1005,9 @@ def set_flags_in_fixed_headers(filename, flags):
     # import has to be here to break import loop
     from .core import _is_mseed
     # Basic check
-    if not os.path.isfile(filename) or not _is_mseed(filename):
+    if not Path(filename).is_file() or not _is_mseed(filename):
         raise IOError("File %s is not a valid MiniSEED file" % filename)
-    filesize = os.path.getsize(filename)
+    filesize = Path(filename).stat().st_size
 
     # Nested dictionaries to allow empty strings as wildcards
     class NestedDict(dict):

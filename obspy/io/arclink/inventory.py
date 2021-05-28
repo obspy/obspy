@@ -15,7 +15,7 @@ This is a modified version of obspy.io.stationxml and obspy.io.sc3ml.
 """
 import inspect
 import math
-import os
+from pathlib import Path
 import re
 import warnings
 
@@ -93,9 +93,8 @@ def validate_arclink_xml(path_or_object):
         element.
     """
     # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "arclink_schema.xsd")
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
+    schema_location = str(schema_location / "data" / "arclink_schema.xsd")
 
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
 

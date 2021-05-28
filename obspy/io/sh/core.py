@@ -9,8 +9,7 @@ SH bindings to ObsPy core module.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
-import os
-
+from pathlib import Path
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
@@ -374,11 +373,13 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
     """
     if not headonly:
         if not data_directory:
-            data_file = os.path.splitext(filename)[0] + '.QBN'
+            path = Path(filename)
+            data_file = Path(path.parent) / (path.stem+".QBN")
+
         else:
-            data_file = os.path.basename(os.path.splitext(filename)[0])
-            data_file = os.path.join(data_directory, data_file + '.QBN')
-        if not os.path.isfile(data_file):
+            path = Path(filename)
+            data_file = Path(data_directory) / Path(filename).stem+".QBN"
+        if not Path(data_file).is_file():
             msg = "Can't find corresponding QBN file at %s."
             raise IOError(msg % data_file)
         fh_data = open(data_file, 'rb')
@@ -405,7 +406,7 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
         header = {}
         header['sh'] = {
             "FROMQ": True,
-            "FILE": os.path.splitext(os.path.split(filename)[1])[0],
+            "FILE": Path(filename).stem,
         }
         channel = ['', '', '']
         npts = 0
@@ -497,16 +498,16 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
     :param append: If filename exists append all data to file, default False.
     """
     if filename.endswith('.QHD') or filename.endswith('.QBN'):
-        filename = os.path.splitext(filename)[0]
+        path = Path(filename)
+        filename = str(Path(path.parent)/path.stem)
     if data_directory:
-        temp = os.path.basename(filename)
-        filename_data = os.path.join(data_directory, temp)
+        filename_data = Path(data_directory) / Path(filename).name
     else:
         filename_data = filename
     filename_header = filename + '.QHD'
 
     # if the header file exists its assumed that the data is also there
-    if os.path.exists(filename_header) and append:
+    if Path(filename_header).exists() and append:
         try:
             trcs = _read_q(filename_header, headonly=True)
             mode = 'ab'
