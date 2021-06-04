@@ -34,7 +34,7 @@ EVENT_TYPE_MAPPING_FROM_SEISAN = {
     " ": "earthquake",
     "L": "landslide",
     "X": "landslide",  # Depreceated Nordic code
-    "S": "acoustic noise",  # not a great translation for "acoustic signal"
+    "S": "sonic boom",  # not a great translation for "acoustic signal"
     "I": "induced or triggered event",
     "O": "other event",
     "C": "ice quake",
