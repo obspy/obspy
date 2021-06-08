@@ -2067,6 +2067,8 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
         elif nordic_format == 'NEW':
             # Define par1, par2, & residual depending on type of observation:
             # Coda, backzimuth (add extra line), amplitude, or other phase pick
+            add_amp_line = False
+            is_amp_pick = False
             add_BAZ_line = False
             par1 = '       '
             par2 = '      '
@@ -2103,8 +2105,22 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                         arrival.backazimuth_weight*10, rounded=0).rjust[2][0:2]
             # Amplitude
             elif amp is not None:
-                par1 = _str_conv(amp, rounded=1).rjust(7)[0:7]
-                par2 = _str_conv(peri, rounded=peri_round).rjust(6)[0:6]
+                add_amp_line = True
+                # check if the amplitude and pick reference the same pick-type
+                # - then don't write the amplitude-pick AND the amplitude
+                if (pick.phase_hint == amplitude.type or
+                        pick.phase_hint[1:] == amplitude.type):
+                    is_amp_pick = True
+                mag_hint = (amplitude.magnitude_hint or amplitude.type)
+                if mag_hint is not None and mag_hint.upper() in ['AML', 'ML']:
+                    amp_phase_hint = 'IAML'
+                else:
+                    amp_phase_hint = 'A'
+                amp_eval_mode = ' ' or INV_EVALUTATION_MAPPING.get(
+                    amplitude.evaluation_mode, None)
+                amp_finalweight = '  '
+                amp_par1 = _str_conv(amp, rounded=1).rjust(7)[0:7]
+                amp_par2 = _str_conv(peri, rounded=peri_round).rjust(6)[0:6]
                 # Get StationMagnitude that corresponds to the amplitude to
                 # print magnitude residual
                 tr_mag = [
@@ -2114,13 +2130,15 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                         == pick.creation_info.agency_id
                         and sta_mag.station_magnitude_type
                         == amplitude.magnitude_hint)]
+                amp_residual = '     '
                 if len(tr_mag) > 0:
                     if len(tr_mag) > 1:
                         msg = 'Nordic files need one trace-amplitude for ' + \
                             'each trace / station-magnitude only.'
                         warnings.warn(msg)
                     mag_residual = tr_mag[0].mag_errors.uncertainty
-                    residual = _str_conv(mag_residual, rounded=2).rjust(5)[0:5]
+                    amp_residual = _str_conv(mag_residual, rounded=2
+                                             ).rjust(5)[0:5]
 
             agency = '   '
             author = '   '
@@ -2136,18 +2154,34 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 "{par1:7s}{par2:6s} {agency:3s} {author:3s}"
                 "{ain:5s}{residual:5s}{finalweight:2s}"
                 "{distance:5s} {caz:3s} ")
-            pick_strings.append(pick_string_formatter.format(
-                station=pick.waveform_id.station_code, channel=channel_code,
-                network=network_code, location=location_code,
-                impulsivity=impulsivity, phase_hint=phase_hint,
-                weight=_str_conv(weight).rjust(1), eval_mode=eval_mode,
-                hour=pick_hour, minute=pick.time.minute,
-                seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
-                par1=par1, par2=par2, agency=agency, author=author,
-                ain=ain.rjust(5)[0:5], residual=residual,
-                finalweight=finalweight,
-                distance=distance.rjust(5)[0:5],
-                caz=_str_conv(caz).rjust(3)[0:3]))
+            if not is_amp_pick:
+                pick_strings.append(pick_string_formatter.format(
+                    station=pick.waveform_id.station_code,
+                    channel=channel_code, network=network_code,
+                    location=location_code, impulsivity=impulsivity,
+                    phase_hint=phase_hint, weight=_str_conv(weight).rjust(1),
+                    eval_mode=eval_mode, hour=pick_hour,
+                    minute=pick.time.minute,
+                    seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
+                    par1=par1, par2=par2, agency=agency, author=author,
+                    ain=ain.rjust(5)[0:5], residual=residual,
+                    finalweight=finalweight,
+                    distance=distance.rjust(5)[0:5],
+                    caz=_str_conv(caz).rjust(3)[0:3]))
+            if add_amp_line:
+                pick_strings.append(pick_string_formatter.format(
+                    station=pick.waveform_id.station_code,
+                    channel=channel_code, network=network_code,
+                    location=location_code, impulsivity=' ',
+                    phase_hint=amp_phase_hint.ljust(8)[0:8], weight=' ',
+                    eval_mode=amp_eval_mode, hour=pick_hour,
+                    minute=pick.time.minute,
+                    seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
+                    par1=amp_par1, par2=amp_par2, agency=agency, author=author,
+                    ain='     ', residual=amp_residual,
+                    finalweight=amp_finalweight,
+                    distance=distance.rjust(5)[0:5],
+                    caz=_str_conv(caz).rjust(3)[0:3]))
             if add_BAZ_line:
                 pick_strings.append(pick_string_formatter.format(
                     station=pick.waveform_id.station_code,
