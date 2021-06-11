@@ -123,8 +123,121 @@ def unpack_4byte_ieee(file, count, endian='>'):
     return data
 
 
-def unpack_1byte_integer(file, count, endian='>'):
+def unpack_8byte_ieee(file, count, endian='>'):
+    """
+    Unpacks 8 byte IEEE floating points.
+    """
     raise NotImplementedError
+    ## Read as 8 byte integer so bit shifting works.
+    #data = from_buffer(file.read(count * 8), dtype=np.float64)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
+
+
+def unpack_3byte_integer(file, count, endian='>'):
+    """
+    Unpacks 3 byte two's compliment integer.
+    """
+    raise NotImplementedError
+    ## Read as 3 byte integer and append an extra zero byte to the end.
+    #data = from_buffer(file.read(count * 3) + byte_array(b'\x00'), dtype=np.int32)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
+
+
+def unpack_1byte_integer(file, count, endian='>'):
+    """
+    Unpacks 1 byte two's compliment integer.
+    """
+    raise NotImplementedError
+    ## Read as 1 byte integer.
+    #data = from_buffer(file.read(count * 1), dtype=np.int8)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
+
+
+def unpack_8byte_integer(file, count, endian='>'):
+    """
+    Unpacks 8 byte two's compliment integer.
+    """
+    raise NotImplementedError
+    ## Read as 8 byte integer.
+    #data = from_buffer(file.read(count * 8), dtype=np.int64)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
+
+
+def unpack_4byte_uint(file, count, endian='>'):
+    """
+    Unpacks 4 byte unsigned integer.
+    """
+    raise NotImplementedError
+    ## Read as 4 byte integer.
+    #data = from_buffer(file.read(count * 4), dtype=np.uint32)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
+
+
+def unpack_2byte_uint(file, count, endian='>'):
+    """
+    Unpacks 2 byte unsigned integer.
+    """
+    raise NotImplementedError
+    ## Read as 2 byte integer.
+    #data = from_buffer(file.read(count * 2), dtype=np.uint16)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
+
+
+def unpack_8byte_uint(file, count, endian='>'):
+    """
+    Unpacks 8 byte unsigned integer.
+    """
+    raise NotImplementedError
+    ## Read as 8 byte integer.
+    #data = from_buffer(file.read(count * 8), dtype=np.uint64)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
+
+
+def unpack_3byte_uint(file, count, endian='>'):
+    """
+    Unpacks 3 byte unsigned integer.
+    """
+    raise NotImplementedError
+    ## Read as 3 byte unsigned integer and append an extra zero byte to the end.
+    #data = from_buffer(file.read(count * 3) + byte_array(b'\x00'), dtype=np.uint32)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
+
+
+def unpack_1byte_uint(file, count, endian='>'):
+    """
+    Unpacks 1 byte unsigned integer.
+    """
+    raise NotImplementedError
+    ## Read as 1 byte unsigned integer.
+    #data = from_buffer(file.read(count * 1), dtype=np.uint8)
+    ## Swap the byte order if necessary.
+    #if BYTEORDER != endian:
+    #    data = data.byteswap()
+    #return data
 
 
 class OnTheFlyDataUnpacker:
