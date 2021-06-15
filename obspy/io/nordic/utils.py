@@ -58,7 +58,7 @@ EVENT_TYPE_MAPPING_TO_SEISAN = {
     "explosion": "E",
     "earthquake": "Q",
     "landslide": "L",
-    "acoustic noise": "S",
+    "sonic boom": "S",
     "induced or triggered event": "I",
     "other event": "O",
     "ice quake": "C",
