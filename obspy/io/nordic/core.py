@@ -2108,8 +2108,9 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 add_amp_line = True
                 # check if the amplitude and pick reference the same pick-type
                 # - then don't write the amplitude-pick AND the amplitude
-                if (pick.phase_hint == amplitude.type or
-                        pick.phase_hint[1:] == amplitude.type):
+                if (pick.phase_hint and (pick.phase_hint == amplitude.type or
+                        pick.phase_hint[1:] == amplitude.type)
+                        and _is_iasp_ampl_phase(pick.phase_hint)):
                     is_amp_pick = True
                 mag_hint = (amplitude.magnitude_hint or amplitude.type)
                 if mag_hint is not None and mag_hint.upper() in ['AML', 'ML']:

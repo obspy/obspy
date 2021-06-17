@@ -282,6 +282,8 @@ def _is_iasp_ampl_phase(phase):
 
     :returns: bool, whether phase string is an amplitude phase
     """
+    if phase is None:
+        return False
     phase = phase.strip()
     try:
         if phase[0] in ACCEPTED_1CHAR_AMPLITUDE_PHASE_TAGS:
