@@ -1390,7 +1390,10 @@ def nordpick(event, high_accuracy=True):
                 warnings.warn("Multiple arrivals for pick - only writing one")
             arrival = arrival[0]
             # Extract weight - should be stored as 0-4, or 9 for seisan.
-            weight = _str_conv(int(arrival.time_weight or 0))
+            if arrival.time_weight is None:
+                weight = ' '
+            else:
+                weight = _str_conv(int(arrival.time_weight))
             # Extract azimuth residual
             if arrival.backazimuth_residual is not None:
                 azimuthres = _str_conv(int(arrival.backazimuth_residual))
@@ -1425,7 +1428,7 @@ def nordpick(event, high_accuracy=True):
                 caz = ' '
         else:
             caz, distance, timeres, azimuthres, azimuth, weight, ain = (
-                ' ', ' ', ' ', ' ', ' ', 0, ' ')
+                ' ', ' ', ' ', ' ', ' ', ' ', ' ')
         phase_hint = pick.phase_hint or ' '
         # Extract amplitude: note there can be multiple amplitudes, but they
         # should be associated with different picks.

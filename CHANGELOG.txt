@@ -11,6 +11,9 @@ Changes:
  - obspy.io.gse2:
    * When reading GSE2 bulletins, station magnitudes now include waveform IDs
      and have associated station magnitude contributions (see #2718)
+ - obspy.io.nordic:
+   * fixed a bug where the number 0 was converted to string ' ' instead of '0'
+   * Made default pick weight ' ' (unspecified) instead of '0' (best)
  - obspy.io.xseed:
    * Properly read a given value of 0.0 in station elevation and not replace it
      with bogus value (see #2763)
