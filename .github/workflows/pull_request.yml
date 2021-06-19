@@ -11,7 +11,7 @@ env:
   ISSUE_NUMBER: ${{ github.event.pull_request.number }}
   PR_URL: https://github.com/obspy/obspy/pull/${{ github.event.pull_request.number }}
   CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
-  CONFIG_PATH: obspy_ci_config/conf.json
+  CONFIG_PATH: conf.json
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   OBSPY_GITHUB_BRANCH: release_0.10.0
 
@@ -22,19 +22,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout obspy
+        uses: actions/checkout@v2.3.4
 
-      - uses: actions/setup-python@v1
+      - name: Setup python
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: '3.x'
 
       - name: create ci config
         run: |
-          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+          python -m pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
           obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token=${GITHUB_TOKEN}
 
       - name: upload ci config
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2.2.3
         with:
           name: obspy_ci_config
           path: ${{ env.CONFIG_PATH }}
@@ -44,16 +46,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout obspy
+        uses: actions/checkout@v2.3.4
 
-      - uses: actions/setup-python@v2
+      - name: Setup python
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: '3.x'
 
       - name: Install flake8
         run: |
-          pip install wheel
-          pip install flake8
+          python -m pip install wheel
+          python -m pip install flake8
 
       - name: Set up reviewdog
         run: |
@@ -83,10 +87,11 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
 
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout obspy
+        uses: actions/checkout@v2.3.4
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -104,7 +109,7 @@ jobs:
           python --version
 
       - name: download test config
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2.0.9
         with:
           name: obspy_ci_config
 
@@ -134,7 +139,7 @@ jobs:
           coverage xml -o coverage.xml
 
       - name: upload coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v1.5.2
         with:
           flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
