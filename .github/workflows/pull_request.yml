@@ -35,7 +35,7 @@ jobs:
           obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token=${GITHUB_TOKEN}
 
       - name: upload ci config
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: obspy_ci_config
           path: ${{ env.CONFIG_PATH }}
