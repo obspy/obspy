@@ -183,7 +183,6 @@ class FlinnEngdahl(object):
 
         return fe_name
 
-
     def get_region_by_number(self, number):
         """
         Return region with given number
