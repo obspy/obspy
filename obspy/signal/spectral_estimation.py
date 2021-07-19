@@ -1670,12 +1670,12 @@ class PPSD(object):
         if filename is not None:
             plt.savefig(filename)
             plt.close()
-        elif show:
-            plt.draw()
+            return
+        
+        plt.draw()
+        if show:
             plt.show()
-        else:
-            plt.draw()
-            return fig
+        return fig
 
     def extract_psd_values(self, period):
         """
