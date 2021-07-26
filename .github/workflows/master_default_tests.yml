@@ -55,7 +55,7 @@ jobs:
           coverage xml -o coverage.xml
 
       - name: upload coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2.0.2
         with:
           flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
