@@ -9,11 +9,13 @@ Evt (Kinemetrics) format support for ObsPy.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 from struct import unpack
+import warnings
 
 import numpy as np
 
 from obspy import Stream, Trace
 from obspy.core.compatibility import from_buffer
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from .evt_base import (EvtBadDataError, EvtBadHeaderError, EvtEOFError,
                        EvtVirtual)
 
@@ -53,9 +55,9 @@ class Evt(object):
         self.e_data = EvtData()
         self.samplingrate = 0
 
-    def calibration(self):
+    def get_calibs(self):
         """
-        Apply calibrations on data matrix
+        Gets calibration values for each traces
 
         Note about calibration:
             fullscale of instrument = +/- 2.5V & +/-20V
@@ -66,26 +68,47 @@ class Evt(object):
             calibration in MKS units = (data_in_volts / sensitivity) * g
 
         """
+        calibs = []
         for i in range(self.e_header.nchannels):
             calib_volts = 8388608.0 / self.e_header.chan_fullscale[i]
             # 8388608 = 2**23
             calib_mks = (calib_volts *
                          self.e_header.chan_sensitivity[i]) / (9.81)
             # 9.81 = mean value of g on earth
-            self.data[i] /= calib_mks
+            calibs.append(calib_mks)
+        return calibs
 
-    def read_file(self, filename_or_object, raw=False):
+    def calibration(self):
+        """
+        Apply calibrations on data matrix
+        """
+        calibs = self.get_calibs()
+        for i in range(self.e_header.nchannels):
+            self.data[i] /= calibs[i]
+
+    def read_file(self, filename_or_object, apply_calib=False, **kwargs):
         """
         Reads an Evt file to the internal data structure
 
         :type filename_or_object: str or file-like object
         :param filename_or_object: Evt file to be read
-        :type raw : bool
-        :param raw : True if raw data (no corrections, int32)
-                     False if data in m/s2 (default)
+        :type apply_calib: bool
+        :param apply_calib: If False, the raw data will be returned (no
+            corrections, int32, default), if True, the data will be in m/s2.
         :rtype: obspy.core.stream.Stream
         :return: Obspy Stream with data
         """
+
+        # Need to deprecate "raw" until version 2.1
+        if "raw" in kwargs:
+            apply_calib = not kwargs["raw"]
+            warnings.warn(
+                'The "raw" keyword argument is deprecated, please use '
+                '"apply_calib" instead. Note the behaviour is flipped, so '
+                '"raw=True" becomes "apply_calib=False, which is default now. '
+                'Setting "apply_calib=%s" and continuing...' % apply_calib,
+                ObsPyDeprecationWarning)
+
         # Support reading from filenames of file-like objects.
         if hasattr(filename_or_object, "seek") and \
                 hasattr(filename_or_object, "tell") and \
@@ -126,7 +149,8 @@ class Evt(object):
         if self.e_frame.count() != self.e_header.duration:
             raise EvtBadDataError("Bad number of blocks")
 
-        if not raw:
+        calibs = self.get_calibs()
+        if apply_calib:
             self.calibration()
 
         traces = []
@@ -137,6 +161,8 @@ class Evt(object):
             cur_trace.stats.sampling_rate = float(self.samplingrate)
             cur_trace.stats.starttime = self.e_header.starttime
             cur_trace.stats.kinemetrics_evt = self.e_header.make_obspy_dict(i)
+            if not apply_calib:
+                cur_trace.stats.calib = 1./calibs[i]
             traces.append(cur_trace)
 
         return Stream(traces=traces)

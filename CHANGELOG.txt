@@ -34,12 +34,18 @@ Changes:
  - obspy.io.hypodd
    * add PHA write support (see #2687)
    * add read support for horizontal and vertical origin uncertainty (see #2687)
+ - obspy.io.kinemetrics:
+   * adds the ``apply_calib`` argument to the ``read_evt`` method to allow
+     obtaining the raw data bits stored in the evt file (see #2582), note this
+     changes the default (wrong!) behaviour, by default the data returned will
+     be the NOT corrected ones. When passing ``apply_calib=True``, the
+     calibration factor will be used.
  - obspy.io.nordic:
    * add read and write support for New Nordic format (see #2814)
    * fix bug where negative magnitudes were not read properly
    * fix bug where empty hours / minutes / seconds were not read as zero
    * fix bug where lat/lon-errors were read as lon/lat
-   * fix bug where origin-error was written with RMS rather than time_error 
+   * fix bug where origin-error was written with RMS rather than time_error
    * for reading picks in Old Nordic format, set network code to None
      (was 'NA' previously)
    * stop writing waveform-file link to a DUMMY-file by default
