@@ -10,6 +10,9 @@ Changes:
    * added deprecation message
    * removed from default test suite
  - obspy.core:
+   * read_inventory(): add "level" option to read files faster when less level
+     of detail is needed. currently only implemented for StationXML reading
+     (see #2759)
    * add option to suppress evalresp sensitivity mismatch warning when removing
      instrument response (see #2677)
    * round magnitudes in Catalog/Event string representation to one decimal
