@@ -123,7 +123,7 @@ def _ns(tagname):
     return "{%s}%s" % (SCHEMA_NAMESPACE, tagname)
 
 
-def _read_inventory_xml(path_or_file_object):
+def _read_inventory_xml(path_or_file_object, **kwargs):
     """
     Function for reading an Arclink inventory file.
 
