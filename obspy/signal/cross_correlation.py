@@ -387,9 +387,10 @@ def xcorr_max(fct, abs_max=True):
 
     :type fct: :class:`~numpy.ndarray`
     :param fct: Cross-correlation function e.g. returned by correlate.
-    :param bool abs_max: Determines if the absolute maximum (positive or
-        negative) should be used. If `False`, maximum positive
-        cross-correlation used.
+    :param bool abs_max: Determines if the largest value of the correlation
+        function is returned, independent of it being positive (correlation) or
+        negative (anti-correlation). Defaults to `True`. If `False` the maximum
+        returned is positive only.
     :return: **shift, value** - Shift and value of maximum of
         cross-correlation.
 
