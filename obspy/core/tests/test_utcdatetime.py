@@ -189,6 +189,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # enforce ISO8601 - no chance to detect that format
         dt = UTCDateTime("2009001", iso8601=True)
         self.assertEqual(dt, UTCDateTime(2009, 1, 1))
+        # Compact day 360 - see issues #2868
+        dt = UTCDateTime("2012360T")
+        self.assertEqual(dt, UTCDateTime(2012, 12, 25)) # Note leapyear
         # w/ trailing Z
         dt = UTCDateTime("2009-365T12:23:34.5Z")
         self.assertEqual(dt, UTCDateTime(2009, 12, 31, 12, 23, 34, 500000))
