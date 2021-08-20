@@ -17,17 +17,16 @@ Nordic file format support for ObsPy
 
   note::
 
+    Station-magnitude residuals (only for New Nordic files) are handled in
+    obspy.core.event.magnitude.StationMagnitude.mag_errors.uncertainty.
+
+  note::
+
     When you read a Nordic file into Obspy and then write to Nordic format, the
     following information is not retained:
      - amplitude-picks have no distance or azimuth to source
      - some event (sub-)types may change if no equivalent event type exists in
        Obspy
-
-.. versionchanged:: 1.2.0
-
-    The number of stations used to calculate the origin was previously
-    incorrectly stored in a comment. From version 1.2.0 this is now stored
-    in `origin.quality.used_station_count`
 
 .. versionchanged:: 1.2.3
     * The pick-weight from the Nordic file (0-4, 9) is now read into
@@ -36,6 +35,12 @@ Nordic file format support for ObsPy
       backazmiuth_weight, respectively).
     * Empty network codes are now read as None instead of "NA"
     * Magnitudes are no longer automatically sorted by size.
+
+.. versionchanged:: 1.2.0
+
+    The number of stations used to calculate the origin was previously
+    incorrectly stored in a comment. From version 1.2.0 this is now stored
+    in `origin.quality.used_station_count`
 
 """
 import warnings
@@ -2133,8 +2138,9 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 add_amp_line = True
                 # check if the amplitude and pick reference the same pick-type
                 # - then don't write the amplitude-pick AND the amplitude
-                if (pick.phase_hint and (pick.phase_hint == amplitude.type or
-                        pick.phase_hint[1:] == amplitude.type)
+                if (pick.phase_hint and
+                        (pick.phase_hint == amplitude.type or
+                         pick.phase_hint[1:] == amplitude.type)
                         and _is_iasp_ampl_phase(pick.phase_hint)):
                     is_amp_pick = True
                 mag_hint = (amplitude.magnitude_hint or amplitude.type)
