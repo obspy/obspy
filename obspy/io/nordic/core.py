@@ -15,11 +15,28 @@ Nordic file format support for ObsPy
     information) with the pick.resource_id (where the pick contains only
     physical measured information).
 
+  note::
+
+    When you read a Nordic file into Obspy and then write to Nordic format, the
+    following information is not retained:
+     - amplitude-picks have no distance or azimuth to source
+     - some event (sub-)types may change if no equivalent event type exists in
+       Obspy
+
 .. versionchanged:: 1.2.0
 
     The number of stations used to calculate the origin was previously
     incorrectly stored in a comment. From version 1.2.0 this is now stored
     in `origin.quality.used_station_count`
+
+.. versionchanged:: 1.2.3
+    * The pick-weight from the Nordic file (0-4, 9) is now read into
+      pick.extra.nordic_pick_weight (was arrival.time_weight) while the
+      finalweight (0-100 %) is read into arrival.time_weight (or
+      backazmiuth_weight, respectively).
+    * Empty network codes are now read as None instead of "NA"
+    * Magnitudes are no longer automatically sorted by size.
+
 """
 import warnings
 import datetime
@@ -1830,7 +1847,7 @@ def _write_comment(comment):
         comment_line[-1] = '6'
 
     # Check if it's a type-I line comment:
-    if "ACTION" in upper(comment_str) and comment_str[-2:] == ' I':
+    if "ACTION" in comment_str.upper() and comment_str[-2:] == ' I':
         comment_line[-1] = 'I'
 
     n_comment_chars = len(comment_str)
