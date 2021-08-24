@@ -60,6 +60,7 @@ Changes:
    * Inventory addition now consistently uses shallow copies (#2675, #2694)
  - obspy.clients.fdsn:
    * add URL mapping for IRISPH5 (see #2739)
+   * update RESIF URL mapping to use https
  - obspy.clients.seedlink:
    * Fix a bug in basic client when printing debug output (see #2734)
  - obspy.io.gse2:
