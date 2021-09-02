@@ -2150,41 +2150,50 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             # Amplitude
             elif amp is not None:
                 add_amp_line = True
-                # check if the amplitude and pick reference the same pick-type
-                # - then don't write the amplitude-pick AND the amplitude
-                if (pick.phase_hint and
-                        (pick.phase_hint == amplitude.type or
-                         pick.phase_hint[1:] == amplitude.type)
-                        and _is_iasp_ampl_phase(pick.phase_hint)):
-                    is_amp_pick = True
-                mag_hint = (amplitude.magnitude_hint or amplitude.type)
-                if mag_hint is not None and mag_hint.upper() in ['AML', 'ML']:
-                    amp_phase_hint = 'IAML'
-                else:
-                    amp_phase_hint = 'A'
-                amp_eval_mode = ' ' or INV_EVALUTATION_MAPPING.get(
-                    amplitude.evaluation_mode, None)
-                amp_finalweight = '  '
-                amp_par1 = _str_conv(amp, rounded=1).rjust(7)[0:7]
-                amp_par2 = _str_conv(peri, rounded=peri_round).rjust(6)[0:6]
-                # Get StationMagnitude that corresponds to the amplitude to
-                # print magnitude residual
-                tr_mag = [
-                    sta_mag for sta_mag in event.station_magnitudes
-                    if (sta_mag.amplitude_id == amplitude.resource_id
-                        and sta_mag.creation_info.agency_id
-                        == pick.creation_info.agency_id
-                        and sta_mag.station_magnitude_type
-                        == amplitude.magnitude_hint)]
-                amp_residual = '     '
-                if len(tr_mag) > 0:
-                    if len(tr_mag) > 1:
-                        msg = 'Nordic files need one trace-amplitude for ' + \
-                            'each trace / station-magnitude only.'
-                        warnings.warn(msg)
-                    mag_residual = tr_mag[0].mag_errors.uncertainty
-                    amp_residual = _str_conv(mag_residual, rounded=2
-                                             ).rjust(5)[0:5]
+                # In New Nordic format, multiple amplitudes can now be associ-
+                # ated with one pick (e.g., measured at different periods)
+                amp_phase_hints, amp_eval_modes, amp_finalweights = [], [], []
+                amp_par1s, amp_par2s = [], []
+                amp_residuals, mag_residuals = [], []
+                for j, amp in enumerate(amp_list):
+                    # check if the amplitude and pick reference the same phase
+                    # - then the amplitude in the line below the pick.
+                    if (pick.phase_hint and
+                            (pick.phase_hint == amplitudes[j].type or
+                             pick.phase_hint[1:] == amplitudes[j].type)
+                            and _is_iasp_ampl_phase(pick.phase_hint)):
+                        is_amp_pick = True
+                    mag_hint = (
+                        amplitudes[j].magnitude_hint or amplitudes[j].type)
+                    if (mag_hint is not None and
+                            mag_hint.upper() in ['AML', 'ML']):
+                        amp_phase_hints.append('IAML')
+                    else:
+                        amp_phase_hints.append('A')
+                    amp_eval_modes.append(' ' or INV_EVALUTATION_MAPPING.get(
+                        amplitude.evaluation_mode, None))
+                    amp_finalweights.append('  ')
+                    amp_par1s.append(_str_conv(amp, rounded=1).rjust(7)[0:7])
+                    amp_par2s.append(
+                        _str_conv(peri, rounded=peri_round).rjust(6)[0:6])
+                    # Get StationMagnitude that corresponds to the amplitude to
+                    # print magnitude residual
+                    tr_mag = [
+                        sta_mag for sta_mag in event.station_magnitudes
+                        if (sta_mag.amplitude_id == amplitudes[j].resource_id
+                            and sta_mag.creation_info.agency_id
+                            == pick.creation_info.agency_id
+                            and sta_mag.station_magnitude_type
+                            == amplitudes[j].magnitude_hint)]
+                    amp_residuals.append('     ')
+                    if len(tr_mag) > 0:
+                        if len(tr_mag) > 1:
+                            msg = ('Nordic files need one trace-amplitude for '
+                                   + 'each trace / station-magnitude only.')
+                            warnings.warn(msg)
+                        mag_residuals.append(tr_mag[0].mag_errors.uncertainty)
+                        amp_residuals[j] = _str_conv(
+                            mag_residuals[j], rounded=2).rjust(5)[0:5]
 
             agency = '   '
             author = '   '
