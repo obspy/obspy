@@ -297,6 +297,28 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(tr.stats.sh.COMMENT), len(tr2.stats.sh.COMMENT))
         self.assertEqual(tr.stats.sh.COMMENT, tr2.stats.sh.COMMENT)
 
+    def test_append_traces(self):
+        """
+        Test for issue #2870
+        """
+        stream = read()
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            stream.write(tempfile, format="Q")
+            with open(tempfile) as f:
+                header1 = f.read()
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            stream[:1].write(tempfile, format="Q")
+            stream[1:].write(tempfile, format="Q", append=True)
+            with open(tempfile) as f:
+                header2 = f.read()
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
+        self.assertEqual(header2, header1)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
