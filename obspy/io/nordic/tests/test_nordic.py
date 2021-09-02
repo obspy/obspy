@@ -497,7 +497,7 @@ class TestNordicMethods:
             warnings.simplefilter('ignore', UserWarning)
             event = read_nordic(testing_path)[0]
         assert len(event.origins) == 1
-        assert len(event.picks) == 50
+        assert len(event.picks) == 51
         assert len(event.origins[0].arrivals) == 34
 
     def test_read_latin1(self):
@@ -1161,7 +1161,7 @@ class TestNordicMethods:
             seedid = 'XX.{}.00.H{}'
             event = read_nordic(testing_path, default_seedid=seedid)[0]
         assert len(event.origins) == 1
-        assert len(event.picks) == 50
+        assert len(event.picks) == 51
         # no changes because net code and location given in nordic file
         assert event.picks[0].waveform_id.network_code != 'XX'
 

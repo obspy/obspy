@@ -79,6 +79,7 @@
  BLS5 HHZ NS00 EP         0345 39.200              BER ml  92.0-0.0710 96.8 142 
  BLS5 HHE NS00 ES         0345 50.640              BER ml  92.0-0.0110 96.8 142 
  BLS5 HHZ NS00  IAML      0345 51.990   33.7  0.16 BER mls      0.57   96.8 142 
+ BLS5 HHZ NS00  A         0345 51.990  200.0  5.00 BER mls      0.57   96.8 142
  KMY  HHZ NS00 EP         0345 39.650              BER ml  91.0-0.1610  101 185 
  KMY  HHZ NS00 E          0345 40.310              BER mls              101 185 
  KMY  HHN NS00 ES       4 0345 51.710              BER ml  91.0 0.12 0  101 185 
