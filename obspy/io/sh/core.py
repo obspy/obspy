@@ -510,12 +510,11 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
     if Path(filename_header).exists() and append:
         try:
             trcs = _read_q(filename_header, headonly=True)
-            mode = 'ab'
-            count_offset = len(trcs)
-            cur_npts_offset = sum(
-                [trcs[i].stats.npts for i in range(len(trcs))])
         except Exception:
             raise Exception("Target filename '%s' not readable!" % filename)
+        mode = 'ab'
+        count_offset = len(trcs)
+        cur_npts_offset = sum([trcs[i].stats.npts for i in range(len(trcs))])
     else:
         append = False
         mode = 'wb'
