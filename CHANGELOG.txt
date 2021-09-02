@@ -38,6 +38,8 @@ Changes:
      (see #2678)
    * properly take into account native system byteorder, should fix reading
      rt130 data on big endian systems (see #2678)
+ - obspy.io.sh:
+   * fix appending traces to existing Q file (see #2870)
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
