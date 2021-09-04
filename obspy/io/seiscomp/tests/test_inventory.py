@@ -306,6 +306,25 @@ class SC3MLTestCase(unittest.TestCase):
         self.assertEqual(zeros, [])
         self.assertEqual(poles, [])
 
+    def test_omit_response(self):
+        """
+        Test SC3ML inventory with response information that leads to
+        ObspyException. Read up to channel level and omit response stages
+        information.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "IM.I31KZ.sc3ml"))
+
+        self.assertEqual(inv[0].code, "IM")
+        self.assertEqual(inv[0][0].code, "I31H1")
+
+        expected = ["BDF", "LWD", "LWS", "LKO", "LDA"]
+        got = [cha.code for cha in inv[0][0].channels]
+        self.assertEqual(expected, got)
+
+        for sta in inv[0]:
+            for cha in sta:
+                self.assertEqual(cha.response.response_stages, [])
+
 
 def suite():
     return unittest.makeSuite(SC3MLTestCase, "test")

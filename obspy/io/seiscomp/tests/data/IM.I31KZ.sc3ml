@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.8" version="0.8">
+  <Inventory>
+    <sensor publicID="Sensor#20200807061628.692291.13" name="Sensor#20200807061628.692291.13" response="ResponseFAP#20200807061628.711794.14">
+      <description>Seismowave absolute pressure microbarometer</description>
+      <model>MB3a</model>
+      <unit>M</unit>
+    </sensor>
+    <sensor publicID="Sensor#20200807061628.722916.18" name="Sensor#20200807061628.722916.18">
+      <description>Vaisala WXT536</description>
+      <model>WXT536</model>
+    </sensor>
+    <datalogger publicID="Datalogger#20200807061628.691245.12" name="Datalogger#20200807061628.691245.12">
+      <gain>419430</gain>
+      <decimation sampleRateNumerator="20" sampleRateDenominator="1">
+        <digitalFilterChain>ResponseFIR#20200807061628.683113.11</digitalFilterChain>
+      </decimation>
+    </datalogger>
+    <datalogger publicID="Datalogger#20200807061628.719632.17" name="Datalogger#20200807061628.719632.17">
+      <gain>1</gain>
+      <decimation sampleRateNumerator="20" sampleRateDenominator="1">
+        <analogueFilterChain>ResponsePAZ#20200807061628.712497.15</analogueFilterChain>
+        <digitalFilterChain>ResponseFIR#20200807061628.715608.16</digitalFilterChain>
+      </decimation>
+    </datalogger>
+    <responsePAZ publicID="ResponsePAZ#20200807061628.669636.10" name="ResponsePAZ#20200807061628.669636.10">
+      <type>A</type>
+      <gain>0.02</gain>
+      <gainFrequency>0.25</gainFrequency>
+      <normalizationFactor>70181.84997</normalizationFactor>
+      <normalizationFrequency>0.25</normalizationFrequency>
+      <numberOfZeros>2</numberOfZeros>
+      <numberOfPoles>4</numberOfPoles>
+      <zeros>(-1156.25,0) (0,0)</zeros>
+      <poles>(-0.062834,0) (-156.25,0) (-142.122,706.193) (-142.122,-706.193)</poles>
+    </responsePAZ>
+    <responsePAZ publicID="ResponsePAZ#20200807061628.712497.15" name="ResponsePAZ#20200807061628.712497.15">
+      <type>A</type>
+      <gain>419430</gain>
+      <gainFrequency>1</gainFrequency>
+      <normalizationFactor>70176.81845</normalizationFactor>
+      <normalizationFrequency>1</normalizationFrequency>
+      <numberOfZeros>2</numberOfZeros>
+      <numberOfPoles>4</numberOfPoles>
+      <zeros>(-1156.25,0) (0,0)</zeros>
+      <poles>(-0.062834,0) (-156.25,0) (-142.122,706.193) (-142.122,-706.193)</poles>
+    </responsePAZ>
+    <responseFIR publicID="ResponseFIR#20200807061628.683113.11" name="ResponseFIR#20200807061628.683113.11">
+      <gain>1</gain>
+      <decimationFactor>1</decimationFactor>
+      <delay>0</delay>
+      <correction>0</correction>
+      <numberOfCoefficients>67</numberOfCoefficients>
+      <symmetry>A</symmetry>
+      <coefficients>3.771622e-17 -1.6971263e-10 1.7183769e-08 -2.4396441e-07 2.5825193e-07 1.5608987e-06 -1.8170374e-06 2.4137647e-06 -3.7049074e-06 8.7327567e-07 3.6423511e-05 -0.00024683311 -0.00039359882 0.00065596116 -0.001020252 0.0012305107 -0.0010604299 0.00028861329 0.0012268313 -0.0034585489 0.0061462784 -0.0087582095 0.010517854 -0.010495466 0.0077688228 -0.0016282018 -0.0076409597 0.019894414 -0.038761941 0.055104411 -0.071369635 0.08330357 -0.086719458 0.062876883 0.88995076 0.1670017 -0.12868654 0.10072625 -0.075500737 0.051595197 -0.031114641 0.011006032 0.00047617321 -0.0082388155 0.012421118 -0.013133279 0.01144166 -0.0084523488 0.0051364373 -0.0022056665 6.4757742e-05 0.0011723495 -0.0016096229 0.0014835919 -0.0010652902 0.000590532 -0.00027357644 -0.00032148402 3.9851542e-05 1.0833027e-06 -4.642973e-06 2.8844792e-06 -1.6208104e-06 1.3161658e-06 4.7251905e-07 -3.2963658e-07 2.7142341e-08</coefficients>
+    </responseFIR>
+    <responseFIR publicID="ResponseFIR#20200807061628.715608.16" name="ResponseFIR#20200807061628.715608.16">
+      <delay>0</delay>
+      <correction>0</correction>
+      <numberOfCoefficients>67</numberOfCoefficients>
+      <symmetry>A</symmetry>
+      <coefficients>3.771622e-17 -1.6971263e-10 1.7183769e-08 -2.4396441e-07 2.5825193e-07 1.5608987e-06 -1.8170374e-06 2.4137647e-06 -3.7049074e-06 8.7327567e-07 3.6423511e-05 -0.00024683311 -0.00039359882 0.00065596116 -0.001020252 0.0012305107 -0.0010604299 0.00028861329 0.0012268313 -0.0034585489 0.0061462784 -0.0087582095 0.010517854 -0.010495466 0.0077688228 -0.0016282018 -0.0076409597 0.019894414 -0.038761941 0.055104411 -0.071369635 0.08330357 -0.086719458 0.062876883 0.88995076 0.1670017 -0.12868654 0.10072625 -0.075500737 0.051595197 -0.031114641 0.011006032 0.00047617321 -0.0082388155 0.012421118 -0.013133279 0.01144166 -0.0084523488 0.0051364373 -0.0022056665 6.4757742e-05 0.0011723495 -0.0016096229 0.0014835919 -0.0010652902 0.000590532 -0.00027357644 -0.00032148402 3.9851542e-05 1.0833027e-06 -4.642973e-06 2.8844792e-06 -1.6208104e-06 1.3161658e-06 4.7251905e-07 -3.2963658e-07 2.7142341e-08</coefficients>
+    </responseFIR>
+    <responseFAP publicID="ResponseFAP#20200807061628.711794.14" name="ResponseFAP#20200807061628.711794.14">
+      <gain>1</gain>
+      <gainFrequency>0.25</gainFrequency>
+      <numberOfTuples>186</numberOfTuples>
+      <tuples>1e-05 1 0 0.001 1 -0.00036528544 0.0010593 1 -0.00038694682 0.001122 1 -0.00040985017 0.0011885 1 -0.00043414158 0.0012589 1 -0.0004598576 0.0013335 1 -0.0004871078 0.0014125 1 -0.00051596523 0.0014962 1 -0.00054653947 0.0015849 1 -0.00057894012 0.0016788 1 -0.00061324021 0.0017783 1 -0.00064958586 0.0018836 1 -0.00068805011 0.0019953 1.0000001 -0.00072885212 0.0021135 1.0000001 -0.00077202842 0.0022387 1.0000001 -0.00081776163 0.0023714 1.0000001 -0.00086623437 0.0025119 1.0000001 -0.00091755622 0.0026607 1.0000001 -0.00097190979 0.0028184 1.0000001 -0.0010295142 0.0029854 1.0000001 -0.0010905156 0.0031623 1.0000001 -0.0011551331 0.0033497 1.0000001 -0.0012235858 0.0035481 1.0000002 -0.0012960562 0.0037584 1.0000002 -0.0013728732 0.0039811 1.0000002 -0.0014542192 0.004217 1.0000002 -0.0015403865 0.0044668 1.0000003 -0.0016316305 0.0047315 1.0000003 -0.0017283166 0.0050119 1.0000003 -0.0018307366 0.0053088 1.0000004 -0.0019391829 0.0056234 1.0000004 -0.0020540934 0.0059566 1.0000004 -0.0021757967 0.0063096 1.0000005 -0.002304731 0.0066834 1.0000006 -0.0024412613 0.0070795 1.0000006 -0.0025859351 0.0074989 1.0000007 -0.0027391173 0.0079433 1.0000008 -0.0029014287 0.008414 1.0000009 -0.0030733434 0.0089125 1.000001 -0.0032554091 0.0094406 1.0000011 -0.0034482826 0.01 1.0000013 -0.0036525844 0.010593 1.0000014 -0.0038691538 0.01122 1.0000016 -0.0040981366 0.011885 1.0000018 -0.0043409929 0.012589 1.000002 -0.0045980876 0.013335 1.0000023 -0.0048705158 0.014125 1.0000025 -0.0051590077 0.014962 1.0000028 -0.0054646587 0.015849 1.0000032 -0.0057885645 0.016788 1.0000036 -0.0061314562 0.017783 1.000004 -0.0064947954 0.018836 1.0000045 -0.0068793143 0.019953 1.0000051 -0.0072872065 0.021135 1.0000057 -0.0077188407 0.022387 1.0000064 -0.0081760478 0.023714 1.0000072 -0.0086606603 0.025119 1.000008 -0.0091737821 0.026607 1.000009 -0.0097172502 0.028184 1.0000101 -0.01029327 0.029854 1.0000114 -0.010903318 0.031623 1.0000128 -0.011549609 0.033497 1.0000144 -0.01223436 0.035481 1.0000161 -0.01295943 0.037584 1.0000181 -0.013728145 0.039811 1.0000203 -0.01454238 0.04217 1.0000228 -0.015405116 0.044668 1.0000256 -0.01631898 0.047315 1.0000287 -0.017287712 0.050119 1.0000323 -0.018314339 0.053088 1.0000362 -0.019401907 0.056234 1.0000407 -0.020554954 0.059566 1.0000456 -0.021776949 0.063096 1.0000512 -0.023072497 0.066834 1.0000575 -0.024445513 0.070795 1.0000645 -0.025901797 0.074989 1.0000724 -0.027445375 0.079433 1.0000813 -0.029082918 0.08414 1.0000912 -0.030819708 0.089125 1.0001024 -0.032661862 0.094406 1.0001149 -0.03461672 0.1 1.0001289 -0.036691387 0.10593 1.0001447 -0.038895352 0.1122 1.0001623 -0.041231212 0.11885 1.000182 -0.043715172 0.12589 1.0002042 -0.0463525 0.13335 1.000229 -0.049156208 0.14125 1.0002568 -0.052135874 0.14962 1.0002879 -0.055305201 0.15849 1.0003228 -0.058678319 0.16788 1.0003619 -0.062266007 0.17783 1.0004056 -0.066087194 0.18836 1.0004545 -0.070153726 0.19953 1.0005093 -0.074493581 0.21135 1.0005705 -0.079116117 0.22387 1.0006389 -0.084047053 0.23714 1.0007155 -0.089313168 0.25119 1.0008011 -0.09493437 0.26607 1.0008967 -0.10093967 0.28184 1.0010036 -0.10736352 0.29854 1.001123 -0.11423379 0.31623 1.0012564 -0.12158814 0.33497 1.0014053 -0.1294662 0.35481 1.0015715 -0.13790544 0.37584 1.0017571 -0.14696281 0.39811 1.0019642 -0.15668089 0.4217 1.0021953 -0.16711824 0.44668 1.002453 -0.17833244 0.47315 1.0027407 -0.19039849 0.50119 1.0030615 -0.20338687 0.53088 1.0034192 -0.21737267 0.56234 1.0038182 -0.23245529 0.59566 1.004263 -0.24872602 0.63096 1.004759 -0.2662973 0.66834 1.0053117 -0.2852788 0.70795 1.005928 -0.30581348 0.74989 1.0066145 -0.3280271 0.79433 1.0073798 -0.35209133 0.8414 1.0082324 -0.37816667 0.89125 1.0091824 -0.40643463 0.94406 1.0102409 -0.4371052 1 1.0114205 -0.47039518 1.0593 1.0127361 -0.50657118 1.122 1.0141998 -0.54579647 1.1885 1.0158336 -0.58847385 1.2589 1.0176545 -0.63483617 1.3335 1.0196865 -0.6852647 1.4125 1.0219537 -0.74009759 1.4962 1.0244859 -0.79976758 1.5849 1.0273163 -0.86474027 1.6788 1.0304791 -0.93544182 1.7783 1.0340191 -1.0124883 1.8836 1.0379799 -1.0963899 1.9953 1.0424261 -1.1880339 2.1135 1.0474105 -1.2879698 2.2387 1.0530099 -1.397152 2.3714 1.0593126 -1.5166393 2.5119 1.0664097 -1.6474225 2.6607 1.0744162 -1.7908033 2.8184 1.0834711 -1.9483485 2.9854 1.093724 -2.1216234 3.1623 1.1053625 -2.3126298 3.3497 1.1186083 -2.5236696 3.5481 1.1337165 -2.7572906 3.7584 1.1510257 -3.0169762 3.9811 1.1709106 -3.3063226 4.217 1.1938572 -3.6300507 4.4668 1.2204562 -3.9937398 4.7315 1.2514829 -4.4047354 5.0119 1.2878996 -4.8718986 5.3088 1.3309487 -5.4065246 5.6234 1.3823336 -6.0241271 5.9566 1.4442964 -6.7447526 6.3096 1.5199975 -7.5966277 6.6834 1.6138826 -8.6191703 7.0795 1.7326444 -9.8719763 7.4989 1.8863698 -11.444917 7.9433 2.0916029 -13.487417 8.414 2.3763779 -16.257876 8.9125 2.7920368 -20.249233 9.4406 3.4394673 -26.513176 10 4.5172651 -37.595592 10.593 6.2110109 -60.013283 11.22 6.9029609 -100.2641 11.885 4.8874615 -135.35493 12.589 3.1750879 -153.12839 13.335 2.1911461 -162.50931 14.125 1.5971046 -168.3362 14.962 1.2058097 -172.51026 15.849 0.92749737 -175.87527 16.788 0.71550154 -178.87876 17.783 0.54173178 178.17265 18.836 0.38641445 175.00583 19.953 0.22974174 171.25663 21.135 0.043792136 166.31101 22.387 0.23233419 -21.261399 23.714 0.77851816 -35.869358 25.119 2.0636948 -74.631792 26.607 2.4135538 -138.40765 28.184 1.9059782 -168.98338 29.854 1.872622 170.93783 31.623 2.3480201 136.64792 33.497 1.6962967 64.569244 35.481 0.60992616 29.244669 37.584 0.2438815 14.850818 39.811 0.09116681 4.9156363</tuples>
+    </responseFAP>
+    <network publicID="Network#20200807061628.492862.2" code="IM">
+      <station publicID="Station#20200807061628.496837.7" code="I31H1">
+        <start>2019-11-18T00:00:00.0000Z</start>
+        <description>Aktyubinsk</description>
+        <latitude>50.4069</latitude>
+        <longitude>58.03485</longitude>
+        <elevation>364</elevation>
+        <type>ss</type>
+        <remark>dnorth:0,deast:0,refsta:I31H1</remark>
+        <sensorLocation publicID="SensorLocation#20200807061628.647916.8" code="">
+          <start>2019-11-18T00:00:00.0000Z</start>
+          <latitude>50.4069</latitude>
+          <longitude>58.03485</longitude>
+          <elevation>364</elevation>
+          <stream code="BDF" datalogger="Datalogger#20200807061628.719632.17" sensor="Sensor#20200807061628.692291.13">
+            <start>2020-06-30T00:00:00.0000Z</start>
+            <sampleRateNumerator>20</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <gain>8.082832871e+12</gain>
+            <gainFrequency>0.25</gainFrequency>
+            <gainUnit>M</gainUnit>
+            <format>steim2</format>
+          </stream>
+          <stream code="LWD" sensor="Sensor#20200807061628.722916.18">
+            <start>2019-11-18T00:00:00.0000Z</start>
+            <sampleRateNumerator>1</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <gain>1000000000</gain>
+            <gainFrequency>0.25</gainFrequency>
+            <format>steim2</format>
+          </stream>
+          <stream code="LWS" sensor="Sensor#20200807061628.722916.18">
+            <start>2019-11-18T00:00:00.0000Z</start>
+            <sampleRateNumerator>1</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <gain>1e+10</gain>
+            <gainFrequency>0.25</gainFrequency>
+            <format>steim2</format>
+          </stream>
+          <stream code="LKO" sensor="Sensor#20200807061628.722916.18">
+            <start>2019-11-18T00:00:00.0000Z</start>
+            <sampleRateNumerator>1</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <gain>1e+10</gain>
+            <gainFrequency>0.25</gainFrequency>
+            <format>steim2</format>
+          </stream>
+          <stream code="LDA" sensor="Sensor#20200807061628.722916.18">
+            <start>2019-11-18T00:00:00.0000Z</start>
+            <sampleRateNumerator>1</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <gain>100000000</gain>
+            <gainFrequency>0.25</gainFrequency>
+            <format>steim2</format>
+          </stream>
+        </sensorLocation>
+      </station>
+      <station publicID="Station#20200807061628.733023.26" code="I31H2">
+        <start>2019-11-18T00:00:00.0000Z</start>
+        <description>Aktyubinsk</description>
+        <latitude>50.40861</latitude>
+        <longitude>58.03431</longitude>
+        <elevation>366</elevation>
+        <type>ss</type>
+        <remark>dnorth:0.19042999999999999,deast:-0.038309999999999997,refsta:I31H1</remark>
+        <sensorLocation publicID="SensorLocation#20200807061628.733305.27" code="">
+          <start>2019-11-18T00:00:00.0000Z</start>
+          <latitude>50.40861</latitude>
+          <longitude>58.03431</longitude>
+          <elevation>366</elevation>
+          <stream code="BDF" datalogger="Datalogger#20200807061628.719632.17" sensor="Sensor#20200807061628.692291.13">
+            <start>2020-06-30T00:00:00.0000Z</start>
+            <sampleRateNumerator>20</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <gain>8.170134889e+12</gain>
+            <gainFrequency>0.25</gainFrequency>
+            <gainUnit>M</gainUnit>
+            <format>steim2</format>
+          </stream>
+        </sensorLocation>
+      </station>
+      <station publicID="Station#20200807061628.770937.41" code="I31H3">
+        <start>2019-11-18T00:00:00.0000Z</start>
+        <description>Aktyubinsk</description>
+        <latitude>50.40759</latitude>
+        <longitude>58.03838</longitude>
+        <elevation>367</elevation>
+        <type>ss</type>
+        <remark>dnorth:0.077179999999999999,deast:0.25046000000000002,refsta:I31H1</remark>
+        <sensorLocation publicID="SensorLocation#20200807061628.774597.42" code="">
+          <start>2019-11-18T00:00:00.0000Z</start>
+          <latitude>50.40759</latitude>
+          <longitude>58.03838</longitude>
+          <elevation>367</elevation>
+          <stream code="BDF" datalogger="Datalogger#20200807061628.719632.17" sensor="Sensor#20200807061628.692291.13">
+            <start>2020-06-30T00:00:00.0000Z</start>
+            <sampleRateNumerator>20</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <gain>7.9417394e+12</gain>
+            <gainFrequency>0.25</gainFrequency>
+            <gainUnit>M</gainUnit>
+            <format>steim2</format>
+          </stream>
+        </sensorLocation>
+      </station>
+     </network>
+  </Inventory>
+</seiscomp>
