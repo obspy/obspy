@@ -27,6 +27,8 @@ Changes:
    * introduce fine-grained FDSN client exceptions (see #2653)
    * support for "eventtype" parameter in get_events(), as specified in version
      1.2 of the FDSN event web service (see #2780)
+   * Hostnames with hyphens and long TLDs are no longer rejected as invalid
+     FDSN server URLs (#2878)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.io.css:
