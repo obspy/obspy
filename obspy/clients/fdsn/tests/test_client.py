@@ -142,13 +142,18 @@ class ClientTestCase(unittest.TestCase):
             "http://[2001:db8::ff00:42:8329]",
             "http://[::ffff:192.168.89.9]",
             "http://jane",
-            "http://localhost"]
+            "http://localhost",
+            "http://hyphenated-internal-hostname",
+            "http://internal-machine.private",
+            "https://long-public-tld.international",
+            "http://punycode-tld.xn--fiqs8s"]
 
         test_urls_fails = [
             "http://",
             "http://127.0.1",
             "http://127.=.0.1",
-            "http://127.0.0.0.1"]
+            "http://127.0.0.0.1",
+            "http://tld.too.long." + ("x" * 64)]
         test_urls_fails += [
             "http://[]",
             "http://[1]",
@@ -158,14 +163,14 @@ class ClientTestCase(unittest.TestCase):
             "http://[1:2:2:4:5:6:7]"]
 
         for url in test_urls_valid:
-            self.assertEqual(
+            self.assertTrue(
                 self.client._validate_base_url(url),
-                True)
+                msg='%s should be valid' % url)
 
         for url in test_urls_fails:
-            self.assertEqual(
+            self.assertFalse(
                 self.client._validate_base_url(url),
-                False)
+                msg='%s should be invalid' % url)
 
     def test_url_building(self):
         """
