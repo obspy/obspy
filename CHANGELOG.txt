@@ -8,6 +8,8 @@ Changes:
    * add URL mapping for IRISPH5 (see #2739)
  - obspy.clients.seedlink:
    * Fix a bug in basic client when printing debug output (see #2734)
+ - obspy.clients.filesystem.tsindex:
+   * improvements to leap second file setup and other small fixes (see #2776)
  - obspy.io.gse2:
    * When reading GSE2 bulletins, station magnitudes now include waveform IDs
      and have associated station magnitude contributions (see #2718)
