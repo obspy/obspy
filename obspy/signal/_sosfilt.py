@@ -249,7 +249,7 @@ def _zpk2sos(z, p, k, pairing='nearest'):
 
     The coefficents of the numerators of the sections:
 
-    >>> sos[:, :3]
+    >>> sos[:, :3]  # doctest: +SKIP
     array([[ 0.0014154 ,  0.00248707,  0.0014154 ],
            [ 1.        ,  0.72965193,  1.        ],
            [ 1.        ,  0.17594966,  1.        ]])
@@ -259,7 +259,7 @@ def _zpk2sos(z, p, k, pairing='nearest'):
 
     The coefficients of the denominators of the sections:
 
-    >>> sos[:, 3:]
+    >>> sos[:, 3:]  # doctest: +SKIP
     array([[ 1.        , -1.32543251,  0.46989499],
            [ 1.        , -1.26117915,  0.6262586 ],
            [ 1.        , -1.25707217,  0.86199667]])
