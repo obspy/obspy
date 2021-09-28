@@ -510,14 +510,16 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
     if Path(filename_header).exists() and append:
         try:
             trcs = _read_q(filename_header, headonly=True)
-            mode = 'ab'
-            count_offset = len(trcs)
         except Exception:
             raise Exception("Target filename '%s' not readable!" % filename)
+        mode = 'ab'
+        count_offset = len(trcs)
+        cur_npts_offset = sum([trcs[i].stats.npts for i in range(len(trcs))])
     else:
         append = False
         mode = 'wb'
         count_offset = 0
+        cur_npts_offset = 0
 
     fh = open(filename_header, mode)
     fh_data = open(filename_data + '.QBN', mode)
@@ -525,7 +527,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
     # build up header strings
     headers = []
     minnol = 4
-    cur_npts = 0
+    cur_npts = 0 + cur_npts_offset
     for trace in stream:
         temp = "L000:%d~ " % cur_npts
         cur_npts += trace.stats.npts
