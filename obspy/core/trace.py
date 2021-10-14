@@ -1743,7 +1743,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             x_i *= large_w[:self.stats.npts // 2 + 1]
 
         # interpolate
-        num = int(self.stats.npts / factor)
+        num = max(1, int(self.stats.npts / factor))
         df = 1.0 / (self.stats.npts * self.stats.delta)
         d_large_f = 1.0 / num * sampling_rate
         f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=np.int32)
