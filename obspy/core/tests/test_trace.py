@@ -2754,6 +2754,15 @@ class TraceTestCase(unittest.TestCase):
         tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=2))
         self.assertEqual(tr_orig, tr_pickled)
 
+    def test_resample_short_traces(self):
+        """
+        Tests that resampling of short traces leaves at least one sample
+        """
+        tr = Trace(data=np.ones(2), header={'sampling_rate': 100})
+        tr.resample(30)
+        self.assertEqual(tr.stats.sampling_rate, 30)
+        self.assertEqual(tr.data.shape[0], 1)
+
 
 def suite():
     suite = unittest.TestSuite()

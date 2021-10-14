@@ -7,6 +7,7 @@ Changes:
    * Removed obsolete wrapper around numpy.loadtxt causing import error with
      numpy 1.22 (see #2912, #2913)
    * Fix iso8601 regex for issue #2868 to cope with day 360 properly.
+   * Fix crash when resampling very short traces
  - obspy.clients.fdsn:
    * add URL mapping for IRISPH5 (see #2739)
  - obspy.clients.seedlink:
