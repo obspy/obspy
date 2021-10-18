@@ -46,6 +46,7 @@ Nordic file format support for ObsPy
 import warnings
 from pathlib import Path
 import io
+import os
 import re
 from math import sqrt
 import datetime
@@ -1667,6 +1668,7 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
                 conv_mags[5]['mag'].rjust(4), conv_mags[5]['type'].rjust(1),
                 conv_mags[5]['agency'][0:3].rjust(3)))
     return ''.join([''.join(line) for line in lines])
+
 
 def _write_moment_tensor_line(focal_mechanism):
     """
