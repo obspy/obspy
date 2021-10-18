@@ -42,3 +42,4 @@ misc/docker_tests/temp/
 # Temporary dir for the anaconda builds.
 misc/installer/anaconda/conda_builds
 .vscode/**
+venv

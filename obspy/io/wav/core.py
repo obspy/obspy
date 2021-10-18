@@ -16,7 +16,7 @@ WAV bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import os
+from pathlib import Path
 import wave
 
 import numpy as np
@@ -132,7 +132,8 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
         tries to autodetect width from data, uses 4 otherwise
     """
     i = 0
-    base, ext = os.path.splitext(filename)
+    file_path = Path(filename)
+    base = file_path.parent / file_path.stem
     if width not in WIDTH2DTYPE.keys() and width is not None:
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
@@ -146,7 +147,7 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
             tr_width = width
         # write WAV file
         if len(stream) >= 2:
-            filename = "%s%03d%s" % (base, i, ext)
+            filename = "%s%03d%s" % (base, i, file_path.suffix)
         w = wave.open(filename, 'wb')
         try:
             trace.stats.npts = len(trace.data)

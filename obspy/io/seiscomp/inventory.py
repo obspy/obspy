@@ -81,7 +81,7 @@ def _parse_list_of_complex_string(complex_string):
     return numbers
 
 
-def _read_sc3ml(path_or_file_object):
+def _read_sc3ml(path_or_file_object, **kwargs):
     """
     Function for reading a stationXML file.
 

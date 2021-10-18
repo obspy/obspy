@@ -34,6 +34,7 @@ available providers are:
 >>> from obspy.clients.fdsn.header import URL_MAPPINGS
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<11} {1}".format(key,  URL_MAPPINGS[key]))
+AUSPASS     http://auspass.edu.au
 BGR         http://eida.bgr.de
 EMSC        http://www.seismicportal.eu
 ETH         http://eida.ethz.ch
@@ -54,7 +55,7 @@ NOA         http://eida.gein.noa.gr
 ODC         http://www.orfeus-eu.org
 ORFEUS      http://www.orfeus-eu.org
 RASPISHAKE  https://fdsnws.raspberryshakedata.com
-RESIF       http://ws.resif.fr
+RESIF       https://ws.resif.fr
 SCEDC       http://service.scedc.caltech.edu
 TEXNET      http://rtserve.beg.utexas.edu
 UIB-NORSAR  http://eida.geo.uib.no

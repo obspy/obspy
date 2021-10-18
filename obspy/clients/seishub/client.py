@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+DEPRECATED -- SeisHub database client is deprecated
+
 SeisHub database client for ObsPy.
 
 :copyright:
@@ -24,6 +26,7 @@ from lxml.etree import Element, SubElement, tostring
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.xseed import Parser
 from obspy.io.xseed.utils import SEEDParserException
 
@@ -74,6 +77,8 @@ def _objectify_result_to_dicts(root):
 
 class Client(object):
     """
+    DEPRECATED -- SeisHub database client is deprecated
+
     SeisHub database request Client class.
 
     The following classes are automatically linked with initialization.
@@ -87,24 +92,13 @@ class Client(object):
     ``Client.station``   :class:`~obspy.clients.seishub.client._StationMapperClient`
     ``Client.event``     :class:`~obspy.clients.seishub.client._EventMapperClient`
     ===================  ============================================================
-
-    .. rubric:: Example
-
-    >>> from obspy.clients.seishub import Client
-    >>>
-    >>> t = UTCDateTime("2009-09-03 00:00:00")
-    >>> client = Client(timeout=20)
-    >>>
-    >>> st = client.waveform.get_waveforms(
-    ...     "BW", "RTBE", "", "EHZ", t, t + 20)  # doctest: +SKIP
-    >>> print(st)  # doctest: +ELLIPSIS +SKIP
-    1 Trace(s) in Stream:
-    BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
     """  # noqa
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
                  user="admin", password="admin", timeout=10, debug=False,
                  retries=3):
         """
+        DEPRECATED -- SeisHub database client is deprecated
+
         Initializes the SeisHub Web service client.
 
         :type base_url: str, optional
@@ -124,6 +118,9 @@ class Client(object):
         :type retries: int
         :param retries: Number of retries for failing requests.
         """
+        msg = "The module obspy.client.seishub is deprecated and will be " + \
+            "removed in the next major release."
+        warnings.warn(msg, ObsPyDeprecationWarning)
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
         self.station = _StationMapperClient(self)
@@ -292,14 +289,6 @@ class _BaseRESTClient(object):
         :param xml_string: XML for a send request (PUT/POST)
         :rtype: tuple
         :return: (HTTP status code, HTTP status message)
-
-        .. rubric:: Example
-
-        >>> c = Client()
-        >>> xseed_file = "dataless.seed.BW_UH1.xml"
-        >>> xml_str = open(xseed_file).read()  # doctest: +SKIP
-        >>> c.station.put_resource(xseed_file, xml_str)  # doctest: +SKIP
-        (201, 'OK')
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
@@ -703,22 +692,6 @@ master/seishub/plugins/seismology/waveform.py
             e.g. ``'2010-01-01 12:00:00'``.
         :rtype: dict
         :return: Dictionary containing zeros, poles, gain and sensitivity.
-
-        .. rubric:: Example
-
-        >>> c = Client(timeout=20)
-        >>> paz = c.station.get_paz(
-        ...     'BW.MANZ..EHZ', '20090707')  # doctest: +SKIP
-        >>> paz['zeros']  # doctest: +SKIP
-        [0j, 0j]
-        >>> len(paz['poles'])  # doctest: +SKIP
-        5
-        >>> print(paz['poles'][0])  # doctest: +SKIP
-        (-0.037004+0.037016j)
-        >>> paz['gain']  # doctest: +SKIP
-        60077000.0
-        >>> paz['sensitivity']  # doctest: +SKIP
-        2516800000.0
         """
         # try to read PAZ from previously obtained XSEED data
         for res in self.client.xml_seeds.get(seed_id, []):

@@ -14,6 +14,7 @@ import importlib
 import inspect
 import io
 import os
+from pathlib import Path
 import re
 import sys
 import tempfile
@@ -124,7 +125,7 @@ class NamedTemporaryFile(io.BufferedIOBase):
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
         self.close()
-        os.remove(self.name)
+        Path(self.name).unlink()
 
 
 def create_empty_data_chunk(delta, dtype, fill_value=None):
@@ -200,12 +201,12 @@ def get_example_file(filename):
                              fromlist=["obspy"])
         except ImportError:
             continue
-        file_ = os.path.join(mod.__path__[0], "tests", "data", filename)
-        if os.path.isfile(file_):
-            return file_
-        file_ = os.path.join(mod.__path__[0], "data", filename)
-        if os.path.isfile(file_):
-            return file_
+        file_ = Path(mod.__path__[0]) / "tests" / "data" / filename
+        if file_.is_file():
+            return str(file_)
+        file_ = Path(mod.__path__[0]) / "data" / filename
+        if file_.is_file():
+            return str(file_)
     msg = ("Could not find file %s in tests/data or data "
            "directory of ObsPy modules") % filename
     raise OSError(msg)
@@ -405,7 +406,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     Reads a single file from a plug-in's readFormat function.
     """
     if isinstance(filename, str):
-        if not os.path.exists(filename):
+        if not Path(filename).exists():
             msg = "[Errno 2] No such file or directory: '{}'".format(
                 filename)
             raise FileNotFoundError(msg)
@@ -463,8 +464,8 @@ def get_script_dir_name():
     Get the directory of the current script file. This is more robust than
     using __file__.
     """
-    return os.path.abspath(os.path.dirname(inspect.getfile(
-        inspect.currentframe())))
+    return str(Path(inspect.getfile(
+        inspect.currentframe())).parent.resolve())
 
 
 def make_format_plugin_table(group="waveform", method="read", numspaces=4,
@@ -670,7 +671,9 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
     elif "://" in pathname_or_url[:10]:
         # URL
         # extract extension if any
-        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
+        suffix = Path(Path(pathname_or_url).name).suffix
+        if suffix == '':
+            suffix = ".tmp"
         with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
             download_to_file(url=pathname_or_url, filename_or_buffer=fh)
             generic = callback_func(fh.name, **kwargs)
@@ -683,7 +686,7 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
             # try to give more specific information why the stream is empty
             if glob.has_magic(pathname) and not glob.glob(pathname):
                 raise Exception("No file matching file pattern: %s" % pathname)
-            elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
+            elif not glob.has_magic(pathname) and not Path(pathname).is_file():
                 raise IOError(2, "No such file or directory", pathname)
 
         generic = callback_func(pathnames[0], **kwargs)

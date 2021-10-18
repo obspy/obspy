@@ -17,15 +17,17 @@ import re
 import unittest
 import warnings
 
+from lxml import etree
+
 import obspy
+import obspy.io.stationxml.core
 from obspy import UTCDateTime
 from obspy.core.util import AttribDict, CatchAndAssertWarnings
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.inventory import (Inventory, Network, ResponseStage)
 from obspy.core.inventory.util import DataAvailability
 from obspy.core.util.base import NamedTemporaryFile
-from lxml import etree
-import obspy.io.stationxml.core
+from obspy.io.stationxml.core import _read_stationxml
 
 
 class StationXMLTestCase(unittest.TestCase):
@@ -1282,6 +1284,41 @@ class StationXMLTestCase(unittest.TestCase):
         # be much improved
         self.assertEqual(
             lats, [-53.12, 44.77, 63.39, 12.46, -13.16, -84.44, 43.9, -88.41])
+
+    def test_read_with_level(self):
+        """
+        Tests reading StationXML with specifying the level of detail.
+        """
+        path = os.path.join(self.data_dir, 'stationxml_BK.CMB.__.LKS.xml')
+        inv_stationxml_no_level = _read_stationxml(path)
+        inv_stationxml_response = _read_stationxml(path, level='response')
+        inv_stationxml_channel = _read_stationxml(path, level='channel')
+        inv_stationxml_station = _read_stationxml(path, level='station')
+        inv_stationxml_network = _read_stationxml(path, level='network')
+        # test reading through plugin
+        self.assertEqual(
+            obspy.read_inventory(path, format='STATIONXML', level='station'),
+            inv_stationxml_station)
+        # test reading default which should be equivalent to reading response
+        # level
+        self.assertEqual(inv_stationxml_no_level, inv_stationxml_response)
+        # test reading response level
+        self.assertEqual(len(inv_stationxml_response), 1)
+        self.assertEqual(len(inv_stationxml_response[0]), 1)
+        self.assertEqual(len(inv_stationxml_response[0][0]), 1)
+        self.assertIsNotNone(inv_stationxml_response[0][0][0].response)
+        # test reading channel level
+        self.assertEqual(len(inv_stationxml_channel), 1)
+        self.assertEqual(len(inv_stationxml_channel[0]), 1)
+        self.assertEqual(len(inv_stationxml_channel[0][0]), 1)
+        self.assertIsNone(inv_stationxml_channel[0][0][0].response)
+        # test reading station level
+        self.assertEqual(len(inv_stationxml_station), 1)
+        self.assertEqual(len(inv_stationxml_station[0]), 1)
+        self.assertEqual(len(inv_stationxml_station[0][0]), 0)
+        # test reading station level
+        self.assertEqual(len(inv_stationxml_network), 1)
+        self.assertEqual(len(inv_stationxml_network[0]), 0)
 
 
 def suite():

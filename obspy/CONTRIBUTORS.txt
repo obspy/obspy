@@ -1,4 +1,5 @@
 Ackerley, Nick
+Alexeev, Nicholas
 Allgeyer, Sebastien
 Ammon, Charles J.
 Antunes, Emanuel
@@ -24,7 +25,7 @@ Danecek, Peter
 van Driel, Martin
 Egdorf, Sven
 Ely, Geoffrey
-Engels, Fabian
+Engels, Fabien
 Ermert, Laura
 Eulenfeld, Tom
 Fabbri, Tommaso
@@ -44,6 +45,7 @@ Inza, Adolfo
 Isken, Marius
 Kearns, Aaron
 Ketchum, David
+Khan, Lewis
 Koymans, Mathijs
 Kremers, Simon
 Kress, Victor
@@ -89,6 +91,7 @@ Satriano, Claudio
 Saul, Joachim
 Scarabello, Luca
 Scheingraber, Chris
+Schneider, Felix M.
 Schneider, Simon
 Sippl, Christian
 Snoke, Arthur

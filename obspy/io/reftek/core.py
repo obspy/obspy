@@ -5,6 +5,7 @@ REFTEK130 read support, core routines.
 import copy
 import io
 import os
+from pathlib import Path
 import warnings
 
 import numpy as np
@@ -37,9 +38,9 @@ def _is_reftek130(filename):
     bytes) and checks for valid packet type identifiers in the first 20
     expected packet positions.
     """
-    if not os.path.isfile(filename):
+    if not Path(filename).is_file():
         return False
-    filesize = os.stat(filename).st_size
+    filesize = Path(filename).stat().st_size
     # check if overall file size is a multiple of 1024
     if filesize < 1024 or filesize % 1024 != 0:
         return False

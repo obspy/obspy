@@ -2,7 +2,17 @@ master
 ======
 
 Changes:
+ - obspy.*
+   * removed os.path calls with pathlib library calls (see #2751).
+ - obspy.clients.seishub:
+   * added deprecation message
+ - obspy.db:
+   * added deprecation message
+   * removed from default test suite
  - obspy.core:
+   * read_inventory(): add "level" option to read files faster when less level
+     of detail is needed. currently only implemented for StationXML reading
+     (see #2759)
    * add option to suppress evalresp sensitivity mismatch warning when removing
      instrument response (see #2677)
    * round magnitudes in Catalog/Event string representation to one decimal
@@ -44,6 +54,8 @@ Changes:
      (see #2678)
    * properly take into account native system byteorder, should fix reading
      rt130 data on big endian systems (see #2678)
+ - obspy.io.sh:
+   * fix appending traces to existing Q file (see #2870)
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
@@ -66,6 +78,7 @@ Changes:
    * Inventory addition now consistently uses shallow copies (#2675, #2694)
  - obspy.clients.fdsn:
    * add URL mapping for IRISPH5 (see #2739)
+   * update RESIF URL mapping to use https
  - obspy.clients.seedlink:
    * Fix a bug in basic client when printing debug output (see #2734)
  - obspy.io.gse2:

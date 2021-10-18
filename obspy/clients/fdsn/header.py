@@ -92,6 +92,7 @@ class FDSNNoServiceException(FDSNException):
 # https://www.fdsn.org/webservices/datacenters/
 # https://www.orfeus-eu.org/data/eida/nodes/
 URL_MAPPINGS = {
+    "AUSPASS": "http://auspass.edu.au",
     "BGR": "http://eida.bgr.de",
     "ETH": "http://eida.ethz.ch",
     "EMSC": "http://www.seismicportal.eu",
@@ -111,7 +112,7 @@ URL_MAPPINGS = {
     "NOA": "http://eida.gein.noa.gr",
     "ODC": "http://www.orfeus-eu.org",
     "ORFEUS": "http://www.orfeus-eu.org",
-    "RESIF": "http://ws.resif.fr",
+    "RESIF": "https://ws.resif.fr",
     "RASPISHAKE": "https://fdsnws.raspberryshakedata.com",
     "SCEDC": "http://service.scedc.caltech.edu",
     "TEXNET": "http://rtserve.beg.utexas.edu",

@@ -12,7 +12,7 @@ import copy
 import inspect
 import io
 import math
-import os
+from pathlib import Path
 import re
 import warnings
 
@@ -121,11 +121,12 @@ def validate_stationxml(path_or_object):
     version = _get_version_from_xmldoc(xmldoc)
 
     # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "fdsn-station-%s.xsd" % version)
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
 
-    if not os.path.exists(schema_location):
+    schema_location = schema_location / "data"
+    schema_location = str(schema_location / ("fdsn-station-%s.xsd" % version))
+
+    if not Path(schema_location).exists():
         msg = "No schema file found to validate StationXML version '%s'"
         raise ValueError(msg % version)
 
@@ -139,11 +140,14 @@ def validate_stationxml(path_or_object):
     return (True, ())
 
 
-def _read_stationxml(path_or_file_object):
+def _read_stationxml(path_or_file_object, level='response'):
     """
     Function reading a StationXML file.
 
     :param path_or_file_object: File name or file like object.
+    :type level: str
+    :param level: Level of detail to read from file. One of ``'response'``,
+        ``'channel'``, ``'station'`` or ``'network'``.
     """
     root = etree.parse(path_or_file_object).getroot()
 
@@ -173,7 +177,7 @@ def _read_stationxml(path_or_file_object):
                 'Setting Numerator/Denominator with a unit is deprecated.',
                 ObsPyDeprecationWarning)
         for network in root.findall(_ns("Network")):
-            networks.append(_read_network(network, _ns))
+            networks.append(_read_network(network, _ns, level))
 
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
@@ -223,7 +227,7 @@ def _read_base_node(element, object_to_write_to, _ns):
     _read_extra(element, object_to_write_to)
 
 
-def _read_network(net_element, _ns):
+def _read_network(net_element, _ns, level):
     network = obspy.core.inventory.Network(net_element.get("code"))
     _read_base_node(net_element, network, _ns)
     for operator in net_element.findall(_ns("Operator")):
@@ -233,13 +237,14 @@ def _read_network(net_element, _ns):
     network.selected_number_of_stations = \
         _tag2obj(net_element, _ns("SelectedNumberStations"), int)
     stations = []
-    for station in net_element.findall(_ns("Station")):
-        stations.append(_read_station(station, _ns))
+    if level in ('station', 'channel', 'response'):
+        for station in net_element.findall(_ns("Station")):
+            stations.append(_read_station(station, _ns, level))
     network.stations = stations
     return network
 
 
-def _read_station(sta_element, _ns):
+def _read_station(sta_element, _ns, level):
     longitude = _read_floattype(sta_element, _ns("Longitude"), Longitude,
                                 datum=True)
     latitude = _read_floattype(sta_element, _ns("Latitude"), Latitude,
@@ -273,23 +278,24 @@ def _read_station(sta_element, _ns):
     for ref in sta_element.findall(_ns("ExternalReference")):
         station.external_references.append(_read_external_reference(ref, _ns))
     channels = []
-    for channel in sta_element.findall(_ns("Channel")):
-        # Skip empty channels.
-        if not channel.items() and not channel.attrib:
-            continue
-        cha = _read_channel(channel, _ns)
-        # Might be None in case the channel could not be parsed.
-        if cha is None:
-            # This is None if, and only if, one of the coordinates could not
-            # be set.
-            msg = ("Channel %s.%s of station %s does not have a complete set "
-                   "of coordinates and thus it cannot be read. It will not be "
-                   "part of the final inventory object." % (
-                       channel.get("locationCode"), channel.get("code"),
-                       sta_element.get("code")))
-            warnings.warn(msg, UserWarning)
-        else:
-            channels.append(cha)
+    if level in ('channel', 'response'):
+        for channel in sta_element.findall(_ns("Channel")):
+            # Skip empty channels.
+            if not channel.items() and not channel.attrib:
+                continue
+            cha = _read_channel(channel, _ns, level=level)
+            # Might be None in case the channel could not be parsed.
+            if cha is None:
+                # This is None if, and only if, one of the coordinates could
+                # not be set.
+                msg = ("Channel %s.%s of station %s does not have a complete "
+                       "set of coordinates and thus it cannot be read. It "
+                       "will not be part of the final inventory object." % (
+                           channel.get("locationCode"), channel.get("code"),
+                           sta_element.get("code")))
+                warnings.warn(msg, UserWarning)
+            else:
+                channels.append(cha)
     station.channels = channels
     return station
 
@@ -354,7 +360,7 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
     return objs
 
 
-def _read_channel(cha_element, _ns):
+def _read_channel(cha_element, _ns, level):
     """
     Returns either a :class:`~obspy.core.inventory.channel.Channel` object or
     ``None``.
@@ -433,10 +439,11 @@ def _read_channel(cha_element, _ns):
     for equipment in cha_element.findall(_ns("Equipment")):
         channel.equipments.append(_read_equipment(equipment, _ns))
     # Finally parse the response.
-    response = cha_element.find(_ns("Response"))
-    if response is not None:
-        channel.response = _read_response(response, _ns)
-        channel.response._attempt_to_fix_units()
+    if level == 'response':
+        response = cha_element.find(_ns("Response"))
+        if response is not None:
+            channel.response = _read_response(response, _ns)
+            channel.response._attempt_to_fix_units()
     return channel
 
 

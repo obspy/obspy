@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+DEPRECATED -- obspy.db database client is deprecated
+
 Client for a database created by obspy.db.
 
 :copyright:
@@ -9,6 +11,7 @@ Client for a database created by obspy.db.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import os
+import warnings
 
 from sqlalchemy import and_, create_engine, func, or_
 from sqlalchemy.orm import sessionmaker
@@ -16,15 +19,20 @@ from sqlalchemy.orm import sessionmaker
 from obspy.core.preview import merge_previews
 from obspy.core.stream import Stream
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.db.db import Base, WaveformChannel, WaveformFile, WaveformPath
 
 
 class Client(object):
     """
+    DEPRECATED -- obspy.db database client is deprecated
+
     Client for a database created by obspy.db.
     """
     def __init__(self, url=None, session=None, debug=False):
         """
+        DEPRECATED -- obspy.db database client is deprecated
+
         Initializes the client.
 
         :type url: str, optional
@@ -37,6 +45,9 @@ class Client(object):
         :type debug: bool, optional
         :param debug: Enables verbose output.
         """
+        msg = "The module obspy.client.seishub is deprecated and will " + \
+            "be removed in the next major release."
+        warnings.warn(msg, ObsPyDeprecationWarning)
         if url:
             self.engine = create_engine(url, encoding='utf-8',
                                         convert_unicode=True)

@@ -38,7 +38,8 @@ def _create_example_inventory():
 
 
 @map_example_filename("path_or_file_object")
-def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
+def read_inventory(path_or_file_object=None, format=None, level='response',
+                   *args, **kwargs):
     """
     Function to read inventory files.
 
@@ -51,6 +52,10 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     :type format: str
     :param format: Format of the file to read (e.g. ``"STATIONXML"``). See the
         `Supported Formats`_ section below for a list of supported formats.
+    :type level: str
+    :param level: Level of detail to read from file. One of ``'response'``,
+        ``'channel'``, ``'station'`` or ``'network'``. Lower level of detail
+        can result in much shorter reading times for some file formats.
     :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
     :return: An ObsPy :class:`~obspy.core.inventory.inventory.Inventory`
         object.
@@ -76,6 +81,9 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
         StationXML standard and how to output it to StationXML
         see the :ref:`ObsPy Tutorial <stationxml-extra>`.
     """
+    # add default parameters to kwargs so sub-modules may handle them
+    kwargs['level'] = level
+
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()

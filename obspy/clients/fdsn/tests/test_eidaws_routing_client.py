@@ -49,7 +49,7 @@ NA * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
 http://webservices.ingv.it/fdsnws/station/1/query
 NI * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
 
-http://ws.resif.fr/fdsnws/station/1/query
+https://ws.resif.fr/fdsnws/station/1/query
 ND * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
         """.strip()
         # This should return a dictionary that contains the root URL of each
@@ -67,7 +67,7 @@ ND * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
                     "NA * * * 2017-01-01T00:00:00 2017-01-01T00:10:00"),
                 "http://webservices.ingv.it": (
                     "NI * * * 2017-01-01T00:00:00 2017-01-01T00:10:00"),
-                "http://ws.resif.fr": (
+                "https://ws.resif.fr": (
                     "ND * * * 2017-01-01T00:00:00 2017-01-01T00:10:00")})
 
         data = """

@@ -3,11 +3,9 @@
 Misc functionality.
 """
 import inspect
-import os
+from pathlib import Path
 
-
-ROOT = os.path.dirname(os.path.abspath(inspect.getfile(
-    inspect.currentframe())))
+ROOT = Path(Path(inspect.getfile(inspect.currentframe())).resolve()).parent
 
 
 def parse_phase_list(phase_list):
