@@ -1864,18 +1864,19 @@ class Stream(object):
                                 and network is None and station is None
                                 and location is None and channel is None
                                 and component is None)
-        no_wildcards = not any(['?' in id or '*' in id or '[' in id])
-        if (quick_check_possible and no_wildcards):
-            quick_check = True
-            [net, sta, loc, chan] = id.split('.')
+        if quick_check_possible:
+            no_wildcards = not any(['?' in id or '*' in id or '[' in id])
+            if no_wildcards:
+                quick_check = True
+                [net, sta, loc, chan] = id.upper().split('.')
 
         traces = []
         for trace in traces_after_inventory_filter:
             if quick_check:
-                if (trace.stats.network == net
-                        and trace.stats.station == sta
-                        and trace.stats.location == loc
-                        and trace.stats.channel == chan):
+                if (trace.stats.network.upper() == net
+                        and trace.stats.station.upper() == sta
+                        and trace.stats.location.upper() == loc
+                        and trace.stats.channel.upper() == chan):
                     traces.append(trace)
                 continue
             # skip trace if any given criterion is not matched
