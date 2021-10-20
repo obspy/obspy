@@ -1858,7 +1858,18 @@ class Stream(object):
                       "mutually exclusive!"
                 raise ValueError(msg)
         traces = []
+        quick_check = False
+        if (id is not None and not any(['?' in id or '*' in id or '[' in id])):
+            quick_check = True
+            [net, sta, loc, chan] = id.split('.')
         for trace in traces_after_inventory_filter:
+            if quick_check:
+                if (trace.stats.network == net
+                        and trace.stats.station == sta
+                        and trace.stats.location == loc
+                        and trace.stats.channel == chan):
+                    traces.append(trace)
+                continue
             # skip trace if any given criterion is not matched
             if id and not fnmatch.fnmatch(trace.id.upper(), id.upper()):
                 continue
