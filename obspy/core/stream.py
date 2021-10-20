@@ -1861,6 +1861,7 @@ class Stream(object):
         # For st.select(id=) without wildcards, use a quicker comparison mode:
         quick_check = False
         quick_check_possible = (id is not None
+                                and sampling_rate is None and npts is None
                                 and network is None and station is None
                                 and location is None and channel is None
                                 and component is None)
