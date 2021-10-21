@@ -164,7 +164,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     # resize.
     if axes is not None:
         # This is what holds the aspect ratio (but breaks the positioning)
-        col.set_transform(transforms.IdentityTransform())
+        col.set_transform(transforms.Affine2D(np.identity(3)))
         # Next is a dirty hack to fix the positioning:
         # 1. Need to bring the all patches to the origin (0, 0).
         for p in col._paths:
