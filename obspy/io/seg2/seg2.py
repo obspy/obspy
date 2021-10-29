@@ -18,6 +18,7 @@ from future.utils import PY2
 from copy import deepcopy
 from struct import unpack, unpack_from
 import warnings
+import re
 
 import numpy as np
 
@@ -179,8 +180,12 @@ class SEG2(object):
                 and "ACQUISITION_DATE" in self.stream.stats.seg2:
             time = self.stream.stats.seg2.ACQUISITION_TIME
             date = self.stream.stats.seg2.ACQUISITION_DATE
-            time = time.strip().split(':')
-            date = date.strip().split('/')
+            
+            # Split on any non numeric character
+            time = list(filter(None, re.split(r'\D+', time)))  
+            # Split on space, dot (.), slash (/), and dash (-)
+            date = list(filter(None, re.split("[, ./-]+", date)))  
+            
             hour, minute, second = int(time[0]), int(time[1]), float(time[2])
             day, month, year = int(date[0]), MONTHS[date[1].lower()], \
                 int(date[2])
