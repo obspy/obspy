@@ -8,7 +8,17 @@ course on triggering. Test data used in this tutorial can be downloaded here:
 
 The triggers are implemented as described in [Withers1998]_. Information on
 finding the right trigger parameters for STA/LTA type triggers can be found in
-[Trnkoczy2012]_.
+[Trnkoczy2012]_. The list includes (but not limited to):
+
+* Generally, STA duration must be longer than a few periods (zero-crossings of
+  the main frequency) of a typically expected seismic signal. On the other
+  hand, STA duration must be shorter than the shortest events (trigger on/off,
+  the envelope duration) we expect to capture.
+* STA duration must be longer than the inverse frequency of noisy spikes.
+  Otherwise, false alarms will be captured.
+* The LTA window should be longer than a few 'periods' of typically irregular
+  (slow) seismic noise fluctuations. Typically, it's an order of magnitude
+  larger than the STA duration.
 
 .. seealso::
     Please note the convenience method of ObsPy's

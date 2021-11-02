@@ -83,28 +83,24 @@ def recursive_sta_lta_py(a, nsta, nlta):
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
     """
-    try:
-        a = a.tolist()
-    except Exception:
-        pass
     ndat = len(a)
     # compute the short time average (STA) and long time average (LTA)
     # given by Evans and Allen
     csta = 1. / nsta
     clta = 1. / nlta
     sta = 0.
-    lta = 1e-99  # avoid zero division
-    charfct = [0.0] * len(a)
+    lta = np.finfo(0.0).tiny  # avoid zero division
+    a = np.square(a)
+    charfct = np.zeros_like(a)
     icsta = 1 - csta
     iclta = 1 - clta
     for i in range(1, ndat):
-        sq = a[i] ** 2
-        sta = csta * sq + icsta * sta
-        lta = clta * sq + iclta * lta
+        sta = csta * a[i] + icsta * sta
+        lta = clta * a[i] + iclta * lta
         charfct[i] = sta / lta
-        if i < nlta:
-            charfct[i] = 0.
-    return np.array(charfct)
+    charfct[:nlta] = 0
+
+    return charfct
 
 
 def carl_sta_trig(a, nsta, nlta, ratio, quiet):
@@ -216,10 +212,7 @@ def classic_sta_lta_py(a, nsta, nlta):
     """
     # The cumulative sum can be exploited to calculate a moving average (the
     # cumsum function is quite efficient)
-    sta = np.cumsum(a ** 2)
-
-    # Convert to float
-    sta = np.require(sta, dtype=np.float)
+    sta = np.cumsum(a ** 2, dtype=np.float64)
 
     # Copy for LTA
     lta = sta.copy()
@@ -279,14 +272,12 @@ def z_detect(a, nsta):
 
     .. seealso:: [Withers1998]_, p. 99
     """
-    m = len(a)
-    #
     # Z-detector given by Swindell and Snell (1977)
     sta = np.zeros(len(a), dtype=np.float64)
+    a_squared = np.square(a)
     # Standard Sta
-    pad_sta = np.zeros(nsta)
     for i in range(nsta):  # window size to smooth over
-        sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
+        sta[nsta:] += a_squared[i:-nsta + i]
     a_mean = np.mean(sta)
     a_std = np.std(sta)
     _z = (sta - a_mean) / a_std
