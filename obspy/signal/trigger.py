@@ -91,7 +91,7 @@ def recursive_sta_lta_py(a, nsta, nlta):
     sta = 0.
     lta = np.finfo(0.0).tiny  # avoid zero division
     a = np.square(a)
-    charfct = np.zeros_like(a)
+    charfct = np.zeros(ndat, dtype=np.float64)
     icsta = 1 - csta
     iclta = 1 - clta
     for i in range(1, ndat):
