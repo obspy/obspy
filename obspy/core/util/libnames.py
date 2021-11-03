@@ -11,7 +11,6 @@ Library name handling for ObsPy.
 # NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
 # installation time)
 import ctypes
-import os
 from pathlib import Path
 import platform
 import re
@@ -88,23 +87,21 @@ def _load_cdll(name):
     """
     # our custom defined part of the extension file name
     libname = _get_lib_name(name, add_extension_suffix=True)
-    libdir = Path(__file__).parent / os.pardir / os.pardir / 'lib'
+    libdir = Path(__file__).parent.parent.parent / 'lib'
     libpath = (libdir / libname).resolve()
     try:
         cdll = ctypes.CDLL(str(libpath))
     except Exception as e:
-        import textwrap
-        dirlisting = textwrap.wrap(
-            ', '.join(sorted(libpath.parent)))
+        dirlisting = sorted(libpath.parent.iterdir())
+        dirlisting = '  \n'.join(map(str, dirlisting))
         msg = ['Could not load shared library "%s"' % libname,
                'Path: %s' % libpath,
-               'Current directory: %s' % Path(os.curdir).resolve(),
+               'Current directory: %s' % Path().resolve(),
                'ctypes error message: %s' % str(e),
                'Directory listing of lib directory:',
-               '  ',
+               '   %s' % dirlisting,
                ]
         msg = '\n  '.join(msg)
-        msg = msg + '\n    '.join(dirlisting)
         raise ImportError(msg)
     return cdll
 
