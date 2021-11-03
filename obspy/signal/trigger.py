@@ -273,11 +273,11 @@ def z_detect(a, nsta):
     .. seealso:: [Withers1998]_, p. 99
     """
     # Z-detector given by Swindell and Snell (1977)
-    sta = np.zeros(len(a), dtype=np.float64)
-    a_squared = np.square(a)
-    # Standard Sta
-    for i in range(nsta):  # window size to smooth over
-        sta[nsta:] += a_squared[i:-nsta + i]
+    # Standard Sta shifted by 1
+    sta = np.cumsum(a ** 2, dtype=np.float64)
+    sta[nsta + 1:] = sta[nsta:-1] - sta[:-nsta - 1]
+    sta[nsta] = sta[nsta - 1]
+    sta[:nsta] = 0
     a_mean = np.mean(sta)
     a_std = np.std(sta)
     _z = (sta - a_mean) / a_std
