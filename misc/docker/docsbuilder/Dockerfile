@@ -28,4 +28,4 @@ RUN python -m pip install --no-cache-dir --upgrade pip && \
 WORKDIR /obspy/misc/docs
 
 ENTRYPOINT ["make"]
-CMD ["html"]
+CMD ["html-docker"]
