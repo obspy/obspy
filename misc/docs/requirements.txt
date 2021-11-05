@@ -5,7 +5,7 @@ sphinx_rtd_theme
 matplotlib
 numpy # required by cartopy
 cython # required by cartopy
-cartopy >= 0.20
+cartopy <= 0.20 # It requires Proj 8 which is not available even on bullseye
 obspy
 
 # deps used in tutorial but not working anymore
