@@ -30,6 +30,8 @@ Changes:
  - obspy.io.hypodd
    * add PHA write support (see #2687)
    * add read support for horizontal and vertical origin uncertainty (see #2687)
+ - obspy.io.hyposat:
+   * add write support for HYPOSAT version 6 phases file format (see #2709)
  - obspy.io.reftek:
    * enable reading data with floating point sampling rates like low sampling
      rate state-of-health channels (see #2678)

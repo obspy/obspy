@@ -35,7 +35,7 @@ from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
                    'io.ah', 'io.arclink', 'io.ascii', 'io.cmtsolution',
                    'io.cnv', 'io.css', 'io.dmx', 'io.focmec', 'io.hypodd',
-                   'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
+                   'io.hyposat', 'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
                    'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk', 'io.nied',
                    'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde', 'io.quakeml',
                    'io.reftek', 'io.rg16', 'io.sac', 'io.scardec', 'io.seg2',

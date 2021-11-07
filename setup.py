@@ -100,7 +100,7 @@ KEYWORDS = [
     'Dataless SEED', 'DMX', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
-    'IASPEI', 'imaging', 'IMS', 'instrument correction',
+    'HYPOSAT', 'IASPEI', 'imaging', 'IMS', 'instrument correction',
     'instrument simulation', 'IRIS', 'ISF', 'kinemetrics', 'KML', 'magnitude',
     'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES',
     'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
@@ -320,7 +320,8 @@ ENTRY_POINTS = {
         'IMS10BULLETIN = obspy.io.iaspei.core',
         'EVT = obspy.io.sh.evt',
         'FOCMEC = obspy.io.focmec.core',
-        'HYPODDPHA = obspy.io.hypodd.pha'
+        'HYPODDPHA = obspy.io.hypodd.pha',
+        'HYPOSAT_PHASES = obspy.io.hyposat.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -403,6 +404,9 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.hypodd.pha:_is_pha',
         'readFormat = obspy.io.hypodd.pha:_read_pha',
         'writeFormat = obspy.io.hypodd.pha:_write_pha',
+        ],
+    'obspy.plugin.event.HYPOSAT_PHASES': [
+        'writeFormat = obspy.io.hyposat.core:_write_hyposat_phases',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
