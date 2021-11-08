@@ -23,6 +23,8 @@ Changes:
      read_events() functions (see #2743)
    * add a "DEF" option (default units) to Inventory.plot_response() and
      Trace.remove_response() (see #2806)
+   * stream.select(): circumvent wildcard-matching when called with a trace-id
+     without wildcards for quicker trace selection.
  - obspy.clients.fdsn:
    * introduce fine-grained FDSN client exceptions (see #2653)
    * support for "eventtype" parameter in get_events(), as specified in version
