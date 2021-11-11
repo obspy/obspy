@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'master'
+  pull_request: # to be deleted before merging to master
 
 jobs:
   docker:
