@@ -895,7 +895,7 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
         # 00 or 24: this signifies a pick over a day boundary.
         pick_hour = int(line[18:20].strip() or 0)
         pick_minute = int(line[20:22].strip() or 0)
-        pick_seconds = float(line[22:29].strip() or 0)  # 29 should be blank,
+        pick_seconds = float(line[22:29].strip() or 0.0)  # 29 should be blank,
         # but sometimes SEISAN appears to overflow here, see #2348
         if pick_hour == 0 and evtime.hour == 23:
             day_add = 86400
