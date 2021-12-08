@@ -30,6 +30,22 @@ Changes:
  - obspy.io.hypodd
    * add PHA write support (see #2687)
    * add read support for horizontal and vertical origin uncertainty (see #2687)
+ - obspy.io.nordic:
+   * add read and write support for New Nordic format (see #2814)
+   * fix bug where negative magnitudes were not read properly
+   * fix bug where empty hours / minutes / seconds were not read as zero
+   * fix bug where lat/lon-errors were read as lon/lat
+   * fix bug where origin-error was written with RMS rather than time_error 
+   * for reading picks in Old Nordic format, set network code to None
+     (was 'NA' previously)
+   * stop writing waveform-file link to a DUMMY-file by default
+   * add support for I/O of apparent velocity / horizontal slowness
+   * add support for writing of multiple origins
+   * add event-type mapping between Nordic and Obspy/Quakeml (do not fully
+     match)
+   * read pick-weight as pick.extra.nordic_pick_weight (was arrival.time_weight)
+     and read finalweight into arrival.time_weight (or backazmiuth_weight)
+     instead.
  - obspy.io.reftek:
    * enable reading data with floating point sampling rates like low sampling
      rate state-of-health channels (see #2678)
