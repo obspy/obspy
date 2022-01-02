@@ -17,6 +17,7 @@ import io
 import platform
 import sys
 from lxml import objectify
+import numpy as np
 
 if sys.version_info.major == 2:
     from urllib import urlencode
@@ -26,7 +27,7 @@ else:
     import urllib.request as urllib_request
 
 from obspy import Stream, UTCDateTime, __version__, read
-from obspy.core.util import NamedTemporaryFile, loadtxt
+from obspy.core.util import NamedTemporaryFile
 
 
 DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (__version__,
@@ -1013,7 +1014,7 @@ class Client(object):
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(io.BytesIO(data), ndmin=1)
+                return np.loadtxt(io.BytesIO(data), ndmin=1)
             else:
                 return self._to_file_or_data(filename, data, binary=True)
 

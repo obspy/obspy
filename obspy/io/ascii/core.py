@@ -41,7 +41,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
-from obspy.core.util import AttribDict, loadtxt
+from obspy.core.util import AttribDict
 
 
 HEADER = ("TIMESERIES {network}_{station}_{location}_{channel}_{dataquality}, "
@@ -515,7 +515,7 @@ def _parse_data(data, data_type):
     if len(data.read(1)) == 0:
         return np.array([], dtype=dtype)
     data.seek(0)
-    return loadtxt(data, dtype=dtype, ndmin=1)
+    return np.loadtxt(data, dtype=dtype, ndmin=1)
 
 
 if __name__ == '__main__':
