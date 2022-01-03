@@ -14,8 +14,10 @@ import urllib.request as urllib_request
 from lxml import objectify
 from urllib.parse import urlencode
 
+import numpy as np
+
 from obspy import Stream, UTCDateTime, __version__, read
-from obspy.core.util import NamedTemporaryFile, loadtxt
+from obspy.core.util import NamedTemporaryFile
 
 
 DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (__version__,
@@ -1002,7 +1004,7 @@ class Client(object):
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(io.BytesIO(data), ndmin=1)
+                return np.loadtxt(io.BytesIO(data), ndmin=1)
             else:
                 return self._to_file_or_data(filename, data, binary=True)
 
