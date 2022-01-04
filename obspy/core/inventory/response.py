@@ -1061,6 +1061,12 @@ class Response(ComparingObject):
                 velocity, output unit is meters/second
             ``"ACC"``
                 acceleration, output unit is meters/second**2
+            ``"DEF"``
+                default units, the response is calculated in
+                output units/input units (last stage/first stage).
+                Useful if the units for a particular type of sensor (e.g., a
+                pressure sensor) cannot be converted to displacement, velocity
+                or acceleration.
 
         :type frequency: float
         :param frequency: Frequency to calculate overall sensitivity for in
@@ -1097,6 +1103,12 @@ class Response(ComparingObject):
                 velocity, output unit is meters/second
             ``"ACC"``
                 acceleration, output unit is meters/second**2
+            ``"DEF"``
+                default units, the response is calculated in
+                output units/input units (last stage/first stage).
+                Useful if the units for a particular type of sensor (e.g., a
+                pressure sensor) cannot be converted to displacement, velocity
+                or acceleration.
 
         :type start_stage: int, optional
         :param start_stage: Stage sequence number of first stage that will be
@@ -1119,9 +1131,9 @@ class Response(ComparingObject):
         from obspy.signal.headers import clibevresp
 
         out_units = output.upper()
-        if out_units not in ("DISP", "VEL", "ACC"):
+        if out_units not in ("DISP", "VEL", "ACC", "DEF"):
             msg = ("requested output is '%s' but must be one of 'DISP', 'VEL' "
-                   "or 'ACC'") % output
+                   ", 'ACC' or 'DEF'") % output
             raise ValueError(msg)
 
         frequencies = np.asarray(frequencies)
@@ -1614,6 +1626,12 @@ class Response(ComparingObject):
                 velocity, output unit is meters/second
             ``"ACC"``
                 acceleration, output unit is meters/second**2
+            ``"DEF"``
+                default units, the response is calculated in
+                output units/input units (last stage/first stage).
+                Useful if the units for a particular type of sensor (e.g., a
+                pressure sensor) cannot be converted to displacement, velocity
+                or acceleration.
 
         :type start_stage: int, optional
         :param start_stage: Stage sequence number of first stage that will be
@@ -1654,6 +1672,12 @@ class Response(ComparingObject):
                 velocity, output unit is meters/second
             ``"ACC"``
                 acceleration, output unit is meters/second**2
+            ``"DEF"``
+                default units, the response is calculated in
+                output units/input units (last stage/first stage).
+                Useful if the units for a particular type of sensor (e.g., a
+                pressure sensor) cannot be converted to displacement, velocity
+                or acceleration.
 
         :type start_stage: int, optional
         :param start_stage: Stage sequence number of first stage that will be
@@ -1739,12 +1763,18 @@ class Response(ComparingObject):
         :type output: str
         :param output: Output units. One of:
 
-                ``"DISP"``
-                    displacement
-                ``"VEL"``
-                    velocity
-                ``"ACC"``
-                    acceleration
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+            ``"DEF"``
+                default units, the response is calculated in
+                output units/input units (last stage/first stage).
+                Useful if the units for a particular type of sensor (e.g., a
+                pressure sensor) cannot be converted to displacement, velocity
+                or acceleration.
 
         :type start_stage: int, optional
         :param start_stage: Stage sequence number of first stage that will be

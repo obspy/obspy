@@ -2305,6 +2305,16 @@ class TraceTestCase(unittest.TestCase):
             tr.remove_response(pre_filt=pre_filt, output="DISP",
                                water_level=60, end_stage=None, plot=ic.name)
 
+    def test_remove_response_default_units(self):
+        """
+        Tests remove_response() with default units for a hydrophone.
+        """
+        tr = read("/path/to/1T_MONN_00_EDH.mseed")[0]
+        inv = read_inventory("/path/to/1T_MONN_00_EDH.xml")
+        tr.attach_response(inv)
+        tr.remove_response(output='DEF')
+        np.testing.assert_almost_equal(tr.max(), 54.833, decimal=3)
+
     def test_normalize(self):
         """
         Tests the normalize() method on normal and edge cases.
