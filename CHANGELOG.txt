@@ -4,6 +4,8 @@ master
 Changes:
  - obspy.*
    * removed os.path calls with pathlib library calls (see #2751).
+   * temporarily removed macOS coverage reporting in github actions (see #2920)
+     to solve test issues (#2900)
  - obspy.clients.seishub:
    * added deprecation message
  - obspy.db:
