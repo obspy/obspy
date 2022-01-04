@@ -15,7 +15,6 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
-from obspy.core.util import loadtxt
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
@@ -209,7 +208,7 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
             stream.append(Trace(header=header))
         else:
             # read data
-            data = loadtxt(data, dtype=np.float32, ndmin=1)
+            data = np.loadtxt(data, dtype=np.float32, ndmin=1)
 
             # cut data if requested
             if skip and length:
