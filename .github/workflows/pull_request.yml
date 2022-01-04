@@ -119,17 +119,16 @@ jobs:
         run: |
           export MODULELIST=`obshub read-config-value module_list --path=${CONFIG_PATH}`
           export MODULELISTSPACES=`obshub read-config-value module_list_spaces --path=${CONFIG_PATH}`
-          coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
-          coverage xml -o coverage.xml
+          python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
 
-      - name: upload coverage
-        uses: codecov/codecov-action@v1
-        with:
-          flags: unittests
-          token: ${{ secrets.CODECOV_TOKEN }}
-          name: codecov-umbrella
-          fail_ci_if_error: false
-          file: coverage.xml
+#      - name: upload coverage
+#        uses: codecov/codecov-action@v1
+#        with:
+#          flags: unittests
+#          token: ${{ secrets.CODECOV_TOKEN }}
+#          name: codecov-umbrella
+#          fail_ci_if_error: false
+#          file: coverage.xml
 
 
 # This is a very useful step for debugging, it allows you to ssh into the CI
