@@ -98,7 +98,7 @@ import warnings
 from argparse import ArgumentParser
 from urllib.parse import urlparse
 
-import numpy as np
+#import numpy as np
 import requests
 
 import obspy
@@ -129,10 +129,10 @@ Type "help" to see all available options.
 
 # Set legacy printing for numpy so the doctests work regardless of the numpy
 # version.
-try:
-    np.set_printoptions(legacy='1.13')
-except TypeError:
-    pass
+# try:
+#     np.set_printoptions(legacy='1.13')
+# except TypeError:
+#     pass
 
 
 HOSTNAME = platform.node().split('.', 1)[0]
@@ -662,7 +662,7 @@ def run(argv=None, interactive=True):
     if args.verbose:
         verbosity = 2
         # raise all NumPy warnings
-        np.seterr(all='warn')
+        # np.seterr(all='warn')
     elif args.quiet:
         verbosity = 0
         # ignore user and deprecation warnings
@@ -673,13 +673,13 @@ def run(argv=None, interactive=True):
     else:
         verbosity = 1
         # show all NumPy warnings
-        np.seterr(all='print')
+        # np.seterr(all='print')
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
     # whether to raise any warning that's appearing
     if args.raise_all_warnings:
         # raise all NumPy warnings
-        np.seterr(all='raise')
+        # np.seterr(all='raise')
         # raise user and deprecation warnings
         warnings.simplefilter("error", UserWarning)
     # ignore specific warnings
@@ -726,7 +726,7 @@ def main(argv=None, interactive=True):
         warnings.filterwarnings(
             "ignore", 'The compiler package is deprecated and removed in '
             'Python 3.x.', DeprecationWarning)
-        np.safe_eval('1')
+        # np.safe_eval('1')
 
     if '-p' in sys.argv or '--profile' in sys.argv:
         try:
