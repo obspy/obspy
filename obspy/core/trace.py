@@ -2756,6 +2756,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 velocity, output unit is meters/second
             ``"ACC"``
                 acceleration, output unit is meters/second**2
+            ``"DEF"``
+                default units, the response is calculated in
+                output units/input units (last stage/first stage).
+                Useful if the units for a particular type of sensor (e.g., a
+                pressure sensor) cannot be converted to displacement, velocity
+                or acceleration.
 
         :type water_level: float
         :param water_level: Water level for deconvolution.

@@ -1047,9 +1047,18 @@ class Inventory(ComparingObject):
         :type output: str
         :param output: Output units. One of:
 
-                * ``"DISP"`` -- displacement, output unit is meters;
-                * ``"VEL"`` -- velocity, output unit is meters/second; or,
-                * ``"ACC"`` -- acceleration, output unit is meters/second**2.
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+            ``"DEF"``
+                default units, the response is calculated in
+                output units/input units (last stage/first stage).
+                Useful if the units for a particular type of sensor (e.g., a
+                pressure sensor) cannot be converted to displacement, velocity
+                or acceleration.
 
         :type network: str
         :param network: Only plot matching networks. Accepts UNIX style
