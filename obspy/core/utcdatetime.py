@@ -31,7 +31,7 @@ _ISO8601_REGEX = re.compile(r"""
      ((0[1-9]|1[0-2])
       (\3([12]\d|0[1-9]|3[01]))?
       |W([0-4]\d|5[0-3])(-?[1-7])?
-      |(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6]))
+      |(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[0-6]))
      )
      ([T\s]
       ((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?
@@ -152,6 +152,9 @@ class UTCDateTime(object):
 
             >>> UTCDateTime("2009001", iso8601=True)       # enforce ISO8601
             UTCDateTime(2009, 1, 1, 0, 0)
+
+            >>> UTCDateTime("2009360T")                    # compact no time
+            UTCDateTime(2009, 12, 26, 0, 0)
 
         * Week date representation.
 
@@ -1420,13 +1423,14 @@ class UTCDateTime(object):
         Returns a tuple containing (ISO year, ISO week number, ISO weekday).
 
         :rtype: tuple of ints
-        :return: Returns a tuple containing ISO year, ISO week number and ISO
-            weekday.
+        :return: Returns a (named) tuple containing ISO year, ISO week number
+            and ISO weekday. Depending on the used Python version it either
+            returns a tuple (Py<3.9) or named tuple (Py>=3.9).
 
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.isocalendar()
+        >>> tuple(dt.isocalendar())
         (2008, 40, 3)
         """
         return self.datetime.isocalendar()

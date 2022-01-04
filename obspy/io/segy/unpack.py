@@ -12,7 +12,7 @@ Functions that will all take a file pointer and the sample count and return a
 NumPy array with the unpacked values.
 """
 import ctypes as C  # NOQA
-import os
+from pathlib import Path
 import sys
 import warnings
 
@@ -142,10 +142,10 @@ class OnTheFlyDataUnpacker:
         self.seek = seek
         self.count = count
         self.endian = endian
-        self.mtime = os.path.getmtime(self.filename)
+        self.mtime = Path(self.filename).stat().st_mtime
 
     def __call__(self):
-        mtime = os.path.getmtime(self.filename)
+        mtime = Path(self.filename).stat().st_mtime
         if mtime != self.mtime:
             msg = "File '%s' changed since reading headers" % self.filename
             msg += "; data may be read incorrectly "

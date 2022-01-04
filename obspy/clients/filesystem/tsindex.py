@@ -175,12 +175,10 @@ logger = logging.getLogger('obspy.clients.filesystem.tsindex')
 
 try:
     import sqlalchemy
-    # TSIndex needs sqlalchemy 1.0.0
-    if not hasattr(sqlalchemy.engine.reflection.Inspector,
-                   'get_temp_table_names'):
+    if sqlalchemy.__version__ < '1.0.0':
         raise ImportError
 except ImportError:
-    msg = ('TSIndex module expects sqlachemy version >1.0.0. Some '
+    msg = ('TSIndex module expects sqlalchemy version >1.0.0. Some '
            'functionality might not work.')
     warnings.warn(msg)
     _sqlalchemy_version_insufficient = True

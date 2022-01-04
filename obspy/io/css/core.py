@@ -2,8 +2,7 @@
 """
 CSS bindings to ObsPy core module.
 """
-import os
-
+from pathlib import Path
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
@@ -119,14 +118,13 @@ def _read_css(filename, **kwargs):
     # read metafile with info on single traces
     with open(filename, "rb") as fh:
         lines = fh.readlines()
-    basedir = os.path.dirname(filename)
+    basedir = Path(filename).parent
     traces = []
     # read single traces
     for line in lines:
         npts = int(line[79:87])
         dirname = line[148:212].strip().decode()
-        wfdisc_dfile = line[213:245].strip().decode()
-        dfilename = os.path.join(basedir, dirname, wfdisc_dfile)
+        dfilename = Path(basedir) / dirname / line[213:245].strip().decode()
         offset = int(line[246:256])
         dtype = DTYPE[line[143:145]]
         if isinstance(dtype, tuple):
@@ -143,7 +141,7 @@ def _read_css(filename, **kwargs):
             # If does not find the waveform file referenced in the wfdisc,
             # it will try to open a compressed .gz suffix file instead.
             try:
-                fh = gzip.open(dfilename + '.gz', "rb")
+                fh = gzip.open(str(dfilename) + '.gz', "rb")
             except FileNotFoundError:
                 raise e
 
@@ -182,14 +180,15 @@ def _read_nnsa_kb_core(filename, **kwargs):
     # read metafile with info on single traces
     with open(filename, "rb") as fh:
         lines = fh.readlines()
-    basedir = os.path.dirname(filename)
+    basedir = Path(filename).parent
     traces = []
     # read single traces
     for line in lines:
         npts = int(line[80:88])
         dirname = line[149:213].strip().decode()
-        filename = line[214:246].strip().decode()
-        filename = os.path.join(basedir, dirname, filename)
+        filename = Path(basedir) / dirname / \
+            line[214:246].strip().decode()
+
         offset = int(line[247:257])
         dtype = DTYPE[line[144:146]]
         if isinstance(dtype, tuple):

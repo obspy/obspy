@@ -202,39 +202,6 @@ def to_int_or_zero(value):
         return 0
 
 
-# import numpy loadtxt and check if ndmin parameter is available
-try:
-    from numpy import loadtxt
-    loadtxt(np.array([0]), ndmin=1)
-except TypeError:
-    # otherwise redefine loadtxt
-    def loadtxt(*args, **kwargs):
-        """
-        Replacement for older numpy.loadtxt versions not supporting ndmin
-        parameter.
-        """
-        if 'ndmin' not in kwargs:
-            return np.loadtxt(*args, **kwargs)
-        # ok we got a ndmin param
-        if kwargs['ndmin'] != 1:
-            # for now we support only one dimensional arrays
-            raise NotImplementedError('Upgrade your NumPy version!')
-        del kwargs['ndmin']
-        dtype = kwargs.get('dtype', None)
-        # lets get the data
-        try:
-            data = np.loadtxt(*args, **kwargs)
-        except IOError as e:
-            # raises in older versions if no data could be read
-            if 'reached before encountering data' in str(e):
-                # return empty array
-                return np.array([], dtype=dtype)
-            # otherwise just raise
-            raise
-        # ensures that an array is returned
-        return np.atleast_1d(data)
-
-
 def get_untracked_files_from_git():
     """
     Tries to return a list of files (absolute paths) that are untracked by git

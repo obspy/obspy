@@ -2,7 +2,17 @@ master
 ======
 
 Changes:
+ - obspy.*
+   * removed os.path calls with pathlib library calls (see #2751).
+ - obspy.clients.seishub:
+   * added deprecation message
+ - obspy.db:
+   * added deprecation message
+   * removed from default test suite
  - obspy.core:
+   * read_inventory(): add "level" option to read files faster when less level
+     of detail is needed. currently only implemented for StationXML reading
+     (see #2759)
    * add option to suppress evalresp sensitivity mismatch warning when removing
      instrument response (see #2677)
    * round magnitudes in Catalog/Event string representation to one decimal
@@ -20,6 +30,22 @@ Changes:
  - obspy.io.hypodd
    * add PHA write support (see #2687)
    * add read support for horizontal and vertical origin uncertainty (see #2687)
+ - obspy.io.nordic:
+   * add read and write support for New Nordic format (see #2814)
+   * fix bug where negative magnitudes were not read properly
+   * fix bug where empty hours / minutes / seconds were not read as zero
+   * fix bug where lat/lon-errors were read as lon/lat
+   * fix bug where origin-error was written with RMS rather than time_error 
+   * for reading picks in Old Nordic format, set network code to None
+     (was 'NA' previously)
+   * stop writing waveform-file link to a DUMMY-file by default
+   * add support for I/O of apparent velocity / horizontal slowness
+   * add support for writing of multiple origins
+   * add event-type mapping between Nordic and Obspy/Quakeml (do not fully
+     match)
+   * read pick-weight as pick.extra.nordic_pick_weight (was arrival.time_weight)
+     and read finalweight into arrival.time_weight (or backazmiuth_weight)
+     instead.
  - obspy.io.reftek:
    * enable reading data with floating point sampling rates like low sampling
      rate state-of-health channels (see #2678)
@@ -31,6 +57,8 @@ Changes:
  - obspy.io.seiscomp:
    * Add support for SC3ML 0.11 (see #2284).
    * Add support for custom tags (see #2284).
+ - obspy.io.sh:
+   * fix appending traces to existing Q file (see #2870)
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
@@ -51,8 +79,12 @@ maintenance_1.2.x
 Changes:
  - obspy.core:
    * Inventory addition now consistently uses shallow copies (#2675, #2694)
+   * Removed obsolete wrapper around numpy.loadtxt causing import error with
+     numpy 1.22 (see #2912, #2913)
+   * Fix iso8601 regex for issue #2868 to cope with day 360 properly.
  - obspy.clients.fdsn:
    * add URL mapping for IRISPH5 (see #2739)
+   * update RESIF URL mapping to use https
  - obspy.clients.seedlink:
    * Fix a bug in basic client when printing debug output (see #2734)
  - obspy.io.gse2:

@@ -1,18 +1,3 @@
-# -*- coding: utf-8 -*-
-import unittest
-
-from obspy.core.util import add_unittests, add_doctests
-
-
-MODULE_NAME = "obspy.db"
-
-
-def suite():
-    suite = unittest.TestSuite()
-    add_unittests(suite, MODULE_NAME)
-    add_doctests(suite, MODULE_NAME)
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+"""
+obspy.db has been deprecated and all tests have been removed.
+"""

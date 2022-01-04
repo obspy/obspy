@@ -15,13 +15,74 @@ from obspy.io.nordic import NordicParsingError
 from obspy.geodetics.base import kilometers2degrees
 from numpy import cos, radians
 
-
-MAG_MAPPING = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
-               "MW": "W", "MbLg": "G", "Mc": "C"}
+# For a non-exhaustive list of magnitudes, see p. 11 in:
+# https://doi.org/10.2312/GFZ.NMSOP-2_IS_3.2
+MAG_MAPPING = {"ML": "L", "MLv": "L", "Ml": "l",
+               "mB": "B", "mb": "b", "MbLg": "G",
+               "Ms": "s", "MS": "S",
+               "MW": "W", "Mw": "w", "Mc": "C",
+               "MN": "N", "Mn": "n"}
 INV_MAG_MAPPING = {item: key for key, item in MAG_MAPPING.items()}
+
+# Event-type mapping:
+EVENT_TYPE_MAPPING_FROM_SEISAN = {
+    "E": "explosion",
+    "P": "explosion",
+    # not a great translation; V=volcanic event not allowed in obspy/QuakeML
+    "V": "earthquake",
+    "Q": "earthquake",
+    " ": "earthquake",
+    "L": "landslide",
+    "X": "landslide",  # Depreceated Nordic code
+    "S": "sonic boom",  # not a great translation for "acoustic signal"
+    "I": "induced or triggered event",
+    "O": "other event",
+    "C": "ice quake",
+    "G": "ice quake"}
+
+EVENT_TYPE_CERTAINTY_MAPPING_FROM_SEISAN = {
+    "E": 'known',
+    "P": 'suspected',
+    "V": 'known',
+    "Q": 'known',
+    " ": 'suspected',
+    "L": 'known',
+    "X": 'known',
+    "S": 'known',
+    "I": 'known',
+    "O": 'known',
+    "C": 'known',
+    "G": 'known'}
+
+EVENT_TYPE_MAPPING_TO_SEISAN = {
+    "explosion": "E",
+    "earthquake": "Q",
+    "landslide": "L",
+    "sonic boom": "S",
+    "induced or triggered event": "I",
+    "other event": "O",
+    "ice quake": "C",
+    "not reported": " "}
+
+# Nordic format condenses type and certainty into one letter in some cases
+EVENT_TYPE_AND_CERTAINTY_MAPPING_TO_SEISAN = {
+    "known explosion": "E",
+    "suspected explosion": "P",
+    "known earthquake": "Q",
+    "suspected earthquake": " "}
+
 # List of currently implemented line-endings, which in Nordic mark what format
 # info in that line will be.
 ACCEPTED_TAGS = ('1', '6', '7', 'E', ' ', 'F', 'M', '3', 'H')
+
+ACCEPTED_1CHAR_PHASE_TAGS = ['P', 'p', 'S', 's', 'L', 'G', 'R', 'H', 'T', 'x',
+                             'r', 't', 'E']
+ACCEPTED_2CHAR_PHASE_TAGS = ['I ', 'Ip', 'Is', 'Ir']
+ACCEPTED_3CHAR_PHASE_TAGS = ['BAZ', 'END']
+
+ACCEPTED_1CHAR_AMPLITUDE_PHASE_TAGS = ['A', 'V']
+ACCEPTED_2CHAR_AMPLITUDE_PHASE_TAGS = ['AM']
+ACCEPTED_3CHAR_AMPLITUDE_PHASE_TAGS = ['IAM', 'IVM', 'AML']
 
 
 def _int_conv(string):
@@ -76,7 +137,7 @@ def _str_conv(number, rounded=False):
     >>> print(_str_conv(1123040))
     11.2e5
     """
-    if not number:
+    if not number and number != 0:
         return str(' ')
     if not rounded and isinstance(number, (float, int)):
         if number < 100000:
@@ -136,7 +197,7 @@ def _evmagtonor(mag_type):
     >>> print(_evmagtonor('bob'))  # doctest: +SKIP
     <BLANKLINE>
     """
-    if mag_type == 'M':
+    if mag_type == 'M' or mag_type is None:
         warnings.warn('Converting generic magnitude to moment magnitude')
         return "W"
     mag = MAG_MAPPING.get(mag_type, '')
@@ -188,6 +249,67 @@ def _km_to_deg_lon(kilometers, latitude):
     degrees_lon = degrees_lat / cos(radians(latitude))
 
     return degrees_lon
+
+
+def _nordic_iasp_phase_ok(phase):
+    """
+    Function to check whether a phase-string is a valid IASPEI-compatible
+    phase in Seisan.
+
+    :param phase: Phase string to check
+
+    :returns: bool, whether phase string is valid in Seisan.
+    """
+    try:
+        if phase[0] in ACCEPTED_1CHAR_PHASE_TAGS:
+            return True
+        if phase[0:2] in ACCEPTED_2CHAR_PHASE_TAGS:
+            return True
+        if phase[0:3] in ACCEPTED_3CHAR_PHASE_TAGS:
+            return True
+    except IndexError:
+        pass
+    return False
+
+
+def _is_iasp_ampl_phase(phase):
+    """
+    Function to check whether a phase-string describes an IASPEI.conpatible
+    amplitude phase in Seisan.
+
+    :type phase: str
+    :param phase: Phase string to be check
+
+    :returns: bool, whether phase string is an amplitude phase
+    """
+    if phase is None:
+        return False
+    phase = phase.strip()
+    try:
+        if phase[0] in ACCEPTED_1CHAR_AMPLITUDE_PHASE_TAGS:
+            return True
+        if phase[0:2] in ACCEPTED_2CHAR_AMPLITUDE_PHASE_TAGS:
+            return True
+        if phase[0:3] in ACCEPTED_3CHAR_AMPLITUDE_PHASE_TAGS:
+            return True
+    except IndexError:
+        pass
+    return False
+
+
+def _get_agency_id(item):
+    """
+    Function to return a properly formatted 3-character agency ID from the
+    creation_info-property of an item.
+    """
+    agency_id = '   '
+    if hasattr(item, 'creation_info'):
+        if hasattr(item.creation_info, 'agency_id'):
+            agency_id = item.creation_info.get('agency_id')
+    if agency_id is None:
+        agency_id = '   '
+    agency_id = agency_id.rjust(3)[0:3]
+    return agency_id
 
 
 if __name__ == "__main__":
