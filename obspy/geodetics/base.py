@@ -350,8 +350,8 @@ def locations2degrees(lat1, long1, lat2, long2):
     .. rubric:: Example
 
     >>> from obspy.geodetics import locations2degrees
-    >>> locations2degrees(5, 5, 10, 10)
-    7.0397014191753815
+    >>> locations2degrees(5, 5, 10, 10) # doctest: +ELLIPSIS
+    7.03970141917538...
     """
     # broadcast explicitly here so it raises once instead of somewhere in the
     # middle if things can't be broadcast
