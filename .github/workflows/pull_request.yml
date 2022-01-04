@@ -79,7 +79,7 @@ jobs:
     needs: get_ci_config
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.7, 3.8]
 
     steps:
@@ -119,16 +119,21 @@ jobs:
         run: |
           export MODULELIST=`obshub read-config-value module_list --path=${CONFIG_PATH}`
           export MODULELISTSPACES=`obshub read-config-value module_list_spaces --path=${CONFIG_PATH}`
-          python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
+          if [ "$RUNNER_OS" != "macOS" ]; then
+              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
+          else
+              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
+              coverage xml -o coverage.xml
+          fi
 
-#      - name: upload coverage
-#        uses: codecov/codecov-action@v1
-#        with:
-#          flags: unittests
-#          token: ${{ secrets.CODECOV_TOKEN }}
-#          name: codecov-umbrella
-#          fail_ci_if_error: false
-#          file: coverage.xml
+      - name: upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          flags: unittests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          file: coverage.xml
 
 
 # This is a very useful step for debugging, it allows you to ssh into the CI
