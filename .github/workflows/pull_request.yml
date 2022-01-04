@@ -127,7 +127,7 @@ jobs:
           fi
 
       - name: upload coverage
-        if: runner.os != "macOS"
+        if: runner.os != 'macOS'
         uses: codecov/codecov-action@v1
         with:
           flags: unittests
