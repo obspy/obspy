@@ -4,6 +4,7 @@ maintenance_1.2.x
 Changes:
  - obspy.core:
    * Inventory addition now consistently uses shallow copies (#2675, #2694)
+   * Fix iso8601 regex for issue #2868 to cope with day 360 properly.
  - obspy.clients.fdsn:
    * add URL mapping for IRISPH5 (see #2739)
  - obspy.clients.seedlink:
