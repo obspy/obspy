@@ -121,13 +121,13 @@ jobs:
           export MODULELISTSPACES=`obshub read-config-value module_list_spaces --path=${CONFIG_PATH}`
           if [ "$RUNNER_OS" == "macOS" ]; then
               python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
-              touch coverage.xml
           else
               coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
               coverage xml -o coverage.xml
           fi
 
       - name: upload coverage
+        if: "$RUNNER_OS" != "macOS"
         uses: codecov/codecov-action@v1
         with:
           flags: unittests
