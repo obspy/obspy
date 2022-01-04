@@ -23,6 +23,7 @@ dependencies:
   - requests
   - sqlalchemy
   - cryptography
+  - setuptools<58.1
   - pip:
       - pyimgur
       - -e..

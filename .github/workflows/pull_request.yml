@@ -79,7 +79,7 @@ jobs:
     needs: get_ci_config
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [macos-latest]
         python-version: [3.7, 3.8]
 
     steps:
