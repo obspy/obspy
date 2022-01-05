@@ -128,7 +128,7 @@ jobs:
 
       - name: upload coverage
         if: runner.os != 'macOS'
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2.1.0
         with:
           flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
