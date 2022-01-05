@@ -38,7 +38,7 @@ jobs:
       - name: install obspy
         shell: bash -l {0}
         run: |
-          pip install -e .
+          pip install -e .[test]
 
       - name: install obspy github api
         shell: bash -l {0}
