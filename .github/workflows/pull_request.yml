@@ -103,6 +103,7 @@ jobs:
         uses: actions/download-artifact@v2.1.0
         with:
           name: obspy_ci_config
+          path: obspy_ci_config
 
       - name: install obspy
         shell: bash -l {0}
