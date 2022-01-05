@@ -5,6 +5,8 @@ channels:
 dependencies:
   - ca-certificates
   - certifi
+  - coverage
+  - codecov
   - cryptography
   - decorator
   - future
