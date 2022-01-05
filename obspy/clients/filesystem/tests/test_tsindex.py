@@ -20,7 +20,9 @@ from obspy import UTCDateTime
 
 def get_test_data_filepath():
     package_dir = os.path.abspath(os.path.dirname(__file__))
-    filepath = os.path.join(package_dir, 'data/tsindex_data/')
+    # TODO It perhaps shouldn't be the case, but the string here has to end
+    # in a forward slash. We should fix this in the future.
+    filepath = os.path.join(package_dir, 'data', 'tsindex_data/')
     return filepath
 
 
