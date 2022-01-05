@@ -75,6 +75,9 @@ Changes:
  - obspy.signal.spectral_estimation.PPSD:
    * Added special handling option for infrasound data and global infrasound noise
      models for plotting (see #2740)
+ - obspy.signal.trigger:
+   * Improved clarity and speed of several STA/LTA triggers methods, namely
+     classic_sta_lta_py, z_detector, and recursive_sta_lta_py (see #2892)
 
 maintenance_1.2.x
 =================
