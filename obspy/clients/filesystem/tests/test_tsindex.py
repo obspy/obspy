@@ -10,7 +10,7 @@ import requests
 import tempfile
 import unittest
 import uuid
-from unittest import mock
+from unittest import mock, TestCase
 
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler
@@ -35,7 +35,7 @@ def get_test_client():
     return client
 
 
-class ClientTestCase(RegExTestCase):
+class ClientTestCase(TestCase):
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -594,7 +594,7 @@ def purge(dir, pattern):
             os.remove(os.path.join(dir, f))
 
 
-class IndexerTestCase(RegExTestCase):
+class IndexerTestCase(TestCase):
 
     def test_bad_rootpath(self):
         """
@@ -889,7 +889,7 @@ class IndexerTestCase(RegExTestCase):
             purge(filepath, '^{}.*$'.format(fname))
 
 
-class TSIndexDatabaseHandlerTestCase(RegExTestCase):
+class TSIndexDatabaseHandlerTestCase(TestCase):
 
     def test_bad_sqlitdb_filepath(self):
         """
