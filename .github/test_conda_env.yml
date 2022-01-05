@@ -7,7 +7,7 @@ dependencies:
   - scipy
   - matplotlib>3.2.0
   - pip
-  - pyproj
+  - pyproj<6
   - proj4
   - codecov
   - coverage
