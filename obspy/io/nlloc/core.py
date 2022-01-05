@@ -17,6 +17,8 @@ from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
                               WaveformStreamID)
+from obspy.core.inventory.util import (
+    _add_resolve_seedid_doc, _add_resolve_seedid_ph2comp_doc, _resolve_seedid)
 from obspy.geodetics import kilometer2degrees
 
 
@@ -40,6 +42,8 @@ def is_nlloc_hyp(filename):
     return True
 
 
+@_add_resolve_seedid_ph2comp_doc
+@_add_resolve_seedid_doc
 def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     """
     Reads a NonLinLoc Hypocenter-Phase file to a
@@ -121,14 +125,15 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     for start, end in zip(lines_start, lines_end):
         event = _read_single_hypocenter(
             lines[start:end + 1], coordinate_converter=coordinate_converter,
-            original_picks=original_picks)
+            original_picks=original_picks, **kwargs)
         cat.append(event)
     cat.creation_info.creation_time = UTCDateTime()
     cat.creation_info.version = "ObsPy %s" % __version__
     return cat
 
 
-def _read_single_hypocenter(lines, coordinate_converter, original_picks):
+def _read_single_hypocenter(lines, coordinate_converter, original_picks,
+                            **kwargs):
     """
     Given a list of lines (starting with a 'NLLOC' line and ending with a
     'END_NLLOC' line), parse them into an Event.
@@ -310,8 +315,9 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         line = line.split()
         arrival = Arrival()
         o.arrivals.append(arrival)
-        station = str(line[0])
-        phase = str(line[4])
+        station = line[0]
+        channel = line[2]
+        phase = line[4]
         arrival.phase = phase
         arrival.distance = kilometer2degrees(float(line[21]))
         arrival.azimuth = float(line[23])
@@ -319,17 +325,20 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         arrival.time_residual = float(line[16])
         arrival.time_weight = float(line[17])
         pick = Pick()
-        # network codes are not used by NonLinLoc, so they can not be known
-        # when reading the .hyp file.. to conform with QuakeML standard set an
-        # empty network code
-        wid = WaveformStreamID(network_code="", station_code=station)
         # have to split this into ints for overflow to work correctly
         date, hourmin, sec = map(str, line[6:9])
         ymd = [int(date[:4]), int(date[4:6]), int(date[6:8])]
         hm = [int(hourmin[:2]), int(hourmin[2:4])]
         t = UTCDateTime(*(ymd + hm), strict=False) + float(sec)
-        pick.waveform_id = wid
         pick.time = t
+        # network codes are not used by NonLinLoc, so they can not be known
+        # when reading the .hyp file.. if an inventory is provided, a lookup
+        # is done
+        widargs = _resolve_seedid(
+            station=station, component=channel, time=t, phase=phase,
+            unused_kwargs=True, **kwargs)
+        wid = WaveformStreamID(*widargs)
+        pick.waveform_id = wid
         pick.time_errors.uncertainty = float(line[10])
         pick.phase_hint = phase
         pick.onset = ONSETS.get(line[3].lower(), None)

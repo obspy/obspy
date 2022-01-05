@@ -1152,6 +1152,31 @@ class TestNordicMethods(unittest.TestCase):
         self.assertAlmostEqual(hor_min, 451.762494786)
         self.assertAlmostEqual(azi_max, 102.0592301)
 
+    def test_read_resolve_seedid(self):
+        testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            seedid = 'XX.{}.00.H{}'
+            event = read_nordic(testing_path, default_seedid=seedid)[0]
+        self.assertEqual(len(event.origins), 2)
+        self.assertEqual(len(event.picks), 17)
+        self.assertEqual(event.picks[0].waveform_id.network_code, 'XX')
+        self.assertEqual(event.picks[0].waveform_id.location_code, '00')
+        self.assertEqual(event.picks[0].waveform_id.channel_code[0], 'H')
+
+    def test_read_resolve_seedid_new_format(self):
+        testing_path = os.path.join(self.testing_path, '03-0345-23L.S202101')
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            seedid = 'XX.{}.00.H{}'
+            event = read_nordic(testing_path, default_seedid=seedid)[0]
+        self.assertEqual(len(event.origins), 1)
+        self.assertEqual(len(event.picks), 50)
+        # no changes because net code and location given in nordic file
+        self.assertNotEqual(event.picks[0].waveform_id.network_code, 'XX')
+
 
 def _assert_similarity(event_1, event_2, strict=False):
     """

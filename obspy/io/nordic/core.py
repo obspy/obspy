@@ -58,6 +58,7 @@ from obspy.core.event import (
     Arrival, Amplitude, FocalMechanism, MomentTensor, NodalPlane, NodalPlanes,
     QuantityError, Tensor, ResourceIdentifier, Comment)
 from obspy.core.event.header import EventType, EventTypeCertainty
+from obspy.core.inventory.util import _resolve_seedid, _add_resolve_seedid_doc
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
@@ -402,8 +403,9 @@ def _read_spectral_info(tagged_lines, event=None):
     return spec_inf
 
 
+@_add_resolve_seedid_doc
 def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
-                nordic_format='UKN'):
+                nordic_format='UKN', **kwargs):
     """
     Read a catalog of events from a Nordic formatted select file.
 
@@ -444,14 +446,16 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
         elif len(event_str) > 0:
             catalog, wav_names = _extract_event(
                 event_str=event_str, catalog=catalog, wav_names=wav_names,
-                return_wavnames=return_wavnames, nordic_format=nordic_format)
+                return_wavnames=return_wavnames, nordic_format=nordic_format,
+                **kwargs)
             event_str = []
     f.close()
     if len(event_str) > 0:
         # May occur if the last line of the file is not blank as it should be
         catalog, wav_names = _extract_event(
             event_str=event_str, catalog=catalog, wav_names=wav_names,
-            return_wavnames=return_wavnames, nordic_format=nordic_format)
+            return_wavnames=return_wavnames, nordic_format=nordic_format,
+            **kwargs)
     if return_wavnames:
         return catalog, wav_names
     for event in catalog:
@@ -460,7 +464,7 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
 
 
 def _extract_event(event_str, catalog, wav_names, return_wavnames=False,
-                   nordic_format='UKN'):
+                   nordic_format='UKN', **kwargs):
     """
     Helper to extract event info from a list of line strings.
 
@@ -492,7 +496,7 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False,
     if return_wavnames:
         wav_names.append(_readwavename(tagged_lines=tagged_lines['6']))
     new_event = _read_picks(tagged_lines=tagged_lines, new_event=new_event,
-                            nordic_format=nordic_format)
+                            nordic_format=nordic_format, **kwargs)
     catalog += new_event
     return catalog, wav_names
 
@@ -730,7 +734,7 @@ def _read_comments(tagged_lines, event):
     return event
 
 
-def _read_picks(tagged_lines, new_event, nordic_format='UKN'):
+def _read_picks(tagged_lines, new_event, nordic_format='UKN', **kwargs):
     """
     Internal pick reader. Use read_nordic instead.
 
@@ -762,9 +766,11 @@ def _read_picks(tagged_lines, new_event, nordic_format='UKN'):
         nordic_format, phase_ok = check_nordic_format_version(pickline)
 
     if nordic_format == 'NEW':
-        new_event = _read_picks_nordic_new(pickline, new_event, header, evtime)
+        new_event = _read_picks_nordic_new(pickline, new_event, header, evtime,
+                                           **kwargs)
     elif nordic_format == 'OLD':
-        new_event = _read_picks_nordic_old(pickline, new_event, header, evtime)
+        new_event = _read_picks_nordic_old(pickline, new_event, header, evtime,
+                                           **kwargs)
     elif nordic_format == 'UKN':
         warnings.warn('Cannot check whether Nordic format is Old or New, is '
                       'this really a Nordic file?')
@@ -865,7 +871,7 @@ def check_nordic_format_version(pickline):
     return nordic_format, is_phase
 
 
-def _read_picks_nordic_old(pickline, new_event, header, evtime):
+def _read_picks_nordic_old(pickline, new_event, header, evtime, **kwargs):
     """
     Reads the type 4 line of the old Nordic format.
     """
@@ -915,8 +921,10 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
             warnings.warn('%s is not currently supported' % header[57:60])
         finalweight = _int_conv(line[68:70])
         # Create a new obspy.event.Pick class for this pick
-        _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
-                                        channel_code=line[6:8].strip())
+        widargs = _resolve_seedid(
+            station=line[1:6].strip(), component=line[6:8].strip(), time=time,
+            **kwargs)
+        _waveform_id = WaveformStreamID(*widargs)
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
         try:
@@ -995,7 +1003,7 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime):
     return new_event
 
 
-def _read_picks_nordic_new(pickline, new_event, header, evtime):
+def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
     """
     Reads the type 4 line of the old Nordic format.
     """
@@ -1039,10 +1047,14 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
             warnings.warn('%s is not currently supported' % header[60:63])
         finalweight = _int_conv(line[68:70])
         # Create a new obspy.event.Pick class for this pick
-        _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
-                                        channel_code=line[6:9].strip(),
-                                        network_code=line[10:12].strip(),
-                                        location_code=line[12:14].strip())
+        sta, cha = line[1:6].strip(), line[6:9].strip()
+        net, loc = line[10:12].strip(), line[12:14].strip()
+        if net == '' and loc == '':
+            widargs = _resolve_seedid(station=sta, component=cha, time=time,
+                                      **kwargs)
+        else:
+            widargs = net, sta, loc, cha
+        _waveform_id = WaveformStreamID(*widargs)
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
         # agency and operator / author / analyst

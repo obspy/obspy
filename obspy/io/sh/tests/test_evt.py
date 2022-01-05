@@ -91,8 +91,10 @@ class EvtTestCase(unittest.TestCase):
         # read invenroty - FUR with channels, WET without channels
         inv = read_inventory().select(channel='HH?')
         inv[0][1].channels = []
-        picks = read_events(fname, inventory=inv, id_default='BLA.{}.11.DH{}',
-                            id_map={'UBR': 'BLB.{}.00.BH{}'})[0].picks
+        cat = read_events(fname, inventory=inv,
+                          default_seedid='BLA.{}.11.DH{}',
+                          seedid_map={'UBR': 'BLB.{}.00.BH{}'}, warn=False)
+        picks = cat[0].picks
         waveform_ids = [p.waveform_id.get_seed_string() for p in picks]
         self.assertIn('GR.FUR..HHZ', waveform_ids)
         self.assertIn('BLA.WET.11.DHZ', waveform_ids)

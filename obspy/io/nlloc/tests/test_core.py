@@ -5,8 +5,10 @@ import io
 import os
 import re
 import unittest
+import warnings
 
 from obspy import UTCDateTime, read_events
+from obspy.core.inventory import Inventory, Network, Station, Channel
 from obspy.core.util import NamedTemporaryFile, get_example_file
 from obspy.core.util.testing import compare_xml_strings, remove_unique_ids
 from obspy.io.nlloc.core import is_nlloc_hyp, read_nlloc_hyp, write_nlloc_obs
@@ -82,6 +84,9 @@ class NLLOCTestCase(unittest.TestCase):
         filename = get_example_file("nlloc_custom.hyp")
         cat = read_nlloc_hyp(filename,
                              coordinate_converter=_mock_coordinate_converter)
+        # reset pick channel codes, these got automatically mapped upon reading
+        for pick in cat[0].picks:
+            pick.waveform_id.channel_code = None
         with open(get_example_file("nlloc_custom.qml"), 'rb') as tf:
             quakeml_expected = tf.read().decode()
         with NamedTemporaryFile() as tf:
@@ -215,6 +220,38 @@ class NLLOCTestCase(unittest.TestCase):
         self.assertEqual(len(cat), 1)
         cat = read_events(filename, format="NLLOC_HYP")
         self.assertEqual(len(cat), 1)
+
+    def test_read_nlloc_with_pick_seed_id_lookup(self):
+        # create some bogus metadata for lookup
+        cha = Channel('HHZ', '00', 0, 0, 0, 0)
+        sta = Station('HM02', 0, 0, 0, channels=[cha])
+        cha = Channel('HHZ', '10', 0, 0, 0, 0)
+        sta2 = Station('YYYY', 0, 0, 0, channels=[cha])
+        net = Network('XX', stations=[sta, sta2])
+        # second network with non matching data
+        cha = Channel('HHZ', '00', 0, 0, 0, 0)
+        sta = Station('ABCD', 0, 0, 0, channels=[cha])
+        cha = Channel('HHZ', '10', 0, 0, 0, 0)
+        sta2 = Station('EFGH', 0, 0, 0, channels=[cha])
+        net2 = Network('YY', stations=[sta, sta2])
+
+        inv = Inventory(networks=[net, net2], source='')
+
+        filename = get_example_file("nlloc_custom.hyp")
+        # we get some warnings since we only provide sufficient metadata for
+        # one pick
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cat = read_events(filename, format="NLLOC_HYP", inventory=inv)
+        self.assertEqual(len(cat), 1)
+        for pick in cat[0].picks:
+            wid = pick.waveform_id
+            if wid.station_code == 'HM02':
+                self.assertEqual(wid.network_code, 'XX')
+                self.assertEqual(wid.location_code, '')
+            else:
+                self.assertEqual(wid.network_code, '')
+                self.assertEqual(wid.location_code, None)
 
     def test_is_nlloc_hyp(self):
         # test positive

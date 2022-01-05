@@ -79,15 +79,13 @@ class PHATestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as ws:
             warnings.resetwarnings()
             cat = read_events(self.fname, inventory=inv)
-            self.assertEqual(len(ws), 2)
-            for w in ws:
-                self.assertIn('Multiple', str(w.message))
+            self.assertEqual(len(ws), 4)
         # FUR with channels, WET without channels
         inv = read_inventory().select(channel='HH?')
         inv[0][1].channels = []
         cat = read_events(self.fname, inventory=inv,
-                          id_default='BLA.{}.11.DH{}',
-                          id_map={'UBR': 'BLB.{}.00.BH{}'})
+                          default_seedid='BLA.{}.11.DH{}',
+                          seedid_map={'UBR': 'BLB.{}.00.BH{}'}, warn=False)
         self.assertEqual(len(cat), 2)
         picks = cat[0].picks + cat[1].picks
         self.assertEqual(len(picks), 4)

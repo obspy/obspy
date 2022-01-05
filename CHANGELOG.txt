@@ -33,6 +33,11 @@ Changes:
      FDSN server URLs (#2878)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
+ - obspy.io
+   * add support to resolve the SEED id of picks for nlloc hyp files and
+     nordic files, refactor the same functionality for SeismicHandler evt
+     and HypoDD pha files. Some parameter names therefore changed in the
+     latter, but former parameter names are still supported (see #2251)
  - obspy.io.css:
    * open CSS waveforms even if gzip-compressed (see #2736)
  - obspy.io.hypodd
