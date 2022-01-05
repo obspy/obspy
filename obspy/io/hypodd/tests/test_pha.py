@@ -84,8 +84,8 @@ class PHATestCase(unittest.TestCase):
         inv = read_inventory().select(channel='HH?')
         inv[0][1].channels = []
         cat = read_events(self.fname, inventory=inv,
-                          id_default='BLA.{}.11.DH{}',
-                          id_map={'UBR': 'BLB.{}.00.BH{}'}, warn=False)
+                          default_seedid='BLA.{}.11.DH{}',
+                          seedid_map={'UBR': 'BLB.{}.00.BH{}'}, warn=False)
         self.assertEqual(len(cat), 2)
         picks = cat[0].picks + cat[1].picks
         self.assertEqual(len(picks), 4)
