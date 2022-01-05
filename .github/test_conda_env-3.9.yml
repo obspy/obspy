@@ -3,22 +3,21 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - numpy<1.22
-  - scipy
-  - matplotlib
-  - pip
-  - pyproj
-  - proj4
-  - codecov
-  - coverage
+  - ca-certificates
   - certifi
-  - decorator
-  - jsonschema
-  - lxml
-  - mock
-  - requests
-  - sqlalchemy
   - cryptography
+  - decorator
+  - future
+  - greenlet
+  - kiwisolver
+  - lxml
+  - numpy
+  - pillow
+  - pip
+  - pyparsing
+  - requests
+  - scipy
+  - sqlalchemy
   - pip:
       - pyimgur
       - -e..
