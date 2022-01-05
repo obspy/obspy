@@ -5,13 +5,13 @@ channels:
 dependencies:
   - numpy<1.22
   - scipy
-  - matplotlib>3.2.0
+  - matplotlib
   - pip
   - pyproj
-  - proj4<6
+  - proj4
   - codecov
   - coverage
-  - certifi>=2017.4.17
+  - certifi
   - decorator
   - jsonschema
   - lxml
