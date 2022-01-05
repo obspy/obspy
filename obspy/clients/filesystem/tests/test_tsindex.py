@@ -10,17 +10,19 @@ import requests
 import tempfile
 import unittest
 import uuid
-from unittest import mock
+from unittest import mock, TestCase
 
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
-    TSIndexDatabaseHandler, _sqlalchemy_version_insufficient
+    TSIndexDatabaseHandler
 from obspy import read
 from obspy import UTCDateTime
 
 
 def get_test_data_filepath():
     package_dir = os.path.abspath(os.path.dirname(__file__))
-    filepath = os.path.join(package_dir, 'data/tsindex_data/')
+    # TODO It perhaps shouldn't be the case, but the string here has to end
+    # in a forward slash. We should fix this in the future.
+    filepath = os.path.join(package_dir, 'data', 'tsindex_data/')
     return filepath
 
 
@@ -35,9 +37,7 @@ def get_test_client():
     return client
 
 
-@unittest.skipIf(_sqlalchemy_version_insufficient,
-                 'TSIndex needs sqlalchemy 1.0.0 or higher')
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase(TestCase):
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -596,9 +596,7 @@ def purge(dir, pattern):
             os.remove(os.path.join(dir, f))
 
 
-@unittest.skipIf(_sqlalchemy_version_insufficient,
-                 'TSIndex needs sqlalchemy 1.0.0 or higher')
-class IndexerTestCase(unittest.TestCase):
+class IndexerTestCase(TestCase):
 
     def test_bad_rootpath(self):
         """
@@ -893,9 +891,7 @@ class IndexerTestCase(unittest.TestCase):
             purge(filepath, '^{}.*$'.format(fname))
 
 
-@unittest.skipIf(_sqlalchemy_version_insufficient,
-                 'TSIndex needs sqlalchemy 1.0.0 or higher')
-class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
+class TSIndexDatabaseHandlerTestCase(TestCase):
 
     def test_bad_sqlitdb_filepath(self):
         """
