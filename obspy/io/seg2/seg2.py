@@ -175,12 +175,10 @@ class SEG2(object):
                 and "ACQUISITION_DATE" in self.stream.stats.seg2:
             time = self.stream.stats.seg2.ACQUISITION_TIME
             date = self.stream.stats.seg2.ACQUISITION_DATE
-            
             # Split on any non numeric character
-            time = list(filter(None, re.split(r'\D+', time)))  
+            time = list(filter(None, re.split(r'\D+', time)))
             # Split on space, dot (.), slash (/), and dash (-)
-            date = list(filter(None, re.split("[, ./-]+", date))) 
-            
+            date = list(filter(None, re.split("[, ./-]+", date)))
             hour, minute, second = int(time[0]), int(time[1]), float(time[2])
             day, month, year = int(date[0]), MONTHS[date[1].lower()], \
                 int(date[2])
