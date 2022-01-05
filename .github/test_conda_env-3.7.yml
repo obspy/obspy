@@ -1,0 +1,24 @@
+name: test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - numpy<1.22
+  - scipy
+  - matplotlib>3.2.0
+  - pip
+  - pyproj
+  - proj4<6
+  - codecov
+  - coverage
+  - certifi>=2017.4.17
+  - decorator
+  - jsonschema
+  - lxml
+  - mock
+  - requests
+  - sqlalchemy
+  - cryptography
+  - pip:
+      - pyimgur
+      - -e..

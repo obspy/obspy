@@ -92,7 +92,7 @@ jobs:
           miniconda-version: 'latest'
           python-version: ${{ matrix.python-version }}
           activate-environment: test
-          environment-file: .github/test_conda_env.yml
+          environment-file: .github/test_conda_env-${{ matrix.python-version }}.yml
 
       - name: print package info
         shell: bash -l {0}
