@@ -6,6 +6,8 @@ Changes:
    * removed os.path calls with pathlib library calls (see #2751).
    * temporarily removed macOS coverage reporting in github actions (see #2920)
      to solve test issues (#2900)
+   * added python 3.9 tests for all platforms, required to disable image
+     comparisons for 3.9 (#2925)
  - obspy.clients.seishub:
    * added deprecation message
  - obspy.db:
