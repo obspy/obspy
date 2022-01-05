@@ -14,6 +14,7 @@ import glob
 import inspect
 import io
 import os
+import platform
 import re
 import shutil
 import unittest
@@ -471,7 +472,10 @@ class ImageComparison(NamedTemporaryFile):
                 else:
                     msg += upload_result
                 msg = msg.rstrip()
-                raise ImageComparisonException(msg)
+                if platform.python_version() < "3.9":
+                    raise ImageComparisonException(msg)
+                else:
+                    print(msg)
         # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
         finally:
