@@ -7,8 +7,8 @@ dependencies:
   - scipy
   - matplotlib>3.2.0
   - pip
-  - pyproj<6
-  - proj4
+  - pyproj
+  - proj4<6
   - codecov
   - coverage
   - certifi>=2017.4.17
