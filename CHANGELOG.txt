@@ -329,6 +329,7 @@ Changes:
    * Handle data format code 3 trace data (#2022, #2385).
    * Improve parsing of free-form entries (#2385).
    * Fix non-native endian data loading (#2385).
+   * Regex date/time separator support (#2923).
  - obspy.io.seiscomp:
    * Adding support for SC3ML 0.10 (see #2024).
    * Update xsl to allow conversion of amplitude picks not associated with
