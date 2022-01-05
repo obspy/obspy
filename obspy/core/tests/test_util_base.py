@@ -84,7 +84,8 @@ class UtilBaseTestCase(unittest.TestCase):
             # avoid uploading the staged test fail image
             # (after an estimate of 10000 uploads of it.. ;-))
             with self.assertRaises(ImageComparisonException):
-                with ImageComparison(path, img_basename, adjust_tolerance=False,
+                with ImageComparison(path, img_basename,
+                                     adjust_tolerance=False,
                                      no_uploads=True) as ic:
                     shutil.copy(img_fail, ic.name)
 
