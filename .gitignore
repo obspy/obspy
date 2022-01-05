@@ -13,6 +13,7 @@
 .idea
 .project
 .pydevproject
+.pytest_cache
 /.settings
 RELEASE-VERSION
 build/

@@ -27,6 +27,9 @@ from lxml import etree
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import MatplotlibBackend
 
+# The default url to upload test resports.
+DEFAULT_TEST_SERVER = 'tests.obspy.org'
+
 # this dictionary contains the locations of checker routines that determine
 # whether the module's tests can be executed or not (e.g. because test server
 # is unreachable, necessary ports are blocked, etc.).

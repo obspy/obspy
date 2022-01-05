@@ -119,14 +119,7 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          export MODULELIST=`obshub read-config-value module_list --path=${CONFIG_PATH}`
-          export MODULELISTSPACES=`obshub read-config-value module_list_spaces --path=${CONFIG_PATH}`
-          if [ "$RUNNER_OS" == "macOS" ]; then
-              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
-          else
-              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
-              coverage xml -o coverage.xml
-          fi
+          pytest -s --cov obsplus --cov-append --cov-report=xml
 
       - name: upload coverage
         if: runner.os != 'macOS'
