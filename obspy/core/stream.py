@@ -1857,8 +1857,29 @@ class Stream(object):
                 msg = "Selection criteria for channel and component are " + \
                       "mutually exclusive!"
                 raise ValueError(msg)
+
+        # For st.select(id=) without wildcards, use a quicker comparison mode:
+        quick_check = False
+        quick_check_possible = (id is not None
+                                and sampling_rate is None and npts is None
+                                and network is None and station is None
+                                and location is None and channel is None
+                                and component is None)
+        if quick_check_possible:
+            no_wildcards = not any(['?' in id or '*' in id or '[' in id])
+            if no_wildcards:
+                quick_check = True
+                [net, sta, loc, chan] = id.upper().split('.')
+
         traces = []
         for trace in traces_after_inventory_filter:
+            if quick_check:
+                if (trace.stats.network.upper() == net
+                        and trace.stats.station.upper() == sta
+                        and trace.stats.location.upper() == loc
+                        and trace.stats.channel.upper() == chan):
+                    traces.append(trace)
+                continue
             # skip trace if any given criterion is not matched
             if id and not fnmatch.fnmatch(trace.id.upper(), id.upper()):
                 continue
