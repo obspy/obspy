@@ -766,9 +766,11 @@ def _read_picks(tagged_lines, new_event, nordic_format='UKN', **kwargs):
         nordic_format, phase_ok = check_nordic_format_version(pickline)
 
     if nordic_format == 'NEW':
-        new_event = _read_picks_nordic_new(pickline, new_event, header, evtime)
+        new_event = _read_picks_nordic_new(pickline, new_event, header, evtime,
+                                           **kwargs)
     elif nordic_format == 'OLD':
-        new_event = _read_picks_nordic_old(pickline, new_event, header, evtime)
+        new_event = _read_picks_nordic_old(pickline, new_event, header, evtime,
+                                           **kwargs)
     elif nordic_format == 'UKN':
         warnings.warn('Cannot check whether Nordic format is Old or New, is '
                       'this really a Nordic file?')
@@ -1001,7 +1003,7 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime, **kwargs):
     return new_event
 
 
-def _read_picks_nordic_new(pickline, new_event, header, evtime):
+def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
     """
     Reads the type 4 line of the old Nordic format.
     """
@@ -1045,10 +1047,14 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime):
             warnings.warn('%s is not currently supported' % header[60:63])
         finalweight = _int_conv(line[68:70])
         # Create a new obspy.event.Pick class for this pick
-        _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
-                                        channel_code=line[6:9].strip(),
-                                        network_code=line[10:12].strip(),
-                                        location_code=line[12:14].strip())
+        sta, cha = line[1:6].strip(), line[6:9].strip()
+        net, loc = line[10:12].strip(), line[12:14].strip()
+        if net == '' and loc == '':
+            widargs = _resolve_seedid(station=sta, component=cha, time=time,
+                                      **kwargs)
+        else:
+            widargs = net, sta, loc, cha
+        _waveform_id = WaveformStreamID(*widargs)
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
         # agency and operator / author / analyst
