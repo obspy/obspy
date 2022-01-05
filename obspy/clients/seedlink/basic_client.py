@@ -308,7 +308,7 @@ class Client(object):
                 # seems the seedlink server replies with no subtags for the
                 # channels
                 if not subtags:
-                    station_cache.add(item + (None, None))
+                    station_cache.add(item + ('', ''))
             else:
                 station_cache.add(item)
         # change results to an Inventory object
