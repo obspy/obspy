@@ -21,7 +21,7 @@ Reading
 Similar to reading any other waveform data format using obspy.core:
 
     >>> from obspy import read
-    >>> st = read("/path/to/BI008_MEMA-04823.evt")
+    >>> st = read("/path/to/BI008_MEMA-04823.evt", apply_calib=True)
     >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
     >>> print (st)  # doctest: +NORMALIZE_WHITESPACE
@@ -53,7 +53,7 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
        sampling_rate: 250.0
                delta: 0.004
                 npts: 5750
-               calib: 1.0
+               calib: 1.1694431304931641e-06
              _format: KINEMETRICS_EVT
     >>> for k, v in sorted(stats_evt.items()):
     ...     print(k, v)

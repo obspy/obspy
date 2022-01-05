@@ -66,5 +66,5 @@ def read_evt(filename_or_object, **kwargs):
     :return: Stream object containing header and data
     """
     evt_obj = evt.Evt()
-    stream = evt_obj.read_file(filename_or_object)
+    stream = evt_obj.read_file(filename_or_object, **kwargs)
     return stream

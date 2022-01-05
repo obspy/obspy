@@ -75,7 +75,7 @@ class CoreTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
-        st = read(filename)
+        st = read(filename, apply_calib=True)
         st.verify()
         self.assertEqual(len(st), 3)
         self.assertEqual(st[0].stats.starttime,
@@ -95,7 +95,7 @@ class CoreTestCase(unittest.TestCase):
 
         # 2
         filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
-        st = read(filename)
+        st = read(filename, apply_calib=True)
         st.verify()
         self.assertEqual(len(st), 6)
         self.assertEqual(st[0].stats.starttime,
@@ -124,7 +124,7 @@ class CoreTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
-        st = read(buf)
+        st = read(buf, apply_calib=True)
         st.verify()
         self.assertEqual(len(st), 3)
         self.assertEqual(st[0].stats.starttime,
@@ -147,7 +147,7 @@ class CoreTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
-        st = read(buf)
+        st = read(buf, apply_calib=True)
         st.verify()
         self.assertEqual(len(st), 6)
         self.assertEqual(st[0].stats.starttime,
@@ -173,7 +173,7 @@ class CoreTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
-        st = read_evt(filename)
+        st = read_evt(filename, apply_calib=True)
         st.verify()
         self.assertEqual(len(st), 3)
         self.assertEqual(st[0].stats.starttime,
@@ -193,7 +193,7 @@ class CoreTestCase(unittest.TestCase):
 
         # 2
         filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
-        st = read_evt(filename)
+        st = read_evt(filename, apply_calib=True)
         st.verify()
         self.assertEqual(len(st), 6)
         self.assertEqual(st[0].stats.starttime,
@@ -223,7 +223,7 @@ class CoreTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
-        st = read_evt(buf)
+        st = read_evt(buf, apply_calib=True)
         st.verify()
         self.assertEqual(len(st), 3)
         self.assertEqual(st[0].stats.starttime,
@@ -246,7 +246,7 @@ class CoreTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
-        st = read_evt(buf)
+        st = read_evt(buf, apply_calib=True)
         st.verify()
         self.assertEqual(len(st), 6)
         self.assertEqual(st[0].stats.starttime,
@@ -314,6 +314,66 @@ class CoreTestCase(unittest.TestCase):
         valuesend = np.array([-4.4538296759e-002, -4.4549994171e-002,
                               -4.4493857771e-002, -4.4451754540e-002,
                               -4.4409647584e-002])
+
+        # Data values from Tsoft Program
+        # length is 5750
+
+        self.assertEqual(len(data), 5750)
+        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
+        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
+
+    def test_read_via_module_raw(self):
+        """
+        Read files via obspy.io.kinemetrics.core.read_evt function.
+        """
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
+        # 1
+        st = read_evt(filename, apply_calib=False)
+        st.verify()
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(len(st[0]), 230 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MEMA')
+
+        self.verify_stats_evt(st[0].stats.kinemetrics_evt)
+        self.verify_data_evt0_raw(st[0].data)
+        self.verify_data_evt2_raw(st[2].data)
+
+    def verify_data_evt0_raw(self, data):
+        valuesdeb = np.array([-20920., -20980., -20922., -20960.,
+                             -20932., -20936., -20894., -20954.,
+                             -20974., -20912., -20958., -20932.,
+                             -20986., -20948., -20906., -20952.,
+                             -20882., -20912., -20990., -20958.])
+        valuesend = np.array([-21070., -20962., -20930., -20918.,
+                              -20964., -20910., -20934., -21026.,
+                              -20968., -20956., -20976., -20954.,
+                              -20954., -21000., -20966., -20940.,
+                              -20976., -20972., -20956., -20886.])
+        # Data values from Tsoft Program
+
+        self.assertEqual(len(data), 5750)
+        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
+        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
+
+    def verify_data_evt2_raw(self, data):
+        valuesdeb = np.array([-37922., -38032., -38004., -37936.,
+                              -37966., -37952., -37930., -37998.,
+                              -37974., -37960., -37982., -37992.,
+                              -38000., -37984., -37988., -37980.,
+                              -37954., -37930., -37928., -37932.])
+        valuesend = np.array([-37996., -38010., -38024., -38048.,
+                              -37960., -37878., -37842., -37864.,
+                              -37902., -37908., -38038., -38070.,
+                              -38126., -38170., -38070., -38082.,
+                              -38092., -38044., -38008., -37972.])
 
         # Data values from Tsoft Program
         # length is 5750
