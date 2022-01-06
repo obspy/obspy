@@ -38,25 +38,17 @@ jobs:
       - name: install obspy
         shell: bash -l {0}
         run: |
-          pip install -e .
+          python -m pip install -e .[tests]
 
       - name: install obspy github api
         shell: bash -l {0}
         run: |
-          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+          python -m pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
 
       - name: run test suite
         shell: bash -l {0}
         run: |
-          export MODULELIST=`obshub get-module-list --group default --sep ','`
-          export MODULELISTSPACES=`obshub get-module-list --group default --sep ' '`
-          export MODULES=${MODULELISTSPACES//obspy.}
-          if [ "$RUNNER_OS" == "macOS" ]; then
-              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" $MODULES
-          else
-              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" $MODULES
-              coverage xml -o coverage.xml
-          fi
+          pytest obspy --coverage
 
       - name: upload coverage
         if: runner.os != 'macOS'

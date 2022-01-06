@@ -10,35 +10,35 @@ Test suite for the station handling.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import os
-import unittest
 import warnings
 
 import numpy as np
+import pytest
 from matplotlib import rcParams
 
 from obspy import read_inventory, UTCDateTime
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import ImageComparison, WarningsCapture
 
 
-class StationTestCase(unittest.TestCase):
+class TestStation:
     """
     Tests the for :class:`~obspy.core.inventory.station.Station` class.
     """
-    def setUp(self):
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_tear_down(self):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.nperr = np.geterr()
         np.seterr(all='ignore')
-
-    def tearDown(self):
+        yield
         np.seterr(**self.nperr)
 
-    def test_response_plot(self):
+    def test_station_response_plot(self, image_comparer):
         """
         Tests the response plot.
         """
+        breakpoint()
         sta = read_inventory()[0][0]
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("ignore")
+        with WarningsCapture():
             with ImageComparison(self.image_dir, "station_response.png") as ic:
                 rcParams['savefig.dpi'] = 72
                 sta.plot(0.05, channel="*[NE]", outfile=ic.name)
@@ -177,11 +177,3 @@ class StationTestCase(unittest.TestCase):
         self.assertEqual(len(sta.select(
             latitude=47.95, longitude=12.95,
             minradius=0.08, maxradius=0.1)), 0)
-
-
-def suite():
-    return unittest.makeSuite(StationTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

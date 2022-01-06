@@ -7,6 +7,7 @@ import unittest
 from unittest import mock
 
 import numpy as np
+import pytest
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
@@ -15,6 +16,7 @@ from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
 
 
 BASE_URL = "http://service.iris.edu/irisws/syngine/1"
+pytestmark = pytest.mark.network
 
 
 class RequestsMockResponse(object):

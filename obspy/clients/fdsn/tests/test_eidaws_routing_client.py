@@ -12,6 +12,8 @@ from distutils.version import LooseVersion
 import unittest
 from unittest import mock
 
+import pytest
+
 import obspy
 from obspy.clients.fdsn.header import FDSNNoDataException
 from obspy.clients.fdsn.routing.eidaws_routing_client import \
@@ -19,6 +21,7 @@ from obspy.clients.fdsn.routing.eidaws_routing_client import \
 
 
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
+pytestmark = pytest.mark.network
 
 
 class EIDAWSRoutingClientTestCase(unittest.TestCase):

@@ -5,7 +5,12 @@ The obspy.clients.seedlink.slpacket test suite.
 import os.path
 import unittest
 
+import pytest
+
 from obspy.clients.seedlink.slpacket import SLPacket
+
+
+pytestmark = pytest.mark.network
 
 
 class SLPacketTestCase(unittest.TestCase):

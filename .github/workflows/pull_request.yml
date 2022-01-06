@@ -31,7 +31,7 @@ jobs:
       - name: create ci config
         shell: bash -l {0}
         run: |
-          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+          python -m pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
           obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token=${GITHUB_TOKEN}
 
       - name: upload ci config
@@ -53,8 +53,8 @@ jobs:
 
       - name: Install flake8
         run: |
-          pip install wheel
-          pip install flake8
+          python -m pip install wheel
+          python -m pip intall flake8
 
       - name: Set up reviewdog
         run: |
@@ -109,24 +109,17 @@ jobs:
       - name: install obspy
         shell: bash -l {0}
         run: |
-          pip install -e .
+          python -m pip install -e .[tests]
 
       - name: install obspy github api
         shell: bash -l {0}
         run : |
-          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+          python -m pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
 
       - name: run test suite
         shell: bash -l {0}
         run: |
-          export MODULELIST=`obshub read-config-value module_list --path=${CONFIG_PATH}`
-          export MODULELISTSPACES=`obshub read-config-value module_list_spaces --path=${CONFIG_PATH}`
-          if [ "$RUNNER_OS" == "macOS" ]; then
-              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
-          else
-              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
-              coverage xml -o coverage.xml
-          fi
+          pytest obspy --coverage
 
       - name: upload coverage
         if: runner.os != 'macOS'

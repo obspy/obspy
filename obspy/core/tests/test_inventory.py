@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Test suite for the inventory class.
-
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
@@ -18,6 +17,7 @@ from pathlib import Path
 from unittest import mock
 
 import numpy as np
+import pytest
 from matplotlib import rcParams
 
 import obspy
@@ -28,7 +28,7 @@ from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
-from obspy.core.inventory.util import _unified_content_strings, _resolve_seedid
+from obspy.core.inventory.util import _unified_content_strings
 
 
 class InventoryTestCase(unittest.TestCase):
@@ -567,7 +567,6 @@ class InventoryTestCase(unittest.TestCase):
     def test_util_unified_content_string_with_dots_in_description(self):
         """
         The unified content string might have dots in the station description.
-
         Make sure it still works.
         """
         contents = (
@@ -707,73 +706,8 @@ class InventoryTestCase(unittest.TestCase):
         inv1 = read_inventory(path1)
         self.assertEqual(inv1, read_inventory(self.station_xml1))
 
-    def test_resolve_seedid(self):
-        """
-        Test the resolve_seed_id() utility function
-        """
-        t_valid = UTCDateTime(2018, 3, 4)
-        t_invalid = UTCDateTime(1985, 3, 4)
-        inv = read_inventory()
-        self.assertEqual(('GR', 'FUR', '', 'HHZ'),
-                         _resolve_seedid('FUR', 'HHZ', inv))
-        with self.assertWarnsRegex(UserWarning, 'Multiple'):
-            self.assertEqual(('GR', 'FUR', '', 'HHZ'),
-                             _resolve_seedid('FUR', 'HZ', inv))
-        with self.assertWarnsRegex(UserWarning, 'Multiple'):
-            self.assertEqual(('GR', 'FUR', '', 'HHZ'),
-                             _resolve_seedid('FUR', 'Z', inv))
-        self.assertEqual(('GR', 'FUR', '', 'HH?'),
-                         _resolve_seedid('FUR', 'HH?', inv))
-        self.assertEqual(('GR', 'FUR', '', 'HHZ'),
-                         _resolve_seedid('FUR', 'HHZ', inv, time=t_valid))
-        self.assertEqual(
-                ('', 'FUR', '', 'HHZ'),
-                _resolve_seedid('FUR', 'HHZ', time=t_invalid,
-                                default_seedid='.{}..{}'))
-        with self.assertWarnsRegex(UserWarning, 'No matching'):
-            self.assertEqual(
-                    ('', 'FUR', None, 'HHZ'),
-                    _resolve_seedid('FUR', 'HHZ', inv, time=t_invalid))
-        # make a copy, but stripping channels. network lookup should still
-        # work, location code lookup obviously not
-#        inv2 = copy.deepcopy(inv)
-#        for net in inv2:
-#            for sta in net:
-#                sta.channels = []
-#        with warnings.catch_warnings(record=True) as w:
-#            warnings.simplefilter("always")
-#            self.assertEqual(
-#                ('GR', 'FUR', None, 'HHZ'),
-#                _resolve_seedid('FUR', 'HHZ', inv2))
-#        self.assertEqual(len(w), 1)
-#        with warnings.catch_warnings(record=True) as w:
-#            warnings.simplefilter("always")
-#            self.assertEqual(
-#                ('GR', 'FUR', None, 'HHZ'),
-#                _resolve_seedid('FUR', 'HHZ', inv2, time=t_valid))
-#        self.assertTrue(any(
-#            str(w_.message) == 'No matching metadata found for location code.'
-#            for w_ in w))
-        # now add some ambiguity in network code
-        inv = inv.select(network='GR', station='FUR', channel='HHZ',
-                         time=t_valid)
-        inv.networks.append(copy.deepcopy(inv[0]))
-        inv[-1].code = 'XX'
-        with self.assertWarnsRegex(UserWarning, 'No matching'):
-            self.assertEqual(
-                    ('', 'FUR', None, 'HHZ'),
-                    _resolve_seedid('FUR', 'HHZ', inv, time=t_valid))
-        # now add some ambiguity in location code only
-        inv.networks = [inv[0]]
-        inv[0][0].channels.append(copy.deepcopy(inv[0][0][0]))
-        inv[0][0][-1].location_code = '01'
-        with self.assertWarnsRegex(UserWarning, 'Multiple'):
-            self.assertEqual(
-                    ('GR', 'FUR', '', 'HHZ'),
-                    _resolve_seedid('FUR', 'HHZ', inv, time=t_valid))
 
-
-@unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+@pytest.importorskip('basemap')
 @unittest.skipIf(
     BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
     'matplotlib 3.0.1 is not compatible with basemap')
@@ -781,16 +715,17 @@ class InventoryBasemapTestCase(unittest.TestCase):
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Basemap.
     """
-    def setUp(self):
+    @pytest.fixture(scope='class')
+    def setup_teardown(self):
+        """Peform the setup and tear-down for class"""
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.nperr = np.geterr()
         np.seterr(all='ignore')
-
-    def tearDown(self):
+        yield
         np.seterr(**self.nperr)
 
-    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                     'unsupported proj4 library')
+    @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                        'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the inventory location preview plot, default parameters, using
@@ -840,8 +775,8 @@ class InventoryBasemapTestCase(unittest.TestCase):
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 
-    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                     'unsupported proj4 library')
+    @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                        'unsupported proj4 library')
     def test_combined_station_event_plot(self):
         """
         Tests the combined plotting of inventory/event data in one plot,
@@ -862,8 +797,8 @@ class InventoryBasemapTestCase(unittest.TestCase):
             cat.plot(outfile=ic.name, fig=fig)
 
 
-@unittest.skipIf(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
-                 'cartopy not installed')
+@pytest.skipif(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
+               'cartopy not installed')
 class InventoryCartopyTestCase(unittest.TestCase):
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Cartopy.
@@ -912,15 +847,3 @@ class InventoryCartopyTestCase(unittest.TestCase):
             inv.plot(method='cartopy', projection='local', resolution='50m',
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(InventoryTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(InventoryBasemapTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(InventoryCartopyTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

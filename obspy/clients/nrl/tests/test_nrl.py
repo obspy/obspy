@@ -3,10 +3,14 @@ import os
 import unittest
 
 import numpy as np
+import pytest
 
 from obspy.core.inventory import (Response, PolesZerosResponseStage,
                                   ResponseStage, CoefficientsTypeResponseStage)
 from obspy.clients.nrl.client import NRL, LocalNRL, RemoteNRL
+
+
+pytestmark = pytest.mark.network
 
 
 class NRLTestCase(unittest.TestCase):

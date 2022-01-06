@@ -6,10 +6,13 @@ import os
 import unittest
 
 import numpy as np
+import pytest
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.clients.iris import Client
+
+pytestmark = pytest.mark.network
 
 
 class ClientTestCase(unittest.TestCase):
