@@ -68,27 +68,27 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     buffersize 64
     chan_altitude 0
     chan_azimuth 0
-    chan_calcoil 0.050000...
+    chan_calcoil 0.0500...
     chan_channel 0
-    chan_damping 0.70700001...
+    chan_damping 0.7070...
     chan_east 0
     chan_fullscale 2.5
     chan_gain 1
     chan_id
-    chan_iirtrigfilter 0
-    chan_ltaseconds 0
+    chan_iirtrigfilter iira IIR bandpass, 1.2 to 20Hz @ 200sps
+    chan_ltaseconds 20
     chan_natfreq 196.0
     chan_north 0
-    chan_range 3
+    chan_range 1g
     chan_sensitivity 2.5
     chan_sensorgain 1
     chan_sensorserialnumber 0
     chan_sensorserialnumberext 0
     chan_sensortype 32
-    chan_staltaprecent 0
-    chan_staltaratio 0
-    chan_stasecondstten 0
-    chan_triggertype 0
+    chan_staltaprecent 10
+    chan_staltaratio 1.5
+    chan_stasecondstten 0.1
+    chan_triggertype threshold, default
     chan_up 0
     clocksource Internal GPS
     comment MEMBACH PARAMETERS FAC+EEP/v3.02
@@ -125,9 +125,9 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     id KMI
     installedchan 4
     instrument New Etna
-    latitude 50.6097...
+    latitude 50.609...
     localoffset 0
-    longitude 6.00925...
+    longitude 6.009...
     maxchannels 12
     maxpeak -19494
     maxpeakoffset 1722
@@ -172,7 +172,7 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     starttime 2013-08-15T09:20:28.000Z
     starttimemsec 0
     stnid MEMA
-    stream_flags 0
+    stream_flags functional test, FT
     sysblkversion 0
     temperature 76
     timeout 0
@@ -182,10 +182,11 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     txblksize 0
     txchanmap 15
     voter_number 0
-    voter_type C
+    voter_type channel
     voter_weight 1
     votestodetrigger 1
     votestotrigger 1
+
 
 The actual data is stored as :class:`numpy.ndarray` in the ``data`` attribute
 of each trace.

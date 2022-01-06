@@ -194,18 +194,20 @@ class EvtVirtual(object):
             ret.append(mystr)
         return ret
 
-    def _instrument(self, code, unused_param, unused_val, unused_offset):
+    def _gpsstatus(self, value, unused_a, unused_b, unused_c):
         """
-        change instrument type code to name
-        :param code: code to convert
-        :param param: not used
-        :param val: not used
-        :param offset: not used
-        :rtype: str
+        Transform bitarray for gpsstatus in human readable string
+
+        :param value: gps status
+        :rtype: string
         """
-        dico = {0: 'QDR', 9: 'K2', 10: 'Makalu', 20: 'New Etna',
-                30: 'Rock', 40: 'SSA2EVT'}
-        if code in dico:
-            return dico[code]
-        else:
-            raise EvtBadHeaderError("Bad Instrument Code")
+        dico = {1: 'Checking', 2: 'Present', 4: 'Error', 8: 'Failed',
+                16: 'Not Locked', 32: 'ON'}
+        retval = ""
+        for key in sorted(dico):
+            if value & key:
+                retval += dico[key] + " "
+        return retval
+
+
+

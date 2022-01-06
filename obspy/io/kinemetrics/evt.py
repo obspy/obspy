@@ -43,6 +43,102 @@ HEADER_STRUCT6 = b"cBh" * 15
 # 0x6c4 - 0x7f8
 HEADER_STRUCT7 = b"64s16s16s16s16s16s24s24s24s24s3B3b5h4xH46s"
 
+structures = {}
+structures["instrument"] = {0: 'QDR', 9: 'K2', 10: 'Makalu', 20: 'New Etna',
+                            30: 'Rock', 40: 'SSA2EVT'}
+structures["stream_flags"] = {0: "functional test, FT",
+                              1: "sensor response test, SRT, 080129",
+                              2: "recorded trigger data, TRIG DATA",}
+structures["restart_source"] = {0: "unknown",
+                                1: "power switch",
+                                2: "user command",
+                                3: "software watchdog",
+                                4: "DSP failure",
+                                5: "battery failure",
+                                6: "memory error"}
+structures["header_version"] = {100: "12 channel, old",
+                                110: "12 channel, old",
+                                120: "18 channel, old",
+                                130: "12 channel, old",
+                                140: "12 channel, K2, Etna, QDR, Rock",
+                                150: "18 channel, Mt Whitney, Rock"}
+structures["clocksource"] = {0: "RTC from cold start",
+                             1: "keyboard",
+                             2: "Sync w/ ext. ref. pulse",
+                             3: "Internal GPS"}
+structures["chan_triggertype"] = {0: "threshold, default",
+                                  1: "sta/lta"}
+structures["chan_iirtrigfilter"] = {0: "iira IIR bandpass, 1.2 to 20Hz "
+                                       "@ 200sps",
+                                    1: "CSM, classic strong motion, 0.1 to "
+                                       "12.5 Hz @ 200sps",
+                                    2: "iirc IIR bandpass, 2.0 to 40Hz at "
+                                       "200sps"}
+structures["chan_stasecondstten"] = {0: 0.1,
+                                     1: 0.2,
+                                     2: 0.3,
+                                     3: 0.4,
+                                     4: 0.5,
+                                     5: 0.6,
+                                     6: 0.8,
+                                     7: 1.0,
+                                     8: 1.2,
+                                     9: 1.4,
+                                     'a': 1.6,
+                                     'b': 1.8,
+                                     'c': 2.0,
+                                     'd': 2.5,
+                                     'e': 3.0,
+                                     'f': 5.0,
+                                     10: 10.0}
+structures["chan_ltaseconds"] = {0: 20,
+                                 1: 30,
+                                 2: 40,
+                                 3: 50,
+                                 4: 60,
+                                 5: 80,
+                                 6: 100,
+                                 7: 120}
+structures["chan_staltaratio"] = {0: 1.5,
+                                  1: 2,
+                                  2: 3,
+                                  3: 4,
+                                  4: 6,
+                                  5: 8,
+                                  6: 10,
+                                  7: 15,
+                                  8: 20,
+                                  9: 30,
+                                  'a': 40,
+                                  'b': 60,
+                                  'c': 100}
+structures["chan_staltaprecent"] = {0: 10,
+                                    1: 15,
+                                    2: 20,
+                                    3: 40,
+                                    4: 60,
+                                    5: 100}
+structures["chan_range"] = {0: 'not defined',
+                            1: '4g',
+                            2: '2g',
+                            3: '1g',
+                            4: '1/2g',
+                            5: '1/4g',
+                            6: '1/8g',
+                            7: '1/16g',
+                            8: '1/32g',
+                            9: '1/64g',
+                            'a': '1/128g',
+                            'b': '1/256g',
+                            'c': '1/512g',
+                            'd': '1/1024g',
+                            }
+structures["voter_type"] = {'C': 'channel',
+                            'E': 'external',
+                            'K': 'keyboard',
+                            'N': 'network',
+                            '': ''}
+
 
 class Evt(object):
     """
@@ -215,7 +311,7 @@ class EvtHeader(EvtVirtual):
     Class to manage header of Evt file
     """
     HEADER = {'id': [0, ['_strnull', '']],
-              'instrument': [1, ['_instrument', '']],
+              'instrument': [1, ''],
               'headerversion': [2, ''],
               'headerbytes': [3, ''],
               'a2dbits': [4, ''],
@@ -231,7 +327,7 @@ class EvtHeader(EvtVirtual):
               'crc': [14, ''],
               'flags': [15, ''],
               'temperature': [16, ''],
-              'clocksource': [17, ['_clocksource', '']],
+              'clocksource': [17, ''],
               'gpsstatus': [18, ['_gpsstatus', '']],
               'gpssoh': [19, ''],
               'gpslockfailcount': [20, ''],
@@ -379,6 +475,28 @@ class EvtHeader(EvtVirtual):
         val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
         self.set_dict(val, 188, 210)
 
+        for key in self.HEADER:
+            if key in structures:
+                value = self.HEADER[key][2]
+                if isinstance(value, list):
+                    vals = []
+                    for v in value:
+                        try:
+                            vals.append(structures[key][v])
+                        except KeyError:
+                            msg = "Unmatched raw value: {}".format(v)
+                            warnings.warn(key+": "+msg)
+                            vals.append(msg)
+                    self.HEADER[key][2] = vals
+                else:
+                    try:
+                        self.HEADER[key][2] = structures[key][value]
+                    except KeyError:
+                        msg = "Unmatched raw value: {}".format(value)
+                        warnings.warn(key + ": " + msg)
+                        self.HEADER[key][2] = "Unmatched raw value: " \
+                                              "{}".format(value)
+
     def make_obspy_dict(self, numchan):
         """
         Make an ObsPy dictionary from header dictionary for 1 channel
@@ -395,40 +513,13 @@ class EvtHeader(EvtVirtual):
                 dico[key] = value
         return dico
 
-    def _gpsstatus(self, value, unused_a, unused_b, unused_c):
-        """
-        Transform bitarray for gpsstatus in human readable string
-
-        :param value: gps status
-        :rtype: string
-        """
-        dico = {1: 'Checking', 2: 'Present', 4: 'Error', 8: 'Failed',
-                16: 'Not Locked', 32: 'ON'}
-        retval = ""
-        for key in sorted(dico):
-            if value & key:
-                retval += dico[key] + " "
-        return retval
-
-    def _clocksource(self, value, unused_a, unused_b, unused_c):
-        """
-        Transform clock source value to human readable value
-        :param value: clock source id
-        :rtype: string
-        """
-        dico = {0: "RTC from cold start",
-                1: "keyboard",
-                2: "Sync w/ ext. ref. pulse",
-                3: "Internal GPS"}
-        return dico[value]
-
 
 class EvtFrameHeader(EvtVirtual):
     """
     Class to manage frame header in Evt file
     """
     HEADER = {'frametype': [0, ''],
-              'instrumentcode': [1, ['_instrument', '']],
+              'instrumentcode': [1, ''],
               'recorderid': [2, ''],
               'framesize': [3, ''],
               'blocktime': [4, ['_time', 9]],
@@ -502,7 +593,7 @@ class EvtTag(EvtVirtual):
     """
     HEADER = {'order': [1, ''],
               'version': [2, ''],
-              'instrument': [3, ['_instrument', '']],
+              'instrument': [3, ''],
               'type': [4, ''],
               'length': [5, ''],
               'datalength': [6, ''],
