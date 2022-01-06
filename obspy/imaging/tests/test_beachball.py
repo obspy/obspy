@@ -88,26 +88,26 @@ class BeachballTestCase(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             data = beachball(fm, format='pdf')
-            self.assertEqual(data[0:4], b"%PDF")
+            assert data[0:4] == b"%PDF"
             # as file
             # create and compare image
             with NamedTemporaryFile(suffix='.pdf') as tf:
                 beachball(fm, format='pdf', outfile=tf.name)
         # PS
         data = beachball(fm, format='ps')
-        self.assertEqual(data[0:4], b"%!PS")
+        assert data[0:4] == b"%!PS"
         # as file
         with NamedTemporaryFile(suffix='.ps') as tf:
             beachball(fm, format='ps', outfile=tf.name)
         # PNG
         data = beachball(fm, format='png')
-        self.assertEqual(data[1:4], b"PNG")
+        assert data[1:4] == b"PNG"
         # as file
         with NamedTemporaryFile(suffix='.png') as tf:
             beachball(fm, format='png', outfile=tf.name)
         # SVG
         data = beachball(fm, format='svg')
-        self.assertEqual(data[0:5], b"<?xml")
+        assert data[0:5] == b"<?xml"
         # as file
         with NamedTemporaryFile(suffix='.svg') as tf:
             beachball(fm, format='svg', outfile=tf.name)
@@ -120,8 +120,8 @@ class BeachballTestCase(unittest.TestCase):
         sl2 = 0.178067035725425
         sl3 = 0.982802524713469
         (strike, dip) = strike_dip(sl2, sl1, sl3)
-        self.assertAlmostEqual(strike, 254.64386091007400)
-        self.assertAlmostEqual(dip, 10.641291652406172)
+        assert round(abs(strike-254.64386091007400), 7) == 0
+        assert round(abs(dip-10.641291652406172), 7) == 0
 
     def test_aux_plane(self):
         """
@@ -132,26 +132,26 @@ class BeachballTestCase(unittest.TestCase):
         d1 = 84.240987194376590
         r1 = 98.963372641038790
         (s2, d2, r2) = aux_plane(s1, d1, r1)
-        self.assertAlmostEqual(s2, 254.64386091007400)
-        self.assertAlmostEqual(d2, 10.641291652406172)
-        self.assertAlmostEqual(r2, 32.915578422454380)
+        assert round(abs(s2-254.64386091007400), 7) == 0
+        assert round(abs(d2-10.641291652406172), 7) == 0
+        assert round(abs(r2-32.915578422454380), 7) == 0
         #
         s1 = 160.55
         d1 = 76.00
         r1 = -46.78
         (s2, d2, r2) = aux_plane(s1, d1, r1)
-        self.assertAlmostEqual(s2, 264.98676854650216)
-        self.assertAlmostEqual(d2, 45.001906942415623)
-        self.assertAlmostEqual(r2, -159.99404307049076)
+        assert round(abs(s2-264.98676854650216), 7) == 0
+        assert round(abs(d2-45.001906942415623), 7) == 0
+        assert round(abs(r2--159.99404307049076), 7) == 0
 
     def test_aux_plane_735(self):
         """
         Test aux_plane precision issue #735
         """
         s, d, r = aux_plane(164, 90, -32)
-        self.assertAlmostEqual(s, 254.)
-        self.assertAlmostEqual(d, 58.)
-        self.assertAlmostEqual(r, -180.)
+        assert round(abs(s-254.), 7) == 0
+        assert round(abs(d-58.), 7) == 0
+        assert round(abs(r--180.), 7) == 0
 
     def test_tdl(self):
         """
@@ -160,9 +160,9 @@ class BeachballTestCase(unittest.TestCase):
         an = [0.737298200871146, -0.668073596186761, -0.100344571703004]
         bn = [-0.178067035261159, -0.048901208638715, -0.982802524796805]
         (ft, fd, fl) = tdl(an, bn)
-        self.assertAlmostEqual(ft, 227.81994742784540)
-        self.assertAlmostEqual(fd, 84.240987194376590)
-        self.assertAlmostEqual(fl, 81.036627358961210)
+        assert round(abs(ft-227.81994742784540), 7) == 0
+        assert round(abs(fd-84.240987194376590), 7) == 0
+        assert round(abs(fl-81.036627358961210), 7) == 0
 
     def test_mt2plane(self):
         """
@@ -170,9 +170,9 @@ class BeachballTestCase(unittest.TestCase):
         """
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
         np = mt2plane(mt)
-        self.assertAlmostEqual(np.strike, 129.86262672080011)
-        self.assertAlmostEqual(np.dip, 79.022700906654734)
-        self.assertAlmostEqual(np.rake, 97.769255185515192)
+        assert round(abs(np.strike-129.86262672080011), 7) == 0
+        assert round(abs(np.dip-79.022700906654734), 7) == 0
+        assert round(abs(np.rake-97.769255185515192), 7) == 0
 
     def test_mt2axes(self):
         """
@@ -181,15 +181,15 @@ class BeachballTestCase(unittest.TestCase):
         # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
         (t, n, p) = mt2axes(mt)
-        self.assertAlmostEqual(t.val, 2.52461359)
-        self.assertAlmostEqual(t.dip, 55.33018576)
-        self.assertAlmostEqual(t.strike, 49.53656116)
-        self.assertAlmostEqual(n.val, 0.08745048)
-        self.assertAlmostEqual(n.dip, 7.62624529)
-        self.assertAlmostEqual(n.strike, 308.37440488)
-        self.assertAlmostEqual(p.val, -2.61206406)
-        self.assertAlmostEqual(p.dip, 33.5833323)
-        self.assertAlmostEqual(p.strike, 213.273886)
+        assert round(abs(t.val-2.52461359), 7) == 0
+        assert round(abs(t.dip-55.33018576), 7) == 0
+        assert round(abs(t.strike-49.53656116), 7) == 0
+        assert round(abs(n.val-0.08745048), 7) == 0
+        assert round(abs(n.dip-7.62624529), 7) == 0
+        assert round(abs(n.strike-308.37440488), 7) == 0
+        assert round(abs(p.val--2.61206406), 7) == 0
+        assert round(abs(p.dip-33.5833323), 7) == 0
+        assert round(abs(p.strike-213.273886), 7) == 0
 
     def test_collection(self):
         """
@@ -311,12 +311,12 @@ class BeachballTestCase(unittest.TestCase):
                 beachball(mt, outfile=ic.name)
 
         # Make sure the appropriate warnings has been raised.
-        self.assertTrue(w)
+        assert w
         # Filter
         w = [_i.message.args[0] for _i in w]
         w = [_i for _i in w
              if "falling back to the mopad wrapper" in _i.lower()]
-        self.assertTrue(w)
+        assert w
 
 
 def suite():

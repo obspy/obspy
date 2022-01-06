@@ -109,7 +109,7 @@ class ScanTestCase(unittest.TestCase):
             fig, ax = plt.subplots()
             fig = scanner.plot(fig=fig, show=False, seed_ids=[seed_id])
             got = [label.get_text() for label in ax.get_yticklabels()]
-            self.assertEqual(got, expected_labels)
+            assert got == expected_labels
             plt.close(fig)
 
     def test_scanner_manually_add_streams(self):
@@ -233,11 +233,11 @@ class ScanTestCase(unittest.TestCase):
                             utc2 = UTCDateTime(out_str)
                         except (ValueError, TypeError):
                             # if str is not a datetime it should be equal
-                            self.assertEqual(ex_str, out_str)
+                            assert ex_str == out_str
                         else:
                             # datetimes just need to be close
                             t1, t2 = utc1.timestamp, utc2.timestamp
-                            self.assertTrue(abs(t1 - t2) < .001)
+                            assert abs(t1 - t2) < .001
 
 
 def suite():

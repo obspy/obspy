@@ -12,6 +12,7 @@ from obspy.core.event import read_events
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
 from obspy.core.util.testing import ImageComparison
+import pytest
 
 
 class WaveformTestCase(unittest.TestCase):
@@ -72,25 +73,26 @@ class WaveformTestCase(unittest.TestCase):
         st[0].stats.calib = 0.2343
         org_st = st.copy()
         st.plot(format='png')
-        self.assertEqual(st, org_st)
+        assert st == org_st
         # Now with min-max list creation (more than 400000 samples).
         st = self._create_stream(UTCDateTime(0), UTCDateTime(600000), 1)
         st[0].stats.calib = 0.2343
         org_st = st.copy()
         st.plot(format='png')
-        self.assertEqual(st, org_st)
+        assert st == org_st
         # Now only plot a certain time frame.
         st.plot(
             format='png', starrtime=UTCDateTime(10000),
             endtime=UTCDateTime(20000))
-        self.assertEqual(st, org_st)
+        assert st == org_st
 
     def test_plot_empty_stream(self):
         """
         Plotting of an empty stream should raise a warning.
         """
         st = Stream()
-        self.assertRaises(IndexError, st.plot)
+        with pytest.raises(IndexError):
+            st.plot()
 
     def test_plot_same_trace_different_sample_rates(self):
         """
@@ -100,7 +102,8 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self._create_stream(start, start + 10, 1.0)
         st += self._create_stream(start + 10, start + 20, 10.0)
-        self.assertRaises(Exception, st.plot)
+        with pytest.raises(Exception):
+            st.plot()
 
     def test_plot_one_hour_many_samples(self):
         """

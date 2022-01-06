@@ -37,7 +37,7 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
         result = out.stdout[:-1]
-        self.assertEqual(expected, result)
+        assert expected == result
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -51,7 +51,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
   \ -1.55  0.47 -0.02 /
 
 '''
-        self.assertEqual(expected, out.stdout)
+        assert expected == out.stdout
 
     def test_script_convert_type_tensor_large(self):
         with CatchOutput() as out:
@@ -65,7 +65,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
   \ -0.87  0.26 -0.01 /
 
 '''
-        self.assertEqual(expected, out.stdout)
+        assert expected == out.stdout
 
     def test_script_convert_basis(self):
         expected = [
@@ -96,18 +96,18 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                              ','.join(str(x) for x in self.mt)])
 
             actual = eval(out.stdout)
-            self.assertEqual(len(exp), len(actual))
+            assert len(exp) == len(actual)
             for i, (e, a) in enumerate(zip(exp, actual)):
                 msg = '%d: %f != %f in %s -> %s conversion' % (i, e, a,
                                                                insys, outsys)
-                self.assertAlmostEqual(e, a, msg=msg)
+                assert round(abs(e-a), 7) == 0, msg
 
     def test_script_convert_vector(self):
         with CatchOutput() as out:
             obspy_mopad(['convert', '-v', 'NED', 'NED',
                          ','.join(str(x) for x in self.mt)])
         expected = str(self.mt) + '\n'
-        self.assertEqual(expected, out.stdout)
+        assert expected == out.stdout
 
     #
     # obspy-mopad decompose
@@ -126,7 +126,7 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
         result = out.stdout[:-1]
-        self.assertEqual(expected, result)
+        assert expected == result
 
     #
     # obspy-mopad gmt
@@ -150,17 +150,17 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                                                   bio.splitlines(),
                                                   fillvalue=''):
                 if exp_line.startswith('>') or out_line.startswith('>'):
-                    self.assertEqual(exp_line, out_line,
-                                     msg='Headers do not match!')
+                    assert exp_line == out_line, \
+                                     'Headers do not match!'
 
         # Test actual data
         exp_data = np.genfromtxt(expected, comments='>')
         with io.BytesIO(out.stdout.encode('utf-8')) as bio:
             out_data = np.genfromtxt(bio, comments='>')
-        self.assertEqual(exp_data.shape, out_data.shape,
-                         msg='Data does not match!')
-        self.assertTrue(np.allclose(exp_data, out_data),
-                        msg='Data does not match!')
+        assert exp_data.shape == out_data.shape, \
+               'Data does not match!'
+        assert np.allclose(exp_data, out_data), \
+               'Data does not match!'
 
     def test_script_gmt_fill(self):
         self.compare_gmt('mopad_fill.gmt',
@@ -250,7 +250,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                                      '--size', '2.54', '--quality', '200',
                                      '--',
                                      ','.join(str(x) for x in mt)])
-                    self.assertEqual('', out.stdout)
+                    assert '' == out.stdout
             except ImageComparisonException as e:
                 if ic.keep_output:
                     messages += str(e)
