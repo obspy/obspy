@@ -29,15 +29,15 @@ WARNING_HEADER = "Only tested with files from ROB networks :" + \
 FRAME_STRUCT = b"BBHHLHHBBHB13s"
 
 # 0 - 0x7c (0-34)
-HEADER_STRUCT1 = b"3sB2H3B3x6Hh2Hh22x3B5x2H4hH2x2h6L16x"
+HEADER_STRUCT1 = b"3sB2H3B3x6Hh2Hh22x" + b"3B5x2H4hH2x2h6L16x"
 # 0x7c - 0x22c (35-106)
 HEADER_STRUCT2 = b"lLlL2l12x" * 12
 # 0x22c-0x2c8(->139)
 HEADER_STRUCT3 = b"3L4H2L4x2H5s33sh2f4h4B2LB17s2B2B6xh22x"
 # 0x2c8 - 0x658 (140 - 464) (27*12)
 HEADER_STRUCT4 = b"5sbH5h3H4BHBx8f2B10x" * 12
-# 0x658 - 0x688
-HEADER_STRUCT5 = b"3B5x6H2hb2Bxh3Hl8x"
+# 0x658 - 0x688 items 167-184
+HEADER_STRUCT5 = b"3B5x6H2hx2Bxh3Hl8x"
 # 0x688 - 0x6c4 (3*15)
 HEADER_STRUCT6 = b"cBh" * 15
 # 0x6c4 - 0x7f8
@@ -212,19 +212,56 @@ class EvtHeader(EvtVirtual):
     """
     Class to manage header of Evt file
     """
-    HEADER = {'instrument': [1, ['_instrument', '']],
+    HEADER = {'id': [0, ['_strnull', '']],
+              'instrument': [1, ['_instrument', '']],
+              'headerversion': [2, ''],
+              'headerbytes': [3, ''],
               'a2dbits': [4, ''],
               'samplebytes': [5, ''],
+              'restartsource': [6, ''],
               'installedchan': [7, ''],
               'maxchannels': [8, ''],
+              'sysblkversion': [9, ''],
+              'bootblkversion': [10, ''],
+              'appblkversion': [11, ''],
+              'dspblkversion': [12, ''],
               'batteryvoltage': [13, ''],
+              'crc': [14, ''],
+              'flags': [15, ''],
               'temperature': [16, ''],
+              'clocksource': [17, ['_clocksource', '']],
               'gpsstatus': [18, ['_gpsstatus', '']],
-              'gpslastlock': [33, ['_time', -1]],
+              'gpssoh': [19, ''],
+              'gpslockfailcount': [20, ''],
+              'gpsupdatertccount': [21, ''],
+              'acqdelay': [22, ''],
+              'gpslatitude': [23, ''],
+              'gpslongitude': [24, ''],
+              'gpsaltitude': [25, ''],
+              'daccount': [26, ''],
+              'gpslastdrift1': [27, ''],
+              'gpslastdrift2': [28, ''],
+              'gpslastturnontime1': [29, ['_time', 0]],
+              'gpslastturnontime2': [30, ['_time', 0]],
+              'gpslastupdatetime1': [31, ['_time', 0]],
+              'gpslastupdatetime2': [32, ['_time', 0]],
+              'gpslastlock1': [33, ['_time', 0]],
+              'gpslastlock2': [34, ['_time', 0]],
+              'maxpeak': [35, ['_array', [12, 6, 35]]],
+              'maxpeakoffset': [36, ['_array', [12, 6, 36]]],
+              'minpeak': [37, ['_array', [12, 6, 37]]],
+              'minpeakoffset': [38, ['_array', [12, 6, 38]]],
+              'mean': [39, ['_array', [12, 6, 39]]],
+              'aqoffset': [40, ['_array', [12, 6, 40]]],
               'starttime': [107, ['_time', 112]],
               'triggertime': [108, ['_time', 113]],
               'duration': [109, ''],
-              'nscans': [115, ''],
+              'errors': [110, ''],
+              'stream_flags': [111, ''],
+              'starttimemsec': [112, ''],
+              'triggertimemsec': [113, ''],
+              'nscans': [114, ''],
+              'triggerbitmap': [115, ''],
               'serialnumber': [116, ''],
               'nchannels': [117, ''],
               'stnid': [118, ['_strnull', '']],
@@ -232,19 +269,81 @@ class EvtHeader(EvtVirtual):
               'elevation': [120, ''],
               'latitude': [121, ''],
               'longitude': [122, ''],
+              'gpsturnoninterval': [137, ''],
+              'gpsmaxturnontime': [138, ''],
+              'localoffset': [139, ''],
               'chan_id': [140, ['_arraynull', [12, 27, 140]]],
+              'chan_channel': [141, ['_array', [12, 27, 141]]],
+              'chan_sensorserialnumberext': [141, ['_array', [12, 27, 142]]],
               'chan_north': [143, ['_array', [12, 27, 143]]],
               'chan_east': [144, ['_array', [12, 27, 144]]],
               'chan_up': [145, ['_array', [12, 27, 145]]],
+              'chan_altitude': [146, ['_array', [12, 27, 146]]],
               'chan_azimuth': [147, ['_array', [12, 27, 147]]],
+              'chan_sensortype': [148, ['_array', [12, 27, 148]]],
+              'chan_sensorserialnumber': [149, ['_array', [12, 27, 149]]],
               'chan_gain': [150, ['_array', [12, 27, 150]]],
+              'chan_triggertype': [151, ['_array', [12, 27, 151]]],
+              'chan_iirtrigfilter': [152, ['_array', [12, 27, 152]]],
+              'chan_stasecondstten': [153, ['_array', [12, 27, 153]]],
+              'chan_ltaseconds': [154, ['_array', [12, 27, 154]]],
+              'chan_staltaratio': [155, ['_array', [12, 27, 155]]],
+              'chan_staltaprecent': [156, ['_array', [12, 27, 156]]],
               'chan_fullscale': [157, ['_array', [12, 27, 157]]],
               'chan_sensitivity': [158, ['_array', [12, 27, 158]]],
               'chan_damping': [159, ['_array', [12, 27, 159]]],
               'chan_natfreq': [160, ['_array', [12, 27, 160]]],
               'chan_calcoil': [164, ['_array', [12, 27, 164]]],
               'chan_range': [165, ['_array', [12, 27, 165]]],
-              'chan_sensorgain': [166, ['_array', [12, 27, 166]]]}
+              'chan_sensorgain': [166, ['_array', [12, 27, 166]]],
+
+              'filterflag': [167, ''], #header5, 167-184,
+              'primarystorage': [168, ''],
+              'secondarystorage': [169, ''],
+              'eventnumber': [170, ''],
+              'sps': [171, ''],
+              'apw': [172, ''],
+              'preevent': [173, ''],
+              'postevent': [174, ''],
+              'minruntime': [175, ''],
+              'votestotrigger': [176, ''],
+              'votestodetrigger': [177, ''],
+              'filtertype': [178, ''],
+              'datafmt': [179, ''],
+              'timeout': [180, ''],
+              'txblksize': [181, ''],
+              'buffersize': [182, ''],
+              'samplerate': [183, ''],
+              'txchanmap': [184, ''],
+
+              'voter_type': [185, ['_arraynull', [15, 3, 185]]],  # header6
+              'voter_number': [186, ['_array', [15, 3, 186]]],
+              'voter_weight': [187, ['_array', [15, 3, 187]]],
+
+              'modem_initcmd': [188, ['_strnull', '']],  # header7
+              'modem_dialingprefix': [189, ['_strnull', '']],
+              'modem_dialingsuffix': [190, ['_strnull', '']],
+              'modem_hangupcmd': [191, ['_strnull', '']],
+              'modem_autoansweroncmd': [192, ['_strnull', '']],
+              'modem_autoansweroffcmd': [193, ['_strnull', '']],
+              'modem_phonenumber1': [194, ['_strnull', '']],
+              'modem_phonenumber2': [195, ['_strnull', '']],
+              'modem_phonenumber3': [196, ['_strnull', '']],
+              'modem_phonenumber4': [197, ['_strnull', '']],
+              'modem_waitforconnection': [198, ''],
+              'modem_pausebetweencalls': [199, ''],
+              'modem_maxdialattempts': [200, ''],
+              'modem_cellshare': [201, ''],
+              'modem_cellontime': [202, ''],
+              'modem_cellwarmuptime': [203, ''],
+              'modem_cellstarttime1': [204, ''],
+              'modem_cellstarttime2': [205, ''],
+              'modem_cellstarttime3': [206, ''],
+              'modem_cellstarttime4': [207, ''],
+              'modem_cellstarttime5': [208, ''],
+              'modem_flags': [209, ''],
+              'modem_calloutmsg': [210, ['_strnull', '']],
+              }
 
     def __init__(self):
         EvtVirtual.__init__(self)
@@ -264,17 +363,19 @@ class EvtHeader(EvtVirtual):
 
     def analyse_header12(self, head_buff):
         val = unpack(self.endian + HEADER_STRUCT1, head_buff[0:0x7c])
-        self.set_dict(val, 0)
+        self.set_dict(val, 0, 34)
         val = unpack(self.endian + HEADER_STRUCT2, head_buff[0x7c:0x22c])
-        self.set_dict(val, 35)
+        self.set_dict(val, 35, 106)
         val = unpack(self.endian + HEADER_STRUCT3, head_buff[0x22c:0x2c8])
-        self.set_dict(val, 107)
+        self.set_dict(val, 107, 139)
         val = unpack(self.endian + HEADER_STRUCT4, head_buff[0x2c8:0x658])
-        self.set_dict(val, 140)
-        # Those three do not do anything... (For futur extensions)
-        # val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
-        # val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
-        # val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
+        self.set_dict(val, 140, 166)
+        val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
+        self.set_dict(val, 167, 184)
+        val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
+        self.set_dict(val, 185, 187)
+        val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
+        self.set_dict(val, 188, 210)
 
     def make_obspy_dict(self, numchan):
         """
@@ -306,6 +407,18 @@ class EvtHeader(EvtVirtual):
             if value & key:
                 retval += dico[key] + " "
         return retval
+
+    def _clocksource(self, value, unused_a, unused_b, unused_c):
+        """
+        Transform clock source value to human readable value
+        :param value: clock source id
+        :rtype: string
+        """
+        dico = {0: "RTC from cold start",
+                1: "keyboard",
+                2: "Sync w/ ext. ref. pulse",
+                3: "Internal GPS"}
+        return dico[value]
 
 
 class EvtFrameHeader(EvtVirtual):

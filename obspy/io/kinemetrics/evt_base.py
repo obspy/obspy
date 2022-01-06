@@ -76,7 +76,7 @@ class EvtVirtual(object):
             except IndexError:
                 pass
 
-    def set_dict(self, val, offset=0):
+    def set_dict(self, val, offset=0, offset_max=None):
         """
         fill the dictionary with values found in the input 'val' list
             the nth value in val is placed in the dictionary if a key
@@ -90,9 +90,13 @@ class EvtVirtual(object):
         """
         if not isinstance(val, tuple):
             raise TypeError("set_dict() expects a tuple")
+        if offset_max:
+            items = offset_max - offset + 1
+        else:
+            items = len(val)
         for key in self.HEADER:
             index = self.HEADER[key][0] - offset
-            if 0 <= index < len(val):
+            if 0 <= index < items:
                 if self.HEADER[key][1] != "":
                     fct = self.HEADER[key][1][0]
                     param = self.HEADER[key][1][1]
@@ -145,7 +149,7 @@ class EvtVirtual(object):
         :param offset: not used
         :rtype: str
         """
-        return strn.split(b"\0", 1)[0].decode()
+        return strn.rstrip(b'\0').replace(b"\0", b" ").decode()
 
     def _array(self, unused_firstval, param, val, offset):
         """
