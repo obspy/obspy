@@ -297,7 +297,7 @@ class EvtHeader(EvtVirtual):
               'chan_range': [165, ['_array', [12, 27, 165]]],
               'chan_sensorgain': [166, ['_array', [12, 27, 166]]],
 
-              'filterflag': [167, ''], #header5, 167-184,
+              'filterflag': [167, ''],  # header5, 167-184,
               'primarystorage': [168, ''],
               'secondarystorage': [169, ''],
               'eventnumber': [170, ''],
