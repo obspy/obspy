@@ -48,7 +48,7 @@ structures["instrument"] = {0: 'QDR', 9: 'K2', 10: 'Makalu', 20: 'New Etna',
                             30: 'Rock', 40: 'SSA2EVT'}
 structures["stream_flags"] = {0: "functional test, FT",
                               1: "sensor response test, SRT, 080129",
-                              2: "recorded trigger data, TRIG DATA",}
+                              2: "recorded trigger data, TRIG DATA"}
 structures["restart_source"] = {0: "unknown",
                                 1: "power switch",
                                 2: "user command",

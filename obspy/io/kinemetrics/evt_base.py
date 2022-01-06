@@ -208,6 +208,3 @@ class EvtVirtual(object):
             if value & key:
                 retval += dico[key] + " "
         return retval
-
-
-
