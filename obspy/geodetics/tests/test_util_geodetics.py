@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import math
-import unittest
 import warnings
 import numpy as np
 
@@ -9,6 +8,7 @@ from obspy.geodetics import (calc_vincenty_inverse, degrees2kilometers,
                              kilometer2degrees, locations2degrees)
 from obspy.geodetics.base import HAS_GEOGRAPHICLIB
 from obspy.core import AttribDict
+import pytest
 
 
 def dms2dec(degs, mins, secs):
@@ -16,7 +16,7 @@ def dms2dec(degs, mins, secs):
     return (degs + mins / 60.0 + secs / 3600.0)
 
 
-class UtilGeodeticsTestCase(unittest.TestCase):
+class TestUtilGeodetics:
     """
     Test suite for obspy.core.util.geodetics
     """
@@ -26,39 +26,52 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         """
         # the following will raise StopIteration exceptions because of two
         # nearly antipodal points
-        self.assertRaises(StopIteration, calc_vincenty_inverse,
-                          15.26804251, 2.93007342, -14.80522806, -177.2299081)
-        self.assertRaises(StopIteration, calc_vincenty_inverse,
-                          27.3562106, 72.2382356, -27.55995499, -107.78571981)
-        self.assertRaises(StopIteration, calc_vincenty_inverse,
-                          27.4675551, 17.28133229, -27.65771704, -162.65420626)
-        self.assertRaises(StopIteration, calc_vincenty_inverse,
-                          27.4675551, 17.28133229, -27.65771704, -162.65420626)
+        with pytest.raises(StopIteration):
+            calc_vincenty_inverse(
+                15.26804251, 2.93007342, -14.80522806, -177.2299081,
+            )
+        with pytest.raises(StopIteration):
+            calc_vincenty_inverse(
+                27.3562106, 72.2382356, -27.55995499, -107.78571981,
+            )
+        with pytest.raises(StopIteration):
+            calc_vincenty_inverse(
+                27.4675551, 17.28133229, -27.65771704, -162.65420626,
+            )
+        with pytest.raises(StopIteration):
+            calc_vincenty_inverse(
+                27.4675551, 17.28133229, -27.65771704, -162.65420626,
+            )
         # working examples
         res = calc_vincenty_inverse(0, 0.2, 0, 20)
-        self.assertAlmostEqual(res[0], 2204125.9174282863)
-        self.assertAlmostEqual(res[1], 90.0)
-        self.assertAlmostEqual(res[2], 270.0)
+        assert round(abs(res[0]-2204125.9174282863), 7) == 0
+        assert round(abs(res[1]-90.0), 7) == 0
+        assert round(abs(res[2]-270.0), 7) == 0
         res = calc_vincenty_inverse(0, 0, 0, 10)
-        self.assertAlmostEqual(res[0], 1113194.9077920639)
-        self.assertAlmostEqual(res[1], 90.0)
-        self.assertAlmostEqual(res[2], 270.0)
+        assert round(abs(res[0]-1113194.9077920639), 7) == 0
+        assert round(abs(res[1]-90.0), 7) == 0
+        assert round(abs(res[2]-270.0), 7) == 0
         res = calc_vincenty_inverse(0, 0, 0, 13)
-        self.assertAlmostEqual(res[0], 1447153.3801296828)
-        self.assertAlmostEqual(res[1], 90.0)
-        self.assertAlmostEqual(res[2], 270.0)
+        assert round(abs(res[0]-1447153.3801296828), 7) == 0
+        assert round(abs(res[1]-90.0), 7) == 0
+        assert round(abs(res[2]-270.0), 7) == 0
         res = calc_vincenty_inverse(0, 0, 0, 17)
-        self.assertAlmostEqual(res[0], 1892431.3432465086)
-        self.assertAlmostEqual(res[1], 90.0)
-        self.assertAlmostEqual(res[2], 270.0)
+        assert round(abs(res[0]-1892431.3432465086), 7) == 0
+        assert round(abs(res[1]-90.0), 7) == 0
+        assert round(abs(res[2]-270.0), 7) == 0
         # out of bounds
-        self.assertRaises(ValueError, calc_vincenty_inverse, 91, 0, 0, 0)
-        self.assertRaises(ValueError, calc_vincenty_inverse, -91, 0, 0, 0)
-        self.assertRaises(ValueError, calc_vincenty_inverse, 0, 0, 91, 0)
-        self.assertRaises(ValueError, calc_vincenty_inverse, 0, 0, -91, 0)
+        with pytest.raises(ValueError):
+            calc_vincenty_inverse(91, 0, 0, 0)
+        with pytest.raises(ValueError):
+            calc_vincenty_inverse(-91, 0, 0, 0)
+        with pytest.raises(ValueError):
+            calc_vincenty_inverse(0, 0, 91, 0)
+        with pytest.raises(ValueError):
+            calc_vincenty_inverse(0, 0, -91, 0)
 
-    @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
-                                            'installed')
+    @pytest.mark.skipif(
+        not HAS_GEOGRAPHICLIB, reason='Module geographiclib is not installed'
+    )
     def test_gps_2_dist_azimuth_with_geographiclib(self):
         """
         Testing gps2dist_azimuth function using the module geographiclib.
@@ -66,14 +79,18 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         # nearly antipodal points
         result = gps2dist_azimuth(15.26804251, 2.93007342, -14.80522806,
                                   -177.2299081)
-        self.assertAlmostEqual(result[0], 19951425.048688546)
-        self.assertAlmostEqual(result[1], 8.65553241932755)
-        self.assertAlmostEqual(result[2], 351.36325485132306)
+        assert round(abs(result[0]-19951425.048688546), 7) == 0
+        assert round(abs(result[1]-8.65553241932755), 7) == 0
+        assert round(abs(result[2]-351.36325485132306), 7) == 0
         # out of bounds
-        self.assertRaises(ValueError, gps2dist_azimuth, 91, 0, 0, 0)
-        self.assertRaises(ValueError, gps2dist_azimuth, -91, 0, 0, 0)
-        self.assertRaises(ValueError, gps2dist_azimuth, 0, 0, 91, 0)
-        self.assertRaises(ValueError, gps2dist_azimuth, 0, 0, -91, 0)
+        with pytest.raises(ValueError):
+            gps2dist_azimuth(91, 0, 0, 0)
+        with pytest.raises(ValueError):
+            gps2dist_azimuth(-91, 0, 0, 0)
+        with pytest.raises(ValueError):
+            gps2dist_azimuth(0, 0, 91, 0)
+        with pytest.raises(ValueError):
+            gps2dist_azimuth(0, 0, -91, 0)
 
     def test_calc_vincenty_inverse_2(self):
         """
@@ -99,16 +116,16 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         alpha12_err = abs(alpha12 - calc_alpha12)
         alpha21_err = abs(alpha21 - calc_alpha21)
 
-        self.assertEqual(dist_err_rel < 1.0e-5, True)
-        self.assertEqual(alpha12_err < 1.0e-5, True)
-        self.assertEqual(alpha21_err < 1.0e-5, True)
+        assert dist_err_rel < 1.0e-5
+        assert alpha12_err < 1.0e-5
+        assert alpha21_err < 1.0e-5
 
         # calculate result with +- 360 for lon values
         dist, alpha12, alpha21 = calc_vincenty_inverse(
             lat1, lon1 + 360, lat2, lon2 - 720)
-        self.assertAlmostEqual(dist, calc_dist)
-        self.assertAlmostEqual(alpha12, calc_alpha12)
-        self.assertAlmostEqual(alpha21, calc_alpha21)
+        assert round(abs(dist-calc_dist), 7) == 0
+        assert round(abs(alpha12-calc_alpha12), 7) == 0
+        assert round(abs(alpha21-calc_alpha21), 7) == 0
 
     def test_calc_vincenty_inverse_tabulated(self):
         """ Tabulated results for Vincenty Inverse
@@ -138,9 +155,9 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         f = 1.0 / 299.1528128
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
-        self.assertAlmostEqual(dist, calc_dist, 2)
-        self.assertAlmostEqual(azi1, calc_azi1, 5)
-        self.assertAlmostEqual(bazi, calc_bazi, 5)
+        assert round(abs(dist-calc_dist), 2) == 0
+        assert round(abs(azi1-calc_azi1), 5) == 0
+        assert round(abs(bazi-calc_bazi), 5) == 0
 
         # Row "B"
         dist = 4085966.703
@@ -154,9 +171,9 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         f = 1.0 / 297.0
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
-        self.assertAlmostEqual(dist, calc_dist, 2)
-        self.assertAlmostEqual(azi1, calc_azi1, 5)
-        self.assertAlmostEqual(bazi, calc_bazi, 5)
+        assert round(abs(dist-calc_dist), 2) == 0
+        assert round(abs(azi1-calc_azi1), 5) == 0
+        assert round(abs(bazi-calc_bazi), 5) == 0
 
         # Row "C"
         dist = 8084823.839
@@ -170,12 +187,14 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         f = 1.0 / 297.0
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
-        self.assertAlmostEqual(dist, calc_dist, 2)
-        self.assertAlmostEqual(azi1, calc_azi1, 5)
-        self.assertAlmostEqual(bazi, calc_bazi, 5)
+        assert round(abs(dist-calc_dist), 2) == 0
+        assert round(abs(azi1-calc_azi1), 5) == 0
+        assert round(abs(bazi-calc_bazi), 5) == 0
 
-    @unittest.skipIf(HAS_GEOGRAPHICLIB, 'Module geographiclib is installed, '
-                                        'not using calc_vincenty_inverse')
+    @pytest.mark.skipif(
+        HAS_GEOGRAPHICLIB,
+        reason='Geographiclib installed, not using calc_vincenty_inverse'
+    )
     def test_gps_2_dist_azimuth_bug150(self):
         """
         Test case for #150: UserWarning will be only raised if geographiclib is
@@ -184,30 +203,29 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         # this raises UserWarning
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
-            self.assertRaises(UserWarning, gps2dist_azimuth, 0, 0, 0, 180)
+            with pytest.raises(UserWarning):
+                gps2dist_azimuth(0, 0, 0, 180)
 
     def test_kilometer2degrees(self):
         """
         Simple test of the convenience function.
         """
         # Test if it works.
-        self.assertEqual(kilometer2degrees(111.19492664455873, radius=6371),
-                         1.0)
+        assert kilometer2degrees(111.19492664455873, radius=6371) == 1.0
         # Test if setting the radius actually does something. Round to avoid
         # some precision problems on different machines.
-        self.assertEqual(round(kilometer2degrees(111.19492664455873,
-                         radius=6381), 5), round(0.99843284751606332, 5))
+        assert round(kilometer2degrees(111.19492664455873,
+                     radius=6381), 5) == round(0.99843284751606332, 5)
 
     def test_degrees2kilometers(self):
         """
         """
         # Test if it works.
-        self.assertEqual(degrees2kilometers(1.0, radius=6371),
-                         111.19492664455873)
+        assert degrees2kilometers(1.0, radius=6371) == 111.19492664455873
         # Test if setting the radius actually does something. Round to avoid
         # some precision problems on different machines.
-        self.assertEqual(round(degrees2kilometers(1.0, radius=6381), 5),
-                         round(111.36945956975816, 5))
+        assert round(degrees2kilometers(1.0, radius=6381), 5) == \
+               round(111.36945956975816, 5)
 
     def test_locations2degrees(self):
         """
@@ -215,8 +233,8 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         """
         # Inline method to avoid messy code.
         def assert_loc(lat1, long1, lat2, long2, approx_distance):
-            self.assertTrue(abs(math.radians(locations2degrees(
-                lat1, long1, lat2, long2)) * 6371 - approx_distance) <= 20)
+            assert abs(math.radians(locations2degrees(
+                lat1, long1, lat2, long2)) * 6371 - approx_distance) <= 20
 
         # Approximate values from the Great Circle Calculator:
         #   http://williams.best.vwh.net/gccalc.htm
@@ -252,11 +270,12 @@ class UtilGeodeticsTestCase(unittest.TestCase):
                                         np.array(long1),
                                         np.array(lat2),
                                         np.array(long2))
-            self.assertTrue((np.abs(np.radians(loc2deg) * 6371 -
-                                    approx_distance) <= 20).all())
-            self.assertTrue(np.isscalar(loc2deg)
-                            if expected_output_len == 0 else
-                            len(loc2deg) == expected_output_len)
+            assert (np.abs(np.radians(loc2deg) * 6371 -
+                    approx_distance) <= 20).all()
+
+            assert np.isscalar(loc2deg) \
+                   if expected_output_len == 0 else \
+                   len(loc2deg) == expected_output_len
 
         # Test just with random location (combining scalars and arrays).
         assert_loc_np(36.12, -86.67, 33.94, -118.40, 2893, 0)
@@ -284,27 +303,29 @@ class UtilGeodeticsTestCase(unittest.TestCase):
                       [-118.40, -118.40], 2893, 2)
 
         # test numpy broadcasting (bad shapes)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             locations2degrees(1, 2, [3, 4], [5, 6, 7])
 
-    @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
-                                            'installed')
+    @pytest.mark.skipif(
+        not HAS_GEOGRAPHICLIB,
+        reason='Module geographiclib is not installed',
+    )
     def test_issue_375(self):
         """
         Test for #375.
         """
         _, azim, bazim = gps2dist_azimuth(50, 10, 50 + 1, 10 + 1)
-        self.assertEqual(round(azim, 0), 32)
-        self.assertEqual(round(bazim, 0), 213)
+        assert round(azim, 0) == 32
+        assert round(bazim, 0) == 213
         _, azim, bazim = gps2dist_azimuth(50, 10, 50 + 1, 10 - 1)
-        self.assertEqual(round(azim, 0), 328)
-        self.assertEqual(round(bazim, 0), 147)
+        assert round(azim, 0) == 328
+        assert round(bazim, 0) == 147
         _, azim, bazim = gps2dist_azimuth(50, 10, 50 - 1, 10 + 1)
-        self.assertEqual(round(azim, 0), 147)
-        self.assertEqual(round(bazim, 0), 327)
+        assert round(azim, 0) == 147
+        assert round(bazim, 0) == 327
         _, azim, bazim = gps2dist_azimuth(50, 10, 50 - 1, 10 - 1)
-        self.assertEqual(round(azim, 0), 213)
-        self.assertEqual(round(bazim, 0), 33)
+        assert round(azim, 0) == 213
+        assert round(bazim, 0) == 33
 
     def test_inside_geobounds(self):
         obj = AttribDict()
@@ -312,25 +333,17 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         obj.longitude = 2.3522
         ret = inside_geobounds(obj, minlatitude=48, maxlatitude=49,
                                minlongitude=2, maxlongitude=3)
-        self.assertTrue(ret)
+        assert ret
         ret = inside_geobounds(obj, latitude=48, longitude=2,
                                minradius=1, maxradius=2)
-        self.assertFalse(ret)
+        assert not ret
         # Test for wrapping around longitude +/- 180°
         obj.latitude = -41.2865
         obj.longitude = 174.7762
         ret = inside_geobounds(obj, minlongitude=170, maxlongitude=-170)
-        self.assertTrue(ret)
+        assert ret
         obj.longitude = -175.
         ret = inside_geobounds(obj, minlongitude=170, maxlongitude=-170)
-        self.assertTrue(ret)
+        assert ret
         ret = inside_geobounds(obj, minlongitude=170, maxlongitude=190)
-        self.assertTrue(ret)
-
-
-def suite():
-    return unittest.makeSuite(UtilGeodeticsTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert ret
