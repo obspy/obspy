@@ -367,7 +367,6 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
     :type t_samp: float
     :param t_samp: Sampling interval in seconds
     :type nfft: int
-<<<<<<< HEAD
     :param nfft: Number of FFT points of signal which needs correction.
         If not specified, the length of the frequencies parameter will be used.
         If specified, the value t_samp is required.
@@ -375,11 +374,6 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
     :type frequencies: list of float
     :param frequencies: Discrete frequencies to get resp values for.
         If nfft and t_samp are not specified, this value is required.
-=======
-    :param nfft: Number of FFT points of signal which needs correction
-    :type frequencies: list of float
-    :param frequencies: Discrete frequencies to get resp values for.
->>>>>>> Add code from PR #1718 to remove evalresp dependency
     :type freq: bool
     :param freq: If true, returns tuple of resp result with freq array input (i.e., x-values)
     :rtype: :class:`numpy.ndarray` complex128
@@ -390,10 +384,13 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
     # strangely returns it as an integer.
     if not isinstance(a, np.ndarray) and a == 1.0:
         a = [1.0]
-<<<<<<< HEAD
-=======
+    # this turns the paz values into an IIR specification, so we will
+    # use the IIR conversion method to produce the response
+    return iir_to_freq_response(b, a, t_samp, nfft, frequencies, freq)
 
->>>>>>> Add code from PR #1718 to remove evalresp dependency
+
+def iir_to_freq_response(numer, denom, t_samp=None, nfft=None,
+                         frequencies=None, freq=False):
     if frequencies is None:
         n = nfft // 2
         fy = 1 / (t_samp * 2.0)
@@ -401,7 +398,22 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
         f = np.linspace(0, fy, n + 1)
     else:
         f = frequencies
-    _w, h = scipy.signal.freqs(b, a, f * 2 * np.pi)
+    _w, h = scipy.signal.freqs(numer, denom, f * 2 * np.pi)
+    if freq:
+        return h, f
+    return h
+
+
+def fir_to_freq_response(numer, denom, t_samp=None, nfft=None,
+                         frequencies=None, freq=False):
+    if frequencies is None:
+        n = nfft // 2
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset / DC of fft
+        f = np.linspace(0, fy, n + 1)
+    else:
+        f = frequencies
+    _w, h = scipy.signal.freqz(numer, denom, f * 2 * np.pi)
     if freq:
         return h, f
     return h
