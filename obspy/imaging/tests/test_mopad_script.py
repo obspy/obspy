@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 
 from obspy.core.util.misc import CatchOutput
-from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.imaging.scripts.mopad import main as obspy_mopad
 
 
@@ -189,7 +188,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                          '-r', '3')
 
     @pytest.mark.skip('Currently broken until further review.')
-    def test_script_plot(self):
+    def test_script_plot(self, image_path):
         # See test_Beachball:
         data = [
             [0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
@@ -226,25 +225,18 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         messages = ''
         for mt, filename in zip(data, filenames):
-            try:
-                with ImageComparison(self.path, filename) as ic:
-                    with CatchOutput() as out:
-                        obspy_mopad(['plot',
-                                     '--output-file', ic.name,
-                                     '--input-system', 'USE',
-                                     '--tension-color', 'b',
-                                     '--pressure-color', 'w',
-                                     '--lines', '1', 'k', '1',
-                                     '--nodals', '1', 'k', '1',
-                                     '--size', '2.54', '--quality', '200',
-                                     '--',
-                                     ','.join(str(x) for x in mt)])
-                    assert '' == out.stdout
-            except ImageComparisonException as e:
-                if ic.keep_output:
-                    messages += str(e)
-                else:
-                    raise
+            with CatchOutput() as out:
+                obspy_mopad(['plot',
+                             '--output-file', image_path,
+                             '--input-system', 'USE',
+                             '--tension-color', 'b',
+                             '--pressure-color', 'w',
+                             '--lines', '1', 'k', '1',
+                             '--nodals', '1', 'k', '1',
+                             '--size', '2.54', '--quality', '200',
+                             '--',
+                             ','.join(str(x) for x in mt)])
+            assert '' == out.stdout
 
         if messages:
-            self.fail(messages)
+            pytest.fail(messages)

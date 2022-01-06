@@ -13,7 +13,6 @@ import pytest
 from obspy import read, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, get_example_file
 from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
-from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
 from obspy.imaging.scripts.scan import scan, Scanner
 
@@ -42,7 +41,7 @@ class TestScan:
                           for i in gse2_files])
         return all_files
 
-    def test_scan_main_method(self, all_files):
+    def test_scan_main_method(self, all_files, image_path):
         """
         Run obspy-scan on selected tests/data directories
         """
@@ -51,27 +50,25 @@ class TestScan:
             for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
-            with ImageComparison(self.path, 'scan.png') as ic:
-                obspy_scan([os.curdir] + ['--output', ic.name])
+            obspy_scan([os.curdir] + ['--output', str(image_path)])
 
-    def test_scan_function_and_scanner_class(self, all_files):
+    def test_scan_function_and_scanner_class(self, all_files, image_path):
         """
         Test scan function and Scanner class (in one test to keep overhead of
         copying files down)
         """
         scanner = Scanner()
+        path1 = image_path.parent / 'scan1.png'
+        path2 = image_path.parent / 'scan2.png'
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
             for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             scanner.parse(os.curdir)
+            scan(paths=os.curdir, plot=path1)
 
-            with ImageComparison(self.path, 'scan.png') as ic:
-                scan(paths=os.curdir, plot=ic.name)
-
-        with ImageComparison(self.path, 'scan.png') as ic:
-            scanner.plot(ic.name)
+        scanner.plot(path2)
 
     def test_scan_plot_by_id_with_wildcard(self):
         """
@@ -114,7 +111,7 @@ class TestScan:
             assert got == expected_labels
             plt.close(fig)
 
-    def test_scanner_manually_add_streams(self, all_files):
+    def test_scanner_manually_add_streams(self, all_files, image_path):
         """
         Test Scanner class, manually adding streams of read data files
         """
@@ -133,10 +130,9 @@ class TestScan:
                 st = read(file_, headonly=True)
                 scanner.add_stream(st)
 
-        with ImageComparison(self.path, 'scan.png') as ic:
-            scanner.plot(ic.name)
+        scanner.plot(str(image_path))
 
-    def test_scan_save_load_npz(self, all_files):
+    def test_scan_save_load_npz(self, all_files, image_path):
         """
         Run obspy-scan on selected tests/data directories, saving/loading
         to/from npz.
@@ -157,20 +153,21 @@ class TestScan:
             scanner.save_npz('scanner.npz')
             scanner = Scanner()
 
+            path1 = image_path.parent / 'scan_load_npz_1.png'
+            path2 = image_path.parent / 'scan_load_npz_2.png'
+
             # version string of '0.0.0+archive' raises UserWarning - ignore
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('ignore', UserWarning)
 
                 # load via Python
                 scanner.load_npz('scanner.npz')
-                with ImageComparison(self.path, 'scan.png') as ic:
-                    scanner.plot(ic.name)
+                scanner.plot(path1)
 
                 # load via command line
-                with ImageComparison(self.path, 'scan.png') as ic:
-                    obspy_scan(['--load', 'scan.npz', '--output', ic.name])
+                obspy_scan(['--load', 'scan.npz', '--output', str(path2)])
 
-    def test_scan_times(self, all_files):
+    def test_scan_times(self, all_files, image_path):
         """
         Checks for timing related options
         """
@@ -179,14 +176,13 @@ class TestScan:
             for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
-            with ImageComparison(self.path, 'scan_times.png') as ic:
-                obspy_scan([os.curdir] + ['--output', ic.name] +
-                           ['--start-time', '2004-01-01'] +
-                           ['--end-time', '2004-12-31'] +
-                           ['--event-time', '2004-03-14T15:09:26'] +
-                           ['--event-time', '2004-02-07T18:28:18'])
+            obspy_scan([os.curdir] + ['--output', str(image_path)] +
+                       ['--start-time', '2004-01-01'] +
+                       ['--end-time', '2004-12-31'] +
+                       ['--event-time', '2004-03-14T15:09:26'] +
+                       ['--event-time', '2004-02-07T18:28:18'])
 
-    def test_multiple_sampling_rates(self):
+    def test_multiple_sampling_rates(self, image_path):
         """
         Check for multiple sampling rates
         """
@@ -215,28 +211,25 @@ class TestScan:
                 files.append(fp.name)
 
             # make image comparison instance and set manual rms (see #2089)
-            image_comp = ImageComparison(self.path, 'scan_mult_sampl.png')
-            image_comp.tol = 50
 
-            with image_comp as ic:
+            with CatchOutput() as out:
+                cmds = ['--output', str(image_path), '--print-gaps']
+                obspy_scan(files + cmds)
 
-                with CatchOutput() as out:
-                    obspy_scan(files + ['--output', ic.name, '--print-gaps'])
-
-                # read output and compare with expected
-                # only check if datetime objects are close, not exact
-                output = out.stdout.splitlines()
-                for ex_line, out_line in zip(expected, output):
-                    ex_split = ex_line.split(' ')
-                    out_split = out_line.split(' ')
-                    for ex_str, out_str in zip(ex_split, out_split):
-                        try:
-                            utc1 = UTCDateTime(ex_str)
-                            utc2 = UTCDateTime(out_str)
-                        except (ValueError, TypeError):
-                            # if str is not a datetime it should be equal
-                            assert ex_str == out_str
-                        else:
-                            # datetimes just need to be close
-                            t1, t2 = utc1.timestamp, utc2.timestamp
-                            assert abs(t1 - t2) < .001
+            # read output and compare with expected
+            # only check if datetime objects are close, not exact
+            output = out.stdout.splitlines()
+            for ex_line, out_line in zip(expected, output):
+                ex_split = ex_line.split(' ')
+                out_split = out_line.split(' ')
+                for ex_str, out_str in zip(ex_split, out_split):
+                    try:
+                        utc1 = UTCDateTime(ex_str)
+                        utc2 = UTCDateTime(out_str)
+                    except (ValueError, TypeError):
+                        # if str is not a datetime it should be equal
+                        assert ex_str == out_str
+                    else:
+                        # datetimes just need to be close
+                        t1, t2 = utc1.timestamp, utc2.timestamp
+                        assert abs(t1 - t2) < .001
