@@ -116,6 +116,27 @@ class ResponseTestCase(unittest.TestCase):
             np.unwrap(np.angle(new_resp))[:800],
             rtol=1E-2, atol=2E-2)
 
+    def test_MEEK_no_failure(self):
+        import matplotlib.pyplot as plt
+        inv = read_inventory(os.path.join(self.data_dir,'AU.MEEK.xml'))
+
+        resp = inv[0][0][0].response
+        print(resp)
+        freqs = np.logspace(-2, 2, 1000)
+        unit = 'VEL'
+        xml_resp = resp.get_evalresp_response_for_frequencies(
+            frequencies=freqs, output=unit)
+        new_resp = resp.get_response(
+            frequencies=freqs, output=unit)
+
+        print(resp)
+        # print(new_resp)
+
+        fig = plt.figure(1)
+        plt.semilogx(freqs, np.abs(new_resp), label='NEW')
+        plt.semilogx(freqs, np.abs(xml_resp), label='Eval Resp')
+        plt.show()
+
     def test_get_response_regression(self):
         units = ["DISP", "VEL", "ACC"]
         filenames = ["AU.MEEK", "IRIS_single_channel_with_response",
@@ -124,6 +145,7 @@ class ResponseTestCase(unittest.TestCase):
         for filename in filenames:
             xml_filename = os.path.join(self.data_dir,
                                         filename + os.path.extsep + "xml")
+            print(xml_filename)
             inv = read_inventory(xml_filename)
             resp = inv[0][0][0].response
 
