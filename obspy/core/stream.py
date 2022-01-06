@@ -3568,7 +3568,12 @@ def _is_pickle(filename):  # @UnusedVariable
     if isinstance(filename, str):
         try:
             with open(filename, 'rb') as fp:
-                st = pickle.load(fp)
+                if "obspy.core.stream" in fp.read(100):
+                    fp.seek(0)
+                    st = pickle.load(fp)
+                    return True
+                else:
+                    return False
         except Exception:
             return False
     else:
