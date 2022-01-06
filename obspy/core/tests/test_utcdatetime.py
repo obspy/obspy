@@ -2,7 +2,6 @@
 import copy
 import datetime
 import itertools
-import unittest
 import warnings
 from functools import partial
 from operator import ge, eq, lt, le, gt, ne
@@ -14,7 +13,7 @@ from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 import pytest
 
 
-class UTCDateTimeTestCase(unittest.TestCase):
+class TestUTCDateTime:
     """
     Test suite for obspy.core.utcdatetime.UTCDateTime.
     """

@@ -3,12 +3,12 @@ import io
 import os
 import threading
 import time
-import unittest
 import warnings
 from copy import deepcopy
 from unittest import mock
 
 import numpy as np
+import pytest
 
 from obspy import Trace, read
 from obspy.io.mseed.core import _write_mseed
@@ -16,7 +16,6 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
                                   DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
 from obspy.core.util.misc import buffered_load_entry_point, _ENTRY_POINT_CACHE
-import pytest
 
 
 def _get_default_eps(group, subgroup=None):
@@ -26,7 +25,7 @@ def _get_default_eps(group, subgroup=None):
     return eps
 
 
-class WaveformPluginsTestCase(unittest.TestCase):
+class TestWaveformPlugins:
     """
     Test suite for all waveform plug-ins.
     """

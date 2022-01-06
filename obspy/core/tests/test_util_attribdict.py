@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pickle
-import unittest
 import warnings
 
 from obspy.core import AttribDict
@@ -11,7 +10,7 @@ class DefaultTestAttribDict(AttribDict):
     defaults = {'test': 1}
 
 
-class AttribDictTestCase(unittest.TestCase):
+class TestAttribDict:
     """
     Test suite for obspy.core.util.attribdict
     """
@@ -326,11 +325,3 @@ class AttribDictTestCase(unittest.TestCase):
         assert isinstance(ad.number, float)
         assert isinstance(ad.int, int)
         assert isinstance(ad.another_number, int)
-
-
-def suite():
-    return unittest.makeSuite(AttribDictTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

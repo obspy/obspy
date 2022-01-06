@@ -2,15 +2,13 @@
 """
 Tests for obspy's testing utilities.
 """
-import unittest
-
 import numpy as np
 
 from obspy import read, Trace
 from obspy.core.util.testing import streams_almost_equal, traces_almost_equal
 
 
-class AlmostEqualTestCase(unittest.TestCase):
+class TestAlmostEqual:
     """
     Tests for fuzzy equality comparisons for traces.
     """
@@ -106,13 +104,3 @@ class AlmostEqualTestCase(unittest.TestCase):
         # passing streams of different lengths should not be almost equal
         st2 = st2[1:]
         assert not streams_almost_equal(st1, st2)
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(AlmostEqualTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

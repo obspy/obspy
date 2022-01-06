@@ -2,16 +2,15 @@
 import copy
 import io
 import pickle
-import unittest
+import pytest
 import warnings
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import Stats
 from obspy.core.util import AttribDict
-import pytest
 
 
-class StatsTestCase(unittest.TestCase):
+class TestStats:
     """
     Test suite for obspy.core.util.Stats.
     """
@@ -346,11 +345,3 @@ class StatsTestCase(unittest.TestCase):
         with pytest.raises(ValueError):
             stats.component = 'ZZ'
         assert stats.channel == 'HHZ'
-
-
-def suite():
-    return unittest.makeSuite(StatsTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

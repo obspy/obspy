@@ -4,13 +4,14 @@ import io
 import os
 import pickle
 import platform
-import unittest
 import warnings
 from copy import deepcopy
+from os.path import dirname, join, abspath
 from pathlib import Path
 from unittest import mock
 
 import numpy as np
+import pytest
 
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.inventory import Channel, Inventory, Network, Station
@@ -20,45 +21,51 @@ from obspy.core.util.base import NamedTemporaryFile, _get_entry_points
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import streams_almost_equal
 from obspy.io.xseed import Parser
-import pytest
 
 
-class StreamTestCase(unittest.TestCase):
+class TestStream:
     """
     Test suite for obspy.core.stream.Stream.
     """
-    def setUp(self):
-        # set specific seed value such that random numbers are reproducible
-        np.random.seed(815)
+    _current_file = inspect.getfile(inspect.currentframe())
+    data_path = join(dirname(abspath(_current_file)), "data")
+
+    @pytest.fixture()
+    def mseed_stream(self):
+        """Create a stream for testing."""
+        rand = np.random.RandomState(815)
         header = {'network': 'BW', 'station': 'BGLD',
                   'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
                   'npts': 412, 'sampling_rate': 200.0,
                   'channel': 'EHE'}
-        trace1 = Trace(data=np.random.randint(0, 1000, 412).astype(np.float64),
+        trace1 = Trace(data=rand.randint(0, 1000, 412).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
         header['npts'] = 824
-        trace2 = Trace(data=np.random.randint(0, 1000, 824).astype(np.float64),
+        trace2 = Trace(data=rand.randint(0, 1000, 824).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
-        trace3 = Trace(data=np.random.randint(0, 1000, 824).astype(np.float64),
+        trace3 = Trace(data=rand.randint(0, 1000, 824).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
         header['npts'] = 50668
         trace4 = Trace(
-            data=np.random.randint(0, 1000, 50668).astype(np.float64),
+            data=rand.randint(0, 1000, 50668).astype(np.float64),
             header=deepcopy(header))
-        self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
+        return Stream(traces=[trace1, trace2, trace3, trace4])
+
+    @pytest.fixture()
+    def gse2_stream(self):
+        """Another example stream."""
+        rand = np.random.RandomState(815)
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
                   'sampling_rate': 200.0, 'npts': 12000,
                   'channel': '  Z'}
         trace = Trace(
-            data=np.random.randint(0, 1000, 12000).astype(np.float64),
+            data=rand.randint(0, 1000, 12000).astype(np.float64),
             header=header)
-        self.gse2_stream = Stream(traces=[trace])
-        self.data_path = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
+        return Stream(traces=[trace])
 
     @staticmethod
     def __remove_processing(st):
@@ -87,11 +94,11 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([Trace(), Trace()])
         assert len(st) == 2
 
-    def test_setitem(self):
+    def test_setitem(self, mseed_stream):
         """
         Tests the __setitem__ method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         stream[0] = stream[3]
         assert stream[0] == stream[3]
         st = deepcopy(stream)
@@ -115,11 +122,11 @@ class StreamTestCase(unittest.TestCase):
         with pytest.raises(IndexError):
             stream.__getitem__(-99)
 
-    def test_add(self):
+    def test_add(self, mseed_stream, gse2_stream):
         """
         Tests the adding of two stream objects.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         assert 4 == len(stream)
         # Add the same stream object to itself.
         stream = stream + stream
@@ -130,7 +137,7 @@ class StreamTestCase(unittest.TestCase):
             assert (stream[_i] == stream[_i + 4])
             assert (stream[_i] is stream[_i + 4])
         # Now add another stream to it.
-        other_stream = self.gse2_stream
+        other_stream = gse2_stream
         assert 1 == len(other_stream)
         new_stream = stream + other_stream
         assert 9 == len(new_stream)
@@ -148,13 +155,13 @@ class StreamTestCase(unittest.TestCase):
         with pytest.raises(TypeError):
             stream.__add__('test')
 
-    def test_iadd(self):
+    def test_iadd(self, mseed_stream, gse2_stream):
         """
         Tests the __iadd__ method of the Stream objects.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         assert 4 == len(stream)
-        other_stream = self.gse2_stream
+        other_stream = gse2_stream
         assert 1 == len(other_stream)
         # Add the other stream to the stream.
         stream += other_stream
@@ -198,11 +205,11 @@ class StreamTestCase(unittest.TestCase):
         st1 += tr
         assert st1 == st0
 
-    def test_append(self):
+    def test_append(self, mseed_stream):
         """
         Tests the append method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Check current count of traces
         assert len(stream) == 4
         # Append first traces to the Stream object.
@@ -240,11 +247,11 @@ class StreamTestCase(unittest.TestCase):
         assert len(stream) == 3
         assert stream.count() == 3
 
-    def test_extend(self):
+    def test_extend(self, mseed_stream):
         """
         Tests the extend method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Check current count of traces
         assert len(stream) == 4
         # Extend the Stream object with the first two traces.
@@ -265,11 +272,11 @@ class StreamTestCase(unittest.TestCase):
         with pytest.raises(TypeError):
             stream.extend([stream[0], 1])
 
-    def test_insert(self):
+    def test_insert(self, mseed_stream):
         """
         Tests the insert Method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         assert 4 == len(stream)
         # Insert the last Trace before the second trace.
         stream.insert(1, stream[-1])
@@ -313,14 +320,14 @@ class StreamTestCase(unittest.TestCase):
         with pytest.raises(TypeError):
             stream.insert(1, [stream[0], 1])
 
-    def test_get_gaps(self):
+    def test_get_gaps(self, mseed_stream):
         """
         Tests the get_gaps method of the Stream objects.
 
         It is compared directly to the obspy.io.mseed method getGapsList which
         is assumed to be correct.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         gap_list = stream.get_gaps()
         # Gaps list created with obspy.io.mseed
         mseed_gap_list = [
@@ -401,11 +408,11 @@ class StreamTestCase(unittest.TestCase):
         # Double-check that the initial Stream is unmodified
         assert len(st) == 1
 
-    def test_pop(self):
+    def test_pop(self, mseed_stream):
         """
         Test the pop method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Remove and return the last Trace.
@@ -565,11 +572,11 @@ class StreamTestCase(unittest.TestCase):
         assert len(st) == 2
         assert st[0].stats.station == 'MUH'
 
-    def test_remove(self):
+    def test_remove(self, mseed_stream):
         """
         Tests the remove method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Make a copy of the Traces.
         stream2 = deepcopy(stream)
         # Use the remove method of the Stream object and of the list of Traces.
@@ -580,11 +587,11 @@ class StreamTestCase(unittest.TestCase):
         # Compare remaining Streams.
         assert stream == stream2
 
-    def test_reverse(self):
+    def test_reverse(self, mseed_stream):
         """
         Tests the reverse method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Use reversing of the Stream object and of the list.
@@ -961,11 +968,11 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([tr1, tr2, tr3, tr4])
         st.merge()
 
-    def test_merge_gaps(self):
+    def test_merge_gaps(self, mseed_stream):
         """
         Test the merge method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         start = UTCDateTime("2007-12-31T23:59:59.915000")
         end = UTCDateTime("2008-01-01T00:04:31.790000")
         assert len(stream) == 4
@@ -1045,7 +1052,7 @@ class StreamTestCase(unittest.TestCase):
         assert isinstance(st[0].data, np.ndarray)
         assert st[0].data.tolist() == [1, 1, 1, 1, 1, 2, 3, 3, 4, 5, 5, 5]
 
-    def test_split(self):
+    def test_split(self, mseed_stream):
         """
         Testing splitting of streams containing masked arrays.
         """
@@ -1064,7 +1071,7 @@ class StreamTestCase(unittest.TestCase):
         assert st2[0].data.tolist() == [1, 1, 1, 1]
         assert st2[1].data.tolist() == [5, 5, 5]
         # 2 - use default example
-        st = self.mseed_stream
+        st = mseed_stream
         st.merge()
         assert isinstance(st[0].data, np.ma.masked_array)
         # now we split again
@@ -1776,13 +1783,13 @@ class StreamTestCase(unittest.TestCase):
         assert '40 Trace(s) in Stream:' in result
         assert 'other traces' in result
 
-    def test_cleanup(self):
+    def test_cleanup(self, mseed_stream):
         """
         Test case for merging traces in the stream with method=-1. This only
         should merge traces that are exactly the same or contained and exactly
         the same or directly adjacent.
         """
-        tr1 = self.mseed_stream[0]
+        tr1 = mseed_stream[0]
         start = tr1.stats.starttime
         end = tr1.stats.endtime
         dt = end - start
@@ -2075,17 +2082,17 @@ class StreamTestCase(unittest.TestCase):
         with pytest.raises(ValueError):
             st.rotate(method='ZNE->LQT')
 
-    def test_plot(self):
+    def test_plot(self, mseed_stream):
         """
         Tests plot method if matplotlib is installed
         """
-        self.mseed_stream.plot(show=False)
+        mseed_stream.plot(show=False)
 
-    def test_spectrogram(self):
+    def test_spectrogram(self, mseed_stream):
         """
         Tests spectrogram method if matplotlib is installed
         """
-        self.mseed_stream.spectrogram(show=False)
+        mseed_stream.spectrogram(show=False)
 
     def test_deepcopy(self):
         """
@@ -2321,12 +2328,12 @@ class StreamTestCase(unittest.TestCase):
             else:
                 assert tr1 == tr2
 
-    def test_select_empty_strings(self):
+    def test_select_empty_strings(self, mseed_stream):
         """
         Test that select works with values that evaluate True when testing with
         if (e.g. "", 0).
         """
-        st = self.mseed_stream
+        st = mseed_stream
         st[0].stats.location = "00"
         for tr in st[1:]:
             tr.stats.network = ""
@@ -2813,13 +2820,3 @@ class StreamTestCase(unittest.TestCase):
         npts = np.sum(same_sign)
         assert np.sum(np.abs(st4[0].data[same_sign]) <=
                       np.abs(st2[0].data[same_sign])) == npts
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(StreamTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

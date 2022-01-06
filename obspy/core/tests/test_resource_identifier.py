@@ -14,8 +14,9 @@ import itertools
 import multiprocessing.pool
 import pickle
 import sys
-import unittest
 import warnings
+
+import pytest
 
 from obspy import UTCDateTime, read_events
 from obspy.core import event as event
@@ -23,27 +24,18 @@ from obspy.core.event.resourceid import ResourceIdentifier, _ResourceKey
 from obspy.core.util.misc import _yield_obj_parent_attr
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.testing import (create_diverse_catalog,
-                                     setup_context_testcase,
                                      WarningsCapture)
-import pytest
 
 
-class ResourceIdentifierTestCase(unittest.TestCase):
+class TestResourceIdentifier:
     """
     Test suite for obspy.core.event.resourceid.ResourceIdentifier.
     """
-    def setUp(self):
-        """
-        Setup code to run before each test. Temporary replaces the state on
-        the ResourceIdentifier class level to reset the ResourceID mechanisms
-        before each run.
-        """
-        # setup temporary id dict for tests in this case and bind to self
-        context = ResourceIdentifier._debug_class_state()
-        state = setup_context_testcase(self, context)
-        self.parent_id_tree = state['parent_id_tree']
-        self.id_order = state['id_order']
-        self.id_object_map = state['id_object_map']
+    @pytest.fixture(scope='class', autouse=True)
+    def debug_state(self):
+        """Return a new Resource id context for testsing."""
+        with ResourceIdentifier._debug_class_state() as state:
+            yield state
 
     def test_same_resource_id_different_referred_object(self):
         """
@@ -149,7 +141,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # the object id should now be bound to obj2
         assert rid1._object_id == rid2._object_id
 
-    def test_resource_id_state_cleanup(self):
+    def test_resource_id_state_cleanup(self, debug_state):
         """
         Tests that the state in the ResourceIdentifier class gets gets cleaned
         up when resource_ids are garbage collected.
@@ -159,11 +151,11 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         res1 = ResourceIdentifier(referred_object=obj_a)
         res2 = ResourceIdentifier(referred_object=obj_b)
         # Now two keys should be in the global dict.
-        assert len(self.id_order) == 2
-        assert len(self.id_object_map) == 2
+        assert len(debug_state['id_order']) == 2
+        assert len(debug_state['id_object_map']) == 2
         del obj_a, obj_b
         # raises UserWarnings
-        assert len(self.id_order) == 2
+        assert len(debug_state['id_order']) == 2
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             assert res1.get_referred_object() is None
@@ -215,12 +207,12 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rid = ResourceIdentifier()
         assert rid.id == rid.get_quakeml_uri_str()
 
-    def test_de_referencing_when_object_goes_out_of_scope(self):
+    def test_de_referencing_when_object_goes_out_of_scope(self, debug_state):
         """
         Tests that objects that have no more referrer are no longer stored in
         the reference dictionary.
         """
-        r_dict = self.id_order
+        r_dict = debug_state['id_order']
         t1 = UTCDateTime(2010, 1, 1)  # test object
         rid = 'a'  # test resource id
 
@@ -759,13 +751,3 @@ def make_diverse_catalog_list(*args):  # NOQA
     cat_bytes = pickle.dumps(cat4)
     cat6 = pickle.loads(cat_bytes)
     return [cat1, cat2, cat3, cat4, cat5, cat6]
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

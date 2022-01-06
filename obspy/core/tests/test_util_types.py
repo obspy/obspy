@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import unittest
-
 from obspy import UTCDateTime
 from obspy.core.inventory import Comment
 from obspy.core.util import (ComplexWithUncertainties, Enum,
@@ -9,7 +7,7 @@ from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit)
 import pytest
 
 
-class UtilTypesTestCase(unittest.TestCase):
+class TestUtilTypes:
     """
     Test suite for obspy.core.util.base
     """
@@ -134,11 +132,3 @@ class UtilTypesTestCase(unittest.TestCase):
                      "\tEnd Effective Time:\t2020-03-18T20:00:32.000000Z\n" \
                      "\tAuthors:\t\t[]\n" \
                      "\tId:\t\t\t9"
-
-
-def suite():
-    return unittest.makeSuite(UtilTypesTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -11,39 +11,30 @@ Test suite for the response handling.
 """
 import inspect
 import os
-import unittest
 import warnings
 from math import pi
 
 import numpy as np
+import pytest
 import scipy.interpolate
-from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
     _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage, Response)
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import WarningsCapture
 from obspy.signal.invsim import evalresp
 from obspy.io.xseed import Parser
-import pytest
 
 
-class ResponseTestCase(unittest.TestCase):
+@pytest.mark.usefixtures('ignore_numpy_errors')
+class TestResponse:
     """
     Tests the for :class:`~obspy.core.inventory.response.Response` class.
     """
-    def setUp(self):
-        # Most generic way to get the actual data directory.
-        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        self.nperr = np.geterr()
-        np.seterr(all='ignore')
-
-    def tearDown(self):
-        np.seterr(**self.nperr)
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(
+               inspect.getfile(inspect.currentframe()))), "data")
 
     def test_evalresp_with_output_from_seed(self):
         """
@@ -121,31 +112,23 @@ class ResponseTestCase(unittest.TestCase):
         assert _pitick2latex(300 * pi + 0.01) == r'942.'
         assert _pitick2latex(3000 * pi + 0.01) == r'9.42e+03'
 
-    def test_response_plot(self):
+    def test_response_plot(self, image_path):
         """
         Tests the response plot.
         """
         resp = read_inventory()[0][0][0].response
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir,
-                                 "response_response.png") as ic:
-                rcParams['savefig.dpi'] = 72
-                resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
-                          outfile=ic.name)
+        with WarningsCapture():
+            resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
+                      outfile=image_path)
 
-    def test_response_plot_degrees(self):
+    def test_response_plot_degrees(self, image_path):
         """
         Tests the response plot in degrees.
         """
         resp = read_inventory()[0][0][0].response
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir,
-                                 "response_response_degrees.png") as ic:
-                rcParams['savefig.dpi'] = 72
-                resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
-                          plot_degrees=True, outfile=ic.name)
+        with WarningsCapture():
+            resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
+                      plot_degrees=True, outfile=image_path)
 
     def test_segfault_after_error_handling(self):
         """
@@ -532,11 +515,3 @@ class ResponseTestCase(unittest.TestCase):
         np.testing.assert_allclose(
             resp.instrument_sensitivity.frequency,
             1.0)
-
-
-def suite():
-    return unittest.makeSuite(ResponseTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-import unittest
-
 from obspy.core.util import get_example_file
 from obspy.core.util.decorator import map_example_filename
 
 
-class TestCase(unittest.TestCase):
+class TestUtilDecorator:
     def test_map_example_filename(self):
         """
         Tests the @map_example_filename decorator
@@ -50,11 +48,3 @@ class TestCase(unittest.TestCase):
         assert changed3(path, b=dummy) == unchanged(path, dummy)
         assert changed3(path, b=path, x=path) == \
             unchanged(path, path, x=path_mapped)
-
-
-def suite():
-    return unittest.makeSuite(TestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

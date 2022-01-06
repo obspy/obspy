@@ -2,7 +2,6 @@
 import io
 import os
 import pickle
-import unittest
 import warnings
 from pathlib import Path
 
@@ -110,12 +109,12 @@ class TestEvent:
         assert not hasattr(p, "test_1")
         assert not hasattr(p, "test_2")
 
-    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
-    @unittest.skipIf(
+    @pytest.mark.skipif(not BASEMAP_VERSION, reason='basemap not installed')
+    @pytest.mark.skipif(
         BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-        'matplotlib 3.0.1 is not compatible with basemap')
-    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                     'unsupported proj4 library')
+        reason='matplotlib 3.0.1 is not compatible with basemap')
+    @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                        reason='unsupported proj4 library')
     def test_plot_farfield_without_quiver_with_maps(self, image_path):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
@@ -145,7 +144,7 @@ class TestEvent:
         np.testing.assert_allclose(result, ref, rtol=1e-5, atol=1e-8)
 
 
-class OriginTestCase(unittest.TestCase):
+class TestOrigin:
     """
     Test suite for obspy.core.event.Origin
     """
@@ -195,17 +194,14 @@ class OriginTestCase(unittest.TestCase):
         assert origin2.longitude is None
 
 
-class CatalogTestCase(unittest.TestCase):
+class TestCatalog:
     """
     Test suite for obspy.core.event.Catalog
     """
-    def setUp(self):
-        # directory where the test files are located
-        path = os.path.join(os.path.dirname(__file__), 'data')
-        self.path = path
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        self.iris_xml = os.path.join(path, 'iris_events.xml')
-        self.neries_xml = os.path.join(path, 'neries_events.xml')
+    path = os.path.join(os.path.dirname(__file__), 'data')
+    image_dir = os.path.join(os.path.dirname(__file__), 'images')
+    iris_xml = os.path.join(path, 'iris_events.xml')
+    neries_xml = os.path.join(path, 'neries_events.xml')
 
     def test_read_invalid_filename(self):
         """
@@ -619,7 +615,7 @@ class CatalogCartopyTestCase:
                  color='date', colormap='gist_heat')
 
 
-class WaveformStreamIDTestCase(unittest.TestCase):
+class TestWaveformStreamID:
     """
     Test suite for obspy.core.event.WaveformStreamID.
     """
@@ -676,7 +672,7 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         assert waveform_id.id == waveform_id.get_seed_string()
 
 
-class BaseTestCase(unittest.TestCase):
+class TestBase:
     """
     Test suite for obspy.core.event.base.
     """

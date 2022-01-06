@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
 import os
-import platform
 import copy
-import shutil
-import unittest
 from unittest import mock
-
-from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
-                                  download_to_file, sanitize_filename,
-                                  create_empty_data_chunk, ComparingObject)
-from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 import numpy as np
 from requests import HTTPError
 import pytest
 
+from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
+                                  download_to_file, sanitize_filename,
+                                  create_empty_data_chunk, ComparingObject)
 
-class UtilBaseTestCase(unittest.TestCase):
+
+class TestUtilBase:
     """
     Test suite for obspy.core.util.base
     """
@@ -61,37 +57,6 @@ class UtilBaseTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             filename = tf.name
         assert not os.path.exists(filename)
-
-    def test_image_comparison(self):
-        """
-        Tests the image comparison mechanism with an expected fail and an
-        expected passing test.
-        Also tests that temporary files are deleted after both passing and
-        failing tests.
-        """
-        path = os.path.join(os.path.dirname(__file__), "images")
-        img_basename = "image.png"
-        img_ok = os.path.join(path, "image_ok.png")
-        img_fail = os.path.join(path, "image_fail.png")
-
-        # image comparison that should pass
-        with ImageComparison(path, img_basename) as ic:
-            shutil.copy(img_ok, ic.name)
-            assert os.path.exists(ic.name)
-        # check that temp file is deleted
-        assert not os.path.exists(ic.name)
-        if platform.python_version() < "3.9":
-            # image comparison that should raise
-            # avoid uploading the staged test fail image
-            # (after an estimate of 10000 uploads of it.. ;-))
-            with pytest.raises(ImageComparisonException):
-                with ImageComparison(path, img_basename,
-                                     adjust_tolerance=False,
-                                     no_uploads=True) as ic:
-                    shutil.copy(img_fail, ic.name)
-
-            # check that temp file is deleted
-            assert not os.path.exists(ic.name)
 
     def test_mock_read_inventory_http_errors(self):
         """
@@ -150,11 +115,3 @@ class UtilBaseTestCase(unittest.TestCase):
         assert co == deep_copy
         deep_copy.at = 0
         assert co != deep_copy
-
-
-def suite():
-    return unittest.makeSuite(UtilBaseTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

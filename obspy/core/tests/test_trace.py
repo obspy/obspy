@@ -2,7 +2,6 @@
 import math
 import os
 import pickle
-import unittest
 from copy import deepcopy
 import warnings
 from unittest import mock
@@ -13,12 +12,11 @@ import numpy.ma as ma
 from obspy import Stream, Trace, __version__, read, read_inventory
 from obspy import UTCDateTime as UTC
 from obspy.core import Stats
-from obspy.core.util.testing import ImageComparison
 from obspy.io.xseed import Parser
 import pytest
 
 
-class TraceTestCase(unittest.TestCase):
+class TestTrace:
     """
     Test suite for obspy.core.trace.Trace.
     """
@@ -1266,15 +1264,6 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             tr.data, np.concatenate([[0.0], np.cumsum(data)[:-1] * 0.1]))
 
-    # skip this test for now on our Travis Minimum dependdency build. there is
-    # a trace endtime offset of 1ns somehow, can't be bothered to look into
-    # fixing this for an ancient numpy etc.
-    @unittest.skipIf(
-        os.environ.get('CI') == 'true' and
-        os.environ.get('TRAVIS') == 'true' and
-        os.environ.get('MINIMUM_DEPENDENCIES') == 'True',
-        'Skipping this test for the minimum dependency Travis build, see '
-        '#2507 and https://travis-ci.org/obspy/obspy/jobs/618280587#L2105')
     def test_issue_317(self):
         """
         Tests times after breaking a stream into parts and merging it again.
@@ -2302,21 +2291,16 @@ class TraceTestCase(unittest.TestCase):
         for arg in patch.call_args_list:
             assert not arg[1]["nearest_sample"]
 
-    def test_remove_response_plot(self):
+    def test_remove_response_plot(self, image_path):
         """
         Tests the plotting option of remove_response().
         """
         tr = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed")[0]
         inv = read_inventory("/path/to/IU_ULN_00_LH1.xml")
         tr.attach_response(inv)
-
         pre_filt = [0.001, 0.005, 10, 20]
-
-        image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        with ImageComparison(image_dir, "trace_remove_response.png",
-                             reltol=1.5) as ic:
-            tr.remove_response(pre_filt=pre_filt, output="DISP",
-                               water_level=60, end_stage=None, plot=ic.name)
+        tr.remove_response(pre_filt=pre_filt, output="DISP",
+                           water_level=60, end_stage=None, plot=image_path)
 
     def test_remove_response_default_units(self):
         """
@@ -2737,13 +2721,3 @@ class TraceTestCase(unittest.TestCase):
 
         assert tr.stats.sampling_rate == 30
         assert tr.data.shape[0] == 1
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TraceTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

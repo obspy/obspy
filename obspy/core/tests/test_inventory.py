@@ -11,21 +11,19 @@ Test suite for the inventory class.
 import copy
 import io
 import os
-import unittest
 import warnings
 from pathlib import Path
 from unittest import mock
 
 import numpy as np
 import pytest
-from matplotlib import rcParams
 
 import obspy
 from obspy import UTCDateTime, read_inventory, read_events
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.core.util.base import _get_entry_points
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import WarningsCapture
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
 from obspy.core.inventory.util import _unified_content_strings
@@ -38,21 +36,15 @@ def sum_stations(inv):
     return sum(len(sta) for net in inv for sta in net)
 
 
-class InventoryTestCase(unittest.TestCase):
+@pytest.mark.usefixtures('ignore_numpy_errors')
+class TestInventory:
     """
     Tests the for :class:`~obspy.core.inventory.inventory.Inventory` class.
     """
-    def setUp(self):
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        self.nperr = np.geterr()
-        np.seterr(all='ignore')
-        path = os.path.join(os.path.dirname(__file__), 'data')
-        self.path = path
-        self.station_xml1 = os.path.join(path, 'IU_ANMO_00_BHZ.xml')
-        self.station_xml2 = os.path.join(path, 'IU_ULN_00_LH1.xml')
-
-    def tearDown(self):
-        np.seterr(**self.nperr)
+    # TODO put these into fixtures
+    path = os.path.join(os.path.dirname(__file__), 'data')
+    station_xml1 = os.path.join(path, 'IU_ANMO_00_BHZ.xml')
+    station_xml2 = os.path.join(path, 'IU_ULN_00_LH1.xml')
 
     def test_initialization(self):
         """
@@ -185,19 +177,15 @@ class InventoryTestCase(unittest.TestCase):
         with pytest.raises(Exception):
             inv.get_orientation('BW.RJOB..XXX')
 
-    def test_response_plot(self):
+    def test_response_plot(self, image_path):
         """
         Tests the response plot.
         """
         inv = read_inventory()
         t = UTCDateTime(2008, 7, 1)
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir,
-                                 "inventory_response.png") as ic:
-                rcParams['savefig.dpi'] = 72
-                inv.plot_response(0.01, output="ACC", channel="*N",
-                                  station="[WR]*", time=t, outfile=ic.name)
+        with WarningsCapture:
+            inv.plot_response(0.01, output="ACC", channel="*N",
+                              station="[WR]*", time=t, outfile=image_path)
 
     def test_response_plot_epoch_times_in_label(self):
         """
@@ -695,99 +683,61 @@ class InventoryTestCase(unittest.TestCase):
         assert inv1 == read_inventory(self.station_xml1)
 
 
+@pytest.mark.usefixtures('ignore_numpy_errors')
 @pytest.importorskip('basemap')
-@unittest.skipIf(
+@pytest.mark.skipif(
     BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-    'matplotlib 3.0.1 is not compatible with basemap')
-class InventoryBasemapTestCase(unittest.TestCase):
+    reason='matplotlib 3.0.1 is not compatible with basemap')
+class TestInventoryBasemap:
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Basemap.
     """
-    @pytest.fixture(scope='class')
-    def setup_teardown(self):
-        """Peform the setup and tear-down for class"""
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        self.nperr = np.geterr()
-        np.seterr(all='ignore')
-        yield
-        np.seterr(**self.nperr)
-
     @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                        'unsupported proj4 library')
-    def test_location_plot_global(self):
+                        reason='unsupported proj4 library')
+    def test_location_plot_global(self, image_path):
         """
         Tests the inventory location preview plot, default parameters, using
         Basemap.
         """
         inv = read_inventory()
-        reltol = 1.3
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        if BASEMAP_VERSION < [1, 0, 7]:
-            reltol = 3.0
-        with ImageComparison(self.image_dir, 'inventory_location-basemap1.png',
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(outfile=ic.name)
+        inv.plot(outfile=image_path)
 
-    def test_location_plot_ortho(self):
+    def test_location_plot_ortho(self, image_path):
         """
         Tests the inventory location preview plot, ortho projection, some
         non-default parameters, using Basemap.
         """
         inv = read_inventory()
-        with ImageComparison(self.image_dir,
-                             'inventory_location-basemap2.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(method='basemap', projection='ortho', resolution='c',
-                     continent_fill_color='0.3', marker='d', label=False,
-                     colormap='Set3', color_per_network=True, outfile=ic.name)
+        inv.plot(method='basemap', projection='ortho', resolution='c',
+                 continent_fill_color='0.3', marker='d', label=False,
+                 colormap='Set3', color_per_network=True, outfile=image_path)
 
-    def test_location_plot_local(self):
+    def test_location_plot_local(self, image_path):
         """
         Tests the inventory location preview plot, local projection, some more
         non-default parameters, using Basemap.
         """
         inv = read_inventory()
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        reltol = 2.0
-        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
-        # tolerance must be much higher.
-        if BASEMAP_VERSION < [1, 0, 4]:
-            reltol = 100.0
-        with ImageComparison(self.image_dir, 'inventory_location-basemap3.png',
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(method='basemap', projection='local', resolution='l',
-                     size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
-                     outfile=ic.name)
+        inv.plot(method='basemap', projection='local', resolution='l',
+                 size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
+                 outfile=image_path)
 
     @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
                         'unsupported proj4 library')
-    def test_combined_station_event_plot(self):
+    def test_combined_station_event_plot(self, image_path):
         """
         Tests the combined plotting of inventory/event data in one plot,
         reusing the basemap instance.
         """
         inv = read_inventory()
         cat = read_events()
-        reltol = 1.1
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        if BASEMAP_VERSION < [1, 0, 7]:
-            reltol = 3.0
-        with ImageComparison(self.image_dir,
-                             'basemap_combined_stations-events.png',
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            fig = inv.plot(show=False)
-            cat.plot(outfile=ic.name, fig=fig)
+        fig = inv.plot(show=False)
+        cat.plot(outfile=image_path, fig=fig)
 
 
 @pytest.skipif(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
                'cartopy not installed')
-class InventoryCartopyTestCase(unittest.TestCase):
+class TestInventoryCartopy:
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Cartopy.
     """
@@ -799,39 +749,30 @@ class InventoryCartopyTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
-    def test_location_plot_global(self):
+    def test_location_plot_global(self, image_path):
         """
         Tests the inventory location preview plot, default parameters, using
         Cartopy.
         """
         inv = read_inventory()
-        with ImageComparison(self.image_dir,
-                             'inventory_location-cartopy1.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(method='cartopy', outfile=ic.name)
+        inv.plot(method='cartopy', outfile=image_path)
 
-    def test_location_plot_ortho(self):
+    def test_location_plot_ortho(self, image_path):
         """
         Tests the inventory location preview plot, ortho projection, some
         non-default parameters, using Cartopy.
         """
         inv = read_inventory()
-        with ImageComparison(self.image_dir,
-                             'inventory_location-cartopy2.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(method='cartopy', projection='ortho', resolution='c',
-                     continent_fill_color='0.3', marker='d', label=False,
-                     colormap='Set3', color_per_network=True, outfile=ic.name)
+        inv.plot(method='cartopy', projection='ortho', resolution='c',
+                 continent_fill_color='0.3', marker='d', label=False,
+                 colormap='Set3', color_per_network=True, outfile=image_path)
 
-    def test_location_plot_local(self):
+    def test_location_plot_local(self, image_path):
         """
         Tests the inventory location preview plot, local projection, some more
         non-default parameters, using Cartopy.
         """
         inv = read_inventory()
-        with ImageComparison(self.image_dir,
-                             'inventory_location-cartopy3.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(method='cartopy', projection='local', resolution='50m',
-                     size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
-                     outfile=ic.name)
+        inv.plot(method='cartopy', projection='local', resolution='50m',
+                 size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
+                 outfile=image_path)

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import unittest
-
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
@@ -8,7 +6,7 @@ from obspy.core.preview import create_preview, merge_previews, resample_preview
 import pytest
 
 
-class UtilTestCase(unittest.TestCase):
+class TestUtil:
     """
     Test suite for obspy.core.preview.
     """
@@ -213,11 +211,3 @@ class UtilTestCase(unittest.TestCase):
         # 2 - should work
         tr.stats.sampling_rate = 1
         create_preview(tr)
-
-
-def suite():
-    return unittest.makeSuite(UtilTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
