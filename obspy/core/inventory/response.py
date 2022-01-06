@@ -342,6 +342,7 @@ class PolesZerosResponseStage(ResponseStage):
             raise ValueError(msg)
 
     def get_response(self, frequencies, fast=True):
+
         """
         Produce the response curve from this stage's data for a given
         range of frequencies
@@ -633,7 +634,6 @@ class CoefficientsTypeResponseStage(ResponseStage):
         phase = np.radians(np.unwrap(np.angle(resp, deg=False))) / np.pi
         if self.cf_transfer_function_type == "DIGITAL":
             phase *= 0.
-
         # Normalize the amplitude with the given sensitivity value and
         # frequency. I'm not sure this is entirely correct, as the digitizer
         # will likely just apply the FIR filter and send the data along. But
@@ -651,6 +651,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             final_resp = np.zeros_like(frequencies) + 0j
         else:
             final_resp = np.empty_like(resp)
+
         final_resp.real = amp * np.cos(phase)
         final_resp.imag = amp * np.sin(phase)
 
@@ -1152,6 +1153,10 @@ class Response(ComparingObject):
 
         # Convert to 0-based indexing.
         # (End stage stays the same because it's the exclusive bound)
+        apply_sens = False
+        if start_stage is None and end_stage is None:
+            apply_sens = True
+        # Convert to 0-based indexing.
         if start_stage is None:
             start_stage = 0
         else:

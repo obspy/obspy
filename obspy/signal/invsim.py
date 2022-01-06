@@ -367,6 +367,7 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
     :type t_samp: float
     :param t_samp: Sampling interval in seconds
     :type nfft: int
+<<<<<<< HEAD
     :param nfft: Number of FFT points of signal which needs correction.
         If not specified, the length of the frequencies parameter will be used.
         If specified, the value t_samp is required.
@@ -374,6 +375,11 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
     :type frequencies: list of float
     :param frequencies: Discrete frequencies to get resp values for.
         If nfft and t_samp are not specified, this value is required.
+=======
+    :param nfft: Number of FFT points of signal which needs correction
+    :type frequencies: list of float
+    :param frequencies: Discrete frequencies to get resp values for.
+>>>>>>> Add code from PR #1718 to remove evalresp dependency
     :type freq: bool
     :param freq: If true, returns tuple of resp result with freq array input (i.e., x-values)
     :rtype: :class:`numpy.ndarray` complex128
@@ -384,6 +390,10 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
     # strangely returns it as an integer.
     if not isinstance(a, np.ndarray) and a == 1.0:
         a = [1.0]
+<<<<<<< HEAD
+=======
+
+>>>>>>> Add code from PR #1718 to remove evalresp dependency
     if frequencies is None:
         n = nfft // 2
         fy = 1 / (t_samp * 2.0)
