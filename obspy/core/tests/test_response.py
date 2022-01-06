@@ -21,7 +21,8 @@ from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
-    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage, Response)
+    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage)
+from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
 from obspy.core.util.testing import ImageComparison
@@ -116,7 +117,8 @@ class ResponseTestCase(unittest.TestCase):
 
     def test_get_response_regression(self):
         units = ["DISP", "VEL", "ACC"]
-        filenames = ["AU.MEEK", "IRIS_single_channel_with_response", "XM.05", "IU_ANMO_00_BHZ"]
+        filenames = ["AU.MEEK", "IRIS_single_channel_with_response",
+                     "XM.05", "IU_ANMO_00_BHZ"]
 
         for filename in filenames:
             xml_filename = os.path.join(self.data_dir,
@@ -145,7 +147,8 @@ class ResponseTestCase(unittest.TestCase):
             print("passed:", xml_filename)
 
     def test_get_response_per_stage(self):
-        filenames = ["AU.MEEK", "IU_ANMO_00_BHZ", "IRIS_single_channel_with_response", "XM.05"]
+        filenames = ["AU.MEEK", "IU_ANMO_00_BHZ",
+                     "IRIS_single_channel_with_response", "XM.05"]
         units = ["DISP", "VEL", "ACC"]
 
         for filename in filenames:
@@ -157,27 +160,28 @@ class ResponseTestCase(unittest.TestCase):
             print(xml_filename)
             for unit in units:
                 for x in range(1, len(resp.response_stages)+1):
-                    """
-                    if not isinstance(resp.response_stages[x-1], FIRResponseStage):
-                        continue
-                    """
-                    print("Type of stage ", str(x) + ":", type(resp.response_stages[x-1]))
+                    print("Type of stage ", str(x) +
+                          ":", type(resp.response_stages[x-1]))
                     xml_resp = resp.get_evalresp_response_for_frequencies(
-                        frequencies=freqs, start_stage=x, end_stage=x, output=unit)
+                        frequencies=freqs, start_stage=x,
+                        end_stage=x, output=unit)
                     new_resp = resp.get_response(
-                        frequencies=freqs, start_stage=x, end_stage=x, output=unit)
+                        frequencies=freqs, start_stage=x,
+                        end_stage=x, output=unit)
 
                     np.testing.assert_allclose(np.abs(xml_resp),
                                                np.abs(new_resp), rtol=1E-5)
-                    # Phase starts to differ slightly before Nyquist and quite a
-                    # bit after. Evalresp appears to have some Gibb's artifacts
-                    # and scipy's solution does look better.
+                    # Phase starts to differ slightly before
+                    # Nyquist and quite a bit after. Evalresp
+                    # appears to have some Gibb's artifacts and scipy's
+                    # solution does look better.
                     np.testing.assert_allclose(
                         np.unwrap(np.angle(xml_resp))[:800],
                         np.unwrap(np.angle(new_resp))[:800],
                         rtol=1E-2, atol=2E-2)
 
-                    print("Succeeded with case for stage no.", x, "with units", unit)
+                    print("Succeeded with case for stage no.", x,
+                          "with units", unit)
 
     def test_get_response_disp_vel_acc(self):
         units = ["DISP", "VEL", "ACC"]
@@ -307,11 +311,15 @@ class ResponseTestCase(unittest.TestCase):
                  -8.96456,
                  -9.20285e+01 + 3.96113e+02,
                  -2.50919e+02]
-        stage = PolesZerosResponseStage(stage_sequence_number=1, stage_gain=1.957300e+04,
-                                        stage_gain_frequency=0.2, input_units='M/S', output_units='V',
+        stage = PolesZerosResponseStage(stage_sequence_number=1,
+                                        stage_gain=1.957300e+04,
+                                        stage_gain_frequency=0.2,
+                                        input_units='M/S', output_units='V',
                                         pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
-                                        normalization_frequency=2E-2, zeros=zeros, poles=poles)
-        self.assertAlmostEqual(3.471289E+11, stage.normalization_factor, delta=1E6)
+                                        normalization_frequency=2E-2,
+                                        zeros=zeros, poles=poles)
+        self.assertAlmostEqual(3.471289E+11,
+                               stage.normalization_factor, delta=1E6)
 
     def test_pitick2latex(self):
         self.assertEqual(_pitick2latex(3 * pi / 2), r'$\frac{3\pi}{2}$')
