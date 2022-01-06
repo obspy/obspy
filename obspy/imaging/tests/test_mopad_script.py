@@ -4,29 +4,22 @@ The obspy-mopad script test suite.
 """
 import io
 import os
-import unittest
 from itertools import product, zip_longest
 
 import numpy as np
+import pytest
 
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.imaging.scripts.mopad import main as obspy_mopad
 
 
-class MopadTestCase(unittest.TestCase):
+class TestMopad:
     """
     Test cases for obspy-mopad script.
     """
-
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'images')
-        self.mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
-
-    #
-    # obspy-mopad convert
-    #
+    path = os.path.join(os.path.dirname(__file__), 'images')
+    mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
     def test_script_convert_type_sdr(self):
         with CatchOutput() as out:
@@ -195,11 +188,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                          '-t', 'ev',
                          '-r', '3')
 
-    #
-    # obspy-mopad plot
-    #
-
-    @unittest.skip('Currently broken until further review.')
+    @pytest.mark.skip('Currently broken until further review.')
     def test_script_plot(self):
         # See test_Beachball:
         data = [
@@ -259,11 +248,3 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         if messages:
             self.fail(messages)
-
-
-def suite():
-    return unittest.makeSuite(MopadTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -2,12 +2,10 @@
 """
 The obspy.imaging.backend test suite.
 """
-import unittest
-
 import matplotlib
 
 
-class BackendTestCase(unittest.TestCase):
+class TestBackend:
     """
     Test cases for matplotlib backend.
 
@@ -24,11 +22,3 @@ class BackendTestCase(unittest.TestCase):
         etc.
         """
         assert 'AGG' == matplotlib.get_backend().upper()
-
-
-def suite():
-    return unittest.makeSuite(BackendTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

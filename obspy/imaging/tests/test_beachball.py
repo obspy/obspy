@@ -3,27 +3,24 @@
 The obspy.imaging.beachball test suite.
 """
 import os
-import unittest
 import warnings
 
 import matplotlib.pyplot as plt
 
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import WarningsCapture
 from obspy.imaging.beachball import (tdl, aux_plane, beach, beachball,
                                      MomentTensor, mt2axes, mt2plane,
                                      strike_dip)
 
 
-class BeachballTestCase(unittest.TestCase):
+class TestBeachballPlot:
     """
     Test cases for beachball generation.
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'images')
+    path = os.path.join(os.path.dirname(__file__), 'images')
 
-    def test_beachball(self):
+    def test_beachball(self, image_path):
         """
         Create beachball examples in tests/output directory.
         """
@@ -75,8 +72,8 @@ class BeachballTestCase(unittest.TestCase):
                      'bb_chile_mt.png',
                      ]
         for data_, filename in zip(data, filenames):
-            with ImageComparison(self.path, filename) as ic:
-                beachball(data_, outfile=ic.name)
+            file_name = image_path.parent / filename
+            beachball(data_, outfile=file_name)
 
     def test_beachball_output_format(self):
         """
@@ -191,7 +188,7 @@ class BeachballTestCase(unittest.TestCase):
         assert round(abs(p.dip-33.5833323), 7) == 0
         assert round(abs(p.strike-213.273886), 7) == 0
 
-    def test_collection(self):
+    def test_collection(self, image_path):
         """
         Tests to plot beachballs as collection into an existing axis
         object. The moment tensor values are taken form the
@@ -221,94 +218,89 @@ class BeachballTestCase(unittest.TestCase):
               [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
               [150, 87, 1]]
 
-        with ImageComparison(self.path, 'bb_collection.png') as ic:
-            # Initialize figure
-            fig = plt.figure(figsize=(6, 6), dpi=300)
-            ax = fig.add_subplot(111, aspect='equal')
+        # Initialize figure
+        fig = plt.figure(figsize=(6, 6), dpi=300)
+        ax = fig.add_subplot(111, aspect='equal')
 
-            # Plot the stations or borders
-            ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
+        # Plot the stations or borders
+        ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
 
-            x = -100
-            y = -100
-            for i, t in enumerate(mt):
-                # add the beachball (a collection of two patches) to the axis
-                ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
-                x += 50
-                if (i + 1) % 5 == 0:
-                    x = -100
-                    y += 50
+        x = -100
+        y = -100
+        for i, t in enumerate(mt):
+            # add the beachball (a collection of two patches) to the axis
+            ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
+            x += 50
+            if (i + 1) % 5 == 0:
+                x = -100
+                y += 50
 
-            # set the x and y limits
-            ax.axis([-120, 120, -120, 120])
+        # set the x and y limits
+        ax.axis([-120, 120, -120, 120])
 
-            # save the output
-            fig.savefig(ic.name)
+        # save the output
+        fig.savefig(image_path)
 
-    def collection_aspect(self, axis, filename_width, filename_width_height):
+    def collection_aspect(self, axis, image_path):
         """
         Common part of the test_collection_aspect_[xy] tests.
         """
         mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
+        filename_width = image_path.parent / 'width.png'
 
         # Test passing only a width
-        with ImageComparison(self.path, filename_width) as ic:
-            # Initialize figure
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            # add the beachball (a collection of two patches) to the axis
-            # give it an axes to keep make the beachballs circular
-            # even though axes are not scaled
-            ax.add_collection(beach(mt, width=400, xy=(0, 0), linewidth=.6,
-                                    axes=ax))
-            # set the x and y limits
-            ax.axis(axis)
-            fig.savefig(ic.name)
+        # Initialize figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(beach(mt, width=400, xy=(0, 0), linewidth=.6,
+                                axes=ax))
+        # set the x and y limits
+        ax.axis(axis)
+        fig.savefig(filename_width)
 
         # Test passing a width and a height
-        with ImageComparison(self.path, filename_width_height) as ic:
-            # Initialize figure
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            # add the beachball (a collection of two patches) to the axis
-            # give it an axes to keep make the beachballs circular
-            # even though axes are not scaled
-            ax.add_collection(beach(mt, width=(400, 200), xy=(0, 0),
-                                    linewidth=.6, axes=ax))
-            # set the x and y limits
-            ax.axis(axis)
-            # save the output
-            fig.savefig(ic.name)
+        filename_height = image_path.parent / 'height.png'
+        # Initialize figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(beach(mt, width=(400, 200), xy=(0, 0),
+                                linewidth=.6, axes=ax))
+        # set the x and y limits
+        ax.axis(axis)
+        # save the output
+        fig.savefig(filename_height)
 
-    def test_collection_aspect_x(self):
+    def test_collection_aspect_x(self, image_path):
         """
         Tests to plot beachball into a non-scaled axes with an x-axis larger
         than y-axis. Use the 'axes' kwarg to make beachballs circular.
         """
         self.collection_aspect(axis=[-10000, 10000, -100, 100],
-                               filename_width='bb_aspect_x.png',
-                               filename_width_height='bb_aspect_x_height.png')
+                               image_path=image_path)
 
-    def test_collection_aspect_y(self):
+    def test_collection_aspect_y(self, image_path):
         """
         Tests to plot beachball into a non-scaled axes with a y-axis larger
         than x-axis. Use the 'axes' kwarg to make beachballs circular.
         """
         self.collection_aspect(axis=[-100, 100, -10000, 10000],
-                               filename_width='bb_aspect_y.png',
-                               filename_width_height='bb_aspect_y_height.png')
+                               image_path=image_path)
 
-    def test_mopad_fallback(self):
+    def test_mopad_fallback(self, image_path):
         """
         Test the fallback to mopad.
         """
         mt = [0.000, -1.232e25, 1.233e25, 0.141e25, -0.421e25, 2.531e25]
 
-        with warnings.catch_warnings(record=True) as w:
+        with WarningsCapture() as w:
             # Always raise warning.
-            warnings.simplefilter("always")
-            with ImageComparison(self.path, 'mopad_fallback.png') as ic:
-                beachball(mt, outfile=ic.name)
+            beachball(mt, outfile=image_path)
 
         # Make sure the appropriate warnings has been raised.
         assert w
@@ -317,11 +309,3 @@ class BeachballTestCase(unittest.TestCase):
         w = [_i for _i in w
              if "falling back to the mopad wrapper" in _i.lower()]
         assert w
-
-
-def suite():
-    return unittest.makeSuite(BeachballTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

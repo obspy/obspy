@@ -4,11 +4,11 @@ The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
 import os
 import shutil
-import unittest
 from os.path import abspath, dirname, join, pardir
 import warnings
 
 import matplotlib.pyplot as plt
+import pytest
 
 from obspy import read, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, get_example_file
@@ -18,14 +18,16 @@ from obspy.imaging.scripts.scan import main as obspy_scan
 from obspy.imaging.scripts.scan import scan, Scanner
 
 
-class ScanTestCase(unittest.TestCase):
+class TestScan:
     """
     Test cases for obspy-scan
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.root = abspath(join(dirname(__file__), pardir, pardir))
-        self.path = join(self.root, 'imaging', 'tests', 'images')
+    root = abspath(join(dirname(__file__), pardir, pardir))
+    path = join(root, 'imaging', 'tests', 'images')
+
+    @pytest.fixture(scope='class')
+    def all_files(self):
+        """return a list of all waveform files in the test suite."""
         sac_files = ['LMOW.BHE.SAC', 'seism.sac', 'dis.G.SCZ.__.BHE_short',
                      'null_terminated.sac', 'test.sac', 'seism-longer.sac',
                      'test.sac.swap', 'seism-shorter.sac', 'testxy.sac']
@@ -38,21 +40,21 @@ class ScanTestCase(unittest.TestCase):
                      for i in sac_files]
         all_files.extend([join(self.root, 'io', 'gse2', 'tests', 'data', i)
                           for i in gse2_files])
-        self.all_files = all_files
+        return all_files
 
-    def test_scan_main_method(self):
+    def test_scan_main_method(self, all_files):
         """
         Run obspy-scan on selected tests/data directories
         """
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             with ImageComparison(self.path, 'scan.png') as ic:
                 obspy_scan([os.curdir] + ['--output', ic.name])
 
-    def test_scan_function_and_scanner_class(self):
+    def test_scan_function_and_scanner_class(self, all_files):
         """
         Test scan function and Scanner class (in one test to keep overhead of
         copying files down)
@@ -60,7 +62,7 @@ class ScanTestCase(unittest.TestCase):
         scanner = Scanner()
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             scanner.parse(os.curdir)
@@ -112,14 +114,14 @@ class ScanTestCase(unittest.TestCase):
             assert got == expected_labels
             plt.close(fig)
 
-    def test_scanner_manually_add_streams(self):
+    def test_scanner_manually_add_streams(self, all_files):
         """
         Test Scanner class, manually adding streams of read data files
         """
         scanner = Scanner()
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             for file_ in os.listdir(os.curdir):
@@ -134,7 +136,7 @@ class ScanTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'scan.png') as ic:
             scanner.plot(ic.name)
 
-    def test_scan_save_load_npz(self):
+    def test_scan_save_load_npz(self, all_files):
         """
         Run obspy-scan on selected tests/data directories, saving/loading
         to/from npz.
@@ -144,7 +146,7 @@ class ScanTestCase(unittest.TestCase):
         scanner = Scanner()
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             # save via command line
@@ -168,13 +170,13 @@ class ScanTestCase(unittest.TestCase):
                 with ImageComparison(self.path, 'scan.png') as ic:
                     obspy_scan(['--load', 'scan.npz', '--output', ic.name])
 
-    def test_scan_times(self):
+    def test_scan_times(self, all_files):
         """
         Checks for timing related options
         """
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             with ImageComparison(self.path, 'scan_times.png') as ic:
@@ -238,11 +240,3 @@ class ScanTestCase(unittest.TestCase):
                             # datetimes just need to be close
                             t1, t2 = utc1.timestamp, utc2.timestamp
                             assert abs(t1 - t2) < .001
-
-
-def suite():
-    return unittest.makeSuite(ScanTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

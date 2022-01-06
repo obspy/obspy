@@ -4,61 +4,55 @@ The obspy.imaging.scripts.plot / obspy-plot test suite.
 """
 import os
 import shutil
-import unittest
 from os.path import abspath, basename, dirname, join, pardir
 
+import pytest
+
 from obspy.core.util.misc import TemporaryWorkingDirectory
-from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.plot import main as obspy_plot
 
 
-class PlotTestCase(unittest.TestCase):
+class TestPlot:
     """
     Test cases for obspy-plot
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.root = abspath(join(dirname(__file__), pardir, pardir))
-        self.path = join(self.root, 'imaging', 'tests', 'images')
-        all_files = [join(self.root, 'io', 'ascii', 'tests', 'data', i)
-                     for i in ['slist.ascii', 'slist_2_traces.ascii']]
-        self.all_files = all_files
+    root = abspath(join(dirname(__file__), pardir, pardir))
+    path = join(root, 'imaging', 'tests', 'images')
 
-    def test_plot(self):
+    @pytest.fixture(scope='class')
+    def all_files(self):
+        """Collect all files. """
+        all_files = [
+            join(self.root, 'io', 'ascii', 'tests', 'data', i)
+            for i in ['slist.ascii', 'slist_2_traces.ascii']
+        ]
+        return all_files
+
+    def test_plot(self, image_path, all_files):
         """
         Run obspy-plot on selected tests
         """
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            all_files = []
-            for filename in self.all_files:
+            all_files_list = []
+            for filename in all_files:
                 newname = join(os.curdir, basename(filename))
                 shutil.copy(filename, newname)
-                all_files += [newname]
+                all_files_list += [newname]
 
-            with ImageComparison(self.path, 'plot.png') as ic:
-                obspy_plot(['--outfile', ic.name] + all_files)
+            obspy_plot(['--outfile', str(image_path)] + all_files_list)
 
-    def test_plot_no_merge(self):
+    def test_plot_no_merge(self, image_path, all_files):
         """
         Run obspy-plot without trace merging
         """
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            all_files = []
-            for filename in self.all_files:
+            all_files_list = []
+            for filename in all_files:
                 newname = join(os.curdir, basename(filename))
                 shutil.copy(filename, newname)
-                all_files += [newname]
+                all_files_list += [newname]
 
-            with ImageComparison(self.path, 'plot_nomerge.png') as ic:
-                obspy_plot(['--no-automerge', '--outfile', ic.name] +
-                           all_files)
-
-
-def suite():
-    return unittest.makeSuite(PlotTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+            obspy_plot(['--no-automerge', '--outfile', str(image_path)] +
+                       all_files_list)
