@@ -17,6 +17,14 @@ env:
 
 
 jobs:
+  check_running_or_queue_jobs_to_cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs in the same PR
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+
   # Parse the comments from the PR and uploads a json with selected options
   get_ci_config:
     runs-on: ubuntu-latest
@@ -96,10 +104,6 @@ jobs:
             prefix: C:\Miniconda3\envs\test
 
     steps:
-      - name: Cancel Previous Runs in the same PR
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v2
 
       - name: Get current date
