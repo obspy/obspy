@@ -129,12 +129,13 @@ class TestNetwork:
         with pytest.raises(Exception):
             network.get_coordinates('BW.RJOB..XXX')
 
-    def test_response_plot(self, image_dir):
+    def test_response_plot(self, image_dir, image_comparer):
         """
         Tests the response plot.
         """
         net = read_inventory()[0]
         t = UTCDateTime(2008, 7, 1)
+        breakpoint()
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             with ImageComparison(image_dir, "network_response.png") as ic:

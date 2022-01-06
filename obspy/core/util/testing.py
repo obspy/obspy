@@ -157,8 +157,8 @@ def write_png(arr, filename):
 def compare_images(expected, actual, tol):
     """
     Custom version of :func:`matplotlib.testing.compare.compare_images`.
-    This enable ObsPy to have the same image comparison metric across
-    matplotlib versions. Furthermore nose is no longer a test dependency of
+    This enables ObsPy to have the same image comparison metric across
+    matplotlib versions. Furthermore, nose is no longer a test dependency of
     ObsPy.
 
     In contrast to the matplotlib version this one only works with png
@@ -166,7 +166,7 @@ def compare_images(expected, actual, tol):
     the RGB values of fully transparent pixels change depending on the
     matplotlib version.
 
-    Additionally this version uses a straight RMSE definition instead of the
+    Additionally, this version uses a straight RMSE definition instead of the
     binned one of matplotlib.
 
     :param expected: The filename of the expected png file.
@@ -179,6 +179,7 @@ def compare_images(expected, actual, tol):
     :type tol: float
     """
     import matplotlib.image
+    breakpoint()
 
     if not os.path.exists(actual):
         msg = "Output image %s does not exist." % actual
@@ -274,6 +275,19 @@ class ImageComparison(NamedTemporaryFile):
         matter what (e.g. any options to ``obspy-runtests`` that would normally
         cause an upload attempt). This can be used to forcibly deactivate
         upload attempts in image tests that are expected to fail.
+    :type save_path: str, Path
+    :param save_path: A path to a directory where the images are saved. The
+        directory has the following structure:
+            passed
+                image_name
+                    image
+                    expected
+                    diff
+            failed
+                image_name
+                    image
+                    expected
+                    diff
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -284,19 +298,6 @@ class ImageComparison(NamedTemporaryFile):
     :func:`matplotlib.testing.compare.compare_images`. Afterwards all
     temporary files are deleted automatically.
 
-    .. note::
-        If images created during the testrun should be kept after the test, set
-        environment variable `OBSPY_KEEP_IMAGES` to any value before executing
-        the test (e.g. with `$ OBSPY_KEEP_IMAGES= obspy-runtests` or `$
-        OBSPY_KEEP_IMAGES= python test_sometest.py`). For `obspy-runtests` the
-        option "--keep-images" can also be used instead of setting an
-        environment variable. Created images and diffs for failing tests are
-        then stored in a subfolder "testrun" under the baseline image's
-        directory.
-        To only keep failed images and the corresponding diff image,
-        additionally set environment variable `OBSPY_KEEP_ONLY_FAILED_IMAGES`
-        to any value before executing the test.
-
     .. rubric:: Example
 
     >>> from obspy import read
@@ -305,18 +306,22 @@ class ImageComparison(NamedTemporaryFile):
     ...     st.plot(outfile=ic.name)  # doctest: +SKIP
     ...     # image is compared against baseline image automatically
     """
-    def __init__(self, image_path, image_name, reltol=1,
+    def __init__(self, image_path=None, image_name=None, reltol=1,
                  adjust_tolerance=True, plt_close_all_enter=True,
-                 plt_close_all_exit=True, style=None, no_uploads=False, *args,
+                 plt_close_all_exit=True, style=None, no_uploads=False,
+                 savepath=None, *args,
                  **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
         self.image_name = image_name
         self.baseline_image = os.path.join(image_path, image_name)
+        self.output_path = os.path.join(image_path, "testrun")
+        self.save_path = savepath
+
         self.keep_output = "OBSPY_KEEP_IMAGES" in os.environ
         self.keep_only_failed = "OBSPY_KEEP_ONLY_FAILED_IMAGES" in os.environ
-        self.output_path = os.path.join(image_path, "testrun")
+
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
         self.tol = reltol * 3.0
         self.plt_close_all_enter = plt_close_all_enter
@@ -347,7 +352,7 @@ class ImageComparison(NamedTemporaryFile):
                             LooseVersion("2.8.0")):
                         self.tol *= 10
 
-    def __enter__(self):
+    def __enter__(self, image_path=None, image_name=None):
         """
         Set matplotlib defaults.
         """
@@ -405,7 +410,7 @@ class ImageComparison(NamedTemporaryFile):
         try:
             # only compare images if no exception occurred in the with
             # statement. this avoids masking previously occurred exceptions (as
-            # an exception may occur in compare()). otherwise we only clean up
+            # an exception may occur in compare()). otherwise, we only clean up
             # and the exception gets re-raised at the end of __exit__.
             if exc_type is None:
                 msg = self.compare()

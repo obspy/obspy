@@ -78,5 +78,6 @@ def run_tests(network=False,
             sys.argv.append(f'--{param}')
     main()
 
+
 if __name__ == "__main__":
     main()

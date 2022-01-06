@@ -3,33 +3,57 @@
 """
 Obspy's testing configuration file.
 """
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 import obspy
 from obspy.core.util import NETWORK_MODULES
+from obspy.core.util.testing import ImageComparison
+
+
+# --- ObsPy fixtures
 
 
 @pytest.fixture(scope='session', autouse=True)
-def set_numpy_print_options():
+def save_image_directory(request, tmp_path_factory):
+    """Create a temporary directory for storing all images."""
+    if request.config.getoption('--keep-images'):
+        image_save_folder = tmp_path_factory.mktemp('images')
+    else:
+        image_save_folder = None
+    return image_save_folder
+
+
+@pytest.fixture(scope='function')
+def image_comparer(request, save_image_directory):
     """
-    Make sure the doctests print the same style of output across all numpy
-    versions.
+    Return an image comparison object initiated for specific test.
     """
-    try:
-        np.set_printoptions(legacy='1.13')
-    except (TypeError, AttributeError):
+    def _get_image_name(node_name):
+        """Get the expected name of the image."""
+        expected_image = node_name.replace('test_', '')
+        if expected_image.endswith('_plot'):
+            expected_image = expected_image[:-5]
+        expected_image += '.png'
+        return expected_image
+
+    # get path to modules image folder
+    image_dir = Path(request.module.__file__).parent / 'images'
+    assert image_dir.is_dir(), f'no image directory found at {image_dir}'
+    # get name of node
+    expected_image = _get_image_name(request.node.name)
+    expected_image_path = image_dir / expected_image
+    assert expected_image.exists(), f"no such image {expected_image_path}"
+    image_comp = ImageComparison(str(image_dir), expected_image)
+    yield image_comp
+    # save images if desired
+    if save_image_directory:
         pass
 
 
-@pytest.fixture(scope='session', autouse=True)
-def set_mpl_backend():
-    """
-    Make sure the doctests print the same style of output across all numpy
-    versions.
-    """
-    import matplotlib
-    matplotlib.use('Agg')
+# --- Pytest configuration
 
 
 def pytest_addoption(parser):
@@ -117,5 +141,5 @@ def pytest_configure(config):
 
 
 def pytest_html_report_title(report):
-    """customize the title of the html report (if used)"""
+    """Customize the title of the html report (if used) to include version."""
     report.title = f"Obspy Tests ({obspy.__version__})"
