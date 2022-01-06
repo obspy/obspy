@@ -13,6 +13,7 @@ from io import BytesIO
 
 from obspy import read, Stream, UTCDateTime
 from obspy.clients.filesystem.msriterator import _MSRIterator
+from obspy.core.util.decorator import deprecated_keywords
 
 
 logger = logging.getLogger('obspy.clients.filesystem.miniseed')
@@ -61,8 +62,9 @@ class _MSRIDataSegment(_ExtractedDataSegment):
     """
     Segment of data from a _MSRIterator
     """
+    @deprecated_keywords({"loglevel": None})
     def __init__(self, msri, sample_rate, start_time, end_time, src_name,
-                 loglevel="WARNING"):
+                 loglevel=None):
         """
         :param msri: A `_MSRIterator`
         :param sample_rate: Sample rate of the data
@@ -70,15 +72,7 @@ class _MSRIDataSegment(_ExtractedDataSegment):
                            requested data
         :param end_time: A `UTCDateTime` giving the end of the requested data
         :param src_name: Name of the data source for logging
-        :type loglevel: str
-        :param loglevel: logging verbosity
         """
-        numeric_level = getattr(logging, loglevel.upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % loglevel)
-        logging.basicConfig(level=numeric_level)
-        logger.setLevel(numeric_level)
-
         self.msri = msri
         self.sample_rate = sample_rate
         self.start_time = start_time
@@ -163,23 +157,15 @@ class _MiniseedDataExtractor(object):
     """
     Component for extracting, trimming, and validating data.
     """
-    def __init__(self, dp_replace=None, request_limit=0, loglevel="WARNING"):
+    @deprecated_keywords({"loglevel": None})
+    def __init__(self, dp_replace=None, request_limit=0, loglevel=None):
         """
         :param dp_replace: optional tuple of (regex, replacement) indicating
           the location of data files. If regex is omitted, then the replacement
           string is appended to the beginning of the file name.
         :param request_limit: optional limit (in bytes) on how much data can
           be extracted at once
-        :type loglevel: str
-        :param loglevel: logging verbosity
         """
-        self.loglevel = loglevel
-        numeric_level = getattr(logging, loglevel.upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % loglevel)
-        logging.basicConfig(level=numeric_level)
-        logger.setLevel(numeric_level)
-
         if dp_replace:
             self.dp_replace_re = re.compile(dp_replace[0])
             self.dp_replace_sub = dp_replace[1]
@@ -306,8 +292,7 @@ class _MiniseedDataExtractor(object):
                                            nrow.samplerate,
                                            nrow.starttime,
                                            nrow.endtime,
-                                           nrow.srcname,
-                                           loglevel=self.loglevel)
+                                           nrow.srcname)
 
                     # Check for passing end offset
                     if (offset + msri.msr.contents.reclen) >= \

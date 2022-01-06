@@ -122,9 +122,9 @@ jobs:
           export MODULELIST=`obshub read-config-value module_list --path=${CONFIG_PATH}`
           export MODULELISTSPACES=`obshub read-config-value module_list_spaces --path=${CONFIG_PATH}`
           if [ "$RUNNER_OS" == "macOS" ]; then
-              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
+              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
           else
-              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
+              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
               coverage xml -o coverage.xml
           fi
 

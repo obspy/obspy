@@ -40,6 +40,9 @@ from obspy.db.indexer import WaveformFileCrawler, worker
 from obspy.db.util import parse_mapping_data
 
 
+logger = logging.getLogger('obspy.db.indexer')
+
+
 class MyHandler(http_server.BaseHTTPRequestHandler):
     def do_GET(self):  # noqa
         """
@@ -100,10 +103,10 @@ class WaveformIndexer(http_server.HTTPServer, WaveformFileCrawler):
 
 
 def _run_indexer(options):
-    logging.info("Starting indexer %s:%s ..." % (options.host, options.port))
+    logger.info("Starting indexer %s:%s ..." % (options.host, options.port))
     # initialize crawler
     service = WaveformIndexer((options.host, options.port), MyHandler)
-    service.log = logging
+    service.log = logger
     try:
         # prepare paths
         if ',' in options.data:
@@ -118,8 +121,8 @@ def _run_indexer(options):
             with open(options.mapping_file, 'r') as f:
                 data = f.readlines()
             mappings = parse_mapping_data(data)
-            logging.info("Parsed %d lines from mapping file %s" %
-                         (len(data), options.mapping_file))
+            logger.info("Parsed %d lines from mapping file %s" %
+                        (len(data), options.mapping_file))
         else:
             mappings = {}
         # create file queue and worker processes
@@ -158,7 +161,7 @@ def _run_indexer(options):
         service.serve_forever(options.poll_interval)
     except KeyboardInterrupt:
         quit()
-    logging.info("Indexer stopped.")
+    logger.info("Indexer stopped.")
 
 
 def main(argv=None):

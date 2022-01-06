@@ -172,6 +172,7 @@ from obspy.clients.filesystem.miniseed import _MiniseedDataExtractor, \
 from obspy.clients.filesystem.db import _get_tsindex_table, \
     _get_tsindex_summary_table
 from obspy.core.stream import Stream
+from obspy.core.util.decorator import deprecated_keywords
 
 logger = logging.getLogger('obspy.clients.filesystem.tsindex')
 
@@ -193,8 +194,8 @@ class Client(object):
     """
     Time series extraction client for IRIS tsindex database schema.
     """
-
-    def __init__(self, database, datapath_replace=None, loglevel="WARNING"):
+    @deprecated_keywords({"loglevel": None})
+    def __init__(self, database, datapath_replace=None, loglevel=None):
         """
         Initializes the client.
 
@@ -206,20 +207,11 @@ class Client(object):
         :param datapath_replace: A ``tuple(str, str)``, where any
             occurrence of the first value will be replaced with the second
             value in filename paths from the index.
-        :type loglevel: str
-        :param loglevel: logging verbosity
         """
-        numeric_level = getattr(logging, loglevel.upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % loglevel)
-        logging.basicConfig(level=numeric_level)
-        logger.setLevel(numeric_level)
-
         # setup handler for database
         if isinstance(database, str):
             self.request_handler = TSIndexDatabaseHandler(
-                os.path.normpath(database),
-                loglevel=loglevel)
+                os.path.normpath(database))
         elif isinstance(database, TSIndexDatabaseHandler):
             self.request_handler = database
         else:
@@ -228,8 +220,7 @@ class Client(object):
 
         # Create and configure the data extraction
         self.data_extractor = _MiniseedDataExtractor(
-            dp_replace=datapath_replace,
-            loglevel=loglevel)
+            dp_replace=datapath_replace)
 
     def get_waveforms(self, network, station, location,
                       channel, starttime, endtime, merge=-1):
@@ -904,11 +895,11 @@ class Indexer(object):
     is not already in the index. After all new files are indexed a summary
     table is generated with the extents of each timeseries.
     """
-
+    @deprecated_keywords({"loglevel": None})
     def __init__(self, root_path, database="timeseries.sqlite",
                  leap_seconds_file="SEARCH", index_cmd='mseedindex',
                  bulk_params=None, filename_pattern='*', parallel=5,
-                 loglevel="WARNING"):
+                 loglevel=None):
         """
         Initializes the Indexer.
 
@@ -943,15 +934,7 @@ class Indexer(object):
         :type parallel: int
         :param parallel: Max number of ``index_cmd`` instances to run in
             parallel. By default a max of 5 parallel process are run.
-        :type loglevel: str
-        :param loglevel: logging verbosity
         """
-        numeric_level = getattr(logging, loglevel.upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % loglevel)
-        logging.basicConfig(level=numeric_level)
-        logger.setLevel(numeric_level)
-
         self.index_cmd = index_cmd
         if bulk_params is None:
             bulk_params = {}
@@ -961,8 +944,7 @@ class Indexer(object):
 
         # setup handler for database
         if isinstance(database, str):
-            self.request_handler = TSIndexDatabaseHandler(database,
-                                                          loglevel=loglevel)
+            self.request_handler = TSIndexDatabaseHandler(database)
         elif isinstance(database, TSIndexDatabaseHandler):
             self.request_handler = database
         else:
@@ -1348,9 +1330,10 @@ class TSIndexDatabaseHandler(object):
 
     """
 
+    @deprecated_keywords({"loglevel": None})
     def __init__(self, database=None, tsindex_table="tsindex",
                  tsindex_summary_table="tsindex_summary",
-                 session=None, loglevel="WARNING"):
+                 session=None, loglevel=None):
         """
         Main query interface to timeseries index database.
 
@@ -1362,15 +1345,7 @@ class TSIndexDatabaseHandler(object):
         :param tsindex_summary_table: Name of timeseries index summary table
         :type session: :class:`sqlalchemy.orm.session.Session`
         :param session: An existing database session object.
-        :type loglevel: str
-        :param loglevel: logging verbosity
         """
-        numeric_level = getattr(logging, loglevel.upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % loglevel)
-        logging.basicConfig(level=numeric_level)
-        logger.setLevel(numeric_level)
-
         self.database = None
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table

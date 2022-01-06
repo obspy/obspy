@@ -45,7 +45,6 @@ class Client(object):
         """
         self.timeout = timeout
         self.debug = debug
-        self.loglevel = debug and "DEBUG" or "CRITICAL"
         self._server_url = "%s:%i" % (server, port)
         self._station_cache = None
         self._station_cache_level = None
@@ -57,7 +56,7 @@ class Client(object):
         Should be done before any request to server, since SLClient keeps
         things like multiselect etc for subsequent requests
         """
-        self._slclient = SLClient(loglevel=self.loglevel, timeout=self.timeout)
+        self._slclient = SLClient(timeout=self.timeout)
 
     def _connect(self):
         """

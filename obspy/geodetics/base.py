@@ -478,7 +478,7 @@ def inside_geobounds(obj, minlatitude=None, maxlatitude=None,
     if maxlongitude is not None:
         if olongitude is None or olongitude > maxlongitude:
             return False
-    if all([l is not None for l in
+    if all([coord is not None for coord in
            (latitude, longitude, olatitude, olongitude)]):
         distance = locations2degrees(latitude, longitude,
                                      olatitude, olongitude)

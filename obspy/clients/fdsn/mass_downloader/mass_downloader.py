@@ -22,19 +22,7 @@ from . import utils
 from .download_helpers import ClientDownloadHelper, STATUS
 
 
-# Setup the logger.
 logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
-logger.setLevel(logging.DEBUG)
-# Prevent propagating to higher loggers.
-logger.propagate = 0
-# Console log handler.
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-# Add formatter
-FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
-formatter = logging.Formatter(FORMAT)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 
 class FDSNMassDownloaderException(FDSNException):
@@ -62,7 +50,19 @@ class MassDownloader(object):
     :type providers: list of str or :class:`~obspy.clients.fdsn.client.Client`
         instances
     """
-    def __init__(self, providers=None, debug=False):
+    def __init__(self, providers=None, debug=False, configure_logging=True):
+        if configure_logging:
+            logger.setLevel(logging.DEBUG)
+            # Prevent propagating to higher loggers.
+            logger.propagate = 0
+            # Console log handler.
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.INFO)
+            # Add formatter
+            formatter = logging.Formatter(
+                    "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s")
+            ch.setFormatter(formatter)
+            logger.addHandler(ch)
         self.debug = debug
         # If not given, use all providers ObsPy knows. They will be sorted
         # alphabetically except that ORFEUS is second to last and IRIS last.

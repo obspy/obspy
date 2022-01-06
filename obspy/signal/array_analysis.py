@@ -825,7 +825,7 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
         for j, sy in enumerate(np.arange(symin, symax + sstep / 10., sstep)):
             for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
                 _sum = 0j
-                for l in np.arange(len(coords)):
+                for l in np.arange(len(coords)):  # NOQA
                     _sum += np.exp(
                         complex(0., (coords[l, 0] * sx + coords[l, 1] * sy) *
                                 2 * np.pi * f))

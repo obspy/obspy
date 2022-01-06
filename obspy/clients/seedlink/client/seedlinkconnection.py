@@ -27,11 +27,6 @@ from ..slpacket import SLPacket
 # default logger
 logger = logging.getLogger('obspy.clients.seedlink')
 
-# set to True for debugging to stdout
-if False:
-    import sys
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
 
 class SeedLinkConnection(object):
     """

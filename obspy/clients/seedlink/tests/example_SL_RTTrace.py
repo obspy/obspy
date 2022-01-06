@@ -1,19 +1,10 @@
 # -*- coding: utf-8 -*-
-import logging
-import sys
-import traceback
-
 import numpy as np
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.realtime.rttrace import RtTrace
-from obspy.clients.seedlink.seedlinkexception import SeedLinkException
 from obspy.clients.seedlink.slclient import SLClient
 from obspy.clients.seedlink.slpacket import SLPacket
-
-
-# default logger
-logger = logging.getLogger('obspy.clients.seedlink')
 
 
 class MySLClient(SLClient):
@@ -114,36 +105,27 @@ def main():
           "them to an RTTrace object.")
 
     # create SeedLink client
-    try:
-        sl_client = MySLClient(rt_trace=rttrace)
-        #
-        sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
-        sl_client.multiselect = ("GE_STU:BHZ")
-        #
-        # slClient.slconn.set_sl_address("discovery.rm.ingv.it:39962")
-        # slClient.multiselect = ("IV_MGAB:BHZ")
-        #
-        # slClient.slconn.set_sl_address("rtserve.iris.washington.edu:18000")
-        # slClient.multiselect = ("AT_TTA:BHZ")
-        #
-        # set a time window from 2 min in the past to 5 sec in the future
-        dt = UTCDateTime()
-        sl_client.begin_time = (dt - 120.0).format_seedlink()
-        sl_client.end_time = (dt + 5.0).format_seedlink()
-        print("SeedLink date-time range:", sl_client.begin_time, " -> ",
-              end=' ')
-        print(sl_client.end_time)
-        sl_client.verbose = 3
-        sl_client.initialize()
-        sl_client.run()
-    except SeedLinkException as sle:
-        logger.critical(sle)
-        traceback.print_exc()
-        raise sle
-    except Exception as e:
-        sys.stderr.write("Error:" + str(e))
-        traceback.print_exc()
-        raise e
+    sl_client = MySLClient(rt_trace=rttrace)
+    #
+    sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
+    sl_client.multiselect = ("GE_STU:BHZ")
+    #
+    # slClient.slconn.set_sl_address("discovery.rm.ingv.it:39962")
+    # slClient.multiselect = ("IV_MGAB:BHZ")
+    #
+    # slClient.slconn.set_sl_address("rtserve.iris.washington.edu:18000")
+    # slClient.multiselect = ("AT_TTA:BHZ")
+    #
+    # set a time window from 2 min in the past to 5 sec in the future
+    dt = UTCDateTime()
+    sl_client.begin_time = (dt - 120.0).format_seedlink()
+    sl_client.end_time = (dt + 5.0).format_seedlink()
+    print("SeedLink date-time range:", sl_client.begin_time, " -> ",
+          end=' ')
+    print(sl_client.end_time)
+    sl_client.verbose = 3
+    sl_client.initialize()
+    sl_client.run()
 
 
 if __name__ == '__main__':
