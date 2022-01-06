@@ -113,7 +113,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ${{ matrix.prefix }}
-          key: ${{ matrix.label }}-conda-py${{ matrix.python-version }}-${{ hashFiles('.github/test_conda_env-${{ matrix.python-version }}.yml) }}-${{ steps.date.outputs.date }}-${{ env.CACHE_NUMBER }}
+          key: ${{ matrix.label }}-conda-py${{ matrix.python-version }}-${{ hashFiles('.github/test_conda_env-${{ matrix.python-version }}.yml') }}-${{ steps.date.outputs.date }}-${{ env.CACHE_NUMBER }}
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
           CACHE_NUMBER: 0
