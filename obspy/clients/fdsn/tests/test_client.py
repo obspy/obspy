@@ -73,12 +73,12 @@ def failmsg(got, expected, ignore_lines=[]):
     excluded from the comparison.
     """
     if isinstance(got, str) and isinstance(expected, str):
-        got = [l for l in got.splitlines(True)
-               if all([x not in l for x in ignore_lines])]
-        expected = [l for l in expected.splitlines(True)
-                    if all([x not in l for x in ignore_lines])]
+        got = [line for line in got.splitlines(True)
+               if all([x not in line for x in ignore_lines])]
+        expected = [line for line in expected.splitlines(True)
+                    if all([x not in line for x in ignore_lines])]
         diff = Differ().compare(got, expected)
-        diff = "".join([l for l in diff if l[0] in "-+?"])
+        diff = "".join([line for line in diff if line[0] in "-+?"])
         if diff:
             return "\nDiff:\n%s" % diff
         else:
@@ -96,7 +96,7 @@ def normalize_version_number(string):
     """
     match = r'v[0-9]+\.[0-9]+\.[0-9]+'
     repl = re.sub(match, "vX.X.X", string).replace(",", "")
-    return [l.strip() for l in repl.splitlines()]
+    return [line.strip() for line in repl.splitlines()]
 
 
 class ClientTestCase(unittest.TestCase):

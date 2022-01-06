@@ -106,7 +106,7 @@ def rotate_zne_lqt(z, n, e, ba, inc):
     return l, q, t
 
 
-def rotate_lqt_zne(l, q, t, ba, inc):
+def rotate_lqt_zne(l, q, t, ba, inc):  # NOQA
     """
     Rotates all components of a seismogram.
 

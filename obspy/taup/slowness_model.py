@@ -105,7 +105,7 @@ class SlownessModel(object):
             desc += str(fl.top_depth) + "," + str(fl.bot_depth) + " "
         desc += "\n"
         desc += "\n**** P Layers ****************\n"
-        for l in self.p_layers:
+        for l in self.p_layers:  # NOQA
             desc += str(l) + "\n"
         return desc
 

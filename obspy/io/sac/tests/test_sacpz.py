@@ -40,8 +40,9 @@ class SACPZTestCase(unittest.TestCase):
         with open(self.file1) as fh:
             expected = fh.read()
         # remove CREATED line that changes
-        got = [l for l in got.split("\n") if "CREATED" not in l]
-        expected = [l for l in expected.split("\n") if "CREATED" not in l]
+        got = [line for line in got.split("\n") if "CREATED" not in line]
+        expected = [line for line in expected.split("\n")
+                    if "CREATED" not in line]
         self.assertEqual(got, expected)
 
     def test_write_sacpz_multiple_channels(self):
@@ -56,8 +57,9 @@ class SACPZTestCase(unittest.TestCase):
         with open(self.file2) as fh:
             expected = fh.read()
         # remove CREATED line that changes
-        got = [l for l in got.split("\n") if "CREATED" not in l]
-        expected = [l for l in expected.split("\n") if "CREATED" not in l]
+        got = [line for line in got.split("\n") if "CREATED" not in line]
+        expected = [line for line in expected.split("\n")
+                    if "CREATED" not in line]
         self.assertEqual(got, expected)
 
     def test_write_sacpz_soh(self):

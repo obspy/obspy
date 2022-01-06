@@ -198,7 +198,7 @@ class LibGSE2TestCase(unittest.TestCase):
                                 'loc_RJOB20050831023349_first100_dos.z')
         fout = io.BytesIO()
         with open(filename, 'rb') as fin:
-            lines = (l for l in fin if not l.startswith(b'DAT2'))
+            lines = (line for line in fin if not line.startswith(b'DAT2'))
             fout.write(b"".join(lines))
         fout.seek(0)
         with SuppressOutput():

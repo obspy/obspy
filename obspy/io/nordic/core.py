@@ -2111,7 +2111,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             # Coda, backzimuth (add extra line), amplitude, or other phase pick
             add_amp_line = False
             is_amp_pick = False
-            add_BAZ_line = False
+            add_baz_line = False
             par1 = '       '
             par2 = '      '
             residual = '     '
@@ -2129,7 +2129,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 impulsivity = ''
             # Back Azimuth
             elif azimuth.strip() != '':  # back-azimuth
-                add_BAZ_line = True
+                add_baz_line = True
                 if len(phase_hint) <= 4:  # max total phase name length is 8
                     baz_phase_hint = 'BAZ-' + phase_hint
                 else:
@@ -2226,7 +2226,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     finalweight=amp_finalweight,
                     distance=distance.rjust(5)[0:5],
                     caz=_str_conv(caz).rjust(3)[0:3]))
-            if add_BAZ_line:
+            if add_baz_line:
                 pick_strings.append(pick_string_formatter.format(
                     station=pick.waveform_id.station_code,
                     channel=channel_code, network=network_code,
