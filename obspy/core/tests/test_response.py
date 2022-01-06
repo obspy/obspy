@@ -145,6 +145,7 @@ class ResponseTestCase(unittest.TestCase):
             print("passed:", xml_filename)
 
     def test_get_response_per_stage(self):
+        from obspy.core.inventory import FIRResponseStage
         filenames = ["IRIS_single_channel_with_response", "XM.05", "IU_ANMO_00_BHZ", "AU.MEEK"]
         units = ["DISP", "VEL", "ACC"]
 
@@ -154,9 +155,16 @@ class ResponseTestCase(unittest.TestCase):
             inv = read_inventory(xml_filename)
             resp = inv[0][0][0].response
             freqs = np.logspace(-2, 2, 1000)
-            print(xml_filename, '\n', resp.response_stages)
+            print(xml_filename)
             for unit in units:
-                for x in range(1, len(resp.response_stages)):
+                for x in range(1, len(resp.response_stages)+1):
+                    print(type(resp.response_stages[x - 1]))
+                    """
+                    if not isinstance(resp.response_stages[x-1], FIRResponseStage):
+                        print("skipping...")
+                        continue
+                    """
+
                     xml_resp = resp.get_evalresp_response_for_frequencies(
                         frequencies=freqs, start_stage=x, end_stage=x, output=unit)
                     new_resp = resp.get_response(
@@ -187,39 +195,39 @@ class ResponseTestCase(unittest.TestCase):
 
         for unit in units:
             # Full response.
-            xml_resp = resp.get_evalresp_response_for_frequencies(
+            evrs_resp = resp.get_evalresp_response_for_frequencies(
                 frequencies=freqs, output=unit)
             new_resp = resp.get_response(
                 frequencies=freqs, output=unit)
 
-            np.testing.assert_allclose(np.abs(xml_resp),
+            np.testing.assert_allclose(np.abs(evrs_resp),
                                        np.abs(new_resp), rtol=1E-5)
             # Phase starts to differ slightly before Nyquist and quite a bit
             # after. Evalresp appears to have some Gibb's artifacts and
             # scipy's solution does look better.
             np.testing.assert_allclose(
-                np.unwrap(np.angle(xml_resp))[:800],
+                np.unwrap(np.angle(evrs_resp))[:800],
                 np.unwrap(np.angle(new_resp))[:800],
                 rtol=1E-2, atol=2E-2)
 
             # import matplotlib.pyplot as plt
             # plt.subplot(411)
-            # plt.semilogx(freqs, np.abs(xml_resp), label="evalresp")
+            # plt.semilogx(freqs, np.abs(evrs_resp), label="evalresp")
             # plt.semilogx(freqs, np.abs(new_resp), label="scipy")
             # plt.legend(loc=3)
             # plt.subplot(412)
-            # plt.semilogx(freqs, np.abs(new_resp) - np.abs(xml_resp))
+            # plt.semilogx(freqs, np.abs(new_resp) - np.abs(evrs_resp))
             # plt.subplot(413)
             #
             # new_phase = np.angle(new_resp)
-            # xml_phase = np.angle(xml_resp)
+            # evrs_phase = np.angle(evrs_resp)
             #
-            # plt.semilogx(freqs, xml_phase, label="evalresp")
+            # plt.semilogx(freqs, evrs_phase, label="evalresp")
             # plt.semilogx(freqs, new_phase, label="scipy")
             # plt.legend(loc=3)
             # plt.xlim(1E-2, 20.0)
             # plt.subplot(414)
-            # plt.semilogx(freqs,xml_phase - new_phase)
+            # plt.semilogx(freqs, evrs_phase - new_phase)
             # plt.show()
 
     def test_evalresp_with_output_from_seed(self):
