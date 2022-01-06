@@ -2786,7 +2786,14 @@ class TraceTestCase(unittest.TestCase):
         Tests that resampling of short traces leaves at least one sample
         """
         tr = Trace(data=np.ones(2), header={'sampling_rate': 100})
-        tr.resample(30)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", UserWarning)
+            tr.resample(30)
+
+        self.assertEqual(len(w), 1)
+        self.assertEqual(w[0].category, UserWarning)
+
         self.assertEqual(tr.stats.sampling_rate, 30)
         self.assertEqual(tr.data.shape[0], 1)
 
