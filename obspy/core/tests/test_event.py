@@ -6,8 +6,8 @@ import unittest
 import warnings
 from pathlib import Path
 
-from matplotlib import rcParams
 import numpy as np
+import pytest
 
 from obspy import UTCDateTime, read_events
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
@@ -18,7 +18,7 @@ from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, PROJ4_VERSION, MATPLOTLIB_VERSION)
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.misc import MatplotlibBackend
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import WarningsCapture
 from obspy.core.event.base import QuantityError
 
 
@@ -28,20 +28,10 @@ else:
     HAS_CARTOPY = False
 
 
-class EventTestCase(unittest.TestCase):
+class TestEvent:
     """
     Test suite for obspy.core.event.Event
     """
-    def setUp(self):
-        """
-        Setup code to run before each test. Temporary replaces the state on
-        the ResourceIdentifier class level to reset the ResourceID mechanisms
-        before each run.
-        """
-        # directory where the test files are located
-        path = os.path.join(os.path.dirname(__file__), 'data')
-        self.path = path
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
     def test_str(self):
         """
@@ -49,8 +39,9 @@ class EventTestCase(unittest.TestCase):
         """
         event = read_events()[1]
         s = event.short_str()
-        self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
-                         " | 4.3  ML | manual", s)
+        expected = ("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
+                    " | 4.3  ML | manual")
+        assert s == expected
 
     def test_str_empty_origin(self):
         """
@@ -59,8 +50,8 @@ class EventTestCase(unittest.TestCase):
         """
         event = Event(origins=[Origin()])
         out = event.short_str()
-        self.assertIsInstance(out, str)
-        self.assertEqual(out, 'None | None, None')
+        assert isinstance(out, str)
+        assert out == 'None | None, None'
 
     def test_eq(self):
         """
@@ -74,13 +65,13 @@ class EventTestCase(unittest.TestCase):
             ev1 = Event(resource_id='id1')
             ev2 = Event(resource_id='id1')
             ev3 = Event(resource_id='id2')
-        self.assertEqual(ev1, ev2)
-        self.assertEqual(ev2, ev1)
-        self.assertFalse(ev1 == ev3)
-        self.assertFalse(ev3 == ev1)
+        assert ev1 == ev2
+        assert ev2 == ev1
+        assert ev1 != ev3
+        assert ev3 != ev1
         # comparing with other objects fails
-        self.assertFalse(ev1 == 1)
-        self.assertFalse(ev2 == "id1")
+        assert ev1 != 1
+        assert ev2 != "id1"
 
     def test_clear_method_resets_objects(self):
         """
@@ -91,34 +82,33 @@ class EventTestCase(unittest.TestCase):
         e = Event(force_resource_id=False)
         e.comments.append(Comment(text="test"))
         e.event_type = "explosion"
-        self.assertEqual(len(e.comments), 1)
-        self.assertEqual(e.event_type, "explosion")
+        assert len(e.comments) == 1
+        assert e.event_type == "explosion"
         e.clear()
-        self.assertEqual(e, Event(force_resource_id=False))
-        self.assertEqual(len(e.comments), 0)
-        self.assertEqual(e.event_type, None)
+        assert e == Event(force_resource_id=False)
+        assert len(e.comments) == 0
+        assert e.event_type is None
         # Test with pick object. Does not really fit in the event test case but
         # it tests the same thing...
         p = Pick()
         p.comments.append(Comment(text="test"))
         p.phase_hint = "p"
-        self.assertEqual(len(p.comments), 1)
-        self.assertEqual(p.phase_hint, "p")
+        assert len(p.comments) == 1
+        assert p.phase_hint == "p"
         # Add some more random attributes. These should disappear upon
         # cleaning.
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with WarningsCapture() as w:
             p.test_1 = "a"
             p.test_2 = "b"
             # two warnings should have been issued by setting non-default keys
-            self.assertEqual(len(w), 2)
-        self.assertEqual(p.test_1, "a")
-        self.assertEqual(p.test_2, "b")
+            assert len(w) == 2
+        assert p.test_1 == "a"
+        assert p.test_2 == "b"
         p.clear()
-        self.assertEqual(len(p.comments), 0)
-        self.assertEqual(p.phase_hint, None)
-        self.assertFalse(hasattr(p, "test_1"))
-        self.assertFalse(hasattr(p, "test_2"))
+        assert len(p.comments) == 0
+        assert p.phase_hint is None
+        assert not hasattr(p, "test_1")
+        assert not hasattr(p, "test_2")
 
     @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     @unittest.skipIf(
@@ -126,15 +116,14 @@ class EventTestCase(unittest.TestCase):
         'matplotlib 3.0.1 is not compatible with basemap')
     @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
                      'unsupported proj4 library')
-    def test_plot_farfield_without_quiver_with_maps(self):
+    def test_plot_farfield_without_quiver_with_maps(self, image_path):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
         and some map plots.
         """
         ev = read_events("/path/to/CMTSOLUTION", format="CMTSOLUTION")[0]
-        with ImageComparison(self.image_dir, 'event.png') as ic:
-            ev.plot(kind=[['global'], ['ortho', 'beachball'],
-                          ['p_sphere', 's_sphere']], outfile=ic.name)
+        ev.plot(kind=[['global'], ['ortho', 'beachball'],
+                      ['p_sphere', 's_sphere']], outfile=image_path)
 
     def test_farfield_2xn_input(self):
         """
@@ -515,77 +504,54 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(cat, read_events(self.iris_xml))
 
 
-@unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
-@unittest.skipIf(
+@pytest.mark.skipif(not BASEMAP_VERSION, reason='basemap not installed')
+@pytest.mark.skipif(
     BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-    'matplotlib 3.0.1 is not compatible with basemap')
-class CatalogBasemapTestCase(unittest.TestCase):
+    reason='matplotlib 3.0.1 is not compatible with basemap')
+class TestBasemap:
     """
     Test suite for obspy.core.event.Catalog.plot with Basemap
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
-    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                     'unsupported proj4 library')
-    def test_catalog_plot_global(self):
+    @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                        reason='unsupported proj4 library')
+    def test_catalog_plot_global(self, image_path):
         """
         Tests the catalog preview plot, default parameters, using Basemap.
         """
         cat = read_events()
-        reltol = 1
-        if BASEMAP_VERSION < [1, 0, 7]:
-            reltol = 3
-        with ImageComparison(self.image_dir, 'catalog-basemap1.png',
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            cat.plot(method='basemap', outfile=ic.name)
+        cat.plot(method='basemap', outfile=image_path)
 
-    def test_catalog_plot_ortho(self):
+    def test_catalog_plot_ortho(self, image_path):
         """
         Tests the catalog preview plot, ortho projection, some non-default
         parameters, using Basemap.
         """
         cat = read_events()
-        with ImageComparison(self.image_dir, 'catalog-basemap2.png',
-                             reltol=1.3) as ic:
-            rcParams['savefig.dpi'] = 72
-            cat.plot(method='basemap', outfile=ic.name, projection='ortho',
-                     resolution='c', water_fill_color='#98b7e2', label=None,
-                     color='date')
+        cat.plot(method='basemap', outfile=image_path, projection='ortho',
+                 resolution='c', water_fill_color='#98b7e2', label=None,
+                 color='date')
 
-    def test_catalog_plot_ortho_longitude_wrap(self):
+    def test_catalog_plot_ortho_longitude_wrap(self, image_path):
         """
         Tests the catalog preview plot, ortho projection, some non-default
         parameters, using Basemap, with longitudes that need the mean to be
         computed in a circular fashion.
         """
         cat = read_events('/path/to/events_longitude_wrap.zmap', format='ZMAP')
-        with ImageComparison(self.image_dir, 'catalog-basemap_long-wrap.png',
-                             reltol=1.1) as ic:
-            rcParams['savefig.dpi'] = 40
-            cat.plot(method='basemap', outfile=ic.name, projection='ortho',
-                     resolution='c', label=None, title='', colorbar=False,
-                     water_fill_color='b')
+        cat.plot(method='basemap', outfile=image_path, projection='ortho',
+                 resolution='c', label=None, title='', colorbar=False,
+                 water_fill_color='b')
 
-    def test_catalog_plot_local(self):
+    def test_catalog_plot_local(self, image_path):
         """
         Tests the catalog preview plot, local projection, some more non-default
         parameters, using Basemap.
         """
         cat = read_events()
-        reltol = 1.5
-        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
-        # tolerance must be much higher.
-        if BASEMAP_VERSION < [1, 0, 4]:
-            reltol = 100
-        with ImageComparison(self.image_dir, "catalog-basemap3.png",
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            cat.plot(method='basemap', outfile=ic.name, projection='local',
-                     resolution='l', continent_fill_color='0.3',
-                     color='date', colormap='gist_heat')
+        cat.plot(method='basemap', outfile=image_path, projection='local',
+                 resolution='l', continent_fill_color='0.3',
+                 color='date', colormap='gist_heat')
 
     def test_plot_catalog_before_1900(self):
         """
@@ -603,61 +569,49 @@ class CatalogBasemapTestCase(unittest.TestCase):
             cat.plot(outfile=io.BytesIO(), method='basemap')
 
 
-@unittest.skipIf(not HAS_CARTOPY, 'Cartopy not installed or too old')
-class CatalogCartopyTestCase(unittest.TestCase):
+@pytest.mark.skipif(not HAS_CARTOPY,
+                    reason='Cartopy not installed or too old')
+class CatalogCartopyTestCase:
     """
     Test suite for obspy.core.event.Catalog.plot using Cartopy
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-
-    def test_catalog_plot_global(self):
+    def test_catalog_plot_global(self, image_path):
         """
         Tests the catalog preview plot, default parameters, using Cartopy.
         """
         cat = read_events()
-        with ImageComparison(self.image_dir, 'catalog-cartopy1.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            cat.plot(method='cartopy', outfile=ic.name)
+        cat.plot(method='cartopy', outfile=image_path)
 
-    def test_catalog_plot_ortho(self):
+    def test_catalog_plot_ortho(self, image_path):
         """
         Tests the catalog preview plot, ortho projection, some non-default
         parameters, using Cartopy.
         """
         cat = read_events()
-        with ImageComparison(self.image_dir, 'catalog-cartopy2.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            cat.plot(method='cartopy', outfile=ic.name, projection='ortho',
-                     resolution='c', water_fill_color='#98b7e2', label=None,
-                     color='date')
+        cat.plot(method='cartopy', outfile=image_path, projection='ortho',
+                 resolution='c', water_fill_color='#98b7e2', label=None,
+                 color='date')
 
-    def test_catalog_plot_ortho_longitude_wrap(self):
+    def test_catalog_plot_ortho_longitude_wrap(self, image_path):
         """
         Tests the catalog preview plot, ortho projection, some non-default
         parameters, using Cartopy, with longitudes that need the mean to be
         computed in a circular fashion.
         """
         cat = read_events('/path/to/events_longitude_wrap.zmap', format='ZMAP')
-        with ImageComparison(self.image_dir,
-                             'catalog-cartopy_long-wrap.png') as ic:
-            rcParams['savefig.dpi'] = 40
-            cat.plot(method='cartopy', outfile=ic.name, projection='ortho',
-                     resolution='c', label=None, title='', colorbar=False,
-                     water_fill_color='b')
+        cat.plot(method='cartopy', outfile=image_path, projection='ortho',
+                 resolution='c', label=None, title='', colorbar=False,
+                 water_fill_color='b')
 
-    def test_catalog_plot_local(self):
+    def test_catalog_plot_local(self, image_path):
         """
         Tests the catalog preview plot, local projection, some more non-default
         parameters, using Cartopy.
         """
         cat = read_events()
-        with ImageComparison(self.image_dir, 'catalog-cartopy3.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            cat.plot(method='cartopy', outfile=ic.name, projection='local',
-                     resolution='50m', continent_fill_color='0.3',
-                     color='date', colormap='gist_heat')
+        cat.plot(method='cartopy', outfile=image_path, projection='local',
+                 resolution='50m', continent_fill_color='0.3',
+                 color='date', colormap='gist_heat')
 
 
 class WaveformStreamIDTestCase(unittest.TestCase):
@@ -786,19 +740,3 @@ class BaseTestCase(unittest.TestCase):
             e.exception.args[0],
             "On Origin object: Value '-inf' for 'latitude' is "
             "not a finite floating point value.")
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(CatalogBasemapTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(CatalogCartopyTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(BaseTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

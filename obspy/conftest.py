@@ -10,47 +10,40 @@ import pytest
 
 import obspy
 from obspy.core.util import NETWORK_MODULES
-from obspy.core.util.testing import ImageComparison
 
 
 # --- ObsPy fixtures
+
+@pytest.fixture(scope='class')
+def ignore_numpy_errors():
+    """ Ignore numpy errors for marked functions/classes. """
+    nperr = np.geterr()
+    np.seterr(all='ignore')
+    yield
+    np.seterr(**nperr)
 
 
 @pytest.fixture(scope='session', autouse=True)
 def save_image_directory(request, tmp_path_factory):
     """Create a temporary directory for storing all images."""
-    if request.config.getoption('--keep-images'):
-        image_save_folder = tmp_path_factory.mktemp('images')
-    else:
-        image_save_folder = None
-    return image_save_folder
+    tmp_image_path = tmp_path_factory.mktemp('images')
+    yield Path(tmp_image_path)
+    # if keep images is selected then we move images to directory
+    # and add info about environment for upload.
+    # breakpoint()
 
 
 @pytest.fixture(scope='function')
-def image_comparer(request, save_image_directory):
+def image_path(request, save_image_directory):
     """
     Return an image comparison object initiated for specific test.
     """
-    def _get_image_name(node_name):
-        """Get the expected name of the image."""
-        expected_image = node_name.replace('test_', '')
-        if expected_image.endswith('_plot'):
-            expected_image = expected_image[:-5]
-        expected_image += '.png'
-        return expected_image
-
-    # get path to modules image folder
-    image_dir = Path(request.module.__file__).parent / 'images'
-    assert image_dir.is_dir(), f'no image directory found at {image_dir}'
-    # get name of node
-    expected_image = _get_image_name(request.node.name)
-    expected_image_path = image_dir / expected_image
-    assert expected_image.exists(), f"no such image {expected_image_path}"
-    image_comp = ImageComparison(str(image_dir), expected_image)
-    yield image_comp
-    # save images if desired
-    if save_image_directory:
-        pass
+    parent_name = getattr(request.node.parent, 'name', '')
+    node_name = request.node.name
+    if parent_name:  # add parent class to name
+        node_name = parent_name + '__' + node_name
+    new_path = save_image_directory / (node_name + '.png')
+    return new_path
 
 
 # --- Pytest configuration
@@ -136,8 +129,18 @@ def pytest_configure(config):
 
     # add marker, having pytest.ini messed with configuration
     config.addinivalue_line(
-        "markers", "network: Test requires network resources (internet). "
+        "markers", "network: Test requires network resources (internet)."
     )
+    config.addinivalue_line(
+        "markers", "image: Test produces a matplotlib image."
+    )
+
+
+def pytest_itemcollected(item):
+    """ we just collected a test item. """
+    # automatically apply image mark if image_path is used
+    if 'image_path' in item.fixturenames:
+        item.add_marker('image')
 
 
 def pytest_html_report_title(report):

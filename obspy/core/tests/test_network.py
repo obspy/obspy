@@ -9,13 +9,11 @@ Test suite for the network class.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
-import os
 import warnings
 from unittest import mock
 
 import numpy as np
 import pytest
-from matplotlib import rcParams
 
 import obspy
 from obspy import UTCDateTime, read_inventory
@@ -23,28 +21,15 @@ from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import WarningsCapture
 from obspy.imaging.maps import HAS_BASEMAP
 
 
-@pytest.fixture(scope='class')
-def image_dir():
-    """Return the image directory."""
-    return os.path.join(os.path.dirname(__file__), 'images')
-
-
+@pytest.mark.usefixtures('ignore_numpy_errors')
 class TestNetwork:
     """
     Tests for the :class:`~obspy.core.inventory.network.Network` class.
     """
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_teardown(self):
-        """Perform class setup/teardown."""
-        nperr = np.geterr()
-        np.seterr(all='ignore')
-        yield
-        np.seterr(**nperr)
-
     def test_get_response(self):
         response_n1_s1 = Response('RESPN1S1')
         response_n1_s2 = Response('RESPN1S2')
@@ -129,19 +114,15 @@ class TestNetwork:
         with pytest.raises(Exception):
             network.get_coordinates('BW.RJOB..XXX')
 
-    def test_response_plot(self, image_dir, image_comparer):
+    def test_response_plot(self, image_path):
         """
         Tests the response plot.
         """
         net = read_inventory()[0]
         t = UTCDateTime(2008, 7, 1)
-        breakpoint()
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("ignore")
-            with ImageComparison(image_dir, "network_response.png") as ic:
-                rcParams['savefig.dpi'] = 72
-                net.plot_response(0.002, output="DISP", channel="B*E",
-                                  time=t, outfile=ic.name)
+        with WarningsCapture():
+            net.plot_response(0.002, output="DISP", channel="B*E",
+                              time=t, outfile=image_path)
 
     def test_response_plot_epoch_times_in_label(self):
         """
@@ -321,6 +302,7 @@ class TestNetwork:
         assert inv == inv2
 
 
+@pytest.mark.usefixtures('ignore_numpy_errors')
 @pytest.mark.skipif(
     not HAS_BASEMAP, reason='no or invalid basemap installation'
 )
@@ -342,55 +324,35 @@ class TestNetworkBasemap:
 
     @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
                         reason='unsupported proj4 library')
-    def test_location_plot_global(self, image_dir):
+    def test_location_plot_global(self, image_path):
         """
         Tests the network location preview plot, default parameters, using
         Basemap.
         """
         net = read_inventory()[0]
-        reltol = 1.3
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        if BASEMAP_VERSION < [1, 0, 7]:
-            reltol = 3.0
-        with ImageComparison(image_dir, 'network_location-basemap1.png',
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(method='basemap', outfile=ic.name)
+        net.plot(method='basemap', outfile=image_path)
 
-    def test_location_plot_ortho(self, image_dir):
+    def test_location_plot_ortho(self, image_path):
         """
         Tests the network location preview plot, ortho projection, some
         non-default parameters, using Basemap.
         """
         net = read_inventory()[0]
-        with ImageComparison(image_dir,
-                             'network_location-basemap2.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(method='basemap', projection='ortho', resolution='c',
-                     continent_fill_color='0.5', marker='d',
-                     color='yellow', label=False, outfile=ic.name)
+        net.plot(method='basemap', projection='ortho', resolution='c',
+                 continent_fill_color='0.5', marker='d',
+                 color='yellow', label=False, outfile=image_path)
 
-    def test_location_plot_local(self, image_dir):
+    def test_location_plot_local(self, image_path):
         """
         Tests the network location preview plot, local projection, some more
         non-default parameters, using Basemap.
         """
         net = read_inventory()[0]
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        reltol = 2.0
-        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
-        # tolerance must be much higher.
-        if BASEMAP_VERSION < [1, 0, 4]:
-            reltol = 100.0
-        with ImageComparison(image_dir, 'network_location-basemap3.png',
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(method='basemap', projection='local', resolution='l',
-                     size=13**2, outfile=ic.name)
+        net.plot(method='basemap', projection='local', resolution='l',
+                 size=13**2, outfile=image_path)
 
 
+@pytest.mark.usefixtures('ignore_numpy_errors')
 @pytest.mark.skipif(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
                     reason='cartopy not installed')
 class TestNetworkCartopy:
@@ -405,38 +367,29 @@ class TestNetworkCartopy:
         yield
         np.seterr(**nperr)
 
-    def test_location_plot_global(self, image_dir):
+    def test_location_plot_global(self, image_path):
         """
         Tests the network location preview plot, default parameters, using
         Cartopy.
         """
         net = read_inventory()[0]
-        with ImageComparison(image_dir,
-                             'network_location-cartopy1.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(method='cartopy', outfile=ic.name)
+        net.plot(method='cartopy', outfile=image_path)
 
-    def test_location_plot_ortho(self, image_dir):
+    def test_location_plot_ortho(self, image_path):
         """
         Tests the network location preview plot, ortho projection, some
         non-default parameters, using Cartopy.
         """
         net = read_inventory()[0]
-        with ImageComparison(image_dir,
-                             'network_location-cartopy2.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(method='cartopy', projection='ortho', resolution='c',
-                     continent_fill_color='0.5', marker='d',
-                     color='yellow', label=False, outfile=ic.name)
+        net.plot(method='cartopy', projection='ortho', resolution='c',
+                 continent_fill_color='0.5', marker='d',
+                 color='yellow', label=False, outfile=image_path)
 
-    def test_location_plot_local(self, image_dir):
+    def test_location_plot_local(self, image_path):
         """
         Tests the network location preview plot, local projection, some more
         non-default parameters, using Cartopy.
         """
         net = read_inventory()[0]
-        with ImageComparison(image_dir,
-                             'network_location-cartopy3.png') as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(method='cartopy', projection='local', resolution='50m',
-                     size=13**2, outfile=ic.name)
+        net.plot(method='cartopy', projection='local', resolution='50m',
+                 size=13**2, outfile=image_path)
