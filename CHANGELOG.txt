@@ -8,6 +8,7 @@ Changes:
      to solve test issues (#2900)
    * added python 3.9 tests for all platforms, required to disable image
      comparisons for 3.9 (#2925)
+   * rewrote CI tests to make use of cache (#2936)
    * removed individual logging configurations in Obspy, logging can be
      configured by the user, see documentation of Pythons logging module,
      only the FDSN mass downloader automatically configures logging as before,
