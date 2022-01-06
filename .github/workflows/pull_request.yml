@@ -96,7 +96,7 @@ jobs:
             prefix: C:\Miniconda3\envs\test
 
     steps:
-      - name: Cancel Previous Runs
+      - name: Cancel Previous Runs in the same PR
         uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ secrets.GITHUB_TOKEN }}
