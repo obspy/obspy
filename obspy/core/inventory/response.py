@@ -31,7 +31,7 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          Enum)
 
 from .util import Angle, Frequency
-from obspy.signal.invsim import digital_filter_to_freq_resp
+
 
 class ResponseStage(ComparingObject):
     """
@@ -129,15 +129,15 @@ class ResponseStage(ComparingObject):
         self.description = description
         self.decimation_input_sample_rate = \
             Frequency(decimation_input_sample_rate) \
-                if decimation_input_sample_rate is not None else None
+            if decimation_input_sample_rate is not None else None
         self.decimation_factor = decimation_factor
         self.decimation_offset = decimation_offset
         self.decimation_delay = \
             FloatWithUncertaintiesAndUnit(decimation_delay) \
-                if decimation_delay is not None else None
+            if decimation_delay is not None else None
         self.decimation_correction = \
             FloatWithUncertaintiesAndUnit(decimation_correction) \
-                if decimation_correction is not None else None
+            if decimation_correction is not None else None
 
     def __str__(self):
         ret = (
@@ -1153,11 +1153,6 @@ class Response(ComparingObject):
 
         # Convert to 0-based indexing.
         # (End stage stays the same because it's the exclusive bound)
-        apply_sens = False
-        if start_stage is None and end_stage is None:
-            apply_sens = True
-        # Convert to 0-based indexing.
-        # (End stage stays the same because it's the exclusive bound)
         if start_stage is None:
             start_stage = 0
         else:
@@ -1348,8 +1343,8 @@ class Response(ComparingObject):
                 "decimation_factor": factor}
 
         # Nothing might be set - just return in that case.
-        if set(itertools.chain.from_iterable(v.values()
-                                             for v in sampling_rates.values())) == {None}:
+        if set(itertools.chain.from_iterable(
+                v.values() for v in sampling_rates.values())) == {None}:
             return sampling_rates
 
         # Find the first set input sampling rate. The output sampling rate
