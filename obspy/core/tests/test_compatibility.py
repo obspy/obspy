@@ -27,8 +27,8 @@ class CompatibilityTestCase(unittest.TestCase):
                 out = round(number, ndigits)
             else:
                 out = round(number)
-            self.assertEqual(out, expected)
-            self.assertIsInstance(out, expected_type)
+            assert out == expected
+            assert isinstance(out, expected_type)
 
 
 def suite():

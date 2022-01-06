@@ -152,22 +152,22 @@ class OriginTestCase(unittest.TestCase):
     def test_creation_info(self):
         # 1 - empty Origin class will set creation_info to None
         orig = Origin()
-        self.assertEqual(orig.creation_info, None)
+        assert orig.creation_info is None
         # 2 - preset via dict or existing CreationInfo object
         orig = Origin(creation_info={})
-        self.assertTrue(isinstance(orig.creation_info, CreationInfo))
+        assert isinstance(orig.creation_info, CreationInfo)
         orig = Origin(creation_info=CreationInfo(author='test2'))
-        self.assertTrue(isinstance(orig.creation_info, CreationInfo))
-        self.assertEqual(orig.creation_info.author, 'test2')
+        assert isinstance(orig.creation_info, CreationInfo)
+        assert orig.creation_info.author == 'test2'
         # 3 - check set values
         orig = Origin(creation_info={'author': 'test'})
-        self.assertEqual(orig.creation_info, orig['creation_info'])
-        self.assertEqual(orig.creation_info.author, 'test')
-        self.assertEqual(orig['creation_info']['author'], 'test')
+        assert orig.creation_info == orig['creation_info']
+        assert orig.creation_info.author == 'test'
+        assert orig['creation_info']['author'] == 'test'
         orig.creation_info.agency_id = "muh"
-        self.assertEqual(orig.creation_info, orig['creation_info'])
-        self.assertEqual(orig.creation_info.agency_id, 'muh')
-        self.assertEqual(orig['creation_info']['agency_id'], 'muh')
+        assert orig.creation_info == orig['creation_info']
+        assert orig.creation_info.agency_id == 'muh'
+        assert orig['creation_info']['agency_id'] == 'muh'
 
     def test_multiple_origins(self):
         """
@@ -180,20 +180,19 @@ class OriginTestCase(unittest.TestCase):
         origin.latitude_errors.confidence_level = 95
         origin.longitude = 42
         origin.depth_type = 'from location'
-        self.assertEqual(
-            origin.resource_id,
-            ResourceIdentifier(id='smi:ch.ethz.sed/origin/37465'))
-        self.assertEqual(origin.latitude, 12)
-        self.assertEqual(origin.latitude_errors.confidence_level, 95)
-        self.assertEqual(origin.latitude_errors.uncertainty, None)
-        self.assertEqual(origin.longitude, 42)
+        assert origin.resource_id == \
+            ResourceIdentifier(id='smi:ch.ethz.sed/origin/37465')
+        assert origin.latitude == 12
+        assert origin.latitude_errors.confidence_level == 95
+        assert origin.latitude_errors.uncertainty is None
+        assert origin.longitude == 42
         origin2 = Origin(force_resource_id=False)
         origin2.latitude = 13.4
-        self.assertEqual(origin2.depth_type, None)
-        self.assertEqual(origin2.resource_id, None)
-        self.assertEqual(origin2.latitude, 13.4)
-        self.assertEqual(origin2.latitude_errors.confidence_level, None)
-        self.assertEqual(origin2.longitude, None)
+        assert origin2.depth_type is None
+        assert origin2.resource_id is None
+        assert origin2.latitude == 13.4
+        assert origin2.latitude_errors.confidence_level is None
+        assert origin2.longitude is None
 
 
 class CatalogTestCase(unittest.TestCase):
@@ -222,7 +221,7 @@ class CatalogTestCase(unittest.TestCase):
         else:
             self.fail('unable to get invalid file path')
 
-        exception_msg = "[Errno 2] No such file or directory: '{}'"
+        exception_msg = "No such file or directory"
 
         formats = _get_entry_points(
             'obspy.plugin.catalog', 'readFormat').keys()
@@ -230,32 +229,30 @@ class CatalogTestCase(unittest.TestCase):
         # plugins and also for filetype autodiscovery
         formats = [None] + list(formats)
         for format in formats:
-            with self.assertRaises(FileNotFoundError) as e:
+            with pytest.raises(FileNotFoundError, match=exception_msg):
                 read_events(doesnt_exist, format=format)
-            self.assertEqual(
-                str(e.exception), exception_msg.format(doesnt_exist))
 
     def test_creation_info(self):
         cat = Catalog()
         cat.creation_info = CreationInfo(author='test2')
-        self.assertTrue(isinstance(cat.creation_info, CreationInfo))
-        self.assertEqual(cat.creation_info.author, 'test2')
+        assert isinstance(cat.creation_info, CreationInfo)
+        assert cat.creation_info.author == 'test2'
 
     def test_read_events_without_parameters(self):
         """
         Calling read_events w/o any parameter will create an example catalog.
         """
         catalog = read_events()
-        self.assertEqual(len(catalog), 3)
+        assert len(catalog) == 3
 
     def test_str(self):
         """
         Testing the __str__ method of the Catalog object.
         """
         catalog = read_events()
-        self.assertTrue(catalog.__str__().startswith("3 Event(s) in Catalog:"))
-        self.assertTrue(catalog.__str__().endswith(
-            "37.736 | 3.0  ML | manual"))
+        assert catalog.__str__().startswith("3 Event(s) in Catalog:")
+        assert catalog.__str__().endswith(
+            "37.736 | 3.0  ML | manual")
 
     def test_read_events(self):
         """
@@ -263,15 +260,15 @@ class CatalogTestCase(unittest.TestCase):
         """
         # iris
         catalog = read_events(self.iris_xml)
-        self.assertEqual(len(catalog), 2)
-        self.assertEqual(catalog[0]._format, 'QUAKEML')
-        self.assertEqual(catalog[1]._format, 'QUAKEML')
+        assert len(catalog) == 2
+        assert catalog[0]._format == 'QUAKEML'
+        assert catalog[1]._format == 'QUAKEML'
         # neries
         catalog = read_events(self.neries_xml)
-        self.assertEqual(len(catalog), 3)
-        self.assertEqual(catalog[0]._format, 'QUAKEML')
-        self.assertEqual(catalog[1]._format, 'QUAKEML')
-        self.assertEqual(catalog[2]._format, 'QUAKEML')
+        assert len(catalog) == 3
+        assert catalog[0]._format == 'QUAKEML'
+        assert catalog[1]._format == 'QUAKEML'
+        assert catalog[2]._format == 'QUAKEML'
 
     def test_read_events_with_wildcard(self):
         """
@@ -282,7 +279,7 @@ class CatalogTestCase(unittest.TestCase):
         expected += read_events(self.neries_xml)
         # with wildcard
         got = read_events(os.path.join(self.path, "*_events.xml"))
-        self.assertEqual(expected, got)
+        assert expected == got
 
     def test_append(self):
         """
@@ -292,17 +289,20 @@ class CatalogTestCase(unittest.TestCase):
         catalog = Catalog()
         event1 = Event()
         event2 = Event()
-        self.assertEqual(len(catalog), 0)
+        assert len(catalog) == 0
         catalog.append(event1)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(catalog.events, [event1])
+        assert len(catalog) == 1
+        assert catalog.events == [event1]
         catalog.append(event2)
-        self.assertEqual(len(catalog), 2)
-        self.assertEqual(catalog.events, [event1, event2])
+        assert len(catalog) == 2
+        assert catalog.events == [event1, event2]
         # 2 - adding objects other as Event should fails
-        self.assertRaises(TypeError, catalog.append, str)
-        self.assertRaises(TypeError, catalog.append, Catalog)
-        self.assertRaises(TypeError, catalog.append, [event1])
+        with pytest.raises(TypeError):
+            catalog.append(str)
+        with pytest.raises(TypeError):
+            catalog.append(Catalog)
+        with pytest.raises(TypeError):
+            catalog.append([event1])
 
     def test_extend(self):
         """
@@ -312,22 +312,25 @@ class CatalogTestCase(unittest.TestCase):
         catalog = Catalog()
         event1 = Event()
         event2 = Event()
-        self.assertEqual(len(catalog), 0)
+        assert len(catalog) == 0
         catalog.extend([event1, event2])
-        self.assertEqual(len(catalog), 2)
-        self.assertEqual(catalog.events, [event1, event2])
+        assert len(catalog) == 2
+        assert catalog.events == [event1, event2]
         # 2 - extend it with other catalog
         event3 = Event()
         event4 = Event()
         catalog2 = Catalog([event3, event4])
-        self.assertEqual(len(catalog), 2)
+        assert len(catalog) == 2
         catalog.extend(catalog2)
-        self.assertEqual(len(catalog), 4)
-        self.assertEqual(catalog.events, [event1, event2, event3, event4])
+        assert len(catalog) == 4
+        assert catalog.events == [event1, event2, event3, event4]
         # adding objects other as Catalog or list should fails
-        self.assertRaises(TypeError, catalog.extend, str)
-        self.assertRaises(TypeError, catalog.extend, event1)
-        self.assertRaises(TypeError, catalog.extend, (event1, event2))
+        with pytest.raises(TypeError):
+            catalog.extend(str)
+        with pytest.raises(TypeError):
+            catalog.extend(event1)
+        with pytest.raises(TypeError):
+            catalog.extend((event1, event2))
 
     def test_iadd(self):
         """
@@ -339,20 +342,23 @@ class CatalogTestCase(unittest.TestCase):
         event3 = Event()
         catalog = Catalog([event1])
         catalog2 = Catalog([event2, event3])
-        self.assertEqual(len(catalog), 1)
+        assert len(catalog) == 1
         catalog += catalog2
-        self.assertEqual(len(catalog), 3)
-        self.assertEqual(catalog.events, [event1, event2, event3])
+        assert len(catalog) == 3
+        assert catalog.events == [event1, event2, event3]
         # 3 - extend it with another Event
         event4 = Event()
-        self.assertEqual(len(catalog), 3)
+        assert len(catalog) == 3
         catalog += event4
-        self.assertEqual(len(catalog), 4)
-        self.assertEqual(catalog.events, [event1, event2, event3, event4])
+        assert len(catalog) == 4
+        assert catalog.events == [event1, event2, event3, event4]
         # adding objects other as Catalog or Event should fails
-        self.assertRaises(TypeError, catalog.__iadd__, str)
-        self.assertRaises(TypeError, catalog.__iadd__, (event1, event2))
-        self.assertRaises(TypeError, catalog.__iadd__, [event1, event2])
+        with pytest.raises(TypeError):
+            catalog.__iadd__(str)
+        with pytest.raises(TypeError):
+            catalog.__iadd__((event1, event2))
+        with pytest.raises(TypeError):
+            catalog.__iadd__([event1, event2])
 
     def test_count_and_len(self):
         """
@@ -360,37 +366,39 @@ class CatalogTestCase(unittest.TestCase):
         """
         # empty catalog without events
         catalog = Catalog()
-        self.assertEqual(len(catalog), 0)
-        self.assertEqual(catalog.count(), 0)
+        assert len(catalog) == 0
+        assert catalog.count() == 0
         # catalog with events
         catalog = read_events()
-        self.assertEqual(len(catalog), 3)
-        self.assertEqual(catalog.count(), 3)
+        assert len(catalog) == 3
+        assert catalog.count() == 3
 
     def test_get_item(self):
         """
         Tests the __getitem__ method of the Catalog object.
         """
         catalog = read_events()
-        self.assertEqual(catalog[0], catalog.events[0])
-        self.assertEqual(catalog[-1], catalog.events[-1])
-        self.assertEqual(catalog[2], catalog.events[2])
+        assert catalog[0] == catalog.events[0]
+        assert catalog[-1] == catalog.events[-1]
+        assert catalog[2] == catalog.events[2]
         # out of index should fail
-        self.assertRaises(IndexError, catalog.__getitem__, 3)
-        self.assertRaises(IndexError, catalog.__getitem__, -99)
+        with pytest.raises(IndexError):
+            catalog.__getitem__(3)
+        with pytest.raises(IndexError):
+            catalog.__getitem__(-99)
 
     def test_slicing(self):
         """
         Tests the __getslice__ method of the Catalog object.
         """
         catalog = read_events()
-        self.assertEqual(catalog[0:], catalog[0:])
-        self.assertEqual(catalog[:2], catalog[:2])
-        self.assertEqual(catalog[:], catalog[:])
-        self.assertEqual(len(catalog), 3)
+        assert catalog[0:] == catalog[0:]
+        assert catalog[:2] == catalog[:2]
+        assert catalog[:] == catalog[:]
+        assert len(catalog) == 3
         new_catalog = catalog[1:3]
-        self.assertTrue(isinstance(new_catalog, Catalog))
-        self.assertEqual(len(new_catalog), 2)
+        assert isinstance(new_catalog, Catalog)
+        assert len(new_catalog) == 2
 
     def test_slicing_with_step(self):
         """
@@ -402,11 +410,11 @@ class CatalogTestCase(unittest.TestCase):
         ev4 = Event()
         ev5 = Event()
         catalog = Catalog([ev1, ev2, ev3, ev4, ev5])
-        self.assertEqual(catalog[0:6].events, [ev1, ev2, ev3, ev4, ev5])
-        self.assertEqual(catalog[0:6:1].events, [ev1, ev2, ev3, ev4, ev5])
-        self.assertEqual(catalog[0:6:2].events, [ev1, ev3, ev5])
-        self.assertEqual(catalog[1:6:2].events, [ev2, ev4])
-        self.assertEqual(catalog[1:6:6].events, [ev2])
+        assert catalog[0:6].events == [ev1, ev2, ev3, ev4, ev5]
+        assert catalog[0:6:1].events == [ev1, ev2, ev3, ev4, ev5]
+        assert catalog[0:6:2].events == [ev1, ev3, ev5]
+        assert catalog[1:6:2].events == [ev2, ev4]
+        assert catalog[1:6:6].events == [ev2]
 
     def test_copy(self):
         """
@@ -414,12 +422,12 @@ class CatalogTestCase(unittest.TestCase):
         """
         cat = read_events()
         cat2 = cat.copy()
-        self.assertEqual(cat, cat2)
-        self.assertEqual(cat2, cat)
-        self.assertFalse(cat is cat2)
-        self.assertFalse(cat2 is cat)
-        self.assertEqual(cat.events[0], cat2.events[0])
-        self.assertFalse(cat.events[0] is cat2.events[0])
+        assert cat == cat2
+        assert cat2 == cat
+        assert not (cat is cat2)
+        assert not (cat2 is cat)
+        assert cat.events[0] == cat2.events[0]
+        assert not (cat.events[0] is cat2.events[0])
 
     def test_filter(self):
         """
@@ -435,8 +443,8 @@ class CatalogTestCase(unittest.TestCase):
                 obj = getattr(obj, a)
             return obj
         cat = read_events()
-        self.assertTrue(all(event.magnitudes[0].mag < 4.
-                            for event in cat.filter('magnitude < 4.')))
+        assert all(event.magnitudes[0].mag < 4.
+                   for event in cat.filter('magnitude < 4.'))
         attrs = ('magnitude', 'latitude', 'longitude', 'depth', 'time',
                  'quality.standard_error', 'quality.azimuthal_gap',
                  'quality.used_station_count', 'quality.used_phase_count')
@@ -446,29 +454,26 @@ class CatalogTestCase(unittest.TestCase):
             attr_filter = attr.split('.')[-1]
             cat_smaller = cat.filter('%s < %s' % (attr_filter, value))
             cat_bigger = cat.filter('%s >= %s' % (attr_filter, value))
-            self.assertTrue(all(True if a is None else a < value
-                                for event in cat_smaller
-                                for a in [getattrs(event, attr)]))
-            self.assertTrue(all(False if a is None else a >= value
-                                for event in cat_bigger
-                                for a in [getattrs(event, attr)]))
-            self.assertTrue(all(event in cat
-                                for event in (cat_smaller + cat_bigger)))
+            assert all(True if a is None else a < value
+                       for event in cat_smaller
+                       for a in [getattrs(event, attr)])
+            assert all(False if a is None else a >= value
+                       for event in cat_bigger
+                       for a in [getattrs(event, attr)])
+            assert all(event in cat for event in (cat_smaller + cat_bigger))
             cat_smaller_inverse = cat.filter(
                 '%s < %s' % (attr_filter, value), inverse=True)
-            self.assertTrue(all(event in cat_bigger
-                                for event in cat_smaller_inverse))
+            assert all(event in cat_bigger for event in cat_smaller_inverse)
             cat_bigger_inverse = cat.filter(
                 '%s >= %s' % (attr_filter, value), inverse=True)
-            self.assertTrue(all(event in cat_smaller
-                                for event in cat_bigger_inverse))
+            assert all(event in cat_smaller for event in cat_bigger_inverse)
 
     def test_catalog_resource_id(self):
         """
         See #662
         """
         cat = read_events(self.neries_xml)
-        self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
+        assert str(cat.resource_id) == r"smi://eu.emsc/unid"
 
     def test_can_pickle(self):
         """
@@ -478,7 +483,7 @@ class CatalogTestCase(unittest.TestCase):
         cat = read_events()
         cat_bytes = pickle.dumps(cat)
         cat2 = pickle.loads(cat_bytes)
-        self.assertEqual(cat, cat2)
+        assert cat == cat2
 
     def test_issue_2173(self):
         """
@@ -493,7 +498,7 @@ class CatalogTestCase(unittest.TestCase):
         # read from disk
         event2 = read_events(bio)[0]
         # saved and loaded event should be equal
-        self.assertEqual(event1, event2)
+        assert event1 == event2
 
     def test_read_path(self):
         """
@@ -501,7 +506,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         path = Path(self.iris_xml)
         cat = read_events(path)
-        self.assertEqual(cat, read_events(self.iris_xml))
+        assert cat == read_events(self.iris_xml)
 
 
 @pytest.mark.skipif(not BASEMAP_VERSION, reason='basemap not installed')
@@ -624,24 +629,24 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         """
         # Default init.
         waveform_id = WaveformStreamID()
-        self.assertEqual(waveform_id.network_code, None)
-        self.assertEqual(waveform_id.station_code, None)
-        self.assertEqual(waveform_id.location_code, None)
-        self.assertEqual(waveform_id.channel_code, None)
+        assert waveform_id.network_code is None
+        assert waveform_id.station_code is None
+        assert waveform_id.location_code is None
+        assert waveform_id.channel_code is None
         # With seed string.
         waveform_id = WaveformStreamID(seed_string="BW.FUR.01.EHZ")
-        self.assertEqual(waveform_id.network_code, "BW")
-        self.assertEqual(waveform_id.station_code, "FUR")
-        self.assertEqual(waveform_id.location_code, "01")
-        self.assertEqual(waveform_id.channel_code, "EHZ")
+        assert waveform_id.network_code == "BW"
+        assert waveform_id.station_code == "FUR"
+        assert waveform_id.location_code == "01"
+        assert waveform_id.channel_code == "EHZ"
         # As soon as any other argument is set, the seed_string will not be
         # used and the default values will be used for any unset arguments.
         waveform_id = WaveformStreamID(location_code="02",
                                        seed_string="BW.FUR.01.EHZ")
-        self.assertEqual(waveform_id.network_code, None)
-        self.assertEqual(waveform_id.station_code, None)
-        self.assertEqual(waveform_id.location_code, "02")
-        self.assertEqual(waveform_id.channel_code, None)
+        assert waveform_id.network_code is None
+        assert waveform_id.station_code is None
+        assert waveform_id.location_code == "02"
+        assert waveform_id.channel_code is None
 
     def test_initialization_with_invalid_seed_string(self):
         """
@@ -652,15 +657,15 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         # the default values.
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
-            self.assertRaises(UserWarning, WaveformStreamID,
-                              seed_string="Invalid SEED string")
+            with pytest.raises(UserWarning):
+                WaveformStreamID(seed_string="Invalid SEED string")
             # Now ignore the warnings and test the default values.
             warnings.simplefilter('ignore', UserWarning)
             waveform_id = WaveformStreamID(seed_string="Invalid Seed String")
-            self.assertEqual(waveform_id.network_code, None)
-            self.assertEqual(waveform_id.station_code, None)
-            self.assertEqual(waveform_id.location_code, None)
-            self.assertEqual(waveform_id.channel_code, None)
+            assert waveform_id.network_code is None
+            assert waveform_id.station_code is None
+            assert waveform_id.location_code is None
+            assert waveform_id.channel_code is None
 
     def test_id_property(self):
         """
@@ -668,7 +673,7 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         `get_seed_string`"
         """
         waveform_id = WaveformStreamID(seed_string="BW.FUR.01.EHZ")
-        self.assertEqual(waveform_id.id, waveform_id.get_seed_string())
+        assert waveform_id.id == waveform_id.get_seed_string()
 
 
 class BaseTestCase(unittest.TestCase):
@@ -685,10 +690,10 @@ class BaseTestCase(unittest.TestCase):
             err.lower_uncertainty = 0.1
             err.upper_uncertainty = 0.02
             err.confidence_level = 80
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
             # setting a typoed or custom field should warn!
             err.confidence_levle = 80
-            self.assertEqual(len(w), 1)
+            assert len(w) == 1
 
     def test_quantity_error_equality(self):
         """
@@ -696,12 +701,12 @@ class BaseTestCase(unittest.TestCase):
         Non-empty quantity errors should return False.
         """
         err1 = QuantityError()
-        self.assertEqual(err1, None)
+        assert err1 == None  # NOQA needs to be ==
         err2 = QuantityError(uncertainty=10)
-        self.assertNotEqual(err2, None)
-        self.assertNotEqual(err2, err1)
+        assert err2 is not None
+        assert err2 != err1
         err3 = QuantityError(uncertainty=10)
-        self.assertEqual(err3, err2)
+        assert err3 == err2
 
     def test_event_type_objects_warn_on_non_default_key(self):
         """
@@ -712,7 +717,7 @@ class BaseTestCase(unittest.TestCase):
                 warnings.simplefilter("always")
                 # setting a typoed or custom field should warn!
                 obj.some_custom_non_default_crazy_key = "my_text_here"
-                self.assertEqual(len(w), 1)
+                assert len(w) == 1
 
     def test_setting_nans_or_inf_fails(self):
         """
@@ -720,23 +725,11 @@ class BaseTestCase(unittest.TestCase):
         """
         o = Origin()
 
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError, match='is not a finite'):
             o.latitude = float('nan')
-        self.assertEqual(
-            e.exception.args[0],
-            "On Origin object: Value 'nan' for 'latitude' is not a finite "
-            "floating point value.")
 
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError, match='is not a finite'):
             o.latitude = float('inf')
-        self.assertEqual(
-            e.exception.args[0],
-            "On Origin object: Value 'inf' for 'latitude' is not a finite "
-            "floating point value.")
 
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError, match='is not a finite'):
             o.latitude = float('-inf')
-        self.assertEqual(
-            e.exception.args[0],
-            "On Origin object: Value '-inf' for 'latitude' is "
-            "not a finite floating point value.")
