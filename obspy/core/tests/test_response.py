@@ -21,7 +21,8 @@ from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
-    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage)
+    _pitick2latex, Response,
+    PolesZerosResponseStage, PolynomialResponseStage)
 from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
