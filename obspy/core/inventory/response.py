@@ -129,15 +129,15 @@ class ResponseStage(ComparingObject):
         self.description = description
         self.decimation_input_sample_rate = \
             Frequency(decimation_input_sample_rate) \
-            if decimation_input_sample_rate is not None else None
+                if decimation_input_sample_rate is not None else None
         self.decimation_factor = decimation_factor
         self.decimation_offset = decimation_offset
         self.decimation_delay = \
             FloatWithUncertaintiesAndUnit(decimation_delay) \
-            if decimation_delay is not None else None
+                if decimation_delay is not None else None
         self.decimation_correction = \
             FloatWithUncertaintiesAndUnit(decimation_correction) \
-            if decimation_correction is not None else None
+                if decimation_correction is not None else None
 
     def __str__(self):
         ret = (
@@ -1348,7 +1348,7 @@ class Response(ComparingObject):
 
         # Nothing might be set - just return in that case.
         if set(itertools.chain.from_iterable(v.values()
-               for v in sampling_rates.values())) == {None}:
+                                             for v in sampling_rates.values())) == {None}:
             return sampling_rates
 
         # Find the first set input sampling rate. The output sampling rate
