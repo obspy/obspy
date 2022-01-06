@@ -36,6 +36,7 @@ FLAKE8_IGNORE_CODES = [
     'E704',
     'W503',
     'W504',
+    'E741',
 ]
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
