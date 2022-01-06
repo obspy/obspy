@@ -29,12 +29,12 @@ jobs:
       - name: install obspy
         shell: bash -l {0}
         run: |
-          pip install -e .[test]
+          python -m pip  -e .[tests]
 
       - name: install obspy github api
         shell: bash -l {0}
         run: |
-          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+          python -m pip  git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
 
       - name: run test suite
         shell: bash -l {0}

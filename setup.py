@@ -127,9 +127,7 @@ INSTALL_REQUIRES = [
     'decorator',
     'requests']
 EXTRAS_REQUIRE = {
-    'tests': [
-        'pytest', 'pytest-cov', 'pytest-html',
-    ],
+    'tests': ['pytest', 'pytest-cov', 'pytest-html',  'pyproj'],
     # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
     'arclink': ['cryptography'],
     'io.shapefile': ['pyshp'],
@@ -811,6 +809,7 @@ def setupPackage():
         zip_safe=False,
         python_requires=f'>={MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}',
         install_requires=INSTALL_REQUIRES,
+        tests_require=EXTRAS_REQUIRE['tests'],
         extras_require=EXTRAS_REQUIRE,
         features=add_features(),
         # this is needed for "easy_install obspy==dev"
