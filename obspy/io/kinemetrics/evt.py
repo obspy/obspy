@@ -163,6 +163,8 @@ class Evt(object):
             cur_trace.stats.kinemetrics_evt = self.e_header.make_obspy_dict(i)
             if not apply_calib:
                 cur_trace.stats.calib = 1./calibs[i]
+            else:
+                cur_trace.stats.calib = 1.
             traces.append(cur_trace)
 
         return Stream(traces=traces)
