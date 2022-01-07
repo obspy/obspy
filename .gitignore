@@ -35,6 +35,7 @@ misc/docker/logs/
 obspy/lib/*.pyd
 obspy/lib/*.so
 obspy_report.html
+obspy_test_images
 /obspy.pstats
 __pycache__
 debian

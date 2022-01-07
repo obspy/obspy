@@ -3,7 +3,9 @@
 """
 Obspy's testing configuration file.
 """
+import shutil
 from pathlib import Path
+from subprocess import run
 
 import numpy as np
 import pytest
@@ -29,8 +31,16 @@ def save_image_directory(request, tmp_path_factory):
     tmp_image_path = tmp_path_factory.mktemp('images')
     yield Path(tmp_image_path)
     # if keep images is selected then we move images to directory
-    # and add info about environment for upload.
-    # breakpoint()
+    # and add info about environment.
+    if request.config.getoption('--keep-images'):
+        new_path = Path().cwd() / 'obspy_test_images'
+        if new_path.exists():  # get rid of old image folder
+            shutil.rmtree(new_path)
+        shutil.copytree(tmp_image_path, new_path)
+        # todo probably need to handle this in a more OS robust way
+        # but since it is mainly for CI running with it for now.
+        run(f"python -m pip freeze > {new_path/'pip_freeze.txt'}", shell=True)
+        run(f"conda list > {new_path / 'conda_list.txt'}", shell=True)
 
 
 @pytest.fixture(scope='function')
@@ -38,10 +48,14 @@ def image_path(request, save_image_directory):
     """
     Return an image comparison object initiated for specific test.
     """
-    parent_name = getattr(request.node.parent, 'name', '')
+    parent_obj = getattr(request.node.parent, 'obj', None)
     node_name = request.node.name
-    if parent_name:  # add parent class to name
-        node_name = parent_name + '__' + node_name
+    if parent_obj:  # add parent class to name, parent.name doesn't work
+        if hasattr(parent_obj, '__name__'):
+            parent_name = parent_obj.__name__
+        else:
+            parent_name = str(parent_obj.__class__.__name__)
+        node_name = parent_name + '_' + node_name
     new_path = save_image_directory / (node_name + '.png')
     return new_path
 
