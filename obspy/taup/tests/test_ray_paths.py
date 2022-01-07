@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-import unittest
-
 import os
 
 import numpy as np
+import pytest
 
 import obspy
 import obspy.geodetics.base as geodetics
 from obspy.taup.ray_paths import get_ray_paths
 
 
-class RayPathCalculationsTestCase(unittest.TestCase):
+class TestRayPathCalculations:
     """
     Test suite for obspy.taup.ray_paths
     """
@@ -22,8 +21,9 @@ class RayPathCalculationsTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'images')
         pass
 
-    @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
-                     'test needs geographiclib >= 1.34')
+    @pytest.mark.skipif(
+        not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
+        reason='test needs geographiclib >= 1.34')
     def test_compute_ray_paths(self):
         # careful, the full inventory, catalog test is long (1min)
         # greatcircles = get_ray_paths(
@@ -57,17 +57,17 @@ class RayPathCalculationsTestCase(unittest.TestCase):
             coordinate_system='XYZ', taup_model='iasp91')
         # two stations, three events, 4 phases should yield 24 rays (since all
         # arrivals are encountered in this case)
-        self.assertEqual(len(greatcircles), 24)
+        assert len(greatcircles) == 24
         # now check details of first ray
         circ = greatcircles[0]
         path = circ[0]
-        self.assertEqual(circ[1], 'P')
-        self.assertEqual(circ[2], 'NET.STA')
+        assert circ[1] == 'P'
+        assert circ[2] == 'NET.STA'
         np.testing.assert_allclose(circ[3], otime.timestamp, atol=1e-5, rtol=0)
-        self.assertEqual(circ[4], 7.0)
-        self.assertEqual(circ[5], 'smi:local/just-a-test')
-        self.assertEqual(circ[6], 'smi:local/just-a-test2')
-        self.assertEqual(path.shape, (3, 274))
+        assert circ[4] == 7.0
+        assert circ[5] == 'smi:local/just-a-test'
+        assert circ[6] == 'smi:local/just-a-test2'
+        assert path.shape == (3, 274)
         # now check some coordinates of the calculated path, start, end and
         # some values in between
         path_start_expected = [
@@ -128,17 +128,17 @@ class RayPathCalculationsTestCase(unittest.TestCase):
             coordinate_system='RTP', taup_model='ak135')
         # two stations, three events, 4 phases should yield 24 rays (since all
         # arrivals are encountered in this case)
-        self.assertEqual(len(greatcircles), 24)
+        assert len(greatcircles) == 24
         # now check details of first ray
         circ = greatcircles[0]
         path = circ[0]
-        self.assertEqual(circ[1], 'P')
-        self.assertEqual(circ[2], 'NET.STA')
+        assert circ[1] == 'P'
+        assert circ[2] == 'NET.STA'
         np.testing.assert_allclose(circ[3], otime.timestamp, atol=1e-5, rtol=0)
-        self.assertEqual(circ[4], 7.0)
-        self.assertEqual(circ[5], 'smi:local/just-a-test')
-        self.assertEqual(circ[6], 'smi:local/just-a-test2')
-        self.assertEqual(path.shape, (3, 270))
+        assert circ[4] == 7.0
+        assert circ[5] == 'smi:local/just-a-test'
+        assert circ[6] == 'smi:local/just-a-test2'
+        assert path.shape == (3, 270)
         # now check some coordinates of the calculated path, start, end and
         # some values in between
         path_start_expected = [
@@ -172,11 +172,3 @@ class RayPathCalculationsTestCase(unittest.TestCase):
              0.53004245, 0.52531799]]
         np.testing.assert_allclose(path[:, ::10], path_steps_expected,
                                    rtol=1e-6)
-
-
-def suite():
-    return unittest.makeSuite(RayPathCalculationsTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
