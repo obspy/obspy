@@ -177,11 +177,11 @@ For more examples see the :ref:`Obspy Gallery <gallery>`.
 
 Dealing with the Response information
 -------------------------------------
-The :meth:`~obspy.core.inventory.response.Response.get_evalresp_response`
-method will call some functions within evalresp to generate the response.
+The :meth:`~obspy.core.inventory.response.Response.get_response_for_window_size`
+method will generate the response based on frequency delta and window size (nfft).
 
 >>> response = cha.response
->>> response, freqs = response.get_evalresp_response(0.1, 16384, output="VEL")
+>>> response, freqs = response.get_response_for_window_size(0.1, 16384, output="VEL")
 >>> print(response)  # doctest: +NORMALIZE_WHITESPACE
  [  0.00000000e+00 +0.00000000e+00j  -1.36383361e+07 +1.42086194e+06j
    -5.36470300e+07 +1.13620679e+07j ...,   2.48907496e+09 -3.94151237e+08j
