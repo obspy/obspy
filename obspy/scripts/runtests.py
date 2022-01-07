@@ -19,12 +19,12 @@ module.
 (2) Run all tests on command line (including network tests)::
         $ obspy-runtests --all
 (3) Run tests of module :mod:`obspy.io.mseed`::
-        $ obspy-runtests obspy/io/mseed
+        $ obspy-runtests io/mseed
 (4) Run tests of multiple modules, e.g. :mod:`obspy.io.wav` and
     :mod:`obspy.io.sac`::
-        $ obspy-runtests obspy/io/wav obspy/io/sac
+        $ obspy-runtests io/wav obspy/io/sac
 (5) Run a specific test case::
-        $ obspy-runtests obspy.core.tests.test_stats.StatsTestCase.test_init
+        $ obspy-runtests core/tests/test_stats.py::TestStats::test_init
 (6) Create a self-contained html-report of test results saved as
    'obspy_report.html' in ObsPy's directory:
         $ obspy-runtests --report

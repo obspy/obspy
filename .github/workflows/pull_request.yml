@@ -130,7 +130,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-umbrella
           fail_ci_if_error: false
-          file: coverage.xml
+          file: obspy/coverage.xml
 
       - name: upload image directory
         uses: actions/upload-artifact@v2

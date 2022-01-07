@@ -1,6 +1,7 @@
 """
 Obspy's testing configuration file.
 """
+import os
 import shutil
 from pathlib import Path
 from subprocess import run
@@ -11,8 +12,10 @@ import pytest
 import obspy
 from obspy.core.util import NETWORK_MODULES
 
+OBSPY_PATH = os.path.dirname(obspy.__file__)
 
 # --- ObsPy fixtures
+
 
 @pytest.fixture(scope='class')
 def ignore_numpy_errors():
@@ -35,7 +38,7 @@ def save_image_directory(request, tmp_path_factory):
     # if keep images is selected then we move images to directory
     # and add info about environment.
     if request.config.getoption('--keep-images'):
-        new_path = Path().cwd() / 'obspy_test_images'
+        new_path = Path(OBSPY_PATH) / 'obspy_test_images'
         if new_path.exists():  # get rid of old image folder
             shutil.rmtree(new_path)
         shutil.copytree(tmp_image_path, new_path)
@@ -128,15 +131,14 @@ def pytest_configure(config):
     # this is the same as using:
     # --cov obspy --cov-report term-missing --cov-report='xml' --cov-append
     if config.getoption('--coverage'):
-        config.option.cov_report = {'term-missing': None, 'xml': None}
-        config.known_args_namespace.cov_source = ['obspy']
-        config.option.cov_append = True
         # this is a bit hinky, but we need to register and load coverage here
         # or else it doesn't work
         from pytest_cov.plugin import CovPlugin
-        config.option.cov_source = ['obspy']
-        options = config.known_args_namespace
-        plugin = CovPlugin(options, config.pluginmanager)
+        opts = config.known_args_namespace
+        opts.cov_report = {'term-missing': None, 'xml': None}
+        opts.cov_source = [OBSPY_PATH]
+        opts.cov_append = True
+        plugin = CovPlugin(opts, config.pluginmanager)
         config.pluginmanager.register(plugin, '_cov')
 
     # Set numpy print options to try to not break doctests.
