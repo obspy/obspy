@@ -199,7 +199,6 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     kwargs['check_compression'] = check_compression
     kwargs['headonly'] = headonly
     kwargs['format'] = format
-    kwargs['apply_calib'] = apply_calib
 
     if pathname_or_url is None:
         # if no pathname or URL specified, return example stream
