@@ -61,6 +61,9 @@ YMDHMS = ('year', 'month', 'day', 'hour', 'minute', 'second')
 YJHMS = ('year', 'julday', 'hour', 'minute', 'second')
 YMDHMS_FORMAT = "%04d-%02d-%02dT%02d:%02d:%02d"
 
+# types which define other packages datetime representation
+OTHER_TIME_TYPES = (datetime.datetime, datetime.date, np.datetime64)
+
 
 class UTCDateTime(object):
     """
@@ -229,7 +232,15 @@ class UTCDateTime(object):
         >>> UTCDateTime(dt)
         UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
 
-    (7) Using strict=False the limits of hour, minute, and second become more
+    (7) Using a numpy :class:`numpy.datetime64` object.
+
+        >>> dt = np.datetime64('2009-05-24T08:28:12', 'ns')
+        >>> UTCDateTime(dt)
+        UTCDateTime(2009, 5, 24, 8, 28, 12)
+
+        Note: all datetime64
+
+    (8) Using strict=False the limits of hour, minute, and second become more
         flexible:
 
         >>> UTCDateTime(year=1970, month=1, day=1, hour=48, strict=False)
@@ -325,12 +336,15 @@ class UTCDateTime(object):
                         (value.__dict__['timestamp'] % 1.0) * 1e6)
                     dt_ = datetime.datetime.utcfromtimestamp(timestamp_seconds)
                     dt_ = dt_.replace(microsecond=timestamp_microseconds)
-                    self._from_datetime(dt_)
+                    self._from_other_time(dt_)
                 return
             # check types
             # The string instance check is mainly needed to not convert
             # numpy strings as these can be converted to floats on
             # numpy >= 1.14.
+            if isinstance(value, OTHER_TIME_TYPES):
+                self._from_other_time(value)
+                return
             if not isinstance(value, (str, bytes)):
                 try:
                     # got a timestamp
@@ -338,15 +352,6 @@ class UTCDateTime(object):
                     return
                 except Exception:
                     pass
-            if isinstance(value, datetime.datetime):
-                # got a Python datetime.datetime object
-                self._from_datetime(value)
-                return
-            elif isinstance(value, datetime.date):
-                # got a Python datetime.date object
-                dt = datetime.datetime(value.year, value.month, value.day)
-                self._from_datetime(dt)
-                return
             elif isinstance(value, (bytes, str)):
                 if not isinstance(value, str):
                     value = value.decode()
@@ -415,11 +420,11 @@ class UTCDateTime(object):
                 # patterns and pass it directly to Python's  datetime.datetime
                 if not ''.join(parts).isdigit():
                     dt = datetime.datetime(*args, **kwargs)
-                    self._from_datetime(dt)
+                    self._from_other_time(dt)
                     return
                 dt = datetime.datetime.strptime(value, pattern)
                 dt += datetime.timedelta(seconds=ms)
-                self._from_datetime(dt)
+                self._from_other_time(dt)
                 return
         # check for ordinal/julian date kwargs
         if 'julday' in kwargs:
@@ -466,7 +471,7 @@ class UTCDateTime(object):
             else:
                 raise
         else:
-            self._from_datetime(dt)
+            self._from_other_time(dt)
 
     def _handle_overflow(self, year, month, day, hour=0, minute=0, second=0,
                          microsecond=0):
@@ -540,14 +545,20 @@ class UTCDateTime(object):
     _ns = property(_get_ns, _set_ns)
     ns = property(_get_ns, _set_ns)
 
-    def _from_datetime(self, dt):
+    def _from_other_time(self, dt):
         """
-        Use Python datetime object to set current time.
+        Set ns from an external time representation.
 
-        :type dt: :class:`datetime.datetime`
-        :param dt: Python datetime object.
+        :type dt: :class:`datetime.datetime`, or :class:`numpy.datetime64`
+        :param dt: A non-ObsPy time object.
         """
-        self._ns = _datetime_to_ns(dt)
+        if isinstance(dt, datetime.datetime):
+            self.__ns = _datetime_to_ns(dt)
+        elif isinstance(dt, datetime.date):
+            dt = datetime.datetime(dt.year, dt.month, dt.day)
+            self.__ns = _datetime_to_ns(dt)
+        elif isinstance(dt, np.datetime64):
+            self.__ns = _datetime_to_ns(dt)
 
     def _from_timestamp(self, value):
         """
@@ -640,7 +651,7 @@ class UTCDateTime(object):
                                         date_pattern + 'T' + time_pattern)
         # add microseconds and eventually correct time zone
         dt += datetime.timedelta(seconds=float(delta) + ms)
-        self._from_datetime(dt)
+        self._from_other_time(dt)
 
     def _get_timestamp(self):
         """
@@ -673,6 +684,17 @@ class UTCDateTime(object):
         1222864235.123456
         """
         return self.timestamp
+
+    def _get_datetime64(self):
+        """
+        Return a numpy datetime64 object.
+
+        :rtype: :class:`numpy.datetime64`
+        :return: Numpy datetime64 object.
+        """
+        return np.datetime64(self.ns, 'ns')
+
+    datetime64 = property(_get_datetime64)
 
     def _get_datetime(self):
         """
@@ -996,14 +1018,17 @@ class UTCDateTime(object):
         >>> UTCDateTime(1970, 1, 1, 0, 0) + 1.123456
         UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
         """
-        if isinstance(value, datetime.timedelta):
-            # see datetime.timedelta.total_seconds
-            value = (value.microseconds + (value.seconds + value.days *
-                     86400) * 10**6) / 1e6
-        elif isinstance(value, UTCDateTime):
+        if isinstance(value, UTCDateTime):
             msg = ("unsupported operand type(s) for +: 'UTCDateTime' and "
                    "'UTCDateTime'")
             raise TypeError(msg)
+        elif isinstance(value, datetime.timedelta):
+            # see datetime.timedelta.total_seconds
+            value = (value.microseconds + (value.seconds + value.days *
+                     86400) * 10**6) / 1e6
+        elif isinstance(value, np.timedelta64):
+            return UTCDateTime(self.datetime64 + value)
+
         return UTCDateTime(ns=self._ns + int(round(value * 1e9)))
 
     def __sub__(self, value):
@@ -1034,6 +1059,8 @@ class UTCDateTime(object):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
                      86400) * 10**6) / 1e6
+        elif isinstance(value, np.timedelta64):
+            return UTCDateTime(self.datetime64 - value)
         return UTCDateTime(ns=self._ns - int(round((value * 1e9))))
 
     def __str__(self):
@@ -1721,16 +1748,23 @@ class UTCDateTime(object):
 
 def _datetime_to_ns(dt):
     """
-    Use Python datetime object to return equivalent nanoseconds.
+    Get equivalent nanoseconds from python's datetime or timedelta.
 
-    :type dt: :class:`datetime.datetime`
-    :param dt: Python datetime object.
+    :type dt: :class:`datetime.datetime`, :class:`datetime.timedelta`, or
+        :class:`numpy.datetime64`.
+    :param dt: Python datetime or timedelta object.
     :returns: nanoseconds as an int.
     """
-    try:
-        td = (dt - TIMESTAMP0)
-    except TypeError:
-        td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
+    if isinstance(dt, datetime.datetime):
+        try:
+            td = (dt - TIMESTAMP0)
+        except TypeError:
+            td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
+    elif isinstance(dt, datetime.timedelta):
+        td = dt
+    elif isinstance(dt, np.datetime64):
+        # Note: need extra int call here to ensure python int not numpy int.
+        return int(dt.astype('datetime64').astype(int))
     # see datetime.timedelta.total_seconds
     return (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
 
