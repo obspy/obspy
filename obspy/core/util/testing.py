@@ -41,12 +41,6 @@ def add_unittests(testsuite, module_name):
     :param testsuite: testsuite to which the tests should be added
     :type module_name: str
     :param module_name: name of the module of which the tests should be added
-
-    .. rubric:: Example
-
-    >>> import unittest
-    >>> suite = unittest.TestSuite()
-    >>> add_unittests(suite, "obspy.core")
     """
     module_tests = __import__(module_name + ".tests",
                               fromlist=["obspy"])
@@ -71,12 +65,6 @@ def add_doctests(testsuite, module_name):
     :param testsuite: testsuite to which the tests should be added
     :type module_name: str
     :param module_name: name of the module of which the tests should be added
-
-    .. rubric:: Example
-
-    >>> import unittest
-    >>> suite = unittest.TestSuite()
-    >>> add_doctests(suite, "obspy.core")
     """
     module = __import__(module_name, fromlist=["obspy"])
     module_path = module.__path__[0]
