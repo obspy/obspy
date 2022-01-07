@@ -42,8 +42,6 @@ Changes:
    * add URL mapping for IRISPH5, IESDMC, GEOFON (alternative to GFZ)
      (see #2739, #2932)
    * update RESIF URL mapping to use https and add RESIFPH5 (see #2938)
-   * Added RESIFPH5 FDSN provider for Large-N data hosted at Résif-DC (see #2938)
-   * update RESIF URL mapping to use https
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.clients.filesystem.tsindex:
