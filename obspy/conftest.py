@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Obspy's testing configuration file.
 """
@@ -18,7 +16,9 @@ from obspy.core.util import NETWORK_MODULES
 
 @pytest.fixture(scope='class')
 def ignore_numpy_errors():
-    """ Ignore numpy errors for marked functions/classes. """
+    """
+    Ignore numpy errors for marked tests.
+    """
     nperr = np.geterr()
     np.seterr(all='ignore')
     yield
@@ -27,7 +27,9 @@ def ignore_numpy_errors():
 
 @pytest.fixture(scope='session', autouse=True)
 def save_image_directory(request, tmp_path_factory):
-    """Create a temporary directory for storing all images."""
+    """
+    Creates a temporary directory for storing all images.
+    """
     tmp_image_path = tmp_path_factory.mktemp('images')
     yield Path(tmp_image_path)
     # if keep images is selected then we move images to directory
@@ -46,7 +48,10 @@ def save_image_directory(request, tmp_path_factory):
 @pytest.fixture(scope='function')
 def image_path(request, save_image_directory):
     """
-    Return an image comparison object initiated for specific test.
+    Returns a path for saving an image.
+
+    These will be saved to obspy_test_images if --keep-images is selected.
+    Using this fixture will also mark a test with "image".
     """
     parent_obj = getattr(request.node.parent, 'obj', None)
     node_name = request.node.name
@@ -93,22 +98,19 @@ def pytest_collection_modifyitems(config, items):
         if obspy_node in network_nodes:
             item.add_marker(pytest.mark.network)
 
-
-def pytest_runtest_setup(item):
-    """Setup test runs."""
-    # skip network tests if not specified by command line argument.
-    if 'network' in item.keywords and not item.config.getvalue("--network"):
-        pytest.skip("need --network option to run")
+        # automatically apply image mark to tests using image_path fixture.
+        if 'image_path' in getattr(item, 'fixturenames', {}):
+            item.add_marker('image')
 
 
 def pytest_configure(config):
     """
     Configure pytest with custom logic for ObsPy before test run.
     """
-    # add doctest option
+    # Add doctest option so all doctests run
     config.option.doctestmodules = True
 
-    # skip or select network options based on options
+    # Skip or select network options based on options
     network_selected = config.getoption('--network')
     all_selected = config.getoption('--all')
     if network_selected and not all_selected:
@@ -137,16 +139,19 @@ def pytest_configure(config):
         plugin = CovPlugin(options, config.pluginmanager)
         config.pluginmanager.register(plugin, '_cov')
 
-    # set print options
+    # Set numpy print options to try to not break doctests.
     try:
         np.set_printoptions(legacy='1.13')
     except (TypeError, AttributeError):
         pass
-    # ensure matplotlib doesn't print anything to the screen
+
+    # Ensure matplotlib doesn't try to show anything.
     import matplotlib
     matplotlib.use('Agg')
 
-    # add marker, having pytest.ini messed with configuration
+    # Register markers. We should really do this in pytest.ini or the like
+    # but the existence of that file messed with the config.py hooks for
+    # some reason.
     config.addinivalue_line(
         "markers", "network: Test requires network resources (internet)."
     )
@@ -155,13 +160,9 @@ def pytest_configure(config):
     )
 
 
-def pytest_itemcollected(item):
-    """ we just collected a test item. """
-    # automatically apply image mark if image_path is used
-    if 'image_path' in getattr(item, 'fixturenames', {}):
-        item.add_marker('image')
-
-
 def pytest_html_report_title(report):
-    """Customize the title of the html report (if used) to include version."""
+    """
+    A pytest-html hook to add custom fields to the report.
+    """
+    # Customize the title of the html report (if used) to include version.
     report.title = f"Obspy Tests ({obspy.__version__})"
