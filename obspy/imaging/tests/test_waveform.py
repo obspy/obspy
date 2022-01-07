@@ -481,6 +481,30 @@ class WaveformTestCase(unittest.TestCase):
                     timezone='EST', time_offset=-5,
                     events=cat)
 
+    def test_plotTwoWayVred(self):
+        """
+        plots simple trace with vred in pos and neg directions
+        """
+        print(self.path)
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._createStream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._createStream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = -_i * 10e3     
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 6))
+        st.plot(type='section', fig=fig, time_down=True, vred=8000)
+        plt.savefig("images/waveform_section_vred.png")
+        # create and compare image
+        with ImageComparison(self.path, 'waveform_section_vred.png',
+                             reltol=10) as ic:
+            st.plot(outfile=ic.name, type='section', time_down=True,
+                    vred=8000)
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')
