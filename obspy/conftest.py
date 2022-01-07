@@ -89,6 +89,9 @@ def pytest_configure(config):
     """
     Configure pytest with custom logic for ObsPy before test run.
     """
+    # add doctest option
+    config.option.doctestmodules = True
+
     # skip or select network options based on options
     network_selected = config.getoption('--network')
     all_selected = config.getoption('--all')
@@ -139,7 +142,7 @@ def pytest_configure(config):
 def pytest_itemcollected(item):
     """ we just collected a test item. """
     # automatically apply image mark if image_path is used
-    if 'image_path' in item.fixturenames:
+    if 'image_path' in getattr(item, 'fixturenames', {}):
         item.add_marker('image')
 
 
