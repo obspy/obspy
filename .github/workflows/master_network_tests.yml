@@ -22,7 +22,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: 'latest'
-          python-version: 3.7
+          python-version: 3.8
           activate-environment: test
           environment-file: .github/test_conda_env.yml
 
@@ -39,22 +39,14 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          export MODULELIST=`obshub get-module-list --group all --sep ','`
-          export MODULELISTSPACES=`obshub get-module-list --group default --sep ' '`
-          export MODULES=${MODULELISTSPACES//obspy.}
-          if [ "$RUNNER_OS" == "macOS" ]; then
-              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" $MODULES
-          else
-              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" $MODULES
-              coverage xml -o coverage.xml
-          fi
+          obspy-runtests --network --coverage
 
       - name: upload coverage
         if: runner.os != 'macOS'
         uses: codecov/codecov-action@v2.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: coverage.xml
+          file: obspy/coverage.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: true

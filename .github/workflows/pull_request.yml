@@ -120,7 +120,7 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          pytest obspy --coverage --keep-images
+          obspy-runtests --coverage --keep-images
 
       - name: upload coverage
         if: runner.os != 'macOS'

@@ -48,7 +48,7 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          pytest obspy --coverage
+          obspy-runtests --coverage
 
       - name: upload coverage
         if: runner.os != 'macOS'
@@ -58,4 +58,4 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-umbrella
           fail_ci_if_error: false
-          file: coverage.xml
+          file: obspy/coverage.xml
