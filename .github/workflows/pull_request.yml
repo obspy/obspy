@@ -133,9 +133,9 @@ jobs:
           file: coverage.xml
 
       - name: upload image directory
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v2
         with:
-          name:  images_${{ github.event.pull_request.number }}_${{ matrix.python-version }}_${{ matrix.os }}
+          name: "images_${{ github.event.pull_request.number }}_${{ matrix.python-version }}_${{ matrix.os }}"
           path: obspy/obspy_test_images
           retention-days: 1
 

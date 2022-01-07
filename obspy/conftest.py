@@ -66,16 +66,18 @@ def image_path(request, save_image_directory):
 def pytest_addoption(parser):
     """Pytest hook which allows setting package-specfic command-line args."""
     parser.addoption('--network', action='store_true', default=False,
-                     help='test network modules', )
+                     help='test only network modules', )
     parser.addoption('--all', action='store_true', default=False,
                      help='run both network and non-network tests', )
     parser.addoption('--coverage', action='store_true', default=False,
-                     help='Report Obspy Coverage and generate xml report', )
+                     help='Report Obspy Coverage to terminal and generate '
+                          'xml report which will be saved as coverage.xml', )
     parser.addoption('--report', action='store_true', default=False,
-                     help='Generate and HTML report of test results', )
+                     help='Generate and HTML report of test results '
+                          'saved as obspy_report.html in obspy directory.', )
     parser.addoption('--keep-images', action='store_true',
-                     help='store images created during image comparison '
-                          'tests in subfolders of baseline images')
+                     help='store images created while runing test suite '
+                          'in a directory called obspy_test_images.')
 
 
 def pytest_collection_modifyitems(config, items):
