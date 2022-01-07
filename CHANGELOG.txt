@@ -8,6 +8,7 @@ Changes:
      to solve test issues (#2900)
    * added python 3.9 tests for all platforms, required to disable image
      comparisons for 3.9 (#2925)
+   * rewrote CI tests to make use of cache (see #2936)
    * removed individual logging configurations in Obspy, logging can be
      configured by the user, see documentation of Pythons logging module,
      only the FDSN mass downloader automatically configures logging as before,
@@ -29,14 +30,26 @@ Changes:
      Trace.remove_response() (see #2806)
    * stream.select(): circumvent wildcard-matching when called with a trace-id
      without wildcards for quicker trace selection.
+   * Inventory addition now consistently uses shallow copies (#2675, #2694)
+   * removed obsolete wrapper around numpy.loadtxt causing import error with
+     numpy 1.22 (see #2912, #2913)
+   * fix iso8601 regex for issue #2868 to cope with day 360 properly
+   * fix crash when resampling very short traces (see #2926)
  - obspy.clients.fdsn:
    * introduce fine-grained FDSN client exceptions (see #2653)
    * support for "eventtype" parameter in get_events(), as specified in version
      1.2 of the FDSN event web service (see #2780)
    * Hostnames with hyphens and long TLDs are no longer rejected as invalid
      FDSN server URLs (#2878)
+   * add URL mapping for IRISPH5, IESDMC, GEOFON (alternative to GFZ)
+     (see #2739, #2932)
+   * update RESIF URL mapping to use https
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
+ - obspy.clients.filesystem.tsindex:
+   * improvements to leap second file setup and other small fixes (see #2776)
+ - obspy.clients.seedlink:
+   * Fix a bug in basic client when printing debug output (see #2734)
  - obspy.clients.seishub:
    * added deprecation message
  - obspy.db:
@@ -49,6 +62,9 @@ Changes:
      latter, but former parameter names are still supported (see #2251)
  - obspy.io.css:
    * open CSS waveforms even if gzip-compressed (see #2736)
+ - obspy.io.gse2:
+   * When reading GSE2 bulletins, station magnitudes now include waveform IDs
+     and have associated station magnitude contributions (see #2718)
  - obspy.io.hypodd
    * add PHA write support (see #2687)
    * add read support for horizontal and vertical origin uncertainty (see #2687)
@@ -87,6 +103,8 @@ Changes:
  - obspy.io.xseed:
    * fix a bug reading SEED blockettes 48 and 58 which was likely never
      encountered (see #2668)
+   * Properly read a given value of 0.0 in station elevation and not replace it
+     with bogus value (see #2763)
  - obspy.scripts
    * obspy-runtests can take one or two -v flags for a more smooth verbosity
      control (see #2720)
@@ -104,30 +122,6 @@ Changes:
  - obspy.signal.trigger:
    * Improved clarity and speed of several STA/LTA triggers methods, namely
      classic_sta_lta_py, z_detector, and recursive_sta_lta_py (see #2892)
-
-maintenance_1.2.x
-=================
-
-Changes:
- - obspy.core:
-   * Inventory addition now consistently uses shallow copies (#2675, #2694)
-   * Removed obsolete wrapper around numpy.loadtxt causing import error with
-     numpy 1.22 (see #2912, #2913)
-   * Fix iso8601 regex for issue #2868 to cope with day 360 properly.
-   * Fix crash when resampling very short traces (see #2926)
- - obspy.clients.fdsn:
-   * add URL mapping for IRISPH5 (see #2739)
-   * update RESIF URL mapping to use https
- - obspy.clients.seedlink:
-   * Fix a bug in basic client when printing debug output (see #2734)
- - obspy.clients.filesystem.tsindex:
-   * improvements to leap second file setup and other small fixes (see #2776)
- - obspy.io.gse2:
-   * When reading GSE2 bulletins, station magnitudes now include waveform IDs
-     and have associated station magnitude contributions (see #2718)
- - obspy.io.xseed:
-   * Properly read a given value of 0.0 in station elevation and not replace it
-     with bogus value (see #2763)
 
 1.2.2 (doi: 10.5281/zenodo.3921997)
 ===================================

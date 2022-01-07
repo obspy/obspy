@@ -17,14 +17,31 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
-      - name: Setup conda
-        uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v2.1.1
         with:
-          miniconda-version: 'latest'
-          python-version: 3.8
-          activate-environment: test
-          environment-file: .github/test_conda_env.yml
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          activate-environment: test3.9
+          use-mamba: true
+          python-version: 3.9
+
+      - uses: actions/cache@v2
+        with:
+          path: /usr/share/miniconda3/envs/test3.9
+          key: ${{ matrix.label }}-conda-py3.9-${{ hashFiles('.github/test_conda_env-3.9.yml') }}-${{ steps.date.outputs.date }}-${{ env.CACHE_NUMBER }}
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        id: cache
+
+      - name: Update environment
+        run: mamba env update -n test3.9 -f .github/test_conda_env-3.9.yml
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: install obspy
         shell: bash -l {0}
