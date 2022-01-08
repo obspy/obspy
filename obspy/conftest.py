@@ -176,14 +176,17 @@ def pytest_html_report_title(report):
 def pytest_json_modifyreport(json_report):
     """Modifies the json report after everything has run."""
     # Add architectural info
-    json_report['platform_info'] = add_environmental_info()
+    json_report['platform_info'] = get_environmental_info()
     # Add github actions info
-    json_report['ci_info'] = add_github_actions_info()
+    json_report['ci_info'] = get_github_actions_info()
     # Add version dependencies
-    json_report['dependencies'] = add_dependency_info()
+    json_report['dependencies'] = get_dependency_info()
+    # Add log for compat. with obspy reporter. We can use this in the
+    # future to attach log files if needed.
+    json_report['log'] = None
 
 
-def add_dependency_info():
+def get_dependency_info():
     """Add version info about obspy's dependencies."""
     import pkg_resources
     distribution = pkg_resources.get_distribution('obspy')
@@ -195,7 +198,7 @@ def add_dependency_info():
     return version_info
 
 
-def add_github_actions_info():
+def get_github_actions_info():
     """
     Adds information from github actions environmental variables.
     """
@@ -211,7 +214,7 @@ def add_github_actions_info():
     return ci_info
 
 
-def add_environmental_info():
+def get_environmental_info():
     """Add info to dict about platform/architecture."""
     # get system / environment settings
     platform_info = {}
@@ -225,4 +228,11 @@ def add_environmental_info():
             platform_info[name] = temp
         except Exception:
             platform_info[name] = ''
+    # add node name, but change if running on github CI
+    node_name = os.environ.get('OBSPY_NODE_NAME')
+    if not node_name:
+        node_name = platform.node().split('.', 1)[0]
+    if os.environ.get('GITHUB_ACTION'):
+        node_name = 'Github_Actions'
+    platform_info['node'] = node_name
     return platform_info
