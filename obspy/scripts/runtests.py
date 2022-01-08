@@ -32,6 +32,8 @@ module.
         $ obspy-runtests --coverage
 (8) Save the image outputs of the testsuite, called 'obspy_image_tests':
         $ obspy-runtests --keep-images
+(9) Run the test suite, drop into a pdb debugging session for each failure:
+        $ obspy-runtests --pdb
 """
 import os
 import sys

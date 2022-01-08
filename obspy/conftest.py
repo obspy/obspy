@@ -175,30 +175,27 @@ def pytest_html_report_title(report):
 @pytest.hookimpl(optionalhook=True)
 def pytest_json_modifyreport(json_report):
     """Modifies the json report after everything has run."""
-    # Add obspy version
-    json_report['obspy_version'] = obspy.__version__
-    # Add archecture info
-    add_environmental_info(json_report)
+    # Add architectural info
+    json_report['platform_info'] = add_environmental_info()
     # Add github actions info
-    add_github_actions_info(json_report)
+    json_report['ci_info'] = add_github_actions_info()
     # Add version dependencies
-    add_dependency_info(json_report)
+    json_report['dependencies'] = add_dependency_info()
 
 
-def add_dependency_info(json_report):
+def add_dependency_info():
     """Add version info about obspy's dependencies."""
     import pkg_resources
     distribution = pkg_resources.get_distribution('obspy')
-    versions = {}
+    version_info = {'obspy': obspy.__version__}
     for req in distribution.requires():
         name = req.name
         version = pkg_resources.get_distribution(name).version
-        versions[name] = version
-    json_report['dependencies'] = versions
-    return json_report
+        version_info[name] = version
+    return version_info
 
 
-def add_github_actions_info(json_report):
+def add_github_actions_info():
     """
     Adds information from github actions environmental variables.
     """
@@ -211,11 +208,10 @@ def add_github_actions_info(json_report):
     for name in vars:
         save_name = name.lower()
         ci_info[save_name] = os.environ.get(name)
-    json_report['ci_info'] = ci_info
-    return json_report
+    return ci_info
 
 
-def add_environmental_info(json_report):
+def add_environmental_info():
     """Add info to dict about platform/architecture."""
     # get system / environment settings
     platform_info = {}
@@ -229,5 +225,4 @@ def add_environmental_info(json_report):
             platform_info[name] = temp
         except Exception:
             platform_info[name] = ''
-    json_report['platform'] = json_report
-    return json_report
+    return platform_info
