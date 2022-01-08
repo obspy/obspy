@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-QuakeML 1.2 to SC3ML 0.11 stylesheet converter
+QuakeML 1.2 to SC3ML 0.12 stylesheet converter
 
 Author:
     EOST (École et Observatoire des Sciences de la Terre)
@@ -16,8 +16,8 @@ Usage
 This stylesheet converts a QuakeML to a SC3ML document. It may be invoked using
 xalan or xsltproc:
 
-    xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.11.xsl -out sc3ml.xml
-    xsltproc quakeml_1.2__sc3ml_0.11.xsl quakeml.xml > sc3ml.xml
+    xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.12.xsl -out sc3ml.xml
+    xsltproc quakeml_1.2__sc3ml_0.12.xsl quakeml.xml > sc3ml.xml
 
 Due to the QuakeML ID schema the public IDs used by QuakeML are rather long
 and may cause problems in SeisComP application when displaying or processing
@@ -25,8 +25,8 @@ them. Especially the slash causes problems, e.g. when an event ID is used on
 the command line or in a directory structure. To remove the ID prefix during
 the conversion you may use the ID_PREFIX parameter:
 
-    xalan -param ID_PREFIX "'smi:org.gfz-potsdam.de/geofon/'" -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.11.xsl -out sc3ml.xml
-    xsltproc -stringparam ID_PREFIX smi:org.gfz-potsdam.de/geofon/ quakeml_1.2__sc3ml_0.11.xsl quakeml.xml > sc3ml.xml
+    xalan -param ID_PREFIX "'smi:org.gfz-potsdam.de/geofon/'" -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.12.xsl -out sc3ml.xml
+    xsltproc -stringparam ID_PREFIX smi:org.gfz-potsdam.de/geofon/ quakeml_1.2__sc3ml_0.12.xsl quakeml.xml > sc3ml.xml
 
 Transformation
 ==============
@@ -109,7 +109,6 @@ Parent              Element lost
 ''''''''''''''''''''''''''''''''''''''''''''
 amplitude           evaluationStatus
 magnitude           evaluationMode
-originUncertainty   confidenceLevel
 arrival             commment
 arrival             horizontalSlownessWeight
 arrival             backazimuthWeight
@@ -129,14 +128,18 @@ Change log
 
 * 16.06.2021: Add ID_PREFIX parameter allowing to strip QuakeML ID prefix from
   publicIDs and references thereof
-* 22.06.2021: Add Z suffix to xs:dateTime values
 
+* 17.06.2021: Starting with schema version 0.12 SeisComP ML supports the
+  confidenceLevel parameter in the originUncertainty element. This version
+  no longer strips this field. Also support for ISO time stamps without a
+  trailing slash was added, hence the Z no longer needs to be added to time
+  values.
 -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
         xmlns:ext="http://exslt.org/common"
-        xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.11"
+        xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12"
         xmlns:qml="http://quakeml.org/xmlns/bed/1.2"
         xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
         exclude-result-prefixes="xsl xs ext q qml">
@@ -148,8 +151,8 @@ Change log
     <xsl:param name="ID_PREFIX_NA" select="concat($ID_PREFIX, 'NA')"/>
 
     <!-- Define some global variables -->
-    <xsl:variable name="version" select="'0.11'"/>
-    <xsl:variable name="schema" select="document('sc3ml_0.11.xsd')"/>
+    <xsl:variable name="version" select="'0.12'"/>
+    <xsl:variable name="schema" select="document('sc3ml_0.12.xsd')"/>
     <xsl:variable name="PID" select="'publicID'"/>
 
     <!-- Define key to remove duplicates-->
@@ -431,7 +434,7 @@ Change log
     ***************************************************************************
 -->
 
-    <!-- SC3ML uses kilometer, QuakeML meter -->
+    <!-- Origin depth, SC3ML uses kilometer, QuakeML meter -->
     <xsl:template match="qml:origin/qml:depth/qml:value
                          | qml:origin/qml:depth/qml:uncertainty
                          | qml:origin/qml:depth/qml:lowerUncertainty
@@ -444,30 +447,6 @@ Change log
                          | qml:confidenceEllipsoid/qml:semiIntermediateAxisLength">
         <xsl:element name="{local-name()}">
             <xsl:value-of select="current() div 1000"/>
-        </xsl:element>
-    </xsl:template>
-
-<!--
-    ***************************************************************************
-    Time conversion
-    ***************************************************************************
--->
-
-    <!-- SeisComP < 5 requires date time values to end on Z -->
-    <xsl:template match="qml:time/qml:value
-                        | qml:scalingTime/qml:value
-                        | qml:timeWindow/qml:reference
-                        | qml:creationTime">
-        <xsl:element name="{local-name()}">
-            <xsl:variable name="v" select="current()"/>
-            <xsl:choose>
-                <xsl:when test="substring($v, string-length($v))='Z'">
-                    <xsl:value-of select="$v"/>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:value-of select="concat($v, 'Z')"/>
-                </xsl:otherwise>
-            </xsl:choose>
         </xsl:element>
     </xsl:template>
 
@@ -486,7 +465,6 @@ Change log
     <xsl:template match="qml:amplitude/qml:category"/>
     <xsl:template match="qml:amplitude/qml:evaluationStatus"/>
     <xsl:template match="qml:magnitude/qml:evaluationMode"/>
-    <xsl:template match="qml:originUncertainty/qml:confidenceLevel"/>
     <xsl:template match="qml:arrival/qml:comment"/>
     <xsl:template match="qml:origin/qml:region"/>
     <xsl:template match="qml:dataUsed/qml:longestPeriod"/>
