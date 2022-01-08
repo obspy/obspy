@@ -39,7 +39,7 @@ class EventTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.write_xslt_filename = os.path.join(
             self.io_directory, 'seiscomp', 'data',
-            'quakeml_1.2__sc3ml_0.11.xsl')
+            'quakeml_1.2__sc3ml_0.12.xsl')
         self.schema_pattern = re.compile(
             r'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[\d\.]+'
         )
@@ -150,7 +150,7 @@ class EventTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.5', '0.6', '0.7', '0.8', '0.10', '0.11']:
+        for version in ['0.5', '0.6', '0.7', '0.8', '0.10', '0.11', '0.12']:
             filename = os.path.join(self.path, 'version%s' % version)
             read_events(filename)
 
@@ -160,7 +160,7 @@ class EventTestCase(unittest.TestCase):
 
         expected_message = ("Can't read SC3ML version 0.3, ObsPy can deal "
                             "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10, "
-                            "0.11].")
+                            "0.11, 0.12].")
         self.assertEqual(e.exception.args[0], expected_message)
 
         filename = os.path.join(self.path, 'version0.12')
@@ -169,7 +169,7 @@ class EventTestCase(unittest.TestCase):
 
         expected_message = ("Can't read SC3ML version 0.12, ObsPy can deal "
                             "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10, "
-                            "0.11].")
+                            "0.11, 0.12].")
         self.assertEqual(e.exception.args[0], expected_message)
 
     def test_read_xslt_event(self):
@@ -312,60 +312,60 @@ class EventTestCase(unittest.TestCase):
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',
                                  'quakeml_1.2_event.sc3ml',
-                                 '0.10',
+                                 '0.12',
                                  path=self.quakeml_path)
 
     def test_write_xslt_origin(self):
         self.cmp_write_xslt_file('quakeml_1.2_origin.xml',
                                  'quakeml_1.2_origin.sc3ml',
-                                 '0.10',
+                                 '0.12',
                                  path=self.quakeml_path)
 
     def test_write_xslt_magnitude(self):
         # Missing origin in original QuakeML test case.
         self.cmp_write_xslt_file('quakeml_1.2_magnitude.xml',
                                  'quakeml_1.2_magnitude.sc3ml',
-                                 '0.10')
+                                 '0.12')
 
     def test_write_xslt_station_magnitude_contribution(self):
         # Missing origin in original QuakeML test case.
         self.cmp_write_xslt_file(
             'quakeml_1.2_stationmagnitudecontributions.xml',
             'quakeml_1.2_stationmagnitudecontributions.sc3ml',
-            '0.10',
+            '0.12',
         )
 
     def test_write_xslt_station_magnitude(self):
         # Missing origin in original QuakeML test case.
         self.cmp_write_xslt_file('quakeml_1.2_stationmagnitude.xml',
                                  'quakeml_1.2_stationmagnitude.sc3ml',
-                                 '0.10')
+                                 '0.12')
 
     def test_write_xslt_data_used_in_moment_tensor(self):
         self.cmp_write_xslt_file('quakeml_1.2_data_used.xml',
                                  'quakeml_1.2_data_used.sc3ml',
-                                 '0.10')
+                                 '0.12')
 
     def test_write_xslt_arrival(self):
         self.cmp_write_xslt_file('quakeml_1.2_arrival.xml',
                                  'quakeml_1.2_arrival_res.sc3ml',
-                                 '0.10')
+                                 '0.12')
 
     def test_write_xslt_pick(self):
         self.cmp_write_xslt_file('quakeml_1.2_pick.xml',
                                  'quakeml_1.2_pick.sc3ml',
-                                 '0.10')
+                                 '0.12')
 
     def test_write_xslt_focalmechanism(self):
         self.cmp_write_xslt_file('quakeml_1.2_focalmechanism.xml',
                                  'quakeml_1.2_focalmechanism.sc3ml',
-                                 '0.10',
+                                 '0.12',
                                  path=self.quakeml_path)
 
     def test_write_xslt_iris_events(self):
         self.cmp_write_xslt_file('iris_events.xml',
                                  'iris_events.sc3ml',
-                                 '0.10',
+                                 '0.12',
                                  path=self.quakeml_path)
 
     def test_write_xslt_neries_events(self):
@@ -386,14 +386,14 @@ class EventTestCase(unittest.TestCase):
         # unvalid)
         self.cmp_write_xslt_file('usgs_event.xml',
                                  'usgs_event.sc3ml',
-                                 '0.10',
+                                 '0.12',
                                  path=self.quakeml_path,
                                  validate=False)
 
     def test_write_xslt_example(self):
         self.cmp_write_xslt_file('qml-example-1.2-RC3.xml',
                                  'qml-example-1.2-RC3.sc3ml',
-                                 '0.10')
+                                 '0.12')
 
     def test_write_example(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
