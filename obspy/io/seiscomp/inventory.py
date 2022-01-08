@@ -33,16 +33,14 @@ from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
+SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
 SCHEMA_NAMESPACE_BASE = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
 
 
 def _get_schema_namespace(version_string):
     """
-    >>> print(_get_schema_namespace('0.9'))
-    http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9
-    >>> print(_get_schema_namespace('0.6'))
-    http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.6
+    >>> print(_get_schema_namespace('0.12'))
+    http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12
     """
     namespace = "%s/%s" % (SCHEMA_NAMESPACE_BASE, version_string)
     return namespace
@@ -89,7 +87,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
     """
     root = etree.parse(path_or_file_object).getroot()
 
-    # Code can be used for version 0.7, 0.8, and 0.9
+    # Code can be used for version 0.7 to 0.12 (Seiscomp 4.x)
     for version in SCHEMA_VERSION:
         namespace = _get_schema_namespace(version)
         if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
