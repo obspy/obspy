@@ -127,7 +127,8 @@ INSTALL_REQUIRES = [
     'decorator',
     'requests']
 EXTRAS_REQUIRE = {
-    'tests': ['pytest', 'pytest-cov', 'pytest-html',  'pyproj'],
+    'tests': ['pytest', 'pytest-cov', 'pytest-html',  'pyproj',
+              'pytest-json-report'],
     # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
     'arclink': ['cryptography'],
     'io.shapefile': ['pyshp'],

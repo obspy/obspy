@@ -15,6 +15,7 @@
 .project
 .pydevproject
 .pytest_cache
+.report.json
 /.settings
 RELEASE-VERSION
 build/

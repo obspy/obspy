@@ -2,6 +2,7 @@
 Obspy's testing configuration file.
 """
 import os
+import platform
 import shutil
 from pathlib import Path
 from subprocess import run
@@ -162,9 +163,71 @@ def pytest_configure(config):
     )
 
 
+@pytest.hookimpl(optionalhook=True)
 def pytest_html_report_title(report):
     """
     A pytest-html hook to add custom fields to the report.
     """
     # Customize the title of the html report (if used) to include version.
     report.title = f"Obspy Tests ({obspy.__version__})"
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_json_modifyreport(json_report):
+    """Modifies the json report after everything has run."""
+    # Add obspy version
+    json_report['obspy_version'] = obspy.__version__
+    # Add archecture info
+    add_environmental_info(json_report)
+    # Add github actions info
+    add_github_actions_info(json_report)
+    # Add version dependencies
+    add_dependency_info(json_report)
+
+
+def add_dependency_info(json_report):
+    """Add version info about obspy's dependencies."""
+    import pkg_resources
+    distribution = pkg_resources.get_distribution('obspy')
+    versions = {}
+    for req in distribution.requires():
+        name = req.name
+        version = pkg_resources.get_distribution(name).version
+        versions[name] = version
+    json_report['dependencies'] = versions
+    return json_report
+
+
+def add_github_actions_info(json_report):
+    """
+    Adds information from github actions environmental variables.
+    """
+    ci_info = {}
+    # Some of these are added to the CI by obspy's setup.
+    vars = ['ISSUE_NUMBER', 'PR_URL', 'CI_URL',
+            'RUNNER_OS', 'RUNNER_ARCH', 'GITHUB_JOB', 'GITHUB_WORKFLOW',
+            'GITHUB_ACTION', 'GITHUB_SHA', 'GITHUB_EVENT_NAME',
+            "GITHUB_ACTOR"]
+    for name in vars:
+        save_name = name.lower()
+        ci_info[save_name] = os.environ.get(name)
+    json_report['ci_info'] = ci_info
+    return json_report
+
+
+def add_environmental_info(json_report):
+    """Add info to dict about platform/architecture."""
+    # get system / environment settings
+    platform_info = {}
+    for name in ['system', 'release', 'version', 'machine',
+                 'processor', 'python_version', 'python_implementation',
+                 'python_compiler', 'architecture']:
+        try:
+            temp = getattr(platform, name)()
+            if isinstance(temp, tuple):
+                temp = temp[0]
+            platform_info[name] = temp
+        except Exception:
+            platform_info[name] = ''
+    json_report['platform'] = json_report
+    return json_report
