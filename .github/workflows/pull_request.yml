@@ -157,7 +157,7 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          obspy-runtests --coverage --keep-images
+          obspy-runtests --coverage --keep-images --report
 
       - name: upload coverage
         if: runner.os != 'macOS'

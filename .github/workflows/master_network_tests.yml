@@ -56,7 +56,7 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          obspy-runtests --network --coverage
+          obspy-runtests --network --coverage --report
 
       - name: upload coverage
         if: runner.os != 'macOS'
