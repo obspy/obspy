@@ -24,9 +24,9 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 - [ ] Correct base branch selected? `master` for new features, `maintenance_...` for bug fixes
 - [ ] This PR is not directly related to an existing issue (which has no PR yet).
 - [ ] If the PR is making changes to documentation, docs pages can be built automatically.
-      Just remove the space in the following string after the + sign: + DOCS
+      Just add the "build_docs" tag to this PR.
 - [ ] If all tests including network modules (e.g. `clients.fdsn`) should be tested for the PR,
-      just remove the space in the following string after the + sign: + TEST:--all
+      just add the "test_network" tag to this PR.
 - [ ] All tests still pass.
 - [ ] Any new features or fixed regressions are be covered via new tests.
 - [ ] Any new or changed features have are fully documented.
