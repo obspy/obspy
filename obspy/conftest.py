@@ -205,7 +205,7 @@ def get_dependency_info():
     for name in SOFT_DEPENDENCIES:
         try:
             version = pkg_resources.get_distribution(name).version
-        except:
+        except pkg_resources.DistributionNotFound:
             version = '---'
         version_info[name] = version
     return version_info
