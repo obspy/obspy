@@ -41,6 +41,9 @@ from pathlib import Path
 
 import obspy
 
+# URL to upload json report
+REPORT_URL = "tests.obspy.org"
+
 
 def main():
     """
@@ -65,7 +68,24 @@ def main():
     try:
         pytest.main()
     finally:
+        if "--report" in sys.argv:
+            upload_json_report()
         os.chdir(here)
+
+
+def upload_json_report(report_path='.report.json'):
+    """Upload the json report to ObsPy test server."""
+    import json
+    import requests
+
+    print('\nUploading ObsPy test run report ...')
+    data = json.load(open(report_path, "rt"))
+    response = requests.post(f"https://{REPORT_URL}/post/v2/", json=data)
+    response_str = response.content.decode('utf-8', 'backslashreplace')
+    status_code = response.status_code
+    report_url = json.loads(response_str)['url']
+    # print("Status Code:", )
+    print(f"STATUSCODE: {status_code} \nREPORT URL: {report_url}\n")
 
 
 def run_tests(network=False,

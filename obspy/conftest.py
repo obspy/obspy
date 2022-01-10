@@ -82,8 +82,8 @@ def pytest_addoption(parser):
                      help='Report Obspy Coverage to terminal and generate '
                           'xml report which will be saved as coverage.xml', )
     parser.addoption('--report', action='store_true', default=False,
-                     help='Generate and HTML report of test results '
-                          'saved as obspy_report.html in obspy directory.', )
+                     help='Generate a json report of the test results and '
+                          'upload it to ObsPys test server.', )
     parser.addoption('--keep-images', action='store_true',
                      help='store images created while runing test suite '
                           'in a directory called obspy_test_images.')
@@ -125,8 +125,8 @@ def pytest_configure(config):
     # select appropriate options for report
     # this is the same as --html=obspy_report.html --self-contained-html
     if config.getoption('--report'):
-        config.option.htmlpath = 'obspy_report.html'
-        config.option.self_contained_html = True
+        config.option.json_report = True
+        config.option.json_report_indent = 2
 
     # select options for coverage
     # this is the same as using:
