@@ -25,7 +25,7 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 - [ ] This PR is not directly related to an existing issue (which has no PR yet).
 - [ ] If the PR is making changes to documentation, docs pages can be built automatically.
       Just remove the space in the following string after the + sign: + DOCS
-- [ ] If all tests inlcuding network modules (e.g. `clients.fdsn`) should be tested for the PR,
+- [ ] If all tests including network modules (e.g. `clients.fdsn`) should be tested for the PR,
       just remove the space in the following string after the + sign: + TEST:--all
 - [ ] All tests still pass.
 - [ ] Any new features or fixed regressions are be covered via new tests.
