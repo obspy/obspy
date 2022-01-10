@@ -11,6 +11,12 @@ on: pull_request
 #       - published
 
 jobs:
+  env:
+    # Disable building PyPy wheels on windows (failed before)
+    CIBW_SKIP: pp38-win*
+    # Only build on CPython 3.9 (=short build test - REMOVE BEFORE FLIGHT)
+    CIBW_BUILD: cp39-*
+
   check_running_or_queue_jobs_to_cancel:
     runs-on: ubuntu-latest
     steps:
