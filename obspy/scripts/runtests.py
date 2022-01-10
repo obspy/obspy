@@ -58,20 +58,21 @@ def main():
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
+    report = (True if '--report' in sys.argv else
+              False if '--no-report' in sys.argv else None)
     if '-h' in sys.argv or '--help' in sys.argv:
         print(__doc__)
+        report = False
+    elif all(['--json-report-file' not in arg for arg in sys.argv]):
+        sys.argv.append('--json-report-file=none')
     here = Path().cwd()
     base_obspy_path = Path(obspy.__file__).parent
     plugin = JSONReport()
     os.chdir(base_obspy_path)
-    if all(['--json-report-file' not in arg for arg in sys.argv]):
-        sys.argv.append('--json-report-file=none')
     try:
         pytest.main(plugins=[plugin])
     finally:
         os.chdir(here)
-    report = (True if '--report' in sys.argv else
-              False if '--no-report' in sys.argv else None)
     upload_json_report(report=report, data=plugin.report)
 
 
@@ -97,7 +98,7 @@ def upload_json_report(report=None, data=None):
 def run_tests(network=False,
               all=False,
               coverage=False,
-              report=False,
+              report=None,
               keep_images=False,):
     """
     Run ObsPy's test suite.
@@ -109,7 +110,7 @@ def run_tests(network=False,
     :type coverage: bool
     :param coverage: Calculate code coverage. Report to screen and recreate
         coverage report (coverage.xml) in current directory.
-    :type report: bool
+    :type report: bool,None
     :param report: Create a self-contained html report of test results
         in current directory called "obspy_report.html". This can be useful
         for sharing test results.
@@ -121,6 +122,8 @@ def run_tests(network=False,
     # append used functions to argv and run tests
     params = ['network', 'all', 'coverage', 'report', 'keep_images']
     locs = locals()
+    if report is False:
+        sys.argv.append('--no-report')
     for param in params:
         if getattr(locs, param):
             sys.argv.append(f'--{param}')
