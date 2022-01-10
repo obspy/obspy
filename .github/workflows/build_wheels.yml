@@ -23,7 +23,7 @@ jobs:
   build_wheels:
     env:
       # Disable building PyPy wheels on windows (failed before)
-      CIBW_SKIP: pp38-win*
+      CIBW_SKIP: pp38-win* *-musllinux* *-win32 *-manylinux_i686
       # Only build on CPython 3.9 (=short build test - REMOVE BEFORE FLIGHT)
       CIBW_BUILD: cp39-*
 
