@@ -242,10 +242,11 @@ def get_environmental_info():
         except Exception:
             platform_info[name] = ''
     # add node name, but change if running on github CI
-    node_name = os.environ.get('OBSPY_NODE_NAME')
-    if not node_name:
-        node_name = platform.node().split('.', 1)[0]
     if os.environ.get('GITHUB_ACTION'):
-        node_name = 'Github_Actions'
+        node_name = 'gh-actions'
+    else:
+        node_name = os.environ.get('OBSPY_NODE_NAME')
+        if not node_name:
+            node_name = platform.node().split('.', 1)[0]
     platform_info['node'] = node_name
     return platform_info
