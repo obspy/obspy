@@ -16,6 +16,8 @@ import obspy
 from obspy.core.util import NETWORK_MODULES
 
 OBSPY_PATH = os.path.dirname(obspy.__file__)
+SOFT_DEPENDENCIES = ['cartopy', 'flake8', 'geographiclib', 'pyproj',
+                     'shapefile']
 
 # --- ObsPy fixtures
 
@@ -199,6 +201,12 @@ def get_dependency_info():
     for req in distribution.requires():
         name = req.name
         version = pkg_resources.get_distribution(name).version
+        version_info[name] = version
+    for name in SOFT_DEPENDENCIES:
+        try:
+            version = pkg_resources.get_distribution(name).version
+        except:
+            version = '---'
         version_info[name] = version
     return version_info
 
