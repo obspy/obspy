@@ -1,0 +1,25 @@
+name: test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - ca-certificates
+  - certifi
+  - coverage
+  - codecov
+  - cryptography
+  - decorator
+  - future
+  - greenlet
+  - kiwisolver
+  - lxml
+  - numpy<1.22
+  - pillow
+  - pip
+  - pyparsing
+  - requests
+  - scipy
+  - sqlalchemy
+  - pip:
+      - pyimgur
+      - -e..
