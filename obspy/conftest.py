@@ -194,7 +194,7 @@ def pytest_json_modifyreport(json_report):
 
 
 def get_dependency_info():
-    """Add version info about obspy's dependencies."""
+    """Add version info about ObsPy's dependencies."""
     import pkg_resources
     distribution = pkg_resources.get_distribution('obspy')
     version_info = {'obspy': obspy.__version__}

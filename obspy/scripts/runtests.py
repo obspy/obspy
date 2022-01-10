@@ -48,6 +48,7 @@ from pytest_jsonreport.plugin import JSONReport
 import pytest
 import requests
 import obspy
+
 REPORT_URL = "tests.obspy.org"
 
 
@@ -62,9 +63,12 @@ def main():
               False if '--no-report' in sys.argv else None)
     if '-h' in sys.argv or '--help' in sys.argv:
         print(__doc__)
-        report = False
+        sys.exit(0)
     elif all(['--json-report-file' not in arg for arg in sys.argv]):
         sys.argv.append('--json-report-file=none')
+    # Use default traceback for nicer report display
+    sys.argv.append("--tb=native")
+
     here = Path().cwd()
     base_obspy_path = Path(obspy.__file__).parent
     plugin = JSONReport()
