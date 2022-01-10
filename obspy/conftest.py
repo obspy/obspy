@@ -5,6 +5,7 @@ import argparse
 import os
 import platform
 import shutil
+import sys
 from pathlib import Path
 from subprocess import run
 
@@ -184,6 +185,7 @@ def pytest_json_modifyreport(json_report):
     json_report['ci_info'] = get_github_actions_info()
     # Add version dependencies
     json_report['dependencies'] = get_dependency_info()
+    json_report['runtest_flags'] = ' '.join(sys.argv[1:])
     # Add log for compat. with obspy reporter. We can use this in the
     # future to attach log files if needed.
     json_report['log'] = None
