@@ -1,6 +1,7 @@
 """
 Obspy's testing configuration file.
 """
+import argparse
 import os
 import platform
 import shutil
@@ -71,6 +72,10 @@ def image_path(request, save_image_directory):
 
 # --- Pytest configuration
 
+class ToggleAction(argparse.Action):
+    def __call__(self, parser, ns, values, option):
+        setattr(ns, self.dest, option[2:4] != 'no')
+
 
 def pytest_addoption(parser):
     """Pytest hook which allows setting package-specfic command-line args."""
@@ -81,9 +86,10 @@ def pytest_addoption(parser):
     parser.addoption('--coverage', action='store_true', default=False,
                      help='Report Obspy Coverage to terminal and generate '
                           'xml report which will be saved as coverage.xml', )
-    parser.addoption('--report', action='store_true', default=False,
+    parser.addoption('--report', '--no-report', dest='report',
+                     action=ToggleAction, nargs=0,
                      help='Generate a json report of the test results and '
-                          'upload it to ObsPys test server.', )
+                          'upload it to ObsPys test server.',)
     parser.addoption('--keep-images', action='store_true',
                      help='store images created while runing test suite '
                           'in a directory called obspy_test_images.')
@@ -123,10 +129,7 @@ def pytest_configure(config):
         setattr(config.option, 'markexpr', 'not network')
 
     # select appropriate options for report
-    # this is the same as --html=obspy_report.html --self-contained-html
-    if config.getoption('--report'):
-        config.option.json_report = True
-        config.option.json_report_indent = 2
+    config.option.json_report_indent = 2
 
     # select options for coverage
     # this is the same as using:

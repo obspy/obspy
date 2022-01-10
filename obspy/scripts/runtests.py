@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#:copyright:
-#    The ObsPy Development Team (devs@obspy.org)
-#:license:
-#    GNU Lesser General Public License, Version 3
-#    (https://www.gnu.org/copyleft/lesser.html)
 """
 A command-line program that runs all ObsPy tests.
 
@@ -36,16 +31,23 @@ module.
 (9) Run the test suite, drop into a pdb debugging session for each failure:
         $ obspy-runtests --pdb
 """
+"""
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+"""
+
+
+# URL to upload json report
 import os
 import sys
 from pathlib import Path
-
 from pytest_jsonreport.plugin import JSONReport
 import pytest
 import requests
 import obspy
-
-# URL to upload json report
 REPORT_URL = "tests.obspy.org"
 
 
