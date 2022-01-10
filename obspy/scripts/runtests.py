@@ -41,26 +41,47 @@ line argument is also accepted.
         $ obspy-runtests --keep-images
 (9) Run the test suite, drop into a pdb debugging session for each failure:
         $ obspy-runtests --pdb
-"""
-"""
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import os
+import re
+import sys
+from pathlib import Path
+
+import pkg_resources
+import requests
+
+import obspy
+from obspy.core.util.requirements import PYTEST_REQUIRES
 
 
 # URL to upload json report
-import os
-import sys
-from pathlib import Path
-from pytest_jsonreport.plugin import JSONReport
-import pytest
-import requests
-import obspy
-
 REPORT_URL = "tests.obspy.org"
+
+
+def _ensure_tests_requirements_installed():
+    """
+    Ensure all the tests requirements are installed or raise exception.
+
+    This function is intended to help less experienced users run the tests.
+    """
+    delimiters = (" ", "=", "<", ">", "!")
+    patterns = '|'.join(map(re.escape, delimiters))
+    msg = (f"\nNot all ObsPy's test requirements are installed. You need to "
+           f"install them before using obspy-runtest. Example with pip: \n"
+           f"\t$ pip install {' '.join(PYTEST_REQUIRES)}")
+    for package_req in PYTEST_REQUIRES:
+        # strip off any requirements, just get pkg_name
+        pkg_name = re.split(patterns, package_req, maxsplit=1)[0]
+        try:
+            pkg_resources.get_distribution(pkg_name).version
+        except pkg_resources.DistributionNotFound:
+            raise ImportError(msg)
 
 
 def main():
@@ -70,6 +91,11 @@ def main():
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
+    _ensure_tests_requirements_installed()
+
+    import pytest
+    from pytest_jsonreport.plugin import JSONReport
+
     report = (True if '--report' in sys.argv else
               False if '--no-report' in sys.argv else None)
     if '-h' in sys.argv or '--help' in sys.argv:

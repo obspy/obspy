@@ -14,10 +14,11 @@ import pytest
 
 import obspy
 from obspy.core.util import NETWORK_MODULES
+from obspy.core.util.requirements import SOFT_DEPENDENCIES
+
 
 OBSPY_PATH = os.path.dirname(obspy.__file__)
-SOFT_DEPENDENCIES = ['cartopy', 'flake8', 'geographiclib', 'pyproj',
-                     'shapefile']
+
 
 # --- ObsPy fixtures
 
