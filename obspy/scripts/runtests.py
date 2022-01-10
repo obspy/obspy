@@ -85,10 +85,11 @@ def main():
     plugin = JSONReport()
     os.chdir(base_obspy_path)
     try:
-        pytest.main(plugins=[plugin])
+        status = pytest.main(plugins=[plugin])
     finally:
         os.chdir(here)
     upload_json_report(report=report, data=plugin.report)
+    sys.exit(status)
 
 
 def upload_json_report(report=None, data=None):

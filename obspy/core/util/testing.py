@@ -10,7 +10,6 @@ Testing utilities for ObsPy.
 """
 import difflib
 import doctest
-import glob
 import inspect
 import io
 import os
@@ -20,83 +19,7 @@ import warnings
 import numpy as np
 from lxml import etree
 
-# TODO all this collection logic can be deleted since pytest does it for us.
-# this dictionary contains the locations of checker routines that determine
-# whether the module's tests can be executed or not (e.g. because test server
-# is unreachable, necessary ports are blocked, etc.).
-# A checker routine should return either an empty string (tests can and will
-# be executed) or a message explaining why tests can not be executed (all
-# tests of corresponding module will be skipped).
 MODULE_TEST_SKIP_CHECKS = {}
-
-
-def add_unittests(testsuite, module_name):
-    """
-    Function to add all available unittests of the module with given name
-    (e.g. "obspy.core") to the given unittest TestSuite.
-    All submodules in the "tests" directory whose names are starting with
-    ``test_`` are added.
-
-    :type testsuite: unittest.TestSuite
-    :param testsuite: testsuite to which the tests should be added
-    :type module_name: str
-    :param module_name: name of the module of which the tests should be added
-    """
-    module_tests = __import__(module_name + ".tests",
-                              fromlist=["obspy"])
-    filename_pattern = os.path.join(module_tests.__path__[0], "test_*.py")
-    files = glob.glob(filename_pattern)
-    names = (os.path.basename(file).split(".")[0] for file in files)
-    module_names = (".".join([module_name, "tests", name]) for name in names)
-    for _module_name in module_names:
-        _module = __import__(_module_name,
-                             fromlist=["obspy"])
-        testsuite.addTest(_module.suite())
-
-
-def add_doctests(testsuite, module_name):
-    """
-    Function to add all available doctests of the module with given name
-    (e.g. "obspy.core") to the given unittest TestSuite.
-    All submodules in the module's root directory are added.
-    Occurring errors are shown as warnings.
-
-    :type testsuite: unittest.TestSuite
-    :param testsuite: testsuite to which the tests should be added
-    :type module_name: str
-    :param module_name: name of the module of which the tests should be added
-    """
-    module = __import__(module_name, fromlist=["obspy"])
-    module_path = module.__path__[0]
-    module_path_len = len(module_path)
-
-    for root, _dirs, files in os.walk(module_path):
-        # skip directories without __init__.py
-        if '__init__.py' not in files:
-            continue
-        # skip tests directories
-        if root.endswith('tests'):
-            continue
-        # skip scripts directories
-        if root.endswith('scripts'):
-            continue
-        # skip lib directories
-        if root.endswith('lib'):
-            continue
-        # loop over all files
-        for file in files:
-            # skip if not python source file
-            if not file.endswith('.py'):
-                continue
-            # get module name
-            parts = root[module_path_len:].split(os.sep)[1:]
-            _module_name = ".".join([module_name] + parts + [file[:-3]])
-            try:
-                _module = __import__(_module_name,
-                                     fromlist=["obspy"])
-                testsuite.addTest(doctest.DocTestSuite(_module))
-            except ValueError:
-                pass
 
 
 def compare_xml_strings(doc1, doc2):
