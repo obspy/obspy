@@ -1,7 +1,7 @@
 name: Build and upload to PyPI
 
 # Build on every branch push, tag push, and pull request change:
-on: [push, pull_request]
+on: pull_request
 # Alternatively, to publish when a (published) GitHub Release is created, use the following:
 # on:
 #   push:
@@ -11,6 +11,14 @@ on: [push, pull_request]
 #       - published
 
 jobs:
+  check_running_or_queue_jobs_to_cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs in the same PR
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
