@@ -6,10 +6,6 @@ on:
     branches:
       - master
 
-# Set globally scoped environmental variables.
-env:
-  OBSPY_GITHUB_BRANCH: release_0.10.0
-
 jobs:
   run_tests:
     runs-on: ${{ matrix.os }}
@@ -70,18 +66,12 @@ jobs:
         run: |
           python -m pip install -e .[tests]
 
-      - name: install obspy github api
-        shell: bash -l {0}
-        run: |
-          python -m pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
-
       - name: run test suite
         shell: bash -l {0}
         run: |
           obspy-runtests --coverage --report
 
       - name: upload coverage
-        if: runner.os != 'macOS'
         uses: codecov/codecov-action@v2.1.0
         with:
           flags: unittests

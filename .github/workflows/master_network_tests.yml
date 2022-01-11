@@ -7,17 +7,13 @@ on:
     branches:
       - master
 
-# Set globally scoped environmental variables.
-env:
-  OBSPY_GITHUB_BRANCH: release_0.10.0
-
 jobs:
   network_tests:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
@@ -48,18 +44,12 @@ jobs:
         run: |
           python -m pip install -e .[tests]
 
-      - name: install obspy github api
-        shell: bash -l {0}
-        run: |
-          python -m pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
-
       - name: run test suite
         shell: bash -l {0}
         run: |
           obspy-runtests --network --coverage --report
 
       - name: upload coverage
-        if: runner.os != 'macOS'
         uses: codecov/codecov-action@v2.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
