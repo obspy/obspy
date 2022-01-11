@@ -1,7 +1,7 @@
 # This workflow runs on all pull requests. It has the following functions:
 #   1. Apply flake8 to the codebase for linting
-#   2. Run either the default test suite, or pass custom cmd line flags if specified in
-#      the PR comments, on all supported python versions and operating systems.
+#   2. Run the default test suite, then, optionally, run network tests,
+#      upload images, build docs, etc. based on tags in the PR.
 
 name: pull_request_tests
 on: pull_request
@@ -148,11 +148,5 @@ jobs:
 
 # This is a very useful step for debugging, it allows you to ssh into the CI
 # machine (https://github.com/marketplace/actions/debugging-with-tmate).
-# Make sure to open the log before the job starts else you cant see the tmate
-# url. See https://github.com/mxschmitt/action-tmate/issues/1.
-# Also, the CI machine will close on a non-zero exit code (annoying). This can
-# be overcome by coalescing the null command like so:
-# $ some-command-that-can-fail || :
-#
 #- name: Setup tmate session
-#  uses: mxschmitt/action-tmate@v1
+#  uses: mxschmitt/action-tmate@v3
