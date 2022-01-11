@@ -99,20 +99,19 @@ def pytest_addoption(parser):
 
 def pytest_collection_modifyitems(config, items):
     """ Preprocessor for collected tests. """
-    network_nodes = set(NETWORK_MODULES)
+    network_module_names = set(NETWORK_MODULES)
 
     for item in items:
-        # get the obspy model test originates from (eg clients.arclink)
-        obspy_node = '.'.join(item.nodeid.split('/')[1:3])
-        # if test is a network test apply network marker
-        # We need to keep these to properly mark doctests, event though
-        # the test files now have proper marks.
-        if obspy_node in network_nodes:
-            item.add_marker(pytest.mark.network)
-
         # automatically apply image mark to tests using image_path fixture.
         if 'image_path' in getattr(item, 'fixturenames', {}):
             item.add_marker('image')
+
+        # Mark network doctests, network test files are already marked.
+        name_split = item.name.replace('obspy.', '').split('.')
+        if len(name_split) >= 2:
+            possible_obspy_node = '.'.join(name_split[:2])
+            if possible_obspy_node in network_module_names:
+                item.add_marker(pytest.mark.network)
 
 
 def pytest_configure(config):
