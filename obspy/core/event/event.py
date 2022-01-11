@@ -179,7 +179,7 @@ class Event(__Event):
         Plot event location and/or the preferred focal mechanism
         and radiation pattern.
 
-        :type kind: list of str or nested list of str
+        :type kind: list[str] or list[list[str]]
         :param kind: A list of strings (for a 1-row plot) or a nested list of
             strings (one list of strings per row), with the following keywords
             to generate a matplotlib figure:
@@ -309,7 +309,8 @@ class Event(__Event):
         :param filename: The name of the file to write.
         :type format: str
         :param format: The file format to use (e.g. ``"QUAKEML"``). See
-            :meth:`Catalog.write()` for a list of supported formats.
+            :meth:`obspy.core.event.catalog.Catalog.write()` for a list of
+            supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             plugin's writer method.
 

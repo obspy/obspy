@@ -185,7 +185,7 @@ def sac_to_obspy_header(sacheader):
     :param sacheader: SAC header dictionary.
     :type sacheader: dict
 
-    :rtype: :class:`~obspy.core.Stats`
+    :rtype: :class:`~obspy.core.trace.Stats`
     :return: Filled ObsPy Stats header.
     """
 
@@ -277,7 +277,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     Merge a primary with a secondary header, reconciling some differences.
 
     :param stats: Filled ObsPy Stats header
-    :type stats: dict or :class:`~obspy.core.Stats`
+    :type stats: dict or :class:`~obspy.core.trace.Stats`
     :param keep_sac_header: If keep_sac_header is True, old stats.sac
         header values are kept, and a minimal set of values are updated from
         the stats dictionary according to these guidelines:
@@ -408,7 +408,7 @@ def get_sac_reftime(header):
     :param header: SAC header
     :type header: dict
 
-    :rtype: :class:`~obspy.core.UTCDateTime`
+    :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :returns: SAC reference time.
     """
     # NOTE: epoch seconds can be got by:

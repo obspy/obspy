@@ -55,7 +55,7 @@ def _objectify_result_to_dicts(root):
     :type root: :class:`lxml.objectify.ObjectifiedElement`
     :param root: Root node of result set returned by
         :func:`lxml.objectify.fromstring`.
-    :rtype: list of dict
+    :rtype: list[dict]
     """
     result = []
     for node in root.getchildren():
@@ -118,12 +118,17 @@ class Client(object):
         :type retries: int
         :param retries: Number of retries for failing requests.
         """
-        msg = "The module obspy.client.seishub is deprecated and will be " + \
+        msg = "The module obspy.clients.seishub is deprecated and will be " + \
             "removed in the next major release."
         warnings.warn(msg, ObsPyDeprecationWarning)
         self.base_url = base_url
+        #: A :class:`obspy.clients.seishub.client._WaveformMapperClient`
+        #: instance
         self.waveform = _WaveformMapperClient(self)
+        #: A :class:`obspy.clients.seishub.client._StationMapperClient`
+        #: instance
         self.station = _StationMapperClient(self)
+        #: An :class:`obspy.clients.seishub.client._EventMapperClient` instance
         self.event = _EventMapperClient(self)
         self.timeout = timeout
         self.debug = debug
@@ -318,7 +323,8 @@ class _WaveformMapperClient(object):
 
     .. warning::
         This function should NOT be initialized directly, instead access the
-        object via the :attr:`obspy.clients.seishub.Client.waveform` attribute.
+        object via the :attr:`obspy.clients.seishub.client.Client.waveform`
+        attribute.
 
     .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
 master/seishub/plugins/seismology/waveform.py
@@ -592,7 +598,8 @@ class _StationMapperClient(_BaseRESTClient):
 
     .. warning::
         This function should NOT be initialized directly, instead access the
-        object via the :attr:`obspy.clients.seishub.Client.station` attribute.
+        object via the :attr:`obspy.clients.seishub.client.Client.station`
+        attribute.
 
     .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
 master/seishub/plugins/seismology/waveform.py
@@ -741,7 +748,8 @@ class _EventMapperClient(_BaseRESTClient):
 
     .. warning::
         This function should NOT be initialized directly, instead access the
-        object via the :attr:`obspy.clients.seishub.Client.event` attribute.
+        object via the :py:attr:`obspy.clients.seishub.client.Client.event`
+        attribute.
 
     .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
 master/seishub/plugins/seismology/event.py

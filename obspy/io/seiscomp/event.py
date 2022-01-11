@@ -98,7 +98,7 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
-    :param filename: Filename to write or open file-like object.
+    :param filename: Filename to write or open file-like object
     :type validate: bool
     :param validate: If True, the final SC3ML file will be validated against
         the SC3ML schema file. Raises an AssertionError if the validation

@@ -47,7 +47,7 @@ class MassDownloader(object):
         IRISPH5, you must set this parameter to
         `obspy.clients.fdsn.header.URL_MAPPINGS` explicitly.
     :param debug: Debug flag passed to the underlying FDSN web service clients.
-    :type providers: list of str or :class:`~obspy.clients.fdsn.client.Client`
+    :type providers: list[str] or :class:`~obspy.clients.fdsn.client.Client`
         instances
     """
     def __init__(self, providers=None, debug=False, configure_logging=True):
@@ -125,11 +125,11 @@ class MassDownloader(object):
         :param mseed_storage: Where to store the waveform files. See
             the :mod:`~obspy.clients.fdsn.mass_downloader` documentation for
             more details.
-        :type mseed_storage: str or function
+        :type mseed_storage: str or callable
         :param stationxml_storage: Where to store the StationXML files. See
             the :mod:`~obspy.clients.fdsn.mass_downloader` documentation for
             more details.
-        :type stationxml_storage: str or function
+        :type stationxml_storage: str or callable
         :param download_chunk_size_in_mb: MiniSEED data will be downloaded
             in bulk chunks. This settings limits the chunk size. A higher
             number means that less total download requests will be sent,

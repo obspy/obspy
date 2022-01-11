@@ -51,7 +51,7 @@ a) Use the file `LKBD_WA_CUT.MSEED
 
 b) Calculate the epicentral distance from the station coordinates (46.387°N,
    7.627°E) and catalog epicenter fetched above (46.218°N, 7.706°E). Some useful
-   routines for such tasks are included in :mod:`obspy.core.geodetics`.
+   routines for such tasks are included in :mod:`obspy.geodetics`.
 
 3. Seismometer Correction/Simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

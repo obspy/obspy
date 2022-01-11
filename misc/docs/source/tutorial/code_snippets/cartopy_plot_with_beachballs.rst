@@ -53,7 +53,7 @@ our SRTM data file (from CGIAR_) look like this::
 * GeoTiff elevation data is available e.g. from ASTER_
 * Shading/Illumination can be added.
 
-.. _cartopy:: https://scitools.org.uk/cartopy/docs/latest/
+.. _cartopy: https://scitools.org.uk/cartopy/docs/latest/
 .. _pypi: https://pypi.org/project/Cartopy/
 .. _here: https://examples.obspy.org/srtm_1240-1300E_4740-4750N.asc.gz
 .. _CGIAR: https://srtm.csi.cgiar.org/

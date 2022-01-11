@@ -194,9 +194,10 @@ class Catalog(object):
         Return a robust iterator for Events of current Catalog.
 
         Doing this it is safe to remove events from catalogs inside of
-        for-loops using catalog's :meth:`~obspy.core.event.Catalog.remove`
-        method. Actually this creates a new iterator every time a event is
-        removed inside the for-loop.
+        for-loops using catalog's
+        :meth:`~obspy.core.event.catalog.Catalog.remove` method. Actually
+        this creates a new iterator every time a event is removed inside the
+        for-loop.
         """
         return list(self.events).__iter__()
 
@@ -402,7 +403,7 @@ class Catalog(object):
         """
         Returns a deepcopy of the Catalog object.
 
-        :rtype: :class:`~obspy.core.stream.Catalog`
+        :rtype: :class:`~obspy.core.event.catalog.Catalog`
         :return: Copy of current catalog.
 
         .. rubric:: Examples
@@ -480,7 +481,7 @@ class Catalog(object):
         .. rubric:: _`Supported Formats`
 
         Additional ObsPy modules extend the parameters of the
-        :meth:`~obspy.core.event.Catalog.write` method. The following
+        :meth:`~obspy.core.event.catalog.Catalog.write` method. The following
         table summarizes all known formats with write capability currently
         available for ObsPy.
 
@@ -530,10 +531,10 @@ class Catalog(object):
             * ``"f"`` (full)
 
             Defaults to ``"l"``
-        :type continent_fill_color: Valid matplotlib color, optional
+        :type continent_fill_color: valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
             ``"0.9"`` which is a light gray.
-        :type water_fill_color: Valid matplotlib color, optional
+        :type water_fill_color: valid matplotlib color, optional
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type label: str, optional
@@ -552,7 +553,7 @@ class Catalog(object):
             * ``"depth"``
 
             Defaults to ``"depth"``
-        :type colormap: str, any matplotlib colormap, optional
+        :type colormap: str, valid matplotlib colormap, optional
         :param colormap: The colormap for color-coding the events.
             The event with the smallest property will have the
             color of one end of the colormap and the event with the biggest
@@ -773,7 +774,7 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
-    :type pathname_or_url: str, pathlib.Path, or StringIO.StringIO, optional
+    :type pathname_or_url: str, pathlib.Path, or file-like object, optional
     :param pathname_or_url: String containing a file name or a URL, Path
         object, or an open file-like object. Wildcards are allowed for a file
         name. If this attribute is omitted, an example
@@ -796,9 +797,9 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
     %s
 
     Next to the :func:`~obspy.core.event.read_events` function the
-    :meth:`~obspy.core.event.Catalog.write` method of the returned
-    :class:`~obspy.core.event.Catalog` object can be used to export the data to
-    the file system.
+    :meth:`~obspy.core.event.catalog.Catalog.write` method of the returned
+    :class:`~obspy.core.event.catalog.Catalog` object can be used to export the
+    data to the file system.
     """
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog

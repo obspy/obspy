@@ -26,8 +26,9 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
     opened, otherwise it will just be passed to the underlying function.
 
     :param filename_or_buf: File to pass.
-    :type filename_or_buf: str, open file, or file-like object.
+    :type filename_or_buf: str, open file, or file-like object
     :param function: The function to call.
+    :type function: callable
     :param reset_fp: If True, the file pointer will be set to the initial
         position after the function has been called.
     :type reset_fp: bool
@@ -54,7 +55,7 @@ def _is_knet_ascii(filename_or_buf):
     Checks if the file is a valid K-NET/KiK-net ASCII file.
 
     :param filename_or_buf: File to test.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: str or file-like object
     """
     try:
         return _buffer_proxy(filename_or_buf, _internal_is_knet_ascii,
@@ -70,7 +71,7 @@ def _internal_is_knet_ascii(buf):
     Checks if the file is a valid K-NET/KiK-net ASCII file.
 
     :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     first_string = buf.read(11).decode()
     # File has less than 11 characters
@@ -246,7 +247,7 @@ def _read_knet_ascii(filename_or_buf, **kwargs):
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param filename: K-NET/KiK-net ASCII file to be read.
-    :type filename: str or file-like object.
+    :type filename: str or file-like object
     """
     return _buffer_proxy(filename_or_buf, _internal_read_knet_ascii, **kwargs)
 
@@ -260,7 +261,7 @@ def _internal_read_knet_ascii(buf, **kwargs):
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     data = []
     hdrdict = {}

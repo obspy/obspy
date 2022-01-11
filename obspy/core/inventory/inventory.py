@@ -844,10 +844,10 @@ class Inventory(ComparingObject):
             * ``"f"`` (full)
 
             Defaults to ``"l"``
-        :type continent_fill_color: Valid matplotlib color, optional
+        :type continent_fill_color: valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
             ``"0.9"`` which is a light gray.
-        :type water_fill_color: Valid matplotlib color, optional
+        :type water_fill_color: valid matplotlib color, optional
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type marker: str
@@ -865,7 +865,7 @@ class Inventory(ComparingObject):
             drawn in a different color. A dictionary can be provided that maps
             network codes to color values (e.g.
             ``color_per_network={"GR": "black", "II": "green"}``).
-        :type colormap: str, any matplotlib colormap, optional
+        :type colormap: str, valid matplotlib colormap, optional
         :param colormap: Only used if ``color_per_network=True``. Specifies
             which colormap is used to draw the colors for the individual
             networks. Defaults to the "Paired" color map.

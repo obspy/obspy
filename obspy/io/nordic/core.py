@@ -219,7 +219,7 @@ def _read_origin(line):
     Read one origin (type 1) line.
 
     :param str line: Origin format (type 1) line
-    :return: `~obspy.core.event.Event`
+    :return: `~obspy.core.event.event.Event`
     """
     new_event = Event()
     try:
@@ -319,7 +319,7 @@ def _read_spectral_info(tagged_lines, event=None):
 
     :type tagged_lines: dict
     :param tagged_lines: dictionary of tagged lines
-    :type event: :class:`~obspy.core.event.Event`
+    :type event: :class:`~obspy.core.event.event.Event`
     :param event: Event to associate spectral info with
 
     :returns:
@@ -470,7 +470,7 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False,
     Helper to extract event info from a list of line strings.
 
     :param event_str: List of lines from sfile
-    :type event_str: list of str
+    :type event_str: list[str]
     :param catalog: Catalog to append the event to
     :type catalog: `obspy.core.event.Catalog`
     :param wav_names: List of waveform names
@@ -1377,7 +1377,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                   wavefiles=None, explosion=False, nordic_format='OLD',
                   overwrite=True, string_io=None, high_accuracy=True):
     """
-    Write an :class:`~obspy.core.event.Event` to a nordic formatted s-file.
+    Write an :class:`~obspy.core.event.event.Event` to a nordic formatted
+    s-file.
 
     :type event: :class:`~obspy.core.event.event.Event`
     :param event: A single obspy event

@@ -314,7 +314,7 @@ class Scanner(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Whether to use a fixed end time for the plot and
             data percentage calculation.
-        :type seed_ids: list of str
+        :type seed_ids: list[str]
         :param seed_ids: Whether to consider only a specific set of SEED IDs
             (e.g. ``seed_ids=["GR.FUR..BHZ", "GR.WET..BHZ"]``) or just all SEED
             IDs encountered in data (if left ``None``). Given SEED IDs may
@@ -457,7 +457,7 @@ class Scanner(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Whether to use a fixed end time for the plot and
             data percentage calculation.
-        :type seed_ids: list of str
+        :type seed_ids: list[str]
         :param seed_ids: Whether to consider only a specific set of SEED IDs
             (e.g. ``seed_ids=["GR.FUR..BHZ", "GR.WET..BHZ"]``) or just all SEED
             IDs encountered in data (if left ``None``).

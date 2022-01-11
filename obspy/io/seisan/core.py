@@ -47,7 +47,7 @@ def _get_version(data):
 
     :type data: str
     :param data: Data chunk.
-    :rtype: tuple, ([ '<' | '>' ], [ 32 | 64 ], [ 6 | 7 ])
+    :rtype: tuple(str, int, int)
     :returns: Byte order (little endian '<' or big endian '>'), architecture
         (32 or 64) and SEISAN version (6 or 7).
 

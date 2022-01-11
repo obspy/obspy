@@ -27,6 +27,7 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
 
     :param kind: A list of strings or nested list of strings, see
         :meth:`obspy.core.event.event.Event.plot`.
+    :type kind: list[str] or list[list[str]]
     :type subplot_size: float
     :param subplot_size: Width/height of one single subplot cell in inches.
     :rtype: tuple

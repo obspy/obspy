@@ -37,7 +37,7 @@ def _nearest_pow_2(x):
 
     :type x: float
     :param x: Number
-    :rtype: Int
+    :rtype: int
     :return: Nearest power of 2 to x
     """
     a = math.pow(2, math.ceil(np.log2(x)))

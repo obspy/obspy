@@ -11,6 +11,7 @@
 
        client.Client
        routing.routing_client.RoutingClient
+       mass_downloader.download_helpers._SlotsEqualityComparisionObject
 
     .. comment to end block
 

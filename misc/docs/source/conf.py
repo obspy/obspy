@@ -92,15 +92,30 @@ exclude_patterns = [
 # Warn about all references where the target cannot be found.
 nitpicky = True
 nitpick_ignore = [
-    ('py:class', 'list of str'),
     ('py:class', 'optional'),
     ('py:class', 'file'),
+    ('py:class', 'file-like object'),
+    ('py:class', 'open file'),
+    ('py:class', 'valid matplotlib color'),
+    ('py:class', 'valid matplotlib colormap'),
+    ('py:class', 'same class as original object'),
+    ('py:class', 'sqlalchemy.orm.decl_api.Base'),
+    ('py:class', 'array_like'),
+    ('py:class', 'hashable')
 ]
 
 # suppress built-in types by default in nitpick
 import builtins
 for name in dir(builtins):
     nitpick_ignore += [('py:class', name)]
+
+# suppress warnings for all Class built using the _event_type_class_factory
+# which generate: "py:class reference target not found:
+# obspy.core.event.base._event_type_class_factory.<locals>.
+# AbstractEventTypeWithResourceID
+nitpick_ignore_regex = [
+    (r'py:class', r'.*<locals>\.AbstractEvent..*')
+]
 
 # configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
@@ -110,6 +125,11 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/', None),
     'sqlalchemy': ('https://docs.sqlalchemy.org/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None),
+    'lxml': ('https://lxml.de/apidoc/', None),
+    'cartopy': ('https://scitools.org.uk/cartopy/docs/latest/', None),
+    'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
+    'sqlalchemy': ('https://docs.sqlalchemy.org/en/latest/', None),
+    'requests': ('https://docs.python-requests.org/en/latest/', None)
 }
 
 # A boolean that decides whether module names are prepended to all object names
@@ -219,6 +239,8 @@ autosummary_generate = True
 # If true, autosummary already overwrites stub files by generated contents.
 autosummary_generate_overwrite = False
 
+# Not sure this will remove warnings from collections's Mapping (Attribdict)
+autodoc_inherit_docstrings = False
 
 # -- Options for linkcheck exension ------------------------------------------
 linkcheck_timeout = 5
@@ -228,3 +250,6 @@ linkcheck_workers = 10
 # -- Options for matplotlib plot directive -----------------------------------
 # File formats to generate.
 plot_formats = [('png', 110),] # ('hires.png', 200), ('pdf', 200)]
+# The short X.Y version.
+version = 'master'# The full version, including alpha/beta/rc tags.
+release = 'master'

@@ -150,10 +150,10 @@ class BaseRoutingClient(HTTPClient):
         :type routing_type: str
         :param routing_type: The type of
             router to initialize. For details see :func:`RoutingClient`.
-        :type exclude_providers: str or list of str
+        :type exclude_providers: str or list[str]
         :param exclude_providers: Get no data from these providers. Can be
             the full HTTP address or one of the shortcuts ObsPy knows about.
-        :type include_providers: str or list of str
+        :type include_providers: str or list[str]
         :param include_providers: Get data only from these providers. Can be
             the full HTTP address of one of the shortcuts ObsPy knows about.
         :type credentials: dict

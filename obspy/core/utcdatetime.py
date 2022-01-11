@@ -1422,7 +1422,7 @@ class UTCDateTime(object):
         """
         Returns a tuple containing (ISO year, ISO week number, ISO weekday).
 
-        :rtype: tuple of ints
+        :rtype: tuple(int)
         :return: Returns a (named) tuple containing ISO year, ISO week number
             and ISO weekday. Depending on the used Python version it either
             returns a tuple (Py<3.9) or named tuple (Py>=3.9).
@@ -1512,7 +1512,7 @@ class UTCDateTime(object):
         :type compact: bool, optional
         :param compact: Delivers a compact SEED date string if enabled. Default
             value is set to False.
-        :rtype: string
+        :rtype: str
         :return: Datetime string in the SEED format.
 
         .. rubric:: Example

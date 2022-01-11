@@ -659,7 +659,7 @@ class Stream(object):
         """
         Append a single Trace object to the current Stream object.
 
-        :param trace: :class:`~obspy.core.stream.Trace` object.
+        :param trace: :class:`~obspy.core.trace.Trace` object.
 
         .. rubric:: Example
 
@@ -2296,7 +2296,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
-        :type window: array_like, callable, str, float, or tuple, optional
+        :type window: :class:`numpy.ndarray`, callable, str, float, or tuple,
+            optional
         :param window: Specifies the window applied to the signal in the
             Fourier domain. Defaults ``'hanning'`` window. See
             :func:`scipy.signal.resample` for details.
@@ -3226,10 +3227,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type npts_tol: int
         :param npts_tol: Tolerate traces with different number of points
             with a difference up to this value. Surplus samples are discarded.
-        :type time_tol: float (seconds)
-        :param time_tol: Tolerate difference in startime when setting the
-            new starttime of the stack. If starttimes differs more than this
-            value it will be set to timestamp 0.
+        :type time_tol: float
+        :param time_tol: Tolerate difference, in seconds, in startime when
+            setting the new starttime of the stack. If starttimes differs more
+            than this value it will be set to timestamp 0.
 
         >>> from obspy import read
         >>> st = read()

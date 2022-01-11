@@ -599,7 +599,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
     opened, otherwise it will just be passed to the underlying function.
 
     :param filename_or_buf: File to pass.
-    :type filename_or_buf: str, open file, or file-like object.
+    :type filename_or_buf: str, open file, or file-like object
     :param function: The function to call.
     :param reset_fp: If True, the file pointer will be set to the initial
         position after the function has been called.
@@ -627,7 +627,7 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
     Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
     object.
 
-    :param filename_or_buf: File or file-like object.
+    :param filename_or_buf: File or file-like object
     """
     try:
         return _buffer_proxy(filename_or_buf, __read_ims10_bulletin,
@@ -643,7 +643,7 @@ def __read_ims10_bulletin(fh, **kwargs):  # NOQA
     Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
     object.
 
-    :param fh: File or file-like object.
+    :param fh: File or file-like object
     """
     return ISFReader(fh, **kwargs).deserialize()
 
@@ -671,7 +671,7 @@ def __is_ims10_bulletin(fh, **kwargs):  # NOQA
     """
     Checks whether a file is ISF IMS1.0 bulletin format.
 
-    :type fh: Open file or file-like object.
+    :type fh: open file or file-like object
     :param filename: name of the file to be checked or open file-like object.
     :rtype: bool
     :return: ``True`` if ISF IMS1.0 bulletin file.

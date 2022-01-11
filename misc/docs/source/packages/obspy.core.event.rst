@@ -35,5 +35,6 @@
        magnitude
        origin
        source
+       resourceid
 
     .. comment to end block

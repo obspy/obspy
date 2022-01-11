@@ -102,19 +102,19 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     """
     Creates a basemap plot with a data point scatter plot.
 
-    :type lons: list/tuple of floats
+    :type lons: list[float] or tuple(float)
     :param lons: Longitudes of the data points.
-    :type lats: list/tuple of floats
+    :type lats: list[float] or tuple(float)
     :param lats: Latitudes of the data points.
-    :type size: float or list/tuple of floats
+    :type size: list[float] or tuple(float)
     :param size: Size of the individual points in the scatter plot.
-    :type color: list/tuple of floats (or objects that can be
-        converted to floats, like e.g.
+    :type color: float, list[float], tuple(float) (or objects that
+        can be converted to floats, like e.g.
         :class:`~obspy.core.utcdatetime.UTCDateTime`)
     :param color: Color information of the individual data points to be
         used in the specified color map (e.g. origin depths,
         origin times).
-    :type labels: list/tuple of str
+    :type labels: list[str] or tuple(str)
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
     :param projection: The map projection.
@@ -137,13 +137,13 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
 
         Defaults to ``"l"``. For compatibility, you may also specify any of the
         Cartopy resolutions defined in :func:`plot_cartopy`.
-    :type continent_fill_color: Valid matplotlib color, optional
+    :type continent_fill_color: valid matplotlib color, optional
     :param continent_fill_color:  Color of the continents. Defaults to
         ``"0.9"`` which is a light gray.
-    :type water_fill_color: Valid matplotlib color, optional
+    :type water_fill_color: valid matplotlib color, optional
     :param water_fill_color: Color of all water bodies.
         Defaults to ``"white"``.
-    :type colormap: str, any matplotlib colormap, optional
+    :type colormap: str, valid matplotlib colormap, optional
     :param colormap: The colormap for color-coding the events as provided
         in `color` kwarg.
         The event with the smallest `color` property will have the
@@ -496,19 +496,19 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     """
     Creates a Cartopy plot with a data point scatter plot.
 
-    :type lons: list/tuple of floats
+    :type lons: list[float] or tuple(float)
     :param lons: Longitudes of the data points.
-    :type lats: list/tuple of floats
+    :type lats: list[float] or tuple(float)
     :param lats: Latitudes of the data points.
-    :type size: float or list/tuple of floats
+    :type size: float, list[float] or tuple(float)
     :param size: Size of the individual points in the scatter plot.
-    :type color: list/tuple of floats (or objects that can be
+    :type color: list[float], tuple(float) or objects that can be
         converted to floats, like e.g.
         :class:`~obspy.core.utcdatetime.UTCDateTime`)
     :param color: Color information of the individual data points to be
         used in the specified color map (e.g. origin depths,
         origin times).
-    :type labels: list/tuple of str
+    :type labels: list[str] or tuple[float]
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
     :param projection: The map projection.
@@ -534,13 +534,13 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
 
         Defaults to ``"110m"``. For compatibility, you may also specify any of
         the Basemap resolutions defined in :func:`plot_basemap`.
-    :type continent_fill_color: Valid matplotlib color, optional
+    :type continent_fill_color: valid matplotlib color, optional
     :param continent_fill_color:  Color of the continents. Defaults to
         ``"0.9"`` which is a light gray.
-    :type water_fill_color: Valid matplotlib color, optional
+    :type water_fill_color: valid matplotlib color, optional
     :param water_fill_color: Color of all water bodies.
         Defaults to ``"white"``.
-    :type colormap: str, any matplotlib colormap, optional
+    :type colormap: str, valid matplotlib colormap, optional
     :param colormap: The colormap for color-coding the events as provided
         in `color` kwarg.
         The event with the smallest `color` property will have the
@@ -563,7 +563,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         to do further customization of the plot before showing it.
     :type proj_kwargs: dict
     :param proj_kwargs: Keyword arguments to pass to the Cartopy
-        :class:`~cartopy.ccrs.Projection`. In this dictionary, you may specify
+        :class:`~cartopy.crs.Projection`. In this dictionary, you may specify
         ``central_longitude='auto'`` or ``central_latitude='auto'`` to have
         this function calculate the latitude or longitude as it would for other
         projections. Some arguments may be ignored if you choose one of the

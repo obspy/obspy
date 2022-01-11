@@ -8,7 +8,7 @@ import numpy as np
 from . import pack, unpack
 
 
-# The format of the 400 byte long binary file header.
+#: The format of the 400 byte long binary file header.
 BINARY_FILE_HEADER_FORMAT = [
     # [length, name, mandatory]
     [4, 'job_identification_number', False],
@@ -45,7 +45,7 @@ BINARY_FILE_HEADER_FORMAT = [
     [2, 'number_of_3200_byte_ext_file_header_records_following', True],
     [94, 'unassigned_2', False]]
 
-# The format of the 240 byte long trace header.
+#: The format of the 240 byte long trace header.
 TRACE_HEADER_FORMAT = [
     # [length, name, special_type, start_byte]
     # Special type enforces a different format while unpacking using struct.
@@ -163,8 +163,8 @@ TRACE_HEADER_FORMAT = [
 TRACE_HEADER_KEYS = [_i[1] for _i in TRACE_HEADER_FORMAT]
 
 
-# Functions that unpack the chosen data format. The keys correspond to the
-# number given for each format by the SEG Y format reference.
+#: Functions that unpack the chosen data format. The keys correspond to the
+#: number given for each format by the SEG Y format reference.
 DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS = {
     1: unpack.unpack_4byte_ibm,
     2: unpack.unpack_4byte_integer,
@@ -174,8 +174,8 @@ DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS = {
     8: unpack.unpack_1byte_integer,
 }
 
-# Functions that pack the chosen data format. The keys correspond to the
-# number given for each format by the SEG Y format reference.
+#: Functions that pack the chosen data format. The keys correspond to the
+#: number given for each format by the SEG Y format reference.
 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS = {
     1: pack.pack_4byte_ibm,
     2: pack.pack_4byte_integer,
@@ -185,7 +185,7 @@ DATA_SAMPLE_FORMAT_PACK_FUNCTIONS = {
     8: pack.pack_1byte_integer,
 }
 
-# Size of one sample.
+#: Size of one sample.
 DATA_SAMPLE_FORMAT_SAMPLE_SIZE = {
     1: 4,
     2: 4,
@@ -195,14 +195,14 @@ DATA_SAMPLE_FORMAT_SAMPLE_SIZE = {
     8: 1,
 }
 
-# Map the data format sample code and the corresponding dtype.
+#: Map the data format sample code and the corresponding dtype.
 DATA_SAMPLE_FORMAT_CODE_DTYPE = {
     1: np.float32,
     2: np.int32,
     3: np.int16,
     5: np.float32}
 
-# Map the endianness to bigger/smaller sign.
+#: Map the endianness to bigger/smaller sign.
 ENDIAN = {
     'big': '>',
     'little': '<',

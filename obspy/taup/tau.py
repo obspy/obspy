@@ -166,10 +166,10 @@ class Arrivals(list):
         Plot arrival times if any have been calculated.
 
         :param phase_list: List of phases for which travel times are plotted,
-            if they exist. See `Phase naming in taup`_ for details on
+            if they exist. See `phase_taup`_ for details on
             phase naming and convenience keys like ``'ttbasic'``. Defaults to
             ``'ttall'``.
-        :type phase_list: list of str
+        :type phase_list: list[str]
         :param plot_all: By default all rays, even those travelling in the
             other direction and thus arriving at a distance of *360 - x*
             degrees are shown. Set this to ``False`` to only show rays
@@ -251,10 +251,10 @@ class Arrivals(list):
         Plot ray paths if any have been calculated.
 
         :param phase_list: List of phases for which ray paths are plotted,
-            if they exist. See `Phase naming in taup`_ for details on
+            if they exist. See `phase_taup`_ for details on
             phase naming and convenience keys like ``'ttbasic'``. Defaults to
             ``'ttall'``.
-        :type phase_list: list of str
+        :type phase_list: list[str]
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
             A spherical plot is always global whereas a Cartesian one can
             also be local.
@@ -275,7 +275,7 @@ class Arrivals(list):
             or clip. Consider using the ``legend`` parameter instead if you
             are plotting multiple phases.
         :type label_arrivals: bool
-        :param show: Show the plot.
+        :param show: Show the plot
         :type show: bool
         :param fig: Figure to plot in. If not given, a new figure will be
             created.
@@ -631,7 +631,7 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases in arrivals object
             will be used.
-        :type phase_list: list of str
+        :type phase_list: list[str]
         :param receiver_depth_in_km: Receiver depth in km
         :type receiver_depth_in_km: float
 
@@ -661,7 +661,7 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases in arrivals object
             will be used.
-        :type phase_list: list of str
+        :type phase_list: list[str]
         :param receiver_depth_in_km: Receiver depth in km
         :type receiver_depth_in_km: float
 
@@ -688,7 +688,7 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases in arrivals object
             will be used.
-        :type phase_list: list of str
+        :type phase_list: list[str]
         :param receiver_depth_in_km: Receiver depth in km
         :type receiver_depth_in_km: float
 
@@ -731,7 +731,7 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases in arrivals object
             will be used.
-        :type phase_list: list of str
+        :type phase_list: list[str]
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -779,11 +779,11 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases in arrivals object
             will be used.
-        :type phase_list: list of str
+        :type phase_list: list[str]
         :param resample: adds sample points to allow for easy cartesian
                          interpolation. This is especially useful for phases
                          like Pdiff.
-        :type resample: boolean
+        :type resample: bool
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
             attributes.
@@ -845,7 +845,7 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases in arrivals object
             will be used.
-        :type phase_list: list of str
+        :type phase_list: list[str]
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
             attributes.
@@ -896,7 +896,7 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
     :param npoints: Number of points to plot.
     :type npoints: int
     :param phase_list: List of phase names to plot.
-    :type phase_list: list of str, optional
+    :type phase_list: list[str], optional
     :param model: string containing the model to use.
     :type model: str
     :param plot_all: By default all rays, even those travelling in the
@@ -996,7 +996,7 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
         and 'cartesian'.
     :type plot_type: str
     :param phase_list: List of phase names.
-    :type phase_list: list of str
+    :type phase_list: list[str]
     :param model: Model name.
     :type model: str
     :param plot_all: By default all rays, even those travelling in the

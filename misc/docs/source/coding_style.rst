@@ -185,7 +185,7 @@ explained by an example:
       :param tb: traceback object
       :param limit: maximum number of stack frames to show
       :type limit: integer or None
-      :rtype: list of strings
+      :rtype: list[str]
       :return: Traceback messages.
       """
 
@@ -200,7 +200,7 @@ which renders like this:
    :param tb: traceback object
    :param limit: maximum number of stack frames to show
    :type limit: int or None
-   :rtype: list of str
+   :rtype: list[str]
    :return: Traceback messages.
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html

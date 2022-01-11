@@ -54,17 +54,18 @@
        cpxtrace
        cross_correlation
        detrend
+       differentiate_and_integrate
        filter
        freqattributes
        hoctavbands
-       invsim
        interpolation
+       invsim
        konnoohmachismoothing
        polarization
        quality_control
        regression
-       spectral_estimation
        rotate
+       spectral_estimation
        tf_misfit
        trigger
        util

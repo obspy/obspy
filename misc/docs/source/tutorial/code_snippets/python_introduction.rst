@@ -54,7 +54,7 @@ Description of each line of the example above:
     A Python counterpart for the well-known C function ``sprintf`` is the ``%``
     operator acting on a format string. Here we print the header attributes
     ``station`` and ``starttime`` as well as the return value of the methods
-    :meth:`~numpy.mean` and :meth:`~numpy.std` acting on the data sub-object
+    :func:`~numpy.mean` and :func:`~numpy.std` acting on the data sub-object
     of the :class:`~obspy.core.trace.Trace` (which are of type
     :class:`numpy.ndarray`).
 *Line 10*

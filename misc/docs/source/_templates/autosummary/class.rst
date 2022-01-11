@@ -2,14 +2,15 @@
 
 .. currentmodule:: {{ module }}
 .. autoclass:: {{ objname }}
-    :show-inheritance:
+   :show-inheritance:
 
 {% block attributes %}
 {% if attributes %}
 .. rubric:: Attributes
 
 .. autosummary::
-
+  :toctree: .
+  :nosignatures:
 {% for item in attributes %}
   ~{{ name }}.{{ item }}
 {%- endfor %}

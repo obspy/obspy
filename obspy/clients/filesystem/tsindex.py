@@ -813,9 +813,9 @@ class Client(object):
         (e.g. NameTuple(earliest, latest)) intersect with
         one another.
 
-        :type ts1: namedtuple
+        :type ts1: :class:`collections.namedtuple`
         :param ts1: Earliest timespan.
-        :type ts2: namedtuple
+        :type ts2: :class:`collections.namedtuple`
         :param ts2: Latest timespan.
         """
         if ts1.earliest <= ts2.latest and \
@@ -1246,7 +1246,7 @@ class Indexer(object):
         :type file_path: str
         :param file_path: Path to leap seconds file to test
 
-        :rtype: boolean
+        :rtype: bool
         :returns: Expiration status of leap seconds file.
         """
 

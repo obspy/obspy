@@ -11,9 +11,9 @@ obspy.clients.earthworm - Earthworm Wave Server client for ObsPy.
 
 Basic Usage
 -----------
-(1) :meth:`~obspy.clients.earthworm.client.Client.getWaveform()`: The following
-    example illustrates how to request and plot 30 seconds of all three
-    short period channels (``"EH*"``) of station ``"KCG"`` of the `Alaska
+(1) :meth:`~obspy.clients.earthworm.client.Client.get_waveforms()`: The
+    following example illustrates how to request and plot 30 seconds of all
+    three short period channels (``"EH*"``) of station ``"KCG"`` of the `Alaska
     Volcano Observatory <https://www.avo.alaska.edu/>`_ (``"AV"``).
 
     >>> from obspy.clients.earthworm import Client

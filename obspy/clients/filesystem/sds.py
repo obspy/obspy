@@ -202,7 +202,7 @@ class Client(object):
         Returns a stream object with with the data requested from the local
         directory.
 
-        :type bulk: list of tuples
+        :type bulk: list[tuple]
         :param bulk: Information about the requested data.
         """
         st = Stream()
@@ -230,7 +230,7 @@ class Client(object):
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
-        :rtype: list of str
+        :rtype: list[str]
         """
         sds_type = sds_type or self.sds_type
         # SDS has data sometimes in adjacent days, so also try to read the
@@ -309,7 +309,7 @@ class Client(object):
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
-        :rtype: 2-tuple (float, int)
+        :rtype: tuple(float, int)
         :returns: 2-tuple of percentage of available data (``0.0`` to ``1.0``)
             and number of gaps/overlaps.
         """
@@ -599,7 +599,7 @@ class Client(object):
 
 def _wildcarded_except(exclude=[]):
     """
-    Function factory for :mod:`re` ``repl`` functions used in :func:`re.sub``,
+    Function factory for :mod:`re` ``repl`` functions used in :func:`re.sub`,
     replacing all format string place holders with ``*`` wildcards, except
     named fields as specified in ``exclude``.
     """

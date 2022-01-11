@@ -29,7 +29,7 @@ from obspy.core.util import Enum
 
 from . import utils
 
-# The current status of an entity.
+#: The current status of an entity.
 STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists",
                "download_failed", "download_rejected",
                "download_partially_failed"])
@@ -65,12 +65,11 @@ class Station(_SlotsEqualityComparisionObject):
     :param longitude: The longitude of the station.
     :type longitude: float
     :param channels: The channels of the station.
-    :type channels: list of :class:`~.Channel` objects
+    :type channels: list[:class:`~.Channel`]
     :param stationxml_filename: The filename of the StationXML file.
     :type stationxml_filename: str
     :param stationxml_status: The current status of the station.
-    :type stationxml_filename:
-        :class:`~.STATUS`
+    :type stationxml_status: :py:attr:`~.STATUS`
     """
     __slots__ = ["network", "station", "latitude", "longitude", "channels",
                  "_stationxml_filename", "want_station_information",
@@ -444,7 +443,7 @@ class TimeInterval(_SlotsEqualityComparisionObject):
     :param filename: The filename of the interval.
     :type filename: str
     :param status: The status of the time interval.
-    :param status: :class:`~.STATUS`
+    :param status: :py:attr:`~.STATUS`
     """
     __slots__ = ["start", "end", "filename", "status"]
 
@@ -466,7 +465,7 @@ class TimeInterval(_SlotsEqualityComparisionObject):
 
 class ClientDownloadHelper(object):
     """
-    :type client: :class:`obspy.fdsn.client.Client`
+    :type client: :class:`obspy.clients.fdsn.client.Client`
     :param client: An initialized FDSN client.
     :type client_name: str
     :param client_name: The name of the client. Only used for logging.

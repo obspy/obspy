@@ -327,7 +327,7 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
     separately, stacks them together and estimates the maximum and shift of
     maximum on the stack.
 
-    Basically the same as :func:`~obspy.signal.cross_correlation.xcorr` but
+    Basically the same as `~obspy.signal.cross_correlation.xcorr` but
     for (normally) three components, please also take a look at the
     documentation of that function. Useful e.g. for estimation of waveform
     similarity on a three component seismogram.
@@ -340,7 +340,7 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
         component_id codes are ignored)
     :type shift_len: int
     :param shift_len: Total length of samples to shift for cross correlation.
-    :type components: list of str
+    :type components: list[str]
     :param components: List of components to use in cross-correlation, defaults
         to ``['Z', 'N', 'E']``.
     :type full_xcorr: bool
@@ -467,12 +467,12 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
         seconds.
     :type filter: str
     :param filter: `None` for no filtering or name of filter type
-            as passed on to :meth:`~obspy.core.Trace.trace.filter` if filter
+            as passed on to :meth:`~obspy.core.trace.Trace.filter` if filter
             should be used. To avoid artifacts in filtering provide
             sufficiently long time series for `trace1` and `trace2`.
     :type filter_options: dict
     :param filter_options: Filter options that get passed on to
-            :meth:`~obspy.core.Trace.trace.filter` if filtering is used.
+            :meth:`~obspy.core.trace.Trace.filter` if filtering is used.
     :type plot: bool
     :param plot: If `True`, a plot window illustrating the alignment of the two
         traces at best cross correlation will be shown. This can and should be

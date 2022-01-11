@@ -234,7 +234,7 @@ raised when mixing the two options):
 
 >>> from obspy.taup import plot_ray_paths
 >>> import matplotlib.pyplot as plt
->>> fig, ax = plt.subplots(projection='polar')
+>>> fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
 >>> ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig, verbose=True)
 There were rays for all but the following epicentral distances:
  [0.0, 360.0]
@@ -252,7 +252,7 @@ There were rays for all but the following epicentral distances:
 More examples of plotting may be found in the :doc:`ObsPy tutorial
 </tutorial/code_snippets/travel_time>`.
 
-.. _`Phase naming in taup`:
+.. _phase_taup:
 
 Phase naming in obspy.taup
 --------------------------

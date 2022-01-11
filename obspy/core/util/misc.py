@@ -119,7 +119,7 @@ def score_at_percentile(values, per, limit=(), issorted=True):
     >>> score_at_percentile(a, 75, limit=(0, 100))
     42.5
 
-    This function is taken from :func:`scipy.stats.score_at_percentile`.
+    This function is taken from `scipy.stats.score_at_percentile`.
 
     Copyright (c) Gary Strangman
     """
