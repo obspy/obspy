@@ -8,7 +8,8 @@ module.
 
 A few important command line arguments:
     --help : Print help message an exit.
-    --report : Create a json report and submit it to ObsPys' report server.
+    --no-report, --report : Do not ask and automatically (not) submit report
+            to ObsPys' report server.
     --cov : Calculate and display test coverage.
     --network : Only run network tests (requires an internet connection).
     --all : Run both network and non-network tests.
@@ -31,15 +32,12 @@ line argument is also accepted.
         $ obspy-runtests io/wav obspy/io/sac
 (5) Run a specific test case::
         $ obspy-runtests core/tests/test_stats.py::TestStats::test_init
-(6) Create a self-contained html-report of test results with pytest-html
-    plugin::
-        $ obspy-runtests --html path/report.html
-(7) Run tests and print a coverage report to screen and save coverage.xml
+(6) Run tests and print a coverage report to screen and save coverage.xml
     with pytest-cov plugin:
         $ obspy-runtests --coverage
-(8) Save the image outputs of the testsuite, called 'obspy_image_tests':
+(7) Save the image outputs of the testsuite, called 'obspy_image_tests':
         $ obspy-runtests --keep-images
-(9) Run the test suite, drop into a pdb debugging session for each failure:
+(8) Run the test suite, drop into a pdb debugging session for each failure:
         $ obspy-runtests --pdb
 
 :copyright:

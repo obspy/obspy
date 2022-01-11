@@ -121,7 +121,7 @@ jobs:
         run: |
           obspy-runtests --coverage --keep-images --report
 
-      - name: run network tests
+      - name: optionally run network tests
         if: contains(github.event.pull_request.labels.*.name, 'test_network')
         continue-on-error: true
         shell: bash -l {0}
