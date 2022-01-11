@@ -179,11 +179,11 @@ def pytest_json_modifyreport(json_report):
     # Remove any possible environmental variables included in Packages:
     # https://github.com/obspy/obspy/pull/2489#issuecomment-1009806258
     with suppress((KeyError, ValueError)):  # don't let this fail tests
-        packages = json_report['environment'].get('Packages', {})
+        packages = json_report.get('environment', {})
         filtered_packages = {
             i: v for i, v in packages.items() if not i.isupper()
         }
-        json_report['environment']['Packages'] = filtered_packages
+        json_report['environment'] = filtered_packages
 
 
 def get_dependency_info():

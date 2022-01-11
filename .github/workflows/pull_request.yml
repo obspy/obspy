@@ -137,7 +137,8 @@ jobs:
           fail_ci_if_error: false
           file: obspy/coverage.xml
 
-      - name: upload image directory
+      - name: optionally upload image directory
+        if: contains(github.event.pull_request.labels.*.name, 'upload_images')
         uses: actions/upload-artifact@v2
         with:
           name: "images_${{ github.event.pull_request.number }}_${{ matrix.python-version }}_${{ matrix.os }}"
