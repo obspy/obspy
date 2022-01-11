@@ -47,7 +47,7 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          obspy-runtests --network --coverage --report
+          obspy-runtests --network --cov obspy --cov-report='xml' --cov-append --report
 
       - name: upload coverage
         uses: codecov/codecov-action@v2.1.0

@@ -8,6 +8,7 @@ import shutil
 import sys
 from pathlib import Path
 from subprocess import run
+from contextlib import suppress
 
 import numpy as np
 import pytest
@@ -82,14 +83,11 @@ class ToggleAction(argparse.Action):
 
 
 def pytest_addoption(parser):
-    """Pytest hook which allows setting package-specfic command-line args."""
+    """Pytest hook which allows setting package-specific command-line args."""
     parser.addoption('--network', action='store_true', default=False,
                      help='test only network modules', )
     parser.addoption('--all', action='store_true', default=False,
                      help='run both network and non-network tests', )
-    parser.addoption('--coverage', action='store_true', default=False,
-                     help='Report Obspy Coverage to terminal and generate '
-                          'xml report which will be saved as coverage.xml', )
     parser.addoption('--report', '--no-report', dest='report',
                      action=ToggleAction, nargs=0,
                      help='Generate a json report of the test results and '
@@ -135,20 +133,6 @@ def pytest_configure(config):
     # select appropriate options for report
     config.option.json_report_indent = 2
 
-    # select options for coverage
-    # this is the same as using:
-    # --cov obspy --cov-report term-missing --cov-report='xml' --cov-append
-    if config.getoption('--coverage'):
-        # this is a bit hinky, but we need to register and load coverage here
-        # or else it doesn't work
-        from pytest_cov.plugin import CovPlugin
-        opts = config.known_args_namespace
-        opts.cov_report = {'term-missing': None, 'xml': None}
-        opts.cov_source = [OBSPY_PATH]
-        opts.cov_append = True
-        plugin = CovPlugin(opts, config.pluginmanager)
-        config.pluginmanager.register(plugin, '_cov')
-
     # Set numpy print options to try to not break doctests.
     try:
         np.set_printoptions(legacy='1.13')
@@ -192,6 +176,14 @@ def pytest_json_modifyreport(json_report):
     # Add log for compat. with obspy reporter. We can use this in the
     # future to attach log files if needed.
     json_report['log'] = None
+    # Remove any possible environmental variables included in Packages:
+    # https://github.com/obspy/obspy/pull/2489#issuecomment-1009806258
+    with suppress((KeyError, ValueError)):  # don't let this fail tests
+        packages = json_report['environment'].get('Packages', {})
+        filtered_packages = {
+            i: v for i, v in packages.items() if not i.isupper()
+        }
+        json_report['environment']['Packages'] = filtered_packages
 
 
 def get_dependency_info():

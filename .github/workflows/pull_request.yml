@@ -119,14 +119,14 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          obspy-runtests --coverage --keep-images --report
+          obspy-runtests --cov obspy --cov-report='xml' --cov-append --keep-images --report
 
       - name: optionally run network tests
         if: contains(github.event.pull_request.labels.*.name, 'test_network')
         continue-on-error: true
         shell: bash -l {0}
         run: |
-          obspy-runtests --coverage --report --network
+          obspy-runtests --cov obspy --cov-report='xml' --cov-append --report --network
 
       - name: upload coverage
         uses: codecov/codecov-action@v2.1.0

@@ -32,9 +32,8 @@ line argument is also accepted.
         $ obspy-runtests io/wav obspy/io/sac
 (5) Run a specific test case::
         $ obspy-runtests core/tests/test_stats.py::TestStats::test_init
-(6) Run tests and print a coverage report to screen and save coverage.xml
-    with pytest-cov plugin:
-        $ obspy-runtests --coverage
+(6) Run tests and print a coverage report to screen including missed lines:
+        $ obspy-runtests --cov obspy --cov-report term-missing
 (7) Save the image outputs of the testsuite, called 'obspy_image_tests':
         $ obspy-runtests --keep-images
 (8) Run the test suite, drop into a pdb debugging session for each failure:
@@ -137,41 +136,6 @@ def upload_json_report(report=None, data=None):
         else:
             print(f"Error: Could not sent a test report to {REPORT_URL}.")
             print(response.reason)
-
-
-def run_tests(network=False,
-              all=False,
-              coverage=False,
-              report=None,
-              keep_images=False,):
-    """
-    Run ObsPy's test suite.
-
-    :type all: bool
-    :param all: Run all tests
-    :type network: bool
-    :param network: run only network tests.
-    :type coverage: bool
-    :param coverage: Calculate code coverage. Report to screen and recreate
-        coverage report (coverage.xml) in current directory.
-    :type report: bool,None
-    :param report: Create a self-contained html report of test results
-        in current directory called "obspy_report.html". This can be useful
-        for sharing test results.
-    :type keep_images: bool
-    :param keep_images: If True, keep all images generated during testing in
-        current directory called "obspy_test_images".
-    """
-
-    # append used functions to argv and run tests
-    params = ['network', 'all', 'coverage', 'report', 'keep_images']
-    locs = locals()
-    if report is False:
-        sys.argv.append('--no-report')
-    for param in params:
-        if getattr(locs, param):
-            sys.argv.append(f'--{param}')
-    main()
 
 
 if __name__ == "__main__":
