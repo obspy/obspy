@@ -47,3 +47,4 @@ misc/installer/anaconda/conda_builds
 .vscode/**
 venv
 weather.mseed
+/misc/docs/.build/

@@ -277,7 +277,7 @@ def _write_kml(obj, filename, **kwargs):
     :meth:`catalog_to_kml_string`.
 
     :type obj: :class:`~obspy.core.event.Catalog` or
-        :class:`~obspy.core.inventory.Inventory`
+        :class:`~obspy.core.inventory.inventory.Inventory`
     :param obj: ObsPy object for KML output
     :type filename: str
     :param filename: Filename to write to. Suffix ".kml" will be appended if

@@ -38,7 +38,7 @@
        ~invsim.simulate_seismometer
        ~util.util_geo_km
        ~util.util_lon_lat
-       ~cross_correlation.xcorr
+       ~cross_correlation.correlate
        ~trigger.z_detect
 
     .. comment to end block

@@ -3,17 +3,17 @@
 .. currentmodule:: {{ fullname }}
 .. automodule:: {{ fullname }}
 
-   {% block functions %}
+   {%- block functions -%}
 
    {% set public_functions = [] %}
    {% set private_functions = [] %}
-   {% for m in all_functions %}
-   {% if m in functions %}
-   {{ public_functions.append(m) or "" }}
-   {% else %}
-   {{ private_functions.append(m) or "" }}
+   {%- for m in all_functions -%}
+   {%- if m in functions -%}
+   {{ public_functions.append(m) or pass }}
+   {%- else -%}
+   {{ private_functions.append(m) or pass }}
    {% endif %}
-   {%- endfor %}
+   {%- endfor -%}
 
    {% if public_functions %}
    .. rubric:: Public Functions

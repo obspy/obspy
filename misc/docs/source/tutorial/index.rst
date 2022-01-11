@@ -26,7 +26,6 @@ Introduction to ObsPy
 ---------------------
 
 .. toctree::
-   :numbered:
    :maxdepth: 2
 
    code_snippets/python_introduction

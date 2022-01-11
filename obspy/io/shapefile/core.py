@@ -39,7 +39,7 @@ def _write_shapefile(obj, filename, extra_fields=None, **kwargs):
     :class:`~obspy.core.event.Catalog` object to a ESRI shapefile.
 
     :type obj: :class:`~obspy.core.event.Catalog` or
-        :class:`~obspy.core.inventory.Inventory`
+        :class:`~obspy.core.inventory.inventory.Inventory`
     :param obj: ObsPy object for shapefile output
     :type filename: str
     :param filename: Filename to write to. According to ESRI shapefile

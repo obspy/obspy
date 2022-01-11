@@ -289,7 +289,7 @@ class Unpickler(object):
             :class:`~obspy.core.event.resourceid.ResourceIdentifier` of the
             parent.
         :rtype: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
-        :return: ResourceIdentifier object.
+        :return:  ResourceIdentifier object.
         """
         prefix = self.res_id_prefix
         # Put the parent id as prefix

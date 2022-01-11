@@ -6,7 +6,7 @@ from obspy.imaging.beachball import beach
 
 
 event = read_events(
-    'https://earthquake.usgs.gov/archive/product/moment-tensor/'
+    'https://earthquake.usgs.gov/product/moment-tensor/'
     'us_20005ysu_mww/us/1470868224040/quakeml.xml', format='QUAKEML')[0]
 origin = event.preferred_origin() or event.origins[0]
 focmec = event.preferred_focal_mechanism() or event.focal_mechanisms[0]

@@ -151,7 +151,7 @@ class Inventory(ComparingObject):
         """
         __eq__ method of the Inventory object.
 
-        :type other: :class:`~obspy.core.inventory.Inventory`
+        :type other: :class:`~obspy.core.inventory.inventory.Inventory`
         :param other: Inventory object for comparison.
         :rtype: bool
         :return: ``True`` if both Inventories are equal.
@@ -1010,20 +1010,20 @@ class Inventory(ComparingObject):
 
         if legend is not None and color_per_network:
             ax = fig.axes[0]
-            count = len(ax.collections)
             for code, color in sorted(color_per_network.items()):
                 ax.scatter([0], [0], size, color, label=code, marker=marker)
             # workaround for older matplotlib versions
             try:
-                ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                          fontsize="medium", markerscale=0.8,
-                          handletextpad=0.1)
+                leg = ax.legend(loc=legend, fancybox=True, scatterpoints=1,
+                                fontsize="medium", markerscale=0.8,
+                                handletextpad=0.1)
+                leg.remove()
             except TypeError:
                 leg_ = ax.legend(loc=legend, fancybox=True, scatterpoints=1,
                                  markerscale=0.8, handletextpad=0.1)
-                leg_.prop.set_size("medium")
+                leg_.remove()
             # remove collections again solely created for legend handles
-            ax.collections = ax.collections[:count]
+            # ax.collections = ax.collections[:count]
 
         if outfile:
             fig.savefig(outfile)

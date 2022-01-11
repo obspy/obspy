@@ -180,7 +180,8 @@ def _read_resp(filename, skip_invalid_responses=True, *args, **kwargs):
 
 def _parse_to_inventory_object(p, skip_invalid_responses=True):
     """
-    Parses a Parser object to an obspy.core.inventory.Inventory object.
+    Parses a Parser object to an obspy.core.inventory.inventory.Inventory
+    object.
 
     :param p: A Parser object.
     :param skip_invalid_responses: If True, invalid responses will be replaced

@@ -608,7 +608,7 @@ def _colormap_plot_beamforming_polar(cmaps):
         ax.set_theta_zero_location("N")
         # circle through backazimuth
         for i, row in enumerate(hist):
-            ax.bar(left=(i * dw) * np.ones(num2),
+            ax.bar((i * dw) * np.ones(num2),
                    height=dh * np.ones(num2),
                    width=dw, bottom=dh * np.arange(num2),
                    color=cmap(row / hist.max()))

@@ -227,4 +227,4 @@ linkcheck_workers = 10
 
 # -- Options for matplotlib plot directive -----------------------------------
 # File formats to generate.
-plot_formats = [('png', 110), ('hires.png', 200), ('pdf', 200)]
+plot_formats = [('png', 110),] # ('hires.png', 200), ('pdf', 200)]

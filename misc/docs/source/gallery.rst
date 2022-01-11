@@ -8,7 +8,7 @@ Gallery
 
 .. raw:: html
 
-    <div class="gallery">
+    <div class="row">
 
 .. plot:: tutorial/code_snippets/reading_seismograms.py
     :target: tutorial/code_snippets/reading_seismograms.html
@@ -80,15 +80,15 @@ Gallery
 
 .. plot:: tutorial/code_snippets/cartopy_plot_with_beachballs.py
     :target: tutorial/code_snippets/cartopy_plot_with_beachballs.html
-    :alt: Bartopy Plot with Beachballs
+    :alt: cartopy Plot with Beachballs
 
 .. plot:: tutorial/code_snippets/cartopy_plot_with_beachballs2.py
     :target: tutorial/code_snippets/cartopy_plot_with_beachballs.html
-    :alt: Second Bartopy Plot with Beachballs
+    :alt: Second cartopy Plot with Beachballs
 
 .. plot:: tutorial/code_snippets/cartopy_with_beachball_read_events.py
     :target: tutorial/code_snippets/cartopy_plot_with_beachballs.html
-    :alt: Bartopy Plot with Beachball read_events
+    :alt: cartopy Plot with Beachball read_events
 
 .. plot:: tutorial/code_snippets/merging_seismograms.py
     :target: tutorial/code_snippets/merging_seismograms.html
@@ -189,7 +189,7 @@ Gallery
 
 .. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
-    :alt: Bartopy preview plot of Inventory class
+    :alt: cartopy preview plot of Inventory class
 
     from obspy import read_inventory
     inv = read_inventory()
@@ -197,7 +197,7 @@ Gallery
 
 .. plot::
     :target: packages/autogen/obspy.core.inventory.network.Network.plot.html
-    :alt: Bartopy preview plot of Network class
+    :alt: cartopy preview plot of Network class
 
     from obspy import read_inventory
     net = read_inventory()[0]
@@ -205,11 +205,11 @@ Gallery
 
 .. plot::
     :target: packages/autogen/obspy.core.event.catalog.Catalog.plot.html
-    :alt: Bartopy preview plot of Catalog class
+    :alt: cartopy preview plot of Catalog class
 
     from obspy import read_events
     cat = read_events()
-    cat.plot()
+    # cat.plot() # TODO CONVERT BASEMAP->CARTOPY
 
 .. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
@@ -248,13 +248,13 @@ Gallery
 
 .. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
-    :alt: Bartopy plot of station and event data together
+    :alt: cartopy plot of station and event data together
 
     from obspy import read_inventory, read_events
     inv = read_inventory()
     cat = read_events()
     fig = inv.plot(show=False)
-    cat.plot(fig=fig)
+    # cat.plot(fig=fig) # TODO CONVERT BASEMAP->CARTOPY
 
 .. plot::
     :target: packages/autogen/obspy.signal.detrend.polynomial.html
@@ -275,7 +275,7 @@ Gallery
 
     from obspy import read_events
     event = read_events("/path/to/CMTSOLUTION")[0]
-    event.plot()
+    # event.plot() # TODO CONVERT BASEMAP->CARTOPY
 
 .. plot::
     :target: packages/autogen/obspy.core.event.event.Event.plot.html
@@ -283,22 +283,16 @@ Gallery
 
     from obspy import read_events
     event = read_events("/path/to/CMTSOLUTION")[0]
-    event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
+    # event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
+    # TODO CONVERT BASEMAP->CARTOPY
 
-.. figure:: /_images/sds_report.png
+.. image:: /_static/sds_report.png
     :target: packages/autogen/obspy.scripts.sds_html_report.html
     :alt: SDS html report
+    :scale: 50%
 
-.. raw:: html
-
-    </div>
-
-
-**Colormap comparison**
-
-.. raw:: html
-
-    <div class="gallery">
+Colormap comparison
+===================
 
 .. plot::
     :target: packages/autogen/obspy.imaging.cm.html

@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-import mlpy
+try:
+    import mlpy
+except ModuleNotFoundError:
+    import warnings
+    warnings.warn("mlpy not installed, code snippet skipped")
+    exit(1)
 
 import obspy
 from obspy.imaging.cm import obspy_sequential

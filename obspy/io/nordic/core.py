@@ -1334,7 +1334,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
     """
     Function to write a catalog to a select file in nordic format.
 
-    :type catalog: :class:`~obspy.core.event.event.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: A catalog of obspy events
     :type filename: str
     :param filename: Path to write to
@@ -1346,7 +1346,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
     :type wavefiles: list
     :param wavefiles:
         Waveforms to associate the events with, must be ordered in the same
-         way as the events in the catalog.
+        way as the events in the catalog.
     :type high_accuracy: bool
     :param high_accuracy:
         Whether to output pick seconds at 6.3f (high_accuracy) or
