@@ -38,8 +38,8 @@ AUSPASS     http://auspass.edu.au
 BGR         http://eida.bgr.de
 EMSC        http://www.seismicportal.eu
 ETH         http://eida.ethz.ch
-GEONET      http://service.geonet.org.nz
 GEOFON      http://geofon.gfz-potsdam.de
+GEONET      http://service.geonet.org.nz
 GFZ         http://geofon.gfz-potsdam.de
 ICGC        http://ws.icgc.cat
 IESDMC      http://batsws.earth.sinica.edu.tw

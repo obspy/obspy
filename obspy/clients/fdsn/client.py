@@ -417,7 +417,7 @@ class Client(object):
         >>> cat = client.get_events(eventid=609301)
         >>> print(cat)
         1 Event(s) in Catalog:
-        1997-10-14T09:53:11.070000Z | -22.145, -176.720 | 7.8 mw
+        1997-10-14T09:53:11.070000Z | -22.145, -176.720 | 7.8 ...
 
         The return value is a :class:`~obspy.core.event.Catalog` object
         which can contain any number of events.
@@ -428,9 +428,9 @@ class Client(object):
         ...                         catalog="ISC")
         >>> print(cat)
         3 Event(s) in Catalog:
-        2001-01-07T02:55:59.290000Z |  +9.801,  +76.548 | 4.9 mb
-        2001-01-07T02:35:35.170000Z | -21.291,  -68.308 | 4.4 mb
-        2001-01-07T00:09:25.630000Z | +22.946, -107.011 | 4.0 mb
+        2001-01-07T02:55:59.290000Z |  +9.801,  +76.548 | 4.9 ...
+        2001-01-07T02:35:35.170000Z | -21.291,  -68.308 | 4.4 ...
+        2001-01-07T00:09:25.630000Z | +22.946, -107.011 | 4.0 ...
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Limit to events on or after the specified start time.
@@ -1085,7 +1085,7 @@ class Client(object):
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                        ...
+
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
@@ -1094,6 +1094,7 @@ class Client(object):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
                 Channels (0):
+
         >>> inv.plot()  # doctest: +SKIP
 
         .. plot::
@@ -1115,7 +1116,7 @@ class Client(object):
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                        ...
+
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
