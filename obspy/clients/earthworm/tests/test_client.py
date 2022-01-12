@@ -17,8 +17,23 @@ class TestEWClient:
     """
     Test cases for obspy.clients.earthworm.client.Client.
     """
-    start = UTCDateTime() - 24 * 3600 * 5
+    start = UTCDateTime() - 24 * 3600 * 4
     end = start + 1.0
+
+    def try_get_stream(self, client, kwargs):
+        """Try to get the stream with either '' or '--' location codes. """
+        # I am not sure why, but sometimes the location code needs to be --
+        # and other times '' in order to get a stream of nonzero length.
+        # Just try both.
+        st = client.get_waveforms(
+            location='', starttime=self.start, endtime=self.end, **kwargs
+        )
+        if len(st) > 0:
+            return st
+        st = client.get_waveforms(
+            location='--', starttime=self.start, endtime=self.end, **kwargs
+        )
+        return st
 
     @pytest.fixture(scope='class', autouse=True)
     def set_utc_precision(self):
@@ -39,28 +54,33 @@ class TestEWClient:
         """Return a stream fetched from the test ew client."""
 
         # example 1 -- 1 channel, cleanup
-        stream = ew_client.get_waveforms(
-            'AV', 'ACH', '--', 'BHE', self.start, self.end
+        kwargs = dict(
+            network='AV',
+            station='ACH',
+            channel='BHE',
         )
-        return stream
+        return self.try_get_stream(ew_client, kwargs)
 
     @pytest.fixture(scope='class')
     def ew_stream_no_cleanup(self, ew_client):
         """Return a stream fetched from the test ew client with no cleanup."""
-
-        # example 1 -- 1 channel, cleanup
-        stream = ew_client.get_waveforms(
-            'AV', 'ACH', '--', 'BHE', self.start, self.end, cleanup=False
+        kwargs = dict(
+            network='AV',
+            station='ACH',
+            channel='BHE',
+            cleanup=False,
         )
-        return stream
+        return self.try_get_stream(ew_client, kwargs)
 
     @pytest.fixture(scope='class')
     def ew_stream_wildcard(self, ew_client):
         """Return a stream fetched from the test ew client with wildcard."""
-        ew_stream = ew_client.get_waveforms(
-            'AV', 'ACH', '--', 'BH?', self.start, self.end
+        kwargs = dict(
+            network='AV',
+            station='ACH',
+            channel='BH?',
         )
-        return ew_stream
+        return self.try_get_stream(ew_client, kwargs)
 
     @skip_on_network_error
     def test_get_waveform(self, ew_client, ew_stream):
