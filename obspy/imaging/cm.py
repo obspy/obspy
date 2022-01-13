@@ -298,6 +298,7 @@ obspy_sequential = _globals["viridis"]
 obspy_sequential_r = _globals["viridis_r"]
 obspy_divergent = get_cmap("RdBu_r")
 obspy_divergent_r = get_cmap("RdBu")
+#: PQLX colormap
 pqlx = _get_cmap("pqlx.npz")
 
 

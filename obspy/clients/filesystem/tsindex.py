@@ -654,7 +654,7 @@ class Client(object):
         containing information found in the tsindex table.
 
         Information about the tsindex schema may be found in the
-        `mseedindex wiki <https://github.com/iris-edu/mseedindex/wiki/\
+        `mseedindex wiki schema <https://github.com/iris-edu/mseedindex/wiki/\
         Database-Schema#sqlite-schema-version-11>`_.
 
         :type network: str
@@ -922,7 +922,8 @@ class Indexer(object):
             seconds listed in this file will be used to adjust the time
             coverage for records that contain a leap second. Also, leap second
             indicators in the miniSEED headers will be ignored. See the
-            `mseedindex wiki <https://github.com/iris-edu/mseedindex/blob/"
+            `mseedindex wiki leap second
+             <https://github.com/iris-edu/mseedindex/blob/"
             "master/doc/mseedindex.md#leap-second-list-file>`_ for more"
             "for more information regarding this file.
         :type index_cmd: str

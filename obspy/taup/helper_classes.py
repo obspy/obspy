@@ -24,7 +24,6 @@ SlownessLayer = np.dtype([
 ])
 
 
-
 #: Holds the ray parameter, time and distance increments, and optionally a
 #: depth, for a ray passing through some layer.
 TimeDist = np.dtype([

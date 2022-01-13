@@ -96,3 +96,5 @@ def create_credits_page(app):
 
 def setup(app):
     app.connect('builder-inited', create_credits_page)
+    return {"parallel_write_safe": True,
+            "parallel_read_safe": True}

@@ -101,7 +101,9 @@ nitpick_ignore = [
     ('py:class', 'same class as original object'),
     ('py:class', 'sqlalchemy.orm.decl_api.Base'),
     ('py:class', 'array_like'),
-    ('py:class', 'hashable')
+    ('py:class', 'hashable'),
+    ('py:class', 'shapefile.Writer'),
+    ('py:class', 'collections.namedtuple')
 ]
 
 # suppress built-in types by default in nitpick
@@ -114,7 +116,8 @@ for name in dir(builtins):
 # obspy.core.event.base._event_type_class_factory.<locals>.
 # AbstractEventTypeWithResourceID
 nitpick_ignore_regex = [
-    (r'py:class', r'.*<locals>\.AbstractEvent..*')
+    (r'py:class', r'.*<locals>\.AbstractEvent..*'),
+    (r'py:class', r'math\..*'),
 ]
 
 # configuration for intersphinx: refer to the Python standard library.

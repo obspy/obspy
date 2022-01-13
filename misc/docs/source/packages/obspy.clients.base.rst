@@ -1,3 +1,5 @@
+:orphan:
+
 .. currentmodule:: obspy.clients.base
 .. automodule:: obspy.clients.base
 

@@ -2,6 +2,7 @@
 
 .. currentmodule:: obspy.core.util
 .. automodule:: obspy.core.util
+    :noindex:
 
     .. comment to end block
 

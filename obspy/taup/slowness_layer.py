@@ -26,7 +26,7 @@ def bullen_radial_slowness(layer, p, radius_of_planet, check=True):
     shape.
 
     :param layer: The layer(s) in which to calculate the increments.
-    :type layer: :class:`~numpy.ndarray`, 
+    :type layer: :class:`~numpy.ndarray`,
         dtype = :class:`obspy.taup.helper_classes.SlownessLayer`
     :param p: The spherical ray paramater to use for calculation, in s/km.
     :type p: :class:`~numpy.ndarray`, dtype = :class:`float`

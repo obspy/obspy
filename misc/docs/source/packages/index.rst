@@ -143,6 +143,7 @@ categories.*
     obspy.io.kml
     obspy.io.ndk
     obspy.io.nied.fnetmt
+    obspy.io.nied.knet
     obspy.io.nlloc
     obspy.io.nordic
     obspy.io.pde

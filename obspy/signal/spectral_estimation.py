@@ -1385,7 +1385,7 @@ class PPSD(object):
 
         Load previously computed PPSD results from a
         compressed numpy binary in npz format, written with
-        :meth:`~osbpy.signal.spectral_estimation.PPSD.save_npz`.
+        :meth:`~obspy.signal.spectral_estimation.PPSD.save_npz`.
         If more data are to be added and processed, metadata have to be
         specified again during loading because they are not
         stored in the npz format.

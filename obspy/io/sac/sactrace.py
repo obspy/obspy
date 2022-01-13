@@ -695,7 +695,7 @@ class SACTrace(object):
         inconsistent, even in the case where '<' is your native order and
         byteorders look like '<', '=', '='.
 
-    Any valid header name is also an attribute. 
+    Any valid header name is also an attribute.
     See below, :mod:`obspy.io.sac.header`, or individial attribution docstrings
     for more header information.
 

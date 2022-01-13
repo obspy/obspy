@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.event.event - The Event class definition
-===================================================
-This module provides a class hierarchy to consistently handle event metadata.
-This class hierarchy is closely modelled after the de-facto standard format
-`QuakeML <https://quake.ethz.ch/quakeml/>`_.
-
-.. note::
-
-    For handling additional information not covered by the QuakeML standard and
-    how to output it to QuakeML see the :ref:`ObsPy Tutorial <quakeml-extra>`.
+Provides the Event class
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

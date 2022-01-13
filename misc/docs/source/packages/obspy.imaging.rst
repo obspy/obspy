@@ -11,6 +11,7 @@
 
        scripts.scan.Scanner
        scripts.scan.scan
+       cm.pqlx
 
     .. comment to end block
 

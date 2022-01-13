@@ -897,7 +897,7 @@ class SlownessModel(object):
 
         :returns: The slowness layer(s).
         :rtype: :class:`~numpy.ndarray`
-            (dtype = :class:`obspy.taup.helper_classes.Slowness_layer`,
+            (dtype = :class:`obspy.taup.helper_classes.SlownessLayer`,
             shape = ``layer_num.shape``)
         """
         if is_p_wave:
