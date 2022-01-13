@@ -4,8 +4,13 @@ The obspy.clients.neic.client test suite.
 """
 import unittest
 
+import pytest
+
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.clients.neic import Client
+
+
+pytestmark = pytest.mark.network
 
 
 class ClientTestCase(unittest.TestCase):

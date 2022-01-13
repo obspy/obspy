@@ -12,6 +12,8 @@ import unittest
 import warnings
 from unittest import mock
 
+import pytest
+
 import obspy
 from obspy.clients.fdsn.header import FDSNNoDataException
 from obspy.clients.fdsn.routing.routing_client import (
@@ -22,6 +24,7 @@ from obspy.clients.fdsn.routing.federator_routing_client import (
     FederatorRoutingClient)
 
 
+pytestmark = pytest.mark.network
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 
 

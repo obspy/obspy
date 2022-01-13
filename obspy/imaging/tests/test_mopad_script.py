@@ -4,29 +4,21 @@ The obspy-mopad script test suite.
 """
 import io
 import os
-import unittest
 from itertools import product, zip_longest
 
 import numpy as np
+import pytest
 
 from obspy.core.util.misc import CatchOutput
-from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.imaging.scripts.mopad import main as obspy_mopad
 
 
-class MopadTestCase(unittest.TestCase):
+class TestMopad:
     """
     Test cases for obspy-mopad script.
     """
-
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'images')
-        self.mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
-
-    #
-    # obspy-mopad convert
-    #
+    path = os.path.join(os.path.dirname(__file__), 'images')
+    mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
     def test_script_convert_type_sdr(self):
         with CatchOutput() as out:
@@ -37,7 +29,7 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
         result = out.stdout[:-1]
-        self.assertEqual(expected, result)
+        assert expected == result
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -51,7 +43,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
   \ -1.55  0.47 -0.02 /
 
 '''
-        self.assertEqual(expected, out.stdout)
+        assert expected == out.stdout
 
     def test_script_convert_type_tensor_large(self):
         with CatchOutput() as out:
@@ -65,7 +57,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
   \ -0.87  0.26 -0.01 /
 
 '''
-        self.assertEqual(expected, out.stdout)
+        assert expected == out.stdout
 
     def test_script_convert_basis(self):
         expected = [
@@ -96,18 +88,18 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                              ','.join(str(x) for x in self.mt)])
 
             actual = eval(out.stdout)
-            self.assertEqual(len(exp), len(actual))
+            assert len(exp) == len(actual)
             for i, (e, a) in enumerate(zip(exp, actual)):
                 msg = '%d: %f != %f in %s -> %s conversion' % (i, e, a,
                                                                insys, outsys)
-                self.assertAlmostEqual(e, a, msg=msg)
+                assert round(abs(e-a), 7) == 0, msg
 
     def test_script_convert_vector(self):
         with CatchOutput() as out:
             obspy_mopad(['convert', '-v', 'NED', 'NED',
                          ','.join(str(x) for x in self.mt)])
         expected = str(self.mt) + '\n'
-        self.assertEqual(expected, out.stdout)
+        assert expected == out.stdout
 
     #
     # obspy-mopad decompose
@@ -126,7 +118,7 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
         result = out.stdout[:-1]
-        self.assertEqual(expected, result)
+        assert expected == result
 
     #
     # obspy-mopad gmt
@@ -150,17 +142,17 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                                                   bio.splitlines(),
                                                   fillvalue=''):
                 if exp_line.startswith('>') or out_line.startswith('>'):
-                    self.assertEqual(exp_line, out_line,
-                                     msg='Headers do not match!')
+                    assert exp_line == out_line, \
+                                     'Headers do not match!'
 
         # Test actual data
         exp_data = np.genfromtxt(expected, comments='>')
         with io.BytesIO(out.stdout.encode('utf-8')) as bio:
             out_data = np.genfromtxt(bio, comments='>')
-        self.assertEqual(exp_data.shape, out_data.shape,
-                         msg='Data does not match!')
-        self.assertTrue(np.allclose(exp_data, out_data),
-                        msg='Data does not match!')
+        assert exp_data.shape == out_data.shape, \
+               'Data does not match!'
+        assert np.allclose(exp_data, out_data), \
+               'Data does not match!'
 
     def test_script_gmt_fill(self):
         self.compare_gmt('mopad_fill.gmt',
@@ -195,12 +187,8 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                          '-t', 'ev',
                          '-r', '3')
 
-    #
-    # obspy-mopad plot
-    #
-
-    @unittest.skip('Currently broken until further review.')
-    def test_script_plot(self):
+    @pytest.mark.skip('Currently broken until further review.')
+    def test_script_plot(self, image_path):
         # See test_Beachball:
         data = [
             [0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
@@ -237,33 +225,18 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         messages = ''
         for mt, filename in zip(data, filenames):
-            try:
-                with ImageComparison(self.path, filename) as ic:
-                    with CatchOutput() as out:
-                        obspy_mopad(['plot',
-                                     '--output-file', ic.name,
-                                     '--input-system', 'USE',
-                                     '--tension-color', 'b',
-                                     '--pressure-color', 'w',
-                                     '--lines', '1', 'k', '1',
-                                     '--nodals', '1', 'k', '1',
-                                     '--size', '2.54', '--quality', '200',
-                                     '--',
-                                     ','.join(str(x) for x in mt)])
-                    self.assertEqual('', out.stdout)
-            except ImageComparisonException as e:
-                if ic.keep_output:
-                    messages += str(e)
-                else:
-                    raise
+            with CatchOutput() as out:
+                obspy_mopad(['plot',
+                             '--output-file', image_path,
+                             '--input-system', 'USE',
+                             '--tension-color', 'b',
+                             '--pressure-color', 'w',
+                             '--lines', '1', 'k', '1',
+                             '--nodals', '1', 'k', '1',
+                             '--size', '2.54', '--quality', '200',
+                             '--',
+                             ','.join(str(x) for x in mt)])
+            assert '' == out.stdout
 
         if messages:
-            self.fail(messages)
-
-
-def suite():
-    return unittest.makeSuite(MopadTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+            pytest.fail(messages)

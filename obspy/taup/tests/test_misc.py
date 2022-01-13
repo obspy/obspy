@@ -3,12 +3,10 @@
 """
 Tests the high level obspy.taup.tau interface.
 """
-import unittest
-
 from obspy.taup.seismic_phase import leg_puller
 
 
-class TauPyMiscTestCase(unittest.TestCase):
+class TestTauPyMisc:
     """
     Test suite for the things of TauPy that have no place elsewhere.
     """
@@ -74,12 +72,4 @@ class TauPyMiscTestCase(unittest.TestCase):
         ]
 
         for name, result in legs:
-            self.assertEqual(leg_puller(name), result)
-
-
-def suite():
-    return unittest.makeSuite(TauPyMiscTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+            assert leg_puller(name) == result

@@ -4,9 +4,14 @@ The obspy.clients.seedlink.client.seedlinkconnection test suite.
 """
 import unittest
 
+import pytest
+
 from obspy.clients.seedlink.client.seedlinkconnection import SeedLinkConnection
 from obspy.clients.seedlink.client.slnetstation import SLNetStation
 from obspy.clients.seedlink.seedlinkexception import SeedLinkException
+
+
+pytestmark = pytest.mark.network
 
 
 class SeedLinkConnectionTestCase(unittest.TestCase):

@@ -9,13 +9,17 @@
 *.pyd.manifest
 *.pyo
 .cache
+.coverage
 .DS_Store
 .idea
 .project
 .pydevproject
+.pytest_cache
+.report.json
 /.settings
 RELEASE-VERSION
 build/
+coverage.xml
 dist/
 distribute-*.egg
 distribute-*.tar.gz
@@ -31,6 +35,8 @@ misc/docs/_build/
 misc/docker/logs/
 obspy/lib/*.pyd
 obspy/lib/*.so
+obspy_report.html
+obspy_test_images
 /obspy.pstats
 __pycache__
 debian
@@ -43,3 +49,4 @@ misc/docker_tests/temp/
 misc/installer/anaconda/conda_builds
 .vscode/**
 venv
+weather.mseed

@@ -3,39 +3,41 @@
 """
 Tests the SeismicPhase class.
 """
-import unittest
-
 import numpy as np
+import pytest
 
 from obspy.taup.tau import TauPyModel
 from obspy.taup.taup_geo import calc_dist, calc_dist_azi
 import obspy.geodetics.base as geodetics
 
 
-class TaupGeoTestCase(unittest.TestCase):
+class TestTaupGeo:
     """
     Test suite for the SeismicPhase class.
     """
-    def setUp(self):
-        self.model = TauPyModel('iasp91')
+    @pytest.fixture(scope='class')
+    def model(self):
+        return TauPyModel('iasp91')
 
-    @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
-                     'Module geographiclib is not installed or too old.')
-    def test_path_geo(self):
+    @pytest.mark.skipif(
+        not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
+        reason='Module geographiclib is not installed or too old.')
+    def test_path_geo(self, model):
         evlat, evlon = 0., 20.
         evdepth = 10.
         stlat, stlon = 0., -80.
-        arrivals = self.model.get_ray_paths_geo(evdepth, evlat, evlon, stlat,
-                                                stlon)
+        arrivals = model.get_ray_paths_geo(evdepth, evlat, evlon, stlat,
+                                           stlon)
         for arr in arrivals:
             stlat_path = arr.path['lat'][-1]
             stlon_path = arr.path['lon'][-1]
-            self.assertAlmostEqual(stlat, stlat_path, delta=0.1)
-            self.assertAlmostEqual(stlon, stlon_path, delta=0.1)
+            assert abs(stlat-stlat_path) < 0.1
+            assert abs(stlon-stlon_path) < 0.1
 
-    @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
-                     'Module geographiclib is not installed or too old.')
-    def test_path_resampling(self):
+    @pytest.mark.skipif(
+        not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
+        reason='Module geographiclib is not installed or too old.')
+    def test_path_resampling(self, model):
         """
         Test resampling of paths in regions that are pretty much straight in
         geographical coordinates and therefore only coarsely sampled by taup
@@ -43,11 +45,10 @@ class TaupGeoTestCase(unittest.TestCase):
         kwargs = dict(source_depth_in_km=50, source_latitude_in_deg=0.,
                       source_longitude_in_deg=0., receiver_latitude_in_deg=0.,
                       receiver_longitude_in_deg=150, phase_list=('Pdiff', ))
-        model = self.model
         default = model.get_ray_paths_geo(resample=False, **kwargs)[0].path
         resampled = model.get_ray_paths_geo(resample=True, **kwargs)[0].path
-        self.assertEqual(len(default), 397)
-        self.assertEqual(len(resampled), 416)
+        assert len(default) == 397
+        assert len(resampled) == 416
         # start and end of path are unchanged
         expected = [
             (254.3313, 0., 0.00000000e+00, 50., 0., 0.),
@@ -121,12 +122,12 @@ class TaupGeoTestCase(unittest.TestCase):
                                    expected_resampled, rtol=1e-5)
 
 
-class TaupGeoDistTestCase(unittest.TestCase):
+class TestTaupGeoDist:
     """
     Test suite for calc_dist and calc_dist_azi in taup_geo.
     """
     def assert_angle_almost_equal(self, first, second, places=7, msg=None,
-                                  delta=None):
+                                  delta=1e-08):
         """
         Compare two angles (in degrees) for equality
 
@@ -137,82 +138,91 @@ class TaupGeoDistTestCase(unittest.TestCase):
             difference = (second - first) % 360.0
         else:
             difference = (first - second) % 360.0
-        self.assertAlmostEqual(difference, 0.0, places=places, msg=msg,
-                               delta=delta)
+        # Pre-pytest line was:
+        # self.assertAlmostEqual(difference, 0.0, places=places, msg=msg,
+        #                        delta=delta)
+        # this doesn't translate exactly but should be good enough
+        assert np.isclose(difference, 0.0, atol=delta)
 
-    def test_taup_geo_calc_dist(self):
+    def test_taup_geo_calc_dist_1(self):
         """Test for calc_dist"""
-        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=20.0,
-                                         source_longitude_in_deg=33.0,
-                                         receiver_latitude_in_deg=55.0,
-                                         receiver_longitude_in_deg=33.0,
-                                         radius_of_planet_in_km=6371.0,
-                                         flattening_of_planet=0.0), 35.0, 5)
-        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=55.0,
-                                         source_longitude_in_deg=33.0,
-                                         receiver_latitude_in_deg=20.0,
-                                         receiver_longitude_in_deg=33.0,
-                                         radius_of_planet_in_km=6371.0,
-                                         flattening_of_planet=0.0), 35.0, 5)
-        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
-                                         source_longitude_in_deg=33.0,
-                                         receiver_latitude_in_deg=-55.0,
-                                         receiver_longitude_in_deg=33.0,
-                                         radius_of_planet_in_km=6371.0,
-                                         flattening_of_planet=0.0), 35.0, 5)
-        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
-                                         source_longitude_in_deg=33.0,
-                                         receiver_latitude_in_deg=-55.0,
-                                         receiver_longitude_in_deg=33.0,
-                                         radius_of_planet_in_km=6.371,
-                                         flattening_of_planet=0.0), 35.0, 5)
+        dist = calc_dist(source_latitude_in_deg=20.0,
+                         source_longitude_in_deg=33.0,
+                         receiver_latitude_in_deg=55.0,
+                         receiver_longitude_in_deg=33.0,
+                         radius_of_planet_in_km=6371.0,
+                         flattening_of_planet=0.0)
+        assert round(abs(dist) - 35.0, 5) == 0.0
+
+    def test_taup_geo_calc_dist_2(self):
+        """Test for calc_dist"""
+        dist = calc_dist(source_latitude_in_deg=55.0,
+                         source_longitude_in_deg=33.0,
+                         receiver_latitude_in_deg=20.0,
+                         receiver_longitude_in_deg=33.0,
+                         radius_of_planet_in_km=6371.0,
+                         flattening_of_planet=0.0)
+        assert round(abs(dist - 35.0), 5) == 0.0
+
+    def test_taup_geo_calc_dist_3(self):
+        """Test for calc_dist"""
+        dist = calc_dist(source_latitude_in_deg=-20.0,
+                         source_longitude_in_deg=33.0,
+                         receiver_latitude_in_deg=-55.0,
+                         receiver_longitude_in_deg=33.0,
+                         radius_of_planet_in_km=6371.0,
+                         flattening_of_planet=0.0)
+        assert round(abs(dist - 35.0), 5) == 0
+
+    def test_taup_geo_calc_dist_4(self):
+        """Test for calc_dist"""
+        dist = calc_dist(source_latitude_in_deg=-20.0,
+                         source_longitude_in_deg=33.0,
+                         receiver_latitude_in_deg=-55.0,
+                         receiver_longitude_in_deg=33.0,
+                         radius_of_planet_in_km=6.371,
+                         flattening_of_planet=0.0)
+        assert round(abs(dist-35.0), 5) == 0
 
     def test_taup_geo_calc_dist_azi(self):
         """Test for calc_dist"""
-        dist, azi, backazi = calc_dist_azi(source_latitude_in_deg=20.0,
-                                           source_longitude_in_deg=33.0,
-                                           receiver_latitude_in_deg=55.0,
-                                           receiver_longitude_in_deg=33.0,
-                                           radius_of_planet_in_km=6371.0,
-                                           flattening_of_planet=0.0)
-        self.assertAlmostEqual(dist, 35.0, 5)
+        dist, azi, backazi = calc_dist_azi(
+            source_latitude_in_deg=20.0,
+            source_longitude_in_deg=33.0,
+            receiver_latitude_in_deg=55.0,
+            receiver_longitude_in_deg=33.0,
+            radius_of_planet_in_km=6371.0,
+            flattening_of_planet=0.0)
+        assert round(abs(dist-35.0), 5) == 0
         self.assert_angle_almost_equal(azi, 0.0, 5)
         self.assert_angle_almost_equal(backazi, 180.0, 5)
-        dist, azi, backazi = calc_dist_azi(source_latitude_in_deg=55.0,
-                                           source_longitude_in_deg=33.0,
-                                           receiver_latitude_in_deg=20.0,
-                                           receiver_longitude_in_deg=33.0,
-                                           radius_of_planet_in_km=6371.0,
-                                           flattening_of_planet=0.0)
-        self.assertAlmostEqual(dist, 35.0, 5)
+        dist, azi, backazi = calc_dist_azi(
+            source_latitude_in_deg=55.0,
+            source_longitude_in_deg=33.0,
+            receiver_latitude_in_deg=20.0,
+            receiver_longitude_in_deg=33.0,
+            radius_of_planet_in_km=6371.0,
+            flattening_of_planet=0.0)
+        assert round(abs(dist-35.0), 5) == 0
         self.assert_angle_almost_equal(azi, 180.0, 5)
         self.assert_angle_almost_equal(backazi, 0.0, 5)
-        dist, azi, backazi = calc_dist_azi(source_latitude_in_deg=-20.0,
-                                           source_longitude_in_deg=33.0,
-                                           receiver_latitude_in_deg=-55.0,
-                                           receiver_longitude_in_deg=33.0,
-                                           radius_of_planet_in_km=6371.0,
-                                           flattening_of_planet=0.0)
-        self.assertAlmostEqual(dist, 35.0, 5)
+        dist, azi, backazi = calc_dist_azi(
+            source_latitude_in_deg=-20.0,
+            source_longitude_in_deg=33.0,
+            receiver_latitude_in_deg=-55.0,
+            receiver_longitude_in_deg=33.0,
+            radius_of_planet_in_km=6371.0,
+            flattening_of_planet=0.0)
+        assert round(abs(dist-35.0), 5) == 0
         self.assert_angle_almost_equal(azi, 180.0, 5)
         self.assert_angle_almost_equal(backazi, 0.0, 5)
-        dist, azi, backazi = calc_dist_azi(source_latitude_in_deg=-20.0,
-                                           source_longitude_in_deg=33.0,
-                                           receiver_latitude_in_deg=-55.0,
-                                           receiver_longitude_in_deg=33.0,
-                                           radius_of_planet_in_km=6.371,
-                                           flattening_of_planet=0.0)
-        self.assertAlmostEqual(dist, 35.0, 5)
+        dist, azi, backazi = calc_dist_azi(
+            source_latitude_in_deg=-20.0,
+            source_longitude_in_deg=33.0,
+            receiver_latitude_in_deg=-55.0,
+            receiver_longitude_in_deg=33.0,
+            radius_of_planet_in_km=6.371,
+            flattening_of_planet=0.0)
+        assert round(abs(dist-35.0), 5) == 0
         self.assert_angle_almost_equal(azi, 180.0, 5)
         self.assert_angle_almost_equal(backazi, 0.0, 5)
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TaupGeoTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(TaupGeoDistTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-import unittest
-
-from obspy.core.util import add_doctests, add_unittests
-
-
 MODULE_NAME = "obspy.io.segy"
 
 
@@ -25,14 +20,3 @@ def _patch_header(header, ebcdic=False):
     header = header[:3200-80] + end_header + header[3200-58:]
 
     return header
-
-
-def suite():
-    suite = unittest.TestSuite()
-    add_doctests(suite, MODULE_NAME)
-    add_unittests(suite, MODULE_NAME)
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

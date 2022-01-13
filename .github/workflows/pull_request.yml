@@ -1,7 +1,7 @@
 # This workflow runs on all pull requests. It has the following functions:
 #   1. Apply flake8 to the codebase for linting
-#   2. Run either the default test suite, or specific tests if specified in
-#      the PR comments, on all supported python versions and operating systems.
+#   2. Run the default test suite, then, optionally, run network tests,
+#      upload images, build docs, etc. based on tags in the PR.
 
 name: pull_request_tests
 on: pull_request
@@ -11,46 +11,36 @@ env:
   ISSUE_NUMBER: ${{ github.event.pull_request.number }}
   PR_URL: https://github.com/obspy/obspy/pull/${{ github.event.pull_request.number }}
   CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
-  CONFIG_PATH: obspy_ci_config/conf.json
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  OBSPY_GITHUB_BRANCH: release_0.10.0
 
+# Cancel previous runs
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  check_running_or_queue_jobs_to_cancel:
+  add_status_with_report_link:
     runs-on: ubuntu-latest
+    permissions:
+      statuses: write
     steps:
-      - name: Cancel Previous Runs in the same PR
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ secrets.GITHUB_TOKEN }}
-
-  # Parse the comments from the PR and uploads a json with selected options
-  get_ci_config:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-python@v2.3.1
-        with:
-          python-version: '3.x'
-
-      - name: create ci config
-        shell: bash -l {0}
+      - name: Set status with url of test report website
         run: |
-          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
-          obshub make-config ${ISSUE_NUMBER} --path=${CONFIG_PATH} --token=${GITHUB_TOKEN}
-
-      - name: upload ci config
-        uses: actions/upload-artifact@v2.3.1
-        with:
-          name: obspy_ci_config
-          path: ${{ env.CONFIG_PATH }}
+          curl --request POST \
+          --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }} \
+          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+          --header 'content-type: application/json' \
+          --data '{
+            "state": "success",
+            "context": "See details about all test reports for this pull request here",
+            "target_url": "https://tests.obspy.org/?pr=${{ github.event.pull_request.number }}"
+            }' \
+          --fail
 
   # Simply applies flake8 to the codebase.
   lint_code:
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_ci') }}
 
     steps:
       - uses: actions/checkout@v2
@@ -61,8 +51,8 @@ jobs:
 
       - name: Install flake8
         run: |
-          pip install wheel
-          pip install flake8
+          python -m pip install wheel
+          python -m pip install flake8
 
       - name: Set up reviewdog
         run: |
@@ -84,12 +74,12 @@ jobs:
   # Runs the tests on combinations of the supported python/os matrix.
   test_code:
     runs-on: ${{ matrix.os }}
-    needs: get_ci_config
     continue-on-error: true
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_ci') }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9', '3.10']
         include:
           - os: ubuntu-latest
             label: linux-64
@@ -137,52 +127,42 @@ jobs:
           conda info -a
           conda list
 
-      - name: download test config
-        uses: actions/download-artifact@v2.1.0
-        with:
-          name: obspy_ci_config
-          path: obspy_ci_config
-
       - name: install obspy
         shell: bash -l {0}
         run: |
-          pip install -e .
-
-      - name: install obspy github api
-        shell: bash -l {0}
-        run : |
-          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+          python -m pip install -e .[tests]
 
       - name: run test suite
         shell: bash -l {0}
         run: |
-          export MODULELIST=`obshub read-config-value module_list --path=${CONFIG_PATH}`
-          export MODULELISTSPACES=`obshub read-config-value module_list_spaces --path=${CONFIG_PATH}`
-          if [ "$RUNNER_OS" == "macOS" ]; then
-              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
-          else
-              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" --pr-url="${PR_URL}" $MODULELISTSPACES
-              coverage xml -o coverage.xml
-          fi
+          obspy-runtests --cov obspy --cov-report='xml' --cov-append --keep-images --report
+
+      - name: optionally run network tests
+        if: contains(github.event.pull_request.labels.*.name, 'test_network')
+        continue-on-error: true
+        shell: bash -l {0}
+        run: |
+          obspy-runtests --cov obspy --cov-report='xml' --cov-append --report --network
 
       - name: upload coverage
-        if: runner.os != 'macOS'
         uses: codecov/codecov-action@v2.1.0
         with:
           flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-umbrella
           fail_ci_if_error: false
-          file: coverage.xml
+          file: obspy/coverage.xml
+
+      - name: optionally upload image directory
+        if: contains(github.event.pull_request.labels.*.name, 'upload_images')
+        uses: actions/upload-artifact@v2
+        with:
+          name: "images_${{ github.event.pull_request.number }}_${{ matrix.python-version }}_${{ matrix.os }}"
+          path: obspy/obspy_test_images
+          retention-days: 1
 
 
 # This is a very useful step for debugging, it allows you to ssh into the CI
 # machine (https://github.com/marketplace/actions/debugging-with-tmate).
-# Make sure to open the log before the job starts else you cant see the tmate
-# url. See https://github.com/mxschmitt/action-tmate/issues/1.
-# Also, the CI machine will close on a non-zero exit code (annoying). This can
-# be overcome by coalescing the null command like so:
-# $ some-command-that-can-fail || :
-#
 #- name: Setup tmate session
-#  uses: mxschmitt/action-tmate@v1
+#  uses: mxschmitt/action-tmate@v3

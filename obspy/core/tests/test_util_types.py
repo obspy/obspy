@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-import unittest
-
 from obspy import UTCDateTime
 from obspy.core.inventory import Comment
 from obspy.core.util import (ComplexWithUncertainties, Enum,
                              FloatWithUncertainties)
 from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit)
+import pytest
 
 
-class UtilTypesTestCase(unittest.TestCase):
+class TestUtilTypes:
     """
     Test suite for obspy.core.util.base
     """
@@ -19,44 +18,49 @@ class UtilTypesTestCase(unittest.TestCase):
         items = ["m", "s", "m/s", "m/(s*s)", "m*s", "dimensionless", "other"]
         units = Enum(items)
         # existing selections
-        self.assertEqual(units.other, "other")
-        self.assertEqual(units.M, "m")
-        self.assertEqual(units['m/s'], "m/s")
-        self.assertEqual(units.get('m/s'), "m/s")
-        self.assertEqual(units[0], "m")
-        self.assertEqual(units[-1], "other")
+        assert units.other == "other"
+        assert units.M == "m"
+        assert units['m/s'] == "m/s"
+        assert units.get('m/s') == "m/s"
+        assert units[0] == "m"
+        assert units[-1] == "other"
         # not existing selections should fail
-        self.assertRaises(Exception, units.__getitem__, '5')
-        self.assertRaises(Exception, units.__getattr__, 'xx')
-        self.assertRaises(Exception, units.get, 'xx', 'default')
-        self.assertRaises(Exception, units.__getitem__, 99)
-        self.assertRaises(Exception, units.__getitem__, -99)
+        with pytest.raises(Exception):
+            units.__getitem__('5')
+        with pytest.raises(Exception):
+            units.__getattr__('xx')
+        with pytest.raises(Exception):
+            units.get('xx', 'default')
+        with pytest.raises(Exception):
+            units.__getitem__(99)
+        with pytest.raises(Exception):
+            units.__getitem__(-99)
         # test in operator
-        self.assertIn("other", units)
-        self.assertNotIn("ot21her", units)
+        assert "other" in units
+        assert "ot21her" not in units
         # test typical dict methods
-        self.assertEqual(units.values(), items)
-        self.assertEqual(units.items(), list(zip(items, items)))
-        self.assertEqual(units.keys(), items)
+        assert units.values() == items
+        assert units.items() == list(zip(items, items))
+        assert units.keys() == items
         # call will either return correct enum label or return None
-        self.assertEqual(units('m'), 'm')
-        self.assertEqual(units('m/(s*s)'), 'm/(s*s)')
-        self.assertEqual(units(5), 'dimensionless')
-        self.assertEqual(units(99), None)
-        self.assertEqual(units('xxx'), None)
+        assert units('m') == 'm'
+        assert units('m/(s*s)') == 'm/(s*s)'
+        assert units(5) == 'dimensionless'
+        assert units(99) is None
+        assert units('xxx') is None
 
     def _check_complex_with_u(self, c, real, r_lo, r_up, imag, i_lo, i_up):
         """
         Check for six equalities for a ComplexWithUncertainties
         """
-        self.assertTrue(isinstance(c.real, FloatWithUncertainties))
-        self.assertTrue(isinstance(c.imag, FloatWithUncertainties))
-        self.assertEqual(c.real, real)
-        self.assertEqual(c.imag, imag)
-        self.assertEqual(c.real.upper_uncertainty, r_up)
-        self.assertEqual(c.real.lower_uncertainty, r_lo)
-        self.assertEqual(c.imag.upper_uncertainty, i_up)
-        self.assertEqual(c.imag.lower_uncertainty, i_lo)
+        assert isinstance(c.real, FloatWithUncertainties)
+        assert isinstance(c.imag, FloatWithUncertainties)
+        assert c.real == real
+        assert c.imag == imag
+        assert c.real.upper_uncertainty == r_up
+        assert c.real.lower_uncertainty == r_lo
+        assert c.imag.upper_uncertainty == i_up
+        assert c.imag.lower_uncertainty == i_lo
 
     def test_complex(self):
         """
@@ -85,8 +89,8 @@ class UtilTypesTestCase(unittest.TestCase):
         # c3 and c4 should be the same.
         self._check_complex_with_u(c3, f1, lu1, uu1, f2, lu2, uu2)
         self._check_complex_with_u(c4, f1, lu1, uu1, f2, lu2, uu2)
-        self.assertEqual(c4.real, fu1)
-        self.assertEqual(c4.imag, fu2)
+        assert c4.real == fu1
+        assert c4.imag == fu2
 
     def test_floating_point_types_are_indempotent(self):
         """
@@ -94,25 +98,25 @@ class UtilTypesTestCase(unittest.TestCase):
         """
         f = FloatWithUncertainties(1.0, lower_uncertainty=0.5,
                                    upper_uncertainty=1.5)
-        self.assertEqual(f, 1.0)
-        self.assertEqual(f.lower_uncertainty, 0.5)
-        self.assertEqual(f.upper_uncertainty, 1.5)
+        assert f == 1.0
+        assert f.lower_uncertainty == 0.5
+        assert f.upper_uncertainty == 1.5
         f = FloatWithUncertainties(f)
-        self.assertEqual(f, 1.0)
-        self.assertEqual(f.lower_uncertainty, 0.5)
-        self.assertEqual(f.upper_uncertainty, 1.5)
+        assert f == 1.0
+        assert f.lower_uncertainty == 0.5
+        assert f.upper_uncertainty == 1.5
 
         f = FloatWithUncertaintiesAndUnit(1.0, lower_uncertainty=0.5,
                                           upper_uncertainty=1.5, unit="AB")
-        self.assertEqual(f, 1.0)
-        self.assertEqual(f.lower_uncertainty, 0.5)
-        self.assertEqual(f.upper_uncertainty, 1.5)
-        self.assertEqual(f.unit, "AB")
+        assert f == 1.0
+        assert f.lower_uncertainty == 0.5
+        assert f.upper_uncertainty == 1.5
+        assert f.unit == "AB"
         f = FloatWithUncertaintiesAndUnit(f)
-        self.assertEqual(f, 1.0)
-        self.assertEqual(f.lower_uncertainty, 0.5)
-        self.assertEqual(f.upper_uncertainty, 1.5)
-        self.assertEqual(f.unit, "AB")
+        assert f == 1.0
+        assert f.lower_uncertainty == 0.5
+        assert f.upper_uncertainty == 1.5
+        assert f.unit == "AB"
 
     def test_comment_str(self):
         """
@@ -121,18 +125,10 @@ class UtilTypesTestCase(unittest.TestCase):
         c = Comment(value='test_comment', id=9,
                     begin_effective_time=UTCDateTime(1240561632),
                     end_effective_time=UTCDateTime(1584561632), authors=[])
-
-        self.assertEqual(str(c), "Comment:\ttest_comment\n"
-                         "\tBegin Effective Time:\t2009-04-24T08:27:12"
-                         ".000000Z\n"
-                         "\tEnd Effective Time:\t2020-03-18T20:00:32.000000Z\n"
-                         "\tAuthors:\t\t[]\n"
-                         "\tId:\t\t\t9")
-
-
-def suite():
-    return unittest.makeSuite(UtilTypesTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        cs = str(c)
+        assert cs == "Comment:\ttest_comment\n" \
+                     "\tBegin Effective Time:\t2009-04-24T08:27:12" \
+                     ".000000Z\n" \
+                     "\tEnd Effective Time:\t2020-03-18T20:00:32.000000Z\n" \
+                     "\tAuthors:\t\t[]\n" \
+                     "\tId:\t\t\t9"

@@ -3,14 +3,12 @@
 """
 Tests the SeismicPhase class.
 """
-import unittest
-
 import numpy as np
 
 from obspy.taup.tau_model import TauModel
 
 
-class SplitTauModelTestCase(unittest.TestCase):
+class TestSplitTauModel:
     """
     Test suite for splitting of the TauModel class.
     """
@@ -19,10 +17,11 @@ class SplitTauModelTestCase(unittest.TestCase):
         depth = 110
         tau_model = TauModel.from_file('iasp91')
         split_t_mod = tau_model.split_branch(depth)
-        self.assertEqual(tau_model.tau_branches.shape[1] + 1,
-                         split_t_mod.tau_branches.shape[1])
-        self.assertEqual(len(tau_model.ray_params) + 2,
-                         len(split_t_mod.ray_params))
+        shape1 = tau_model.tau_branches.shape[1] + 1
+        shape2 = split_t_mod.tau_branches.shape[1]
+        assert shape1 == shape2
+
+        assert len(tau_model.ray_params) + 2 == len(split_t_mod.ray_params)
 
         branch_count = tau_model.tau_branches.shape[1]
         split_branch_index = tau_model.find_branch(depth)
@@ -40,21 +39,18 @@ class SplitTauModelTestCase(unittest.TestCase):
             if new_s_ray_param == ray_params[j]:
                 s_index = j
 
-        self.assertTrue(p_index == len(split_t_mod.ray_params) or
-                        s_index < p_index)
+        assert p_index == len(split_t_mod.ray_params) or s_index < p_index
 
         for b in range(branch_count):
             orig = tau_model.get_tau_branch(b, True)
             if b < split_branch_index:
                 depth_branch = split_t_mod.get_tau_branch(b, True)
-                self.assertGreater(depth_branch.dist[p_index], 0)
-                self.assertGreater(depth_branch.time[p_index], 0)
+                assert depth_branch.dist[p_index] > 0
+                assert depth_branch.time[p_index] > 0
             elif b > split_branch_index:
                 depth_branch = split_t_mod.get_tau_branch(b + 1, True)
-                self.assertAlmostEqual(depth_branch.dist[p_index], 0,
-                                       delta=0.00000001)
-                self.assertAlmostEqual(depth_branch.time[p_index], 0,
-                                       delta=0.00000001)
+                assert np.isclose(depth_branch.dist[p_index], 0)
+                assert np.isclose(depth_branch.time[p_index], 0)
             else:
                 # the split one
                 continue
@@ -67,7 +63,7 @@ class SplitTauModelTestCase(unittest.TestCase):
                                        atol=0.00000001)
             orig_len = len(orig.dist)
             if s_index < orig_len:
-                self.assertEqual(orig_len + 2, len(depth_branch.dist))
+                assert orig_len + 2 == len(depth_branch.dist)
                 np.testing.assert_allclose(
                     orig.dist[s_index:p_index - 1],
                     depth_branch.dist[s_index + 1:p_index],
@@ -89,34 +85,23 @@ class SplitTauModelTestCase(unittest.TestCase):
         orig = tau_model.get_tau_branch(split_branch_index, True)
         above = split_t_mod.get_tau_branch(split_branch_index, True)
         below = split_t_mod.get_tau_branch(split_branch_index + 1, True)
-        self.assertAlmostEqual(above.min_ray_param, below.max_ray_param, 8)
+        assert np.isclose(above.min_ray_param, below.max_ray_param)
         for i in range(len(above.dist)):
             if i < s_index:
-                self.assertAlmostEqual(orig.dist[i], above.dist[i],
-                                       delta=0.000000001)
+                assert np.isclose(orig.dist[i], above.dist[i])
             elif i == s_index:
                 # new value should be close to average of values to either side
-                self.assertAlmostEqual((orig.dist[i - 1] + orig.dist[i]) / 2,
-                                       above.dist[i], delta=0.00001)
-            elif i > s_index and i < p_index:
-                self.assertAlmostEqual(orig.dist[i - 1],
-                                       above.dist[i] + below.dist[i],
-                                       delta=0.000000001)
+                assert np.isclose((orig.dist[i - 1] + orig.dist[i]) / 2,
+                                  above.dist[i], atol=0.00001)
+            elif s_index < i < p_index:
+                assert np.isclose(orig.dist[i - 1],
+                                  above.dist[i] + below.dist[i])
             elif i == p_index:
                 # new value should be close to average of values to either side
-                self.assertAlmostEqual(
-                    (orig.dist[i - 2] + orig.dist[i - 1]) / 2,
-                    above.dist[i] + below.dist[i],
-                    delta=0.0001)
+                val1 = (orig.dist[i - 2] + orig.dist[i - 1]) / 2
+                val2 = above.dist[i] + below.dist[i]
+                assert np.isclose(val1, val2, atol=0.0001)
             else:
-                self.assertAlmostEqual(orig.dist[i - 2],
-                                       above.dist[i] + below.dist[i],
-                                       delta=0.000000001)
-
-
-def suite():
-    return unittest.makeSuite(SplitTauModelTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+                val1 = orig.dist[i - 2]
+                val2 = above.dist[i] + below.dist[i]
+                assert np.isclose(val1, val2, atol=0.000000001)

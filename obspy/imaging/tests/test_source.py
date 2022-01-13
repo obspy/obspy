@@ -3,20 +3,16 @@
 The obspy.imaging.source test suite.
 """
 import os
-import unittest
 
 from obspy.imaging.source import plot_radiation_pattern
 
 
-class RadPatternTestCase(unittest.TestCase):
+class TestRadPattern:
     """
     Test cases for radiation_pattern.
     """
-    def setUp(self):
-        # directory where the test files are located
-        path = os.path.join(os.path.dirname(__file__), 'data')
-        self.path = path
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+    path = os.path.join(os.path.dirname(__file__), 'data')
+    image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
     def test_farfield_with_quiver(self):
         """
@@ -26,11 +22,3 @@ class RadPatternTestCase(unittest.TestCase):
         mt = [2.245, -0.547, -1.698, 1.339, -3.728, 1.444]
         plot_radiation_pattern(
             mt, kind=['beachball', 's_quiver', 'p_quiver'], show=False)
-
-
-def suite():
-    return unittest.makeSuite(RadPatternTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

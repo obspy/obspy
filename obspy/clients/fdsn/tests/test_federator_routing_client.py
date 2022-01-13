@@ -12,12 +12,15 @@ from distutils.version import LooseVersion
 import unittest
 from unittest import mock
 
+import pytest
+
 import obspy
 from obspy.clients.fdsn.routing.federator_routing_client import \
     FederatorRoutingClient
 
 
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
+pytestmark = pytest.mark.network
 
 
 class FederatorRoutingClientTestCase(unittest.TestCase):

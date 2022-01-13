@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import pickle
-import unittest
 import warnings
 
 from obspy.core import AttribDict
+import pytest
 
 
 class DefaultTestAttribDict(AttribDict):
     defaults = {'test': 1}
 
 
-class AttribDictTestCase(unittest.TestCase):
+class TestAttribDict:
     """
     Test suite for obspy.core.util.attribdict
     """
@@ -24,15 +24,16 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via pop
         temp = ad.pop('test')
-        self.assertEqual(temp, 1)
-        self.assertFalse('test' in ad)
-        self.assertIn('test2', ad)
-        self.assertFalse('test' in ad.__dict__)
-        self.assertIn('test2', ad.__dict__)
-        self.assertFalse(hasattr(ad, 'test'))
-        self.assertTrue(hasattr(ad, 'test2'))
+        assert temp == 1
+        assert not ('test' in ad)
+        assert 'test2' in ad
+        assert not ('test' in ad.__dict__)
+        assert 'test2' in ad.__dict__
+        assert not hasattr(ad, 'test')
+        assert hasattr(ad, 'test2')
         # using pop() for not existing element raises a KeyError
-        self.assertRaises(KeyError, ad.pop, 'test')
+        with pytest.raises(KeyError):
+            ad.pop('test')
 
     def test_popitem(self):
         """
@@ -42,12 +43,13 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via popitem
         temp = ad.popitem()
-        self.assertEqual(temp, ('test2', 'test'))
-        self.assertFalse('test2' in ad)
-        self.assertFalse('test2' in ad.__dict__)
-        self.assertFalse(hasattr(ad, 'test2'))
+        assert temp == ('test2', 'test')
+        assert not ('test2' in ad)
+        assert not ('test2' in ad.__dict__)
+        assert not hasattr(ad, 'test2')
         # popitem for empty AttribDict raises a KeyError
-        self.assertRaises(KeyError, ad.popitem)
+        with pytest.raises(KeyError):
+            ad.popitem()
 
     def test_delete(self):
         """
@@ -58,32 +60,32 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # deleting test using dictionary
         del ad['test']
-        self.assertFalse('test' in ad)
-        self.assertIn('test2', ad)
-        self.assertFalse('test' in ad.__dict__)
-        self.assertIn('test2', ad.__dict__)
-        self.assertFalse(hasattr(ad, 'test'))
-        self.assertTrue(hasattr(ad, 'test2'))
+        assert not ('test' in ad)
+        assert 'test2' in ad
+        assert not ('test' in ad.__dict__)
+        assert 'test2' in ad.__dict__
+        assert not hasattr(ad, 'test')
+        assert hasattr(ad, 'test2')
         # deleting test2 using attribute
         del ad.test2
-        self.assertFalse('test2' in ad)
-        self.assertFalse('test2' in ad.__dict__)
-        self.assertFalse(hasattr(ad, 'test2'))
+        assert not ('test2' in ad)
+        assert not ('test2' in ad.__dict__)
+        assert not hasattr(ad, 'test2')
 
     def test_init(self):
         """
         Tests initialization of AttribDict class.
         """
         ad = AttribDict({'test': 'NEW'})
-        self.assertEqual(ad['test'], 'NEW')
-        self.assertEqual(ad.test, 'NEW')
-        self.assertEqual(ad.get('test'), 'NEW')
-        self.assertEqual(ad.__getattr__('test'), 'NEW')
-        self.assertEqual(ad.__getitem__('test'), 'NEW')
-        self.assertEqual(ad.__dict__['test'], 'NEW')
-        self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertIn('test', ad)
-        self.assertIn('test', ad.__dict__)
+        assert ad['test'] == 'NEW'
+        assert ad.test == 'NEW'
+        assert ad.get('test') == 'NEW'
+        assert ad.__getattr__('test') == 'NEW'
+        assert ad.__getitem__('test') == 'NEW'
+        assert ad.__dict__['test'] == 'NEW'
+        assert ad.__dict__.get('test') == 'NEW'
+        assert 'test' in ad
+        assert 'test' in ad.__dict__
 
     def test_setitem(self):
         """
@@ -92,27 +94,27 @@ class AttribDictTestCase(unittest.TestCase):
         # 1
         ad = AttribDict()
         ad['test'] = 'NEW'
-        self.assertEqual(ad['test'], 'NEW')
-        self.assertEqual(ad.test, 'NEW')
-        self.assertEqual(ad.get('test'), 'NEW')
-        self.assertEqual(ad.__getattr__('test'), 'NEW')
-        self.assertEqual(ad.__getitem__('test'), 'NEW')
-        self.assertEqual(ad.__dict__['test'], 'NEW')
-        self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertIn('test', ad)
-        self.assertIn('test', ad.__dict__)
+        assert ad['test'] == 'NEW'
+        assert ad.test == 'NEW'
+        assert ad.get('test') == 'NEW'
+        assert ad.__getattr__('test') == 'NEW'
+        assert ad.__getitem__('test') == 'NEW'
+        assert ad.__dict__['test'] == 'NEW'
+        assert ad.__dict__.get('test') == 'NEW'
+        assert 'test' in ad
+        assert 'test' in ad.__dict__
         # 2
         ad = AttribDict()
         ad.__setitem__('test', 'NEW')
-        self.assertEqual(ad['test'], 'NEW')
-        self.assertEqual(ad.test, 'NEW')
-        self.assertEqual(ad.get('test'), 'NEW')
-        self.assertEqual(ad.__getattr__('test'), 'NEW')
-        self.assertEqual(ad.__getitem__('test'), 'NEW')
-        self.assertEqual(ad.__dict__['test'], 'NEW')
-        self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertIn('test', ad)
-        self.assertIn('test', ad.__dict__)
+        assert ad['test'] == 'NEW'
+        assert ad.test == 'NEW'
+        assert ad.get('test') == 'NEW'
+        assert ad.__getattr__('test') == 'NEW'
+        assert ad.__getitem__('test') == 'NEW'
+        assert ad.__dict__['test'] == 'NEW'
+        assert ad.__dict__.get('test') == 'NEW'
+        assert 'test' in ad
+        assert 'test' in ad.__dict__
 
     def test_setattr(self):
         """
@@ -121,27 +123,27 @@ class AttribDictTestCase(unittest.TestCase):
         # 1
         ad = AttribDict()
         ad.test = 'NEW'
-        self.assertEqual(ad['test'], 'NEW')
-        self.assertEqual(ad.test, 'NEW')
-        self.assertEqual(ad.get('test'), 'NEW')
-        self.assertEqual(ad.__getattr__('test'), 'NEW')
-        self.assertEqual(ad.__getitem__('test'), 'NEW')
-        self.assertEqual(ad.__dict__['test'], 'NEW')
-        self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertIn('test', ad)
-        self.assertIn('test', ad.__dict__)
+        assert ad['test'] == 'NEW'
+        assert ad.test == 'NEW'
+        assert ad.get('test') == 'NEW'
+        assert ad.__getattr__('test') == 'NEW'
+        assert ad.__getitem__('test') == 'NEW'
+        assert ad.__dict__['test'] == 'NEW'
+        assert ad.__dict__.get('test') == 'NEW'
+        assert 'test' in ad
+        assert 'test' in ad.__dict__
         # 2
         ad = AttribDict()
         ad.__setattr__('test', 'NEW')
-        self.assertEqual(ad['test'], 'NEW')
-        self.assertEqual(ad.test, 'NEW')
-        self.assertEqual(ad.get('test'), 'NEW')
-        self.assertEqual(ad.__getattr__('test'), 'NEW')
-        self.assertEqual(ad.__getitem__('test'), 'NEW')
-        self.assertEqual(ad.__dict__['test'], 'NEW')
-        self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertIn('test', ad)
-        self.assertIn('test', ad.__dict__)
+        assert ad['test'] == 'NEW'
+        assert ad.test == 'NEW'
+        assert ad.get('test') == 'NEW'
+        assert ad.__getattr__('test') == 'NEW'
+        assert ad.__getitem__('test') == 'NEW'
+        assert ad.__dict__['test'] == 'NEW'
+        assert ad.__dict__.get('test') == 'NEW'
+        assert 'test' in ad
+        assert 'test' in ad.__dict__
 
     def test_setdefault(self):
         """
@@ -150,41 +152,41 @@ class AttribDictTestCase(unittest.TestCase):
         ad = AttribDict()
         # 1
         default = ad.setdefault('test', 'NEW')
-        self.assertEqual(default, 'NEW')
-        self.assertEqual(ad['test'], 'NEW')
-        self.assertEqual(ad.test, 'NEW')
-        self.assertEqual(ad.get('test'), 'NEW')
-        self.assertEqual(ad.__getattr__('test'), 'NEW')
-        self.assertEqual(ad.__getitem__('test'), 'NEW')
-        self.assertEqual(ad.__dict__['test'], 'NEW')
-        self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertIn('test', ad)
-        self.assertIn('test', ad.__dict__)
+        assert default == 'NEW'
+        assert ad['test'] == 'NEW'
+        assert ad.test == 'NEW'
+        assert ad.get('test') == 'NEW'
+        assert ad.__getattr__('test') == 'NEW'
+        assert ad.__getitem__('test') == 'NEW'
+        assert ad.__dict__['test'] == 'NEW'
+        assert ad.__dict__.get('test') == 'NEW'
+        assert 'test' in ad
+        assert 'test' in ad.__dict__
         # 2 - existing key should not be overwritten
         default = ad.setdefault('test', 'SOMETHINGDIFFERENT')
-        self.assertEqual(default, 'NEW')
-        self.assertEqual(ad['test'], 'NEW')
-        self.assertEqual(ad.test, 'NEW')
-        self.assertEqual(ad.get('test'), 'NEW')
-        self.assertEqual(ad.__getattr__('test'), 'NEW')
-        self.assertEqual(ad.__getitem__('test'), 'NEW')
-        self.assertEqual(ad.__dict__['test'], 'NEW')
-        self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertIn('test', ad)
-        self.assertIn('test', ad.__dict__)
+        assert default == 'NEW'
+        assert ad['test'] == 'NEW'
+        assert ad.test == 'NEW'
+        assert ad.get('test') == 'NEW'
+        assert ad.__getattr__('test') == 'NEW'
+        assert ad.__getitem__('test') == 'NEW'
+        assert ad.__dict__['test'] == 'NEW'
+        assert ad.__dict__.get('test') == 'NEW'
+        assert 'test' in ad
+        assert 'test' in ad.__dict__
         # 3 - default value isNone
         ad = AttribDict()
         default = ad.setdefault('test')
-        self.assertEqual(default, None)
-        self.assertEqual(ad['test'], None)
-        self.assertEqual(ad.test, None)
-        self.assertEqual(ad.get('test'), None)
-        self.assertEqual(ad.__getattr__('test'), None)
-        self.assertEqual(ad.__getitem__('test'), None)
-        self.assertEqual(ad.__dict__['test'], None)
-        self.assertEqual(ad.__dict__.get('test'), None)
-        self.assertIn('test', ad)
-        self.assertIn('test', ad.__dict__)
+        assert default is None
+        assert ad['test'] is None
+        assert ad.test is None
+        assert ad.get('test') is None
+        assert ad.__getattr__('test') is None
+        assert ad.__getitem__('test') is None
+        assert ad.__dict__['test'] is None
+        assert ad.__dict__.get('test') is None
+        assert 'test' in ad
+        assert 'test' in ad.__dict__
 
     def test_clear(self):
         """
@@ -195,15 +197,15 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via pop
         ad.clear()
-        self.assertFalse('test' in ad)
-        self.assertFalse('test2' in ad)
-        self.assertFalse('test' in ad.__dict__)
-        self.assertFalse('test2' in ad.__dict__)
-        self.assertFalse(hasattr(ad, 'test'))
-        self.assertFalse(hasattr(ad, 'test2'))
+        assert not ('test' in ad)
+        assert not ('test2' in ad)
+        assert not ('test' in ad.__dict__)
+        assert not ('test2' in ad.__dict__)
+        assert not hasattr(ad, 'test')
+        assert not hasattr(ad, 'test2')
         # class attributes should be still present
-        self.assertTrue(hasattr(ad, 'readonly'))
-        self.assertTrue(hasattr(ad, 'defaults'))
+        assert hasattr(ad, 'readonly')
+        assert hasattr(ad, 'defaults')
 
     def test_init_argument(self):
         """
@@ -211,13 +213,17 @@ class AttribDictTestCase(unittest.TestCase):
         """
         # one dict works as expected
         ad = AttribDict({'test': 1})
-        self.assertEqual(ad.test, 1)
+        assert ad.test == 1
         # multiple dicts results into TypeError
-        self.assertRaises(TypeError, AttribDict, {}, {})
-        self.assertRaises(TypeError, AttribDict, {}, {}, blah=1)
+        with pytest.raises(TypeError):
+            AttribDict({}, {})
+        with pytest.raises(TypeError):
+            AttribDict({}, {}, blah=1)
         # non-dicts results into TypeError
-        self.assertRaises(TypeError, AttribDict, 1)
-        self.assertRaises(TypeError, AttribDict, object())
+        with pytest.raises(TypeError):
+            AttribDict(1)
+        with pytest.raises(TypeError):
+            AttribDict(object())
 
     def test_defaults(self):
         """
@@ -226,19 +232,22 @@ class AttribDictTestCase(unittest.TestCase):
         # 1
         ad = AttribDict()
         ad['test'] = 'NEW'
-        self.assertEqual(ad.__getitem__('test'), 'NEW')
-        self.assertEqual(ad.__getitem__('xxx', 'blub'), 'blub')
-        self.assertEqual(ad.__getitem__('test', 'blub'), 'NEW')
-        self.assertEqual(ad.__getattr__('test'), 'NEW')
-        self.assertEqual(ad.__getattr__('xxx', 'blub'), 'blub')
-        self.assertEqual(ad.__getattr__('test', 'blub'), 'NEW')
+        assert ad.__getitem__('test') == 'NEW'
+        assert ad.__getitem__('xxx', 'blub') == 'blub'
+        assert ad.__getitem__('test', 'blub') == 'NEW'
+        assert ad.__getattr__('test') == 'NEW'
+        assert ad.__getattr__('xxx', 'blub') == 'blub'
+        assert ad.__getattr__('test', 'blub') == 'NEW'
         # should raise KeyError without default item
-        self.assertRaises(KeyError, ad.__getitem__, 'xxx')
-        self.assertRaises(AttributeError, ad.__getattr__, 'xxx')
+        with pytest.raises(KeyError):
+            ad.__getitem__('xxx')
+        with pytest.raises(AttributeError):
+            ad.__getattr__('xxx')
         # 2
         ad2 = AttribDict(defaults={'test2': 'NEW'})
-        self.assertEqual(ad2.__getitem__('test2'), 'NEW')
-        self.assertRaises(KeyError, ad2.__getitem__, 'xxx')
+        assert ad2.__getitem__('test2') == 'NEW'
+        with pytest.raises(KeyError):
+            ad2.__getitem__('xxx')
 
     def test_set_readonly(self):
         """
@@ -249,8 +258,9 @@ class AttribDictTestCase(unittest.TestCase):
             defaults = {'test': 1}
 
         ad = MyAttribDict()
-        self.assertEqual(ad.test, 1)
-        self.assertRaises(AttributeError, ad.__setitem__, 'test', 1)
+        assert ad.test == 1
+        with pytest.raises(AttributeError):
+            ad.__setitem__('test', 1)
 
     def test_deepcopy_and_pickle(self):
         """
@@ -259,13 +269,13 @@ class AttribDictTestCase(unittest.TestCase):
         ad = DefaultTestAttribDict()
         ad.muh = 2
         ad2 = ad.copy()
-        self.assertEqual(ad2.test, 1)
-        self.assertEqual(ad2.muh, 2)
-        self.assertEqual(ad2, ad)
+        assert ad2.test == 1
+        assert ad2.muh == 2
+        assert ad2 == ad
         ad3 = pickle.loads(pickle.dumps(ad, protocol=2))
-        self.assertEqual(ad3.test, 1)
-        self.assertEqual(ad3.muh, 2)
-        self.assertEqual(ad3, ad)
+        assert ad3.test == 1
+        assert ad3.muh == 2
+        assert ad3 == ad
 
     def test_compare_with_dict(self):
         """
@@ -273,8 +283,8 @@ class AttribDictTestCase(unittest.TestCase):
         """
         adict = {'test': 1}
         ad = AttribDict(adict)
-        self.assertEqual(ad, adict)
-        self.assertEqual(adict, ad)
+        assert ad == adict
+        assert adict == ad
 
     def test_pretty_str(self):
         """
@@ -283,15 +293,15 @@ class AttribDictTestCase(unittest.TestCase):
         # 1
         ad = AttribDict({'test1': 1, 'test2': 2})
         out = '           test1: 1\n           test2: 2'
-        self.assertEqual(ad._pretty_str(), out)
+        assert ad._pretty_str() == out
         # 2
         ad = AttribDict({'test1': 1, 'test2': 2})
         out = '           test2: 2\n           test1: 1'
-        self.assertEqual(ad._pretty_str(priorized_keys=['test2']), out)
+        assert ad._pretty_str(priorized_keys=['test2']) == out
         # 3
         ad = AttribDict({'test1': 1, 'test2': 2})
         out = ' test1: 1\n test2: 2'
-        self.assertEqual(ad._pretty_str(min_label_length=6), out)
+        assert ad._pretty_str(min_label_length=6) == out
 
     def test_types(self):
         """
@@ -310,16 +320,8 @@ class AttribDictTestCase(unittest.TestCase):
             ad.not_type_controlled = 2
             ad.another_number = 1
 
-        self.assertEqual(len(w), 3)
-        self.assertIsInstance(ad.string, str)
-        self.assertIsInstance(ad.number, float)
-        self.assertIsInstance(ad.int, int)
-        self.assertIsInstance(ad.another_number, int)
-
-
-def suite():
-    return unittest.makeSuite(AttribDictTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert len(w) == 3
+        assert isinstance(ad.string, str)
+        assert isinstance(ad.number, float)
+        assert isinstance(ad.int, int)
+        assert isinstance(ad.another_number, int)

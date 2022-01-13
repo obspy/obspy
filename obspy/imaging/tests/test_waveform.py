@@ -3,7 +3,6 @@
 The obspy.imaging.waveform test suite.
 """
 import os
-import unittest
 
 import numpy as np
 
@@ -11,16 +10,14 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.event import read_events
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
-from obspy.core.util.testing import ImageComparison
+import pytest
 
 
-class WaveformTestCase(unittest.TestCase):
+class TestWaveformPlot:
     """
     Test cases for waveform plotting.
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'images')
+    path = os.path.join(os.path.dirname(__file__), 'images')
 
     def _create_stream(self, starttime, endtime, sampling_rate):
         """
@@ -72,25 +69,26 @@ class WaveformTestCase(unittest.TestCase):
         st[0].stats.calib = 0.2343
         org_st = st.copy()
         st.plot(format='png')
-        self.assertEqual(st, org_st)
+        assert st == org_st
         # Now with min-max list creation (more than 400000 samples).
         st = self._create_stream(UTCDateTime(0), UTCDateTime(600000), 1)
         st[0].stats.calib = 0.2343
         org_st = st.copy()
         st.plot(format='png')
-        self.assertEqual(st, org_st)
+        assert st == org_st
         # Now only plot a certain time frame.
         st.plot(
             format='png', starrtime=UTCDateTime(10000),
             endtime=UTCDateTime(20000))
-        self.assertEqual(st, org_st)
+        assert st == org_st
 
     def test_plot_empty_stream(self):
         """
         Plotting of an empty stream should raise a warning.
         """
         st = Stream()
-        self.assertRaises(IndexError, st.plot)
+        with pytest.raises(IndexError):
+            st.plot()
 
     def test_plot_same_trace_different_sample_rates(self):
         """
@@ -100,9 +98,10 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self._create_stream(start, start + 10, 1.0)
         st += self._create_stream(start + 10, start + 20, 10.0)
-        self.assertRaises(Exception, st.plot)
+        with pytest.raises(Exception):
+            st.plot()
 
-    def test_plot_one_hour_many_samples(self):
+    def test_plot_one_hour_many_samples(self, image_path):
         """
         Plots one hour, starting Jan 1970.
 
@@ -113,11 +112,9 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self._create_stream(start, start + 3600, 1000.0)
         # create and compare image
-        image_name = 'waveform_one_hour_many_samples.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+        st.plot(outfile=image_path)
 
-    def test_plot_one_hour_few_samples(self):
+    def test_plot_one_hour_few_samples(self, image_path):
         """
         Plots one hour, starting Jan 1970.
 
@@ -126,11 +123,9 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self._create_stream(start, start + 3600, 10.0)
         # create and compare image
-        image_name = 'waveform_one_hour_few_samples.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+        st.plot(outfile=image_path)
 
-    def test_plot_simple_gap_many_samples(self):
+    def test_plot_simple_gap_many_samples(self, image_path):
         """
         Plots three hours with a gap.
 
@@ -141,11 +136,9 @@ class WaveformTestCase(unittest.TestCase):
         st = self._create_stream(start, start + 3600 * 3 / 4, 500.0)
         st += self._create_stream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
         # create and compare image
-        image_name = 'waveform_simple_gap_many_samples.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+        st.plot(outfile=image_path)
 
-    def test_plot_simple_gap_few_samples(self):
+    def test_plot_simple_gap_few_samples(self, image_path):
         """
         Plots three hours with a gap.
 
@@ -156,11 +149,9 @@ class WaveformTestCase(unittest.TestCase):
         st = self._create_stream(start, start + 3600 * 3 / 4, 5.0)
         st += self._create_stream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
         # create and compare image
-        image_name = 'waveform_simple_gap_few_samples.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+        st.plot(outfile=image_path)
 
-    def test_plot_complex_gap_many_samples(self):
+    def test_plot_complex_gap_many_samples(self, image_path):
         """
         Plots three hours with a gap.
 
@@ -177,11 +168,9 @@ class WaveformTestCase(unittest.TestCase):
         temp_st[0].stats.location = '02'
         st += temp_st
         # create and compare image
-        image_name = 'waveform_complex_gap_many_samples.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+        st.plot(outfile=image_path)
 
-    def test_plot_complex_gap_few_samples(self):
+    def test_plot_complex_gap_few_samples(self, image_path):
         """
         Plots three hours with a gap.
 
@@ -198,46 +187,60 @@ class WaveformTestCase(unittest.TestCase):
         temp_st[0].stats.location = '02'
         st += temp_st
         # create and compare image
-        image_name = 'waveform_complex_gap_few_samples.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+        st.plot(outfile=image_path)
 
-    def test_plot_multiple_traces(self):
+    def test_plot_multiple_traces_1_trace(self, image_path):
         """
         Plots multiple traces underneath.
         """
         # 1 trace
         st = read()[1]
-        with ImageComparison(self.path, 'waveform_1_trace.png') as ic:
-            st.plot(outfile=ic.name, automerge=False)
-        # 3 traces
+        st.plot(outfile=image_path, automerge=False)
+
+    def test_plot_multiple_traces_3_traces(self, image_path):
+        """
+        3 traces
+        """
         st = read()
-        with ImageComparison(self.path, 'waveform_3_traces.png') as ic:
-            st.plot(outfile=ic.name, automerge=False)
-        # 5 traces
-        st = st[1] * 5
-        with ImageComparison(self.path, 'waveform_5_traces.png') as ic:
-            st.plot(outfile=ic.name, automerge=False)
+        st.plot(outfile=image_path, automerge=False)
+
+    def test_plot_multiple_traces_5_traces(self, image_path):
+        """
+        5 traces
+        """
+        st = read()[1] * 5
+        st.plot(outfile=image_path, automerge=False)
+
+    def test_plot_multiple_traces_10_traces(self, image_path):
+        """
+        10 traces
+        """
         # 10 traces
-        st = st[1] * 10
-        with ImageComparison(self.path, 'waveform_10_traces.png') as ic:
-            st.plot(outfile=ic.name, automerge=False)
-        # 10 traces - huge numbers
-        st = st[1] * 10
+        st = read()[1] * 10
+        st.plot(outfile=image_path, automerge=False)
+
+    def test_plot_multiple_traces_10_traces_huge(self, image_path):
+        """
+        10 traces - huge numbers
+        """
+        st = read()[1] * 10
         for i, tr in enumerate(st):
             # scale data to have huge numbers
             st[i].data = tr.data * 10 ** i
-        with ImageComparison(self.path, 'waveform_10_traces_huge.png') as ic:
-            st.plot(outfile=ic.name, automerge=False, equal_scale=False)
+        st.plot(outfile=image_path, automerge=False, equal_scale=False)
+
+    def test_plot_multiple_traces_10_traces_tiny(self, image_path):
+        """
+        10 traces tiny numbers
+        """
         # 10 traces - tiny numbers
-        st = st[1] * 10
+        st = read()[1] * 10
         for i, tr in enumerate(st):
             # scale data to have huge numbers
             st[i].data = tr.data / (10 ** i)
-        with ImageComparison(self.path, 'waveform_10_traces_tiny.png') as ic:
-            st.plot(outfile=ic.name, automerge=False, equal_scale=False)
+        st.plot(outfile=image_path, automerge=False, equal_scale=False)
 
-    def test_plot_with_labels(self):
+    def test_plot_with_labels(self, image_path):
         """
         Plots with labels.
         """
@@ -247,25 +250,27 @@ class WaveformTestCase(unittest.TestCase):
         st[1].label = u'Hällö Wörld & Marß'
         st[2].label = '*' * 80
         # create and compare image
-        with ImageComparison(self.path, 'waveform_labels.png') as ic:
-            st.plot(outfile=ic.name)
+        st.plot(outfile=image_path)
 
-    def test_plot_binning_error(self):
+    def test_plot_binning_error_1(self, image_path):
         """
         Tests the plotting of a trace with a certain amount of sampling that
         had a binning problem.
         """
         tr = Trace(data=np.sin(np.linspace(0, 200, 432000)))
         # create and compare image
-        with ImageComparison(self.path, 'waveform_binning_error.png') as ic:
-            tr.plot(outfile=ic.name)
+        tr.plot(outfile=image_path)
 
+    def test_plot_binning_error_2(self, image_path):
+        """
+        Tests the plotting of a trace with a certain amount of sampling that
+        had a binning problem.
+        """
         tr = Trace(data=np.sin(np.linspace(0, 200, 431979)))
         # create and compare image
-        with ImageComparison(self.path, 'waveform_binning_error_2.png') as ic:
-            tr.plot(outfile=ic.name)
+        tr.plot(outfile=image_path)
 
-    def test_plot_default_section(self):
+    def test_plot_default_section(self, image_path):
         """
         Tests plotting 10 traces in a horizontal section.
         """
@@ -276,10 +281,9 @@ class WaveformTestCase(unittest.TestCase):
             st += self._create_stream(this_start, this_start + 3600, 100)
             st[-1].stats.distance = _i * 10e3
         # create and compare image
-        with ImageComparison(self.path, 'waveform_default_section.png') as ic:
-            st.plot(outfile=ic.name, type='section')
+        st.plot(outfile=image_path, type='section')
 
-    def test_plot_azim_section(self):
+    def test_plot_azim_section(self, image_path):
         """
         Tests plotting 10 traces in a azimuthal distant section.
         """
@@ -291,11 +295,10 @@ class WaveformTestCase(unittest.TestCase):
                 'latitude': _i,
                 'longitude': _i})
         # create and compare image
-        with ImageComparison(self.path, 'waveform_azim_section.png') as ic:
-            st.plot(outfile=ic.name, type='section', dist_degree=True,
-                    ev_coord=(0.0, 0.0))
+        st.plot(outfile=image_path, type='section', dist_degree=True,
+                ev_coord=(0.0, 0.0))
 
-    def test_plot_horizontal_section(self):
+    def test_plot_horizontal_section(self, image_path):
         """
         Tests plotting 10 traces in a horizontal section.
         """
@@ -305,10 +308,9 @@ class WaveformTestCase(unittest.TestCase):
             st += self._create_stream(start, start + 3600, 100)
             st[-1].stats.distance = _i * 10e3
         # create and compare image
-        with ImageComparison(self.path, 'waveform_horiz_section.png') as ic:
-            st.plot(outfile=ic.name, type='section', orientation='horizontal')
+        st.plot(outfile=image_path, type='section', orientation='horizontal')
 
-    def test_plot_ref_time_section(self):
+    def test_plot_ref_time_section(self, image_path):
         """
         Tests plotting 10 traces in a section with alternate reference time.
         """
@@ -320,10 +322,9 @@ class WaveformTestCase(unittest.TestCase):
             st += self._create_stream(this_start, this_start + 3600, 100)
             st[-1].stats.distance = _i * 10e3
         # create and compare image
-        with ImageComparison(self.path, 'waveform_reftime_section.png') as ic:
-            st.plot(outfile=ic.name, type='section', reftime=reftime)
+        st.plot(outfile=image_path, type='section', reftime=reftime)
 
-    def test_plot_colored_section(self):
+    def test_plot_colored_section(self, image_path):
         """
         Tests plotting 10 traces in a section colored by channel.
         """
@@ -335,10 +336,9 @@ class WaveformTestCase(unittest.TestCase):
             st[-1].stats.distance = _i * 10e3
             st[-1].stats.channel = str(_i % 3)
         # create and compare image
-        with ImageComparison(self.path, 'waveform_color_section.png') as ic:
-            st.plot(outfile=ic.name, type='section', color='channel')
+        st.plot(outfile=image_path, type='section', color='channel')
 
-    def test_plot_wiggles_negative_section(self):
+    def test_plot_wiggles_negative_section(self, image_path):
         """
         Tests plotting 10 traces in a horizontal section,
         with colored wiggles only on the negative side.
@@ -351,12 +351,10 @@ class WaveformTestCase(unittest.TestCase):
             st[-1].stats.distance = _i * 10e3
             st[-1].stats.channel = str(_i % 3)
         # create and compare image
-        with ImageComparison(
-                self.path, 'waveform_wiggles_negative_section.png') as ic:
-            st.plot(outfile=ic.name, type='section', orientation='horizontal',
-                    fillcolors=(None, "black"))
+        st.plot(outfile=image_path, type='section', orientation='horizontal',
+                fillcolors=(None, "black"))
 
-    def test_plot_wiggles_positive_section(self):
+    def test_plot_wiggles_positive_section(self, image_path):
         """
         Tests plotting 10 traces in a horizontal section,
         with colored wiggles only on the positive side.
@@ -369,12 +367,10 @@ class WaveformTestCase(unittest.TestCase):
             st[-1].stats.distance = _i * 10e3
             st[-1].stats.channel = str(_i % 3)
         # create and compare image
-        with ImageComparison(
-                self.path, 'waveform_wiggles_positive_section.png') as ic:
-            st.plot(outfile=ic.name, type='section', orientation='horizontal',
-                    fillcolors=("black", None))
+        st.plot(outfile=image_path, type='section', orientation='horizontal',
+                fillcolors=("black", None))
 
-    def test_plot_wiggles_horizontal_section(self):
+    def test_plot_wiggles_horizontal_section(self, image_path):
         """
         Tests plotting 10 traces in a horizontal section with colored wiglets.
         """
@@ -386,12 +382,10 @@ class WaveformTestCase(unittest.TestCase):
             st[-1].stats.distance = _i * 10e3
             st[-1].stats.channel = str(_i % 3)
         # create and compare image
-        with ImageComparison(
-                self.path, 'waveform_wiggles_horizontal_section.png') as ic:
-            st.plot(outfile=ic.name, type='section', orientation='horizontal',
-                    fillcolors=("blue", "red"))
+        st.plot(outfile=image_path, type='section', orientation='horizontal',
+                fillcolors=("blue", "red"))
 
-    def test_plot_wiggles_vertical_section(self):
+    def test_plot_wiggles_vertical_section(self, image_path):
         """
         Tests plotting 10 traces in a vertical section with colored wiglets.
         """
@@ -403,23 +397,19 @@ class WaveformTestCase(unittest.TestCase):
             st[-1].stats.distance = _i * 10e3
             st[-1].stats.channel = str(_i % 3)
         # create and compare image
-        with ImageComparison(
-                self.path, 'waveform_wiggles_vertical_section.png') as ic:
-            st.plot(outfile=ic.name, type='section', orientation='vertical',
-                    fillcolors=("blue", "red"))
+        st.plot(outfile=image_path, type='section', orientation='vertical',
+                fillcolors=("blue", "red"))
 
-    def test_plot_default_relative(self):
+    def test_plot_default_relative(self, image_path):
         """
         Plots one hour, starting Jan 1970, with a relative scale.
         """
         start = UTCDateTime(0)
         st = self._create_stream(start, start + 3600, 100)
         # create and compare image
-        image_name = 'waveform_default_relative.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name, type='relative')
+        st.plot(outfile=image_path, type='relative')
 
-    def test_plot_ref_time_relative(self):
+    def test_plot_ref_time_relative(self, image_path):
         """
         Plots one hour, starting Jan 1970, with a relative scale.
 
@@ -429,26 +419,22 @@ class WaveformTestCase(unittest.TestCase):
         ref = UTCDateTime(300)
         st = self._create_stream(start, start + 3600, 100)
         # create and compare image
-        image_name = 'waveform_reftime_relative.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name, type='relative', reftime=ref)
+        st.plot(outfile=image_path, type='relative', reftime=ref)
 
-    def test_plot_day_plot(self):
-        '''
+    def test_plot_day_plot(self, image_path):
+        """
         Plots day plot, starting Jan 1970.
-        '''
+        """
         start = UTCDateTime(0)
         st = self._create_stream(start, start + 3 * 3600, 100)
         # create and compare image
-        image_name = 'waveform_dayplot.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name, type='dayplot',
-                    timezone='EST', time_offset=-5)
+        st.plot(outfile=image_path, type='dayplot',
+                timezone='EST', time_offset=-5)
 
-    def test_plot_day_plot_explicit_event(self):
-        '''
+    def test_plot_day_plot_explicit_event(self, image_path):
+        """
         Plots day plot, starting Jan 1970, with several events.
-        '''
+        """
         start = UTCDateTime(0)
         event1 = UTCDateTime(30)       # Event: Top left; Note: below right
         event2 = UTCDateTime(14 * 60)  # Event: Top right; Note: below left
@@ -457,34 +443,22 @@ class WaveformTestCase(unittest.TestCase):
         event5 = UTCDateTime(61 * 60)  # Should be ignored
         st = self._create_stream(start, start + 3600, 100)
         # create and compare image
-        image_name = 'waveform_dayplot_event.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name, type='dayplot',
-                    timezone='EST', time_offset=-5,
-                    events=[{'time': event1, 'text': 'Event 1'},
-                            {'time': event2, 'text': 'Event 2'},
-                            {'time': event3, 'text': 'Event 3'},
-                            {'time': event4, 'text': 'Event 4'},
-                            {'time': event5, 'text': 'Event 5'}])
+        st.plot(outfile=image_path, type='dayplot',
+                timezone='EST', time_offset=-5,
+                events=[{'time': event1, 'text': 'Event 1'},
+                        {'time': event2, 'text': 'Event 2'},
+                        {'time': event3, 'text': 'Event 3'},
+                        {'time': event4, 'text': 'Event 4'},
+                        {'time': event5, 'text': 'Event 5'}])
 
-    def test_plot_day_plot_catalog(self):
-        '''
+    def test_plot_day_plot_catalog(self, image_path):
+        """
         Plots day plot, with a catalog of events.
-        '''
+        """
         start = UTCDateTime(2012, 4, 4, 14, 0, 0)
         cat = read_events()
         st = self._create_stream(start, start + 3600, 100)
         # create and compare image
-        image_name = 'waveform_dayplot_catalog.png'
-        with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name, type='dayplot',
-                    timezone='EST', time_offset=-5,
-                    events=cat)
-
-
-def suite():
-    return unittest.makeSuite(WaveformTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        st.plot(outfile=image_path, type='dayplot',
+                timezone='EST', time_offset=-5,
+                events=cat)

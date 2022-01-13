@@ -6,11 +6,11 @@ Tests the high level obspy.taup.tau interface.
 import collections
 import inspect
 import os
-import unittest
 import warnings
 from collections import OrderedDict
 
 import numpy as np
+import pytest
 
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.taup import TauPyModel
@@ -28,16 +28,15 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(
 SPEEDUP_FACTOR = 20
 
 
-class TauPyModelTestCase(unittest.TestCase):
+class TestTauPyModel:
     """
     Test suite for the obspy.taup.TauPy class.
     """
 
-    def setUp(self):
-        """setup method. Instantiates cache values to be used in
-        P phase arrival calculations
-        to test also `TauModel.load_from_depth_cache`"""
-        self.caches = [OrderedDict(), False, None]
+    @pytest.fixture  # Note: tests fail when cache is set to class level
+    def caches(self):
+        """A cache for test state."""
+        return [OrderedDict(), False, None]
 
     def _read_taup_output(self, filename):
         """
@@ -86,19 +85,19 @@ class TauPyModelTestCase(unittest.TestCase):
         # Zero travel time result in the other parameters being undefined.
         if arr.time == 0.0:
             return
-        self.assertEqual(arr.distance, expected_arr["distance"])
-        self.assertEqual(arr.source_depth, expected_arr["depth"])
-        self.assertEqual(arr.name, expected_arr["name"])
-        self.assertAlmostEqual(arr.time, expected_arr["time"], 2)
-        self.assertAlmostEqual(arr.ray_param_sec_degree,
-                               expected_arr["ray_param_sec_degree"], 3)
-        self.assertAlmostEqual(arr.takeoff_angle,
-                               expected_arr["takeoff_angle"], 2)
-        self.assertAlmostEqual(arr.incident_angle,
-                               expected_arr["incident_angle"], 2)
-        self.assertAlmostEqual(arr.purist_distance,
-                               expected_arr["purist_distance"], 2)
-        self.assertEqual(arr.purist_name, expected_arr["purist_name"])
+        assert arr.distance == expected_arr["distance"]
+        assert arr.source_depth == expected_arr["depth"]
+        assert arr.name == expected_arr["name"]
+        assert round(abs(arr.time - expected_arr["time"]), 2) == 0
+        diff = arr.ray_param_sec_degree - expected_arr["ray_param_sec_degree"]
+        assert round(abs(diff), 3) == 0
+        diff = arr.takeoff_angle - expected_arr["takeoff_angle"]
+        assert round(abs(diff), 2) == 0
+        diff = arr.incident_angle - expected_arr["incident_angle"]
+        assert round(abs(diff), 2) == 0
+        diff = arr.purist_distance - expected_arr["purist_distance"]
+        assert round(abs(diff), 2) == 0
+        assert arr.purist_name == expected_arr["purist_name"]
 
     def test_p_iasp91_manual(self):
         """
@@ -108,19 +107,19 @@ class TauPyModelTestCase(unittest.TestCase):
         arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                       distance_in_degree=35.0,
                                       phase_list=["P"])
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
         p_arrival = arrivals[0]
 
-        self.assertEqual(p_arrival.name, "P")
-        self.assertAlmostEqual(p_arrival.time, 412.43, 2)
-        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.613, 3)
-        self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
-        self.assertAlmostEqual(p_arrival.incident_angle, 26.70, 2)
-        self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
-        self.assertEqual(p_arrival.purist_name, "P")
+        assert p_arrival.name == "P"
+        assert round(abs(p_arrival.time-412.43), 2) == 0
+        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
+        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
+        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
+        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert p_arrival.purist_name == "P"
 
-    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
-                     'Module geographiclib is not installed')
+    @pytest.mark.skipif(not geodetics.HAS_GEOGRAPHICLIB,
+                        reason='Module geographiclib is not installed')
     def test_p_iasp91_geo_manual(self):
         """
         Manual test for P phase in IASP91 given geographical input.
@@ -134,16 +133,16 @@ class TauPyModelTestCase(unittest.TestCase):
                                           receiver_latitude_in_deg=55.0,
                                           receiver_longitude_in_deg=33.0,
                                           phase_list=["P"])
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
         p_arrival = arrivals[0]
 
-        self.assertEqual(p_arrival.name, "P")
-        self.assertAlmostEqual(p_arrival.time, 412.43, 2)
-        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.613, 3)
-        self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
-        self.assertAlmostEqual(p_arrival.incident_angle, 26.70, 2)
-        self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
-        self.assertEqual(p_arrival.purist_name, "P")
+        assert p_arrival.name == "P"
+        assert round(abs(p_arrival.time-412.43), 2) == 0
+        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
+        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
+        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
+        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert p_arrival.purist_name == "P"
 
     def test_p_iasp91_geo_fallback_manual(self):
         """
@@ -162,23 +161,23 @@ class TauPyModelTestCase(unittest.TestCase):
                                           receiver_longitude_in_deg=33.0,
                                           phase_list=["P"])
         geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
         p_arrival = arrivals[0]
 
-        self.assertEqual(p_arrival.name, "P")
-        self.assertAlmostEqual(p_arrival.time, 412.43, 2)
-        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.613, 3)
-        self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
-        self.assertAlmostEqual(p_arrival.incident_angle, 26.70, 2)
-        self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
-        self.assertEqual(p_arrival.purist_name, "P")
+        assert p_arrival.name == "P"
+        assert round(abs(p_arrival.time-412.43), 2) == 0
+        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
+        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
+        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
+        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert p_arrival.purist_name == "P"
 
-    def test_p_iasp91(self):
+    def test_p_iasp91(self, caches):
         """
         Test P phase arrival against TauP output in model IASP91
         with different cache values to test `TauModel.load_from_depth_cache`
         """
-        for cache in self.caches:
+        for cache in caches:
             m = TauPyModel(model="iasp91", cache=cache)
             arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                           distance_in_degree=35.0,
@@ -186,12 +185,12 @@ class TauPyModelTestCase(unittest.TestCase):
             self._compare_arrivals_with_file(arrivals,
                                              "taup_time_-h_10_-ph_P_-deg_35")
 
-    def test_p_ak135(self):
+    def test_p_ak135(self, caches):
         """
         Test P phase arrival against TauP output in model AK135
         with different cache values to test `TauModel.load_from_depth_cache`
         """
-        for cache in self.caches:
+        for cache in caches:
             m = TauPyModel(model="ak135", cache=cache)
             arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                           distance_in_degree=35.0,
@@ -199,12 +198,12 @@ class TauPyModelTestCase(unittest.TestCase):
             self._compare_arrivals_with_file(
                 arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
 
-    def test_p_ak135f_no_mud(self):
+    def test_p_ak135f_no_mud(self, caches):
         """
         Test P phase arrival against TauP output in model ak135f_no_mud
         with different cache values to test `TauModel.load_from_depth_cache`
         """
-        for cache in self.caches:
+        for cache in caches:
             m = TauPyModel(model="ak135f_no_mud", cache=cache)
             arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                           distance_in_degree=35.0,
@@ -212,12 +211,12 @@ class TauPyModelTestCase(unittest.TestCase):
             self._compare_arrivals_with_file(
                 arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_ak135f_no_mud")
 
-    def test_p_jb(self):
+    def test_p_jb(self, caches):
         """
         Test P phase arrival against TauP output in model jb
         with different cache values to test `TauModel.load_from_depth_cache`
         """
-        for cache in self.caches:
+        for cache in caches:
             m = TauPyModel(model="jb", cache=cache)
             arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                           distance_in_degree=35.0,
@@ -225,12 +224,12 @@ class TauPyModelTestCase(unittest.TestCase):
             self._compare_arrivals_with_file(
                 arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_jb")
 
-    def test_p_pwdk(self):
+    def test_p_pwdk(self, caches):
         """
         Test P phase arrival against TauP output in model pwdk
         with different cache values to test `TauModel.load_from_depth_cache`
         """
-        for cache in self.caches:
+        for cache in caches:
             m = TauPyModel(model="pwdk", cache=cache)
             arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                           distance_in_degree=35.0,
@@ -238,13 +237,13 @@ class TauPyModelTestCase(unittest.TestCase):
             self._compare_arrivals_with_file(
                 arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_pwdk")
 
-    def test_iasp91(self):
+    def test_iasp91(self, caches):
         """
         Test travel times for lots of phases against output from TauP in model
         IASP91 with different cache values to test
         `TauModel.load_from_depth_cache`
         """
-        for cache in self.caches:
+        for cache in caches:
             m = TauPyModel(model="iasp91", cache=cache)
             arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                           distance_in_degree=35.0,
@@ -252,13 +251,13 @@ class TauPyModelTestCase(unittest.TestCase):
             self._compare_arrivals_with_file(
                 arrivals, "taup_time_-h_10_-ph_ttall_-deg_35")
 
-    def test_ak135(self):
+    def test_ak135(self, caches):
         """
         Test travel times for lots of phases against output from TauP in model
         AK135 with different cache values to test
         `TauModel.load_from_depth_cache`
         """
-        for cache in self.caches:
+        for cache in caches:
             m = TauPyModel(model="ak135", cache=cache)
             arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                           distance_in_degree=35.0,
@@ -274,7 +273,7 @@ class TauPyModelTestCase(unittest.TestCase):
         arrivals = m.get_pierce_points(source_depth_in_km=10.0,
                                        distance_in_degree=35.0,
                                        phase_list=["P"])
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
         p_arr = arrivals[0]
 
         # Open test file.
@@ -289,8 +288,9 @@ class TauPyModelTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
 
-    @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
-                     'test needs geographiclib >= 1.34')
+    @pytest.mark.skipif(
+        not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
+        reason='test needs geographiclib >= 1.34')
     def test_pierce_p_iasp91_geo(self):
         """
         Test single pierce point against output from TauP using geo data.
@@ -306,7 +306,7 @@ class TauPyModelTestCase(unittest.TestCase):
                 source_longitude_in_deg=-50.0,
                 receiver_latitude_in_deg=-80.0,
                 receiver_longitude_in_deg=-50.0, phase_list=["P"])
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
         p_arr = arrivals[0]
 
         # Open test file.
@@ -347,9 +347,9 @@ class TauPyModelTestCase(unittest.TestCase):
                                                receiver_longitude_in_deg=-50.0,
                                                phase_list=["P"])
             geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
+            assert issubclass(w[-1].category, UserWarning)
 
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
         p_arr = arrivals[0]
 
         # Open test file.
@@ -366,9 +366,9 @@ class TauPyModelTestCase(unittest.TestCase):
         # NB: we do not check pierce['lat'] and pierce['lon'] here, as these
         # are not calculated when geographiclib is not installed. We check
         # that they are not present.
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             p_arr.pierce["lat"]
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             p_arr.pierce["lon"]
 
     def test_vs_java_iasp91(self):
@@ -446,7 +446,7 @@ class TauPyModelTestCase(unittest.TestCase):
             for arr in tt:
                 actual_phases.append(arr.name)
         actual_phases = sorted(set(actual_phases))
-        self.assertEqual(actual_phases, all_phases)
+        assert actual_phases == all_phases
 
     def test_pierce_all_phases(self):
         """
@@ -473,7 +473,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
         # Make sure the same stuff is available.
         arrival_phases = sorted(set([_i.name for _i in arrivals]))
-        self.assertEqual(expected_phases, arrival_phases)
+        assert expected_phases == arrival_phases
 
         actual = collections.defaultdict(list)
         for arr in arrivals:
@@ -483,12 +483,12 @@ class TauPyModelTestCase(unittest.TestCase):
                     round(p['depth'], 1),
                     round(p['time'], 1)))
 
-        self.assertEqual(sorted(actual.keys()), sorted(expected.keys()))
+        assert sorted(actual.keys()) == sorted(expected.keys())
 
         for key in actual.keys():
             actual_values = sorted(actual[key])
             expected_values = sorted(expected[key])
-            self.assertEqual(actual_values, expected_values)
+            assert actual_values == expected_values
 
     def test_single_path_iasp91(self):
         """
@@ -501,7 +501,7 @@ class TauPyModelTestCase(unittest.TestCase):
         m = TauPyModel(model="iasp91")
         arrivals = m.get_ray_paths(source_depth_in_km=10.0,
                                    distance_in_degree=35.0, phase_list=["P"])
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
 
         # Interpolate both paths to 100 samples and make sure they are
         # approximately equal.
@@ -517,11 +517,12 @@ class TauPyModelTestCase(unittest.TestCase):
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
 
-        self.assertTrue(np.allclose(interpolated_actual,
-                                    interpolated_expected, rtol=1E-4, atol=0))
+        assert np.allclose(interpolated_actual,
+               interpolated_expected, rtol=1E-4, atol=0)
 
-    @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
-                     'test needs geographiclib >= 1.34')
+    @pytest.mark.skipif(
+        not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
+        reason='test needs geographiclib >= 1.34')
     def test_single_path_geo_iasp91(self):
         """
         Test the raypath for a single phase given geographical input.
@@ -542,7 +543,7 @@ class TauPyModelTestCase(unittest.TestCase):
                 source_longitude_in_deg=-60.0,
                 receiver_latitude_in_deg=-45.0,
                 receiver_longitude_in_deg=-60.0, phase_list=["P"])
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
 
         # Interpolate both paths to 100 samples and make sure they are
         # approximately equal.
@@ -608,9 +609,9 @@ class TauPyModelTestCase(unittest.TestCase):
                                            receiver_longitude_in_deg=-60.0,
                                            phase_list=["P"])
             geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
+            assert issubclass(w[-1].category, UserWarning)
 
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
 
         # Interpolate both paths to 100 samples and make sure they are
         # approximately equal.
@@ -632,9 +633,9 @@ class TauPyModelTestCase(unittest.TestCase):
         # NB: we do not check path['lat'] and path['lon'] here, as these
         # are not calculated when geographiclib is not installed. We check
         # that they are not present.
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             arrivals[0].path["lat"]
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             arrivals[0].path["lon"]
 
     def test_single_path_ak135(self):
@@ -648,7 +649,7 @@ class TauPyModelTestCase(unittest.TestCase):
         m = TauPyModel(model="ak135")
         arrivals = m.get_ray_paths(source_depth_in_km=10.0,
                                    distance_in_degree=35.0, phase_list=["P"])
-        self.assertEqual(len(arrivals), 1)
+        assert len(arrivals) == 1
 
         # Interpolate both paths to 100 samples and make sure they are
         # approximately equal.
@@ -664,8 +665,8 @@ class TauPyModelTestCase(unittest.TestCase):
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
 
-        self.assertTrue(np.allclose(interpolated_actual,
-                                    interpolated_expected, rtol=1E-4, atol=0))
+        assert np.allclose(interpolated_actual,
+               interpolated_expected, rtol=1E-4, atol=0)
 
     def _read_ak135_test_files(self, filename):
         """
@@ -718,9 +719,8 @@ class TauPyModelTestCase(unittest.TestCase):
             arrivals = sorted(arrivals, key=lambda x: x.time)
             arr = arrivals[0]
             # These are the same tolerances as in the Java tests suite.
-            self.assertTrue(abs(arr.time - value["time"]) < 0.07)
-            self.assertTrue(abs(arr.ray_param_sec_degree -
-                                value["ray_param"]) < 0.11)
+            assert abs(arr.time - value["time"]) < 0.07
+            assert abs(arr.ray_param_sec_degree - value["ray_param"]) < 0.11
 
     def test_kennet_ak135_ttime_tables_p_deep(self):
         self._compare_against_ak135_tables_kennet(
@@ -793,7 +793,7 @@ class TauPyModelTestCase(unittest.TestCase):
                         source_depth_in_km=depth, distance_in_degree=distance,
                         phase_list=[phase])
 
-                    self.assertTrue(len(arrivals) > 0)
+                    assert len(arrivals) > 0
 
                     # Potentially multiple arrivals. Get the one closest in
                     # time and closest in ray parameter.
@@ -803,9 +803,10 @@ class TauPyModelTestCase(unittest.TestCase):
                                        abs(x.ray_param_sec_degree -
                                            ray_param)))
                     arrival = arrivals[0]
-                    self.assertEqual(round(arrival.time, 2), round(time, 2))
-                    self.assertEqual(round(arrival.ray_param_sec_degree, 2),
-                                     round(ray_param, 2))
+                    assert round(arrival.time, 2) == round(time, 2)
+                    param1 = round(arrival.ray_param_sec_degree, 2)
+                    param2 = round(ray_param, 2)
+                    assert param1 == param2
 
     def test_underside_reflections(self):
         """
@@ -850,7 +851,7 @@ class TauPyModelTestCase(unittest.TestCase):
                 phase_list=["P"])
             # AK135 travel time.
             expected = 534.4
-            self.assertTrue(abs(arrivals[0].time - expected) < 5)
+            assert abs(arrivals[0].time - expected) < 5
 
             # Get an s phase.
             arrivals = m.get_travel_times(
@@ -860,7 +861,7 @@ class TauPyModelTestCase(unittest.TestCase):
             expected = 965.1
             # Some models do produce s-waves but they are very far from the
             # AK135 value.
-            self.assertTrue(abs(arrivals[0].time - expected) < 50)
+            assert abs(arrivals[0].time - expected) < 50
 
     def test_paths_for_crustal_phases(self):
         """
@@ -872,14 +873,14 @@ class TauPyModelTestCase(unittest.TestCase):
         paths = model.get_ray_paths(source_depth_in_km=0,
                                     distance_in_degree=1,
                                     phase_list=['Pn', 'PmP'])
-        self.assertEqual(len(paths), 2)
+        assert len(paths) == 2
 
-        self.assertEqual(paths[0].name, "PmP")
-        self.assertAlmostEqual(paths[0].time, 21.273, 3)
-        self.assertEqual(paths[1].name, "Pn")
-        self.assertAlmostEqual(paths[1].time, 21.273, 3)
+        assert paths[0].name == "PmP"
+        assert round(abs(paths[0].time-21.273), 3) == 0
+        assert paths[1].name == "Pn"
+        assert round(abs(paths[1].time-21.273), 3) == 0
 
-        self.assertAlmostEqual(paths[0].time, 21.273, 3)
+        assert round(abs(paths[0].time-21.273), 3) == 0
 
         # Values of visually checked paths to guard against regressions.
         pmp_path = [
@@ -959,43 +960,43 @@ class TauPyModelTestCase(unittest.TestCase):
         arrivals = model.get_ray_paths(source_depth_in_km=0,
                                        distance_in_degree=1,
                                        phase_list=['Pn', 'PmP'])
-        self.assertEqual(len(arrivals), 2)
+        assert len(arrivals) == 2
         # test copy
-        self.assertTrue(isinstance(arrivals.copy(), Arrivals))
+        assert isinstance(arrivals.copy(), Arrivals)
         # test sum
-        self.assertTrue(isinstance(arrivals + arrivals, Arrivals))
-        self.assertTrue(isinstance(arrivals + arrivals[0], Arrivals))
+        assert isinstance(arrivals + arrivals, Arrivals)
+        assert isinstance(arrivals + arrivals[0], Arrivals)
         # test multiplying
-        self.assertTrue(isinstance(arrivals * 2, Arrivals))
+        assert isinstance(arrivals * 2, Arrivals)
         arrivals *= 3
-        self.assertEqual(len(arrivals), 6)
-        self.assertTrue(isinstance(arrivals, Arrivals))
+        assert len(arrivals) == 6
+        assert isinstance(arrivals, Arrivals)
         # test slicing
-        self.assertTrue(isinstance(arrivals[2:5], Arrivals))
+        assert isinstance(arrivals[2:5], Arrivals)
         # test appending
         arrivals.append(arrivals[0])
-        self.assertEqual(len(arrivals), 7)
-        self.assertTrue(isinstance(arrivals, Arrivals))
+        assert len(arrivals) == 7
+        assert isinstance(arrivals, Arrivals)
         # test assignment
         arrivals[0] = arrivals[-1]
-        self.assertTrue(isinstance(arrivals, Arrivals))
+        assert isinstance(arrivals, Arrivals)
         arrivals[2:5] = arrivals[1:4]
-        self.assertTrue(isinstance(arrivals, Arrivals))
+        assert isinstance(arrivals, Arrivals)
         # test assignment with wrong type
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             arrivals[0] = 10.
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             arrivals[2:5] = [0, 1, 2]
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             arrivals.append(arrivals)
         # test add and mul with wrong type
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             arrivals + [2, ]
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             arrivals += [2, ]
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             arrivals * [2, ]
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             arrivals *= [2, ]
 
     def test_regional_models(self):
@@ -1029,15 +1030,7 @@ class TauPyModelTestCase(unittest.TestCase):
             arrvials = model.get_ray_paths(source_depth_in_km=18.0,
                                            distance_in_degree=1.0)
 
-            self.assertEqual(len(arrvials), len(expects))
+            assert len(arrvials) == len(expects)
             for arrival, expect in zip(arrvials, expects):
-                self.assertEqual(arrival.name, expect[0])
-                self.assertAlmostEqual(arrival.time, expect[1], 3)
-
-
-def suite():
-    return unittest.makeSuite(TauPyModelTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+                assert arrival.name == expect[0]
+                assert round(abs(arrival.time-expect[1]), 3) == 0

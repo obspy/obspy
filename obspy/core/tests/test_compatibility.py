@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-import unittest
 
-
-class CompatibilityTestCase(unittest.TestCase):
+class TestCompatibility:
     def test_round(self):
         """
         Ensure round rounds correctly and returns expected data types.
@@ -27,13 +25,5 @@ class CompatibilityTestCase(unittest.TestCase):
                 out = round(number, ndigits)
             else:
                 out = round(number)
-            self.assertEqual(out, expected)
-            self.assertIsInstance(out, expected_type)
-
-
-def suite():
-    return unittest.makeSuite(CompatibilityTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+            assert out == expected
+            assert isinstance(out, expected_type)

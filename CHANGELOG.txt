@@ -14,6 +14,8 @@ Changes:
      only the FDSN mass downloader automatically configures logging as before,
      but this behavior can be turned off now. The loglevel keywords are
      therefore deprecated and have no effect anymore (see #2720)
+   * refactored obspy-runtest to use pytest and modified several command
+     line arguments (see #2489)
  - obspy.core:
    * read_inventory(): add "level" option to read files faster when less level
      of detail is needed. currently only implemented for StationXML reading

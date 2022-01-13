@@ -4,25 +4,27 @@
 The tf_misfit test suite.
 """
 import os
-import unittest
 
 import numpy as np
+import pytest
 from scipy.signal import hilbert
 import matplotlib.pyplot as plt
 
-from obspy.core.util.testing import ImageComparison
 from obspy.signal.tf_misfit import (eg, em, feg, fem, fpg, fpm, pg, pm, teg,
                                     tem, tfeg, tfem, tfpg, tfpm, tpg, tpm)
 from obspy.signal.tf_misfit import plot_tfr, plot_tf_misfits, plot_tf_gofs
 
 
-class TfTestCase(unittest.TestCase):
+class TestTf:
     """
     Test cases for tf functions.
     """
-    def setUp(self):
-        # path to test files
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+    # path to test files
+    path = os.path.join(os.path.dirname(__file__), 'data')
+
+    @pytest.fixture(scope='class')
+    def state(self):
+        """Return a dict with state needed to run tests."""
         tmax = 3.
         npts = 60
         dt = tmax / (npts - 1)
@@ -61,31 +63,33 @@ class TfTestCase(unittest.TestCase):
             return a1a * (t - t1) * np.exp(-2 * (t - t1)) * \
                 np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * h(t - t1)
 
-        self.s1 = s1
-        self.s1p = s1p
-        self.s1a = s1a
-        self.t = t
-        self.f = f
-        self.dt = dt
+        out = dict(
+            s1=s1,
+            s1p=s1p,
+            s1a=s1a,
+            t=t,
+            f=f,
+            dt=dt,
+            fmin=fmin,
+            fmax=fmax,
+            nf=nf,
+            npts=npts,
+            w0=6
+        )
+        return out
 
-        self.fmin = fmin
-        self.fmax = fmax
-        self.nf = nf
-        self.npts = npts
-        self.w0 = 6
-
-    def test_phase_misfit(self):
+    def test_phase_misfit(self, state):
         """
         Tests all tf misfits with a signal that has phase misfit
         """
-        s1 = self.s1
-        s1p = self.s1p
-        t = self.t
-        dt = self.dt
+        s1 = state['s1']
+        s1p = state['s1p']
+        t = state['t']
+        dt = state['dt']
 
-        fmin = self.fmin
-        fmax = self.fmax
-        nf = self.nf
+        fmin = state['fmin']
+        fmax = state['fmax']
+        nf = state['nf']
 
         tfem_11p_ref = np.loadtxt(self.path + os.sep + 'TFEM_11p.dat')
         tfpm_11p_ref = np.loadtxt(self.path + os.sep + 'TFPM_11p.dat')
@@ -108,22 +112,22 @@ class TfTestCase(unittest.TestCase):
         tol = 1e-5
         atol_min = 1e-15
 
-        self.assertTrue(np.allclose(tfem_11p, tfem_11p_ref, rtol=tol,
-                        atol=np.abs(tfem_11p_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(tfpm_11p, tfpm_11p_ref, rtol=tol,
-                        atol=np.abs(tfpm_11p_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(tem_11p, tem_11p_ref, rtol=tol,
-                        atol=np.abs(tem_11p_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(fem_11p, fem_11p_ref, rtol=tol,
-                        atol=np.abs(fem_11p_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(fpm_11p, fpm_11p_ref, rtol=tol,
-                        atol=np.abs(fpm_11p_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(tpm_11p, tpm_11p_ref, rtol=tol,
-                        atol=np.abs(tpm_11p_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(em_11p, em_11p_ref, rtol=tol,
-                        atol=np.abs(em_11p_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(pm_11p, pm_11p_ref, rtol=tol,
-                        atol=np.abs(pm_11p_ref).max() * tol + atol_min))
+        assert np.allclose(tfem_11p, tfem_11p_ref, rtol=tol,
+               atol=np.abs(tfem_11p_ref).max() * tol + atol_min)
+        assert np.allclose(tfpm_11p, tfpm_11p_ref, rtol=tol,
+               atol=np.abs(tfpm_11p_ref).max() * tol + atol_min)
+        assert np.allclose(tem_11p, tem_11p_ref, rtol=tol,
+               atol=np.abs(tem_11p_ref).max() * tol + atol_min)
+        assert np.allclose(fem_11p, fem_11p_ref, rtol=tol,
+               atol=np.abs(fem_11p_ref).max() * tol + atol_min)
+        assert np.allclose(fpm_11p, fpm_11p_ref, rtol=tol,
+               atol=np.abs(fpm_11p_ref).max() * tol + atol_min)
+        assert np.allclose(tpm_11p, tpm_11p_ref, rtol=tol,
+               atol=np.abs(tpm_11p_ref).max() * tol + atol_min)
+        assert np.allclose(em_11p, em_11p_ref, rtol=tol,
+               atol=np.abs(em_11p_ref).max() * tol + atol_min)
+        assert np.allclose(pm_11p, pm_11p_ref, rtol=tol,
+               atol=np.abs(pm_11p_ref).max() * tol + atol_min)
 
         # keeping the save commands in case the files need to be updated
         # np.savetxt(self.path + os.sep + 'TFEM_11p.dat', TFEM_11p,
@@ -137,18 +141,18 @@ class TfTestCase(unittest.TestCase):
         # np.savetxt(self.path + os.sep + 'EM_11p.dat', (EM_11p,), fmt='%1.5e')
         # np.savetxt(self.path + os.sep + 'PM_11p.dat', (PM_11p,), fmt='%1.5e')
 
-    def test_envelope_misfit(self):
+    def test_envelope_misfit(self, state):
         """
         Tests all tf misfits with a signal that has envelope misfit
         """
-        s1 = self.s1
-        s1a = self.s1a
-        t = self.t
-        dt = self.dt
+        s1 = state['s1']
+        s1a = state['s1a']
+        t = state['t']
+        dt = state['dt']
 
-        fmin = self.fmin
-        fmax = self.fmax
-        nf = self.nf
+        fmin = state['fmin']
+        fmax = state['fmax']
+        nf = state['nf']
 
         tfem_11a_ref = np.loadtxt(self.path + os.sep + 'TFEM_11a.dat')
         tfpm_11a_ref = np.loadtxt(self.path + os.sep + 'TFPM_11a.dat')
@@ -171,22 +175,22 @@ class TfTestCase(unittest.TestCase):
         tol = 1e-5
         atol_min = 1e-15
 
-        self.assertTrue(np.allclose(tfem_11a, tfem_11a_ref, rtol=tol,
-                        atol=np.abs(tfem_11a_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(tfpm_11a, tfpm_11a_ref, rtol=tol,
-                        atol=np.abs(tfpm_11a_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(tem_11a, tem_11a_ref, rtol=tol,
-                        atol=np.abs(tem_11a_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(fem_11a, fem_11a_ref, rtol=tol,
-                        atol=np.abs(fem_11a_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(fpm_11a, fpm_11a_ref, rtol=tol,
-                        atol=np.abs(fpm_11a_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(tpm_11a, tpm_11a_ref, rtol=tol,
-                        atol=np.abs(tpm_11a_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(em_11a, em_11a_ref, rtol=tol,
-                        atol=np.abs(em_11a_ref).max() * tol + atol_min))
-        self.assertTrue(np.allclose(pm_11a, pm_11a_ref, rtol=tol,
-                        atol=np.abs(pm_11a_ref).max() * tol + atol_min))
+        assert np.allclose(tfem_11a, tfem_11a_ref, rtol=tol,
+               atol=np.abs(tfem_11a_ref).max() * tol + atol_min)
+        assert np.allclose(tfpm_11a, tfpm_11a_ref, rtol=tol,
+               atol=np.abs(tfpm_11a_ref).max() * tol + atol_min)
+        assert np.allclose(tem_11a, tem_11a_ref, rtol=tol,
+               atol=np.abs(tem_11a_ref).max() * tol + atol_min)
+        assert np.allclose(fem_11a, fem_11a_ref, rtol=tol,
+               atol=np.abs(fem_11a_ref).max() * tol + atol_min)
+        assert np.allclose(fpm_11a, fpm_11a_ref, rtol=tol,
+               atol=np.abs(fpm_11a_ref).max() * tol + atol_min)
+        assert np.allclose(tpm_11a, tpm_11a_ref, rtol=tol,
+               atol=np.abs(tpm_11a_ref).max() * tol + atol_min)
+        assert np.allclose(em_11a, em_11a_ref, rtol=tol,
+               atol=np.abs(em_11a_ref).max() * tol + atol_min)
+        assert np.allclose(pm_11a, pm_11a_ref, rtol=tol,
+               atol=np.abs(pm_11a_ref).max() * tol + atol_min)
 
         # keeping the save commands in case the files need to be updated
         # np.savetxt(self.path + os.sep + 'TFEM_11a.dat', TFEM_11a,
@@ -200,18 +204,18 @@ class TfTestCase(unittest.TestCase):
         # np.savetxt(self.path + os.sep + 'EM_11a.dat', (EM_11a,), fmt='%1.5e')
         # np.savetxt(self.path + os.sep + 'PM_11a.dat', (PM_11a,), fmt='%1.5e')
 
-    def test_envelope_gof(self):
+    def test_envelope_gof(self, state):
         """
         Tests all tf gofs
         """
-        s1 = self.s1
-        t = self.t
-        dt = self.dt
+        s1 = state['s1']
+        t = state['t']
+        dt = state['dt']
 
-        fmin = self.fmin
-        fmax = self.fmax
-        nf = self.nf
-        npts = self.npts
+        fmin = state['fmin']
+        fmax = state['fmax']
+        nf = state['nf']
+        npts = state['npts']
 
         tol = 1e-5
 
@@ -224,32 +228,36 @@ class TfTestCase(unittest.TestCase):
         _eg = eg(s1(t), s1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         _pg = pg(s1(t), s1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
 
-        self.assertTrue(np.allclose(_tfeg, np.ones((nf, npts)) * 10.,
-                                    rtol=tol))
-        self.assertTrue(np.allclose(_tfpg, np.ones((nf, npts)) * 10.,
-                                    rtol=tol))
-        self.assertTrue(np.allclose(_teg, np.ones(npts) * 10., rtol=tol))
-        self.assertTrue(np.allclose(_tpg, np.ones(npts) * 10., rtol=tol))
-        self.assertTrue(np.allclose(_feg, np.ones(nf) * 10., rtol=tol))
-        self.assertTrue(np.allclose(_fpg, np.ones(nf) * 10., rtol=tol))
-        self.assertTrue(np.allclose(_eg, 10., rtol=tol))
-        self.assertTrue(np.allclose(_pg, 10., rtol=tol))
+        assert np.allclose(_tfeg, np.ones((nf, npts)) * 10., rtol=tol)
+        assert np.allclose(_tfpg, np.ones((nf, npts)) * 10., rtol=tol)
+        assert np.allclose(_teg, np.ones(npts) * 10., rtol=tol)
+        assert np.allclose(_tpg, np.ones(npts) * 10., rtol=tol)
+        assert np.allclose(_feg, np.ones(nf) * 10., rtol=tol)
+        assert np.allclose(_fpg, np.ones(nf) * 10., rtol=tol)
+        assert np.allclose(_eg, 10., rtol=tol)
+        assert np.allclose(_pg, 10., rtol=tol)
 
 
-class TfPlotTestCase(unittest.TestCase):
+class TestTfPlot:
     """
     Test cases for tf plot functions.
     """
-    def setUp(self):
+    path = os.path.join(os.path.dirname(__file__), 'images')
+
+    @pytest.fixture(scope='class')
+    def state(self):
+        """return state for testing."""
+        from obspy.core.util import AttribDict
+        out = AttribDict()
         # path to test files
-        self.path = os.path.join(os.path.dirname(__file__), 'images')
+        # self.path =
         # general constants
         tmax = 6.
-        self.dt = 0.01
-        npts = int(tmax / self.dt + 1)
+        out.dt = 0.01
+        npts = int(tmax / out.dt + 1)
         t = np.linspace(0., tmax, npts)
-        self.fmin = .5
-        self.fmax = 10
+        out.fmin = .5
+        out.fmax = 10
         # constants for the signal
         a1 = 4.
         t1 = 2.
@@ -261,55 +269,35 @@ class TfPlotTestCase(unittest.TestCase):
 
         # generate the signal
         h1 = (np.sign(t - t1) + 1) / 2
-        self.st1 = a1 * (t - t1) * np.exp(-2 * (t - t1))
-        self.st1 *= np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * h1
+        out.st1 = a1 * (t - t1) * np.exp(-2 * (t - t1))
+        out.st1 *= np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * h1
 
         # reference signal
-        self.st2 = self.st1.copy()
+        out.st2 = out.st1.copy()
 
         # generate analytical signal (hilbert transform) and add phase shift
-        self.st1p = hilbert(self.st1)
-        self.st1p = np.real(
-            np.abs(self.st1p) *
-            np.exp((np.angle(self.st1p) + phase_shift * np.pi) * 1j))
+        out.st1p = hilbert(out.st1)
+        out.st1p = np.real(
+            np.abs(out.st1p) *
+            np.exp((np.angle(out.st1p) + phase_shift * np.pi) * 1j))
 
         # signal with amplitude error
-        self.st1p /= amp_fac
+        out.st1p /= amp_fac
+        return out
 
-    def test_plot_tfr(self):
+    def test_plot_tfr(self, state, ignore_numpy_errors, image_path):
         n = 295
         t, dt = np.linspace(0., 20 * np.pi, n, retstep=True)
         sig = np.sin(t)
+        plot_tfr(sig, dt=dt, show=False)
+        plt.savefig(image_path)
 
-        with np.errstate(all='ignore'):
-            with ImageComparison(self.path,
-                                 'time_frequency_representation.png') as ic:
-                plot_tfr(sig, dt=dt, show=False)
-                plt.savefig(ic.name)
+    def test_plot_tf_misfits(self, image_path, ignore_numpy_errors, state):
+        plot_tf_misfits(state.st1p, state.st2, dt=state.dt,
+                        fmin=state.fmin, fmax=state.fmax, show=False)
+        plt.savefig(image_path)
 
-    def test_plot_tf_misfits(self):
-        with np.errstate(all='ignore'):
-            with ImageComparison(self.path,
-                                 'time_frequency_misfits.png') as ic:
-                plot_tf_misfits(self.st1p, self.st2, dt=self.dt,
-                                fmin=self.fmin, fmax=self.fmax, show=False)
-                plt.savefig(ic.name)
-
-    def test_plot_tf_gofs(self):
-        with np.errstate(all='ignore'):
-            with ImageComparison(self.path,
-                                 'time_frequency_gofs.png') as ic:
-                plot_tf_gofs(self.st1p, self.st2, dt=self.dt, fmin=self.fmin,
-                             fmax=self.fmax, show=False)
-                plt.savefig(ic.name)
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TfTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(TfPlotTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+    def test_plot_tf_gofs(self, state, ignore_numpy_errors, image_path):
+        plot_tf_gofs(state.st1p, state.st2, dt=state.dt, fmin=state.fmin,
+                     fmax=state.fmax, show=False)
+        plt.savefig(image_path)

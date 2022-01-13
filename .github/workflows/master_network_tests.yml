@@ -7,17 +7,13 @@ on:
     branches:
       - master
 
-# Set globally scoped environmental variables.
-env:
-  OBSPY_GITHUB_BRANCH: release_0.10.0
-
 jobs:
   network_tests:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
@@ -46,32 +42,18 @@ jobs:
       - name: install obspy
         shell: bash -l {0}
         run: |
-          pip install -e .
-
-      - name: install obspy github api
-        shell: bash -l {0}
-        run: |
-          pip install git+https://github.com/obspy/obspy_github_api@${OBSPY_GITHUB_BRANCH}
+          python -m pip install -e .[tests]
 
       - name: run test suite
         shell: bash -l {0}
         run: |
-          export MODULELIST=`obshub get-module-list --group all --sep ','`
-          export MODULELISTSPACES=`obshub get-module-list --group default --sep ' '`
-          export MODULES=${MODULELISTSPACES//obspy.}
-          if [ "$RUNNER_OS" == "macOS" ]; then
-              python -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" $MODULES
-          else
-              coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n gh-actions -r -v --ci-url="${CI_URL}" $MODULES
-              coverage xml -o coverage.xml
-          fi
+          obspy-runtests --network --cov obspy --cov-report='xml' --cov-append --report
 
       - name: upload coverage
-        if: runner.os != 'macOS'
         uses: codecov/codecov-action@v2.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: coverage.xml
+          file: obspy/coverage.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: true

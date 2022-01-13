@@ -22,6 +22,7 @@ import urllib.request as urllib_request
 
 import lxml
 import numpy as np
+import pytest
 import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
@@ -50,6 +51,7 @@ from obspy.geodetics import locations2degrees
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
+pytestmark = pytest.mark.network
 
 
 def _normalize_stats(obj):
@@ -338,6 +340,7 @@ class ClientTestCase(unittest.TestCase):
         # queryauth)
         self.assertEqual(client.user, user)
 
+    @pytest.mark.skip(reason='data no longer available')
     def test_trim_stream_after_get_waveform(self):
         """
         Tests that stream is properly trimmed to user requested times after
@@ -1573,6 +1576,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(FDSNTooManyRequestsException,
                           self.client.get_stations)
 
+    @pytest.mark.skip(reason='Token is expired')
     def test_eida_token_resolution(self):
         """
         Tests that EIDA tokens are resolved correctly and new credentials get

@@ -4,8 +4,13 @@ The obspy.clients.seedlink.slclient test suite.
 """
 import unittest
 
+import pytest
+
 from obspy import UTCDateTime
 from obspy.clients.seedlink.slclient import SLClient
+
+
+pytestmark = pytest.mark.network
 
 
 class SLClientTestCase(unittest.TestCase):
