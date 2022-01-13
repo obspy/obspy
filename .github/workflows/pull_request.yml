@@ -13,9 +13,13 @@ env:
   CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+# Cancel previous runs
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  cancel_previous_runs:
+  add_status_with_report_link:
     runs-on: ubuntu-latest
     permissions:
       statuses: write
@@ -32,10 +36,6 @@ jobs:
             "target_url": "https://tests.obspy.org/?pr=${{ github.event.pull_request.number }}"
             }' \
           --fail
-      - name: Cancel Previous Runs in the same PR
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ secrets.GITHUB_TOKEN }}
 
   # Simply applies flake8 to the codebase.
   lint_code:
