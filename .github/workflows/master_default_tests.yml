@@ -9,8 +9,8 @@ on:
 jobs:
   run_tests:
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: ['3.7', '3.8', '3.9', '3.10']
@@ -69,9 +69,10 @@ jobs:
       - name: run test suite
         shell: bash -l {0}
         run: |
-          obspy-runtests --report --cov obspy --cov-report='xml' --cov-append
+          obspy-runtests --cov obspy --cov-report='xml' --cov-append --report
 
       - name: upload coverage
+        if: always()
         uses: codecov/codecov-action@v2.1.0
         with:
           flags: unittests
