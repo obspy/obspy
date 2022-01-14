@@ -19,12 +19,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  add_status_with_report_link:
+
+  # Simply applies flake8 to the codebase.
+  lint_code:
     runs-on: ubuntu-latest
-    permissions:
-      statuses: write
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_ci') }}
+
     steps:
-      - name: Set status with url of test report website
+      - name: set status with url of test report website
         run: |
           curl --request POST \
           --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }} \
@@ -34,15 +36,8 @@ jobs:
             "state": "success",
             "context": "See details about all test reports for this pull request here",
             "target_url": "https://tests.obspy.org/?pr=${{ github.event.pull_request.number }}"
-            }' \
-          --fail
+            }'
 
-  # Simply applies flake8 to the codebase.
-  lint_code:
-    runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_ci') }}
-
-    steps:
       - uses: actions/checkout@v2
 
       - uses: actions/setup-python@v2.3.1
@@ -70,6 +65,7 @@ jobs:
           python -m flake8 obspy | \
             reviewdog -f=pep8 -name=flake8 \
               -tee -reporter=github-check -filter-mode nofilter
+
 
   # Runs the tests on combinations of the supported python/os matrix.
   test_code:
