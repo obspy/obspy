@@ -22,18 +22,18 @@ jobs:
     container: heavelock/obspydocs:latest
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'build_docs')
     steps:
-      - name: Set status with PR doc url
-        if: github.event_name == 'pull_request'
-        run: |
-          curl --request POST \
-          --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }} \
-          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-          --header 'content-type: application/json' \
-          --data '{
-            "state": "success",
-            "context": "See documentation for this PR here",
-            "target_url": "https://docs.obspy.org/pr/${{ github.event.pull_request.number }}"
-            }'
+      #- name: Set status with PR doc url
+      #  if: github.event_name == 'pull_request'
+      #  run: |
+      #    curl --request POST \
+      #    --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }} \
+      #    --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+      #    --header 'content-type: application/json' \
+      #    --data '{
+      #      "state": "success",
+      #      "context": "See documentation for this PR here",
+      #      "target_url": "https://docs.obspy.org/pr/${{ github.event.pull_request.number }}"
+      #      }'
       - uses: actions/checkout@v2
       - name: install obspy
         shell: bash -l {0}
