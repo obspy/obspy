@@ -309,7 +309,7 @@ class Client(object):
         >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10,
         ...     filter=["correct", "demean", "lp=2.0"])
         >>> print(st[0].data)  # doctest: +ELLIPSIS
-        [ -1.57488682e-06  -1.26318002e-06  -7.84807128e-07 ...
+        [ -1.57498380e-06  -1.26325779e-06  -7.84855445e-07 ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -490,8 +490,8 @@ class Client(object):
         * START             : 2002-11-19T21:07:00
         * END               : 2008-06-30T00:00:00
         * DESCRIPTION       : Albuquerque, New Mexico, USA
-        * LATITUDE          : 34.945980
-        * LONGITUDE         : -106.457130
+        * LATITUDE          : 34.945981
+        * LONGITUDE         : -106.457133
         * ELEVATION         : 1671.0
         * DEPTH             : 145.0
         * DIP               : 0.0
@@ -501,25 +501,15 @@ class Client(object):
         * OUTPUT UNIT       : COUNTS
         * INSTTYPE          : Geotech KS-54000 Borehole Seismometer
         * INSTGAIN          : 1.935000e+03 (M/S)
-        * COMMENT           :
-        * SENSITIVITY       : 8.115970e+08 (M/S)
-        * A0                : 8.608300e+04
+        * ...
         * **********************************
-        ZEROS    3
-            +0.000000e+00    +0.000000e+00
-            +0.000000e+00    +0.000000e+00
-            +0.000000e+00    +0.000000e+00
-        POLES    5
-            -5.943130e+01    +0.000000e+00
-            -2.271210e+01    +2.710650e+01
-            -2.271210e+01    -2.710650e+01
-            -4.800400e-03    +0.000000e+00
-            -7.319900e-02    +0.000000e+00
-        CONSTANT    6.986470e+13
-        <BLANKLINE>
-        <BLANKLINE>
-        <BLANKLINE>
-        ...
+        ZEROS      3
+           +0.000000e+00   +0.000000e+00
+           +0.000000e+00   +0.000000e+00
+           +0.000000e+00   +0.000000e+00
+        POLES      5 ...
+        CONSTANT   6.985619e+13
+        <BLANKLINE> ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -930,7 +920,7 @@ class Client(object):
             >>> data = client.evalresp("IU", "ANMO", "00", "BHZ", dt,
             ...                        output='fap')
             >>> data[0]  # frequency, amplitude, phase of first point
-            array([  1.00000000e-05,   1.05599900e+04,   1.79200700e+02])
+            array([  1.00000000e-05,   1.05593400e+04,   1.79200700e+02])
 
         (2) Returning amplitude and phase plot.
 

@@ -157,10 +157,10 @@ jobs:
 
  # Runs network tests
   network_tests:
+    continue-on-error: true
     runs-on: ${{ matrix.os }}
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_ci') && contains(github.event.pull_request.labels.*.name, 'test_network') }}
     strategy:
-      fail-fast: true
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.7']

@@ -317,18 +317,18 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         things.
         """
         st = self.client.get_waveforms(
-            network="B*", station="*", location="*", channel="LHZ",
+            network="B*", station="*", location="*", channel="HHZ",
             starttime=obspy.UTCDateTime(2017, 1, 1),
-            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1))
-        # This yields 1 channel at the time of writing this test - I assume
-        # it is unlikely to every yield less. So this test should be fairly
-        # stable.
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 0, 0, 1))
+        # This yields 4 channels at the time of writing this test - I assume
+        # it is unlikely to every yield less than 1.
+        # So this test should be fairly stable.
         self.assertGreaterEqual(len(st), 1)
 
         # Same with the bulk download.
         st2 = self.client.get_waveforms_bulk(
-            [["B*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
-              obspy.UTCDateTime(2017, 1, 1, 0, 1)]])
+            [["B*", "*", "*", "HHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 0, 0, 1)]])
         self.assertGreaterEqual(len(st2), 1)
 
         # They should be identical.
@@ -370,13 +370,11 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         # this time window is before the requested station was installed
         t1 = obspy.UTCDateTime('2012-01-01')
         t2 = t1 + 2
-        msg = ('No data available for request (requested time window '
-               'might be out of bounds of valid station epochs).')
         with self.assertRaises(FDSNNoDataException) as e:
             self.client.get_waveforms(
                 network='OE', station='UNNA', channel='HHZ', location='*',
                 starttime=t1, endtime=t2)
-        self.assertEqual(e.exception.args[0], msg)
+        self.assertIn('No data', e.exception.args[0])
 
 
 def suite():  # pragma: no cover

@@ -57,7 +57,8 @@ NOA         http://eida.gein.noa.gr
 ODC         http://www.orfeus-eu.org
 ORFEUS      http://www.orfeus-eu.org
 RASPISHAKE  https://fdsnws.raspberryshakedata.com
-RESIF       https://ws.resif.fr
+RESIF       http://ws.resif.fr
+RESIFPH5    http://ph5ws.resif.fr
 SCEDC       http://service.scedc.caltech.edu
 TEXNET      http://rtserve.beg.utexas.edu
 UIB-NORSAR  http://eida.geo.uib.no
