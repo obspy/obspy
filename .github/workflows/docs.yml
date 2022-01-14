@@ -46,11 +46,11 @@ jobs:
           echo "<html><body>test deploy</body><html>" > misc/docs/build/html/index.html
       #    cd misc/docs
       #    make html
-      - name: setup SSH key
-        shell: bash -l {0}
-        run: |
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          #ssh-add - <<< "${{ secrets.SSH_DOC_DEPLOY_KEY }}"
+      #- name: setup SSH key
+      #  shell: bash -l {0}
+      #  run: |
+      #    ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+      #    ssh-add - <<< "${{ secrets.SSH_DOC_DEPLOY_KEY }}"
       - name: deploy doc
         shell: bash -l {0}
         run: |
