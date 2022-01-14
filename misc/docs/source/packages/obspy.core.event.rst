@@ -1,8 +1,6 @@
-:orphan:
 
 .. currentmodule:: obspy.core.event
 .. automodule:: obspy.core.event
-    :noindex:
 
     .. comment to end block
 

@@ -2,7 +2,6 @@
 
 .. currentmodule:: obspy.core.inventory
 .. automodule:: obspy.core.inventory
-    :noindex:
 
     .. comment to end block
 

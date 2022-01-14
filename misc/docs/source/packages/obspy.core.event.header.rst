@@ -3,7 +3,6 @@
 .. currentmodule:: obspy.core.event.header
 .. automodule:: obspy.core.event.header
     :members:
-    :noindex:
 
     .. comment to end block
 

@@ -16,6 +16,7 @@
        ~utcdatetime.UTCDateTime
        ~event.read_events
        ~event.Catalog
+       ~event.Event
        ~inventory.inventory.read_inventory
        ~inventory.inventory.Inventory
 
