@@ -1,0 +1,75 @@
+name: "docs"
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - '**'
+  release:
+    types: [published]
+
+# Set globally scoped environmental variables.
+env:
+  EVENT: ${{ github.event_name }}
+  SERVER: github@obspy.org
+  SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    container: heavelock/obspydocs:latest
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'build_docs')
+    steps:
+      - name: Set status with PR doc url
+        if: github.event_name == 'pull_request'
+        run: |
+          curl --request POST \
+          --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }} \
+          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+          --header 'content-type: application/json' \
+          --data '{
+            "state": "success",
+            "context": "See documentation for this PR here",
+            "target_url": "https://docs.obspy.org/pr/${{ github.event.pull_request.number }}"
+            }'
+      - uses: actions/checkout@v2
+      - name: install obspy
+        shell: bash -l {0}
+        run: |
+          python -m pip install .
+      - name: build doc
+        shell: bash -l {0}
+        run: |
+          cd misc/docs
+          make html
+      - name: setup SSH key
+        shell: bash -l {0}
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          #ssh-add - <<< "${{ secrets.SSH_DOC_DEPLOY_KEY }}"
+      - name: deploy doc
+        shell: bash -l {0}
+        run: |
+          if [[ "$EVENT" == "release" ]]; then
+              TARGET = ""
+          elif [[ "$EVENT" == "push" ]]; then
+              TARGET = "master"
+          elif [[ "$EVENT" == "pull_request" ]]; then
+              TARGET = "pr/${{ github.event.pull_request.number }}"
+              echo "touch $SERVER:$TARGET.txt"
+              #ssh -o StrictHostKeyChecking=no $SERVER "echo touch > $TARGET.txt"
+
+          else
+              echo "unknown event: $EVENT"
+              fail
+          fi
+          echo "rsync -avh --mkpath --delete misc/docs/build/html/ $SERVER:$TARGET/"
+          #rsync -avh --mkpath --delete misc/docs/build/html/ $SERVER:$TARGET/
+
+      #- run: tar cfJ documentation.tar.xz misc/docs/build/html/
+      #- uses: actions/upload-artifact@v2
+      #  with:
+      #    name: DocumentationHTML
+      #    path: documentation.tar.xz
