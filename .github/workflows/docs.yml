@@ -55,20 +55,20 @@ jobs:
         shell: bash -l {0}
         run: |
           if [[ "$EVENT" == "release" ]]; then
-              TARGET = ""
+              TARGET = "."
           elif [[ "$EVENT" == "push" ]]; then
               TARGET = "master"
           elif [[ "$EVENT" == "pull_request" ]]; then
               TARGET = "pr/${{ github.event.pull_request.number }}"
-              echo "touch $SERVER:$TARGET.txt"
-              #ssh -o StrictHostKeyChecking=no $SERVER "echo touch > $TARGET.txt"
+              echo "touch $SERVER:${TARGET}.txt"
+              #ssh -o StrictHostKeyChecking=no $SERVER "echo touch > ${TARGET}.txt"
 
           else
               echo "unknown event: $EVENT"
               fail
           fi
-          echo "rsync -avh --mkpath --delete misc/docs/build/html/ $SERVER:$TARGET/"
-          #rsync -avh --mkpath --delete misc/docs/build/html/ $SERVER:$TARGET/
+          echo "rsync -avh --mkpath --delete misc/docs/build/html/ $SERVER:${TARGET}/"
+          #rsync -avh --mkpath --delete misc/docs/build/html/ $SERVER:${TARGET}
 
       #- run: tar cfJ documentation.tar.xz misc/docs/build/html/
       #- uses: actions/upload-artifact@v2
