@@ -35,15 +35,17 @@ jobs:
       #      "target_url": "https://docs.obspy.org/pr/${{ github.event.pull_request.number }}"
       #      }'
       - uses: actions/checkout@v2
-      - name: install obspy
-        shell: bash -l {0}
-        run: |
-          python -m pip install .
+      #- name: install obspy
+      #  shell: bash -l {0}
+      #  run: |
+      #    python -m pip install .
       - name: build doc
         shell: bash -l {0}
         run: |
-          cd misc/docs
-          make html
+          mkdir -p misc/docs/build/html/
+          echo "<html><body>test deploy</body><html>" > misc/docs/build/html/index.html
+      #    cd misc/docs
+      #    make html
       - name: setup SSH key
         shell: bash -l {0}
         run: |
