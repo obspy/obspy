@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Module for handling ObsPy Stream objects.
+Module for handling ObsPy :class:`~obspy.core.stream.Stream` objects.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -41,7 +41,8 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
          endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
          check_compression=True, **kwargs):
     """
-    Read waveform files into an ObsPy Stream object.
+    Read waveform files into an ObsPy :class:`~obspy.core.stream.Stream`
+    object.
 
     The :func:`~obspy.core.stream.read` function opens either one or multiple
     waveform files given via file name or URL using the ``pathname_or_url``
@@ -298,7 +299,8 @@ def _create_example_stream(headonly=False):
 
 class Stream(object):
     """
-    List like object of multiple ObsPy Trace objects.
+    List like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
+    objects.
 
     :type traces: list of :class:`~obspy.core.trace.Trace`, optional
     :param traces: Initial list of ObsPy :class:`~obspy.core.trace.Trace`

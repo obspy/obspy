@@ -10,9 +10,9 @@
        :nosignatures:
 
        ~stream.read
+       ~stream.Stream
        ~trace.Trace
        ~trace.Stats
-       ~stream.Stream
        ~utcdatetime.UTCDateTime
        ~event.read_events
        ~event.Catalog

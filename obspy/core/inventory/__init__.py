@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.inventory - Classes for handling station metadata
-============================================================
+Module for handling station metadata
+
 This module provides a class hierarchy to consistently handle station metadata.
 This class hierarchy is closely modelled after the upcoming de-facto standard
 format `FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was

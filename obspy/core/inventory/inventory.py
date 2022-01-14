@@ -104,7 +104,10 @@ def _read(filename, format=None, **kwargs):
 
 class Inventory(ComparingObject):
     """
-    The root object of the Inventory->Network->Station->Channel hierarchy.
+    The root object of the
+    :class:`~obspy.core.inventory.network.Network`->
+    :class:`~obspy.core.inventory.station.Station`->
+    :class:`~obspy.core.inventory.channel.Channel` hierarchy.
 
     In essence just a container for one or more networks.
     """

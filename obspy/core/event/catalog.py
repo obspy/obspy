@@ -40,7 +40,8 @@ EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
 
 class Catalog(object):
     """
-    This class serves as a container for Event objects.
+    This class serves as a container for
+    :class:`~obspy.core.event.event.Event` objects.
 
     :type events: list of :class:`~obspy.core.event.event.Event`, optional
     :param events: List of events
@@ -768,7 +769,8 @@ class Catalog(object):
 @map_example_filename("pathname_or_url")
 def read_events(pathname_or_url=None, format=None, **kwargs):
     """
-    Read event files into an ObsPy Catalog object.
+    Read event files into an ObsPy
+    :class:`~obspy.core.event.catalog.Catalog` object.
 
     The :func:`~obspy.core.event.read_events` function opens either one or
     multiple event files given via file name or URL using the
