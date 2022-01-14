@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Module for handling ObsPy :class:`~obspy.core.trace.Trace` objects.
+Module for handling ObsPy :class:`~obspy.core.trace.Trace` and
+:class:`~obspy.core.trace.Stats` objects.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -28,8 +29,7 @@ from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
 class Stats(AttribDict):
     """
     A container for additional header information of a ObsPy
-    :class:`~obspy.core.trace.Trace` and
-    :class:`~obspy.core.trace.Stats` objects.
+    :class:`~obspy.core.trace.Trace` object.
 
     A ``Stats`` object may contain all header information (also known as meta
     data) of a :class:`~obspy.core.trace.Trace` object. Those headers may be
