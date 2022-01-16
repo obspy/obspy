@@ -2,7 +2,7 @@
 """
 The obspy.clients.earthworm.client test suite.
 """
-import unittest
+import pytest
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
@@ -10,113 +10,174 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skip_on_network_error
 from obspy.clients.earthworm import Client
 
+pytestmark = pytest.mark.network
 
-class ClientTestCase(unittest.TestCase):
+
+class TestEWClient:
     """
     Test cases for obspy.clients.earthworm.client.Client.
     """
-    def setUp(self):
-        # Monkey patch: set lower default precision of all UTCDateTime objects
-        UTCDateTime.DEFAULT_PRECISION = 4
-        self.client = Client("pubavo1.wr.usgs.gov", 16022, timeout=30.0)
+    start = UTCDateTime() - 24 * 3600 * 4
+    end = start + 1.0
 
-    def tearDown(self):
-        # restore default precision of all UTCDateTime objects
-        UTCDateTime.DEFAULT_PRECISION = 6
+    def try_get_stream(self, client, kwargs):
+        """Try to get the stream with either '' or '--' location codes. """
+        # I am not sure why, but sometimes the location code needs to be --
+        # and other times '' in order to get a stream of nonzero length.
+        # Just try both.
+        st = client.get_waveforms(
+            location='', starttime=self.start, endtime=self.end, **kwargs
+        )
+        if len(st) > 0:
+            return st
+        st = client.get_waveforms(
+            location='--', starttime=self.start, endtime=self.end, **kwargs
+        )
+        return st
+
+    @pytest.fixture(scope='class', autouse=True)
+    def set_utc_precision(self):
+        """Set UTC precision to 4 for this tests class."""
+        current_precision = UTCDateTime.DEFAULT_PRECISION
+        UTCDateTime.DEFAULT_PRECISION = 4
+        yield
+        UTCDateTime.DEFAULT_PRECISION = current_precision
+
+    @pytest.fixture(scope='class')
+    def ew_client(self):
+        """Return the earthworn client."""
+        ew_client = Client("pubavo1.wr.usgs.gov", 16022, timeout=30.0)
+        return ew_client
+
+    @pytest.fixture(scope='class')
+    def ew_stream(self, ew_client):
+        """Return a stream fetched from the test ew client."""
+
+        # example 1 -- 1 channel, cleanup
+        kwargs = dict(
+            network='AV',
+            station='ACH',
+            channel='BHE',
+        )
+        return self.try_get_stream(ew_client, kwargs)
+
+    @pytest.fixture(scope='class')
+    def ew_stream_no_cleanup(self, ew_client):
+        """Return a stream fetched from the test ew client with no cleanup."""
+        kwargs = dict(
+            network='AV',
+            station='ACH',
+            channel='BHE',
+            cleanup=False,
+        )
+        return self.try_get_stream(ew_client, kwargs)
+
+    @pytest.fixture(scope='class')
+    def ew_stream_wildcard(self, ew_client):
+        """Return a stream fetched from the test ew client with wildcard."""
+        kwargs = dict(
+            network='AV',
+            station='ACH',
+            channel='BH?',
+        )
+        return self.try_get_stream(ew_client, kwargs)
 
     @skip_on_network_error
-    def test_get_waveform(self):
+    def test_get_waveform(self, ew_client, ew_stream):
         """
         Tests get_waveforms method.
         """
-        client = self.client
-        start = UTCDateTime() - 3600
-        end = start + 1.0
-        # example 1 -- 1 channel, cleanup
-        stream = client.get_waveforms('AV', 'ACH', '', 'BHE', start, end)
-        self.assertEqual(len(stream), 1)
-        delta = stream[0].stats.delta
-        trace = stream[0]
-        self.assertTrue(len(trace) in (50, 51))
-        self.assertGreaterEqual(trace.stats.starttime, start - delta)
-        self.assertLessEqual(trace.stats.starttime, start + delta)
-        self.assertGreaterEqual(trace.stats.endtime, end - delta)
-        self.assertLessEqual(trace.stats.endtime, end + delta)
-        self.assertEqual(trace.stats.network, 'AV')
-        self.assertEqual(trace.stats.station, 'ACH')
-        self.assertEqual(trace.stats.location, '')
-        self.assertEqual(trace.stats.channel, 'BHE')
-        # example 2 -- 1 channel, no cleanup
-        stream = client.get_waveforms('AV', 'ACH', '', 'BHE', start, end,
-                                      cleanup=False)
-        self.assertGreaterEqual(len(stream), 2)
-        summed_length = sum(len(tr) for tr in stream)
-        self.assertTrue(summed_length in (50, 51))
-        self.assertGreaterEqual(stream[0].stats.starttime, start - delta)
-        self.assertLessEqual(stream[0].stats.starttime, start + delta)
-        self.assertGreaterEqual(stream[-1].stats.endtime, end - delta)
-        self.assertLessEqual(stream[-1].stats.endtime, end + delta)
-        for trace in stream:
-            self.assertEqual(trace.stats.network, 'AV')
-            self.assertEqual(trace.stats.station, 'ACH')
-            self.assertEqual(trace.stats.location, '')
-            self.assertEqual(trace.stats.channel, 'BHE')
-        # example 3 -- component wildcarded with '?'
-        stream = client.get_waveforms('AV', 'ACH', '', 'BH?', start, end)
-        self.assertEqual(len(stream), 3)
-        for trace in stream:
-            self.assertTrue(len(trace) in (50, 51))
-            self.assertGreaterEqual(trace.stats.starttime, start - delta)
-            self.assertLessEqual(trace.stats.starttime, start + delta)
-            self.assertGreaterEqual(trace.stats.endtime, end - delta)
-            self.assertLessEqual(trace.stats.endtime, end + delta)
-            self.assertEqual(trace.stats.network, 'AV')
-            self.assertEqual(trace.stats.station, 'ACH')
-            self.assertEqual(trace.stats.location, '')
-        self.assertEqual(stream[0].stats.channel, 'BHZ')
-        self.assertEqual(stream[1].stats.channel, 'BHN')
-        self.assertEqual(stream[2].stats.channel, 'BHE')
+        assert len(ew_stream) == 1
+        delta = ew_stream[0].stats.delta
+        trace = ew_stream[0]
+        assert len(trace) in (50, 51)
+        assert trace.stats.starttime >= self.start - delta
+        assert trace.stats.starttime <= self.start + delta
+        assert trace.stats.endtime >= self.end - delta
+        assert trace.stats.endtime <= self.end + delta
+        assert trace.stats.network == 'AV'
+        assert trace.stats.station == 'ACH'
+        assert trace.stats.location in ('--', '')
+        assert trace.stats.channel == 'BHE'
 
     @skip_on_network_error
-    def test_save_waveform(self):
+    def test_get_waveform_no_cleanup(self, ew_client, ew_stream_no_cleanup):
+        """
+        Tests get_waveforms method again, 1 channel no cleanup.
+        """
+        # example 2 -- 1 channel, no cleanup
+        ew_stream = ew_stream_no_cleanup
+        delta = ew_stream[0].stats.delta
+        assert len(ew_stream) >= 2
+        summed_length = sum(len(tr) for tr in ew_stream)
+        assert summed_length in (50, 51)
+        assert ew_stream[0].stats.starttime >= self.start - delta
+        assert ew_stream[0].stats.starttime <= self.start + delta
+        assert ew_stream[-1].stats.endtime >= self.end - delta
+        assert ew_stream[-1].stats.endtime <= self.end + delta
+        for trace in ew_stream:
+            assert trace.stats.network == 'AV'
+            assert trace.stats.station == 'ACH'
+            assert trace.stats.location in ('--', '')
+            assert trace.stats.channel == 'BHE'
+
+    @skip_on_network_error
+    def test_get_waveform_widlcard(self, ew_client, ew_stream_wildcard):
+        """
+        Test example 3 -- component wildcarded with '?'
+        """
+        # example 3 -- component wildcarded with '?'
+        stream = ew_stream_wildcard
+        delta = stream[0].stats.delta
+        assert len(stream) == 3
+        for trace in stream:
+            assert len(trace) in (50, 51)
+            assert trace.stats.starttime >= self.start - delta
+            assert trace.stats.starttime <= self.start + delta
+            assert trace.stats.endtime >= self.end - delta
+            assert trace.stats.endtime <= self.end + delta
+            assert trace.stats.network == 'AV'
+            assert trace.stats.station == 'ACH'
+            assert trace.stats.location in ('--', '')
+        assert stream[0].stats.channel == 'BHZ'
+        assert stream[1].stats.channel == 'BHN'
+        assert stream[2].stats.channel == 'BHE'
+
+    @skip_on_network_error
+    def test_save_waveform(self, ew_client):
         """
         Tests save_waveforms method.
         """
         # initialize client
-        client = self.client
-        start = UTCDateTime() - 3600
-        end = start + 1.0
         with NamedTemporaryFile() as tf:
             testfile = tf.name
             # 1 channel, cleanup (using SLIST to avoid dependencies)
-            client.save_waveforms(testfile, 'AV', 'ACH', '', 'BHE', start, end,
-                                  format="SLIST")
+            ew_client.save_waveforms(
+                testfile,
+                'AV',
+                'ACH',
+                '--',
+                'BHE',
+                self.start,
+                self.end,
+                format="SLIST",
+            )
             stream = read(testfile)
-        self.assertEqual(len(stream), 1)
+        assert len(stream) == 1
         delta = stream[0].stats.delta
         trace = stream[0]
-        self.assertEqual(len(trace), 51)
-        self.assertGreaterEqual(trace.stats.starttime, start - delta)
-        self.assertLessEqual(trace.stats.starttime, start + delta)
-        self.assertGreaterEqual(trace.stats.endtime, end - delta)
-        self.assertLessEqual(trace.stats.endtime, end + delta)
-        self.assertEqual(trace.stats.network, 'AV')
-        self.assertEqual(trace.stats.station, 'ACH')
-        self.assertEqual(trace.stats.location, '')
-        self.assertEqual(trace.stats.channel, 'BHE')
+        assert len(trace) == 51
+        assert trace.stats.starttime >= self.start - delta
+        assert trace.stats.starttime <= self.start + delta
+        assert trace.stats.endtime >= self.end - delta
+        assert trace.stats.endtime <= self.end + delta
+        assert trace.stats.network == 'AV'
+        assert trace.stats.station == 'ACH'
+        assert trace.stats.location in ('--', '')
+        assert trace.stats.channel == 'BHE'
 
     @skip_on_network_error
-    def test_availability(self):
-        data = self.client.get_availability()
+    def test_availability(self, ew_client):
+        data = ew_client.get_availability()
         seeds = ["%s.%s.%s.%s" % (d[0], d[1], d[2], d[3]) for d in data]
-        self.assertIn('AV.ACH.--.BHZ', seeds)
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(ClientTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert 'AV.ACH.--.BHZ' in seeds

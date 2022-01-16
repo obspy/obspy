@@ -4,13 +4,14 @@ import io
 import os
 import pickle
 import platform
-import unittest
 import warnings
 from copy import deepcopy
+from os.path import dirname, join, abspath
 from pathlib import Path
 from unittest import mock
 
 import numpy as np
+import pytest
 
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.inventory import Channel, Inventory, Network, Station
@@ -22,42 +23,49 @@ from obspy.core.util.testing import streams_almost_equal
 from obspy.io.xseed import Parser
 
 
-class StreamTestCase(unittest.TestCase):
+class TestStream:
     """
     Test suite for obspy.core.stream.Stream.
     """
-    def setUp(self):
-        # set specific seed value such that random numbers are reproducible
-        np.random.seed(815)
+    _current_file = inspect.getfile(inspect.currentframe())
+    data_path = join(dirname(abspath(_current_file)), "data")
+
+    @pytest.fixture()
+    def mseed_stream(self):
+        """Create a stream for testing."""
+        rand = np.random.RandomState(815)
         header = {'network': 'BW', 'station': 'BGLD',
                   'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
                   'npts': 412, 'sampling_rate': 200.0,
                   'channel': 'EHE'}
-        trace1 = Trace(data=np.random.randint(0, 1000, 412).astype(np.float64),
+        trace1 = Trace(data=rand.randint(0, 1000, 412).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
         header['npts'] = 824
-        trace2 = Trace(data=np.random.randint(0, 1000, 824).astype(np.float64),
+        trace2 = Trace(data=rand.randint(0, 1000, 824).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
-        trace3 = Trace(data=np.random.randint(0, 1000, 824).astype(np.float64),
+        trace3 = Trace(data=rand.randint(0, 1000, 824).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
         header['npts'] = 50668
         trace4 = Trace(
-            data=np.random.randint(0, 1000, 50668).astype(np.float64),
+            data=rand.randint(0, 1000, 50668).astype(np.float64),
             header=deepcopy(header))
-        self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
+        return Stream(traces=[trace1, trace2, trace3, trace4])
+
+    @pytest.fixture()
+    def gse2_stream(self):
+        """Another example stream."""
+        rand = np.random.RandomState(815)
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
                   'sampling_rate': 200.0, 'npts': 12000,
                   'channel': '  Z'}
         trace = Trace(
-            data=np.random.randint(0, 1000, 12000).astype(np.float64),
+            data=rand.randint(0, 1000, 12000).astype(np.float64),
             header=header)
-        self.gse2_stream = Stream(traces=[trace])
-        self.data_path = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
+        return Stream(traces=[trace])
 
     @staticmethod
     def __remove_processing(st):
@@ -78,24 +86,24 @@ class StreamTestCase(unittest.TestCase):
         """
         # empty
         st = Stream()
-        self.assertEqual(len(st), 0)
+        assert len(st) == 0
         # single trace
         st = Stream(Trace())
-        self.assertEqual(len(st), 1)
+        assert len(st) == 1
         # array of traces
         st = Stream([Trace(), Trace()])
-        self.assertEqual(len(st), 2)
+        assert len(st) == 2
 
-    def test_setitem(self):
+    def test_setitem(self, mseed_stream):
         """
         Tests the __setitem__ method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         stream[0] = stream[3]
-        self.assertEqual(stream[0], stream[3])
+        assert stream[0] == stream[3]
         st = deepcopy(stream)
         stream[0].data[0:10] = 999
-        self.assertNotEqual(st[0].data[0], 999)
+        assert st[0].data[0] != 999
         st[0] = stream[0]
         np.testing.assert_array_equal(stream[0].data[:10],
                                       np.ones(10, dtype=np.int_) * 999)
@@ -105,78 +113,83 @@ class StreamTestCase(unittest.TestCase):
         Tests the __getitem__ method of the Stream object.
         """
         stream = read()
-        self.assertEqual(stream[0], stream.traces[0])
-        self.assertEqual(stream[-1], stream.traces[-1])
-        self.assertEqual(stream[2], stream.traces[2])
+        assert stream[0] == stream.traces[0]
+        assert stream[-1] == stream.traces[-1]
+        assert stream[2] == stream.traces[2]
         # out of index should fail
-        self.assertRaises(IndexError, stream.__getitem__, 3)
-        self.assertRaises(IndexError, stream.__getitem__, -99)
+        with pytest.raises(IndexError):
+            stream.__getitem__(3)
+        with pytest.raises(IndexError):
+            stream.__getitem__(-99)
 
-    def test_add(self):
+    def test_add(self, mseed_stream, gse2_stream):
         """
         Tests the adding of two stream objects.
         """
-        stream = self.mseed_stream
-        self.assertEqual(4, len(stream))
+        stream = mseed_stream
+        assert 4 == len(stream)
         # Add the same stream object to itself.
         stream = stream + stream
-        self.assertEqual(8, len(stream))
+        assert 8 == len(stream)
         # This will not create copies of Traces and thus the objects should
         # be identical (and the Traces attributes should be identical).
         for _i in range(4):
-            self.assertEqual(stream[_i], stream[_i + 4])
-            self.assertEqual(stream[_i] == stream[_i + 4], True)
-            self.assertEqual(stream[_i] != stream[_i + 4], False)
-            self.assertEqual(stream[_i] is stream[_i + 4], True)
-            self.assertEqual(stream[_i] is not stream[_i + 4], False)
+            assert (stream[_i] == stream[_i + 4])
+            assert (stream[_i] is stream[_i + 4])
         # Now add another stream to it.
-        other_stream = self.gse2_stream
-        self.assertEqual(1, len(other_stream))
+        other_stream = gse2_stream
+        assert 1 == len(other_stream)
         new_stream = stream + other_stream
-        self.assertEqual(9, len(new_stream))
+        assert 9 == len(new_stream)
         # The traces of all streams are copied.
         for _i in range(8):
-            self.assertEqual(new_stream[_i], stream[_i])
-            self.assertEqual(new_stream[_i] is stream[_i], True)
+            assert new_stream[_i] == stream[_i]
+            assert new_stream[_i] is stream[_i]
         # Also test for the newly added stream.
-        self.assertEqual(new_stream[8], other_stream[0])
-        self.assertEqual(new_stream[8].stats, other_stream[0].stats)
+        assert new_stream[8] == other_stream[0]
+        assert new_stream[8].stats == other_stream[0].stats
         np.testing.assert_array_equal(new_stream[8].data, other_stream[0].data)
         # adding something else than stream or trace results into TypeError
-        self.assertRaises(TypeError, stream.__add__, 1)
-        self.assertRaises(TypeError, stream.__add__, 'test')
+        with pytest.raises(TypeError):
+            stream.__add__(1)
+        with pytest.raises(TypeError):
+            stream.__add__('test')
 
-    def test_iadd(self):
+    def test_iadd(self, mseed_stream, gse2_stream):
         """
         Tests the __iadd__ method of the Stream objects.
         """
-        stream = self.mseed_stream
-        self.assertEqual(4, len(stream))
-        other_stream = self.gse2_stream
-        self.assertEqual(1, len(other_stream))
+        stream = mseed_stream
+        assert 4 == len(stream)
+        other_stream = gse2_stream
+        assert 1 == len(other_stream)
         # Add the other stream to the stream.
         stream += other_stream
         # This will leave the Traces of the new stream and create a deepcopy of
         # the other Stream's Traces
-        self.assertEqual(5, len(stream))
-        self.assertEqual(other_stream[0], stream[-1])
-        self.assertEqual(other_stream[0].stats, stream[-1].stats)
+        assert 5 == len(stream)
+        assert other_stream[0] == stream[-1]
+        assert other_stream[0].stats == stream[-1].stats
         np.testing.assert_array_equal(other_stream[0].data, stream[-1].data)
         # adding something else than stream or trace results into TypeError
-        self.assertRaises(TypeError, stream.__iadd__, 1)
-        self.assertRaises(TypeError, stream.__iadd__, 'test')
+        with pytest.raises(TypeError):
+            stream.__iadd__(1)
+        with pytest.raises(TypeError):
+            stream.__iadd__('test')
 
     def test_mul(self):
         """
         Tests the __mul__ method of the Stream objects.
         """
         st = Stream(Trace())
-        self.assertEqual(len(st), 1)
+        assert len(st) == 1
         st = st * 4
-        self.assertEqual(len(st), 4)
+        assert len(st) == 4
         # multiplying by something else than an integer results into TypeError
-        self.assertRaises(TypeError, st.__mul__, 1.2345)
-        self.assertRaises(TypeError, st.__mul__, 'test')
+        with pytest.raises(TypeError):
+            st.__mul__(1.2345)
+        with pytest.raises(TypeError):
+            st.__mul__('test')
 
     def test_add_trace_to_stream(self):
         """
@@ -186,37 +199,40 @@ class StreamTestCase(unittest.TestCase):
         st1 = st0[0:2]
         tr = st0[2]
         # __add__
-        self.assertEqual(st1.__add__(tr), st0)
-        self.assertEqual(st1 + tr, st0)
+        assert st1.__add__(tr) == st0
+        assert st1 + tr == st0
         # __iadd__
         st1 += tr
-        self.assertEqual(st1, st0)
+        assert st1 == st0
 
-    def test_append(self):
+    def test_append(self, mseed_stream):
         """
         Tests the append method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Check current count of traces
-        self.assertEqual(len(stream), 4)
+        assert len(stream) == 4
         # Append first traces to the Stream object.
         stream.append(stream[0])
-        self.assertEqual(len(stream), 5)
+        assert len(stream) == 5
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
-        self.assertEqual(stream[0], stream[-1])
+        assert stream[0] == stream[-1]
         # But the attributes and data values should be identical.
-        self.assertEqual(stream[0].stats, stream[-1].stats)
+        assert stream[0].stats == stream[-1].stats
         np.testing.assert_array_equal(stream[0].data, stream[-1].data)
         # Append the same again
         stream.append(stream[0])
-        self.assertEqual(len(stream), 6)
+        assert len(stream) == 6
         # Now the two objects should be identical.
-        self.assertEqual(stream[0], stream[-1])
+        assert stream[0] == stream[-1]
         # Using append with a list of Traces, or int, or ... should fail.
-        self.assertRaises(TypeError, stream.append, stream[:])
-        self.assertRaises(TypeError, stream.append, 1)
-        self.assertRaises(TypeError, stream.append, stream[0].data)
+        with pytest.raises(TypeError):
+            stream.append(stream[:])
+        with pytest.raises(TypeError):
+            stream.append(1)
+        with pytest.raises(TypeError):
+            stream.append(stream[0].data)
 
     def test_count_and_len(self):
         """
@@ -224,88 +240,94 @@ class StreamTestCase(unittest.TestCase):
         """
         # empty stream without traces
         stream = Stream()
-        self.assertEqual(len(stream), 0)
-        self.assertEqual(stream.count(), 0)
+        assert len(stream) == 0
+        assert stream.count() == 0
         # stream with traces
         stream = read()
-        self.assertEqual(len(stream), 3)
-        self.assertEqual(stream.count(), 3)
+        assert len(stream) == 3
+        assert stream.count() == 3
 
-    def test_extend(self):
+    def test_extend(self, mseed_stream):
         """
         Tests the extend method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Check current count of traces
-        self.assertEqual(len(stream), 4)
+        assert len(stream) == 4
         # Extend the Stream object with the first two traces.
         stream.extend(stream[0:2])
-        self.assertEqual(len(stream), 6)
+        assert len(stream) == 6
         # This is NOT supposed to make a deepcopy of the Trace and thus the two
         # Traces compare equal and are identical.
-        self.assertEqual(stream[0], stream[-2])
-        self.assertEqual(stream[1], stream[-1])
-        self.assertIs(stream[0], stream[-2])
-        self.assertIs(stream[1], stream[-1])
+        assert stream[0] == stream[-2]
+        assert stream[1] == stream[-1]
+        assert stream[0] is stream[-2]
+        assert stream[1] is stream[-1]
         # Using extend with a single Traces, or a wrong list, or ...
         # should fail.
-        self.assertRaises(TypeError, stream.extend, stream[0])
-        self.assertRaises(TypeError, stream.extend, 1)
-        self.assertRaises(TypeError, stream.extend, [stream[0], 1])
+        with pytest.raises(TypeError):
+            stream.extend(stream[0])
+        with pytest.raises(TypeError):
+            stream.extend(1)
+        with pytest.raises(TypeError):
+            stream.extend([stream[0], 1])
 
-    def test_insert(self):
+    def test_insert(self, mseed_stream):
         """
         Tests the insert Method of the Stream object.
         """
-        stream = self.mseed_stream
-        self.assertEqual(4, len(stream))
+        stream = mseed_stream
+        assert 4 == len(stream)
         # Insert the last Trace before the second trace.
         stream.insert(1, stream[-1])
-        self.assertEqual(len(stream), 5)
+        assert len(stream) == 5
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
         # self.assertNotEqual(stream[1], stream[-1])
-        self.assertEqual(stream[1], stream[-1])
+        assert stream[1] == stream[-1]
         # But the attributes and data values should be identical.
-        self.assertEqual(stream[1].stats, stream[-1].stats)
+        assert stream[1].stats == stream[-1].stats
         np.testing.assert_array_equal(stream[1].data, stream[-1].data)
         # Do the same again
         stream.insert(1, stream[-1])
-        self.assertEqual(len(stream), 6)
+        assert len(stream) == 6
         # Now the two Traces should be identical
-        self.assertEqual(stream[1], stream[-1])
+        assert stream[1] == stream[-1]
         # Do the same with a list of traces this time.
         # Insert the last two Trace before the second trace.
         stream.insert(1, stream[-2:])
-        self.assertEqual(len(stream), 8)
+        assert len(stream) == 8
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
-        self.assertEqual(stream[1], stream[-2])
-        self.assertEqual(stream[2], stream[-1])
+        assert stream[1] == stream[-2]
+        assert stream[2] == stream[-1]
         # But the attributes and data values should be identical.
-        self.assertEqual(stream[1].stats, stream[-2].stats)
+        assert stream[1].stats == stream[-2].stats
         np.testing.assert_array_equal(stream[1].data, stream[-2].data)
-        self.assertEqual(stream[2].stats, stream[-1].stats)
+        assert stream[2].stats == stream[-1].stats
         np.testing.assert_array_equal(stream[2].data, stream[-1].data)
         # Do the same again
         stream.insert(1, stream[-2:])
-        self.assertEqual(len(stream), 10)
+        assert len(stream) == 10
         # Now the two Traces should be identical
-        self.assertEqual(stream[1], stream[-2])
-        self.assertEqual(stream[2], stream[-1])
+        assert stream[1] == stream[-2]
+        assert stream[2] == stream[-1]
         # Using insert without a single Traces or a list of Traces should fail.
-        self.assertRaises(TypeError, stream.insert, 1, 1)
-        self.assertRaises(TypeError, stream.insert, stream[0], stream[0])
-        self.assertRaises(TypeError, stream.insert, 1, [stream[0], 1])
+        with pytest.raises(TypeError):
+            stream.insert(1, 1)
+        with pytest.raises(TypeError):
+            stream.insert(stream[0], stream[0])
+        with pytest.raises(TypeError):
+            stream.insert(1, [stream[0], 1])
 
-    def test_get_gaps(self):
+    def test_get_gaps(self, mseed_stream):
         """
         Tests the get_gaps method of the Stream objects.
 
         It is compared directly to the obspy.io.mseed method getGapsList which
         is assumed to be correct.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         gap_list = stream.get_gaps()
         # Gaps list created with obspy.io.mseed
         mseed_gap_list = [
@@ -322,18 +344,16 @@ class StreamTestCase(unittest.TestCase):
              UTCDateTime(2008, 1, 1, 0, 0, 18, 455000),
              4.120, 824.0)]
         # Assert the number of gaps.
-        self.assertEqual(len(mseed_gap_list), len(gap_list))
+        assert len(mseed_gap_list) == len(gap_list)
         for _i in range(len(mseed_gap_list)):
             # Compare the string values directly.
             for _j in range(6):
-                self.assertEqual(gap_list[_i][_j], mseed_gap_list[_i][_j])
+                assert gap_list[_i][_j] == mseed_gap_list[_i][_j]
             # The small differences are probably due to rounding errors.
-            self.assertAlmostEqual(float(mseed_gap_list[_i][6]),
-                                   float(gap_list[_i][6]),
-                                   places=3)
-            self.assertAlmostEqual(float(mseed_gap_list[_i][7]),
-                                   float(gap_list[_i][7]),
-                                   places=3)
+            gap_6 = mseed_gap_list[_i][6]
+            gap_7 = mseed_gap_list[_i][7]
+            assert round(abs(float(gap_6)-float(gap_6)), 3) == 0
+            assert round(abs(float(gap_7)-float(gap_7)), 3) == 0
 
     def test_get_gaps_multiplexed_streams(self):
         """
@@ -344,22 +364,22 @@ class StreamTestCase(unittest.TestCase):
         st = Stream()
         for channel in ['EHZ', 'EHN', 'EHE']:
             st.append(Trace(data=data, header={'channel': channel}))
-        self.assertEqual(len(st.get_gaps()), 0)
+        assert len(st.get_gaps()) == 0
         # different locations
         st = Stream()
         for location in ['', '00', '01']:
             st.append(Trace(data=data, header={'location': location}))
-        self.assertEqual(len(st.get_gaps()), 0)
+        assert len(st.get_gaps()) == 0
         # different stations
         st = Stream()
         for station in ['MANZ', 'ROTZ', 'BLAS']:
             st.append(Trace(data=data, header={'station': station}))
-        self.assertEqual(len(st.get_gaps()), 0)
+        assert len(st.get_gaps()) == 0
         # different networks
         st = Stream()
         for network in ['BW', 'GE', 'GR']:
             st.append(Trace(data=data, header={'network': network}))
-        self.assertEqual(len(st.get_gaps()), 0)
+        assert len(st.get_gaps()) == 0
 
     def test_get_gaps_masked(self):
         """
@@ -379,42 +399,42 @@ class StreamTestCase(unittest.TestCase):
         # Get the gaps
         gaps = st.get_gaps()
         # Assert the number of gaps
-        self.assertEqual(len(gaps), 1)
+        assert len(gaps) == 1
         # Verify the resulting gap list matches what is expected
         for _i in range(6):
-            self.assertEqual(gaps[0][_i], gap[_i])
-        self.assertAlmostEqual(float(gaps[0][6]), float(gap[6]), places=3)
-        self.assertAlmostEqual(float(gaps[0][7]), float(gap[7]))
+            assert gaps[0][_i] == gap[_i]
+        assert round(abs(float(gaps[0][6])-float(gap[6])), 3) == 0
+        assert round(abs(float(gaps[0][7])-float(gap[7])), 7) == 0
         # Double-check that the initial Stream is unmodified
-        self.assertEqual(len(st), 1)
+        assert len(st) == 1
 
-    def test_pop(self):
+    def test_pop(self, mseed_stream):
         """
         Test the pop method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Remove and return the last Trace.
         temp_trace = stream.pop()
-        self.assertEqual(3, len(stream))
+        assert 3 == len(stream)
         # Assert attributes. The objects itself are not identical.
-        self.assertEqual(temp_trace.stats, traces[-1].stats)
+        assert temp_trace.stats == traces[-1].stats
         np.testing.assert_array_equal(temp_trace.data, traces[-1].data)
         # Remove the last copied Trace.
         traces.pop()
         # Remove and return the second Trace.
         temp_trace = stream.pop(1)
         # Assert attributes. The objects itself are not identical.
-        self.assertEqual(temp_trace.stats, traces[1].stats)
+        assert temp_trace.stats == traces[1].stats
         np.testing.assert_array_equal(temp_trace.data, traces[1].data)
         # Remove the second copied Trace.
         traces.pop(1)
         # Compare all remaining Traces.
-        self.assertEqual(2, len(stream))
-        self.assertEqual(2, len(traces))
+        assert 2 == len(stream)
+        assert 2 == len(traces)
         for _i in range(len(traces)):
-            self.assertEqual(traces[_i].stats, stream[_i].stats)
+            assert traces[_i].stats == stream[_i].stats
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
     def test_slicing(self):
@@ -422,15 +442,15 @@ class StreamTestCase(unittest.TestCase):
         Tests the __getslice__ method of the Stream object.
         """
         stream = read()
-        self.assertEqual(stream[0:], stream[0:])
-        self.assertEqual(stream[:2], stream[:2])
-        self.assertEqual(stream[:], stream[:])
-        self.assertEqual(len(stream), 3)
+        assert stream[0:] == stream[0:]
+        assert stream[:2] == stream[:2]
+        assert stream[:] == stream[:]
+        assert len(stream) == 3
         new_stream = stream[1:3]
-        self.assertTrue(isinstance(new_stream, Stream))
-        self.assertEqual(len(new_stream), 2)
-        self.assertEqual(new_stream[0].stats, stream[1].stats)
-        self.assertEqual(new_stream[1].stats, stream[2].stats)
+        assert isinstance(new_stream, Stream)
+        assert len(new_stream) == 2
+        assert new_stream[0].stats == stream[1].stats
+        assert new_stream[1].stats == stream[2].stats
 
     def test_slicing_with_steps(self):
         """
@@ -442,11 +462,11 @@ class StreamTestCase(unittest.TestCase):
         tr4 = Trace()
         tr5 = Trace()
         st = Stream([tr1, tr2, tr3, tr4, tr5])
-        self.assertEqual(st[0:6].traces, [tr1, tr2, tr3, tr4, tr5])
-        self.assertEqual(st[0:6:1].traces, [tr1, tr2, tr3, tr4, tr5])
-        self.assertEqual(st[0:6:2].traces, [tr1, tr3, tr5])
-        self.assertEqual(st[1:6:2].traces, [tr2, tr4])
-        self.assertEqual(st[1:6:6].traces, [tr2])
+        assert st[0:6].traces == [tr1, tr2, tr3, tr4, tr5]
+        assert st[0:6:1].traces == [tr1, tr2, tr3, tr4, tr5]
+        assert st[0:6:2].traces == [tr1, tr3, tr5]
+        assert st[1:6:2].traces == [tr2, tr4]
+        assert st[1:6:6].traces == [tr2]
 
     def test_slice(self):
         """
@@ -456,8 +476,8 @@ class StreamTestCase(unittest.TestCase):
         st.test = 1
         st.muh = "Muh"
         st2 = st.slice(st[0].stats.starttime, st[0].stats.endtime)
-        self.assertEqual(st2.test, 1)
-        self.assertEqual(st2.muh, "Muh")
+        assert st2.test == 1
+        assert st2.muh == "Muh"
 
     def test_slice_nearest_sample(self):
         """
@@ -470,27 +490,27 @@ class StreamTestCase(unittest.TestCase):
             patch.return_value = st[0]
             st.slice(1, 2)
 
-        self.assertEqual(patch.call_count, 3)
+        assert patch.call_count == 3
         for arg in patch.call_args_list:
-            self.assertTrue(arg[1]["nearest_sample"])
+            assert arg[1]["nearest_sample"]
 
         # Force True.
         with mock.patch("obspy.core.trace.Trace.slice") as patch:
             patch.return_value = st[0]
             st.slice(1, 2, nearest_sample=True)
 
-        self.assertEqual(patch.call_count, 3)
+        assert patch.call_count == 3
         for arg in patch.call_args_list:
-            self.assertTrue(arg[1]["nearest_sample"])
+            assert arg[1]["nearest_sample"]
 
         # Set to False.
         with mock.patch("obspy.core.trace.Trace.slice") as patch:
             patch.return_value = st[0]
             st.slice(1, 2, nearest_sample=False)
 
-        self.assertEqual(patch.call_count, 3)
+        assert patch.call_count == 3
         for arg in patch.call_args_list:
-            self.assertFalse(arg[1]["nearest_sample"])
+            assert not arg[1]["nearest_sample"]
 
     def test_cutout(self):
         """
@@ -506,17 +526,17 @@ class StreamTestCase(unittest.TestCase):
         # 1
         st_cut.cutout(t4, t4 + 10)
         self.__remove_processing(st_cut)
-        self.assertEqual(st, st_cut)
+        assert st == st_cut
         # 2
         st_cut.cutout(t1 - 10, t1)
         self.__remove_processing(st_cut)
-        self.assertEqual(st, st_cut)
+        assert st == st_cut
         # 3
         st_cut.cutout(t1, t2)
         st.trim(starttime=t2, nearest_sample=True)
         self.__remove_processing(st_cut)
         self.__remove_processing(st)
-        self.assertEqual(st, st_cut)
+        assert st == st_cut
         # 4
         st = read()
         st_cut = read()
@@ -524,7 +544,7 @@ class StreamTestCase(unittest.TestCase):
         st.trim(endtime=t3, nearest_sample=True)
         self.__remove_processing(st_cut)
         self.__remove_processing(st)
-        self.assertEqual(st, st_cut)
+        assert st == st_cut
         # 5
         st = read()
         st.trim(endtime=t2, nearest_sample=True)
@@ -535,7 +555,7 @@ class StreamTestCase(unittest.TestCase):
         st_cut.cutout(t2, t3)
         self.__remove_processing(st_cut)
         self.__remove_processing(st)
-        self.assertEqual(st, st_cut)
+        assert st == st_cut
 
     def test_pop2(self):
         """
@@ -544,19 +564,19 @@ class StreamTestCase(unittest.TestCase):
         trace = Trace(data=np.arange(0, 1000))
         st = Stream([trace])
         st = st + st + st + st
-        self.assertEqual(len(st), 4)
+        assert len(st) == 4
         st.pop()
-        self.assertEqual(len(st), 3)
+        assert len(st) == 3
         st[1].stats.station = 'MUH'
         st.pop(0)
-        self.assertEqual(len(st), 2)
-        self.assertEqual(st[0].stats.station, 'MUH')
+        assert len(st) == 2
+        assert st[0].stats.station == 'MUH'
 
-    def test_remove(self):
+    def test_remove(self, mseed_stream):
         """
         Tests the remove method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Make a copy of the Traces.
         stream2 = deepcopy(stream)
         # Use the remove method of the Stream object and of the list of Traces.
@@ -565,23 +585,23 @@ class StreamTestCase(unittest.TestCase):
         stream.remove(stream[-1])
         del(stream2[-1])
         # Compare remaining Streams.
-        self.assertEqual(stream, stream2)
+        assert stream == stream2
 
-    def test_reverse(self):
+    def test_reverse(self, mseed_stream):
         """
         Tests the reverse method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Use reversing of the Stream object and of the list.
         stream.reverse()
         traces.reverse()
         # Compare all Traces.
-        self.assertEqual(4, len(stream))
-        self.assertEqual(4, len(traces))
+        assert 4 == len(stream)
+        assert 4 == len(traces)
         for _i in range(len(traces)):
-            self.assertEqual(traces[_i].stats, stream[_i].stats)
+            assert traces[_i].stats == stream[_i].stats
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
     def test_select(self):
@@ -613,81 +633,82 @@ class StreamTestCase(unittest.TestCase):
         stream = Stream(traces=traces)
         # Test cases:
         stream2 = stream.select()
-        self.assertEqual(stream, stream2)
-        self.assertRaises(Exception, stream.select, channel="EHZ",
+        assert stream == stream2
+        with pytest.raises(Exception):
+            stream.select(channel="EHZ",
                           component="N")
         stream2 = stream.select(channel='EHE')
-        self.assertEqual(len(stream2), 0)
+        assert len(stream2) == 0
         stream2 = stream.select(channel='EHZ')
-        self.assertEqual(len(stream2), 2)
-        self.assertIn(stream[0], stream2)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 2
+        assert stream[0] in stream2
+        assert stream[4] in stream2
         stream2 = stream.select(component='Z')
-        self.assertEqual(len(stream2), 3)
-        self.assertIn(stream[0], stream2)
-        self.assertIn(stream[2], stream2)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 3
+        assert stream[0] in stream2
+        assert stream[2] in stream2
+        assert stream[4] in stream2
         stream2 = stream.select(component='n')
-        self.assertEqual(len(stream2), 2)
-        self.assertIn(stream[1], stream2)
-        self.assertIn(stream[3], stream2)
+        assert len(stream2) == 2
+        assert stream[1] in stream2
+        assert stream[3] in stream2
         stream2 = stream.select(channel='BHZ', npts=100, sampling_rate='20.0',
                                 network='AA', component='Z', station='ZZZZ')
-        self.assertEqual(len(stream2), 1)
-        self.assertIn(stream[2], stream2)
+        assert len(stream2) == 1
+        assert stream[2] in stream2
         stream2 = stream.select(channel='EHZ', station="XXXX")
-        self.assertEqual(len(stream2), 1)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 1
+        assert stream[4] in stream2
         stream2 = stream.select(network='AA')
-        self.assertEqual(len(stream2), 3)
-        self.assertIn(stream[0], stream2)
-        self.assertIn(stream[2], stream2)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 3
+        assert stream[0] in stream2
+        assert stream[2] in stream2
+        assert stream[4] in stream2
         stream2 = stream.select(id='AA.ZZZZ..EHZ')
-        self.assertEqual(len(stream2), 1)
-        self.assertIn(stream[0], stream2)
+        assert len(stream2) == 1
+        assert stream[0] in stream2
         stream2 = stream.select(sampling_rate=20.0)
-        self.assertEqual(len(stream2), 2)
-        self.assertIn(stream[2], stream2)
-        self.assertIn(stream[3], stream2)
+        assert len(stream2) == 2
+        assert stream[2] in stream2
+        assert stream[3] in stream2
         # tests for wildcarded channel:
         stream2 = stream.select(channel='B*')
-        self.assertEqual(len(stream2), 2)
-        self.assertIn(stream[2], stream2)
-        self.assertIn(stream[3], stream2)
+        assert len(stream2) == 2
+        assert stream[2] in stream2
+        assert stream[3] in stream2
         stream2 = stream.select(channel='EH*')
-        self.assertEqual(len(stream2), 3)
-        self.assertIn(stream[0], stream2)
-        self.assertIn(stream[1], stream2)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 3
+        assert stream[0] in stream2
+        assert stream[1] in stream2
+        assert stream[4] in stream2
         stream2 = stream.select(channel='*Z')
-        self.assertEqual(len(stream2), 3)
-        self.assertIn(stream[0], stream2)
-        self.assertIn(stream[2], stream2)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 3
+        assert stream[0] in stream2
+        assert stream[2] in stream2
+        assert stream[4] in stream2
         # tests for other wildcard operations:
         stream2 = stream.select(station='[XY]*')
-        self.assertEqual(len(stream2), 3)
-        self.assertIn(stream[1], stream2)
-        self.assertIn(stream[3], stream2)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 3
+        assert stream[1] in stream2
+        assert stream[3] in stream2
+        assert stream[4] in stream2
         stream2 = stream.select(station='[A-Y]*')
-        self.assertEqual(len(stream2), 3)
-        self.assertIn(stream[1], stream2)
-        self.assertIn(stream[3], stream2)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 3
+        assert stream[1] in stream2
+        assert stream[3] in stream2
+        assert stream[4] in stream2
         stream2 = stream.select(station='[A-Y]??*', network='A?')
-        self.assertEqual(len(stream2), 1)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 1
+        assert stream[4] in stream2
         # test case insensitivity
         stream2 = stream.select(channel='BhZ', npts=100, sampling_rate='20.0',
                                 network='aA', station='ZzZz',)
-        self.assertEqual(len(stream2), 1)
-        self.assertIn(stream[2], stream2)
+        assert len(stream2) == 1
+        assert stream[2] in stream2
         stream2 = stream.select(channel='e?z', network='aa', station='x?X*',
                                 location='00', component='z')
-        self.assertEqual(len(stream2), 1)
-        self.assertIn(stream[4], stream2)
+        assert len(stream2) == 1
+        assert stream[4] in stream2
 
     def test_select_on_single_letter_channels(self):
         st = read()
@@ -695,15 +716,15 @@ class StreamTestCase(unittest.TestCase):
         st[1].stats.channel = "N"
         st[2].stats.channel = "E"
 
-        self.assertEqual([tr.stats.channel for tr in st], ["Z", "N", "E"])
+        assert [tr.stats.channel for tr in st] == ["Z", "N", "E"]
 
-        self.assertEqual(st.select(component="Z")[0], st[0])
-        self.assertEqual(st.select(component="N")[0], st[1])
-        self.assertEqual(st.select(component="E")[0], st[2])
+        assert st.select(component="Z")[0] == st[0]
+        assert st.select(component="N")[0] == st[1]
+        assert st.select(component="E")[0] == st[2]
 
-        self.assertEqual(len(st.select(component="Z")), 1)
-        self.assertEqual(len(st.select(component="N")), 1)
-        self.assertEqual(len(st.select(component="E")), 1)
+        assert len(st.select(component="Z")) == 1
+        assert len(st.select(component="N")) == 1
+        assert len(st.select(component="E")) == 1
 
     def test_select_from_inventory(self):
         # Create a test stream
@@ -753,11 +774,11 @@ class StreamTestCase(unittest.TestCase):
         networks = [Network('AA', stations=stations)]
         inv = Inventory(networks=networks, source='TEST')
         # tests
-        self.assertEqual(len(st.select(inventory=inv)), 2)
+        assert len(st.select(inventory=inv)) == 2
         st_sel = st.select(network='AB')
-        self.assertEqual(len(st_sel.select(inventory=inv)), 0)
+        assert len(st_sel.select(inventory=inv)) == 0
         inv_sel = inv.select(starttime=UTCDateTime(2000, 1, 1))
-        self.assertEqual(len(st.select(inventory=inv_sel)), 1)
+        assert len(st.select(inventory=inv_sel)) == 1
 
     def test_sort(self):
         """
@@ -784,41 +805,44 @@ class StreamTestCase(unittest.TestCase):
             stream.append(new_trace)
         # Use normal sorting.
         stream.sort()
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
-                         [300.0, 500.0, 400.0, 200.0, 100.0])
+        assert [i.stats.sampling_rate for i in stream.traces] == \
+               [300.0, 500.0, 400.0, 200.0, 100.0]
         # Sort after sampling_rate.
         stream.sort(keys=['sampling_rate'])
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
-                         [100.0, 200.0, 300.0, 400.0, 500.0])
+        assert [i.stats.sampling_rate for i in stream.traces] == \
+               [100.0, 200.0, 300.0, 400.0, 500.0]
         # Sort after channel and sampling rate.
         stream.sort(keys=['channel', 'sampling_rate'])
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
-                         [200.0, 500.0, 300.0, 400.0, 100.0])
+        assert [i.stats.sampling_rate for i in stream.traces] == \
+               [200.0, 500.0, 300.0, 400.0, 100.0]
         # Sort after npts and sampling_rate and endtime.
         stream.sort(keys=['npts', 'sampling_rate', 'endtime'])
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
-                         [100.0, 200.0, 300.0, 400.0, 500.0])
+        assert [i.stats.sampling_rate for i in stream.traces] == \
+               [100.0, 200.0, 300.0, 400.0, 500.0]
         # The same with reverted sorting
         # Use normal sorting.
         stream.sort(reverse=True)
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
-                         [100.0, 200.0, 400.0, 500.0, 300.0])
+        assert [i.stats.sampling_rate for i in stream.traces] == \
+               [100.0, 200.0, 400.0, 500.0, 300.0]
         # Sort after sampling_rate.
         stream.sort(keys=['sampling_rate'], reverse=True)
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
-                         [500.0, 400.0, 300.0, 200.0, 100.0])
+        assert [i.stats.sampling_rate for i in stream.traces] == \
+               [500.0, 400.0, 300.0, 200.0, 100.0]
         # Sort after channel and sampling rate.
         stream.sort(keys=['channel', 'sampling_rate'], reverse=True)
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
-                         [100.0, 400.0, 300.0, 500.0, 200.0])
+        assert [i.stats.sampling_rate for i in stream.traces] == \
+               [100.0, 400.0, 300.0, 500.0, 200.0]
         # Sort after npts and sampling_rate and endtime.
         stream.sort(keys=['npts', 'sampling_rate', 'endtime'], reverse=True)
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
-                         [500.0, 400.0, 300.0, 200.0, 100.0])
+        assert [i.stats.sampling_rate for i in stream.traces] == \
+               [500.0, 400.0, 300.0, 200.0, 100.0]
         # Sorting without a list or a wrong item string should fail.
-        self.assertRaises(TypeError, stream.sort, keys=1)
-        self.assertRaises(TypeError, stream.sort, keys='sampling_rate')
-        self.assertRaises(KeyError, stream.sort, keys=['npts', 'wrong_value'])
+        with pytest.raises(TypeError):
+            stream.sort(keys=1)
+        with pytest.raises(TypeError):
+            stream.sort(keys='sampling_rate')
+        with pytest.raises(KeyError):
+            stream.sort(keys=['npts', 'wrong_value'])
 
     def test_sorting_twice(self):
         """
@@ -855,7 +879,7 @@ class StreamTestCase(unittest.TestCase):
         stream.sort()
         b = [i.stats.sampling_rate for i in stream.traces]
         # should be equal
-        self.assertEqual(a, b)
+        assert a == b
 
     def test_merge_with_different_calibration_factors(self):
         """
@@ -870,7 +894,8 @@ class StreamTestCase(unittest.TestCase):
         # this also emits an UserWarning
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            self.assertRaises(Exception, st.merge)
+            with pytest.raises(Exception):
+                st.merge()
         # 2 - different calibration factors for the different channels is ok
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.calib = 2.00
@@ -900,7 +925,8 @@ class StreamTestCase(unittest.TestCase):
         # this also emits an UserWarning
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            self.assertRaises(Exception, st.merge)
+            with pytest.raises(Exception):
+                st.merge()
         # 2 - different sampling rates for the different channels is ok
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.sampling_rate = 200
@@ -928,7 +954,8 @@ class StreamTestCase(unittest.TestCase):
         # this also emits an UserWarning
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            self.assertRaises(Exception, st.merge)
+            with pytest.raises(Exception):
+                st.merge()
         # 2 - different sampling rates for the different channels is ok
         tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr1.stats.channel = 'EHE'
@@ -941,33 +968,33 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([tr1, tr2, tr3, tr4])
         st.merge()
 
-    def test_merge_gaps(self):
+    def test_merge_gaps(self, mseed_stream):
         """
         Test the merge method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = mseed_stream
         start = UTCDateTime("2007-12-31T23:59:59.915000")
         end = UTCDateTime("2008-01-01T00:04:31.790000")
-        self.assertEqual(len(stream), 4)
-        self.assertEqual(len(stream[0]), 412)
-        self.assertEqual(len(stream[1]), 824)
-        self.assertEqual(len(stream[2]), 824)
-        self.assertEqual(len(stream[3]), 50668)
-        self.assertEqual(stream[0].stats.starttime, start)
-        self.assertEqual(stream[3].stats.endtime, end)
+        assert len(stream) == 4
+        assert len(stream[0]) == 412
+        assert len(stream[1]) == 824
+        assert len(stream[2]) == 824
+        assert len(stream[3]) == 50668
+        assert stream[0].stats.starttime == start
+        assert stream[3].stats.endtime == end
         for i in range(4):
-            self.assertEqual(stream[i].stats.sampling_rate, 200)
-            self.assertEqual(stream[i].get_id(), 'BW.BGLD..EHE')
+            assert stream[i].stats.sampling_rate == 200
+            assert stream[i].get_id() == 'BW.BGLD..EHE'
         stream.verify()
         # merge it
         stream.merge()
         stream.verify()
-        self.assertEqual(len(stream), 1)
-        self.assertEqual(len(stream[0]), stream[0].data.size)
-        self.assertEqual(stream[0].stats.starttime, start)
-        self.assertEqual(stream[0].stats.endtime, end)
-        self.assertEqual(stream[0].stats.sampling_rate, 200)
-        self.assertEqual(stream[0].get_id(), 'BW.BGLD..EHE')
+        assert len(stream) == 1
+        assert len(stream[0]) == stream[0].data.size
+        assert stream[0].stats.starttime == start
+        assert stream[0].stats.endtime == end
+        assert stream[0].stats.sampling_rate == 200
+        assert stream[0].get_id() == 'BW.BGLD..EHE'
 
     def test_merge_gaps_2(self):
         """
@@ -984,52 +1011,48 @@ class StreamTestCase(unittest.TestCase):
         # 1 + 2  : 1111-----555
         st = stream.copy()
         st.merge()
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
-        self.assertEqual(st[0].data.tolist(),
-                         [1, 1, 1, 1, None, None, None, None, None, 5, 5, 5])
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ma.masked_array)
+        assert st[0].data.tolist() == \
+               [1, 1, 1, 1, None, None, None, None, None, 5, 5, 5]
         # 2 - fill in zeros
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 111100000555
         st = stream.copy()
         st.merge(fill_value=0)
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ndarray))
-        self.assertEqual(st[0].data.tolist(),
-                         [1, 1, 1, 1, 0, 0, 0, 0, 0, 5, 5, 5])
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ndarray)
+        assert st[0].data.tolist() == [1, 1, 1, 1, 0, 0, 0, 0, 0, 5, 5, 5]
         # 2b - fill in some other user-defined value
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 111199999555
         st = stream.copy()
         st.merge(fill_value=9)
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ndarray))
-        self.assertEqual(st[0].data.tolist(),
-                         [1, 1, 1, 1, 9, 9, 9, 9, 9, 5, 5, 5])
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ndarray)
+        assert st[0].data.tolist() == [1, 1, 1, 1, 9, 9, 9, 9, 9, 5, 5, 5]
         # 3 - use last value of first trace
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 111111111555
         st = stream.copy()
         st.merge(fill_value='latest')
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ndarray))
-        self.assertEqual(st[0].data.tolist(),
-                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5])
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ndarray)
+        assert st[0].data.tolist() == [1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5]
         # 4 - interpolate
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 111112334555
         st = stream.copy()
         st.merge(fill_value='interpolate')
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ndarray))
-        self.assertEqual(st[0].data.tolist(),
-                         [1, 1, 1, 1, 1, 2, 3, 3, 4, 5, 5, 5])
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ndarray)
+        assert st[0].data.tolist() == [1, 1, 1, 1, 1, 2, 3, 3, 4, 5, 5, 5]
 
-    def test_split(self):
+    def test_split(self, mseed_stream):
         """
         Testing splitting of streams containing masked arrays.
         """
@@ -1039,32 +1062,32 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.starttime = tr1.stats.starttime + 9
         st = Stream([tr1, tr2])
         st.merge()
-        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+        assert isinstance(st[0].data, np.ma.masked_array)
         # now we split again
         st2 = st.split()
-        self.assertEqual(len(st2), 2)
-        self.assertTrue(isinstance(st2[0].data, np.ndarray))
-        self.assertTrue(isinstance(st2[1].data, np.ndarray))
-        self.assertEqual(st2[0].data.tolist(), [1, 1, 1, 1])
-        self.assertEqual(st2[1].data.tolist(), [5, 5, 5])
+        assert len(st2) == 2
+        assert isinstance(st2[0].data, np.ndarray)
+        assert isinstance(st2[1].data, np.ndarray)
+        assert st2[0].data.tolist() == [1, 1, 1, 1]
+        assert st2[1].data.tolist() == [5, 5, 5]
         # 2 - use default example
-        st = self.mseed_stream
+        st = mseed_stream
         st.merge()
-        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+        assert isinstance(st[0].data, np.ma.masked_array)
         # now we split again
         st2 = st.split()
-        self.assertEqual(len(st2), 4)
-        self.assertEqual(len(st2[0]), 412)
-        self.assertEqual(len(st2[1]), 824)
-        self.assertEqual(len(st2[2]), 824)
-        self.assertEqual(len(st2[3]), 50668)
-        self.assertEqual(st2[0].stats.starttime,
-                         UTCDateTime("2007-12-31T23:59:59.915000"))
-        self.assertEqual(st2[3].stats.endtime,
-                         UTCDateTime("2008-01-01T00:04:31.790000"))
+        assert len(st2) == 4
+        assert len(st2[0]) == 412
+        assert len(st2[1]) == 824
+        assert len(st2[2]) == 824
+        assert len(st2[3]) == 50668
+        assert st2[0].stats.starttime == \
+               UTCDateTime("2007-12-31T23:59:59.915000")
+        assert st2[3].stats.endtime == \
+               UTCDateTime("2008-01-01T00:04:31.790000")
         for i in range(4):
-            self.assertEqual(st2[i].stats.sampling_rate, 200)
-            self.assertEqual(st2[i].get_id(), 'BW.BGLD..EHE')
+            assert st2[i].stats.sampling_rate == 200
+            assert st2[i].get_id() == 'BW.BGLD..EHE'
 
     def test_merge_overlaps_default_method(self):
         """
@@ -1079,10 +1102,10 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.starttime = tr1.stats.starttime + 5
         st = Stream([tr1, tr2])
         st.merge()
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
-        self.assertEqual(st[0].data.tolist(),
-                         [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ma.masked_array)
+        data_list = st[0].data.tolist()
+        assert data_list == [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1]
         # 2 - overlapping trace with same data
         # Trace 1: 0123456
         # Trace 2:      56789
@@ -1092,8 +1115,8 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.starttime = tr1.stats.starttime + 5
         st = Stream([tr1, tr2])
         st.merge()
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ndarray))
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ndarray)
         np.testing.assert_array_equal(st[0].data, np.arange(10))
         #
         # 3 - contained overlap with same data
@@ -1105,8 +1128,8 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.starttime = tr1.stats.starttime + 5
         st = Stream([tr1, tr2])
         st.merge()
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ndarray))
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ndarray)
         np.testing.assert_array_equal(st[0].data, np.arange(10))
         #
         # 4 - contained overlap with differing data
@@ -1118,23 +1141,22 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.starttime = tr1.stats.starttime + 5
         st = Stream([tr1, tr2])
         st.merge()
-        self.assertEqual(len(st), 1)
-        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
-        self.assertEqual(st[0].data.tolist(),
-                         [0, 0, 0, 0, 0, None, None, 0, 0, 0])
+        assert len(st) == 1
+        assert isinstance(st[0].data, np.ma.masked_array)
+        assert st[0].data.tolist() == [0, 0, 0, 0, 0, None, None, 0, 0, 0]
 
     def test_tab_completion_trace(self):
         """
         Test tab completion of Trace object.
         """
         tr = Trace()
-        self.assertIn('sampling_rate', dir(tr.stats))
-        self.assertIn('npts', dir(tr.stats))
-        self.assertIn('station', dir(tr.stats))
-        self.assertIn('starttime', dir(tr.stats))
-        self.assertIn('endtime', dir(tr.stats))
-        self.assertIn('calib', dir(tr.stats))
-        self.assertIn('delta', dir(tr.stats))
+        assert 'sampling_rate' in dir(tr.stats)
+        assert 'npts' in dir(tr.stats)
+        assert 'station' in dir(tr.stats)
+        assert 'starttime' in dir(tr.stats)
+        assert 'endtime' in dir(tr.stats)
+        assert 'calib' in dir(tr.stats)
+        assert 'delta' in dir(tr.stats)
 
     def test_bugfix_merge_drop_trace_if_already_contained(self):
         """
@@ -1201,13 +1223,13 @@ class StreamTestCase(unittest.TestCase):
         # merge
         st.merge()
         # compare results
-        self.assertEqual(len(st), 1)
-        self.assertEqual(st[0].stats.delta, 60.0)
-        self.assertEqual(st[0].stats.starttime, trace1.stats.starttime)
+        assert len(st) == 1
+        assert st[0].stats.delta == 60.0
+        assert st[0].stats.starttime == trace1.stats.starttime
         # end time of last trace
         endtime = trace1.stats.starttime + \
             (4 * 1440 - 1) * trace1.stats.delta
-        self.assertEqual(st[0].stats.endtime, endtime)
+        assert st[0].stats.endtime == endtime
 
     def test_merge_overlaps_method_1(self):
         """
@@ -1298,10 +1320,10 @@ class StreamTestCase(unittest.TestCase):
         stream = Stream([trace1, trace2, trace3])
         stream.trim(UTCDateTime(900), UTCDateTime(1100))
         # Check if only trace2 is still in the Stream object.
-        self.assertEqual(len(stream), 1)
+        assert len(stream) == 1
         np.testing.assert_array_equal(np.ones(10), stream[0].data)
-        self.assertEqual(stream[0].stats.starttime, UTCDateTime(1000))
-        self.assertEqual(stream[0].stats.npts, 10)
+        assert stream[0].stats.starttime == UTCDateTime(1000)
+        assert stream[0].stats.npts == 10
 
     def test_trim_with_small_sampling_rate(self):
         """
@@ -1325,10 +1347,10 @@ class StreamTestCase(unittest.TestCase):
         # trim
         st.trim(trace1.stats.starttime, trace4.stats.endtime)
         # compare results
-        self.assertEqual(len(st), 4)
-        self.assertEqual(st[0].stats.delta, 60.0)
-        self.assertEqual(st[0].stats.starttime, trace1.stats.starttime)
-        self.assertEqual(st[3].stats.endtime, trace4.stats.endtime)
+        assert len(st) == 4
+        assert st[0].stats.delta == 60.0
+        assert st[0].stats.starttime == trace1.stats.starttime
+        assert st[3].stats.endtime == trace4.stats.endtime
 
     def test_writing_masked_array(self):
         """
@@ -1337,11 +1359,13 @@ class StreamTestCase(unittest.TestCase):
         # np.ma.masked_array with masked values
         tr = Trace(data=np.ma.masked_all(10))
         st = Stream([tr])
-        self.assertRaises(NotImplementedError, st.write, 'filename', 'MSEED')
+        with pytest.raises(NotImplementedError):
+            st.write('filename', 'MSEED')
         # np.ma.masked_array without masked values
         tr = Trace(data=np.ma.ones(10))
         st = Stream([tr])
-        self.assertRaises(NotImplementedError, st.write, 'filename', 'MSEED')
+        with pytest.raises(NotImplementedError):
+            st.write('filename', 'MSEED')
 
     def test_pickle(self):
         """
@@ -1354,17 +1378,17 @@ class StreamTestCase(unittest.TestCase):
         temp = pickle.dumps(st, protocol=0)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEqual(st[0].stats, st2[0].stats)
+        assert st[0].stats == st2[0].stats
         # protocol 1 (old binary)
         temp = pickle.dumps(st, protocol=1)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEqual(st[0].stats, st2[0].stats)
+        assert st[0].stats == st2[0].stats
         # protocol 2 (new binary)
         temp = pickle.dumps(st, protocol=2)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEqual(st[0].stats, st2[0].stats)
+        assert st[0].stats == st2[0].stats
 
     def test_cpickle(self):
         """
@@ -1377,17 +1401,17 @@ class StreamTestCase(unittest.TestCase):
         temp = pickle.dumps(st, protocol=0)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEqual(st[0].stats, st2[0].stats)
+        assert st[0].stats == st2[0].stats
         # protocol 1 (old binary)
         temp = pickle.dumps(st, protocol=1)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEqual(st[0].stats, st2[0].stats)
+        assert st[0].stats == st2[0].stats
         # protocol 2 (new binary)
         temp = pickle.dumps(st, protocol=2)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEqual(st[0].stats, st2[0].stats)
+        assert st[0].stats == st2[0].stats
 
     def test_is_pickle(self):
         """
@@ -1398,12 +1422,12 @@ class StreamTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             st.write(tf.name, format='PICKLE')
             # check using file name
-            self.assertTrue(_is_pickle(tf.name))
+            assert _is_pickle(tf.name)
             # check using file handler
-            self.assertTrue(_is_pickle(tf))
+            assert _is_pickle(tf)
         # not existing files
-        self.assertFalse(_is_pickle('/path/to/pickle.file'))
-        self.assertFalse(_is_pickle(12345))
+        assert not _is_pickle('/path/to/pickle.file')
+        assert not _is_pickle(12345)
 
     def test_read_write_pickle(self):
         """
@@ -1414,24 +1438,24 @@ class StreamTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             # write using file name
             _write_pickle(st, tf.name)
-            self.assertTrue(_is_pickle(tf.name))
+            assert _is_pickle(tf.name)
             # write using file handler
             _write_pickle(st, tf)
             tf.seek(0)
-            self.assertTrue(_is_pickle(tf))
+            assert _is_pickle(tf)
             # write using stream write method
             st.write(tf.name, format='PICKLE')
             # check and read directly
             st2 = _read_pickle(tf.name)
-            self.assertEqual(len(st2), 3)
+            assert len(st2) == 3
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() with given format
             st2 = read(tf.name, format='PICKLE')
-            self.assertEqual(len(st2), 3)
+            assert len(st2) == 3
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() and automatically detect format
             st2 = read(tf.name)
-            self.assertEqual(len(st2), 3)
+            assert len(st2) == 3
             np.testing.assert_array_equal(st2[0].data, st[0].data)
 
     def test_read_pickle(self):
@@ -1458,8 +1482,8 @@ class StreamTestCase(unittest.TestCase):
         bio.seek(0)
         st_with_format = read(bio, format="pickle")
         # Test equalities.
-        self.assertEqual(st, _remove_format(st_no_format))
-        self.assertEqual(st_no_format, _remove_format(st_with_format))
+        assert st == _remove_format(st_no_format)
+        assert st_no_format == _remove_format(st_with_format)
 
     def test_get_gaps_2(self):
         """
@@ -1481,19 +1505,19 @@ class StreamTestCase(unittest.TestCase):
         st.verify()
         # same sampling rate should have no gaps
         gaps = st.get_gaps()
-        self.assertEqual(len(gaps), 0)
+        assert len(gaps) == 0
         # different sampling rate should result in a gap
         tr3.stats.sampling_rate = 50.0
         gaps = st.get_gaps()
-        self.assertEqual(len(gaps), 1)
+        assert len(gaps) == 1
         # but different ids will be skipped (if only one trace)
         tr3.stats.station = 'MANZ'
         gaps = st.get_gaps()
-        self.assertEqual(len(gaps), 0)
+        assert len(gaps) == 0
         # multiple traces with same id will be handled again
         tr2.stats.station = 'MANZ'
         gaps = st.get_gaps()
-        self.assertEqual(len(gaps), 1)
+        assert len(gaps) == 1
 
     def test_get_gaps_whole_overlap(self):
         """
@@ -1507,12 +1531,12 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.sampling_rate = 1.
         st = Stream([tr1, tr2])
         gaps = st.get_gaps()
-        self.assertEqual(len(gaps), 1)
+        assert len(gaps) == 1
         gap = gaps[0]
         starttime = gap[4]
-        self.assertEqual(starttime, UTCDateTime("2018-09-25T00:01:59.000000Z"))
+        assert starttime == UTCDateTime("2018-09-25T00:01:59.000000Z")
         endtime = gap[5]
-        self.assertEqual(endtime, tr2.stats.starttime)
+        assert endtime == tr2.stats.starttime
 
     def test_get_gaps_overlap(self):
         """
@@ -1537,7 +1561,7 @@ class StreamTestCase(unittest.TestCase):
             st.append(tr_)
 
         # min_gap=1 is used to only show the gaps
-        self.assertEqual(len(st.get_gaps(min_gap=1)), 0)
+        assert len(st.get_gaps(min_gap=1)) == 0
 
     def test_comparisons(self):
         """
@@ -1569,74 +1593,63 @@ class StreamTestCase(unittest.TestCase):
         st9 = Stream()
         st_a = Stream()
         # tests that should raise a NotImplementedError (i.e. <=, <, >=, >)
-        self.assertRaises(NotImplementedError, st1.__lt__, st1)
-        self.assertRaises(NotImplementedError, st1.__le__, st1)
-        self.assertRaises(NotImplementedError, st1.__gt__, st1)
-        self.assertRaises(NotImplementedError, st1.__ge__, st1)
-        self.assertRaises(NotImplementedError, st1.__lt__, st2)
-        self.assertRaises(NotImplementedError, st1.__le__, st2)
-        self.assertRaises(NotImplementedError, st1.__gt__, st2)
-        self.assertRaises(NotImplementedError, st1.__ge__, st2)
+        with pytest.raises(NotImplementedError):
+            st1.__lt__(st1)
+        with pytest.raises(NotImplementedError):
+            st1.__le__(st1)
+        with pytest.raises(NotImplementedError):
+            st1.__gt__(st1)
+        with pytest.raises(NotImplementedError):
+            st1.__ge__(st1)
+        with pytest.raises(NotImplementedError):
+            st1.__lt__(st2)
+        with pytest.raises(NotImplementedError):
+            st1.__le__(st2)
+        with pytest.raises(NotImplementedError):
+            st1.__gt__(st2)
+        with pytest.raises(NotImplementedError):
+            st1.__ge__(st2)
         # normal tests
         for st in [st1]:
-            self.assertEqual(st0 == st, True)
-            self.assertEqual(st0 != st, False)
+            assert st0 == st
         for st in [st2, st3, st4, st5, st6, st7, st8, st9, st_a]:
-            self.assertEqual(st0 == st, False)
-            self.assertEqual(st0 != st, True)
+            assert st0 != st
         for st in [st0]:
-            self.assertEqual(st1 == st, True)
-            self.assertEqual(st1 != st, False)
+            assert st1 == st
         for st in [st2, st3, st4, st5, st6, st7, st8, st9, st_a]:
-            self.assertEqual(st1 == st, False)
-            self.assertEqual(st1 != st, True)
+            assert st1 != st
         for st in [st0, st1, st3, st4, st5, st6, st7, st8, st9, st_a]:
-            self.assertEqual(st2 == st, False)
-            self.assertEqual(st2 != st, True)
+            assert st2 != st
         for st in [st0, st1, st2, st4, st5, st6, st7, st8, st9, st_a]:
-            self.assertEqual(st3 == st, False)
-            self.assertEqual(st3 != st, True)
+            assert st3 != st
         for st in [st0, st1, st2, st3, st5, st6, st7, st8, st9, st_a]:
-            self.assertEqual(st4 == st, False)
-            self.assertEqual(st4 != st, True)
+            assert st4 != st
         for st in [st0, st1, st2, st3, st4, st6, st7, st8, st9, st_a]:
-            self.assertEqual(st5 == st, False)
-            self.assertEqual(st5 != st, True)
+            assert st5 != st
         for st in [st7, st8]:
-            self.assertEqual(st6 == st, True)
-            self.assertEqual(st6 != st, False)
+            assert st6 == st
         for st in [st0, st1, st2, st3, st4, st5, st9, st_a]:
-            self.assertEqual(st6 == st, False)
-            self.assertEqual(st6 != st, True)
+            assert st6 != st
         for st in [st6, st8]:
-            self.assertEqual(st7 == st, True)
-            self.assertEqual(st7 != st, False)
+            assert st7 == st
         for st in [st0, st1, st2, st3, st4, st5, st9, st_a]:
-            self.assertEqual(st7 == st, False)
-            self.assertEqual(st7 != st, True)
+            assert st7 != st
         for st in [st6, st7]:
-            self.assertEqual(st8 == st, True)
-            self.assertEqual(st8 != st, False)
+            assert st8 == st
         for st in [st0, st1, st2, st3, st4, st5, st9, st_a]:
-            self.assertEqual(st8 == st, False)
-            self.assertEqual(st8 != st, True)
+            assert st8 != st
         for st in [st_a]:
-            self.assertEqual(st9 == st, True)
-            self.assertEqual(st9 != st, False)
+            assert st9 == st
         for st in [st0, st1, st2, st3, st4, st5, st6, st7, st8]:
-            self.assertEqual(st9 == st, False)
-            self.assertEqual(st9 != st, True)
+            assert st9 != st
         for st in [st9]:
-            self.assertEqual(st_a == st, True)
-            self.assertEqual(st_a != st, False)
+            assert st_a == st
         for st in [st0, st1, st2, st3, st4, st5, st6, st7, st8]:
-            self.assertEqual(st_a == st, False)
-            self.assertEqual(st_a != st, True)
+            assert st_a != st
         # some weird tests against non-Stream objects
         for object in [0, 1, 0.0, 1.0, "", "test", True, False, [], [tr0],
                        set(), set(tr0), {}, {"test": "test"}, Trace(), None]:
-            self.assertEqual(st0 == object, False)
-            self.assertEqual(st0 != object, True)
+            assert st0 != object
 
     def test_trim_nearest_sample(self):
         """
@@ -1653,16 +1666,16 @@ class StreamTestCase(unittest.TestCase):
         #    |  S |    |    |
         #      |    |    |    |
         st.trim(UTCDateTime(0.6), endtime=None)
-        self.assertEqual(st[0].stats.starttime.timestamp, 1.0)
-        self.assertEqual(st[1].stats.starttime.timestamp, 1.4)
+        assert st[0].stats.starttime.timestamp == 1.0
+        assert st[1].stats.starttime.timestamp == 1.4
         # ENDTIME
         # check that trimming first selects the next best sample, and only
         # then selects the following ones
         #    |    |    |  E |
         #      |    |    |    |
         st.trim(starttime=None, endtime=UTCDateTime(2.6))
-        self.assertEqual(st[0].stats.endtime.timestamp, 3.0)
-        self.assertEqual(st[1].stats.endtime.timestamp, 3.4)
+        assert st[0].stats.endtime.timestamp == 3.0
+        assert st[1].stats.endtime.timestamp == 3.4
 
     def test_trim_consistent_start_end_time_nearest_sample(self):
         """
@@ -1681,9 +1694,9 @@ class StreamTestCase(unittest.TestCase):
         start = [4.0, 4.25, 4.5, 3.75, 4.0]
         end = [6.0, 6.25, 6.50, 5.75, 6.0]
         for i in range(len(st)):
-            self.assertEqual(3, st[i].stats.npts)
-            self.assertEqual(st[i].stats.starttime.timestamp, start[i])
-            self.assertEqual(st[i].stats.endtime.timestamp, end[i])
+            assert 3 == st[i].stats.npts
+            assert st[i].stats.starttime.timestamp == start[i]
+            assert st[i].stats.endtime.timestamp == end[i]
 
     def test_trim_consistent_start_end_time_nearest_sample_padded(self):
         """
@@ -1702,9 +1715,9 @@ class StreamTestCase(unittest.TestCase):
         start = [-4.0, -3.75, -3.5, -4.25, -4.0]
         end = [17.0, 17.25, 17.50, 16.75, 17.0]
         for i in range(len(st)):
-            self.assertEqual(22, st[i].stats.npts)
-            self.assertEqual(st[i].stats.starttime.timestamp, start[i])
-            self.assertEqual(st[i].stats.endtime.timestamp, end[i])
+            assert 22 == st[i].stats.npts
+            assert st[i].stats.starttime.timestamp == start[i]
+            assert st[i].stats.endtime.timestamp == end[i]
 
     def test_trim_consistent_start_end_time(self):
         """
@@ -1723,9 +1736,9 @@ class StreamTestCase(unittest.TestCase):
         end = [6.00, 6.25, 6.50, 5.75, 6.00]
         npts = [3, 3, 4, 3, 3]
         for i in range(len(st)):
-            self.assertEqual(st[i].stats.npts, npts[i])
-            self.assertEqual(st[i].stats.starttime.timestamp, start[i])
-            self.assertEqual(st[i].stats.endtime.timestamp, end[i])
+            assert st[i].stats.npts == npts[i]
+            assert st[i].stats.starttime.timestamp == start[i]
+            assert st[i].stats.endtime.timestamp == end[i]
 
     def test_trim_consistent_start_and_time_pad(self):
         """
@@ -1744,9 +1757,9 @@ class StreamTestCase(unittest.TestCase):
         end = [16.00, 16.25, 16.50, 15.75, 16.00]
         npts = [20, 20, 21, 20, 20]
         for i in range(len(st)):
-            self.assertEqual(st[i].stats.npts, npts[i])
-            self.assertEqual(st[i].stats.starttime.timestamp, start[i])
-            self.assertEqual(st[i].stats.endtime.timestamp, end[i])
+            assert st[i].stats.npts == npts[i]
+            assert st[i].stats.starttime.timestamp == start[i]
+            assert st[i].stats.endtime.timestamp == end[i]
 
     def test_str(self):
         """
@@ -1763,20 +1776,20 @@ class StreamTestCase(unittest.TestCase):
                    "T00:00:00.000000Z | 1.0 Hz, 0 samples\n" + \
                    ".12345.. | 1970-01-01T00:00:00.000000Z - 1970-01-01" + \
                    "T00:00:00.000000Z | 1.0 Hz, 0 samples"
-        self.assertEqual(result, expected)
+        assert result == expected
         # streams containing more than 20 lines will be compressed
         st2 = Stream([tr1]) * 40
         result = st2.__str__()
-        self.assertIn('40 Trace(s) in Stream:', result)
-        self.assertIn('other traces', result)
+        assert '40 Trace(s) in Stream:' in result
+        assert 'other traces' in result
 
-    def test_cleanup(self):
+    def test_cleanup(self, mseed_stream):
         """
         Test case for merging traces in the stream with method=-1. This only
         should merge traces that are exactly the same or contained and exactly
         the same or directly adjacent.
         """
-        tr1 = self.mseed_stream[0]
+        tr1 = mseed_stream[0]
         start = tr1.stats.starttime
         end = tr1.stats.endtime
         dt = end - start
@@ -1808,28 +1821,28 @@ class StreamTestCase(unittest.TestCase):
             tr_a = tr1.copy()
             st = Stream([tr_a, tr_b])
             st._cleanup()
-            self.assertEqual(st, Stream([tr1]))
-            self.assertEqual(type(st[0].data), np.ndarray)
+            assert st == Stream([tr1])
+            assert type(st[0].data) == np.ndarray
         # test mergeable traces (adjacent ones)
         for tr_b in [tr5, tr6]:
             tr_a = tr1.copy()
             st = Stream([tr_a, tr_b])
             st._cleanup()
-            self.assertEqual(len(st), 1)
-            self.assertEqual(type(st[0].data), np.ndarray)
+            assert len(st) == 1
+            assert type(st[0].data) == np.ndarray
             st_result = Stream([tr1, tr_b])
             st_result.merge()
-            self.assertEqual(st, st_result)
+            assert st == st_result
         # test mergeable traces (overlapping ones)
         for tr_b in [tr_01, tr_02]:
             tr_a = tr1.copy()
             st = Stream([tr_a, tr_b])
             st._cleanup()
-            self.assertEqual(len(st), 1)
-            self.assertEqual(type(st[0].data), np.ndarray)
+            assert len(st) == 1
+            assert type(st[0].data) == np.ndarray
             st_result = Stream([tr1, tr_b])
             st_result.merge()
-            self.assertEqual(st, st_result)
+            assert st == st_result
 
         # test traces that should not be merged
         tr7 = tr1.copy()
@@ -1855,7 +1868,7 @@ class StreamTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('ignore', UserWarning)
                 st._cleanup()
-            self.assertEqual(st, Stream([tr_a, tr_b]))
+            assert st == Stream([tr_a, tr_b])
 
     def test_integrate_and_differentiate(self):
         """
@@ -1882,19 +1895,19 @@ class StreamTestCase(unittest.TestCase):
         # 1 - default example
         # dtype
         tr = read(dtype=np.int64)[0]
-        self.assertEqual(tr.data.dtype, np.int64)
+        assert tr.data.dtype == np.int64
         # dtype is string
         tr2 = read(dtype='i8')[0]
-        self.assertEqual(tr2.data.dtype, np.int64)
-        self.assertEqual(tr, tr2)
+        assert tr2.data.dtype == np.int64
+        assert tr == tr2
         # start/end time
         tr2 = read(starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
-        self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
-        self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
+        assert tr2.stats.starttime == tr.stats.starttime + 1
+        assert tr2.stats.endtime == tr.stats.endtime - 2
         # headonly
         tr = read(headonly=True)[0]
-        self.assertEqual(len(tr.data), 0)
+        assert len(tr.data) == 0
 
         # 2 - via http
         # now in separate test case "test_read_url_via_network"
@@ -1902,18 +1915,19 @@ class StreamTestCase(unittest.TestCase):
         # 3 - some example within obspy
         # dtype
         tr = read('/path/to/slist_float.ascii', dtype=np.int32)[0]
-        self.assertEqual(tr.data.dtype, np.int32)
+        assert tr.data.dtype == np.int32
         # start/end time
         tr2 = read('/path/to/slist_float.ascii',
                    starttime=tr.stats.starttime + 0.025,
                    endtime=tr.stats.endtime - 0.05)[0]
-        self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 0.025)
-        self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 0.05)
+        assert tr2.stats.starttime == tr.stats.starttime + 0.025
+        assert tr2.stats.endtime == tr.stats.endtime - 0.05
         # headonly
         tr = read('/path/to/slist_float.ascii', headonly=True)[0]
-        self.assertFalse(tr.data)
+        assert len(tr.data) == 0
         # not existing
-        self.assertRaises(OSError, read, '/path/to/UNKNOWN')
+        with pytest.raises(OSError):
+            read('/path/to/UNKNOWN')
 
         # 4 - file patterns
         path = os.path.dirname(__file__)
@@ -1921,17 +1935,19 @@ class StreamTestCase(unittest.TestCase):
                                   "data")
         filename = os.path.join(ascii_path, 'slist.*')
         st = read(filename)
-        self.assertEqual(len(st), 2)
+        assert len(st) == 2
         # exception if no file matches file pattern
         filename = path + os.sep + 'data' + os.sep + 'NOTEXISTING.*'
-        self.assertRaises(Exception, read, filename)
+        with pytest.raises(Exception):
+            read(filename)
 
         # argument headonly should not be used with start or end time or dtype
         with warnings.catch_warnings(record=True):
             # will usually warn only but here we force to raise an exception
             warnings.simplefilter('error', UserWarning)
-            self.assertRaises(UserWarning, read, '/path/to/slist_float.ascii',
-                              headonly=True, starttime=0, endtime=1)
+            with pytest.raises(UserWarning):
+                read('/path/to/slist_float.ascii',
+                     headonly=True, starttime=0, endtime=1)
 
     def test_read_url_via_network(self):
         """
@@ -1940,16 +1956,16 @@ class StreamTestCase(unittest.TestCase):
         # 2 - via http
         # dtype
         tr = read('https://examples.obspy.org/test.sac', dtype=np.int32)[0]
-        self.assertEqual(tr.data.dtype, np.int32)
+        assert tr.data.dtype == np.int32
         # start/end time
         tr2 = read('https://examples.obspy.org/test.sac',
                    starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
-        self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
-        self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
+        assert tr2.stats.starttime == tr.stats.starttime + 1
+        assert tr2.stats.endtime == tr.stats.endtime - 2
         # headonly
         tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
-        self.assertEqual(tr.data.size, 0)
+        assert tr.data.size == 0
 
     def test_read_path(self):
         """
@@ -1957,9 +1973,9 @@ class StreamTestCase(unittest.TestCase):
         """
         base_path = Path(__file__).parent / 'data'
         data_path = base_path / 'IU_ULN_00_LH1_2015-07-18T02.mseed'
-        self.assertTrue(data_path.exists())
+        assert data_path.exists()
         st = read(data_path)
-        self.assertIsInstance(st, Stream)
+        assert isinstance(st, Stream)
 
     def test_copy(self):
         """
@@ -1967,12 +1983,12 @@ class StreamTestCase(unittest.TestCase):
         """
         st = read()
         st2 = st.copy()
-        self.assertEqual(st, st2)
-        self.assertEqual(st2, st)
-        self.assertFalse(st is st2)
-        self.assertFalse(st2 is st)
-        self.assertEqual(st.traces[0], st2.traces[0])
-        self.assertFalse(st.traces[0] is st2.traces[0])
+        assert st == st2
+        assert st2 == st
+        assert not (st is st2)
+        assert not (st2 is st)
+        assert st.traces[0] == st2.traces[0]
+        assert not (st.traces[0] is st2.traces[0])
 
     def test_merge_with_empty_trace(self):
         """
@@ -1987,7 +2003,7 @@ class StreamTestCase(unittest.TestCase):
         st[1].data = np.array([])
         # merge
         st.merge(fill_value='interpolate')
-        self.assertEqual(len(st), 1)
+        assert len(st) == 1
 
     def test_rotate(self):
         """
@@ -1999,21 +2015,21 @@ class StreamTestCase(unittest.TestCase):
         st2 = st.copy()
         # rotate to RT and back with 6 traces
         st.rotate(method='NE->RT', back_azimuth=30)
-        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
-                         st[2].stats.channel[-1]) == 'ZRT')
-        self.assertTrue((st[3].stats.channel[-1] + st[4].stats.channel[-1] +
-                         st[5].stats.channel[-1]) == 'ZRT')
+        assert (st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                st[2].stats.channel[-1]) == 'ZRT'
+        assert (st[3].stats.channel[-1] + st[4].stats.channel[-1] +
+                st[5].stats.channel[-1]) == 'ZRT'
         st.rotate(method='RT->NE', back_azimuth=30)
-        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
-                         st[2].stats.channel[-1]) == 'ZNE')
-        self.assertTrue((st[3].stats.channel[-1] + st[4].stats.channel[-1] +
-                         st[5].stats.channel[-1]) == 'ZNE')
-        self.assertTrue(np.allclose(st[0].data, st2[0].data))
-        self.assertTrue(np.allclose(st[1].data, st2[1].data))
-        self.assertTrue(np.allclose(st[2].data, st2[2].data))
-        self.assertTrue(np.allclose(st[3].data, st2[3].data))
-        self.assertTrue(np.allclose(st[4].data, st2[4].data))
-        self.assertTrue(np.allclose(st[5].data, st2[5].data))
+        assert (st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                st[2].stats.channel[-1]) == 'ZNE'
+        assert (st[3].stats.channel[-1] + st[4].stats.channel[-1] +
+                st[5].stats.channel[-1]) == 'ZNE'
+        assert np.allclose(st[0].data, st2[0].data)
+        assert np.allclose(st[1].data, st2[1].data)
+        assert np.allclose(st[2].data, st2[2].data)
+        assert np.allclose(st[3].data, st2[3].data)
+        assert np.allclose(st[4].data, st2[4].data)
+        assert np.allclose(st[5].data, st2[5].data)
         # again, with angles given in stats and just 2 components
         st = st2.copy()
         st = st[1:3] + st[4:]
@@ -2021,56 +2037,62 @@ class StreamTestCase(unittest.TestCase):
         st[2].stats.back_azimuth = 200
         st.rotate(method='NE->RT')
         st.rotate(method='RT->NE')
-        self.assertTrue(np.allclose(st[0].data, st2[1].data))
-        self.assertTrue(np.allclose(st[1].data, st2[2].data))
+        assert np.allclose(st[0].data, st2[1].data)
+        assert np.allclose(st[1].data, st2[2].data)
         # rotate to LQT and back with 6 traces
         st = st2.copy()
         st.rotate(method='ZNE->LQT', back_azimuth=100, inclination=30)
-        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
-                         st[2].stats.channel[-1]) == 'LQT')
+        assert (st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                st[2].stats.channel[-1]) == 'LQT'
         st.rotate(method='LQT->ZNE', back_azimuth=100, inclination=30)
-        self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
-                        st[2].stats.channel[-1] == 'ZNE')
-        self.assertTrue(np.allclose(st[0].data, st2[0].data))
-        self.assertTrue(np.allclose(st[1].data, st2[1].data))
-        self.assertTrue(np.allclose(st[2].data, st2[2].data))
-        self.assertTrue(np.allclose(st[3].data, st2[3].data))
-        self.assertTrue(np.allclose(st[4].data, st2[4].data))
-        self.assertTrue(np.allclose(st[5].data, st2[5].data))
+        assert st[0].stats.channel[-1] + st[1].stats.channel[-1] + \
+               st[2].stats.channel[-1] == 'ZNE'
+        assert np.allclose(st[0].data, st2[0].data)
+        assert np.allclose(st[1].data, st2[1].data)
+        assert np.allclose(st[2].data, st2[2].data)
+        assert np.allclose(st[3].data, st2[3].data)
+        assert np.allclose(st[4].data, st2[4].data)
+        assert np.allclose(st[5].data, st2[5].data)
 
         # unknown rotate method will raise ValueError
-        self.assertRaises(ValueError, st.rotate, method='UNKNOWN')
+        with pytest.raises(ValueError):
+            st.rotate(method='UNKNOWN')
         # rotating without back_azimuth raises TypeError
         st = Stream()
-        self.assertRaises(TypeError, st.rotate, method='RT->NE')
+        with pytest.raises(TypeError):
+            st.rotate(method='RT->NE')
         # rotating without inclination raises TypeError for LQT-> or ZNE->
-        self.assertRaises(TypeError, st.rotate, method='LQT->ZNE',
-                          back_azimuth=30)
+        with pytest.raises(TypeError):
+            st.rotate(method='LQT->ZNE', back_azimuth=30)
         # having traces with different timespans or sampling rates will fail
         st = read()
         st[1].stats.sampling_rate = 2.0
-        self.assertRaises(ValueError, st.rotate, method='NE->RT')
+        with pytest.raises(ValueError):
+            st.rotate(method='NE->RT')
         st = read()
         st[1].stats.starttime += 1
-        self.assertRaises(ValueError, st.rotate, method='NE->RT')
+        with pytest.raises(ValueError):
+            st.rotate(method='NE->RT')
         st = read()
         st[1].stats.sampling_rate = 2.0
-        self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
+        with pytest.raises(ValueError):
+            st.rotate(method='ZNE->LQT')
         st = read()
         st[1].stats.starttime += 1
-        self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
+        with pytest.raises(ValueError):
+            st.rotate(method='ZNE->LQT')
 
-    def test_plot(self):
+    def test_plot(self, mseed_stream):
         """
         Tests plot method if matplotlib is installed
         """
-        self.mseed_stream.plot(show=False)
+        mseed_stream.plot(show=False)
 
-    def test_spectrogram(self):
+    def test_spectrogram(self, mseed_stream):
         """
         Tests spectrogram method if matplotlib is installed
         """
-        self.mseed_stream.spectrogram(show=False)
+        mseed_stream.spectrogram(show=False)
 
     def test_deepcopy(self):
         """
@@ -2087,17 +2109,18 @@ class StreamTestCase(unittest.TestCase):
         ct = deepcopy(st)
         # common header
         st[0].stats.network = 'XX'
-        self.assertEqual(st[0].stats.network, 'XX')
-        self.assertEqual(ct[0].stats.network, 'AA')
+        assert st[0].stats.network == 'XX'
+        assert ct[0].stats.network == 'AA'
         # format specific headers
         st[0].stats.mseed.dataquality = 'X'
-        self.assertEqual(st[0].stats.mseed.dataquality, 'X')
-        self.assertEqual(ct[0].stats.mseed.dataquality, 'A')
+        assert st[0].stats.mseed.dataquality == 'X'
+        assert ct[0].stats.mseed.dataquality == 'A'
 
     def test_write(self):
         # writing in unknown format raises ValueError
         st = read()
-        self.assertRaises(ValueError, st.write, 'file.ext', format="UNKNOWN")
+        with pytest.raises(ValueError):
+            st.write('file.ext', format="UNKNOWN")
 
     def test_detrend(self):
         """
@@ -2146,10 +2169,10 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([tr, tr])
         st.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
-            self.assertLessEqual(st[0].data[i], 1.)
-            self.assertGreaterEqual(st[0].data[i], 0.)
-            self.assertLessEqual(st[1].data[i], 1.)
-            self.assertGreaterEqual(st[1].data[i], 0.)
+            assert st[0].data[i] <= 1.
+            assert st[0].data[i] >= 0.
+            assert st[1].data[i] <= 1.
+            assert st[1].data[i] >= 0.
 
     def test_issue_540(self):
         """
@@ -2158,31 +2181,31 @@ class StreamTestCase(unittest.TestCase):
         """
         # fill_value = None
         st = read()
-        self.assertEqual(len(st[0]), 3000)
+        assert len(st[0]) == 3000
         st.trim(starttime=st[0].stats.starttime - 0.01,
                 endtime=st[0].stats.endtime + 0.01, pad=True, fill_value=None)
-        self.assertEqual(len(st[0]), 3002)
-        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
-        self.assertIs(st[0].data[0], np.ma.masked)
-        self.assertTrue(st[0].data[1] is not np.ma.masked)
-        self.assertTrue(st[0].data[-2] is not np.ma.masked)
-        self.assertIs(st[0].data[-1], np.ma.masked)
+        assert len(st[0]) == 3002
+        assert isinstance(st[0].data, np.ma.masked_array)
+        assert st[0].data[0] is np.ma.masked
+        assert st[0].data[1] is not np.ma.masked
+        assert st[0].data[-2] is not np.ma.masked
+        assert st[0].data[-1] is np.ma.masked
         # fill_value = 999
         st = read()
-        self.assertEqual(len(st[1]), 3000)
+        assert len(st[1]) == 3000
         st.trim(starttime=st[1].stats.starttime - 0.01,
                 endtime=st[1].stats.endtime + 0.01, pad=True, fill_value=999)
-        self.assertEqual(len(st[1]), 3002)
-        self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
-        self.assertEqual(st[1].data[0], 999)
-        self.assertEqual(st[1].data[-1], 999)
+        assert len(st[1]) == 3002
+        assert not isinstance(st[1].data, np.ma.masked_array)
+        assert st[1].data[0] == 999
+        assert st[1].data[-1] == 999
         # given fill_value but actually no padding at all
         st = read()
-        self.assertEqual(len(st[2]), 3000)
+        assert len(st[2]) == 3000
         st.trim(starttime=st[2].stats.starttime, endtime=st[2].stats.endtime,
                 pad=True, fill_value=-999)
-        self.assertEqual(len(st[2]), 3000)
-        self.assertFalse(isinstance(st[2].data, np.ma.masked_array))
+        assert len(st[2]) == 3000
+        assert not isinstance(st[2].data, np.ma.masked_array)
 
     def test_method_chaining(self):
         """
@@ -2192,20 +2215,20 @@ class StreamTestCase(unittest.TestCase):
         st1 = read()[0:1]
         st2 = read()
 
-        self.assertEqual(len(st1), 1)
-        self.assertEqual(len(st2), 3)
+        assert len(st1) == 1
+        assert len(st2) == 3
 
         # Test some list like methods.
         temp_st = st1.append(st1[0].copy())\
             .extend(st2)\
             .insert(0, st1[0].copy())\
             .remove(st1[0])
-        self.assertIs(temp_st, st1)
-        self.assertEqual(len(st1), 5)
-        self.assertEqual(st1[0], st1[1])
-        self.assertEqual(st1[2], st2[0])
-        self.assertEqual(st1[3], st2[1])
-        self.assertEqual(st1[4], st2[2])
+        assert temp_st is st1
+        assert len(st1) == 5
+        assert st1[0] == st1[1]
+        assert st1[2] == st2[0]
+        assert st1[3] == st2[1]
+        assert st1[4] == st2[2]
 
         # Sort and reverse methods.
         st = st2.copy()
@@ -2213,8 +2236,8 @@ class StreamTestCase(unittest.TestCase):
         st[1].stats.channel = "C"
         st[2].stats.channel = "A"
         temp_st = st.sort(keys=["channel"]).reverse()
-        self.assertIs(temp_st, st)
-        self.assertEqual([tr.stats.channel for tr in st], ["C", "B", "A"])
+        assert temp_st is st
+        assert [tr.stats.channel for tr in st] == ["C", "B", "A"]
 
         # The others are pretty hard to properly test and probably not worth
         # the effort. A simple demonstrating that they can be chained should be
@@ -2245,23 +2268,23 @@ class StreamTestCase(unittest.TestCase):
         # processing chain.
         pr = st[0].stats.processing
 
-        self.assertIn("decimate", pr[1])
-        self.assertIn("resample", pr[2])
-        self.assertIn("simulate", pr[3])
-        self.assertTrue("filter" in pr[4] and "lowpass" in pr[4])
-        self.assertIn("differentiate", pr[5])
-        self.assertIn("integrate", pr[6])
-        self.assertIn("trim", pr[7])
-        self.assertIn("detrend", pr[8])
-        self.assertIn("taper", pr[9])
-        self.assertIn("normalize", pr[10])
-        self.assertIn("trigger", pr[11])
+        assert "decimate" in pr[1]
+        assert "resample" in pr[2]
+        assert "simulate" in pr[3]
+        assert "filter" in pr[4] and "lowpass" in pr[4]
+        assert "differentiate" in pr[5]
+        assert "integrate" in pr[6]
+        assert "trim" in pr[7]
+        assert "detrend" in pr[8]
+        assert "taper" in pr[9]
+        assert "normalize" in pr[10]
+        assert "trigger" in pr[11]
 
-        self.assertIs(temp, st)
+        assert temp is st
         # Cutout duplicates the number of traces.
-        self.assertTrue(len(st), 6)
+        assert len(st), 6
         # Clearing also works for method chaining.
-        self.assertEqual(len(st.clear()), 0)
+        assert len(st.clear()) == 0
 
     def test_simulate_seedresp_parser(self):
         """
@@ -2292,7 +2315,7 @@ class StreamTestCase(unittest.TestCase):
             # (see #2330). Thus we just use assert_allclose() here instead of
             # testing for full equality.
             if platform.system() == "Windows":  # pragma: no cover
-                self.assertEqual(tr1.stats, tr2.stats)
+                assert tr1.stats == tr2.stats
                 # as of 2020-01-21 we see some new Win fails with one sample
                 # failing with:
                 #    Mismatched elements: 1 / 3000 (0.0333%)
@@ -2303,14 +2326,14 @@ class StreamTestCase(unittest.TestCase):
                 np.testing.assert_allclose(
                     tr1.data, tr2.data, rtol=1e-6, atol=1e-22)
             else:
-                self.assertEqual(tr1, tr2)
+                assert tr1 == tr2
 
-    def test_select_empty_strings(self):
+    def test_select_empty_strings(self, mseed_stream):
         """
         Test that select works with values that evaluate True when testing with
         if (e.g. "", 0).
         """
-        st = self.mseed_stream
+        st = mseed_stream
         st[0].stats.location = "00"
         for tr in st[1:]:
             tr.stats.network = ""
@@ -2318,10 +2341,10 @@ class StreamTestCase(unittest.TestCase):
             tr.stats.channel = ""
             tr.data = tr.data[0:0]
         st2 = Stream(st[1:])
-        self.assertEqual(st.select(network=""), st2)
-        self.assertEqual(st.select(station=""), st2)
-        self.assertEqual(st.select(channel=""), st2)
-        self.assertEqual(st.select(npts=0), st2)
+        assert st.select(network="") == st2
+        assert st.select(station="") == st2
+        assert st.select(channel="") == st2
+        assert st.select(npts=0) == st2
 
     def test_remove_response(self):
         """
@@ -2338,9 +2361,9 @@ class StreamTestCase(unittest.TestCase):
         # https://ci.appveyor.com/project/obspy/obspy/
         #                                 builds/27495567/job/r4m7ely1nkjht20x
         if platform.system() == "Windows":  # pragma: no cover
-            self.assertTrue(streams_almost_equal(st1, st2, atol=0, rtol=1e-6))
+            assert streams_almost_equal(st1, st2, atol=0, rtol=1e-6)
         else:
-            self.assertEqual(st1, st2)
+            assert st1 == st2
 
     def test_remove_sensitivity(self):
         """
@@ -2358,10 +2381,10 @@ class StreamTestCase(unittest.TestCase):
         # testing for full equality.
         if platform.system() == "Windows":  # pragma: no cover
             for tr1, tr2 in zip(st1, st2):
-                self.assertEqual(tr1.stats, tr2.stats)
+                assert tr1.stats == tr2.stats
                 np.testing.assert_allclose(tr1.data, tr2.data, rtol=1e-6)
         else:
-            self.assertEqual(st1, st2)
+            assert st1 == st2
 
     def test_interpolate(self):
         """
@@ -2372,10 +2395,9 @@ class StreamTestCase(unittest.TestCase):
         with mock.patch("obspy.core.trace.Trace.interpolate") as patch:
             st.interpolate(sampling_rate=1.0, method="weighted_average_slopes")
 
-        self.assertEqual(len(st), patch.call_count)
-        self.assertEqual({"sampling_rate": 1.0,
-                          "method": "weighted_average_slopes"},
-                         patch.call_args[1])
+        assert len(st) == patch.call_count
+        expected = {"sampling_rate": 1.0, "method": "weighted_average_slopes"}
+        assert expected == patch.call_args[1]
 
     def test_integrate(self):
         """
@@ -2388,7 +2410,7 @@ class StreamTestCase(unittest.TestCase):
         for tr in st1:
             tr.integrate()
         st2.integrate()
-        self.assertEqual(st1, st2)
+        assert st1 == st2
 
     def test_integrate_args(self):
         """
@@ -2401,7 +2423,7 @@ class StreamTestCase(unittest.TestCase):
         for tr in st1:
             tr.integrate(method='cumtrapz')
         st2.integrate(method='cumtrapz')
-        self.assertEqual(st1, st2)
+        assert st1 == st2
 
     def test_misaligned_traces(self):
         """
@@ -2474,16 +2496,16 @@ class StreamTestCase(unittest.TestCase):
             for to_be_fixed_misalignmnt_ratio in np.linspace(0.011, 0.49, 5):
                 # first test traces with normal gap, these should never change
                 for trx in traces_gap:
-                    self.assertFalse(_gets_merged(
-                        trx, to_be_fixed_misalignmnt_ratio))
+                    assert not _gets_merged(
+                        trx, to_be_fixed_misalignmnt_ratio)
                 # now lets check the cases for which depending on
                 # the combination of actual/to-be-fixed misalignment ratios
                 # there should be a change/merge or not
                 should_change = (to_be_fixed_misalignmnt_ratio >=
                                  actual_misalign_percentage)
                 for trx in traces_contained + traces_overlap + traces_adjacent:
-                    self.assertEqual(should_change, _gets_merged(
-                        trx, to_be_fixed_misalignmnt_ratio))
+                    assert should_change == _gets_merged(
+                        trx, to_be_fixed_misalignmnt_ratio)
 
     def test_slide(self):
         """
@@ -2511,15 +2533,11 @@ class StreamTestCase(unittest.TestCase):
         for window_st in st.slide(window_length=5.0, step=5.0):
             slices.append(window_st)
 
-        self.assertEqual(len(slices), 4)
-        self.assertEqual(slices[0],
-                         st.slice(UTCDateTime(0), UTCDateTime(5)))
-        self.assertEqual(slices[1],
-                         st.slice(UTCDateTime(5), UTCDateTime(10)))
-        self.assertEqual(slices[2],
-                         st.slice(UTCDateTime(10), UTCDateTime(15)))
-        self.assertEqual(slices[3],
-                         st.slice(UTCDateTime(15), UTCDateTime(20)))
+        assert len(slices) == 4
+        assert slices[0] == st.slice(UTCDateTime(0), UTCDateTime(5))
+        assert slices[1] == st.slice(UTCDateTime(5), UTCDateTime(10))
+        assert slices[2] == st.slice(UTCDateTime(10), UTCDateTime(15))
+        assert slices[3] == st.slice(UTCDateTime(15), UTCDateTime(20))
 
         # Different step which is the distance between two windows measured
         # from the start of the first window in seconds.
@@ -2527,22 +2545,18 @@ class StreamTestCase(unittest.TestCase):
         for window_tr in st.slide(window_length=5.0, step=10.0):
             slices.append(window_tr)
 
-        self.assertEqual(len(slices), 2)
-        self.assertEqual(slices[0],
-                         st.slice(UTCDateTime(0), UTCDateTime(5)))
-        self.assertEqual(slices[1],
-                         st.slice(UTCDateTime(10), UTCDateTime(15)))
+        assert len(slices) == 2
+        assert slices[0] == st.slice(UTCDateTime(0), UTCDateTime(5))
+        assert slices[1] == st.slice(UTCDateTime(10), UTCDateTime(15))
 
         # Offset determines the initial starting point. It defaults to zero.
         slices = []
         for window_tr in st.slide(window_length=5.0, step=6.5, offset=8.5):
             slices.append(window_tr)
 
-        self.assertEqual(len(slices), 2)
-        self.assertEqual(slices[0],
-                         st.slice(UTCDateTime(8.5), UTCDateTime(13.5)))
-        self.assertEqual(slices[1],
-                         st.slice(UTCDateTime(15.0), UTCDateTime(20.0)))
+        assert len(slices) == 2
+        assert slices[0] == st.slice(UTCDateTime(8.5), UTCDateTime(13.5))
+        assert slices[1] == st.slice(UTCDateTime(15.0), UTCDateTime(20.0))
 
         # By default only full length windows will be returned so any
         # remainder that can no longer make up a full window will not be
@@ -2551,9 +2565,8 @@ class StreamTestCase(unittest.TestCase):
         for window_tr in st.slide(window_length=15.0, step=15.0):
             slices.append(window_tr)
 
-        self.assertEqual(len(slices), 1)
-        self.assertEqual(slices[0],
-                         st.slice(UTCDateTime(0.0), UTCDateTime(15.0)))
+        assert len(slices) == 1
+        assert slices[0] == st.slice(UTCDateTime(0.0), UTCDateTime(15.0))
 
         # But it can optionally be returned.
         slices = []
@@ -2561,26 +2574,20 @@ class StreamTestCase(unittest.TestCase):
                                   include_partial_windows=True):
             slices.append(window_tr)
 
-        self.assertEqual(len(slices), 2)
-        self.assertEqual(slices[0],
-                         st.slice(UTCDateTime(0.0), UTCDateTime(15.0)))
-        self.assertEqual(slices[1],
-                         st.slice(UTCDateTime(15.0), UTCDateTime(20.0)))
+        assert len(slices) == 2
+        assert slices[0] == st.slice(UTCDateTime(0.0), UTCDateTime(15.0))
+        assert slices[1] == st.slice(UTCDateTime(15.0), UTCDateTime(20.0))
 
         # Negative step lengths work together with an offset.
         slices = []
         for window_tr in st.slide(window_length=5.0, step=-5.0, offset=20.0):
             slices.append(window_tr)
 
-        self.assertEqual(len(slices), 4)
-        self.assertEqual(slices[0],
-                         st.slice(UTCDateTime(15), UTCDateTime(20)))
-        self.assertEqual(slices[1],
-                         st.slice(UTCDateTime(10), UTCDateTime(15)))
-        self.assertEqual(slices[2],
-                         st.slice(UTCDateTime(5), UTCDateTime(10)))
-        self.assertEqual(slices[3],
-                         st.slice(UTCDateTime(0), UTCDateTime(5)))
+        assert len(slices) == 4
+        assert slices[0] == st.slice(UTCDateTime(15), UTCDateTime(20))
+        assert slices[1] == st.slice(UTCDateTime(10), UTCDateTime(15))
+        assert slices[2] == st.slice(UTCDateTime(5), UTCDateTime(10))
+        assert slices[3] == st.slice(UTCDateTime(0), UTCDateTime(5))
 
     def test_slide_nearest_sample(self):
         """
@@ -2598,9 +2605,9 @@ class StreamTestCase(unittest.TestCase):
             list(st.slide(5, 5))
 
         # Twice per window as two traces.
-        self.assertEqual(patch.call_count, 8)
+        assert patch.call_count == 8
         for arg in patch.call_args_list:
-            self.assertTrue(arg[1]["nearest_sample"])
+            assert arg[1]["nearest_sample"]
 
         # Force True.
         with mock.patch("obspy.core.trace.Trace.slice") as patch:
@@ -2608,9 +2615,9 @@ class StreamTestCase(unittest.TestCase):
             list(st.slide(5, 5, nearest_sample=True))
 
         # Twice per window as two traces.
-        self.assertEqual(patch.call_count, 8)
+        assert patch.call_count == 8
         for arg in patch.call_args_list:
-            self.assertTrue(arg[1]["nearest_sample"])
+            assert arg[1]["nearest_sample"]
 
         # Set to False.
         with mock.patch("obspy.core.trace.Trace.slice") as patch:
@@ -2618,9 +2625,9 @@ class StreamTestCase(unittest.TestCase):
             list(st.slide(5, 5, nearest_sample=False))
 
         # Twice per window as two traces.
-        self.assertEqual(patch.call_count, 8)
+        assert patch.call_count == 8
         for arg in patch.call_args_list:
-            self.assertFalse(arg[1]["nearest_sample"])
+            assert not arg[1]["nearest_sample"]
 
     def test_passing_kwargs_to_trace_detrend(self):
         """
@@ -2633,11 +2640,11 @@ class StreamTestCase(unittest.TestCase):
             st.detrend("polynomial", order=2, plot=True)
 
         # 3 Traces.
-        self.assertEqual(patch.call_count, 3)
+        assert patch.call_count == 3
 
         for arg in patch.call_args_list:
-            self.assertEqual(arg[1]["order"], 2)
-            self.assertEqual(arg[1]["plot"], True)
+            assert arg[1]["order"] == 2
+            assert arg[1]["plot"]
 
     def test_read_check_compression(self):
         """
@@ -2650,16 +2657,16 @@ class StreamTestCase(unittest.TestCase):
                      check_compression=False)
 
         # assert neither compression check function was called.
-        self.assertEqual(tar_p.call_count, 0)
-        self.assertEqual(zip_p.call_count, 0)
+        assert tar_p.call_count == 0
+        assert zip_p.call_count == 0
 
         # ensure compression checks get called when check_compression is True
         with mock.patch("tarfile.is_tarfile", return_value=0) as tar_p:
             with mock.patch("zipfile.is_zipfile", return_value=0) as zip_p:
                 read('/path/to/slist.ascii', format='SLIST',
                      check_compression=True)
-        self.assertEqual(tar_p.call_count, 1)
-        self.assertGreaterEqual(zip_p.call_count, 1)
+        assert tar_p.call_count == 1
+        assert zip_p.call_count >= 1
 
     def test_rotate_to_zne(self):
         """
@@ -2680,7 +2687,7 @@ class StreamTestCase(unittest.TestCase):
             st = st_unrotated.copy()
             st.rotate("->ZNE", inventory=metadata)
             # do some checks on results
-            self.assertEqual(len(st), 30)
+            assert len(st) == 30
             # compare data
             for tr_got, tr_expected in zip(st, st_expected):
                 np.testing.assert_allclose(tr_got.data, tr_expected.data,
@@ -2692,15 +2699,14 @@ class StreamTestCase(unittest.TestCase):
                 tr_got.stats.pop('mseed')
                 tr_got.stats.pop('_format')
                 tr_got.stats.pop('processing')
-                self.assertEqual(tr_got.stats, tr_expected.stats)
+                assert tr_got.stats == tr_expected.stats
 
         # check that using something like `components="Z12"` also works,
         st = st_unrotated.copy()
         result = st.rotate("->ZNE", inventory=inv,
                            components='Z12')
         # check that rotation to ZNE worked..
-        self.assertEqual(set(tr.stats.channel[-1] for tr in result),
-                         set('ZNE'))
+        assert set(tr.stats.channel[-1] for tr in result) == set('ZNE')
 
     def test_write_empty_stream(self):
         """
@@ -2708,12 +2714,11 @@ class StreamTestCase(unittest.TestCase):
         """
         st = Stream()
         bio = io.BytesIO()
+        msg = 'Can not write empty stream to file.'
         for format_ in _get_entry_points('obspy.plugin.waveform',
                                          'writeFormat').keys():
-            with self.assertRaises(ObsPyException) as e:
+            with pytest.raises(ObsPyException, match=msg):
                 st.write(bio, format=format_)
-            self.assertEqual(e.exception.args[0],
-                             'Can not write empty stream to file.')
 
     def test_stack(self):
         """
@@ -2723,39 +2728,38 @@ class StreamTestCase(unittest.TestCase):
         # stack with default options
         st = read()
         st2 = st.copy().stack()
-        self.assertEqual(len(st2), 1)
-        self.assertIn('stack', st2[0].stats)
-        self.assertEqual(st2[0].stats.stack.group, 'all')
-        self.assertEqual(st2[0].stats.stack.count, 3)
-        self.assertEqual(st2[0].stats.stack.type, 'linear')
+        assert len(st2) == 1
+        assert 'stack' in st2[0].stats
+        assert st2[0].stats.stack.group == 'all'
+        assert st2[0].stats.stack.count == 3
+        assert st2[0].stats.stack.type == 'linear'
         # stack by SEED id
         st += st.copy()
         st2 = st.copy().stack('id')
-        self.assertEqual(len(st2), 3)
-        self.assertEqual({tr.stats.stack.group for tr in st2},
-                         {tr.id for tr in st})
-        self.assertEqual({tr.id for tr in st2}, {tr.id for tr in st})
-        self.assertEqual(st2[0].stats.stack.count, 2)
+        assert len(st2) == 3
+        assert {tr.stats.stack.group for tr in st2} == {tr.id for tr in st}
+        assert {tr.id for tr in st2} == {tr.id for tr in st}
+        assert st2[0].stats.stack.count == 2
         # stack by other metadata
         for tr in st[3:]:
             tr.stats.station = 'OTH'
         st2 = st.copy().stack('{network}.{station}')
-        self.assertEqual(len(st2), 2)
-        self.assertEqual(
-            {tr.stats.stack.group for tr in st2},
-            {'.'.join((tr.stats.network, tr.stats.station)) for tr in st})
-        self.assertEqual(st2[0].stats.stack.count, 3)
+        assert len(st2) == 2
+        assert {tr.stats.stack.group for tr in st2} == \
+            {'.'.join((tr.stats.network, tr.stats.station)) for tr in st}
+        assert st2[0].stats.stack.count == 3
 
         # check npts_tol option and correct npts of stack
         st = read()
         st[2].data = st[2].data[:-1]
         npts = len(st[0])
         # self.assertRaisesRegex(ValueError, 'number of points', st.stack)
-        self.assertRaises(ValueError, st.stack)
+        with pytest.raises(ValueError):
+            st.stack()
         st2 = st.copy().stack(npts_tol=1)
-        self.assertEqual(len(st2), 1)
-        self.assertEqual(len(st2[0]), npts-1)
-        self.assertEqual(len(st[0]), npts)
+        assert len(st2) == 1
+        assert len(st2[0]) == npts-1
+        assert len(st[0]) == npts
 
         # check correct setting of metadata
         st = read()
@@ -2772,24 +2776,25 @@ class StreamTestCase(unittest.TestCase):
         for tr in st:
             tr.stats.sub2 = sub2_dict
         st2 = st.copy().stack()
-        self.assertEqual(st2[0].stats.station, st[0].stats.station)
-        self.assertEqual(st2[0].stats.inclination, st[0].stats.inclination)
-        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
-        self.assertEqual(st2[0].stats.channel, '')
-        self.assertNotIn('back_azimuth', st2[0].stats)
-        self.assertNotIn('array1', st2[0].stats)
-        self.assertIn('array2', st2[0].stats)
-        self.assertNotIn('sub1', st2[0].stats)
-        self.assertIn('sub2', st2[0].stats)
-        self.assertEqual(st2[0].stats.sub2.keys(), sub2_dict.keys())
+        assert st2[0].stats.station == st[0].stats.station
+        assert st2[0].stats.inclination == st[0].stats.inclination
+        assert st2[0].stats.starttime == st[0].stats.starttime
+        assert st2[0].stats.channel == ''
+        assert 'back_azimuth' not in st2[0].stats
+        assert 'array1' not in st2[0].stats
+        assert 'array2' in st2[0].stats
+        assert 'sub1' not in st2[0].stats
+        assert 'sub2' in st2[0].stats
+        assert st2[0].stats.sub2.keys() == sub2_dict.keys()
         st[1].stats.starttime += 10
         st2 = st.copy().stack()
-        self.assertEqual(st2[0].stats.starttime, UTCDateTime(0))
+        assert st2[0].stats.starttime == UTCDateTime(0)
         st2 = st.copy().stack(time_tol=11)
-        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
+        assert st2[0].stats.starttime == st[0].stats.starttime
         st[0].stats.sampling_rate /= 10
         # self.assertRaisesRegex(ValueError, 'Sampling rate', st.stack)
-        self.assertRaises(ValueError, st.stack)
+        with pytest.raises(ValueError):
+            st.stack()
 
         # Check pw and root stacking types, these must result in the linear
         # stack for order 0, resp. 1.
@@ -2801,28 +2806,17 @@ class StreamTestCase(unittest.TestCase):
         st2 = st.copy().stack()
         st3 = st.copy().stack(stack_type=('pw', 0))
         st4 = st.copy().stack(stack_type=('root', 1))
-        self.assertEqual(len(st2), 1)
-        self.assertEqual(len(st3), 1)
-        self.assertEqual(len(st4), 1)
+        assert len(st2) == 1
+        assert len(st3) == 1
+        assert len(st4) == 1
         np.testing.assert_allclose(st3[0].data, st2[0].data)
         np.testing.assert_allclose(st4[0].data, st2[0].data)
         st3 = st.copy().stack(stack_type=('pw', 2))
         st4 = st.copy().stack(stack_type=('root', 2))
-        self.assertEqual(np.sum(np.abs(st3[0].data) <= np.abs(st2[0].data)),
-                         npts)
+        assert np.sum(np.abs(st3[0].data) <= np.abs(st2[0].data)) == npts
         all_data = np.array([tr.data for tr in st])
         same_sign = np.logical_or(np.all(all_data < 0, axis=0),
                                   np.all(all_data > 0, axis=0))
         npts = np.sum(same_sign)
-        self.assertEqual(np.sum(np.abs(st4[0].data[same_sign]) <=
-                                np.abs(st2[0].data[same_sign])), npts)
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(StreamTestCase, 'test'))
-    return suite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert np.sum(np.abs(st4[0].data[same_sign]) <=
+                      np.abs(st2[0].data[same_sign])) == npts

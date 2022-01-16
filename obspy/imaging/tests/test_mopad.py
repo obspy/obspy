@@ -3,31 +3,21 @@
 The obspy.imaging.mopad test suite.
 """
 import os
-import unittest
 
 import matplotlib.pyplot as plt
-import numpy as np
+import pytest
 
-from obspy.core.util.testing import ImageComparison
 from obspy.imaging.mopad_wrapper import beach
 
 
-class MopadTestCase(unittest.TestCase):
+@pytest.mark.usefixtures('ignore_numpy_errors')
+class TestMopad:
     """
     Test cases for mopad.
     """
+    path = os.path.join(os.path.dirname(__file__), 'images')
 
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'images')
-        # ignore some "RuntimeWarning: invalid value encountered in sign"
-        self.nperr = np.geterr()
-        np.seterr(all='ignore')
-
-    def tearDown(self):
-        np.seterr(**self.nperr)
-
-    def test_collection(self):
+    def test_mopad_collection(self, image_path):
         """
         Tests to plot mopad beachballs as collection into an existing axis
         object. The moment tensor values are taken form the
@@ -57,34 +47,25 @@ class MopadTestCase(unittest.TestCase):
               [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
               [150, 87, 1]]
 
-        with ImageComparison(self.path, 'mopad_collection.png') as ic:
-            # Initialize figure
-            fig = plt.figure(figsize=(6, 6), dpi=300)
-            ax = fig.add_subplot(111, aspect='equal')
+        # Initialize figure
+        fig = plt.figure(figsize=(6, 6), dpi=300)
+        ax = fig.add_subplot(111, aspect='equal')
 
-            # Plot the stations or borders
-            ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
+        # Plot the stations or borders
+        ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
 
-            x = -100
-            y = -100
-            for i, t in enumerate(mt):
-                # add the beachball (a collection of two patches) to the axis
-                ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
-                x += 50
-                if (i + 1) % 5 == 0:
-                    x = -100
-                    y += 50
+        x = -100
+        y = -100
+        for i, t in enumerate(mt):
+            # add the beachball (a collection of two patches) to the axis
+            ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
+            x += 50
+            if (i + 1) % 5 == 0:
+                x = -100
+                y += 50
 
-            # set the x and y limits
-            ax.axis([-120, 120, -120, 120])
+        # set the x and y limits
+        ax.axis([-120, 120, -120, 120])
 
-            # create and compare image
-            fig.savefig(ic.name)
-
-
-def suite():
-    return unittest.makeSuite(MopadTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        # create and compare image
+        fig.savefig(image_path)

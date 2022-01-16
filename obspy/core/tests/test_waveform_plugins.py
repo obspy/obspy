@@ -3,12 +3,12 @@ import io
 import os
 import threading
 import time
-import unittest
 import warnings
 from copy import deepcopy
 from unittest import mock
 
 import numpy as np
+import pytest
 
 from obspy import Trace, read
 from obspy.io.mseed.core import _write_mseed
@@ -25,7 +25,7 @@ def _get_default_eps(group, subgroup=None):
     return eps
 
 
-class WaveformPluginsTestCase(unittest.TestCase):
+class TestWaveformPlugins:
     """
     Test suite for all waveform plug-ins.
     """
@@ -46,7 +46,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 is_format = buffered_load_entry_point(
                     ep.dist.key, 'obspy.plugin.waveform.' + ep.name,
                     'isFormat')
-                self.assertFalse(False, is_format(tmpfile))
+                assert not False, is_format(tmpfile)
 
     def test_read_and_write(self):
         """
@@ -92,37 +92,37 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             outfile += '.QHD'
                         # read in again using auto detection
                         st = read(outfile)
-                        self.assertEqual(len(st), 1)
-                        self.assertEqual(st[0].stats._format, format)
+                        assert len(st) == 1
+                        assert st[0].stats._format == format
                         # read in using format argument
                         st = read(outfile, format=format)
-                        self.assertEqual(len(st), 1)
-                        self.assertEqual(st[0].stats._format, format)
+                        assert len(st) == 1
+                        assert st[0].stats._format == format
                         # read in using a BytesIO instances, skip Q files as
                         # it needs multiple files
                         if format not in ['Q']:
                             # file handler without format
                             with open(outfile, 'rb') as fp:
                                 st = read(fp)
-                            self.assertEqual(len(st), 1)
-                            self.assertEqual(st[0].stats._format, format)
+                            assert len(st) == 1
+                            assert st[0].stats._format == format
                             # file handler with format
                             with open(outfile, 'rb') as fp:
                                 st = read(fp, format=format)
-                            self.assertEqual(len(st), 1)
-                            self.assertEqual(st[0].stats._format, format)
+                            assert len(st) == 1
+                            assert st[0].stats._format == format
                             # BytesIO without format
                             with open(outfile, 'rb') as fp:
                                 temp = io.BytesIO(fp.read())
                             st = read(temp)
-                            self.assertEqual(len(st), 1)
-                            self.assertEqual(st[0].stats._format, format)
+                            assert len(st) == 1
+                            assert st[0].stats._format == format
                             # BytesIO with format
                             with open(outfile, 'rb') as fp:
                                 temp = io.BytesIO(fp.read())
                             st = read(temp, format=format)
-                            self.assertEqual(len(st), 1)
-                            self.assertEqual(st[0].stats._format, format)
+                            assert len(st) == 1
+                            assert st[0].stats._format == format
                             # BytesIO with an offset (additional data in front
                             # but file pointer at right position in file), with
                             # and without autodetection
@@ -134,8 +134,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
                                 temp2.write(temp.read())
                                 temp2.seek(len(dummy_bytes))
                                 st = read(outfile, format=autodetect)
-                                self.assertEqual(len(st), 1)
-                                self.assertEqual(st[0].stats._format, format)
+                                assert len(st) == 1
+                                assert st[0].stats._format == format
                         # Q files consist of two files - deleting additional
                         # file
                         if format == 'Q':
@@ -144,31 +144,31 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # check byte order
                     if format == 'SAC':
                         # SAC format preserves byteorder on writing
-                        self.assertTrue(st[0].data.dtype.byteorder
-                                        in ('=', byteorder))
+                        assert st[0].data.dtype.byteorder \
+                                        in ('=', byteorder)
                     else:
-                        self.assertEqual(st[0].data.dtype.byteorder, '=')
+                        assert st[0].data.dtype.byteorder == '='
                     # check meta data
                     # some formats do not contain a calibration factor
                     if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST', 'AH']:
-                        self.assertAlmostEqual(st[0].stats.calib, 0.199999, 5)
+                        assert round(abs(st[0].stats.calib-0.199999), 5) == 0
                     else:
-                        self.assertEqual(st[0].stats.calib, 1.0)
+                        assert st[0].stats.calib == 1.0
                     if format not in ['WAV']:
-                        self.assertEqual(st[0].stats.starttime, start)
-                        self.assertEqual(st[0].stats.delta, 0.25)
-                        self.assertEqual(st[0].stats.endtime, start + 499.75)
-                        self.assertEqual(st[0].stats.sampling_rate, 4.0)
+                        assert st[0].stats.starttime == start
+                        assert st[0].stats.delta == 0.25
+                        assert st[0].stats.endtime == start + 499.75
+                        assert st[0].stats.sampling_rate == 4.0
 
                     # network/station/location/channel codes
                     if format in ['Q', 'SH_ASC', 'AH']:
                         # no network or location code in Q, SH_ASC
-                        self.assertEqual(st[0].id, ".MANZ1..EHE")
+                        assert st[0].id == ".MANZ1..EHE"
                     elif format == "GSE2":
                         # no location code in GSE2
-                        self.assertEqual(st[0].id, "BW.MANZ1..EHE")
+                        assert st[0].id == "BW.MANZ1..EHE"
                     elif format not in ['WAV']:
-                        self.assertEqual(st[0].id, "BW.MANZ1.00.EHE")
+                        assert st[0].id == "BW.MANZ1.00.EHE"
 
     def test_is_format(self):
         """
@@ -217,7 +217,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 paths[f.name] = path
 
         msg = 'Test data directories do not exist:\n    '
-        self.assertTrue(len(paths) > 0, msg + '\n    '.join(all_paths))
+        assert len(paths) > 0, msg + '\n    '.join(all_paths)
         # Collect all false positives.
         false_positives = []
         # Big loop over every format.
@@ -242,7 +242,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.
         try:
-            self.assertEqual(len(false_positives), 0)
+            assert len(false_positives) == 0
         except Exception:  # pragma: no cover
             msg = 'False positives for isFormat:\n'
             msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in
@@ -364,7 +364,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                                   "tests", "data")
         st1 = read(os.path.join(ascii_path, 'tspair.ascii.gz'))
         st2 = read(os.path.join(ascii_path, 'tspair.ascii'))
-        self.assertEqual(st1, st2)
+        assert st1 == st2
 
     def test_read_bzip2_file(self):
         """
@@ -375,7 +375,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                                   "tests", "data")
         st1 = read(os.path.join(ascii_path, 'slist.ascii.bz2'))
         st2 = read(os.path.join(ascii_path, 'slist.ascii'))
-        self.assertEqual(st1, st2)
+        assert st1 == st2
 
     def test_read_tar_archive(self):
         """
@@ -387,19 +387,19 @@ class WaveformPluginsTestCase(unittest.TestCase):
         # tar
         st1 = read(os.path.join(path, "data", "test.tar"))
         st2 = read(os.path.join(ascii_path, "slist.ascii"))
-        self.assertEqual(st1, st2)
+        assert st1 == st2
         # tar.gz
         st1 = read(os.path.join(path, "data", "test.tar.gz"))
         st2 = read(os.path.join(ascii_path, "slist.ascii"))
-        self.assertEqual(st1, st2)
+        assert st1 == st2
         # tar.bz2
         st1 = read(os.path.join(path, "data", "test.tar.bz2"))
         st2 = read(os.path.join(ascii_path, "slist.ascii"))
-        self.assertEqual(st1, st2)
+        assert st1 == st2
         # tgz
         st1 = read(os.path.join(path, "data", "test.tgz"))
         st2 = read(os.path.join(ascii_path, "slist.ascii"))
-        self.assertEqual(st1, st2)
+        assert st1 == st2
 
     def test_read_zip_archive(self):
         """
@@ -410,7 +410,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                                   "tests", "data")
         st1 = read(os.path.join(path, 'data', 'test.zip'))
         st2 = read(os.path.join(ascii_path, 'slist.ascii'))
-        self.assertEqual(st1, st2)
+        assert st1 == st2
 
     def test_raise_on_unknown_format(self):
         """
@@ -421,7 +421,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
             # create empty file
             open(tmpfile, 'wb').close()
             # using format keyword
-            self.assertRaises(TypeError, read, tmpfile)
+            with pytest.raises(TypeError):
+                read(tmpfile)
 
     def test_deepcopy(self):
         """
@@ -460,7 +461,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             st_deepcopy = deepcopy(st)
             st_deepcopy.sort()
             msg = "Error in wavform format=%s" % format
-            self.assertEqual(str(st), str(st_deepcopy), msg=msg)
+            assert str(st) == str(st_deepcopy), msg
 
     def test_auto_file_format_during_writing(self):
         """
@@ -500,18 +501,18 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     with mock.patch.dict(_ENTRY_POINT_CACHE, mock_dict):
                         obj.write("temp." + s)
                     # Make sure the fct has actually been called.
-                    self.assertEqual(mocked_func.call_count, 1)
+                    assert mocked_func.call_count == 1
 
                     # Specifying the format name should overwrite this.
                     mocked_mseed_func = mock.MagicMock(mseed_func)
                     mseed_mock_dict = {mseed_name: mocked_mseed_func}
                     with mock.patch.dict(_ENTRY_POINT_CACHE, mseed_mock_dict):
                         obj.write("temp." + s, format="mseed")
-                    self.assertEqual(mocked_mseed_func.call_count, 1)
-                    self.assertEqual(mocked_func.call_count, 1)
+                    assert mocked_mseed_func.call_count == 1
+                    assert mocked_func.call_count == 1
 
         # An unknown suffix should raise.
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             for obj in stream_trace:
                 obj.write("temp.random_suffix")
 
@@ -523,7 +524,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         See #1436.
         """
         st = read("/path/to/tarfile_impostor.mseed")
-        self.assertEqual(st[0].id, "10.864.1B.004")
+        assert st[0].id == "10.864.1B.004"
 
     def test_read_invalid_filename(self):
         """
@@ -539,7 +540,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         else:
             self.fail('unable to get invalid file path')
 
-        exception_msg = "[Errno 2] No such file or directory: '{}'"
+        exception_msg = "No such file or directory: '{}'"
 
         formats = _get_entry_points(
             'obspy.plugin.catalog', 'readFormat').keys()
@@ -547,15 +548,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
         # plugins and also for filetype autodiscovery
         formats = [None] + list(formats)
         for format in formats:
-            with self.assertRaises(FileNotFoundError) as e:
+            msg = exception_msg.format(doesnt_exist)
+            with pytest.raises(FileNotFoundError, match=msg):
                 read(doesnt_exist, format=format)
-            self.assertEqual(
-                str(e.exception), exception_msg.format(doesnt_exist))
-
-
-def suite():
-    return unittest.makeSuite(WaveformPluginsTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

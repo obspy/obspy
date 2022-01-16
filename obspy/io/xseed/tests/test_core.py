@@ -9,8 +9,7 @@ import warnings
 import numpy as np
 
 from obspy.core.inventory.response import PolynomialResponseStage
-from obspy.core.util.base import CatchAndAssertWarnings
-from obspy.core.util.testing import NamedTemporaryFile
+from obspy.core.util.base import CatchAndAssertWarnings, NamedTemporaryFile
 from obspy.io.xseed import Parser, InvalidResponseError
 from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
     _read_seed, _read_xseed

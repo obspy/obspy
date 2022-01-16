@@ -6,10 +6,13 @@ import os
 import unittest
 
 import numpy as np
+import pytest
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.clients.iris import Client
+
+pytestmark = pytest.mark.network
 
 
 class ClientTestCase(unittest.TestCase):
@@ -162,7 +165,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05 1.055999E+04 1.792007E+02\n')
+                                 '1.000000E-05 1.055934E+04 1.792007E+02\n')
         # cs as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -171,7 +174,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  -1.055896E+04  1.473054E+02\n')
+                                 '1.000000E-05  -1.055831E+04  1.472963E+02\n')
         # fap & def as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name

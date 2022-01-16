@@ -75,6 +75,7 @@ UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
 from libnames import _get_lib_name  # @UnresolvedImport
+from requirements import INSTALL_REQUIRES, EXTRAS_REQUIRES
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -117,21 +118,6 @@ KEYWORDS = [
 # and in obspy/io/mseed/core.py change downcasting check to numpy.can_cast()
 # when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
 # and get rid of helper function _np_copy_astype() in obspy/io/mseed/core.py
-INSTALL_REQUIRES = [
-    'numpy>=1.15.0',
-    'scipy>=1.0.0',
-    'matplotlib>=3.2.0',
-    'lxml',
-    'setuptools',
-    'sqlalchemy',
-    'decorator',
-    'requests']
-EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
-    # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
-    'arclink': ['cryptography'],
-    'io.shapefile': ['pyshp'],
-    }
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -809,7 +795,8 @@ def setupPackage():
         zip_safe=False,
         python_requires=f'>={MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}',
         install_requires=INSTALL_REQUIRES,
-        extras_require=EXTRAS_REQUIRE,
+        tests_require=EXTRAS_REQUIRES['tests'],
+        extras_require=EXTRAS_REQUIRES,
         features=add_features(),
         # this is needed for "easy_install obspy==dev"
         download_url=("https://github.com/obspy/obspy/zipball/master"

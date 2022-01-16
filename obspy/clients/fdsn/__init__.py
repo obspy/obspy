@@ -38,8 +38,8 @@ AUSPASS     http://auspass.edu.au
 BGR         http://eida.bgr.de
 EMSC        http://www.seismicportal.eu
 ETH         http://eida.ethz.ch
-GEONET      http://service.geonet.org.nz
 GEOFON      http://geofon.gfz-potsdam.de
+GEONET      http://service.geonet.org.nz
 GFZ         http://geofon.gfz-potsdam.de
 ICGC        http://ws.icgc.cat
 IESDMC      http://batsws.earth.sinica.edu.tw
@@ -57,7 +57,8 @@ NOA         http://eida.gein.noa.gr
 ODC         http://www.orfeus-eu.org
 ORFEUS      http://www.orfeus-eu.org
 RASPISHAKE  https://fdsnws.raspberryshakedata.com
-RESIF       https://ws.resif.fr
+RESIF       http://ws.resif.fr
+RESIFPH5    http://ph5ws.resif.fr
 SCEDC       http://service.scedc.caltech.edu
 TEXNET      http://rtserve.beg.utexas.edu
 UIB-NORSAR  http://eida.geo.uib.no

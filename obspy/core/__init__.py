@@ -121,7 +121,6 @@ from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util.attribdict import AttribDict  # NOQA
 from obspy.core.trace import Stats, Trace  # NOQA
 from obspy.core.stream import Stream, read  # NOQA
-from obspy.scripts.runtests import run_tests  # NOQA
 
 
 if __name__ == '__main__':

@@ -62,6 +62,15 @@ WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
+# Define Obspy hard and soft dependencies
+HARD_DEPENDENCIES = [
+    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "sqlalchemy", "decorator", "requests"]
+OPTIONAL_DEPENDENCIES = [
+    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "shapefile",
+    "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy"]
+DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
+
 
 class NamedTemporaryFile(io.BufferedIOBase):
     """

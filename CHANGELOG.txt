@@ -14,6 +14,8 @@ Changes:
      only the FDSN mass downloader automatically configures logging as before,
      but this behavior can be turned off now. The loglevel keywords are
      therefore deprecated and have no effect anymore (see #2720)
+   * refactored obspy-runtest to use pytest and modified several command
+     line arguments (see #2489)
  - obspy.core:
    * read_inventory(): add "level" option to read files faster when less level
      of detail is needed. currently only implemented for StationXML reading
@@ -41,7 +43,7 @@ Changes:
      FDSN server URLs (#2878)
    * add URL mapping for IRISPH5, IESDMC, GEOFON (alternative to GFZ)
      (see #2739, #2932)
-   * update RESIF URL mapping to use https
+   * update RESIF URL mapping to use http and add RESIFPH5 (see #2938)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.clients.filesystem.tsindex:

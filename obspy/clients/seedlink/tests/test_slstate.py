@@ -4,7 +4,12 @@ The obspy.clients.seedlink.client.slstate test suite.
 """
 import unittest
 
+import pytest
+
 from obspy.clients.seedlink.client.slstate import SLState
+
+
+pytestmark = pytest.mark.network
 
 
 class SLStateTestCase(unittest.TestCase):

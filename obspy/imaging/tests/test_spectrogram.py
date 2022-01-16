@@ -3,25 +3,21 @@
 The obspy.imaging.spectrogram test suite.
 """
 import os
-import unittest
 import warnings
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util.testing import ImageComparison
 from obspy.imaging import spectrogram
 
 
-class SpectrogramTestCase(unittest.TestCase):
+class TestSpectrogram:
     """
     Test cases for spectrogram plotting.
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'images')
+    path = os.path.join(os.path.dirname(__file__), 'images')
 
-    def test_spectrogram(self):
+    def test_spectrogram(self, image_path):
         """
         Create spectrogram plotting examples in tests/output directory.
         """
@@ -35,23 +31,15 @@ class SpectrogramTestCase(unittest.TestCase):
         tr = Trace(data=np.random.randint(0, 1000, 824), header=head)
         st = Stream([tr])
         # 1 - using log=True
-        with ImageComparison(self.path, 'spectrogram_log.png') as ic:
-            with warnings.catch_warnings(record=True):
-                warnings.resetwarnings()
-                with np.errstate(all='warn'):
-                    spectrogram.spectrogram(
-                        st[0].data, log=True, outfile=ic.name,
-                        samp_rate=st[0].stats.sampling_rate, show=False)
+        image_path_1 = image_path.parent / 'spectrogram1.png'
+        with warnings.catch_warnings(record=True):
+            warnings.resetwarnings()
+            with np.errstate(all='warn'):
+                spectrogram.spectrogram(
+                    st[0].data, log=True, outfile=image_path_1,
+                    samp_rate=st[0].stats.sampling_rate, show=False)
         # 2 - using log=False
-        with ImageComparison(self.path, 'spectrogram.png') as ic:
-            spectrogram.spectrogram(st[0].data, log=False, outfile=ic.name,
-                                    samp_rate=st[0].stats.sampling_rate,
-                                    show=False)
-
-
-def suite():
-    return unittest.makeSuite(SpectrogramTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        image_path_2 = image_path.parent / 'spectrogram2.png'
+        spectrogram.spectrogram(st[0].data, log=False, outfile=image_path_2,
+                                samp_rate=st[0].stats.sampling_rate,
+                                show=False)

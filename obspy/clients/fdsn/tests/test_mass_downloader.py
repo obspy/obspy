@@ -20,6 +20,8 @@ import tempfile
 import unittest
 from unittest import mock
 
+import pytest
+
 if sys.version_info.major == 2:
     from httplib import HTTPException
 else:
@@ -39,6 +41,9 @@ from obspy.clients.fdsn.mass_downloader.utils import (
     _get_stationxml_contents_slow)
 from obspy.clients.fdsn.mass_downloader.download_helpers import (
     Channel, TimeInterval, Station, STATUS, ClientDownloadHelper)
+
+
+pytestmark = pytest.mark.network
 
 
 class DomainTestCase(unittest.TestCase):

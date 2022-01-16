@@ -24,7 +24,7 @@ jobs:
       - name: install obpsy
         shell: bash -l {0}
         run: |
-          pip install -e .
+          python -m pip install -e .
 
       - name: create dist
         shell: bash -l {0}
