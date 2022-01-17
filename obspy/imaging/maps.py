@@ -19,11 +19,8 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
 from obspy import UTCDateTime
-from obspy.core.util import (BASEMAP_VERSION, CARTOPY_VERSION,
-                             MATPLOTLIB_VERSION, PROJ4_VERSION)
+from obspy.core.util import CARTOPY_VERSION
 from obspy.geodetics.base import mean_longitude
-
-HAS_BASEMAP = False
 
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     import cartopy.crs as ccrs
@@ -33,8 +30,8 @@ else:
     HAS_CARTOPY = False
 
 
-if not HAS_BASEMAP and not HAS_CARTOPY:
-    msg = ("Neither basemap nor cartopy installed, map plots will not work.")
+if not HAS_CARTOPY:
+    msg = ("Cartopy not installed, map plots will not work.")
     warnings.warn(msg)
 
 
