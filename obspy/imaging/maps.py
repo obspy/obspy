@@ -28,7 +28,7 @@ if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     HAS_CARTOPY = True
 else:
     HAS_CARTOPY = False
-
+HAS_BASEMAP = False
 
 if not HAS_CARTOPY:
     msg = ("Cartopy not installed, map plots will not work.")
