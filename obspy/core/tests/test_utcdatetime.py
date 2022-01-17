@@ -6,6 +6,7 @@ import warnings
 from functools import partial
 from operator import ge, eq, lt, le, gt, ne
 
+from packaging.version import parse as parse_version
 import numpy as np
 
 from obspy import UTCDateTime as UTC
@@ -1061,7 +1062,6 @@ class TestUTCDateTime:
         Test convenience method and property for conversion to matplotlib
         datetime float numbers.
         """
-        from distutils.version import LooseVersion
         from matplotlib import __version__
 
         for t_, expected_old, expected in zip(
@@ -1071,7 +1071,7 @@ class TestUTCDateTime:
                 (5965.57236768, 14480.013978, 20784.1338588),
                 ):
             t = UTC(t_)
-            if LooseVersion(__version__) < LooseVersion('3.3'):
+            if parse_version(__version__) < parse_version('3.3'):
                 expected = expected_old
             np.testing.assert_almost_equal(
                 t.matplotlib_date, expected, decimal=8)
