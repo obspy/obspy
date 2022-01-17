@@ -15,12 +15,19 @@ Functions to compute and plot radiation patterns
 
 import numpy as np
 from matplotlib.cm import get_cmap
-from cartopy import crs
+
 from itertools import chain
 
 from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import beach
+from obspy.core.util import CARTOPY_VERSION
+if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    HAS_CARTOPY = True
+else:
+    HAS_CARTOPY = False
 
 
 def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0, **kwargs):
