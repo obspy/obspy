@@ -251,7 +251,6 @@ class Event(__Event):
             kind_ = list(chain(*kind))
 
         if any([k_ in ("ortho", "global", "local") for k_ in kind_]):
-            from .catalog import Catalog
             cat_ = Catalog([self])
             kwargs["events"] = cat_
 

@@ -22,36 +22,8 @@ from obspy import UTCDateTime
 from obspy.core.util import (BASEMAP_VERSION, CARTOPY_VERSION,
                              MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.geodetics.base import mean_longitude
-import cartopy.crs as ccrs
 
-if BASEMAP_VERSION:
-    try:
-        from mpl_toolkits.basemap import Basemap
-    except ImportError as ex:
-        warnings.warn("Basemap installation not working: %s" % ex)
-        HAS_BASEMAP = False
-    else:
-        HAS_BASEMAP = True
-    if BASEMAP_VERSION < [1, 0, 4]:
-        warnings.warn("All basemap version < 1.0.4 contain a serious bug "
-                      "when rendering countries and continents. ObsPy will "
-                      "still work but the maps might be wrong. Please update "
-                      "your basemap installation.")
-    if PROJ4_VERSION and PROJ4_VERSION[0] == 5:
-        msg = (
-            "basemap/pyproj with proj4 version >= 5 has a bug that results in "
-            "inverted map axes. Your maps may be wrong. Please use another "
-            "version of proj4, or use cartopy. "
-            "See https://github.com/matplotlib/basemap/issues/443")
-        warnings.warn(msg)
-    if MATPLOTLIB_VERSION == [3, 0, 1] and BASEMAP_VERSION >= [1, 1, 0]:
-        msg = (
-            "basemap and matplotlib version 3.0.1 have compataibilty issues, "
-            "please change your matplotlib version. "
-            "See https://github.com/matplotlib/basemap/issues/435")
-        warnings.warn(msg)
-else:
-    HAS_BASEMAP = False
+HAS_BASEMAP = False
 
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     import cartopy.crs as ccrs
@@ -339,7 +311,7 @@ def _plot_cartopy_into_axes(
     fig = ax.figure
     if bmap is None:
 
-        if projection in ['global', 'ortho'] :
+        if projection in ['global', 'ortho']:
             bmap = ax
         elif projection == 'ortho':
             bmap = ax
