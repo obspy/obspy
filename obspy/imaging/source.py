@@ -24,7 +24,6 @@ from obspy.imaging.mopad_wrapper import beach
 from obspy.core.util import CARTOPY_VERSION
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     import cartopy.crs as ccrs
-    import cartopy.feature as cfeature
     HAS_CARTOPY = True
 else:
     HAS_CARTOPY = False
@@ -86,15 +85,15 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0, **kwargs):
                     lat_0 = 0.0
                     lon_0 = 0.0
                 if kind__ == "ortho":
-                    kwargs["projection"] = crs.Orthographic(
+                    kwargs["projection"] = ccrs.Orthographic(
                         central_longitude=lon_0,
                         central_latitude=lat_0)
                 elif kind__ == "global":
-                    kwargs["projection"] = crs.Mollweide(
+                    kwargs["projection"] = ccrs.Mollweide(
                         central_longitude=lon_0
                     )
                 else:
-                    kwargs["projection"] = crs.AlbersEqualArea(
+                    kwargs["projection"] = ccrs.AlbersEqualArea(
                         central_longitude=lon_0,
                         central_latitude=lat_0
                     )
