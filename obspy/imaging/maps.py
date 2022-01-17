@@ -691,17 +691,10 @@ def plot_map(method, *args, **kwargs):
     '''
 
     if method is None:
-        if HAS_BASEMAP:
-            return plot_basemap(*args, **kwargs)
-        elif HAS_CARTOPY:
+        if HAS_CARTOPY:
             return plot_cartopy(*args, **kwargs)
         else:
-            raise ImportError('Neither Basemap nor Cartopy could be imported.')
-    elif method == 'basemap':
-        if not HAS_BASEMAP:
-            raise ImportError('Basemap cannot be imported but was explicitly '
-                              'requested.')
-        return plot_basemap(*args, **kwargs)
+            raise ImportError('Cartopy could not be imported.')
     elif method == 'cartopy':
         if not HAS_CARTOPY:
             raise ImportError('Cartopy cannot be imported but was explicitly '
