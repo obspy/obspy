@@ -1006,7 +1006,7 @@ class MST(object):
         bytecount = data.itemsize * data.size
 
         self.mst.contents.datasamples = clibmseed.allocate_bytes(bytecount)
-        C.memmove(self.mst.contents.datasamples, data.ctypes.get_data(),
+        C.memmove(self.mst.contents.datasamples, data.ctypes.data,
                   bytecount)
 
     def __del__(self):
