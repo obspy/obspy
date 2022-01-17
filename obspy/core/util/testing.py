@@ -89,7 +89,7 @@ def get_all_py_files():
     """
     Return a list with full absolute paths to all .py files in ObsPy file tree.
 
-    :rtype: list of str
+    :rtype: list[str]
     """
     util_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
     obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(util_dir)))

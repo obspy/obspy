@@ -159,8 +159,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         read the headers.
     :type sourcename: str
     :param sourcename: Only read data with matching SEED ID (can contain
-        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z"). Defaults to
-        ``None``.
+        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z").
+        Defaults to ``None`` .
     :param reclen: If it is None, it will be automatically determined for every
         record. If it is known, just set it to the record length in bytes which
         will increase the reading speed slightly.
@@ -175,11 +175,11 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         from 0 to 100 [%]. ``calibration_type`` specifies the type of available
         calibration information blockettes:
 
-        - ``1``: Step Calibration (Blockette 300)
-        - ``2``: Sine Calibration (Blockette 310)
-        - ``3``: Pseudo-random Calibration (Blockette 320)
-        - ``4``: Generic Calibration  (Blockette 390)
-        - ``-2``: Calibration Abort (Blockette 395)
+        - ``1`` : Step Calibration (Blockette 300)
+        - ``2`` : Sine Calibration (Blockette 310)
+        - ``3`` : Pseudo-random Calibration (Blockette 320)
+        - ``4`` : Generic Calibration  (Blockette 390)
+        - ``-2`` : Calibration Abort (Blockette 395)
 
     :type header_byteorder: int or str, optional
     :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or

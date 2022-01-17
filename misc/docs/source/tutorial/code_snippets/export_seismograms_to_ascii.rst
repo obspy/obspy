@@ -18,7 +18,7 @@ The following ASCII formats are currently supported:
 
 * ``SLIST``, a ASCII time series format represented with a header line
   followed by a sample lists (see also
-  :func:`SLIST format description<obspy.core.ascii._write_slist>`)::
+  :func:`SLIST format description<obspy.io.ascii.core._write_slist>`)::
 
     TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, SLIST, INTEGER, 
     288 300 292 285 265 287
@@ -26,7 +26,8 @@ The following ASCII formats are currently supported:
     ...
 
 * ``TSPAIR``, a ASCII format where data is written in time-sample pairs
-  (see also :func:`TSPAIR format description<obspy.core.ascii._write_tspair>`)::
+  (see also
+  :func:`TSPAIR format description<obspy.io.ascii.core._write_tspair>`)::
 
     TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, TSPAIR, INTEGER, 
     2009-08-24T00:20:03.000000  288

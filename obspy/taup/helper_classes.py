@@ -15,6 +15,7 @@ class TauModelError(Exception):
     pass
 
 
+#: The SlownessLayer dtype stores a single layer.
 SlownessLayer = np.dtype([
     ('top_p', np.float_),
     ('top_depth', np.float_),
@@ -23,10 +24,8 @@ SlownessLayer = np.dtype([
 ])
 
 
-"""
-Holds the ray parameter, time and distance increments, and optionally a
-depth, for a ray passing through some layer.
-"""
+#: Holds the ray parameter, time and distance increments, and optionally a
+#: depth, for a ray passing through some layer.
 TimeDist = np.dtype([
     ('p', np.float_),
     ('time', np.float_),
@@ -35,10 +34,8 @@ TimeDist = np.dtype([
 ])
 
 
-"""
-Holds the ray parameter, time and distance increments, and optionally a
-depth, latitude and longitude for a ray passing through some layer.
-"""
+#: Holds the ray parameter, time and distance increments, and optionally a
+#: depth, latitude and longitude for a ray passing through some layer.
 TimeDistGeo = np.dtype([
     ('p', np.float_),
     ('time', np.float_),
@@ -49,10 +46,8 @@ TimeDistGeo = np.dtype([
 ])
 
 
-"""
-Tracks critical points (discontinuities or reversals in slowness gradient)
-within slowness and velocity models.
-"""
+#: Tracks critical points (discontinuities or reversals in slowness gradient)
+#: within slowness and velocity models.
 CriticalDepth = np.dtype([
     ('depth', np.float_),
     ('vel_layer_num', np.int_),
@@ -125,9 +120,11 @@ class Arrival(object):
     :ivar takeoff_angle: Angle (in degrees) at which the ray leaves the source
     :vartype takeoff_angle: float
     :ivar pierce: Points pierced by ray
-    :vartype pierce: :class:`~numpy.ndarray` (dtype = :const:`~TimeDist`)
+    :vartype pierce: :class:`~numpy.ndarray`
+        (dtype = :class:`~obspy.taup.helper_classes.TimeDist`)
     :ivar path: Path taken by ray
-    :vartype path: :class:`~numpy.ndarray` (dtype = :const:`~TimeDist`)
+    :vartype path: :class:`~numpy.ndarray`
+        (dtype = :class:`~obspy.taup.helper_classes.TimeDist`)
     """
     def __init__(self, phase, distance, time, purist_dist, ray_param,
                  ray_param_index, name, purist_name, source_depth,

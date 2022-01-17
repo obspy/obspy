@@ -924,7 +924,7 @@ def set_flags_in_fixed_headers(filename, flags):
     """
     Updates a given MiniSEED file with some fixed header flags.
 
-    :type filename: string
+    :type filename: str
     :param filename: Name of the MiniSEED file to be changed
     :type flags: dict
     :param flags: The flags to update in the MiniSEED file
@@ -1478,10 +1478,12 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
     compared to the expected_signals, and its value is converted to bool.
     Missing values are considered false.
 
-    :type expected_flags: dict {int: str}
-    :param expected_flags: every possible flag in this field, with its offset
-    :type user_flags: dict {str: bool}
-    :param user_flags: user defined flags and its value
+    :type expected_flags: dict
+    :param expected_flags: every possible flag in this field, with its offset.
+        Structure: {int: str}.
+    :type user_flags: dict
+    :param user_flags: user defined flags and its value.
+        Structure: {str: bool}.
     :type recstart: UTCDateTime
     :param recstart: date of the first sample of the current record
     :type recstart: UTCDateTime

@@ -107,11 +107,13 @@ class Client(object):
     # Dictionary caching any discovered service. Therefore repeatedly
     # initializing a client with the same base URL is cheap.
     __service_discovery_cache = {}
-
+    #: Regex for UINT8
     RE_UINT8 = r'(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
+    #: Regex for HEX4
     RE_HEX4 = r'(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
-
+    #: Regex for IPv4
     RE_IPv4 = r'(?:' + RE_UINT8 + r'(?:\.' + RE_UINT8 + r'){3})'
+    #: Regex for IPv6
     RE_IPv6 = \
         r'(?:\[' + RE_HEX4 + r'(?::' + RE_HEX4 + r'){7}\]' + \
         r'|\[(?:' + RE_HEX4 + r':){0,5}' + RE_HEX4 + r'::\]' + \
@@ -121,7 +123,7 @@ class Client(object):
         r'|\[' + RE_HEX4 + r':' + \
         r'(?:' + RE_HEX4 + r':|:' + RE_HEX4 + r'){0,4}' + \
         r':' + RE_HEX4 + r'\])'
-
+    #: Regex for checking the validity of URLs
     URL_REGEX = r'https?://' + \
                 r'(' + RE_IPv4 + \
                 r'|' + RE_IPv6 + \
@@ -492,9 +494,9 @@ class Client(object):
             suggested to be the preferred magnitude only.
         :type includearrivals: bool, optional
         :param includearrivals: Specify if phase arrivals should be included.
-        :type eventid: str (or int, dependent on data center), optional
+        :type eventid: str or int, optional
         :param eventid: Select a specific event by ID; event identifiers are
-            data center specific.
+            data center specific (String or Integer).
         :type limit: int, optional
         :param limit: Limit the results to the specified number of events.
         :type offset: int, optional
@@ -991,7 +993,7 @@ class Client(object):
             information to each trace. This can be used to remove response
             using :meth:`~obspy.core.stream.Stream.remove_response`.
 
-        :type bulk: str, file or list of lists
+        :type bulk: str, file or list[list]
         :param bulk: Information about the requested data. See above for
             details.
         :type quality: str, optional
@@ -1145,7 +1147,7 @@ class Client(object):
                     GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
                     IU.ANMO.10.BHZ
 
-        :type bulk: str, file or list of lists
+        :type bulk: str, file or list[list]
         :param bulk: Information about the requested data. See above for
             details.
         :type level: str

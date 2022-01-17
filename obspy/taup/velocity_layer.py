@@ -43,7 +43,8 @@ def evaluate_velocity_at_bottom(layer, prop):
     .. seealso:: :func:`evaluate_velocity_at_top`, :func:`evaluate_velocity_at`
 
     :param layer: The velocity layer to use for evaluation.
-    :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`
+    :type layer: :class:`~numpy.ndarray`,
+        dtype = :py:const:`~obspy.taup.velocity_layer.VelocityLayer`
     :param prop: The material property to evaluate. One of:
 
         * ``p``
@@ -76,7 +77,8 @@ def evaluate_velocity_at_top(layer, prop):
         :func:`evaluate_velocity_at`
 
     :param layer: The velocity layer to use for evaluation.
-    :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`
+    :type layer: :class:`~numpy.ndarray`,
+        dtype = :py:class:`~obspy.taup.velocity_layer.VelocityLayer`
     :param prop: The material property to evaluate. One of:
 
         * ``p``
@@ -109,7 +111,8 @@ def evaluate_velocity_at(layer, depth, prop):
         :func:`evaluate_velocity_at_bottom`
 
     :param layer: The velocity layer to use for evaluation.
-    :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`
+    :type layer: :class:`~numpy.ndarray`,
+        dtype = :py:class:`~obspy.taup.velocity_layer.VelocityLayer`
     :param depth: The depth at which the material property should be
         evaluated. Must be within the bounds of the layer or results will be
         undefined.

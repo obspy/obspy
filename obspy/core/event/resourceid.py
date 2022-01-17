@@ -103,7 +103,7 @@ class ResourceIdentifier(object):
         if `id` is not specified (for a fixed ID string). Makes automatically
         generated resource ids more reasonable. By default "smi:local" is used
         which ensures a QuakeML compliant resource identifier.
-    :type referred_object: Python object, optional
+    :type referred_object: object, optional
     :param referred_object: The object (resource) to which this instance
         refers. All instances created with the same resource_id will be able
         to access the object as long as at least one instance actually has a
@@ -506,7 +506,7 @@ class ResourceIdentifier(object):
     @deprecated()
     def get_quakeml_uri(self, authority_id="local"):
         """
-        This method is deprecated, use :meth:`get_quakeml_uri_str` instead.
+        This method is deprecated, use :meth:`.get_quakeml_uri_str` instead.
         """
         return self.get_quakeml_uri_str(authority_id=authority_id)
 

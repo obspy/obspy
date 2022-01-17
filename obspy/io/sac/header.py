@@ -255,7 +255,7 @@ NOTE:
 
 kevnm also has a kevnm2 b/c it takes two array spaces.
 'kevnm' lookups must be caught and handled differently.  This happens in the
-SACTrace string property getters/setters, .io.dict_to_header_arrays
+SACTrace string property getters/setters, .arrayio.dict_to_header_arrays
 and .arrayio.header_arrays_to_dict.
 """
 # NOTE: using namedtuples for header arrays sounds great, but they're immutable

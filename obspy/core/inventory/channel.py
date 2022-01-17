@@ -60,7 +60,7 @@ class Channel(BaseNode):
         :param azimuth: Azimuth of the sensor in degrees from North, clockwise.
         :type dip: float
         :param dip: Dip of the instrument in degrees, down from horizontal.
-        :type types: list of str
+        :type types: list[str]
         :param types: The type of data this channel collects. Corresponds to
             channel flags in SEED blockette 52. The SEED volume producer could
             use the first letter of an Output value as the SEED channel flag.
@@ -123,10 +123,10 @@ class Channel(BaseNode):
         :param historical_code: A previously used code if different from the
             current code.
         :type data_availability:
-            :class:`~obspy.core.inventor.util.DataAvailability`
+            :class:`~obspy.core.inventory.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the channel.
-        :type identifiers: list of str, optional
+        :type identifiers: list[str], optional
         :param identifiers: Persistent identifiers for network/station/channel
             (schema version >=1.1). URIs are in general composed of a 'scheme'
             and a 'path' (optionally with additional components), the two of
@@ -421,7 +421,8 @@ class Channel(BaseNode):
             (disregarding all later stages).
         :type label: str
         :param label: Label string for legend.
-        :type axes: list of 2 :class:`matplotlib.axes.Axes`
+        :type axes: list[:class:`matplotlib.axes.Axes`,
+            :class:`matplotlib.axes.Axes`]
         :param axes: List/tuple of two axes instances on which to plot the
             amplitude/phase spectrum. If not specified, a new figure is opened.
         :type unwrap_phase: bool

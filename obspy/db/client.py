@@ -45,7 +45,7 @@ class Client(object):
         :type debug: bool, optional
         :param debug: Enables verbose output.
         """
-        msg = "The module obspy.client.seishub is deprecated and will " + \
+        msg = "The module obspy.clients.seishub is deprecated and will " + \
             "be removed in the next major release."
         warnings.warn(msg, ObsPyDeprecationWarning)
         if url:

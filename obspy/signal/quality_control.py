@@ -60,7 +60,7 @@ class MSEEDMetadata(object):
     MiniSEED files must have a matching stream ID and quality.
 
     :param files: One ore more MiniSEED files.
-    :type files: str or list of str
+    :type files: str or list[str]
     :type id: str, optional
     :param id: A unique identifier of the to be created QC object. It is
         not verified, that it actually is unique. The user has to take care of

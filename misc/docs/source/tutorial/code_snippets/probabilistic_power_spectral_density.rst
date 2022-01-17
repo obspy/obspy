@@ -121,7 +121,7 @@ lines.
    :class:`~obspy.signal.spectral_estimation.PPSD`). 
 
 Time series of psd values can also be extracted from the PPSD by accessing the
-property :attr:`~obspy.signal.spectral_estimation.PPSD.psd_values` and
+property :py:attr:`~obspy.signal.spectral_estimation.PPSD.psd_values` and
 plotted using the
 :meth:`~obspy.signal.spectral_estimation.PPSD.plot_temporal()` method (temporal
 restrictions can be used in the plot, see documentation):

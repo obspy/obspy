@@ -23,7 +23,7 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param filename: path to the rg16 file or a file object.
-    :type filename: str, buffer
+    :type filename: str or file-like object
     :param headonly: If True don't read data, only main information
         contained in the headers of the trace block is read.
     :type headonly: optional, bool
@@ -507,7 +507,7 @@ def _is_rg16(filename, **kwargs):
     Determine if a file is a rg16 file.
 
     :param filename: a path to a file or a file object
-    :type filename: str, buffer
+    :type filename: str or file-like object
     :rtype: bool
     :return: True if the file object is a rg16 file.
     """
@@ -528,13 +528,12 @@ def _read_initial_headers(filename):
     Extract all the information contained in the headers located before data,
     at the beginning of the rg16 file object.
 
-    :param filename : a path to a rg16 file or a rg16 file object.
-    :type filename: str, buffer
-    :return: a dictionnary containing all the information of the initial
-        headers
+    :param filename: a path to a rg16 file or a rg16 file object.
+    :type filename: str or file-like object
+    :return: a dictionary containing all the information of the initial headers
 
-    Frequencies are expressed in hertz and time is expressed in second
-    (except for the date).
+    Frequencies are expressed in hertz and time is expressed in second (except
+    for the date).
     """
     headers_content = dict(
         general_header_1=_read_general_header_1(filename),

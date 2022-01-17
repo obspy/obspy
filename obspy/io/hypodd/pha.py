@@ -166,7 +166,7 @@ def _write_pha(catalog, filename, eventid_map=None,
 
     :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: str or file
+    :type filename: str or file-like object
     :param filename: Filename to write or open file-like object.
     :param dict eventid_map: Desired mapping of event resource ids (dict keys)
         to hypodd event ids (dict values).

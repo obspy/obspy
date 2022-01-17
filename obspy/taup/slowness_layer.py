@@ -26,7 +26,8 @@ def bullen_radial_slowness(layer, p, radius_of_planet, check=True):
     shape.
 
     :param layer: The layer(s) in which to calculate the increments.
-    :type layer: :class:`~numpy.ndarray`, dtype = :const:`SlownessLayer`
+    :type layer: :class:`~numpy.ndarray`,
+        dtype = :class:`obspy.taup.helper_classes.SlownessLayer`
     :param p: The spherical ray paramater to use for calculation, in s/km.
     :type p: :class:`~numpy.ndarray`, dtype = :class:`float`
     :param radius_of_planet: The radius of the planet to use, in km.
@@ -37,7 +38,7 @@ def bullen_radial_slowness(layer, p, radius_of_planet, check=True):
     :type check: bool
 
     :returns: Time (in s) and distance (in rad) increments.
-    :rtype: tuple of :class:`~numpy.ndarray`
+    :rtype: tuple(:class:`~numpy.ndarray`)
     """
     ldim = np.ndim(layer)
     pdim = np.ndim(p)
@@ -81,7 +82,7 @@ def bullen_depth_for(layer, ray_param, radius_of_planet, check=True):
 
     :param layer: The layer(s) to check.
     :type layer: :class:`~numpy.ndarray` (shape = (1, ), dtype =
-        :const:`SlownessLayer`)
+        :class:`obspy.taup.helper_classes.SlownessLayer`)
     :param ray_param: The ray parameter(s) to use for calculation, in s/km.
     :type ray_param: float
     :param radius_of_planet: The radius (in km) of the planet to use.
@@ -243,7 +244,8 @@ def evaluate_at_bullen(layer, depth, radius_of_planet):
     with the tau model.
 
     :param layer: The layer to use for the calculation.
-    :type layer: :class:`numpy.ndarray`, dtype = :const:`SlownessLayer`
+    :type layer: :class:`numpy.ndarray`,
+        dtype = :class:`obspy.taup.helper_classes.SlownessLayer`
     :param depth: The depth (in km) to use for the calculation. It must be
         contained within the provided ``layer`` or else results are undefined.
     :type depth: float
@@ -302,7 +304,8 @@ def create_from_vlayer(v_layer, is_p_wave, radius_of_planet,
     Compute the slowness layer from a velocity layer.
 
     :param v_layer: The velocity layer to convert.
-    :type v_layer: :class:`numpy.ndarray`, dtype = :const:`VelocityLayer`
+    :type v_layer: :class:`numpy.ndarray`,
+        dtype = :class:`obspy.taup.velocity_layer.VelocityLayer`
     :param is_p_wave: Whether this velocity layer is for compressional/P
          (``True``) or shear/S (``False``) waves.
     :type is_p_wave: bool

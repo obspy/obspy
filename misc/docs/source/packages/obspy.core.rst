@@ -3,6 +3,7 @@
 
     .. comment to end block
 
+
     Classes & Functions
     -------------------
     .. autosummary::
@@ -10,12 +11,13 @@
        :nosignatures:
 
        ~stream.read
+       ~stream.Stream
        ~trace.Trace
        ~trace.Stats
-       ~stream.Stream
        ~utcdatetime.UTCDateTime
        ~event.read_events
        ~event.Catalog
+       ~event.Event
        ~inventory.inventory.read_inventory
        ~inventory.inventory.Inventory
 

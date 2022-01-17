@@ -26,7 +26,7 @@ def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
     :type catalog: :class:`~obspy.core.event.Catalog`
     :param catalog: Input catalog for CNV output..
     :type filename: str or file
-    :param filename: Filename to write or open file-like object.
+    :param filename: Filename to write or open file-like object
     :type phase_mapping: dict
     :param phase_mapping: Mapping of phase hints to "P" or "S". CNV format only
         uses a single letter phase code (either "P" or "S"). If not specified
@@ -36,7 +36,7 @@ def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
         :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param ifx_list: List of events for which the 'IFX' flag should be set
         (used in VELEST to fix the y coordinate of the hypocenter).
-    :type weight_mapping: list of float
+    :type weight_mapping: list[float]]
     :param weight_mapping: Mapping of pick uncertainties to integer weights.
         (Sorted) list of floats of boundary uncertainties. If uncertainty of
         pick is lower than the first entry of the list than a weight of 0 is

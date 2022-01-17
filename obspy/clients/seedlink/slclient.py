@@ -211,14 +211,14 @@ class SLClient(object):
         """
         Start this SLClient.
 
-        :type packet_handler: func
+        :type packet_handler: callable
         :param packet_handler: Custom packet handler funtion to override
             `self.packet_handler` for this seedlink request. The function will
             be repeatedly called with two arguments: the current packet counter
             (`int`) and the currently served seedlink packet
-            (:class:`~obspy.clients.seedlink.SLPacket`). The function should
-            return `True` to abort the request or `False` to continue the
-            request.
+            (:class:`~obspy.clients.seedlink.slclient.SLPacket`). The
+            function should return `True` to abort the request or `False` to
+             continue the request.
         """
         if packet_handler is None:
             packet_handler = self.packet_handler

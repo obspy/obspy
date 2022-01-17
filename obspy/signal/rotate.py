@@ -173,7 +173,8 @@ def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
         and E and the dips and azimuths specify where to transform to.
     :type inverse: bool
 
-    :rtype: Tuple of three NumPy arrays.
+    :rtype: tuple(:class:`numpy.ndarray`, :class:`numpy.ndarray`,
+        :class:`numpy.ndarray`)
     :returns: The three rotated components, oriented in Z, N, and E if
         `inverse` is `False`. Otherwise they will be oriented as specified
         by the dips and azimuths.

@@ -997,7 +997,8 @@ class Parser(object):
 
         :param blockettes_for_channel: The blockettes for the channel to
             calculate the response for.
-        :type blockettes_for_channel: List[Blockette]
+        :type blockettes_for_channel:
+            List[:class:`~obspy.io.xseed.blockette.Blockette]
         :param epoch_str: A string representing the epoch. Used for nice
             warning and error message.
         :type epoch_str: str

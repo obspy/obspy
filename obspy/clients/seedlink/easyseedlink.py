@@ -290,13 +290,13 @@ class EasySeedLinkClient(object):
             If the server doesn't send one of the stop words, this never
             returns!
 
-        :type bytes_: str (Python 2) or bytes (Python 3)
+        :type bytes_: bytes
         :param bytes_: The bytes to send to the server
-        :type stop_on: list
+        :type stop_on: list[str]
         :param stop_on: A list of strings that indicate the end of the server
                         response.
 
-        :rtype: str (Python 2) or bytes (Python 3)
+        :rtype: bytes
         :return: The server's response
         """
         if not bytes_.endswith(b'\r'):
@@ -500,16 +500,16 @@ def create_client(server_url, on_data=None, on_seedlink_error=None,
 
     :type server_url: str
     :param server_url: The SeedLink server URL
-    :type on_data: function or callable
+    :type on_data: callable
     :param on_data: A function or callable that is called for every new trace
                     received from the server; needs to accept one argument (the
                     trace); default is ``None``
-    :type on_seedlink_error: function or callable
+    :type on_seedlink_error: callable
     :param on_seedlink_error: A function or callable that is called when a
                               SeedLink ERROR response is received (see the
                               :meth:`~.EasySeedLinkClient.on_seedlink_error`
                               method for details); default is ``None``
-    :type on_terminate: function or callable
+    :type on_terminate: callable
     :param on_terminate: A function or callable that is called when the
                          connection is terminated (see the
                          :meth:`~.EasySeedLinkClient.on_terminate`

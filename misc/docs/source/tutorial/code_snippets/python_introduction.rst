@@ -54,7 +54,7 @@ Description of each line of the example above:
     A Python counterpart for the well-known C function ``sprintf`` is the ``%``
     operator acting on a format string. Here we print the header attributes
     ``station`` and ``starttime`` as well as the return value of the methods
-    :meth:`~numpy.mean` and :meth:`~numpy.std` acting on the data sub-object
+    :func:`~numpy.mean` and :func:`~numpy.std` acting on the data sub-object
     of the :class:`~obspy.core.trace.Trace` (which are of type
     :class:`numpy.ndarray`).
 *Line 10*
@@ -72,9 +72,9 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
     Official Python tutorial.
 * https://docs.python.org/3/library/index.html
     Python library reference
-* http://software-carpentry.org/
+* https://software-carpentry.org/
     Very instructive video lectures on various computer related topics. A good
-    starting point for learning Python and Version Control with Subversion.
+    starting point for learning Python and Version Control with Git.
 * https://ipython.org/
     An enhanced interactive Python shell.
 * https://docs.scipy.org/doc/
@@ -82,16 +82,16 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
    allow fast array manipulation (functions in C). NumPy and SciPy provide
    access to FFTW, LAPACK, ATLAS or BLAS. That is svd, eigenvalues...
    ObsPy uses the numpy.ndarrays for storing the data (e.g. tr.data).
-* http://matplotlib.org/gallery.html
+* https://matplotlib.org/gallery.html
    matplotlib is the 2-D plotting package for Python. The gallery is the market
    place which allows you to go shopping for all kind of figures. The source
    code for each figure is linked. Note matplotlib has even its own latex
    renderer.
-* http://matplotlib.org/basemap/
+* https://scitools.org.uk/cartopy/docs/latest/
    Package plotting 2D data on maps in Python. Similar to GMT.
 * https://trac.osgeo.org/gdal/wiki/GdalOgrInPython
    Package which allows to directly read a GeoTiff which then can be plotted
-   with the basemap toolkit.
+   with the Cartopy package.
 * https://svn.geophysik.uni-muenchen.de/trac/mtspecpy
    Multitaper spectrum bindings for Python
 

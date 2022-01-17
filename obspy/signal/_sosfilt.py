@@ -39,12 +39,12 @@ def _cplxreal(z, tol=None):
 
     Returns
     -------
-    zc : ndarray
+    zc : :class:`numpy.ndarray`
         Complex elements of `z`, with each pair represented by a single value
         having positive imaginary part, sorted first by real part, and then
         by magnitude of imaginary part.  The pairs are averaged when combined
         to reduce error.
-    zr : ndarray
+    zr : :class:`numpy.ndarray`
         Real elements of `z` (those having imaginary part less than
         `tol` times their magnitude), sorted by value.
 
@@ -152,7 +152,7 @@ def _zpk2sos(z, p, k, pairing='nearest'):
 
     Returns
     -------
-    sos : ndarray
+    sos : :class:`numpy.ndarray`
         Array of second-order filter coefficients, with shape
         ``(n_sections, 6)``. See `sosfilt` for the SOS filter format
         specification.
@@ -430,9 +430,9 @@ def _sosfilt(sos, x, axis=-1, zi=None):
 
     Returns
     -------
-    y : ndarray
+    y : :class:`numpy.ndarray`
         The output of the digital filter.
-    zf : ndarray, optional
+    zf : :class:`numpy.ndarray`, optional
         If `zi` is None, this is not returned, otherwise, `zf` holds the
         final filter delay values.
 

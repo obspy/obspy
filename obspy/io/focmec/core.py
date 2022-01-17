@@ -170,7 +170,7 @@ def _get_polarity_count(lines):
 
 def _read_focmec_lst(lines):
     """
-    Read given data into an :class:`~obspy.core.event.Event` object.
+    Read given data into an :class:`~obspy.core.event.event.Event` object.
 
     Unfortunately, "lst" is not a well defined file format but what it outputs
     depends on input data, program parameters, program version and also
@@ -303,7 +303,7 @@ def _get_polarity_error_count_lst_block(lines):
 
 def _read_focmec_out(lines):
     """
-    Read given data into an :class:`~obspy.core.event.Event` object.
+    Read given data into an :class:`~obspy.core.event.event.Event` object.
 
     :type lines: list
     :param lines: List of decoded unicode strings with data from a FOCMEC out
@@ -348,7 +348,7 @@ def _read_focmec_out(lines):
 
 def _read_common_header(lines):
     """
-    Read given data into an :class:`~obspy.core.event.Event` object.
+    Read given data into an :class:`~obspy.core.event.event.Event` object.
 
     Parses the first few common header lines and sets creation time and some
     other basic info.

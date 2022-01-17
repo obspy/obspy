@@ -54,10 +54,11 @@ class BaseNode(ComparingObject):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
-        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :type data_availability:
+            :class:`~obspy.core.inventory.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network/station/channel.
-        :type identifiers: list of str, optional
+        :type identifiers: list[str], optional
         :param identifiers: Persistent identifiers for network/station/channel
             (schema version >=1.1). URIs are in general composed of a 'scheme'
             and a 'path' (optionally with additional components), the two of
@@ -501,13 +502,13 @@ class Person(ComparingObject):
 
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
-        :type names: list of str, optional
+        :type names: list[str], optional
         :param names: Self-explanatory. Multiple names allowed.
-        :type agencies: list of str, optional
+        :type agencies: list[str], optional
         :param agencies: Self-explanatory. Multiple agencies allowed.
-        :type emails: list of str, optional
+        :type emails: list[str], optional
         :param emails: Self-explanatory. Multiple emails allowed.
-        :type phones: list of :class:`PhoneNumber`, optional
+        :type phones: list[:class:`PhoneNumber`], optional
         :param phones: Self-explanatory. Multiple phone numbers allowed.
         """
         self.names = names or []
@@ -971,6 +972,8 @@ class InventoryTextWrapper(TextWrapper):
     wordsep_simple_re = re.compile(r'(, )')
 
     def _wrap_chunks(self, *args, **kwargs):
+        """
+        """
         # the following doesn't work somehow (likely because of future??)
         # lines = super(InventoryTextWrapper, self)._wrap_chunks(
         #     *args, **kwargs)

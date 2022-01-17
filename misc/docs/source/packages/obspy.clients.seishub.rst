@@ -13,6 +13,7 @@
        client._EventMapperClient
        client._StationMapperClient
        client._WaveformMapperClient
+       client._BaseRESTClient
 
     .. comment to end block
 

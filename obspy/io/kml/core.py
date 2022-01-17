@@ -49,7 +49,7 @@ def inventory_to_kml_string(
         stations (more than twenty years after current time). Far future end
         times may produce time sliders with bad overall time span in third
         party applications viewing the KML file.
-    :rtype: byte string
+    :rtype: bytes
     :return: Encoded byte string containing KML information of the station
         metadata.
     """
@@ -153,13 +153,13 @@ def catalog_to_kml_string(
     :type label_func: func
     :type label_func: Custom function to use for determining each event's
         label. User provided function is supposed to take an
-        :class:`~obspy.core.event.Event` object as single argument, e.g. for
-        empty labels use `label_func=lambda x: ""`.
+        :class:`~obspy.core.event.event.Event` object as single argument, e.g.
+        for empty labels use `label_func=lambda x: ""`.
     :type icon_size_func: func
     :type icon_size_func: Custom function to use for determining each
         event's icon size. User provided function should take an
-        :class:`~obspy.core.event.Event` object as single argument and return a
-        float.
+        :class:`~obspy.core.event.event.Event` object as single argument
+        and return a float.
     :type encoding: str
     :param encoding: Encoding used for XML string.
     :type timestamps: bool
@@ -169,7 +169,7 @@ def catalog_to_kml_string(
         such that using the time slider different states of the catalog in time
         can be visualized. If timespans are not used, any event happening at
         any point in time is always shown.
-    :rtype: byte string
+    :rtype: bytes
     :return: Encoded byte string containing KML information of the event
         metadata.
     """
@@ -277,7 +277,7 @@ def _write_kml(obj, filename, **kwargs):
     :meth:`catalog_to_kml_string`.
 
     :type obj: :class:`~obspy.core.event.Catalog` or
-        :class:`~obspy.core.inventory.Inventory`
+        :class:`~obspy.core.inventory.inventory.Inventory`
     :param obj: ObsPy object for KML output
     :type filename: str
     :param filename: Filename to write to. Suffix ".kml" will be appended if

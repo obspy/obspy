@@ -147,7 +147,7 @@ class NRL(object):
         """
         Get the datalogger response.
 
-        :type datalogger_keys: list of str
+        :type datalogger_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
         datalogger = self.dataloggers
@@ -163,7 +163,7 @@ class NRL(object):
         """
         Get the sensor response.
 
-        :type sensor_keys: list of str
+        :type sensor_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
         sensor = self.sensors

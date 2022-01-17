@@ -26,7 +26,7 @@ For a subsequent update of latency only:
 
 Screenshot of resulting html page (cut off at the bottom):
 
-.. image:: /_static/sds_report.png
+.. image:: /_images/sds_report.png
 
 """
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
