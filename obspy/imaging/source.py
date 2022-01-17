@@ -15,13 +15,15 @@ Functions to compute and plot radiation patterns
 
 import numpy as np
 from matplotlib.cm import get_cmap
+from cartopy import crs
+from itertools import chain
 
 from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import beach
 
 
-def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
+def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0, **kwargs):
     """
     Setup figure for Event plot.
 
@@ -58,11 +60,40 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
         ncols_ = len(row)
         for j, kind__ in enumerate(row):
             kind_.append(kind__)
-            kwargs = {"adjustable": "datalim"}
+            kwargs["adjustable"] = "datalim"
             if kind__ in ("p_quiver", "p_sphere", "s_quiver", "s_sphere"):
                 kwargs["projection"] = "3d"
-            else:  # equal aspect never worked on 3d plot, see mpl #13474
+                kwargs["aspect"] = "auto"
+            if kind__ in ("ortho", "local", "global"):
+                lats = []
+                lons = []
+                if "events" in kwargs:
+                    _cat = kwargs.pop("events")
+                    for event in _cat:
+                        origin = event.preferred_origin() or event.origins[0]
+                        lats.append(origin.latitude)
+                        lons.append(origin.longitude)
+                    lat_0 = round(np.mean(lats), 4)
+                    lon_0 = round(np.mean(lons), 4)
+                else:
+                    lat_0 = 0.0
+                    lon_0 = 0.0
+                if kind__ == "ortho":
+                    kwargs["projection"] = crs.Orthographic(
+                        central_longitude=lon_0,
+                        central_latitude=lat_0)
+                elif kind__ == "global":
+                    kwargs["projection"] = crs.Mollweide(
+                        central_longitude=lon_0
+                    )
+                else:
+                    kwargs["projection"] = crs.AlbersEqualArea(
+                        central_longitude=lon_0,
+                        central_latitude=lat_0
+                    )
                 kwargs["aspect"] = "equal"
+            else:  # equal aspect never worked on 3d plot, see mpl #13474
+                kwargs["aspect"] = "auto"
             ax = fig.add_subplot(nrows, ncols_, i * ncols_ + j + 1, **kwargs)
             axes.append(ax)
     return fig, axes, kind_
@@ -129,8 +160,14 @@ def plot_radiation_pattern(
 
     # matplotlib plotting is triggered when kind is a list of strings
     if isinstance(kind, (list, tuple)):
-        fig, axes, kind = _setup_figure_and_axes(kind, fig=fig)
-
+        if not fig:
+            fig, axes, kind = _setup_figure_and_axes(kind, fig=fig)
+        else:
+            axes = fig.axes
+            if len(kind) == 1:
+                kind = kind
+            else:
+                kind = list(chain(*kind))
         for ax, kind_ in zip(axes, kind):
             if kind_ is None:
                 continue

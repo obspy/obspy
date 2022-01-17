@@ -9,6 +9,7 @@ Provides the Event class
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import copy
+from itertools import chain
 
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
@@ -233,6 +234,7 @@ class Event(__Event):
             event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
         """
         import matplotlib.pyplot as plt
+        from .catalog import Catalog
         try:
             fm = self.preferred_focal_mechanism() or self.focal_mechanisms[0]
             mtensor = fm.moment_tensor.tensor
@@ -242,28 +244,37 @@ class Event(__Event):
 
         mt = [mtensor.m_rr, mtensor.m_tt, mtensor.m_pp,
               mtensor.m_rt, mtensor.m_rp, mtensor.m_tp]
-        fig, axes, kind_ = _setup_figure_and_axes(kind,
-                                                  subplot_size=subplot_size)
+
+        if len(kind) == 1:
+            kind_ = kind
+        else:
+            kind_ = list(chain(*kind))
+
         if any([k_ in ("ortho", "global", "local") for k_ in kind_]):
             from .catalog import Catalog
             cat_ = Catalog([self])
+            kwargs["events"] = cat_
+
+        fig, axes, kind_ = _setup_figure_and_axes(kind,
+                                                  subplot_size=subplot_size,
+                                                  **kwargs)
         for ax, kind__ in zip(axes, kind_):
             if kind__ in ("ortho", "global", "local"):
                 cat_.plot(projection=kind__, fig=ax, show=False,
                           **kwargs)
                 # shrink plot a bit to avoid it looking oversized compared to
                 # 3d axes that have some white space around them
-                if kind__ == "ortho":
-                    scale = 0.8
-                    for getter, setter in zip((ax.get_xlim, ax.get_ylim),
-                                              (ax.set_xlim, ax.set_ylim)):
-                        min_, max_ = getter()
-                        margin = (max_ - min_) * (1 - scale) / 2.0
-                        setter(min_ - margin, max_ + margin)
+                # if kind__ == "ortho":
+                #     scale = 0.8
+                #     for getter, setter in zip((ax.get_xlim, ax.get_ylim),
+                #                               (ax.set_xlim, ax.set_ylim)):
+                #         min_, max_ = getter()
+                #         margin = (max_ - min_) * (1 - scale) / 2.0
+                #         setter(min_ - margin, max_ + margin)
         plot_radiation_pattern(
             mt, kind=kind, coordinate_system='RTP', fig=fig, show=False)
 
-        fig.tight_layout(pad=0.1)
+        # fig.tight_layout(pad=0.1)
 
         if outfile:
             fig.savefig(outfile)

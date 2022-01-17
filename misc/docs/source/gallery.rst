@@ -209,7 +209,7 @@ Gallery
 
     from obspy import read_events
     cat = read_events()
-    # cat.plot() # TODO CONVERT BASEMAP->CARTOPY
+    cat.plot()
 
 .. plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
@@ -254,7 +254,7 @@ Gallery
     inv = read_inventory()
     cat = read_events()
     fig = inv.plot(show=False)
-    # cat.plot(fig=fig) # TODO CONVERT BASEMAP->CARTOPY
+    cat.plot(fig=fig)
 
 .. plot::
     :target: packages/autogen/obspy.signal.detrend.polynomial.html
@@ -275,7 +275,7 @@ Gallery
 
     from obspy import read_events
     event = read_events("/path/to/CMTSOLUTION")[0]
-    # event.plot() # TODO CONVERT BASEMAP->CARTOPY
+    event.plot()
 
 .. plot::
     :target: packages/autogen/obspy.core.event.event.Event.plot.html
@@ -283,8 +283,7 @@ Gallery
 
     from obspy import read_events
     event = read_events("/path/to/CMTSOLUTION")[0]
-    # event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
-    # TODO CONVERT BASEMAP->CARTOPY
+    event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
 
 .. image:: /_static/sds_report.png
     :target: packages/autogen/obspy.scripts.sds_html_report.html

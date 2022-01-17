@@ -650,7 +650,7 @@ class Catalog(object):
             fig = inv.plot(show=False)
             cat.plot(fig=fig)
         """
-        from obspy.imaging.maps import plot_map, _plot_basemap_into_axes
+        from obspy.imaging.maps import plot_map, _plot_cartopy_into_axes
         import matplotlib
         import matplotlib.pyplot as plt
 
@@ -740,7 +740,7 @@ class Catalog(object):
                 raise NotImplementedError(msg)
             ax = fig
             fig = ax.figure
-            _plot_basemap_into_axes(
+            _plot_cartopy_into_axes(
                 ax=ax, lons=lons, lats=lats, size=size_plot,
                 color=colors, bmap=None, labels=labels,
                 projection=projection, resolution=resolution,
