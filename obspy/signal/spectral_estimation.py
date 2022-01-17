@@ -2087,7 +2087,7 @@ class PPSD(object):
         ax = fig.axes[0]
         xlim = ax.get_xlim()
         if "quadmesh" in fig.ppsd:
-            ax.collections.remove(fig.ppsd.pop("quadmesh"))
+            fig.ppsd.pop("quadmesh").remove()
 
         if fig.ppsd.cumulative:
             data = self.current_histogram_cumulative * 100.0
@@ -2122,8 +2122,8 @@ class PPSD(object):
                 color = {"color": "0.7"}
             else:
                 color = {}
-            ax.grid(b=True, which="major", **color)
-            ax.grid(b=True, which="minor", **color)
+            ax.grid(True, which="major", **color)
+            ax.grid(True, which="minor", **color)
 
         ax.set_xlim(*xlim)
 
