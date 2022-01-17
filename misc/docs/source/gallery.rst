@@ -8,7 +8,7 @@ Gallery
 
 .. raw:: html
 
-    <div class="row">
+    <div class="gallery">
 
 .. plot:: tutorial/code_snippets/reading_seismograms.py
     :target: tutorial/code_snippets/reading_seismograms.html
