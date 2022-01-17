@@ -1040,7 +1040,7 @@ class TestUTCDateTime:
 
         See issue #1096.
         """
-        for microns in np.arange(0, 5999, dtype=np.int):
+        for microns in range(0, 5999):
             t = UTC(2011, 1, 25, 15, 32, 12 + microns / 1e6)
             assert microns == t.microsecond
 

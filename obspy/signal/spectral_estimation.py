@@ -1042,7 +1042,7 @@ class PPSD(object):
             stack.
         """
         times_all = np.array(self._times_processed)
-        selected = np.ones(len(times_all), dtype=np.bool)
+        selected = np.ones(len(times_all), dtype=bool)
         if starttime is not None:
             selected &= times_all > starttime._ns
         if endtime is not None:
@@ -1053,10 +1053,10 @@ class PPSD(object):
             # windows, so we start with an array of False and set all matching
             # pieces True for the final logical AND against the previous
             # restrictions
-            selected_time_of_weekday = np.zeros(len(times_all), dtype=np.bool)
+            selected_time_of_weekday = np.zeros(len(times_all), dtype=bool)
             for weekday, start, end in time_of_weekday:
                 if weekday == -1:
-                    selected_ = np.ones(len(times_all), dtype=np.bool)
+                    selected_ = np.ones(len(times_all), dtype=bool)
                 else:
                     selected_ = (
                         times_all_details['iso_weekday'] == weekday)

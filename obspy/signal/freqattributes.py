@@ -311,7 +311,7 @@ def log_spaced_filterbank_matrix(p, n, fs, w):
     v = 2 * np.append([1 - pm[k2:k4 + 1]], [pm[1:k3 + 1]])
     mn = b1 + 1
     mx = b4 + 1
-    # x = np.array([[c],[r]], dtype=[('x', np.float), ('y', np.float)])
+    # x = np.array([[c],[r]], dtype=[('x', float), ('y', float)])
     # ind=np.argsort(x, order=('x','y'))
     if (w == 'Hann'):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]

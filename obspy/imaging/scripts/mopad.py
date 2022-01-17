@@ -773,12 +773,12 @@ class MomentTensor:
         # reference Double Couple (in NED basis)
         # it has strike, dip, slip-rake = 0,0,0
         refDC = np.matrix([[0., 0., -1.], [0., 0., 0.], [-1., 0., 0.]],
-                          dtype=np.float)
+                          dtype=float)
         refDC_evals, refDC_evecs = np.linalg.eigh(refDC)
 
         # matrix which is turning from one fault plane to the other
         flip_dc = np.matrix([[0., 0., -1.], [0., -1., 0.], [-1., 0., 0.]],
-                            dtype=np.float)
+                            dtype=float)
 
         # euler-tools need matrices of EV sorted in PNT:
         pnt_sorted_EV_matrix = self._rotation_matrix.copy()
@@ -818,7 +818,7 @@ class MomentTensor:
         """
         Builds a column vector (matrix type) from a 3 tuple.
         """
-        return np.matrix([[x, y, z]], dtype=np.float).T
+        return np.matrix([[x, y, z]], dtype=float).T
 
     def _matrix_to_euler(self, rotmat):
         """
@@ -1501,7 +1501,7 @@ def _return_matrix_vector_array(ma_ve_ar, basis_change_matrix):
         m_in = ma_ve_ar
         orig_matrix = np.matrix([[m_in[0], m_in[3], m_in[4]],
                                 [m_in[3], m_in[1], m_in[5]],
-                                [m_in[4], m_in[5], m_in[2]]], dtype=np.float)
+                                [m_in[4], m_in[5], m_in[2]]], dtype=float)
         m_out_mat = np.dot(basis_change_matrix,
                            np.dot(orig_matrix, basis_change_matrix.T))
 
@@ -1528,7 +1528,7 @@ def USE2NED(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., -1., 0.],
                                     [0., 0., 1.],
-                                    [-1., 0., 0.]], dtype=np.float)
+                                    [-1., 0., 0.]], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1547,7 +1547,7 @@ def XYZ2NED(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., 1., 0.],
                                     [1., 0., 0.],
-                                    [0., 0., -1.]], dtype=np.float)
+                                    [0., 0., -1.]], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1566,7 +1566,7 @@ def NWU2NED(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[1., 0., 0.],
                                     [0., -1., 0.],
-                                    [0., 0., -1.]], dtype=np.float)
+                                    [0., 0., -1.]], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1585,7 +1585,7 @@ def NED2USE(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., -1., 0.],
                                     [0., 0., 1.],
-                                    [-1., 0., 0.]], dtype=np.float).I
+                                    [-1., 0., 0.]], dtype=float).I
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1604,7 +1604,7 @@ def XYZ2USE(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., 0., 1.],
                                     [0., -1., 0.],
-                                    [1., 0., 0.]], dtype=np.float)
+                                    [1., 0., 0.]], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1623,7 +1623,7 @@ def NED2XYZ(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., 1., 0.],
                                     [1., 0., 0.],
-                                    [0., 0., -1.]], dtype=np.float).I
+                                    [0., 0., -1.]], dtype=float).I
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1642,7 +1642,7 @@ def NED2NWU(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[1., 0., 0.],
                                     [0., -1., 0.],
-                                    [0., 0., -1.]], dtype=np.float).I
+                                    [0., 0., -1.]], dtype=float).I
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1662,7 +1662,7 @@ def USE2XYZ(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., 0., 1.],
                                     [0., -1., 0.],
-                                    [1., 0., 0.]], dtype=np.float).I
+                                    [1., 0., 0.]], dtype=float).I
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1682,7 +1682,7 @@ def NWU2XYZ(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., -1., 0.],
                                     [1., 0., 0.],
-                                    [0., 0., 1.]], dtype=np.float)
+                                    [0., 0., 1.]], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1702,7 +1702,7 @@ def NWU2USE(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., 0., 1.],
                                     [-1., 0., 0.],
-                                    [0., -1., 0.]], dtype=np.float)
+                                    [0., -1., 0.]], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1721,7 +1721,7 @@ def XYZ2NWU(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., -1., 0.],
                                     [1., 0., 0.],
-                                    [0., 0., 1.]], dtype=np.float).I
+                                    [0., 0., 1.]], dtype=float).I
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1740,7 +1740,7 @@ def USE2NWU(some_matrix_or_vector):
     """
     basis_change_matrix = np.matrix([[0., 0., 1.],
                                     [-1., 0., 0.],
-                                    [0., -1., 0.]], dtype=np.float).I
+                                    [0., -1., 0.]], dtype=float).I
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
