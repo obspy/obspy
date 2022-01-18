@@ -1186,15 +1186,22 @@ class WaveformPlotting(object):
                     'coordinates and ev_coord. See documentation.'
                 raise ValueError(msg)
         # Define minimum and maximum offsets
-        if self.sect_offset_min is None:
-            self._offset_min = self._tr_offsets.min()
+        if (self.sect_offset_min is None and self.sect_offset_max is None
+                and len(self._tr_offsets) == 1):
+            # avoid flatline in case of a single trace and no custom offsets
+            # specified
+            self._offset_min = self._tr_offsets[0] * 0.8
+            self._offset_max = self._tr_offsets[0] * 1.2
         else:
-            self._offset_min = self.sect_offset_min
+            if self.sect_offset_min is None:
+                self._offset_min = self._tr_offsets.min()
+            else:
+                self._offset_min = self.sect_offset_min
+            if self.sect_offset_max is None:
+                self._offset_max = self._tr_offsets.max()
+            else:
+                self._offset_max = self.sect_offset_max
 
-        if self.sect_offset_max is None:
-            self._offset_max = self._tr_offsets.max()
-        else:
-            self._offset_max = self.sect_offset_max
         # Reduce data to indexes within offset_min/max
         mask = ((self._tr_offsets >= self._offset_min) &
                 (self._tr_offsets <= self._offset_max))
