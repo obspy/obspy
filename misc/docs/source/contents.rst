@@ -1,23 +1,17 @@
 .. _contents:
 
-ObsPy Documentation Contents
-============================
+Table of Contents
+=================
 
 .. toctree::
    :maxdepth: 3
 
    tutorial/index
+   gallery
    packages/index
    changelog
-   credits
-   coding_style
-   gallery
    citations
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   coding_style
+   contributing
+   code_of_conduct
+   credits

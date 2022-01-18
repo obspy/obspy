@@ -5,6 +5,8 @@
 # Based on Guralp's GCF reference (GCF-RFC-GCFR, Issue C, 2011-01-05)
 # more details available from: http://www.guralp.com/apps/ok?doc=GCF_Intro
 # last access: June, 2016
+import struct
+
 import numpy as np
 
 from obspy import UTCDateTime
@@ -27,9 +29,10 @@ TIME_OFFSETS_D = {  # Table 3.1: Time fractional offset denominator
     179: 8.,
     181: 16.}
 COMPRESSION_D = {  # Table 3.2: format field to data type
-    1: '>i4',
-    2: '>i2',
-    4: '>i1'}
+    1: 'i',  # 4 bytes
+    2: 'h',  # 2 bytes
+    4: 'b',  # 1 byte
+}
 
 
 def is_gcf(f):
@@ -86,29 +89,20 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     sysid = f.read(4)
     if not sysid:
         raise EOFError  # got to EOF
-    sysid = np.frombuffer(sysid, count=1, dtype='>u4')
+    sysid, = struct.unpack('>I', sysid)
     if sysid >> 31 & 0b1 > 0:
         sysid = (sysid << 6) >> 6
-    if isinstance(sysid, np.ndarray) and sysid.shape == (1,):
-        sysid = sysid[0]
-    else:
-        raise ValueError('sysid should be a single element np.ndarray')
     sysid = decode36(sysid)
     # get Stream ID
-    stid = np.frombuffer(f.read(4), count=1, dtype='>u4')
-    if isinstance(stid, np.ndarray) and stid.shape == (1,):
-        stid = stid[0]
-    else:
-        raise ValueError('stid should be a single element np.ndarray')
+    stid, = struct.unpack('>I', f.read(4))
     stid = decode36(stid)
     # get Date & Time
-    data = np.frombuffer(f.read(4), count=1, dtype='>u4')
+    data, = struct.unpack('>I', f.read(4))
     starttime = decode_date_time(data)
     # get data format
     # get reserved, SPS, data type compression,
     # number of 32bit records (num_records)
-    reserved, sps, compress, num_records = np.frombuffer(f.read(4), count=4,
-                                                         dtype='>u1')
+    reserved, sps, compress, num_records = struct.unpack('>4B', f.read(4))
     compression = compress & 0b00000111  # get compression code
     t_offset = compress >> 4  # get time offset
     if t_offset > 0:
@@ -136,14 +130,14 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
         return header
     else:
         # get FIC
-        fic = np.frombuffer(f.read(4), count=1, dtype='>i4')
+        fic, = struct.unpack('>i', f.read(4))
         # get incremental data
-        data = np.frombuffer(f.read(4 * num_records), count=npts,
-                             dtype=COMPRESSION_D[compression])
+        data = struct.unpack(f'>{npts}{COMPRESSION_D[compression]}',
+                             f.read(4 * num_records))
         # construct time series
         data = (fic + np.cumsum(data)).astype('i4')
         # get RIC
-        ric = np.frombuffer(f.read(4), count=1, dtype='>i4')
+        ric, = struct.unpack('>i', f.read(4))
         # skip to end of block if only partly filled with data
         if 1000 - num_records * 4 > 0:
             f.seek(1000 - num_records * 4, 1)

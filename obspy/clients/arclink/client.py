@@ -34,6 +34,13 @@ _INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
 MSG_NOPAZ = "No Poles and Zeros information returned by server."
 
 
+# check if sphinx doc building process is running
+if os.environ.get('SPHINXBUILD'):
+    SPHINXBUILD = True
+else:
+    SPHINXBUILD = False
+
+
 class ArcLinkException(Exception):
     """
     Raised by the ArcLink client for known exceptions.
@@ -101,7 +108,9 @@ class Client(object):
                'main servers have been shut down already. Please consider '
                'using other methods like FDSN web services to fetch data. '
                'ArcLink functionality is now untested in ObsPy.')
-        warnings.warn(msg, ObsPyDeprecationWarning)
+        # suppress warning on docs build
+        if not SPHINXBUILD:
+            warnings.warn(msg, ObsPyDeprecationWarning)
         self.user = user
         self.password = password
         self.institution = institution

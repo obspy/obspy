@@ -1189,9 +1189,9 @@ def _test_similarity(event_1, event_2, strict=False):
 
     Raise AssertionError if test fails
 
-    :type event_1: obspy.core.event.Event
+    :type event_1: obspy.core.event.event.event.Event
     :param event_1: First event
-    :type event_2: obspy.core.event.Event
+    :type event_2: obspy.core.event.event.Event
     :param event_2: Comparison event
     :type verbose: bool
     :param verbose: If true and fails will output why it fails.

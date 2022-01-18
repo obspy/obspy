@@ -896,7 +896,8 @@ class SlownessModel(object):
         :type is_p_wave: bool
 
         :returns: The slowness layer(s).
-        :rtype: :class:`~numpy.ndarray` (dtype = :const:`Slowness_layer`,
+        :rtype: :class:`~numpy.ndarray`
+            (dtype = :class:`obspy.taup.helper_classes.SlownessLayer`,
             shape = ``layer_num.shape``)
         """
         if is_p_wave:
@@ -1251,7 +1252,8 @@ class SlownessModel(object):
         :type is_p_wave: bool
 
         :returns: The time (in s) and distance (in rad) the ray travels.
-        :rtype: :class:`~numpy.ndarray` (dtype = :const:`TimeDist`, shape =
+        :rtype: :class:`~numpy.ndarray`
+            (dtype = :class:`obspy.taup.helper_classes.TimeDist`, shape =
             (``slowness_turn_layer``, ))
         """
         # First, if the slowness model contains less than slowness_turn_layer
@@ -1306,7 +1308,8 @@ class SlownessModel(object):
 
         :returns: The time (in s) and distance (in rad) increments for the
             specified ray(s) and layer(s).
-        :rtype: :class:`~numpy.ndarray` (dtype = :const:`TimeDist`, shape =
+        :rtype: :class:`~numpy.ndarray`
+            (dtype = :class:`obspy.taup.helper_classes.TimeDist`, shape =
             ``spherical_ray_param.shape`` or ``layer_num.shape``)
 
         :raises SlownessModelError: If the ray with the given spherical ray

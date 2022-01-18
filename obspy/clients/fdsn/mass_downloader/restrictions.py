@@ -145,10 +145,10 @@ class Restrictions(object):
     :type channel: str
     :param exclude_networks: A list of potentially wildcarded networks that
         should not be downloaded.
-    :type exclude_networks: list of str
+    :type exclude_networks: list[str]
     :param exclude_stations: A list of potentially wildcarded stations that
         should not be downloaded.
-    :type exclude_stations: list of str
+    :type exclude_stations: list[str]
     :param limit_stations_to_inventory: If given, only stations part of the
         this inventory object will be downloaded. All other restrictions
         still apply - this just serves to further limit the set of stations
@@ -177,10 +177,10 @@ class Restrictions(object):
     :type minimum_interstation_distance_in_m: float
     :param channel_priorities: Priority list for the channels. Will not be
         used if the ``channel`` argument is used.
-    :type channel_priorities: list of str
+    :type channel_priorities: list[str]
     :param location_priorities: Priority list for the locations. Will not be
         used if the ``location`` argument is used.
-    :type location_priorities: list of str
+    :type location_priorities: list[str]
     """
     def __init__(self, starttime, endtime,
                  station_starttime=None, station_endtime=None,

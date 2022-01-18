@@ -26,7 +26,7 @@ class FederatorRoutingClient(BaseRoutingClient):
         Initialize a federated routing client.
 
         All parameters except ``url`` are passed on to the
-        :class:`~obspy.clients.fdsn.routing.routing_clieng.BaseRoutingClient`
+        :class:`~obspy.clients.fdsn.routing.routing_client.BaseRoutingClient`
         parent class
 
         :param url: The URL of the routing service.

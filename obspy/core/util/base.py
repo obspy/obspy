@@ -708,7 +708,7 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
 class CatchAndAssertWarnings(warnings.catch_warnings):
     def __init__(self, clear=None, expected=None, show_all=True, **kwargs):
         """
-        :type clear: list of str
+        :type clear: list[str]
         :param clear: list of modules to clear warning
             registries on (e.g. ``["obspy.signal", "obspy.core"]``), in order
             to make sure any expected warnings will be shown and not suppressed

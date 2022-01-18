@@ -385,6 +385,7 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     :return: (pptime, pfm [,cf]) pptime sample number of parrival;
         pfm direction of first motion (U or D), optionally also the
         characteristic function.
+
     .. note:: currently the first sample is not taken into account
 
     .. seealso:: [Baer1987]_

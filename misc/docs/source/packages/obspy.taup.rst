@@ -10,6 +10,11 @@
        :nosignatures:
 
        ~tau.TauPyModel
+       ~velocity_layer.VelocityLayer
+       ~helper_classes.SlownessLayer
+       ~helper_classes.TimeDist
+       ~helper_classes.TimeDistGeo
+       ~helper_classes.CriticalDepth
 
     .. comment to end block
 

@@ -110,7 +110,8 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
     The types oftentimes share attributes and setting them manually every time
     is cumbersome, error-prone and hard to do consistently. The classes created
-    with this method will inherit from :class:`~obspy.core.util.AttribDict`.
+    with this method will inherit from
+    :class:`~obspy.core.util.attribdict.AttribDict`.
 
     Usage to create a new class type:
 
@@ -229,6 +230,10 @@ def _event_type_class_factory(class_name, class_attributes=[],
                     setattr(self, key, QuantityError())
 
         def clear(self):
+            """
+            Clear the class
+            :return:
+            """
             super(AbstractEventType, self).clear()
             self.__init__(force_resource_id=False)
 
@@ -618,7 +623,7 @@ class WaveformStreamID(__WaveformStreamID):
     :type channel_code: str, optional
     :param channel_code: Channel code.
     :type resource_uri:
-    :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_uri: Resource identifier for the waveform stream.
     :type seed_string: str, optional
     :param seed_string: Provides an alternative initialization way by passing a

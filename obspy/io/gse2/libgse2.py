@@ -532,7 +532,7 @@ def parse_sta2(line):
 def compile_sta2(stats):
     """
     Returns a STA2 line as a string (including newline at end) from a
-    :class:`~obspy.core.stats.Stats` object.
+    :class:`~obspy.core.trace.Stats` object.
     """
     fmt1 = "STA2 %-9s %9s %10s %-12s "
     fmt2 = "%5s %5s\n"

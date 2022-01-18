@@ -40,7 +40,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
     opened, otherwise it will just be passed to the underlying function.
 
     :param filename_or_buf: File to pass.
-    :type filename_or_buf: str, open file, or file-like object.
+    :type filename_or_buf: str, open file, or file-like object
     :param function: The function to call.
     :param reset_fp: If True, the file pointer will be set to the initial
         position after the function has been called.
@@ -68,7 +68,7 @@ def _is_cmtsolution(filename_or_buf):
     Checks if the file is a CMTSOLUTION file.
 
     :param filename_or_buf: File to test.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: str or file-like object
     """
     try:
         with warnings.catch_warnings():
@@ -86,7 +86,7 @@ def _internal_is_cmtsolution(buf):
     Checks if the file is a CMTSOLUTION file.
 
     :param buf: File to check.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     # The file format is so simple. Just attempt to read the first event. If
     # it passes it will be read again but that has really no
@@ -103,7 +103,7 @@ def _read_cmtsolution(filename_or_buf, **kwargs):
     Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
 
     :param filename_or_buf: File to read.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: str or file-like object
     """
     return _buffer_proxy(filename_or_buf, _internal_read_cmtsolution, **kwargs)
 
@@ -113,7 +113,7 @@ def _internal_read_cmtsolution(buf, **kwargs):
     Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
 
     :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     events = []
     cur_pos = buf.tell()
@@ -148,7 +148,7 @@ def _internal_read_single_cmtsolution(buf):
     object.
 
     :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     # The first line encodes the preliminary epicenter.
     line = buf.readline()
@@ -307,7 +307,7 @@ def _write_cmtsolution(catalog, filename_or_buf, **kwargs):
     :param catalog: The catalog to write. Can only contain one event.
     :type catalog: :class:`~obspy.core.event.Catalog`
     :param filename_or_buf: Filename or file-like object to write to.
-    :type filename_or_buf: str, open file, or file-like object.
+    :type filename_or_buf: str, open file, or file-like object
     """
     return _buffer_proxy(filename_or_buf, _internal_write_cmtsolution,
                          file_mode="wb", catalog=catalog, **kwargs)
@@ -318,7 +318,7 @@ def _internal_write_cmtsolution(buf, catalog, **kwargs):
     Write events to a file.
 
     :param buf: File to write to.
-    :type buf: Open file or file-like object.
+    :type buf: open file or file-like object
     :param catalog: The catalog to write.
     :type catalog: :class:`~obspy.core.event.Catalog`
     """
@@ -337,9 +337,9 @@ def _internal_write_single_cmtsolution(buf, event, **kwargs):
     Write an event to a file.
 
     :param buf: File to write to.
-    :type buf: Open file or file-like object.
+    :type buf: open file or file-like object
     :param event: The event to write.
-    :type event: :class:`~obspy.core.event.Event`
+    :type event: :class:`~obspy.core.event.event.Event`
     """
     if not event.focal_mechanisms:
         raise ValueError("Event must contain a focal mechanism.")

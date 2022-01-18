@@ -42,7 +42,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
     opened, otherwise it will just be passed to the underlying function.
 
     :param filename_or_buf: File to pass.
-    :type filename_or_buf: str, open file, or file-like object.
+    :type filename_or_buf: str, open file, or file-like object
     :param function: The function to call.
     :param reset_fp: If True, the file pointer will be set to the initial
         position after the function has been called.
@@ -70,7 +70,7 @@ def _is_fnetmt_catalog(filename_or_buf):
     Checks if the file is an F-net moment tensor file.
 
     :param filename_or_buf: File to test.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: str or file-like object
     """
     try:
         return _buffer_proxy(filename_or_buf, _internal_is_fnetmt_catalog,
@@ -87,7 +87,7 @@ def _internal_is_fnetmt_catalog(buf):
     header and the first data line. Reads at most 40 lines.
 
     :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     cnt = 0
     try:
@@ -123,7 +123,7 @@ def _read_fnetmt_catalog(filename_or_buf, **kwargs):
     :class:`~obspy.core.event.Catalog` object.
 
     :param filename_or_buf: File to read.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: str or file-like object
     """
     return _buffer_proxy(filename_or_buf, _internal_read_fnetmt_catalog,
                          **kwargs)
@@ -135,7 +135,7 @@ def _internal_read_fnetmt_catalog(buf, **kwargs):
     :class:`~obspy.core.event.Catalog` object.
 
     :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     events = []
     cur_pos = buf.tell()
@@ -178,10 +178,10 @@ def _internal_read_fnetmt_catalog(buf, **kwargs):
 def _internal_read_single_fnetmt_entry(line, **kwargs):
     """
     Reads a single F-net moment tensor solution to a
-    :class:`~obspy.core.event.Event` object.
+    :class:`~obspy.core.event.event.Event` object.
 
     :param line: String containing moment tensor information.
-    :type line: str.
+    :type line: str
     """
 
     a = line.split()

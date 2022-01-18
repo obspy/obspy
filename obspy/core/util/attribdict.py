@@ -83,8 +83,10 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
         >>> assert(attrib_dict_1 == attrib_dict_2)
         """
         # set default values directly
+        #: Calling the Subclassed dict update method
         self.__dict__.update(self.defaults)
         # use overwritable update method to set arguments
+        #: Subclassed update method
         self.update(dict(*args, **kwargs))
 
     def __repr__(self):
@@ -157,7 +159,7 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
         """
         Return better readable string representation of AttribDict object.
 
-        :type priorized_keys: list of str, optional
+        :type priorized_keys: list[str], optional
         :param priorized_keys: Keywords of current AttribDict which will be
             shown before all other keywords. Those keywords must exists
             otherwise an exception will be raised. Defaults to empty list.

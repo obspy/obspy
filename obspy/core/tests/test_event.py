@@ -29,7 +29,7 @@ else:
 
 class TestEvent:
     """
-    Test suite for obspy.core.event.Event
+    Test suite for obspy.core.event.event.Event
     """
 
     def test_str(self):

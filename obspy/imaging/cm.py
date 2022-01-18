@@ -218,15 +218,14 @@ def _get_cmap(file_name, lut=None, reverse=False):
 
     :type file_name: str
     :param file_name: Name of colormap to load, same as filename in
-                      `obspy/imaging/data`. The type of colormap data is
-                      determined from the extension: .npz assumes the file
-                      contains colorbar segments (segmented colormap).
-                      '*.npy' assumes the file contains a simple array of RGB
-                      values with size [ncolors, 3].
+        `obspy/imaging/data`. The type of colormap data is determined from the
+        extension: .npz assumes the file contains colorbar segments (segmented
+        colormap). '*.npy' assumes the file contains a simple array of RGB
+        values with size [ncolors, 3].
     :type lut: int
-    :param lut: Specifies the number of discrete color values in the
-                segmented colormap. Only used for segmented colormap
-                `None` to use matplotlib default value (continuous colormap).
+    :param lut: Specifies the number of discrete color values in the segmented
+        colormap. Only used for segmented colormap `None` to use matplotlib
+        default value (continuous colormap).
     :type reverse: bool
     :param reverse: Whether to return the specified colormap reverted.
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
@@ -299,6 +298,7 @@ obspy_sequential = _globals["viridis"]
 obspy_sequential_r = _globals["viridis_r"]
 obspy_divergent = get_cmap("RdBu_r")
 obspy_divergent_r = get_cmap("RdBu")
+#: PQLX colormap
 pqlx = _get_cmap("pqlx.npz")
 
 
@@ -609,7 +609,7 @@ def _colormap_plot_beamforming_polar(cmaps):
         ax.set_theta_zero_location("N")
         # circle through backazimuth
         for i, row in enumerate(hist):
-            ax.bar(left=(i * dw) * np.ones(num2),
+            ax.bar((i * dw) * np.ones(num2),
                    height=dh * np.ones(num2),
                    width=dw, bottom=dh * np.arange(num2),
                    color=cmap(row / hist.max()))

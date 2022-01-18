@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Module for handling ObsPy Stream objects.
+Module for handling ObsPy :class:`~obspy.core.stream.Stream` objects.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -41,7 +41,8 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
          endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
          check_compression=True, **kwargs):
     """
-    Read waveform files into an ObsPy Stream object.
+    Read waveform files into an ObsPy :class:`~obspy.core.stream.Stream`
+    object.
 
     The :func:`~obspy.core.stream.read` function opens either one or multiple
     waveform files given via file name or URL using the ``pathname_or_url``
@@ -298,7 +299,8 @@ def _create_example_stream(headonly=False):
 
 class Stream(object):
     """
-    List like object of multiple ObsPy Trace objects.
+    List like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
+    objects.
 
     :type traces: list of :class:`~obspy.core.trace.Trace`, optional
     :param traces: Initial list of ObsPy :class:`~obspy.core.trace.Trace`
@@ -544,7 +546,7 @@ class Stream(object):
         This function strictly compares the data and stats objects of each
         trace contained by the streams. If less strict behavior is desired,
         which may be the case for testing, consider using the
-        :func:`~obspy.core.util.testing.stream_almost_equal` function.
+        :func:`~obspy.core.util.testing.streams_almost_equal` function.
 
         :type other: :class:`~obspy.core.stream.Stream`
         :param other: Stream object for comparison.
@@ -659,7 +661,7 @@ class Stream(object):
         """
         Append a single Trace object to the current Stream object.
 
-        :param trace: :class:`~obspy.core.stream.Trace` object.
+        :param trace: :class:`~obspy.core.trace.Trace` object.
 
         .. rubric:: Example
 
@@ -2296,7 +2298,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
-        :type window: array_like, callable, str, float, or tuple, optional
+        :type window: :class:`numpy.ndarray`, callable, str, float, or tuple,
+            optional
         :param window: Specifies the window applied to the signal in the
             Fourier domain. Defaults ``'hanning'`` window. See
             :func:`scipy.signal.resample` for details.
@@ -3226,10 +3229,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type npts_tol: int
         :param npts_tol: Tolerate traces with different number of points
             with a difference up to this value. Surplus samples are discarded.
-        :type time_tol: float (seconds)
-        :param time_tol: Tolerate difference in startime when setting the
-            new starttime of the stack. If starttimes differs more than this
-            value it will be set to timestamp 0.
+        :type time_tol: float
+        :param time_tol: Tolerate difference, in seconds, in startime when
+            setting the new starttime of the stack. If starttimes differs more
+            than this value it will be set to timestamp 0.
 
         >>> from obspy import read
         >>> st = read()

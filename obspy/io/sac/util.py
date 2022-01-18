@@ -98,13 +98,17 @@ def _convert_enum(header, converter, accep):
 
 
 def enum_string_to_int(header):
-    """Convert enumerated string values in header dictionary to int values."""
+    """
+    Convert enumerated string values in header dictionary to int values.
+    """
     out = _convert_enum(header, converter=HD.ENUM_VALS, accep=HD.ACCEPTED_VALS)
     return out
 
 
 def enum_int_to_string(header):
-    """Convert enumerated int values in header dictionary to string values."""
+    """
+    Convert enumerated int values in header dictionary to string values.
+    """
     out = _convert_enum(header, converter=HD.ENUM_NAMES, accep=HD.ACCEPTED_INT)
     return out
 
@@ -113,16 +117,14 @@ def byteswap(*arrays):
     """
     Swapping of bytes for provided arrays.
 
-    Notes
-    -----
+    **Notes**
+
     arr.newbyteorder('S') swaps dtype interpretation, but not bytes in memory
     arr.byteswap() swaps bytes in memory, but not dtype interpretation
     arr.byteswap(True).newbyteorder('S') completely swaps both
 
-    References
-    ----------
-    https://docs.scipy.org/doc/numpy/user/basics.byteswapping.html
-
+    .. seealso::
+        https://docs.scipy.org/doc/numpy/user/basics.byteswapping.html
     """
     return [arr.newbyteorder('S') for arr in arrays]
 
@@ -140,7 +142,6 @@ def is_same_byteorder(bo1, bo2):
 
     :rtype: bool
     :return: True of same byte order.
-
     """
     # TODO: extend this as is_same_byteorder(*byteorders) using itertools
     be = ('b', 'big', '>')
@@ -184,9 +185,8 @@ def sac_to_obspy_header(sacheader):
     :param sacheader: SAC header dictionary.
     :type sacheader: dict
 
-    :rtype: :class:`~obspy.core.Stats`
+    :rtype: :class:`~obspy.core.trace.Stats`
     :return: Filled ObsPy Stats header.
-
     """
 
     # 1. get required sac header values
@@ -277,7 +277,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     Merge a primary with a secondary header, reconciling some differences.
 
     :param stats: Filled ObsPy Stats header
-    :type stats: dict or :class:`~obspy.core.Stats`
+    :type stats: dict or :class:`~obspy.core.trace.Stats`
     :param keep_sac_header: If keep_sac_header is True, old stats.sac
         header values are kept, and a minimal set of values are updated from
         the stats dictionary according to these guidelines:
@@ -307,7 +307,6 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     :type keep_sac_header: bool
     :rtype merged: dict
     :return: SAC header
-
     """
     header = {}
     oldsac = stats.get('sac', {})
@@ -409,9 +408,8 @@ def get_sac_reftime(header):
     :param header: SAC header
     :type header: dict
 
-    :rtype: :class:`~obspy.core.UTCDateTime`
+    :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :returns: SAC reference time.
-
     """
     # NOTE: epoch seconds can be got by:
     # (reftime - datetime.datetime(1970,1,1)).total_seconds()

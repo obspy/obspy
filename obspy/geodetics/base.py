@@ -250,7 +250,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
         for converting between geographic, UTM, UPS, MGRS, and geocentric
         coordinates, for geoid calculations, and for solving geodesic problems.
         Otherwise the locally implemented Vincenty's Inverse formulae
-        (:func:`obspy.core.util.geodetics.calc_vincenty_inverse`) is used which
+        (:func:`obspy.geodetics.base.calc_vincenty_inverse`) is used which
         has known limitations for two nearly antipodal points and is ca. 4x
         slower.
     """

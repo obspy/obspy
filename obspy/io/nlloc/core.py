@@ -47,7 +47,7 @@ def is_nlloc_hyp(filename):
 def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     """
     Reads a NonLinLoc Hypocenter-Phase file to a
-    :class:`~obspy.core.event.Catalog` object.
+    :class:`~obspy.core.event.catalog.Catalog` object.
 
     .. note::
 
@@ -61,7 +61,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         page in the documentation pages.
 
     :param filename: File or file-like object in text mode.
-    :type coordinate_converter: func
+    :type coordinate_converter: callable
     :param coordinate_converter: Function to convert (x, y, z)
         coordinates of NonLinLoc output to geographical coordinates and depth
         in meters (longitude, latitude, depth in kilometers).
@@ -70,14 +70,14 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         The function should accept three arguments x, y, z (each of type
         :class:`numpy.ndarray`) and return a tuple of three
         :class:`numpy.ndarray` (lon, lat, depth in kilometers).
-    :type picks: list of :class:`~obspy.core.event.Pick`
+    :type picks: list of :class:`~obspy.core.event.origin.Pick`
     :param picks: Original picks used to generate the NonLinLoc location.
         If provided, the output event will include the original picks and the
         arrivals in the output origin will link to them correctly (with their
         ``pick_id`` attribute). If not provided, the output event will include
         (the rather basic) pick information that can be reconstructed from the
         NonLinLoc hypocenter-phase file.
-    :rtype: :class:`~obspy.core.event.Catalog`
+    :rtype: :class:`~obspy.core.event.catalog.Catalog`
     """
     if not hasattr(filename, "read"):
         # Check if it exists, otherwise assume its a string.
@@ -369,16 +369,16 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
 def write_nlloc_obs(catalog, filename, **kwargs):
     """
     Write a NonLinLoc Phase file (NLLOC_OBS) from a
-    :class:`~obspy.core.event.Catalog` object.
+    :class:`~obspy.core.event.catalog.Catalog` object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
         the :meth:`~obspy.core.event.Catalog.write` method of an
         ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: str or file
+    :type filename: str or file-like object
     :param filename: Filename to write or open file-like object.
     """
     info = []

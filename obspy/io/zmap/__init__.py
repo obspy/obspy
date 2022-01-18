@@ -67,13 +67,14 @@ origin and magnitude columns. Any missing values are exported as ``'NaN'``.
 Writing extended ZMAP, is supported by using the keyword argument
 ``with_uncertainties``.
 
-If :class:`~obspy.core.event.OriginUncertainty` specifies a
+If :class:`~obspy.core.event.origin.OriginUncertainty` specifies a
 *horizontal uncertainty* the value for column 11 is extracted from there.
 *Uncertainty ellipse* and *confidence ellipsoid* are not currently supported.
-If no horizontal uncertainty is given, :class:`~obspy.core.event.Origin`'s
+If no horizontal uncertainty is given,
+:class:`~obspy.core.event.origin.Origin`'s
 ``latitude_errors`` and ``longitude_errors`` are used instead. Depth and
 magnitude errors are always read from the respective ``_errors`` attribute in
-:class:`~obspy.core.event.Origin`.
+:class:`~obspy.core.event.origin.Origin`.
 
 
 The ZMAP Format
@@ -113,4 +114,5 @@ Column #            Value
 """
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod(exclude_empty=True)

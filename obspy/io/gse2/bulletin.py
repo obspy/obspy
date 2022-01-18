@@ -284,12 +284,12 @@ class Unpickler(object):
             used as a prefix for the new
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`.
         :type parent_res_id:
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :param parent_res_id:
             :class:`~obspy.core.event.resourceid.ResourceIdentifier` of the
             parent.
-        :param parent_res_id:
-            :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :rtype: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
-        :return: ResourceIdentifier object.
+        :return:  ResourceIdentifier object.
         """
         prefix = self.res_id_prefix
         # Put the parent id as prefix

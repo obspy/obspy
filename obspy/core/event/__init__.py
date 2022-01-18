@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.event - Classes for handling event metadata
-======================================================
+Module handling event metadata
+
 This module provides a class hierarchy to consistently handle event metadata.
 This class hierarchy is closely modelled after the de-facto standard
 format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
