@@ -17,6 +17,7 @@ INSTALL_REQUIRES = [
 
 # The modules needed for running ObsPy's test suite.
 PYTEST_REQUIRES = [
+    'packaging',
     'pytest',
     'pytest-cov',
     'pytest-json-report',
