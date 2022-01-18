@@ -109,10 +109,19 @@ def main():
     os.chdir(base_obspy_path)
     try:
         status = pytest.main(plugins=[plugin])
+    except Exception as e:
+        raise e
+    else:
+        if int(status) > 1:
+            msg = (
+                'A failure occurred while running ObsPys test suite. Please '
+                'check the output carefully and try again.'
+                   )
+            raise ValueError(msg)
+        upload_json_report(report=report, data=plugin.report)
+        sys.exit(status)
     finally:
         os.chdir(here)
-    upload_json_report(report=report, data=plugin.report)
-    sys.exit(status)
 
 
 def upload_json_report(report=None, data=None):
