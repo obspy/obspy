@@ -162,9 +162,9 @@ def _trace_list_to_rec_array(traces):
     """
     # get the id, starttime, endtime into a recarray
     # rec array column names must be native strings due to numpy issue 2407
-    dtype1 = [('id', np.object), ('starttime', float),
+    dtype1 = [('id', object), ('starttime', float),
               ('endtime', float)]
-    dtype2 = [('data', np.object), ('stats', np.object)]
+    dtype2 = [('data', object), ('stats', object)]
     data1 = [(tr.id, tr.stats.starttime.timestamp, tr.stats.endtime.timestamp)
              for tr in traces]
     data2 = [(tr.data, tr.stats) for tr in traces]

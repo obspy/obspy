@@ -376,7 +376,7 @@ def _plot_cartopy_into_axes(
     # scatter plot is removing valid x/y points with invalid color value,
     # so we plot those points separately.
     try:
-        nan_points = np.isnan(np.array(color, dtype=np.float))
+        nan_points = np.isnan(np.array(color, dtype=float))
     except ValueError:
         # `color' was not a list of values, but a list of colors.
         pass
