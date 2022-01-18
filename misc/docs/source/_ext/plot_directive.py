@@ -2,7 +2,7 @@
 A directive for including a Matplotlib plot in a Sphinx document
 ================================================================
 
-Shameless copy of 
+Shameless copy of
 https://matplotlib.org/3.2.2/_modules/matplotlib/sphinxext/plot_directive.html
 modified in order to use also :target: in plots.
 """
