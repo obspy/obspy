@@ -40,7 +40,7 @@ import re
 from subprocess import STDOUT, CalledProcessError, check_output
 
 
-__all__ = ("get_git_version")
+__all__ = ["get_git_version"]
 
 script_dir = os.path.abspath(os.path.dirname(inspect.getfile(
                                              inspect.currentframe())))

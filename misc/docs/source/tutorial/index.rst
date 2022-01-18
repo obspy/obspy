@@ -1,7 +1,7 @@
 .. _tutorial:
 
-ObsPy Tutorial
-==============
+Tutorial
+========
 
 .. note::
     A one-hour introduction to ObsPy is
@@ -11,7 +11,7 @@ This tutorial does not attempt to be comprehensive and cover every single
 feature. Instead, it introduces many of ObsPy's most noteworthy features, and
 will give you a good idea of the library’s flavor and style.
 
-A pdf version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`. A Chinese translation of the tutorial (as of 2020-04-12) is available `here <http://docs.obspy.org/archive/ObsPy_Tutorial_2020-04_chinese.pdf>`_.
+A PDF version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`. A Chinese translation of the tutorial (as of 2020-04-12) is available `here <http://docs.obspy.org/archive/ObsPy_Tutorial_2020-04_chinese.pdf>`_.
 
 There are also IPython notebooks available online with an
 `introduction to Python <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2017-10-25_iris_stcu/Python%20Introduction/Python_Crash_Course.ipynb>`__
@@ -26,7 +26,6 @@ Introduction to ObsPy
 ---------------------
 
 .. toctree::
-   :numbered:
    :maxdepth: 2
 
    code_snippets/python_introduction
@@ -48,7 +47,7 @@ Introduction to ObsPy
    code_snippets/export_seismograms_to_ascii
    code_snippets/anything_to_miniseed
    code_snippets/beachball_plot
-   code_snippets/basemap_plot_with_beachballs
+   code_snippets/cartopy_plot_with_beachballs
    code_snippets/interfacing_r_from_python
    code_snippets/coordinate_conversions
    code_snippets/hierarchical_clustering.rst

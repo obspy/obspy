@@ -59,7 +59,8 @@ def cosine_taper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     :return: Cosine taper array/vector of length npts.
     :type freqs: NumPy :class:`~numpy.ndarray`
     :param freqs: Frequencies as, for example, returned by fftfreq
-    :type flimit: list or tuple of floats
+    :type flimit: list(float, float, float, float) or
+        tuple(float, float, float, float)
     :param flimit: The list or tuple defines the four corner frequencies
         (f1, f2, f3, f4) of the cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
@@ -157,7 +158,7 @@ def cosine_sac_taper(freqs, flimit):
     :param freqs: frequency vector to use
     :type freqs: :class:`numpy.ndarray`
     :param flimit: sequence containing the 4 frequency limits
-    :type flimit: tuple of 4 floats
+    :type flimit: tuple(float, float, float, float)
     :returns: taper
     :rtype: :class:`numpy.ndarray`
 
@@ -221,7 +222,7 @@ def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
 
     :type t_samp: float
     :param t_samp: Sampling interval in seconds
-    :type frequencies: list of float
+    :type frequencies: list[float]
     :param frequencies: Discrete frequencies to calculate response for.
     :type filename: str or file
     :param filename: SEED RESP-filename or open file like object with RESP
@@ -357,9 +358,9 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
 
     The output contains the frequency zero which is the offset of the trace.
 
-    :type poles: list of complex
+    :type poles: list[complex]
     :param poles: The poles of the transfer function
-    :type zeros: list of complex
+    :type zeros: list[complex]
     :param zeros: The zeros of the transfer function
     :type scale_fac: float
     :param scale_fac: Gain factor
@@ -465,7 +466,8 @@ def simulate_seismometer(
     :param taper: If true a cosine taper is applied.
     :type taper_fraction: float
     :param taper_fraction: Taper fraction of cosine taper to use
-    :type pre_filt: list or tuple of floats
+    :type pre_filt: list(float, float, float, float) or
+        tuple(float, float, float, float)
     :param pre_filt: Apply a bandpass filter to the data trace before
         deconvolution. The list or tuple defines the four corner frequencies
         (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and

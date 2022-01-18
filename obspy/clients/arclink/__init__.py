@@ -20,6 +20,9 @@ import warnings
 
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
+from .client import SPHINXBUILD, Client  # NOQA
+
+
 # Raise a deprecation warning. This has been requested by the EIDA management
 # board.
 msg = ('ArcLink protocol has been officially deprecated and some '
@@ -27,7 +30,5 @@ msg = ('ArcLink protocol has been officially deprecated and some '
        'using other methods like FDSN web services to fetch data. '
        'ArcLink functionality is now untested in ObsPy.')
 # suppress warning on docs build
-if os.environ.get('SPHINX') != 'true':
+if not SPHINXBUILD:
     warnings.warn(msg, category=ObsPyDeprecationWarning)
-
-from .client import Client  # NOQA

@@ -37,7 +37,7 @@ class Ellipse:
         :param theta: azimuth (degrees CW from 0=N (y positive))
         :type b: float
         :param center: x,y coordinates of ellipse center
-        :type center: tuple of numeric
+        :type center: tuple(:class:`numpy.ndarray)
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
@@ -57,7 +57,7 @@ class Ellipse:
         :param uncert: obspy origin_uncertainty
         :type uncert: :class: `~obspy.origin.origin_uncertainty`
         :param center: center position (x,y)
-        :type center: 2-tuple of numeric
+        :type center: tuple
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
@@ -79,7 +79,7 @@ class Ellipse:
         :param cov: covariance matrix [[c_xx, c_xy], [c_xy, c_yy]]
         :type cov: 2-list of 2-lists
         :param center: center position (x,y)
-        :type center: 2-tuple of numeric
+        :type center: tuple
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
@@ -122,7 +122,7 @@ class Ellipse:
         :param c_xy:  x-y covariance (dist_units^2)
         :type c_xy: float
         :param center: center position (x,y)
-        :type center: 2-tuple of numeric
+        :type center: tuple
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
@@ -146,7 +146,7 @@ class Ellipse:
         :param baz:   back-azimuth from observer (degrees)
         :type baz: float
         :param viewpoint: observer's position
-        :type viewpoint: 2-tuple of floats
+        :type viewpoint: tuple
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
@@ -201,7 +201,7 @@ class Ellipse:
 
         :returns: covariance_matrix [[c_xx, c_xy], [c_xy, c_yy]],
                  center_position (x,y)
-        :rtype: 2-tuple
+        :rtype: tuple
         """
         sin_theta = sin(radians(self.theta))
         cos_theta = cos(radians(self.theta))
@@ -236,7 +236,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: True or False
         :rtype: bool
         """
@@ -253,7 +253,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: True or False
         :rtype: bool
         """
@@ -273,9 +273,9 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: original coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: new coordinates of the viewpoint
-        :rtype: 2-tuple of floats
+        :rtype: tuple(float, float)
         """
         # Translate
         pt1 = (pt[0] - self.x, pt[1] - self.y)
@@ -294,9 +294,9 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: original coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: new coordinates of the viewpoint
-        :rtype: 2-tuple of floats
+        :rtype: tuple(float, float)
         """
         # Unrotate
         r_rot = _rot_cw(self.theta)
@@ -314,7 +314,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: coordinates of both tangent intersections
         :rtype: 2-tuple of 2-tuples of floats
         """
@@ -358,7 +358,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: subtended angle (degrees)
         :rtype: float
 
@@ -448,7 +448,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the viewpoint (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param color: Color of the edges. Defaults to ``'k'`` (black).

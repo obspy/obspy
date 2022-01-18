@@ -6,6 +6,7 @@ from copy import deepcopy
 import warnings
 from unittest import mock
 
+from packaging.version import parse as parse_version
 import numpy as np
 import numpy.ma as ma
 
@@ -1414,7 +1415,6 @@ class TestTrace:
         Test if the correct times array is returned for normal traces and
         traces with gaps.
         """
-        from distutils.version import LooseVersion
         from matplotlib import __version__
         tr = Trace(data=np.ones(100))
         tr.stats.sampling_rate = 20
@@ -1455,7 +1455,7 @@ class TestTrace:
         expected = np.array([
                 10957.000000000000, 10957.000000578704, 10957.000001157407,
                 10957.000001736111, 10957.000002314815])
-        if LooseVersion(__version__) < LooseVersion('3.3'):
+        if parse_version(__version__) < parse_version('3.3'):
             expected = np.array([
                 730120.00000000000000000000, 730120.00000057870056480169,
                 730120.00000115740112960339, 730120.00000173610169440508,

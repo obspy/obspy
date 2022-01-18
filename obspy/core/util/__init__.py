@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.util - Various utilities for ObsPy
-=============================================
+Various utilities for ObsPy
 
 .. note:: Please import all utilities within your custom applications from this
     module rather than from any sub module, e.g.

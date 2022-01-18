@@ -80,7 +80,7 @@ class ClientHTTPException(ClientException,
     """
     Exception that should be raised for all HTTP exceptions.
 
-    Inherits from :class:`requests.exceptions.Request.Exception` so catching
+    Inherits from :class:`requests.exceptions.RequestException` so catching
     the main requests exception catches this one as well.
     """
     pass
@@ -186,7 +186,7 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
         :type filename: str or file-like object
         :param data: If specified, a POST request will be sent with the data in
             the body of the request.
-        :type data: dictionary, bytes, or file-like object
+        :type data: dict, bytes, or file-like object
         :return: The response object assuming ``filename`` is ``None``.
         :rtype: :class:`requests.Response`
         """

@@ -101,7 +101,7 @@ class FlinnEngdahl(object):
         :type longitude: int or float
         :param latitude: WGS84 latitude
         :type latitude: int or float
-        :rtype: string
+        :rtype: str
         :return: Quadrant name (ne, nw, se and sw)
         """
         if longitude >= 0 and latitude >= 0:
@@ -127,7 +127,7 @@ class FlinnEngdahl(object):
         :type longitude: int or float
         :param latitude: WGS84 latitude
         :type latitude: int or float
-        :rtype: string
+        :rtype: str
         :return: Flinn Engdahl region number
         """
         if longitude < -180 or longitude > 180:
@@ -174,7 +174,7 @@ class FlinnEngdahl(object):
         :type longitude: int or float
         :param latitude: WGS84 latitude
         :type latitude: int or float
-        :rtype: string
+        :rtype: str
         :return: Flinn Engdahl region name
         """
 
@@ -195,7 +195,7 @@ class FlinnEngdahl(object):
 
         :param number: Region ID
         :type number: int
-        :rtype: string
+        :rtype: str
         :return: Flinn Engdahl region name
         """
         return self.by_number[number]

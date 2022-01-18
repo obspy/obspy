@@ -298,7 +298,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     you have to determine yourself if the given response is for velocity
     or displacement and if the values are given in rad or Hz. This is
     still experimental code (see also documentation for
-    :func:`obspy.io.sac.sacio.attach_paz`).
+    :func:`obspy.io.sac.sacpz.attach_paz`).
     Attaches to a trace a paz AttribDict containing poles, zeros, and gain.
 
     :param tr: An ObsPy :class:`~obspy.core.trace.Trace` object

@@ -48,7 +48,7 @@ def _internal_is_sac(buf):
     Checks whether a file-like object contains a SAC file or not.
 
     :param buf: SAC file to be checked.
-    :type buf: file-like object or open file.
+    :type buf: file-like object or open file
     :rtype: bool
     :return: ``True`` if a SAC file.
     """
@@ -290,8 +290,8 @@ def _internal_write_sac_xy(trace, buf, **kwargs):  # @UnusedVariable
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        the :meth:`~obspy.core.trace.Stream.write` method of an
-        ObsPy :class:`~obspy.core.trace.Stream` object, call this instead.
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
     :param trace: The ObsPy Trace object to write.
     :type trace: :class:`~obspy.core.trace.Trace`
@@ -358,7 +358,7 @@ def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param buf: SAC file to be read.
-    :type buf: file or file-like object.
+    :type buf: file or file-like object
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
     :type headonly: bool
@@ -373,10 +373,11 @@ def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
         from header. Defaults to ``True``.
     :type fsize: bool
     :param byteorder: If omitted or None, automatic byte-order checking is
-        done, starting with native order. If byteorder is specified and
-        incorrect, a :class:`SacIOError` is raised. Only valid for binary
+        done, starting with native order. If byteorder is specified,
+        {'little', 'big'}, and incorrect, a
+        :class:`obspy.io.sac.util.SacIOError` is raised. Only valid for binary
         files.
-    :type byteorder: str {'little', 'big'}, optional
+    :type byteorder: str, optional
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
@@ -446,7 +447,7 @@ def _write_sac(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
 
 def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
     """
-    Writes a single trace to an open file or file-like object.
+    Writes a single trace to an open file or file-like object
 
     .. warning::
         This function should NOT be called directly, it registers via the

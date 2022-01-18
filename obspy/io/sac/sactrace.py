@@ -242,8 +242,6 @@ Great for interactive use, with (ipython) tab-completion...
     sac.kcmpnm            sac.nzmin             sac.write
     sac.kdatrd            sac.nzmsec
 
-...and documentation (in IPython)!
-
 .. code:: python
 
     sac.iztype?
@@ -327,6 +325,7 @@ scale      = 1.0
              sac: AttribDict(...)
 
 """
+import os
 import sys
 import warnings
 from copy import deepcopy
@@ -469,7 +468,9 @@ class EnumHeader(IntHeader):
             msg = """Unrecognized enumerated value {} for header "{}".
                      See .header for allowed values.""".format(value,
                                                                self.name)
-            warnings.warn(msg)
+            # suppress warning on docs build
+            if not os.environ.get('SPHINXBUILD'):
+                warnings.warn(msg)
             name = None
         return name
 
@@ -690,12 +691,13 @@ class SACTrace(object):
     :var reftime: Read-only reference time.  Calculated from nzyear, nzjday,
         nzhour, nzmin, nzsec, nzmsec.
     :var byteorder: The byte order of the underlying header/data arrays.
-        Raises :class:`SacError` if array byte orders are inconsistent, even in
-        the case where '<' is your native order and byteorders look like '<',
-        '=', '='.
+        Raises :class:`obspy.io.sac.util.SacError` if array byte orders are
+        inconsistent, even in the case where '<' is your native order and
+        byteorders look like '<', '=', '='.
 
-    Any valid header name is also an attribute. See below, :mod:`header`,
-    or individial attribution docstrings for more header information.
+    Any valid header name is also an attribute.
+    See below, :mod:`obspy.io.sac.header`, or individial attribution docstrings
+    for more header information.
 
                                  THE SAC HEADER
 
@@ -856,7 +858,7 @@ class SACTrace(object):
         # The Plan:
         # 1. Build the default header dictionary and update with provided
         #    values.
-        # 2. Convert header dict to arrays (util.dict_to_header_arrays
+        # 2. Convert header dict to arrays (.arrayio.dict_to_header_arrays)
         #    initializes the arrays and fills in without checking.
         # 3. set the _h[fis] and data arrays on self.
 
@@ -1037,10 +1039,11 @@ class SACTrace(object):
         :param ascii: If True, file is a SAC ASCII/Alphanumeric file.
         :type ascii: bool
         :param byteorder: If omitted or None, automatic byte-order checking is
-            done, starting with native order. If byteorder is specified and
-            incorrect, a :class:`SacIOError` is raised. Only valid for binary
-            files.
-        :type byteorder: str {'little', 'big'}, optional
+            done, starting with native order. If byteorder is specified
+            {'little', 'big'}, and incorrect, a
+            :class:`obspy.io.sac.util.SacIOError` is raised.
+            Only valid for binary files.
+        :type byteorder: str, optional
         :param checksize: If True, check that the theoretical file size from
             the header matches the size on disk. Only valid for binary files.
         :type checksize: bool
@@ -1050,11 +1053,11 @@ class SACTrace(object):
             are instead passed without modification.  Good for debugging.
         :type debug_strings: bool
         :param encoding: Encoding string that passes the user specified
-        encoding scheme.
+            encoding scheme.
         :type encoding: str
 
-        :raises: :class:`SacIOError` if checksize failed, byteorder was wrong,
-            or header arrays are wrong size.
+        :raises: :class:`obspy.io.sac.util.SacIOError`: if checksize failed,
+            byteorder was wrong, or header arrays are wrong size.
 
         .. rubric:: Example
 
@@ -1110,10 +1113,11 @@ class SACTrace(object):
         :param ascii: If True, file is a SAC ASCII/Alphanumeric file.
         :type ascii: bool
         :param byteorder: If omitted or None, automatic byte-order checking is
-            done, starting with native order. If byteorder is specified and
-            incorrect, a :class:`SacIOError` is raised. Only valid for binary
-            files.
-        :type byteorder: str {'little', 'big'}, optional
+            done, starting with native order. If byteorder is specified (
+            'little' or 'big') and incorrect, a
+            :class:`obspy.io.sac.util.SacIOError` is raised.
+            Only valid for binary files.
+        :type byteorder: str, optional
         :param flush_headers: If True, update data headers like 'depmin' and
             'depmax' with values from the data array.
         :type flush_headers: bool
@@ -1153,8 +1157,8 @@ class SACTrace(object):
         :param data: SAC data array, optional.
 
         If omitted or None, the header arrays are intialized according to
-        :func:`arrayio.init_header_arrays`.  If data is omitted, it is
-        simply set to None on the corresponding :class:`SACTrace`.
+        :func:`obspy.io.sac.arrayio.init_header_arrays`.  If data is omitted,
+        it is simply set to None on the corresponding :class:`SACTrace`.
 
         .. rubric:: Example
 
@@ -1206,7 +1210,7 @@ class SACTrace(object):
         Construct an instance from an ObsPy Trace.
 
         :param trace: Source Trace object
-        :type trace: :class:`~obspy.core.Trace` instance
+        :type trace: :class:`~obspy.core.trace.Trace`
         :param keep_sac_header: If True, any old stats.sac header values are
             kept as is, and only a minimal set of values are updated from the
             stats dictionary: npts, e, and data.  If an old iztype and a valid
@@ -1251,7 +1255,7 @@ class SACTrace(object):
             Trace.stats.sac dictionary.
         :type debug_headers: bool
         :param encoding: Encoding string that passes the user specified
-        encoding scheme.
+            encoding scheme.
         :type encoding: str
 
         .. rubric:: Example
@@ -1299,21 +1303,23 @@ class SACTrace(object):
         Check validity of loaded SAC file content, such as header/data
         consistency.
 
-        :param tests: One or more of the following validity tests:
-            'delta' : Time step "delta" is positive.
-            'logicals' : Logical values are 0, 1, or null
-            'data_hdrs' : Length, min, mean, max of data array match header
-                values.
-            'enums' : Check validity of enumerated values.
-            'reftime' : Reference time values in header are all set.
-            'reltime' : Relative time values in header are absolutely
-                referenced.
-            'all' : Do all tests.
+        :param tests: One or more of the following validity
+            tests:
+
+            - 'delta' : Time step "delta" is positive.
+            - 'logicals' : Logical values are 0, 1, or null
+            - 'data_hdrs' : Length, min, mean, max of data array match
+              header values.
+            - 'enums' : Check validity of enumerated values.
+            - 'reftime' : Reference time values in header are all set.
+            - 'reltime' : Relative time values in header are absolutely
+              referenced.
+            - 'all' : Do all tests.
         :type tests: str
 
-        :raises: :class:`SacInvalidContentError` if any of the specified tests
-            fail. :class:`ValueError` if 'data_hdrs' is specified and data is
-            None, empty array, or no tests specified.
+        :raises: :class:`obspy.io.sac.util.SacInvalidContentError` if any of
+            the specified tests fail. :class:`ValueError` if 'data_hdrs' is
+            specified and data is None, empty array, or no tests specified.
 
         .. rubric:: Example
 
@@ -1494,8 +1500,8 @@ class SACTrace(object):
 
         Similar to SAC's "chnhdr allt".
 
-        Note
-        ----
+        **Note**
+
         This method is triggered by setting an instance's iztype or changing
         its reference time, which is the most likely use case for this
         functionality.  If what you're trying to do is set an origin time and

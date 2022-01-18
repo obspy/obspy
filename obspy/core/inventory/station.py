@@ -94,10 +94,11 @@ class Station(BaseNode):
         :type historical_code: str
         :param historical_code: A previously used code if different from the
             current code.
-        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :type data_availability:
+            :class:`~obspy.core.inventory.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the station.
-        :type identifiers: list of str, optional
+        :type identifiers: list[str], optional
         :param identifiers: Persistent identifiers for network/station/channel
             (schema version >=1.1). URIs are in general composed of a 'scheme'
             and a 'path' (optionally with additional components), the two of

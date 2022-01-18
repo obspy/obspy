@@ -38,7 +38,7 @@
        ~invsim.simulate_seismometer
        ~util.util_geo_km
        ~util.util_lon_lat
-       ~cross_correlation.xcorr
+       ~cross_correlation.correlate
        ~trigger.z_detect
 
     .. comment to end block
@@ -54,17 +54,18 @@
        cpxtrace
        cross_correlation
        detrend
+       differentiate_and_integrate
        filter
        freqattributes
        hoctavbands
-       invsim
        interpolation
+       invsim
        konnoohmachismoothing
        polarization
        quality_control
        regression
-       spectral_estimation
        rotate
+       spectral_estimation
        tf_misfit
        trigger
        util

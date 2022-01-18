@@ -123,7 +123,7 @@ def _read_seed(filename, skip_invalid_responses=True, *args, **kwargs):
     Read dataless SEED files to an ObsPy inventory object
 
     :param filename: File with a SEED file.
-    :type filename: str or file-like object.
+    :type filename: str or file-like object
     :param skip_invalid_responses: If True, invalid responses will be replaced
         by None but a warning will be raised. Otherwise an exception will be
         raised. Only responses which are clearly invalid will not be read.
@@ -140,7 +140,7 @@ def _read_xseed(filename, skip_invalid_responses=True, *args, **kwargs):
     Read XML-SEED files to an ObsPy inventory object
 
     :param filename: File with a XML-SEED file.
-    :type filename: str or file-like object.
+    :type filename: str or file-like object
     :param skip_invalid_responses: If True, invalid responses will be replaced
         by None but a warning will be raised. Otherwise an exception will be
         raised. Only responses which are clearly invalid will not be read.
@@ -158,7 +158,7 @@ def _read_resp(filename, skip_invalid_responses=True, *args, **kwargs):
     this information will be missing from the inventory objects.
 
     :param filename: File with a RESP file.
-    :type filename: str or file-like object.
+    :type filename: str or file-like object
     :param skip_invalid_responses: If True, invalid responses will be replaced
         by None but a warning will be raised. Otherwise an exception will be
         raised. Only responses which are clearly invalid will not be read.
@@ -180,7 +180,8 @@ def _read_resp(filename, skip_invalid_responses=True, *args, **kwargs):
 
 def _parse_to_inventory_object(p, skip_invalid_responses=True):
     """
-    Parses a Parser object to an obspy.core.inventory.Inventory object.
+    Parses a Parser object to an obspy.core.inventory.inventory.Inventory
+    object.
 
     :param p: A Parser object.
     :param skip_invalid_responses: If True, invalid responses will be replaced

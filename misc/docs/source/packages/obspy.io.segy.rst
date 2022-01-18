@@ -3,6 +3,16 @@
 
     .. comment to end block
 
+    Classes & Functions
+    -------------------
+    .. autosummary::
+       :toctree: autogen
+       :nosignatures:
+
+       ~header.TRACE_HEADER_FORMAT
+
+    .. comment to end block
+
     Modules
     -------
     .. autosummary::

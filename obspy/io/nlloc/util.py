@@ -23,7 +23,7 @@ def read_nlloc_scatter(filename, coordinate_converter=None):
 
     :type filename: str
     :param filename: Filename with NonLinLoc scatter.
-    :type coordinate_converter: func
+    :type coordinate_converter: callable
     :param coordinate_converter: Function to convert (x, y, z)
         coordinates of NonLinLoc output to geographical coordinates and depth
         in meters (longitude, latitude, depth in kilometers).

@@ -1,4 +1,3 @@
-:orphan:
 
 .. currentmodule:: obspy.core.event
 .. automodule:: obspy.core.event
@@ -35,5 +34,6 @@
        magnitude
        origin
        source
+       resourceid
 
     .. comment to end block

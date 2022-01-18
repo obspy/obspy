@@ -252,7 +252,7 @@ There were rays for all but the following epicentral distances:
 More examples of plotting may be found in the :doc:`ObsPy tutorial
 </tutorial/code_snippets/travel_time>`.
 
-.. _`Phase naming in taup`:
+.. _phase_taup:
 
 Phase naming in obspy.taup
 --------------------------

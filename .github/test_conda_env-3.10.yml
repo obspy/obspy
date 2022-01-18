@@ -13,7 +13,7 @@ dependencies:
   - greenlet
   - kiwisolver
   - lxml
-  - numpy<1.22
+  - numpy
   - pillow
   - pip
   - pyparsing

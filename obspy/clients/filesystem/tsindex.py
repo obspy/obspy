@@ -5,7 +5,7 @@ obspy.clients.filesystem.tsindex - IRIS TSIndex Client and Indexer
 
 The obspy.clients.filesystem.tsindex module includes a timeseries extraction
 :class:`Client` class for a database created by the IRIS
-`mseedindex <https://github.com/iris-edu/mseedindex>`_ program, as well as, a
+`mseedindex <https://github.com/iris-edu/mseedindex/>`_ program, as well as, a
 :class:`Indexer` class for creating a SQLite3 database that follows the IRIS
 `tsindex database schema
 <https://github.com/iris-edu/mseedindex/wiki/Database-Schema/>`_\.
@@ -105,6 +105,7 @@ Requesting Timeseries Data
     from obspy.clients.filesystem.tsindex import Client
     from obspy.clients.filesystem.tests.test_tsindex \
         import get_test_data_filepath
+    import os
     # for this example get the file path to test data
     filepath = get_test_data_filepath()
     db_path = os.path.join(filepath, 'timeseries.sqlite')
@@ -653,7 +654,7 @@ class Client(object):
         containing information found in the tsindex table.
 
         Information about the tsindex schema may be found in the
-        `mseedindex wiki <https://github.com/iris-edu/mseedindex/wiki/\
+        `mseedindex wiki schema <https://github.com/iris-edu/mseedindex/wiki/\
         Database-Schema#sqlite-schema-version-11>`_.
 
         :type network: str
@@ -812,9 +813,9 @@ class Client(object):
         (e.g. NameTuple(earliest, latest)) intersect with
         one another.
 
-        :type ts1: namedtuple
+        :type ts1: :class:`collections.namedtuple`
         :param ts1: Earliest timespan.
-        :type ts2: namedtuple
+        :type ts2: :class:`collections.namedtuple`
         :param ts2: Latest timespan.
         """
         if ts1.earliest <= ts2.latest and \
@@ -921,7 +922,8 @@ class Indexer(object):
             seconds listed in this file will be used to adjust the time
             coverage for records that contain a leap second. Also, leap second
             indicators in the miniSEED headers will be ignored. See the
-            `mseedindex wiki <https://github.com/iris-edu/mseedindex/blob/"
+            `mseedindex wiki leap second
+             <https://github.com/iris-edu/mseedindex/blob/"
             "master/doc/mseedindex.md#leap-second-list-file>`_ for more"
             "for more information regarding this file.
         :type index_cmd: str
@@ -1245,7 +1247,7 @@ class Indexer(object):
         :type file_path: str
         :param file_path: Path to leap seconds file to test
 
-        :rtype: boolean
+        :rtype: bool
         :returns: Expiration status of leap seconds file.
         """
 

@@ -181,7 +181,7 @@ class EvtData(object):
         :param endian: endian type in datafile
         :type param: list
         :param param: sampling rate,sample size, block time, channels
-        :rtype: list of list
+        :rtype: list[list]
         :return: list of data
         """
         buff = file_p.read(length)
@@ -281,7 +281,7 @@ class EvtHeader(EvtVirtual):
         Make an ObsPy dictionary from header dictionary for 1 channel
 
         :param numchan: channel to be converted
-        :rtype: dictionary
+        :rtype: dict
         """
         dico = {}
         for key in self.HEADER:
@@ -297,7 +297,7 @@ class EvtHeader(EvtVirtual):
         Transform bitarray for gpsstatus in human readable string
 
         :param value: gps status
-        :rtype: string
+        :rtype: str
         """
         dico = {1: 'Checking', 2: 'Present', 4: 'Error', 8: 'Failed',
                 16: 'Not Locked', 32: 'ON'}

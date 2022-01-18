@@ -33,12 +33,12 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
 
     :param arrays: Specify which arrays to initialize and the desired order.
         If omitted, returned arrays are ('float', 'int', 'str'), in that order.
-    :type arrays: Tuple of strings {'float', 'int', 'str'}
+    :type arrays: tuple(float, int, str)
     :param byteorder: Desired byte order of initialized arrays
-        (little, native, big).
-    :type byteorder: str {'<', '=', '>'}
+        (little, native, big) as {'<', '=', '>'}.
+    :type byteorder: str
 
-    :rtype: list of :class:`~numpy.ndarray` instances
+    :rtype: list(:class:`~numpy.ndarray`)
     :returns: The desired SAC header arrays.
 
     """
@@ -84,16 +84,16 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
         data array.
     :type headonly: bool
     :param byteorder: If omitted or None, automatic byte-order checking is
-        done, starting with native order. If byteorder is specified and
-        incorrect, a SacIOError is raised.
-    :type byteorder: str {'little', 'big'}, optional
+        done, starting with native order. If byteorder is specified,
+        {'little', 'big'} and incorrect, a SacIOError is raised.
+    :type byteorder: str, optional
     :param checksize: If True, check that the theoretical file size from the
         header matches the size on disk.
     :type checksize: bool
 
     :return: The float, integer, and string header arrays, and data array,
         in that order. Data array will be None if headonly is True.
-    :rtype: tuple of :class:`numpy.ndarray`
+    :rtype: tuple(:class:`numpy.ndarray`)
 
     :raises: :class:`ValueError` if unrecognized byte order.  :class:`IOError`
         if file not found, incorrect specified byteorder, theoretical file size
@@ -279,10 +279,11 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         that the user intends to overwrite/modify only the header arrays of an
         existing file.  Equivalent to SAC's "writehdr".
     :type data: :class:`numpy.ndarray` of float32
-    :param byteorder: Desired output byte order.  If omitted, arrays are
-        written as they are.  If data=None, better make sure the file you're
-        writing to has the same byte order as headers you're writing.
-    :type byteorder: str {'little', 'big'}, optional
+    :param byteorder: Desired output byte order {'little', 'big'}.  If omitted,
+        arrays are written as they are.  If data=None, better make sure the
+        file you're writing to has the same byte order as headers you're
+        writing.
+    :type byteorder: str, optional
 
     :return: None
 
@@ -485,11 +486,11 @@ def dict_to_header_arrays(header=None, byteorder='='):
     :param header: SAC header dictionary.
     :type header: dict
     :param byteorder: Desired byte order of initialized arrays (little, native,
-        big).
-    :type byteorder: str {'<', '=', '>'}
+        big, as  {'<', '=', '>'}).
+    :type byteorder: str
 
     :return: The float, integer, and string header arrays, in that order.
-    :rtype: tuple of :class:`numpy.ndarray`
+    :rtype: tuple(:class:`numpy.ndarray`)
 
     """
     hf, hi, hs = init_header_arrays(byteorder=byteorder)
@@ -547,9 +548,9 @@ def validate_sac_content(hf, hi, hs, data, *tests):
         'all' : Do all tests.
     :type tests: str
 
-    :raises: :class:`SacInvalidContentError` if any of the specified tests
-        fail. :class:`ValueError` if 'data_hdrs' is specified and data is None,
-        empty array, or no tests specified.
+    :raises: :class:`obspy.io.sac.util.SacInvalidContentError` if any of the
+        specified tests fail. :class:`ValueError` if 'data_hdrs' is specified
+        and data is None, empty array, or no tests specified.
 
     """
     # TODO: move this to util.py and write and use individual test functions,

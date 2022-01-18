@@ -143,7 +143,8 @@ class StationMagnitude(__StationMagnitude):
         `resource_id` attribute in case it is not specified will be skipped.
     :type origin_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param origin_id: Reference to an origin’s ``resource_id`` if the
-        StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
+        StationMagnitude has an associated
+        :class:`~obspy.core.event.origin.Origin`.
     :type mag: float
     :param mag: Estimated magnitude.
     :type mag_errors: :class:`~obspy.core.event.base.QuantityError`

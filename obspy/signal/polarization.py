@@ -33,7 +33,7 @@ def eigval(datax, datay, dataz, fk, normf=1.0):
 
     The algorithm is mainly based on the paper by [Jurkevics1988]_. The rest is
     just the numerical differentiation by central differences (carried out by
-    the routine :func:`scipy.signal.lfilter(data, 1, fk)`).
+    the routine :func:`scipy.signal.lfilter` (data, 1, fk)).
 
     :param datax: Data of x component. Note this is most useful with
         windowed data, represented by a 2 dimensional array. First
@@ -127,7 +127,7 @@ def flinn(stream, noise_thres=0):
     eigenstructure decomposition method of [Flinn1965b]_.
 
     :param stream: ZNE sorted trace data
-    :type stream: List of ZNE sorted numpy arrays
+    :type stream: list
     :param noise_tresh: Variance of the noise sphere; data points are excluded
         when falling within the sphere of radius sqrt(noise_thres),
         default is set to 0.
