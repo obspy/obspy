@@ -45,7 +45,6 @@ line argument is also accepted.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import os
 import re
 import sys
 from pathlib import Path
@@ -54,6 +53,7 @@ import pkg_resources
 import requests
 
 import obspy
+from obspy.core.util.misc import change_directory
 from obspy.core.util.requirements import PYTEST_REQUIRES
 
 
@@ -100,28 +100,17 @@ def main():
         sys.exit(0)
     elif all(['--json-report-file' not in arg for arg in sys.argv]):
         sys.argv.append('--json-report-file=none')
-    # Use default traceback for nicer report display
+    # Use default traceback for nicer report display.
     sys.argv.append("--tb=native")
-
-    here = Path().cwd()
-    base_obspy_path = Path(obspy.__file__).parent
-    plugin = JSONReport()
-    os.chdir(base_obspy_path)
-    try:
+    # Cd into ObsPy's directory and run tests.
+    with change_directory(Path(obspy.__file__).parent):
+        plugin = JSONReport()
         status = pytest.main(plugins=[plugin])
-    except Exception as e:
-        raise e
-    else:
-        if int(status) > 1:
-            msg = (
-                'A failure occurred while running ObsPys test suite. Please '
-                'check the output carefully and try again.'
-                   )
-            raise ValueError(msg)
+    # Upload test report if tests were successfully run.
+    # See https://docs.pytest.org/en/latest/reference/exit-codes.html
+    if int(status) < 2:
         upload_json_report(report=report, data=plugin.report)
-        sys.exit(status)
-    finally:
-        os.chdir(here)
+    sys.exit(status)
 
 
 def upload_json_report(report=None, data=None):
