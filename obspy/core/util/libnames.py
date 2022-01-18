@@ -8,11 +8,8 @@ Library name handling for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-# NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
-# installation time)
 import ctypes
 from pathlib import Path
-import platform
 import re
 import warnings
 from distutils import sysconfig
@@ -39,41 +36,31 @@ def cleanse_pymodule_filename(filename):
     return filename
 
 
-def _get_lib_name(lib, add_extension_suffix):
+def _get_lib_name(lib):
     """
-    Helper function to get an architecture and Python version specific library
-    filename.
+    Get an architecture and Python version specific library filename.
 
-    :type add_extension_suffix: bool
-    :param add_extension_suffix: setuptools adds a suffix to the filename we
-        specify to build internally (as specified by Python builtin
-        `sysconfig.get_config_var("EXT_SUFFIX")`. So when loading the file we
-        have to add this suffix, but not during building.
+    setuptools adds a suffix to the filename we specify to build internally (as
+    specified by Python builtin `sysconfig.get_config_var("EXT_SUFFIX")`. So
+    when loading the file we have to add this suffix.
     """
-    # our custom defined part of the extension file name
-    libname = "lib%s_%s_%s_py%s" % (
-        lib, platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    libname = cleanse_pymodule_filename(libname)
-    # setuptools adds extension suffix by itself during build (#771, #755)
-    if add_extension_suffix:
-        # append any extension suffix defined by Python for current platform
-        ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
-        # in principle "EXT_SUFFIX" is what we want.
-        # "SO" seems to be deprecated on newer python
-        # but: older python seems to have empty "EXT_SUFFIX", so we fall back
-        if not ext_suffix:
-            try:
-                ext_suffix = sysconfig.get_config_var("SO")
-            except Exception as e:
-                msg = ("Empty 'EXT_SUFFIX' encountered while building CDLL "
-                       "filename and fallback to 'SO' variable failed "
-                       "(%s)." % str(e))
-                warnings.warn(msg)
-                pass
-        if ext_suffix:
-            libname = libname + ext_suffix
-    return libname
+    # append any extension suffix defined by Python for current platform
+    ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+    # in principle "EXT_SUFFIX" is what we want.
+    # "SO" seems to be deprecated on newer python
+    # but: older python seems to have empty "EXT_SUFFIX", so we fall back
+    if not ext_suffix:
+        try:
+            ext_suffix = sysconfig.get_config_var("SO")
+        except Exception as e:
+            msg = ("Empty 'EXT_SUFFIX' encountered while building CDLL "
+                   "filename and fallback to 'SO' variable failed "
+                   "(%s)." % str(e))
+            warnings.warn(msg)
+            pass
+    if ext_suffix:
+        lib += ext_suffix
+    return lib
 
 
 def _load_cdll(name):
@@ -86,7 +73,7 @@ def _load_cdll(name):
     :rtype: :class:`ctypes.CDLL`
     """
     # our custom defined part of the extension file name
-    libname = _get_lib_name(name, add_extension_suffix=True)
+    libname = _get_lib_name(name)
     libdir = Path(__file__).parent.parent.parent / 'lib'
     libpath = (libdir / libname).resolve()
     try:

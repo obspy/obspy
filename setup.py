@@ -61,7 +61,6 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from libnames import _get_lib_name  # @UnresolvedImport
 from requirements import INSTALL_REQUIRES, EXTRAS_REQUIRES
 sys.path.pop(0)
 
@@ -571,9 +570,7 @@ def get_extensions():
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    extensions.append(
-        Extension(_get_lib_name("gse2", add_extension_suffix=False),
-                  files, **kwargs))
+    extensions.append(Extension("gse2", files, **kwargs))
 
     # LIBMSEED
     path = os.path.join("obspy", "io", "mseed", "src")
@@ -592,9 +589,7 @@ def get_extensions():
             export_symbols(path, 'obspy-readbuffer.def')
     if EXTERNAL_LIBMSEED:
         kwargs['libraries'] = ['mseed']
-    extensions.append(
-        Extension(_get_lib_name("mseed", add_extension_suffix=False),
-                  files, **kwargs))
+    extensions.append(Extension("mseed", files, **kwargs))
 
     # SEGY
     path = os.path.join("obspy", "io", "segy", "src")
@@ -604,9 +599,7 @@ def get_extensions():
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    extensions.append(
-        Extension(_get_lib_name("segy", add_extension_suffix=False),
-                  files, **kwargs))
+    extensions.append(Extension("segy", files, **kwargs))
 
     # SIGNAL
     path = os.path.join("obspy", "signal", "src")
@@ -616,9 +609,7 @@ def get_extensions():
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    extensions.append(
-        Extension(_get_lib_name("signal", add_extension_suffix=False),
-                  files, **kwargs))
+    extensions.append(Extension("signal", files, **kwargs))
 
     # EVALRESP
     path = os.path.join("obspy", "signal", "src")
@@ -635,9 +626,7 @@ def get_extensions():
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
     if EXTERNAL_EVALRESP:
         kwargs['libraries'] = ['evresp']
-    extensions.append(
-        Extension(_get_lib_name("evresp", add_extension_suffix=False),
-                  files, **kwargs))
+    extensions.append(Extension("evresp", files, **kwargs))
 
     # TAU
     path = os.path.join("obspy", "taup", "src")
@@ -647,9 +636,7 @@ def get_extensions():
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
-    extensions.append(
-        Extension(_get_lib_name("tau", add_extension_suffix=False),
-                  files, **kwargs))
+    extensions.append(Extension("tau", files, **kwargs))
 
     return extensions
 
