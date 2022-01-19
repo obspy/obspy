@@ -6,9 +6,7 @@ bibliography folder.
 
 import glob
 import os
-import re
 
-import pybtex
 from pybtex.database.input import bibtex
 from pybtex.style.names.lastfirst import NameStyle
 from pybtex.style.template import field, join, node, optional, sentence, words
@@ -134,12 +132,13 @@ formats = {
     ],
 }
 
+
 def create_citations_page(app):
     parser = bibtex.Parser(encoding='utf8')
     for file in glob.glob(os.path.join('source', 'bibliography', '*.bib')):
         try:
             parser.parse_file(file)
-        except:
+        except Exception:
             print("Error parsing file %s:" % (file))
             raise
 
@@ -162,7 +161,7 @@ def create_citations_page(app):
             line = line.replace(old, new)
         try:
             fh.write((out % (key, line)))
-        except:
+        except Exception:
             print("Error writing %s:" % (key))
             raise
         fh.write(os.linesep)
