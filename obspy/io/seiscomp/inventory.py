@@ -539,6 +539,13 @@ def _read_channel(instrumentation_register, cha_element, _ns):
             response_element = instrumentation_register["responses"]\
                                .get(response_id)
         else:
+            msg = (
+                "Could not find response tag with public ID '{response}'. "
+                "Omitting response stage information from Inventory for "
+                "channel '{channel}'.".format(response=response_id,
+                                              channel=seed_id)
+            )
+            warnings.warn(msg)      
             response_element = None        
     else:
         response_element = None
