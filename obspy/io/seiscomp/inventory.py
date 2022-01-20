@@ -85,7 +85,7 @@ def _parse_list_of_complex_string(complex_string):
 
 def _read_sc3ml(path_or_file_object, **kwargs):
     """
-    Function for reading a stationXML file.
+    Function for reading a SeisComp XML file.
 
     :param path_or_file_object: File name or file like object.
     """
@@ -119,59 +119,6 @@ def _read_sc3ml(path_or_file_object, **kwargs):
     module = None
     module_uri = None
 
-    # Find the inventory root element. (Only finds the first. We expect only
-    # one, so any more than that will be ignored.)
-    # that will be ignored.)
-    inv_element = root.find(_ns("Inventory"))
-
-    # Pre-generate a dictionary of the sensors, dataloggers and responses to
-    # avoid costly linear search when parsing network nodes later
-    # search when parsing network nodes later.
-    # Register sensors
-    sensors = {}
-    for sensor_element in inv_element.findall(_ns("sensor")):
-        public_id = sensor_element.get("publicID")
-        if public_id:
-            if public_id in sensors:
-                msg = ("Found multiple matching sensor tags with the same "
-                       "publicID '{}'.".format(public_id))
-                raise obspy.ObsPyException(msg)
-            else:
-                sensors[public_id] = sensor_element
-    # Register dataloggers
-    dataloggers = {}
-    for datalogger_element in inv_element.findall(_ns("datalogger")):
-        public_id = datalogger_element.get("publicID")
-        if public_id:
-            if public_id in dataloggers:
-                msg = ("Found multiple matching datalogger tags with the same "
-                       "publicID '{}'.".format(public_id))
-                raise obspy.ObsPyException(msg)
-            else:
-                dataloggers[public_id] = datalogger_element
-    # Register reponses
-    responses = {}
-
-    # Go over all responses
-    for response_type in ["responseFAP", "responseFIR", "responsePAZ",
-                          "responseIIR", "responsePolynomial"]:
-        for response_element in inv_element.findall(_ns(response_type)):
-            public_id = response_element.get("publicID")
-            if public_id:
-                if public_id in responses:
-                    msg = ("Found multiple matching {} tags with the same "
-                           "publicID '{}'.".format(response_type, public_id))
-                    raise obspy.ObsPyException(msg)
-                else:
-                    responses[public_id] = response_element
-    # Organize all the collection instrument information into a unified
-    # intrumentation register.
-    instrumentation_register = {
-        "sensors": sensors,
-        "dataloggers": dataloggers,
-        "responses": responses
-    }
-    
     # Find the inventory root element. (Only finds the first. We expect only
     # one, so any more than that will be ignored.)
     inv_element = root.find(_ns("Inventory"))
@@ -215,7 +162,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
                     responses[public_id] = response_element
                     
     # Organize all the collection instrument information into a unified
-    # intrumentation register.
+    # intrumentation register
     instrumentation_register = {
         "sensors": sensors,
         "dataloggers": dataloggers,
@@ -706,7 +653,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
             # get the particular stage decimation factor
             # multiply the decimated sample rate by this factor
             # These may be FIR, IIR or PAZ
-            fir_element = instrumentation_register["responses"].get(fir_id)
+            fir_element = instrumentation_register['responses'].get(fir_id)
             if fir_element is None:
                 continue
             dec_fac = _tag2obj(fir_element, _ns("decimationFactor"), int)
@@ -745,7 +692,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
     # Output unit: V
     if len(analogue):
         for analogue_id in analogue:
-            analogue_element = instrumentation_register["responses"]\
+            analogue_element = instrumentation_register['responses']\
                 .get(analogue_id)
             if analogue_element is None:
                 msg = ('Analogue responsePAZ not in inventory:'
@@ -774,7 +721,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
     # Input unit: COUNTS
     # Output unit: COUNTS
     for fir_id, rate in zip(fir, fir_stage_rates):
-        stage_element = instrumentation_register["responses"].get(fir_id)
+        stage_element = instrumentation_register['responses'].get(fir_id)
         if stage_element is None:
             msg = ("fir response not in inventory: %s, stopping correction"
                    "before stage %i") % (fir_id, stage)
@@ -881,25 +828,25 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
     if output_units != "V":
 
         # Get element or default value
-        decimation["factor"] = _tag2obj(
+        decimation['factor'] = _tag2obj(
             stage, _ns("decimationFactor"), int) or 1
-        decimation["delay"] = _tag2obj(
+        decimation['delay'] = _tag2obj(
             stage, _ns("delay"), float) or 0
         decimation["correction"] = _tag2obj(
             stage, _ns("correction"), float) or 0
-        decimation["offset"] = _tag2obj(
+        decimation['offset'] = _tag2obj(
             stage, _ns("offset"), float) or 0
-        decimation["rate"] = _read_float_var(rate, Frequency)
+        decimation['rate'] = _read_float_var(rate, Frequency)
 
     # Decimation delay/correction need to be normalized
     if rate != 0.0:
-        if decimation["delay"] is not None:
-            decimation["delay"] = \
-                _read_float_var(decimation["delay"] / rate,
+        if decimation['delay'] is not None:
+            decimation['delay'] = \
+                _read_float_var(decimation['delay'] / rate,
                                 FloatWithUncertaintiesAndUnit, unit=True)
-        if decimation["correction"] is not None:
-            decimation["correction"] = \
-                _read_float_var(decimation["correction"] / rate,
+        if decimation['correction'] is not None:
+            decimation['correction'] = \
+                _read_float_var(decimation['correction'] / rate,
                                 FloatWithUncertaintiesAndUnit, unit=True)
 
     # Set up list of for this stage arguments
@@ -915,11 +862,11 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         "stage_gain_frequency": stage_gain_frequency,
         "name": name,
         "description": None,
-        "decimation_input_sample_rate": decimation["rate"],
-        "decimation_factor": decimation["factor"],
-        "decimation_offset": decimation["offset"],
-        "decimation_delay": decimation["delay"],
-        "decimation_correction": decimation["correction"]        
+        "decimation_input_sample_rate": decimation['rate'],
+        "decimation_factor": decimation['factor'],
+        "decimation_offset": decimation['offset'],
+        "decimation_delay": decimation['delay'],
+        "decimation_correction": decimation['correction']        
     }
 
     # Different processing for different types of responses
