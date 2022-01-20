@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ObsPy implementation for parsing the scxml (formerly sc3ml) format 
+ObsPy implementation for parsing the SeisComp XML format 
 to an Inventory object.
 
 This is a modified version of obspy.io.stationxml.
@@ -69,7 +69,7 @@ def _count_complex(complex_string):
 def _parse_list_of_complex_string(complex_string):
     """
     Returns a list of complex numbers, parsed from a string (formatted
-    according to SeisComp3 XML schema type "ComplexArray").
+    according to SeisComp XML schema type "ComplexArray").
     """
     count = _count_complex(complex_string)
     numbers = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
@@ -201,22 +201,19 @@ def _read_sc3ml(path_or_file_object, **kwargs):
             else:
                 dataloggers[public_id] = datalogger_element
     # Register reponses
-    responses = {
-        "responsePAZ": {},
-        "responsePolynomial": {},
-        "responseFIR": {},
-        "responseIIR": {}
-    }
-    for response_type, all_elements in responses.items():
+    responses = {}
+    for response_type in ["responseFAP", "responseFIR", "responsePAZ",
+                          "responseIIR", "responsePolynomial"]:
         for response_element in inv_element.findall(_ns(response_type)):
             public_id = response_element.get("publicID")
             if public_id:
-                if public_id in all_elements:
+                if public_id in responses:
                     msg = ("Found multiple matching {} tags with the same "
                            "publicID '{}'.".format(response_type, public_id))
                     raise obspy.ObsPyException(msg)
                 else:
-                    all_elements[public_id] = response_element
+                    responses[public_id] = response_element
+                    
     # Organize all the collection instrument information into a unified
     # intrumentation register.
     instrumentation_register = {
