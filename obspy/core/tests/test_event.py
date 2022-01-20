@@ -111,6 +111,8 @@ class TestEvent:
 
     @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
                         reason='unsupported proj4 library')
+    @pytest.mark.skipif(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
+                        'cartopy not installed')
     def test_plot_farfield_without_quiver_with_maps(self, image_path):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
