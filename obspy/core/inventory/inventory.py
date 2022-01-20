@@ -838,7 +838,7 @@ class Inventory(ComparingObject):
             Defaults to ``"global"``
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are:
+            based directly to the cartopy module. Possible values are:
 
             * ``"c"`` (crude)
             * ``"l"`` (low)
@@ -892,16 +892,15 @@ class Inventory(ComparingObject):
         :type method: str
         :param method: Method to use for plotting. Possible values are:
 
-            * ``'basemap'`` to use the Basemap library
             * ``'cartopy'`` to use the Cartopy library
             * ``None`` to use the best available library
 
             Defaults to ``None``.
         :type fig: :class:`matplotlib.figure.Figure`
         :param fig: Figure instance to reuse, returned from a previous
-            inventory/catalog plot call with `method=basemap`.
-            If a previous basemap plot is reused, any kwargs regarding the
-            basemap plot setup will be ignored (i.e.  `projection`,
+            inventory/catalog plot call with `method=cartopy`.
+            If a previous cartopy plot is reused, any kwargs regarding the
+            cartopy plot setup will be ignored (i.e.  `projection`,
             `resolution`, `continent_fill_color`, `water_fill_color`). Note
             that multiple plots using colorbars likely are problematic, but
             e.g. one station plot (without colorbar) and one event plot (with

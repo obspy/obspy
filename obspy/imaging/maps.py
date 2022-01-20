@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Module for basemap related plotting in ObsPy.
+Module for map related plotting in ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -28,7 +28,6 @@ if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     HAS_CARTOPY = True
 else:
     HAS_CARTOPY = False
-HAS_BASEMAP = False
 
 if not HAS_CARTOPY:
     msg = ("Cartopy not installed, map plots will not work.")
@@ -63,242 +62,23 @@ if HAS_CARTOPY:
     }
 
 
-def plot_basemap(lons, lats, size, color, labels=None, projection='global',
-                 resolution='l', continent_fill_color='0.8',
-                 water_fill_color='1.0', colormap=None, colorbar=None,
-                 marker="o", title=None, colorbar_ticklabel_format=None,
-                 show=True, fig=None, **kwargs):  # @UnusedVariable
-    """
-    Creates a basemap plot with a data point scatter plot.
-
-    :type lons: list[float] or tuple(float)
-    :param lons: Longitudes of the data points.
-    :type lats: list[float] or tuple(float)
-    :param lats: Latitudes of the data points.
-    :type size: list[float] or tuple(float)
-    :param size: Size of the individual points in the scatter plot.
-    :type color: float, list[float], tuple(float) (or objects that
-        can be converted to floats, like e.g.
-        :class:`~obspy.core.utcdatetime.UTCDateTime`)
-    :param color: Color information of the individual data points to be
-        used in the specified color map (e.g. origin depths,
-        origin times).
-    :type labels: list[str] or tuple(str)
-    :param labels: Annotations for the individual data points.
-    :type projection: str, optional
-    :param projection: The map projection.
-        Currently supported are:
-
-            * ``"global"`` (Will plot the whole world.)
-            * ``"ortho"`` (Will center around the mean lat/long.)
-            * ``"local"`` (Will plot around local events)
-
-        Defaults to "global".
-    :type resolution: str, optional
-    :param resolution: Resolution of the boundary database to use. Will be
-        based directly to the basemap module. Possible values are:
-
-            * ``"c"`` (crude)
-            * ``"l"`` (low)
-            * ``"i"`` (intermediate)
-            * ``"h"`` (high)
-            * ``"f"`` (full)
-
-        Defaults to ``"l"``. For compatibility, you may also specify any of the
-        Cartopy resolutions defined in :func:`plot_cartopy`.
-    :type continent_fill_color: valid matplotlib color, optional
-    :param continent_fill_color:  Color of the continents. Defaults to
-        ``"0.9"`` which is a light gray.
-    :type water_fill_color: valid matplotlib color, optional
-    :param water_fill_color: Color of all water bodies.
-        Defaults to ``"white"``.
-    :type colormap: str, valid matplotlib colormap, optional
-    :param colormap: The colormap for color-coding the events as provided
-        in `color` kwarg.
-        The event with the smallest `color` property will have the
-        color of one end of the colormap and the event with the highest
-        `color` property the color of the other end with all other events
-        in between.
-        Defaults to None which will use the default matplotlib colormap.
-    :type colorbar: bool, optional
-    :param colorbar: When left `None`, a colorbar is plotted if more than one
-        object is plotted. Using `True`/`False` the colorbar can be forced
-        on/off.
-    :type title: str
-    :param title: Title above plot.
-    :type colorbar_ticklabel_format: str or function or
-        subclass of :class:`matplotlib.ticker.Formatter`
-    :param colorbar_ticklabel_format: Format string or Formatter used to format
-        colorbar tick labels.
-    :type show: bool
-    :param show: Whether to show the figure after plotting or not. Can be used
-        to do further customization of the plot before showing it.
-    :type fig: :class:`matplotlib.figure.Figure`
-    :param fig: Figure instance to reuse, returned from a previous
-        :func:`plot_basemap` call. If a previous basemap plot is reused, any
-        kwargs regarding the basemap plot setup will be ignored (i.e.
-        `projection`, `resolution`, `continent_fill_color`,
-        `water_fill_color`). Note that multiple plots using colorbars likely
-        are problematic, but e.g. one station plot (without colorbar) and one
-        event plot (with colorbar) together should work well.
-    """
-    import matplotlib.pyplot as plt
-
-    if any([isinstance(c, (datetime.datetime, UTCDateTime)) for c in color]):
-        datetimeplot = True
-        color = [
-            (np.isfinite(float(t)) and
-             date2num(getattr(t, 'datetime', t)) or
-             np.nan)
-            for t in color]
-    else:
-        datetimeplot = False
-
-    # The colorbar should only be plotted if more then one event is
-    # present.
-    if colorbar is None:
-        if len(lons) > 1 and hasattr(color, "__len__") and \
-                not isinstance(color, str):
-            colorbar = True
-        else:
-            colorbar = False
-
-    if fig is None:
-        fig = plt.figure()
-
-        if projection == "local":
-            ax_x0, ax_width = 0.10, 0.80
-        elif projection == "global":
-            ax_x0, ax_width = 0.01, 0.98
-        else:
-            ax_x0, ax_width = 0.05, 0.90
-
-        if colorbar:
-            map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77])
-            cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
-        else:
-            ax_y0, ax_height = 0.05, 0.85
-            if projection == "local":
-                ax_y0 += 0.05
-                ax_height -= 0.05
-            map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
-        bmap = None
-
-    else:
-        error_message_suffix = (
-            ". Please provide a figure object from a previous call to the "
-            ".plot() method of e.g. an Inventory or Catalog object.")
-        try:
-            map_ax = fig.axes[0]
-        except IndexError as e:
-            e.args = tuple([e.args[0] + error_message_suffix] +
-                           list(e.args[1:]))
-            raise
-        try:
-            bmap = fig.bmap
-        except AttributeError as e:
-            e.args = tuple([e.args[0] + error_message_suffix] +
-                           list(e.args[1:]))
-            raise
-
-    # basemap plots will break with basemap 1.1.0 together with matplotlib
-    # >=2.3 (see matplotlib/basemap#382) so only thing we can do is show a
-    # nicer message.
-    # XXX can be removed maybe a year or so after basemap
-    # 1.1.1 or 1.2.0 is released
-    try:
-        from matplotlib.cbook import MatplotlibDeprecationWarning
-    except ImportError:
-        # matplotlib 1.2.0 does not have that warning class yet
-        # XXX can be removed when minimum matplotlib version gets bumped to
-        # XXX 1.3.0
-        category = {}
-    else:
-        category = {'category': MatplotlibDeprecationWarning}
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', message='The axesPatch function was deprecated '
-                'in version 2.1. Use Axes.patch instead.',
-                module='.*basemap.*', **category)
-            scatter = _plot_cartopy_into_axes(
-                ax=map_ax, lons=lons, lats=lats, size=size, color=color,
-                bmap=bmap, labels=labels, projection=projection,
-                resolution=resolution,
-                continent_fill_color=continent_fill_color,
-                water_fill_color=water_fill_color, colormap=colormap,
-                marker=marker, title="", adjust_aspect_to_colorbar=colorbar,
-                **kwargs)
-    except AttributeError as e:
-        if 'axesPatch' not in str(e):
-            raise
-        msg = ('Encountered a problem doing the basemap plot due to a known '
-               'issue of matplotlib >=2.3 together with basemap <=1.1.0 (see '
-               'https://github.com/matplotlib/basemap/issues/382). Please '
-               'update basemap to a version >1.1.0 if available or downgrade '
-               'matplotlib to a version <2.3.')
-        raise Exception(msg)
-
-    if title:
-        plt.suptitle(title)
-
-    if colorbar:
-        if colorbar_ticklabel_format is not None:
-            if isinstance(colorbar_ticklabel_format, str):
-                formatter = FormatStrFormatter(colorbar_ticklabel_format)
-            elif hasattr(colorbar_ticklabel_format, '__call__'):
-                formatter = FuncFormatter(colorbar_ticklabel_format)
-            elif isinstance(colorbar_ticklabel_format, Formatter):
-                formatter = colorbar_ticklabel_format
-            locator = MaxNLocator(5)
-        else:
-            if datetimeplot:
-                locator = AutoDateLocator()
-                formatter = AutoDateFormatter(locator)
-                # Compat with old matplotlib versions.
-                if hasattr(formatter, "scaled"):
-                    formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
-            else:
-                locator = None
-                formatter = None
-
-        # normal case: axes for colorbar was set up in this routine
-        if "cm_ax" in locals():
-            cb_kwargs = {"cax": cm_ax}
-        # unusual case: reusing a plot that has no colorbar set up previously
-        else:
-            cb_kwargs = {"ax": map_ax}
-
-        cb = fig.colorbar(
-            mappable=scatter, cmap=colormap, orientation='horizontal',
-            ticks=locator, format=formatter, **cb_kwargs)
-        # Compat with old matplotlib versions.
-        if hasattr(cb, "update_ticks"):
-            cb.update_ticks()
-
-    if show:
-        plt.show()
-
-    return fig
-
-
 def _plot_cartopy_into_axes(
         ax, lons, lats, size, color, bmap=None, labels=None,
         projection='global', resolution='l', continent_fill_color='0.8',
         water_fill_color='1.0', colormap=None, marker="o", title=None,
         adjust_aspect_to_colorbar=False, **kwargs):  # @UnusedVariable
     """
-    Creates a (or adds to existing) basemap plot with a data point scatter
+    Creates a (or adds to existing) cartopy plot with a data point scatter
     plot in given axes.
 
-    See :func:`plot_basemap` for details on most args/kwargs.
+    See :func:`plot_cartopy` for details on most args/kwargs.
 
     :type ax: :class:`matplotlib.axes.Axes`
     :param ax: Existing matplotlib axes instance, optionally with previous
-        basemap plot (see `bmap` kwarg).
-    :type bmap: :class:`mpl_toolkits.basemap.Basemap`
-    :param bmap: Basemap instance in provided matplotlib Axes `ax` to reuse. If
-        specified, any kwargs regarding the basemap plot setup will be ignored
+        cartopy plot (see `bmap` kwarg).
+    :type bmap: :class:`matplotlib.axes.Axes`
+    :param bmap: Axes instance in provided matplotlib Axes `ax` to reuse. If
+        specified, any kwargs regarding the cartopy plot setup will be ignored
         (i.e.  `projection`, `resolution`, `continent_fill_color`,
         `water_fill_color`).
     :rtype: :class:`matplotlib.collections.PathCollection`
@@ -441,7 +221,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
             * ``"10m"``
 
         Defaults to ``"110m"``. For compatibility, you may also specify any of
-        the Basemap resolutions defined in :func:`plot_basemap`.
+        the cartopy resolutions defined in :func:`plot_cartopy`.
     :type continent_fill_color: valid matplotlib color, optional
     :param continent_fill_color:  Color of the continents. Defaults to
         ``"0.9"`` which is a light gray.
@@ -676,20 +456,16 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
 
 
 def plot_map(method, *args, **kwargs):
-    '''
+    """
     Creates a map plot with a data point scatter plot.
 
     :type method: str
     :param method: Method to use for plotting. Possible values are:
 
-        * ``'basemap'`` to use the Basemap library. For other arguments, see
-          the :func:`plot_basemap` function.
         * ``'cartopy'`` to use the Cartopy library. For other arguments, see
           the :func:`plot_cartopy` function.
-        * ``None`` to use either the Basemap or Cartopy library, whichever is
-          available.
-    '''
-
+        * ``None`` to use either will use the Cartopy library
+    """
     if method is None:
         if HAS_CARTOPY:
             return plot_cartopy(*args, **kwargs)
@@ -701,5 +477,5 @@ def plot_map(method, *args, **kwargs):
                               'requested.')
         return plot_cartopy(*args, **kwargs)
     else:
-        raise ValueError("The method argument must be either 'basemap' or "
+        raise ValueError("The method argument must be either 'None' or "
                          "'cartopy', not '%s'." % (method, ))
