@@ -683,8 +683,9 @@ class TestInventory:
 
 
 @pytest.mark.usefixtures('ignore_numpy_errors')
+@pytest.importorskip('cartopy')
 @pytest.mark.skipif(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
-                    'cartopy not installed')
+                    reason='cartopy not installed')
 class TestInventoryCartopy:
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Cartopy.
