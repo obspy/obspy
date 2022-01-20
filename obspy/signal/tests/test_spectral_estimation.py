@@ -450,7 +450,7 @@ class TestPsd:
             assert t_array.shape == (len(ppsd._times_processed),)
             assert np.issubdtype(t_array.dtype, np.integer)
             np.random.seed(1234)
-            res = np.random.randint(0, 2, len(t_array)).astype(np.bool)
+            res = np.random.randint(0, 2, len(t_array)).astype(bool)
             return res
 
         # test several different sets of stack criteria, should cover

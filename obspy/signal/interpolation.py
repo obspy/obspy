@@ -149,7 +149,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     # If m_i and m_{i+1} have opposite signs then set the slope to zero.
     # This forces the curve to have extrema at the sample points and not
     # in-between.
-    sign_change = np.diff(np.sign(m)).astype(np.bool)
+    sign_change = np.diff(np.sign(m)).astype(bool)
     slope[1:-1][sign_change] = 0.0
 
     derivatives = np.empty((len(data), 2), dtype=np.float64)

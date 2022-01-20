@@ -18,8 +18,8 @@ DTYPE = {
     b'i4': b'<i',
     b'i2': b'<h',
     # ASCII integers
-    b'c0': (b'S12', np.int),
-    b'c#': (b'S12', np.int),
+    b'c0': (b'S12', int),
+    b'c#': (b'S12', int),
     # Big-endian floating point
     b't4': b'>f',
     b't8': b'>d',

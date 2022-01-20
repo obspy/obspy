@@ -208,9 +208,11 @@ class MomentTensor:
         # mechanism given as 6- or 7-tuple, list or array
         if len(mech) == 6 or len(mech) == 7:
             M = mech
-            new_M = np.matrix([M[0], M[3], M[4],
-                              M[3], M[1], M[5],
-                              M[4], M[5], M[2]]).reshape(3, 3)
+            new_M = np.array([
+                [M[0], M[3], M[4]],
+                [M[3], M[1], M[5]],
+                [M[4], M[5], M[2]],
+            ])
 
             if len(mech) == 7:
                 new_M *= M[6]
@@ -239,9 +241,11 @@ class MomentTensor:
 
             moms = strikediprake_2_moments(strike, dip, rake)
 
-            new_M = np.matrix([moms[0], moms[3], moms[4],
-                              moms[3], moms[1], moms[5],
-                              moms[4], moms[5], moms[2]]).reshape(3, 3)
+            new_M = np.array([
+                [moms[0], moms[3], moms[4]],
+                [moms[3], moms[1], moms[5]],
+                [moms[4], moms[5], moms[2]],
+            ])
 
             if len(mech) == 4:
                 new_M *= mech[3]
@@ -772,13 +776,19 @@ class MomentTensor:
         """
         # reference Double Couple (in NED basis)
         # it has strike, dip, slip-rake = 0,0,0
-        refDC = np.matrix([[0., 0., -1.], [0., 0., 0.], [-1., 0., 0.]],
-                          dtype=np.float)
+        refDC = np.array([
+            [0, 0, -1],
+            [0, 0, 0],
+            [-1, 0, 0],
+        ], dtype=float)
         refDC_evals, refDC_evecs = np.linalg.eigh(refDC)
 
         # matrix which is turning from one fault plane to the other
-        flip_dc = np.matrix([[0., 0., -1.], [0., -1., 0.], [-1., 0., 0.]],
-                            dtype=np.float)
+        flip_dc = np.array([
+            [0, 0, -1],
+            [0, -1, 0],
+            [-1, 0, 0],
+        ], dtype=float)
 
         # euler-tools need matrices of EV sorted in PNT:
         pnt_sorted_EV_matrix = self._rotation_matrix.copy()
@@ -814,25 +824,19 @@ class MomentTensor:
         (alpha, beta, gamma) = self._matrix_to_euler(rotation_matrix)
         return (beta * rad2deg, alpha * rad2deg, -gamma * rad2deg)
 
-    def _cvec(self, x, y, z):
-        """
-        Builds a column vector (matrix type) from a 3 tuple.
-        """
-        return np.matrix([[x, y, z]], dtype=np.float).T
-
     def _matrix_to_euler(self, rotmat):
         """
         Returns three Euler angles alpha, beta, gamma (in radians) from a
         rotation matrix.
         """
-        ex = self._cvec(1., 0., 0.)
-        ez = self._cvec(0., 0., 1.)
-        exs = rotmat.T * ex
-        ezs = rotmat.T * ez
+        ex = np.array([[1], [0], [0]])
+        ez = np.array([[0], [0], [1]])
+        exs = rotmat.T @ ex
+        ezs = rotmat.T @ ez
         enodes = np.cross(ez.T, ezs.T).T
         if np.linalg.norm(enodes) < 1e-10:
             enodes = exs
-        enodess = rotmat * enodes
+        enodess = rotmat @ enodes
         cos_alpha = float((ez.T * ezs))
         if cos_alpha > 1.:
             cos_alpha = 1.
@@ -1499,9 +1503,11 @@ def _return_matrix_vector_array(ma_ve_ar, basis_change_matrix):
                       np.dot(ma_ve_ar, basis_change_matrix.T))
     elif np.prod(np.shape(ma_ve_ar)) == 6:
         m_in = ma_ve_ar
-        orig_matrix = np.matrix([[m_in[0], m_in[3], m_in[4]],
-                                [m_in[3], m_in[1], m_in[5]],
-                                [m_in[4], m_in[5], m_in[2]]], dtype=np.float)
+        orig_matrix = np.array([
+            [m_in[0], m_in[3], m_in[4]],
+            [m_in[3], m_in[1], m_in[5]],
+            [m_in[4], m_in[5], m_in[2]],
+        ], dtype=float)
         m_out_mat = np.dot(basis_change_matrix,
                            np.dot(orig_matrix, basis_change_matrix.T))
 
@@ -1526,9 +1532,11 @@ def USE2NED(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in NED basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., -1., 0.],
-                                    [0., 0., 1.],
-                                    [-1., 0., 0.]], dtype=np.float)
+    basis_change_matrix = np.array([
+        [0, -1, 0],
+        [0, 0, 1],
+        [-1, 0, 0],
+    ], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1545,9 +1553,11 @@ def XYZ2NED(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in NED basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., 1., 0.],
-                                    [1., 0., 0.],
-                                    [0., 0., -1.]], dtype=np.float)
+    basis_change_matrix = np.array([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, -1],
+    ], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1564,9 +1574,11 @@ def NWU2NED(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in NED basis
     representation
     """
-    basis_change_matrix = np.matrix([[1., 0., 0.],
-                                    [0., -1., 0.],
-                                    [0., 0., -1.]], dtype=np.float)
+    basis_change_matrix = np.array([
+        [1, 0, 0],
+        [0, -1, 0],
+        [0, 0, -1],
+    ], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1583,9 +1595,11 @@ def NED2USE(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in USE basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., -1., 0.],
-                                    [0., 0., 1.],
-                                    [-1., 0., 0.]], dtype=np.float).I
+    basis_change_matrix = np.linalg.inv([
+        [0, -1, 0],
+        [0, 0, 1],
+        [-1, 0, 0],
+    ])
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1602,9 +1616,11 @@ def XYZ2USE(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in USE basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., 0., 1.],
-                                    [0., -1., 0.],
-                                    [1., 0., 0.]], dtype=np.float)
+    basis_change_matrix = np.array([
+        [0, 0, 1],
+        [0, -1, 0],
+        [1, 0, 0],
+    ], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1621,9 +1637,11 @@ def NED2XYZ(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in XYZ basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., 1., 0.],
-                                    [1., 0., 0.],
-                                    [0., 0., -1.]], dtype=np.float).I
+    basis_change_matrix = np.linalg.inv([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, -1],
+    ])
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1640,9 +1658,11 @@ def NED2NWU(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in NWU basis
     representation
     """
-    basis_change_matrix = np.matrix([[1., 0., 0.],
-                                    [0., -1., 0.],
-                                    [0., 0., -1.]], dtype=np.float).I
+    basis_change_matrix = np.linalg.inv([
+        [1, 0, 0],
+        [0, -1, 0],
+        [0, 0, -1],
+    ])
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1660,9 +1680,11 @@ def USE2XYZ(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in XYZ basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., 0., 1.],
-                                    [0., -1., 0.],
-                                    [1., 0., 0.]], dtype=np.float).I
+    basis_change_matrix = np.linalg.inv([
+        [0, 0, 1],
+        [0, -1, 0],
+        [1, 0, 0],
+    ])
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1680,9 +1702,11 @@ def NWU2XYZ(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in XYZ basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., -1., 0.],
-                                    [1., 0., 0.],
-                                    [0., 0., 1.]], dtype=np.float)
+    basis_change_matrix = np.array([
+        [0, -1, 0],
+        [1, 0, 0],
+        [0, 0, 1],
+    ], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1700,9 +1724,11 @@ def NWU2USE(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in XYZ basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., 0., 1.],
-                                    [-1., 0., 0.],
-                                    [0., -1., 0.]], dtype=np.float)
+    basis_change_matrix = np.array([
+        [0, 0, 1],
+        [-1, 0, 0],
+        [0, -1, 0],
+    ], dtype=float)
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1719,9 +1745,11 @@ def XYZ2NWU(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in XYZ basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., -1., 0.],
-                                    [1., 0., 0.],
-                                    [0., 0., 1.]], dtype=np.float).I
+    basis_change_matrix = np.linalg.inv([
+        [0, -1, 0],
+        [1, 0, 0],
+        [0, 0, 1],
+    ])
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 
@@ -1738,9 +1766,11 @@ def USE2NWU(some_matrix_or_vector):
     3x3 matrix or 3-element vector or 6-element array in XYZ basis
     representation
     """
-    basis_change_matrix = np.matrix([[0., 0., 1.],
-                                    [-1., 0., 0.],
-                                    [0., -1., 0.]], dtype=np.float).I
+    basis_change_matrix = np.linalg.inv([
+        [0, 0, 1],
+        [-1, 0, 0],
+        [0, -1, 0],
+    ])
     return _return_matrix_vector_array(some_matrix_or_vector,
                                        basis_change_matrix)
 

@@ -18,7 +18,6 @@ Signal processing routines based on cross correlation techniques.
 """
 from bisect import bisect_left
 from copy import copy
-from distutils.version import LooseVersion
 import warnings
 
 import numpy as np
@@ -37,22 +36,6 @@ def _pad_zeros(a, num, num2=None):
     return np.hstack(hstack)
 
 
-def _call_scipy_correlate(a, b, mode, method):
-    """
-    Call the correct correlate function depending on Scipy version and method.
-    """
-    if LooseVersion(scipy.__version__) >= LooseVersion('0.19'):
-        cc = scipy.signal.correlate(a, b, mode=mode, method=method)
-    elif method in ('fft', 'auto'):
-        cc = scipy.signal.fftconvolve(a, b[::-1], mode=mode)
-    elif method == 'direct':
-        cc = scipy.signal.correlate(a, b, mode=mode)
-    else:
-        msg = "method keyword has to be one of ('auto', 'fft', 'direct')"
-        raise ValueError(msg)
-    return cc
-
-
 def _xcorr_padzeros(a, b, shift, method):
     """
     Cross-correlation using SciPy with mode='valid' and precedent zero padding.
@@ -64,7 +47,7 @@ def _xcorr_padzeros(a, b, shift, method):
         b = _pad_zeros(b, dif // 2)
     else:
         a = _pad_zeros(a, -dif // 2)
-    return _call_scipy_correlate(a, b, 'valid', method)
+    return scipy.signal.correlate(a, b, mode='valid', method=method)
 
 
 def _xcorr_slice(a, b, shift, method):
@@ -77,7 +60,7 @@ def _xcorr_slice(a, b, shift, method):
     if shift > mid:
         # Such a large shift is not possible without zero padding
         return _xcorr_padzeros(a, b, shift, method)
-    cc = _call_scipy_correlate(a, b, 'full', method)
+    cc = scipy.signal.correlate(a, b, mode='full', method=method)
     return cc[mid - shift:mid + shift + len(cc) % 2]
 
 
@@ -269,7 +252,7 @@ def correlate_template(data, template, mode='valid', normalize='full',
         template = template - np.mean(template)
         if normalize != 'full':
             data = data - np.mean(data)
-    cc = _call_scipy_correlate(data, template, mode, method)
+    cc = scipy.signal.correlate(data, template, mode=mode, method=method)
     if normalize is not None:
         tnorm = np.sum(template ** 2)
         if normalize == 'naive':

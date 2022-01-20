@@ -16,6 +16,7 @@ Changes:
      therefore deprecated and have no effect anymore (see #2720)
    * refactored obspy-runtest to use pytest and modified several command
      line arguments (see #2489)
+   * removed calls to deprecated NumPy functionality (see #2949)
    * cleaned the documentation, build process, and docstrings (see #2662)
  - obspy.core:
    * read_inventory(): add "level" option to read files faster when less level
@@ -47,6 +48,8 @@ Changes:
    * update RESIF URL mapping to use http and add RESIFPH5 (see #2938)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
+ - obspy.imaging:
+   * fix section plot in case of a single trace only (see #2764)
  - obspy.clients.filesystem.tsindex:
    * improvements to leap second file setup and other small fixes (see #2776)
  - obspy.clients.seedlink:
