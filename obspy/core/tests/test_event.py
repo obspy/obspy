@@ -14,7 +14,7 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
                               ResourceIdentifier, WaveformStreamID)
 from obspy.core.event.source import farfield
 from obspy.core.util import (
-    CARTOPY_VERSION, PROJ4_VERSION, MATPLOTLIB_VERSION)
+    CARTOPY_VERSION, PROJ4_VERSION)
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import WarningsCapture

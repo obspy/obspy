@@ -20,8 +20,7 @@ import pytest
 
 import obspy
 from obspy import UTCDateTime, read_inventory, read_events
-from obspy.core.util import (
-    CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
+from obspy.core.util import CARTOPY_VERSION
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import WarningsCapture
 from obspy.core.inventory import (Channel, Inventory, Network, Response,

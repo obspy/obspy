@@ -19,8 +19,7 @@ import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
-from obspy.core.util import (
-    CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
+from obspy.core.util import CARTOPY_VERSION
 from obspy.core.util.testing import WarningsCapture
 
 
