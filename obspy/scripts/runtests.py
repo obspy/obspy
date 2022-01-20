@@ -49,9 +49,6 @@ import re
 import sys
 from pathlib import Path
 
-import pkg_resources
-import requests
-
 import obspy
 from obspy.core.util.misc import change_directory
 from obspy.core.util.requirements import PYTEST_REQUIRES
@@ -67,6 +64,7 @@ def _ensure_tests_requirements_installed():
 
     This function is intended to help less experienced users run the tests.
     """
+    import pkg_resources
     delimiters = (" ", "=", "<", ">", "!")
     patterns = '|'.join(map(re.escape, delimiters))
     msg = (f"\nNot all ObsPy's test requirements are installed. You need to "
@@ -115,6 +113,7 @@ def main():
 
 def upload_json_report(report=None, data=None):
     """Upload the json report to ObsPy test server."""
+    import requests
     if report is None:
         msg = f"Do you want to report this to {REPORT_URL} ? [n]: "
         answer = input(msg).lower()

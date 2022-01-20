@@ -8,7 +8,6 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import doctest
 import glob
 import importlib
 import inspect
@@ -23,7 +22,6 @@ import warnings
 from collections import OrderedDict
 from pathlib import PurePath
 
-import numpy as np
 import pkg_resources
 from pkg_resources import get_entry_info, iter_entry_points
 
@@ -158,6 +156,7 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
+    import numpy as np
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
         # fill with nan if float number and otherwise with a very small number
@@ -405,7 +404,7 @@ NUMPY_VERSION = get_dependency_version('numpy')
 SCIPY_VERSION = get_dependency_version('scipy')
 MATPLOTLIB_VERSION = get_dependency_version('matplotlib')
 BASEMAP_VERSION = get_dependency_version('basemap')
-PROJ4_VERSION = get_proj_version()
+PROJ4_VERSION = get_dependency_version('pyproj')
 CARTOPY_VERSION = get_dependency_version('cartopy')
 
 
@@ -787,4 +786,5 @@ class CatchAndAssertWarnings(warnings.catch_warnings):
 
 
 if __name__ == '__main__':
+    import doctest
     doctest.testmod(exclude_empty=True)

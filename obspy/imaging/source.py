@@ -21,8 +21,7 @@ from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import beach
 from obspy.core.util import CARTOPY_VERSION
-if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
-    import cartopy.crs as ccrs
+if CARTOPY_VERSION:
     HAS_CARTOPY = True
 else:
     HAS_CARTOPY = False
@@ -48,6 +47,7 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0, **kwargs):
     # matplotlib/matplotlib#6537 to routines that actually use Axes3D, for that
     # reason do the Axes3D import inside this routine.
     from mpl_toolkits.mplot3d import Axes3D  # NOQA
+    import cartopy.crs as ccrs
     # make 2d layout of kind parameter
     if isinstance(kind[0], (list, tuple)):
         nrows = len(kind)
