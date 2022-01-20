@@ -61,7 +61,6 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from requirements import INSTALL_REQUIRES, EXTRAS_REQUIRES
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -79,6 +78,32 @@ else:
 # Use system libraries? Set later...
 EXTERNAL_EVALRESP = False
 EXTERNAL_LIBMSEED = False
+
+# Hard dependencies needed to install/run ObsPy.
+INSTALL_REQUIRES = [
+    'numpy>=1.15.0',
+    'scipy>=1.0.0',
+    'matplotlib>=3.2.0',
+    'lxml',
+    'setuptools',
+    'sqlalchemy',
+    'decorator',
+    'requests',
+]
+
+# Extra dependencies
+EXTRAS_REQUIRES = {
+    'tests': [
+        'packaging',
+        'pyproj',
+        'pytest',
+        'pytest-cov',
+        'pytest-json-report',
+    ],
+    # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
+    'arclink': ['cryptography'],
+    'io.shapefile': ['pyshp'],
+}
 
 # package specific settings
 KEYWORDS = [
