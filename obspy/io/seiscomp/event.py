@@ -20,14 +20,14 @@ from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
 from obspy.io.seiscomp.core import validate as validate_sc3ml
 
 
-SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
+SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
 
 
 def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     """
-    Read a SC3ML file and returns a :class:`~obspy.core.event.Catalog`.
+    Read a SeisComp XML file and returns a :class:`~obspy.core.event.Catalog`.
 
-    An XSLT file is used to convert the SC3ML file to a QuakeML file. The
+    An XSLT file is used to convert the SCXML file to a QuakeML file. The
     catalog is then generated using the QuakeML module.
 
     .. warning::
@@ -38,9 +38,9 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
         instead.
 
     :type filename: str
-    :param filename: SC3ML file to be read.
+    :param filename: SCXML file to be read.
     :type id_prefix: str
-    :param id_prefix: ID prefix. SC3ML does not enforce any particular ID
+    :param id_prefix: ID prefix. SCXML does not enforce any particular ID
         restriction, this ID prefix allows to convert the IDs to a well
         formatted QuakeML ID. You can modify the default ID prefix with the
         reverse DNS name of your institute.
@@ -50,7 +50,7 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     .. rubric:: Example
 
     >>> from obspy import read_events
-    >>> cat = read_events('/path/to/iris_events.sc3ml')
+    >>> cat = read_events('/path/to/iris_events.scxml')
     >>> print(cat)
     2 Event(s) in Catalog:
     2011-03-11T05:46:24.120000Z | +38.297, +142.373
@@ -68,7 +68,7 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
         raise ValueError("Not a SC3ML compatible file or string.")
     else:
         if version not in SCHEMA_VERSION:
-            message = ("Can't read SC3ML version %s, ObsPy can deal with "
+            message = ("Can't read SCXML version %s, ObsPy can deal with "
                        "versions [%s].") % (
                 version, ', '.join(SCHEMA_VERSION))
             raise ValueError(message)
@@ -86,7 +86,7 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
 def _write_sc3ml(catalog, filename, validate=False, verbose=False,
                  event_removal=False, **kwargs):  # @UnusedVariable
     """
-    Write a SC3ML 0.12 file. Since a XSLT file is used to write the SC3ML file
+    Write a SCXML 0.12 file. Since a XSLT file is used to write the SCXML file
     from a QuakeML file, the catalog is first converted in QuakeML.
 
     .. warning::
@@ -100,8 +100,8 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     :type filename: str or file
     :param filename: Filename to write or open file-like object
     :type validate: bool
-    :param validate: If True, the final SC3ML file will be validated against
-        the SC3ML schema file. Raises an AssertionError if the validation
+    :param validate: If True, the final SCXML file will be validated against
+        the SCXML schema file. Raises an AssertionError if the validation
         fails.
     :type verbose: bool
     :param verbose: Print validation error log if True.
@@ -123,7 +123,7 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
             event.getparent().remove(event)
 
     if validate and not validate_sc3ml(io.BytesIO(sc3ml_doc), verbose=verbose):
-        raise AssertionError("The final SC3ML file did not pass validation.")
+        raise AssertionError("The final SCXML file did not pass validation.")
 
     # Open filehandler or use an existing file like object
     try:
