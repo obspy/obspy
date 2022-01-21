@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-sc3ml events read and write support.
+scxml/sc3ml events read and write support.
 
 :author:
     EOST (École et Observatoire des Sciences de la Terre)
@@ -86,8 +86,8 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
 def _write_sc3ml(catalog, filename, validate=False, verbose=False,
                  event_removal=False, **kwargs):  # @UnusedVariable
     """
-    Write a SCXML 0.12 file. Since a XSLT file is used to write the SCXML file
-    from a QuakeML file, the catalog is first converted in QuakeML.
+    Write a SCXML 0.12 event file. Since a XSLT file is used to write the 
+    SCXML file from a QuakeML file, the catalog is first converted in QuakeML.
 
     .. warning::
         This function should NOT be called directly, it registers via the
