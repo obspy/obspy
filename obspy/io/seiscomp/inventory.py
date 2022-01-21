@@ -440,7 +440,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     if sensor_id is None:
         sensor_element = None
     else:
-        sensor_element = instrumentation_register["sensors"]\
+        sensor_element = instrumentation_register['sensors']\
                          .get(sensor_id)
     
     # obtain the poles and zeros responseID and link to particular
@@ -449,38 +449,10 @@ def _read_channel(instrumentation_register, cha_element, _ns):
        sensor_element.get("response") is not None):
 
         response_id = sensor_element.get("response")
-        """
-        response_elements = []
 
-        for resp_element in instrumentation_register["responses"].values():
-            found_response = resp_element.get(response_id)
-            if found_response is not None:
-                response_elements.append(found_response)
-
-        if len(response_elements) == 0:
-            msg = ("Could not find response tag with public ID "
-                   "'{}'.".format(response_id))
-            #raise obspy.ObsPyException(msg)
-            print ('{} - Response ERROR:'.format(seed_id))
-            print (msg)
-            print (' -> Omitting response information from Inventory')
-            print ('')
-            response_element = None
-        elif len(response_elements) > 1:
-            msg = ("Found multiple matching response tags with the same "
-                   "public ID '{}'.".format(response_id))
-            #raise obspy.ObsPyException(msg)
-            print ('{} - Response ERROR:'.format(seed_id))
-            print (msg)
-            print (' -> Omitting response information from Inventory')
-            print ('')
-            response_element = None
-        else:
-            response_element = response_elements[0]
-        """
         if response_id is not None:
             # Change in v0.10 the way identifiers are delimited (# -> /)
-            response_element = instrumentation_register["responses"]\
+            response_element = instrumentation_register['responses']\
                                .get(response_id)
         else:
             msg = (
@@ -500,7 +472,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     if datalogger_id is None:
         data_log_element = None
     else:
-        data_log_element = instrumentation_register["dataloggers"]\
+        data_log_element = instrumentation_register['dataloggers']\
                            .get(datalogger_id)
     
     
@@ -546,7 +518,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     if match:
         namespace = match.group(1)
     else:
-        namespace = _get_schema_namespace('0.9')
+        namespace = _get_schema_namespace('0.12')
     channel.extra = {'format': {
         'value': _tag2obj(cha_element, _ns("format"), str),
         # storage format of channel not supported by StationXML1.1 anymore,
@@ -595,7 +567,7 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
     frequency = _tag2obj(cha_element, _ns("gainFrequency"), float)
 
     input_units_name = _tag2obj(sen_element, _ns("unit"), str)
-    output_units_name = ''
+    output_units_name = str(None)
 
     sensitivity = obspy.core.inventory.response.InstrumentSensitivity(
         value=gain, frequency=frequency,
@@ -621,7 +593,6 @@ def _read_response(instrumentation_register, sen_element, resp_element,
         instrumentation response metadata, top level keyed by response type,
         and subdictionaries keyed by response ID.
     :param _ns: namespace
-    :param instrumentation_register: register of instrumentation metadata
     """
     response = obspy.core.inventory.response.Response()
     response.instrument_sensitivity = _read_instrument_sensitivity(
@@ -631,9 +602,11 @@ def _read_response(instrumentation_register, sen_element, resp_element,
         return response
 
     #uncomment to include resource id for response (not shown in stationXML)
+    """
     response.resource_id = resp_element.attrib.get('publicID')
     if response.resource_id is not None:
         response.resource_id = str(response.resource_id)
+    """    
 
     # The sampling rate is not given per fir filter as in stationXML
     # We are only given a decimation factor per stage, therefore we are
@@ -733,6 +706,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
         if fir_response is not None:
             response.response_stages.append(fir_response)
             stage += 1
+            
     return response
 
 def _map_transfer_type(pz_transfer_function_type):
@@ -753,6 +727,7 @@ def _map_transfer_type(pz_transfer_function_type):
 def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
                          output_units):
 
+    # Strip the namespace to get the element name (response type)
     elem_type = stage.tag.split("}")[1]
 
     # Get the stage gain and frequency: 0 and 0.00 per default
