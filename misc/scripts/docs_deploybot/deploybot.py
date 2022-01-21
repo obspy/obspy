@@ -24,13 +24,13 @@ T2 = 24 * 3600
 
 
 def sdeploy():
-    s.enter(T1, 1, sdeploy)
     deploy()
+    s.enter(T1, 1, sdeploy)
 
 
 def sremove():
-    s.enter(T2, 2, sremove)
     remove_old_docs()
+    s.enter(T2, 2, sremove)
 
 
 s = sched.scheduler()
