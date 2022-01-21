@@ -56,16 +56,16 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     2011-03-11T05:46:24.120000Z | +38.297, +142.373
     2006-09-10T04:26:33.610000Z |  +9.614, +121.961
     """
-    sc3ml_doc = _xml_doc_from_anything(filename)
+    scxml_doc = _xml_doc_from_anything(filename)
 
     match = re.match(
         r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
-        r'[0-9]*\.?[0-9]+)}', sc3ml_doc.tag)
+        r'[0-9]*\.?[0-9]+)}', scxml_doc.tag)
 
     try:
         version = match.group(1)
     except AttributeError:
-        raise ValueError("Not a SC3ML compatible file or string.")
+        raise ValueError("Not a SCXML compatible file or string.")
     else:
         if version not in SCHEMA_VERSION:
             message = ("Can't read SCXML version %s, ObsPy can deal with "
@@ -77,7 +77,7 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     xslt_filename = xslt_filename / ('sc3ml_%s__quakeml_1.2.xsl' % version)
 
     transform = etree.XSLT(etree.parse(str(xslt_filename)))
-    quakeml_doc = transform(sc3ml_doc,
+    quakeml_doc = transform(scxml_doc,
                             ID_PREFIX=etree.XSLT.strparam(id_prefix))
 
     return Unpickler().load(io.BytesIO(quakeml_doc))
@@ -107,7 +107,7 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     :param verbose: Print validation error log if True.
     :type event_deletion: bool
     :param event_removal: If True, the event elements will be removed. This can
-        be useful to associate origins with scevent when injecting SC3ML file
+        be useful to associate origins with scevent when injecting SCXML file
         into seiscomp.
     """
     nsmap_ = getattr(catalog, "nsmap", {})
@@ -119,15 +119,15 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
 
     # Remove events
     if event_removal:
-        for event in sc3ml_doc.xpath("//*[local-name()='event']"):
+        for event in scxml_doc.xpath("//*[local-name()='event']"):
             event.getparent().remove(event)
 
-    if validate and not validate_sc3ml(io.BytesIO(sc3ml_doc), verbose=verbose):
+    if validate and not validate_scxml(io.BytesIO(scxml_doc), verbose=verbose):
         raise AssertionError("The final SCXML file did not pass validation.")
 
     # Open filehandler or use an existing file like object
     try:
         with open(filename, 'wb') as fh:
-            fh.write(sc3ml_doc)
+            fh.write(scxml_doc)
     except TypeError:
-        filename.write(sc3ml_doc)
+        filename.write(scxml_doc)
