@@ -17,7 +17,7 @@ import re
 from lxml import etree
 
 from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
-from obspy.io.seiscomp.core import validate as validate_sc3ml
+from obspy.io.seiscomp.core import validate as validate_scxml
 
 
 SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
@@ -115,7 +115,7 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     xslt_filename = Path(__file__).parent / 'data'
     xslt_filename = xslt_filename / 'quakeml_1.2__sc3ml_0.12.xsl'
     transform = etree.XSLT(etree.parse(str(xslt_filename)))
-    sc3ml_doc = transform(etree.parse(io.BytesIO(quakeml_doc)))
+    scxml_doc = transform(etree.parse(io.BytesIO(quakeml_doc)))
 
     # Remove events
     if event_removal:
