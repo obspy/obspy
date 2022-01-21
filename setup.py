@@ -41,7 +41,7 @@ from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
-MIN_PYTHON_VERSION = (3, 6)
+MIN_PYTHON_VERSION = (3, 7)
 
 # Fail fast if the user is on an unsupported version of python.
 if sys.version_info < MIN_PYTHON_VERSION:
