@@ -105,10 +105,15 @@ def post_state(run, state, msg=None):
     data = {'state': state,
             'context': f"docs / deploy ({run['event']})"}
     if run['event'] == 'pull_request':
-        if msg is None:
-            msg = 'See Details link'
-        pr = run['pull_requests'][0]['number']
-        data['target_url'] = URL.format(pr=pr)
+        try:
+            pr = run['pull_requests'][0]['number']
+        except IndexError:
+            pass
+        else:
+            if msg is None:
+                msg = 'See Details link'
+            pr = run['pull_requests'][0]['number']
+            data['target_url'] = URL.format(pr=pr)
     if msg:
         data['description'] = msg
     requests.post(API + 'statuses/' + run['head_sha'], json=data, **RKW)
