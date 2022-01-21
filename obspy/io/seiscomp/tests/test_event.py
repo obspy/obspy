@@ -150,7 +150,7 @@ class EventTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.5', '0.6', '0.7', '0.8', '0.10', '0.11', '0.12']:
+        for version in ['0.8', '0.10', '0.11', '0.12']:
             filename = os.path.join(self.path, 'version%s' % version)
             read_events(filename)
 
@@ -158,17 +158,17 @@ class EventTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
-        expected_message = ("Can't read SC3ML version 0.3, ObsPy can deal "
-                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10, "
+        expected_message = ("Can't read SC3ML version < 0.6, ObsPy can deal "
+                            "with versions [0.6, 0.7, 0.8, 0.9, 0.10, "
                             "0.11, 0.12].")
         self.assertEqual(e.exception.args[0], expected_message)
 
-        filename = os.path.join(self.path, 'version0.12')
+        filename = os.path.join(self.path, 'version0.13')
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
-        expected_message = ("Can't read SC3ML version 0.12, ObsPy can deal "
-                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10, "
+        expected_message = ("Can't read SC3ML version > 0.12, ObsPy can deal "
+                            "with versions [0.6, 0.7, 0.8, 0.9, 0.10, "
                             "0.11, 0.12].")
         self.assertEqual(e.exception.args[0], expected_message)
 
