@@ -18,6 +18,7 @@ Changes:
      line arguments (see #2489)
    * removed calls to deprecated NumPy functionality (see #2949)
    * cleaned the documentation, build process, and docstrings (see #2662)
+   * refactored and modernized setup.py (see #2422)
  - obspy.core:
    * read_inventory(): add "level" option to read files faster when less level
      of detail is needed. currently only implemented for StationXML reading

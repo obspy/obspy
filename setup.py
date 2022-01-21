@@ -20,41 +20,28 @@ For more information visit https://www.obspy.org.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-# Importing setuptools monkeypatches some of distutils commands so things like
-# 'python setup.py develop' work. Wrap in try/except so it is not an actual
-# dependency. Inplace installation with pip works also without importing
-# setuptools.
-try:
-    import setuptools  # @UnusedImport # NOQA
-except ImportError:
-    pass
 
-try:
-    import numpy  # @UnusedImport # NOQA
-except ImportError:
-    msg = ("No module named numpy. "
-           "Please install numpy first, it is needed before installing ObsPy.")
-    raise ImportError(msg)
-
-import fnmatch
 import glob
 import inspect
 import os
-import sys
 import platform
-from distutils.util import change_root
-from distutils.errors import DistutilsSetupError
+import shutil
+import subprocess
+import sys
 
-from numpy.distutils.core import setup
-from numpy.distutils.ccompiler import get_default_compiler
-from numpy.distutils.command.build import build
-from numpy.distutils.command.install import install
-from numpy.distutils.exec_command import exec_command, find_executable
-from numpy.distutils.misc_util import Configuration
+import setuptools
+
+from distutils.ccompiler import get_default_compiler
+from distutils.command.build import build
+from distutils.command.install import install
+from distutils.errors import DistutilsSetupError
+from distutils.util import change_root
+
+from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
-MIN_PYTHON_VERSION = (3, 6)
+MIN_PYTHON_VERSION = (3, 7)
 
 # Fail fast if the user is on an unsupported version of python.
 if sys.version_info < MIN_PYTHON_VERSION:
@@ -74,8 +61,6 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from libnames import _get_lib_name  # @UnresolvedImport
-from requirements import INSTALL_REQUIRES, EXTRAS_REQUIRES
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -93,6 +78,32 @@ else:
 # Use system libraries? Set later...
 EXTERNAL_EVALRESP = False
 EXTERNAL_LIBMSEED = False
+
+# Hard dependencies needed to install/run ObsPy.
+INSTALL_REQUIRES = [
+    'numpy>=1.15.0',
+    'scipy>=1.0.0',
+    'matplotlib>=3.2.0',
+    'lxml',
+    'setuptools',
+    'sqlalchemy',
+    'decorator',
+    'requests',
+]
+
+# Extra dependencies
+EXTRAS_REQUIRES = {
+    'tests': [
+        'packaging',
+        'pyproj',
+        'pytest',
+        'pytest-cov',
+        'pytest-json-report',
+    ],
+    # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
+    'arclink': ['cryptography'],
+    'io.shapefile': ['pyshp'],
+}
 
 # package specific settings
 KEYWORDS = [
@@ -520,18 +531,6 @@ ENTRY_POINTS = {
     }
 
 
-def find_packages():
-    """
-    Simple function to find all modules under the current folder.
-    """
-    modules = []
-    for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
-                                                      "obspy")):
-        if "__init__.py" in filenames:
-            modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
-    return [_i.replace(os.sep, ".") for _i in modules]
-
-
 # monkey patches for MS Visual Studio
 if IS_MSVC:
     # remove 'init' entry in exported symbols
@@ -549,7 +548,7 @@ def export_symbols(*path):
 
 # adds --with-system-libs command-line option if possible
 def add_features():
-    if 'setuptools' not in sys.modules or not hasattr(setuptools, 'Feature'):
+    if not hasattr(setuptools, 'Feature'):
         return {}
 
     class ExternalLibFeature(setuptools.Feature):
@@ -582,11 +581,11 @@ def add_features():
     }
 
 
-def configuration(parent_package="", top_path=None):
+def get_extensions():
     """
     Config function mainly used to compile C code.
     """
-    config = Configuration("", parent_package, top_path)
+    extensions = []
 
     # GSE2
     path = os.path.join("obspy", "io", "gse2", "src", "GSE_UTI")
@@ -596,8 +595,7 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    config.add_extension(_get_lib_name("gse2", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(Extension("gse2", files, **kwargs))
 
     # LIBMSEED
     path = os.path.join("obspy", "io", "mseed", "src")
@@ -616,8 +614,7 @@ def configuration(parent_package="", top_path=None):
             export_symbols(path, 'obspy-readbuffer.def')
     if EXTERNAL_LIBMSEED:
         kwargs['libraries'] = ['mseed']
-    config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(Extension("mseed", files, **kwargs))
 
     # SEGY
     path = os.path.join("obspy", "io", "segy", "src")
@@ -627,8 +624,7 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    config.add_extension(_get_lib_name("segy", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(Extension("segy", files, **kwargs))
 
     # SIGNAL
     path = os.path.join("obspy", "signal", "src")
@@ -638,8 +634,7 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    config.add_extension(_get_lib_name("signal", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(Extension("signal", files, **kwargs))
 
     # EVALRESP
     path = os.path.join("obspy", "signal", "src")
@@ -656,8 +651,7 @@ def configuration(parent_package="", top_path=None):
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
     if EXTERNAL_EVALRESP:
         kwargs['libraries'] = ['evresp']
-    config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(Extension("evresp", files, **kwargs))
 
     # TAU
     path = os.path.join("obspy", "taup", "src")
@@ -667,44 +661,9 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
-    config.add_extension(_get_lib_name("tau", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(Extension("tau", files, **kwargs))
 
-    add_data_files(config)
-
-    return config
-
-
-def add_data_files(config):
-    """
-    Recursively include all non python files
-    """
-    # python files are included per default, we only include data files
-    # here
-    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf', '.git*']
-    EXCLUDE_DIRS = ['src', '__pycache__']
-    common_prefix = SETUP_DIRECTORY + os.path.sep
-    for root, dirs, files in os.walk(os.path.join(SETUP_DIRECTORY, 'obspy')):
-        root = root.replace(common_prefix, '')
-        for name in files:
-            if any(fnmatch.fnmatch(name, w) for w in EXCLUDE_WILDCARDS):
-                continue
-            config.add_data_files(os.path.join(root, name))
-        for folder in EXCLUDE_DIRS:
-            if folder in dirs:
-                dirs.remove(folder)
-
-    # Force include the contents of some directories.
-    FORCE_INCLUDE_DIRS = [
-        os.path.join(SETUP_DIRECTORY, 'obspy', 'io', 'mseed', 'src',
-                     'libmseed', 'test')]
-
-    for folder in FORCE_INCLUDE_DIRS:
-        for root, _, files in os.walk(folder):
-            for filename in files:
-                config.add_data_files(
-                    os.path.relpath(os.path.join(root, filename),
-                                    SETUP_DIRECTORY))
+    return extensions
 
 
 # Auto-generate man pages from --help output
@@ -713,8 +672,8 @@ class Help2ManBuild(build):
 
     def finalize_options(self):
         build.finalize_options(self)
-        self.help2man = find_executable('help2man')
-        if not self.help2man:
+        self.help2man = shutil.which('help2man')
+        if self.help2man is None:
             raise DistutilsSetupError('Building man pages requires help2man.')
 
     def run(self):
@@ -729,11 +688,11 @@ class Help2ManBuild(build):
 
             output = os.path.join(mandir, ep.name + '.1')
             print('Generating %s ...' % (output))
-            exec_command([self.help2man,
-                          '--no-info', '--no-discard-stderr',
-                          '--output', output,
-                          '"%s -m %s"' % (sys.executable,
-                                          ep.module_name)])
+            subprocess.call([self.help2man,
+                             '--no-info', '--no-discard-stderr',
+                             '--output', output,
+                             '"%s -m %s"' % (sys.executable,
+                                             ep.module_name)])
 
 
 class Help2ManInstall(install):
@@ -771,6 +730,11 @@ def setupPackage():
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
         url="https://www.obspy.org",
+        project_urls={
+            "Bug Tracker": "https://github.com/obspy/obspy/issues",
+            "Documentation": "https://docs.obspy.org/",
+            "Source Code": "https://github.com/obspy/obspy",
+        },
         author='The ObsPy Development Team',
         author_email='devs@obspy.org',
         license='GNU Lesser General Public License, Version 3 (LGPLv3)',
@@ -780,8 +744,8 @@ def setupPackage():
             'Environment :: Console',
             'Intended Audience :: Science/Research',
             'Intended Audience :: Developers',
-            'License :: OSI Approved :: GNU Library or ' +
-                'Lesser General Public License (LGPL)',
+            'License :: OSI Approved :: '
+                'GNU Lesser General Public License v3 (LGPLv3)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Programming Language :: Python :: 3',
@@ -791,6 +755,32 @@ def setupPackage():
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
         packages=find_packages(),
+        include_package_data=True,
+        exclude_package_data={
+            'obspy.io.css': ['contrib/*'],
+            # NOTE: If the libmseed test data wasn't used in our tests, we
+            # could just ignore src/* everywhere.
+            'obspy.io.gse2': ['src/*'],
+            'obspy.io.mseed': [
+                # Only keep src/libmseed/test/* except for the C files.
+                'src/*.c',
+                'src/*.def',
+                'src/libmseed/.clang-format',
+                'src/libmseed/ChangeLog',
+                'src/libmseed/Makefile*',
+                'src/libmseed/README.byteorder',
+                'src/libmseed/doc/*',
+                'src/libmseed/example/*',
+                'src/libmseed/test/Makefile',
+                'src/libmseed/*.h',
+                'src/libmseed/*.in',
+                'src/libmseed/*.map',
+                'src/libmseed/*.md',
+            ],
+            'obspy.io.segy': ['src/*'],
+            'obspy.signal': ['src/*'],
+            'obspy.taup': ['src/*'],
+        },
         namespace_packages=[],
         zip_safe=False,
         python_requires=f'>={MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}',
@@ -798,23 +788,19 @@ def setupPackage():
         tests_require=EXTRAS_REQUIRES['tests'],
         extras_require=EXTRAS_REQUIRES,
         features=add_features(),
-        # this is needed for "easy_install obspy==dev"
-        download_url=("https://github.com/obspy/obspy/zipball/master"
-                      "#egg=obspy=dev"),
-        include_package_data=True,
         entry_points=ENTRY_POINTS,
+        ext_modules=get_extensions(),
         ext_package='obspy.lib',
         cmdclass={
             'build_man': Help2ManBuild,
             'install_man': Help2ManInstall
         },
-        configuration=configuration)
+    )
 
 
 if __name__ == '__main__':
     # clean --all does not remove extensions automatically
     if 'clean' in sys.argv and '--all' in sys.argv:
-        import shutil
         # delete complete build directory
         path = os.path.join(SETUP_DIRECTORY, 'build')
         try:
