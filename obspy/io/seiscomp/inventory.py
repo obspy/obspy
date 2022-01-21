@@ -37,7 +37,7 @@ from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
+SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
 SCHEMA_NAMESPACE_BASE = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
 
 
@@ -91,7 +91,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
     """
     root = etree.parse(path_or_file_object).getroot()
 
-    # Code can be used for version 0.7 to 0.12 (Seiscomp 4.x)
+    # Code can be used for version 0.6 to 0.12 (Seiscomp 4.x)
     for version in SCHEMA_VERSION:
         namespace = _get_schema_namespace(version)
         if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
@@ -147,6 +147,31 @@ def _read_sc3ml(path_or_file_object, **kwargs):
                 raise obspy.ObsPyException(msg)
             else:
                 dataloggers[public_id] = datalogger_element
+
+    #### this version in #2695 allows the the scxml inventory to be read but
+    #### the response stages are all None
+    # Register reponses
+    responses = {
+        "responsePAZ": {},
+        "responsePolynomial": {},
+        "responseFIR": {},
+        "responseIIR": {}
+    }
+    for response_type, all_elements in responses.items():
+        for response_element in inv_element.findall(_ns(response_type)):
+            public_id = response_element.get("publicID")
+            if public_id:
+                if public_id in all_elements:
+                    msg = ("Found multiple matching {} tags with the same "
+                           "publicID '{}'.".format(response_type, public_id))
+                    raise obspy.ObsPyException(msg)
+                else:
+                    all_elements[public_id] = response_element                
+                
+                
+    #### the below version from #2124 gives a instrumentation_register 'reponses' key error 
+    #### in read_response
+    """
     # Register reponses
     responses = {}
     for response_type in ["responseFAP", "responseFIR", "responsePAZ",
@@ -160,6 +185,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
                     raise obspy.ObsPyException(msg)
                 else:
                     responses[public_id] = response_element
+    """                
                     
     # Organize all the collection instrument information into a unified
     # intrumentation register
