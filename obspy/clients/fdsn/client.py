@@ -34,7 +34,10 @@ from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      FDSNTimeoutException,
                      FDSNNoAuthenticationServiceException,
                      FDSNBadRequestException, FDSNNoServiceException,
-                     FDSNInternalServerException, FDSNTooManyRequestsException,
+                     FDSNInternalServerException,
+                     FDSNNotImplementedException,
+                     FDSNBadGatewayException,
+                     FDSNTooManyRequestsException,
                      FDSNRequestTooLargeException,
                      FDSNServiceUnavailableException,
                      FDSNUnauthorizedException,
@@ -1771,6 +1774,12 @@ def raise_on_error(code, data):
     elif code == 500:
         raise FDSNInternalServerException("Service responds: Internal server "
                                           "error", server_info)
+    elif code == 501:
+        raise FDSNNotImplementedException("Service responds: Not implemented ",
+                                          server_info)
+    elif code == 502:
+        raise FDSNBadGatewayException("Service responds: Bad gateway ",
+                                      server_info)
     elif code == 503:
         raise FDSNServiceUnavailableException("Service temporarily "
                                               "unavailable",
