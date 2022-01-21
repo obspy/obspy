@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.seiscomp - SeisComP3 inventory and event file support for ObsPy
+obspy.io.seiscomp - SeisComP XML inventory and event file support for ObsPy
 ========================================================================
 
-This module provides read support for SeisComP3 inventory files and read and
-write support for SeisComP3 event files.
+This module provides read support for SeisComP XML inventory files & 
+read and write support for SeisComP XML event files.
+
+Note that the "sc3ml" suffix has now evolved to the general "scxml" to 
+coincide with SeisComp (now 4.8) dropping the version number in its name.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
