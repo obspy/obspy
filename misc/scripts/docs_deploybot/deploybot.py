@@ -40,3 +40,5 @@ try:
     s.run()
 except KeyboardInterrupt:
     log.info('Bye, bye')
+except Exception:
+    log.exception('Unexpected error: stop')
