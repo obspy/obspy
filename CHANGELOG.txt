@@ -39,7 +39,7 @@ Changes:
    * fix iso8601 regex for issue #2868 to cope with day 360 properly
    * fix crash when resampling very short traces (see #2926)
  - obspy.clients.fdsn:
-   * introduce fine-grained FDSN client exceptions (see #2653)
+   * introduce fine-grained FDSN client exceptions (see #2653, #2964)
    * support for "eventtype" parameter in get_events(), as specified in version
      1.2 of the FDSN event web service (see #2780)
    * Hostnames with hyphens and long TLDs are no longer rejected as invalid
