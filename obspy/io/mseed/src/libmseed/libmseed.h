@@ -587,22 +587,22 @@ typedef struct Selections_s {
  * pack byte orders */
 extern flag packheaderbyteorder;
 extern flag packdatabyteorder;
-#define MS_PACKHEADERBYTEORDER(X) (packheaderbyteorder = X);
-#define MS_PACKDATABYTEORDER(X) (packdatabyteorder = X);
+#define MS_PACKHEADERBYTEORDER(X) do { packheaderbyteorder = (X); } while(0)
+#define MS_PACKDATABYTEORDER(X) do { packdatabyteorder = (X); } while(0)
 
 /* Global variables (defined in unpack.c) and macros to set/force
  * unpack byte orders */
 extern flag unpackheaderbyteorder;
 extern flag unpackdatabyteorder;
-#define MS_UNPACKHEADERBYTEORDER(X) (unpackheaderbyteorder = X);
-#define MS_UNPACKDATABYTEORDER(X) (unpackdatabyteorder = X);
+#define MS_UNPACKHEADERBYTEORDER(X) do { unpackheaderbyteorder = (X); } while(0)
+#define MS_UNPACKDATABYTEORDER(X) do { unpackdatabyteorder = (X); } while(0)
 
 /* Global variables (defined in unpack.c) and macros to set/force
  * encoding and fallback encoding */
 extern int unpackencodingformat;
 extern int unpackencodingfallback;
-#define MS_UNPACKENCODINGFORMAT(X) (unpackencodingformat = X);
-#define MS_UNPACKENCODINGFALLBACK(X) (unpackencodingfallback = X);
+#define MS_UNPACKENCODINGFORMAT(X) do { unpackencodingformat = (X); } while(0)
+#define MS_UNPACKENCODINGFALLBACK(X) do { unpackencodingfallback = (X); } while(0)
 
 /* Mini-SEED record related functions */
 extern int           msr_parse (char *record, int recbuflen, MSRecord **ppmsr, int reclen,
@@ -822,10 +822,12 @@ extern void     ms_gswap4a ( void *data4 );
 extern void     ms_gswap8a ( void *data8 );
 
 /* Byte swap macro for the BTime struct */
-#define MS_SWAPBTIME(x) \
-  ms_gswap2 (x.year);   \
-  ms_gswap2 (x.day);    \
-  ms_gswap2 (x.fract);
+#define MS_SWAPBTIME(x)  \
+  do {                   \
+    ms_gswap2 (x.year);  \
+    ms_gswap2 (x.day);   \
+    ms_gswap2 (x.fract); \
+  } while (0)
 
 /* Platform portable functions */
 extern off_t lmp_ftello (FILE *stream);
