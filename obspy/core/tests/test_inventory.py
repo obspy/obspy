@@ -19,6 +19,7 @@ import pytest
 
 import obspy
 from obspy import UTCDateTime, read_inventory, read_events
+from obspy.core.util import CARTOPY_VERSION
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import WarningsCapture
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
@@ -180,7 +181,7 @@ class TestInventory:
         """
         inv = read_inventory()
         t = UTCDateTime(2008, 7, 1)
-        with WarningsCapture:
+        with WarningsCapture():
             inv.plot_response(0.01, output="ACC", channel="*N",
                               station="[WR]*", time=t, outfile=image_path)
 
@@ -580,10 +581,10 @@ class TestInventory:
         # try read_inventory() with invalid filename for all registered read
         # plugins and also for filetype autodiscovery
         formats = [None] + list(formats)
+        expected_error_message = exception_msg.format(doesnt_exist)
         for format in formats[:1]:
-            with pytest.raises(IOError) as e:
+            with pytest.raises(IOError, match=expected_error_message):
                 read_inventory(doesnt_exist, format=format)
-            assert str(e.exception) == exception_msg.format(doesnt_exist)
 
     def test_inventory_can_be_initialized_with_no_arguments(self):
         """
@@ -681,7 +682,7 @@ class TestInventory:
 
 
 @pytest.mark.usefixtures('ignore_numpy_errors')
-@pytest.importorskip('cartopy')
+@pytest.mark.skipif(not CARTOPY_VERSION, reason='cartopy not installed')
 class TestInventoryCartopy:
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Cartopy.
