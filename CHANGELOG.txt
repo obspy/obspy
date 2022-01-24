@@ -328,6 +328,8 @@ Changes:
    * The recordanalyzer can now detect calibration blockettes 300, 310,
      and 320 (see #2370).
    * Can now write zero sampling-rate traces. (see #2488, 2509)
+   * Updated to libmseed 2.19.6. (see #2966)
+   * Fixed byte swapping of data. (see #2966)
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
      information. (see #1924)
