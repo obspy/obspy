@@ -10,7 +10,6 @@ dependencies:
 - astropy=1.1.1=np110py34_0
 - babel=2.2.0=py34_0
 - backports_abc=0.4=py34_0
-- basemap=1.0.7=np110py34_0
 - beautiful-soup=4.3.2=py34_0
 - beautifulsoup4=4.4.1=py34_0
 - bitarray=0.8.1=py34_0

@@ -684,19 +684,11 @@ class TestInventory:
 
 @pytest.mark.usefixtures('ignore_numpy_errors')
 @pytest.importorskip('cartopy')
-@pytest.mark.skipif(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
-                    reason='cartopy not installed')
 class TestInventoryCartopy:
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Cartopy.
     """
-    def setUp(self):
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        self.nperr = np.geterr()
-        np.seterr(all='ignore')
-
-    def tearDown(self):
-        np.seterr(**self.nperr)
+    image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
     def test_location_plot_global(self, image_path):
         """

@@ -13,8 +13,7 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
                               FocalMechanism, Magnitude, Origin, Pick,
                               ResourceIdentifier, WaveformStreamID)
 from obspy.core.event.source import farfield
-from obspy.core.util import (
-    CARTOPY_VERSION, PROJ4_VERSION)
+from obspy.core.util import CARTOPY_VERSION
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import WarningsCapture
@@ -109,8 +108,6 @@ class TestEvent:
         assert not hasattr(p, "test_1")
         assert not hasattr(p, "test_2")
 
-    @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                        reason='unsupported proj4 library')
     @pytest.mark.skipif(not (CARTOPY_VERSION and CARTOPY_VERSION >=
                              [0, 12, 0]),
                         reason='cartopy not installed')
