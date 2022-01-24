@@ -1001,7 +1001,7 @@ class WaveformPlotting(object):
         if not count:
             # Up to 15 time units and if it's a full number, show every unit.
             if time_value <= 15 and time_value % 1 == 0:
-                count = time_value
+                count = int(time_value)
             # Otherwise determine whether they are divisible for numbers up to
             # 15. If a number is not divisible just show 10 units.
             else:
