@@ -12,8 +12,6 @@
  * Written by Chad Trabant,
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
- *
- * modified: 2016.273
  ***************************************************************************/
 #include <ctype.h>
 #include <stdio.h>
@@ -824,7 +822,14 @@ msr_unpack_data (MSRecord *msr, int swapflag, flag verbose)
       ms_log (1, "%s: Found ASCII data\n", srcname);
 
     nsamples = (int)msr->samplecnt;
-    memcpy (msr->datasamples, dbuf, nsamples);
+    if (nsamples > 0)
+    {
+      memcpy (msr->datasamples, dbuf, nsamples);
+    }
+    else
+    {
+      nsamples = 0;
+    }
     msr->sampletype = 'a';
     break;
 

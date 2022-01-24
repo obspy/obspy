@@ -120,7 +120,7 @@ ms_loginit_main (MSLogParam *logp,
   {
     if (strlen (logprefix) >= MAX_LOG_MSG_LENGTH)
     {
-      ms_log_l (logp, 2, 0, "log message prefix is too large\n");
+      ms_log_l (logp, 2, "%s", "log message prefix is too large\n");
     }
     else
     {
@@ -135,7 +135,7 @@ ms_loginit_main (MSLogParam *logp,
   {
     if (strlen (errprefix) >= MAX_LOG_MSG_LENGTH)
     {
-      ms_log_l (logp, 2, 0, "error message prefix is too large\n");
+      ms_log_l (logp, 2, "%s", "error message prefix is too large\n");
     }
     else
     {

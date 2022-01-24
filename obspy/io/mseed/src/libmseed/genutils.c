@@ -1192,6 +1192,14 @@ ms_readleapsecondfile (char *filename)
     return -1;
   }
 
+  /* Free existing leapsecondlist */
+  while (leapsecondlist != NULL)
+  {
+    LeapSecond *next = leapsecondlist->next;
+    free(leapsecondlist);
+    leapsecondlist = next;
+  }
+
   while (fgets (readline, sizeof (readline) - 1, fp))
   {
     /* Guarantee termination */
@@ -1247,6 +1255,7 @@ ms_readleapsecondfile (char *filename)
       ls->leapsecond = MS_EPOCH2HPTIME ((leapsecond - NTPPOSIXEPOCHDELTA));
       ls->TAIdelta   = TAIdelta;
       ls->next       = NULL;
+      count++;
 
       /* Add leap second to global list */
       if (!leapsecondlist)

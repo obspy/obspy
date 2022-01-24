@@ -28,8 +28,8 @@
 extern "C" {
 #endif
 
-#define LIBMSEED_VERSION "2.19.5"
-#define LIBMSEED_RELEASE "2017.283"
+#define LIBMSEED_VERSION "2.19.6"
+#define LIBMSEED_RELEASE "2018.240"
 
 /* C99 standard headers */
 #include <stdlib.h>
@@ -68,10 +68,7 @@ extern "C" {
 #endif
 
 /* Set platform specific features */
-#if defined(LMP_LINUX) || defined(LMP_BSD) || defined(LMP_SOLARIS)
-  #include <unistd.h>
-  #include <inttypes.h>
-#elif defined(LMP_WIN)
+#if defined(LMP_WIN)
   #include <windows.h>
   #include <sys/types.h>
 
@@ -115,6 +112,7 @@ extern "C" {
     #define stat _stat
   #endif
 #else
+  #include <unistd.h>
   #include <inttypes.h>
 #endif
 
