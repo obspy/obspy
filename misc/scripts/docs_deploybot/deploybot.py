@@ -6,6 +6,8 @@ Outdated PR docs older than 90 days will be deleted.
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import sched
+import signal
+import sys
 
 handlers = [TimedRotatingFileHandler('log.txt', 'D', 30, 5)]
 format_ = '%(levelname)s:%(name)s:%(asctime)s %(message)s'
@@ -33,10 +35,18 @@ def sremove():
     s.enter(T2, 2, sremove)
 
 
+def signal_term_handler(signal, frame):
+    log.info('Received SIGTERM: Bye, bye')
+    sys.exit(0)
+signal.signal(signal.SIGTERM, signal_term_handler)
+
+
 s = sched.scheduler()
 s.enter(0, 1, sdeploy)
 s.enter(0, 2, sremove)
 try:
     s.run()
 except KeyboardInterrupt:
-    log.info('Bye, bye')
+    log.info('Received KeyboardInterrupt: Bye, bye')
+except Exception:
+    log.exception('Unexpected error: stop')
