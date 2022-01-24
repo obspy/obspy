@@ -156,12 +156,12 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
   if (headerswapflag)
   {
     MS_SWAPBTIME (&msr->fsdh->start_time);
-    ms_gswap2a (&msr->fsdh->numsamples);
-    ms_gswap2a (&msr->fsdh->samprate_fact);
-    ms_gswap2a (&msr->fsdh->samprate_mult);
-    ms_gswap4a (&msr->fsdh->time_correct);
-    ms_gswap2a (&msr->fsdh->data_offset);
-    ms_gswap2a (&msr->fsdh->blockette_offset);
+    ms_gswap2 (&msr->fsdh->numsamples);
+    ms_gswap2 (&msr->fsdh->samprate_fact);
+    ms_gswap2 (&msr->fsdh->samprate_mult);
+    ms_gswap4 (&msr->fsdh->time_correct);
+    ms_gswap2 (&msr->fsdh->data_offset);
+    ms_gswap2 (&msr->fsdh->blockette_offset);
   }
 
   /* Populate some of the common header fields */

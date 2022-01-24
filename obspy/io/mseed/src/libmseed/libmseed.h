@@ -816,10 +816,27 @@ extern void     ms_gswap3 ( void *data3 );
 extern void     ms_gswap4 ( void *data4 );
 extern void     ms_gswap8 ( void *data8 );
 
-/* Generic byte swapping routines for memory aligned quantities */
+/* Generic byte swapping routines for memory aligned quantities; names exist
+ * for backwards compatibility, but are the same as the generic routines. */
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5) || defined (__clang__)
+__attribute__ ((deprecated("Use ms_gswap2 instead.")))
+extern void     ms_gswap2a ( void *data2 );
+__attribute__ ((deprecated("Use ms_gswap4 instead.")))
+extern void     ms_gswap4a ( void *data4 );
+__attribute__ ((deprecated("Use ms_gswap8 instead.")))
+extern void     ms_gswap8a ( void *data8 );
+#elif defined(_MSC_FULL_VER) && (_MSC_FULL_VER > 140050320)
+__declspec(deprecated("Use ms_gswap2 instead."))
+extern void     ms_gswap2a ( void *data2 );
+__declspec(deprecated("Use ms_gswap4 instead."))
+extern void     ms_gswap4a ( void *data4 );
+__declspec(deprecated("Use ms_gswap8 instead."))
+extern void     ms_gswap8a ( void *data8 );
+#else
 extern void     ms_gswap2a ( void *data2 );
 extern void     ms_gswap4a ( void *data4 );
 extern void     ms_gswap8a ( void *data8 );
+#endif
 
 /* Byte swap macro for the BTime struct */
 #define MS_SWAPBTIME(x)  \
