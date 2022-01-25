@@ -28,6 +28,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import sysconfig
 
 import setuptools
 
@@ -595,6 +596,8 @@ def get_extensions():
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
     extensions.append(Extension("gse2", files, **kwargs))
 
     # LIBMSEED
@@ -612,8 +615,10 @@ def get_extensions():
             export_symbols(path, 'libmseed', 'libmseed.def')
         kwargs['export_symbols'] += \
             export_symbols(path, 'obspy-readbuffer.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
     if EXTERNAL_LIBMSEED:
-        kwargs['libraries'] = ['mseed']
+        kwargs.setdefault('libraries', []).append('mseed')
     extensions.append(Extension("mseed", files, **kwargs))
 
     # SEGY
@@ -624,6 +629,8 @@ def get_extensions():
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
     extensions.append(Extension("segy", files, **kwargs))
 
     # SIGNAL
@@ -634,6 +641,8 @@ def get_extensions():
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
     extensions.append(Extension("signal", files, **kwargs))
 
     # EVALRESP
@@ -649,8 +658,10 @@ def get_extensions():
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
     if EXTERNAL_EVALRESP:
-        kwargs['libraries'] = ['evresp']
+        kwargs.setdefault('libraries', []).append('evresp')
     extensions.append(Extension("evresp", files, **kwargs))
 
     # TAU
@@ -661,6 +672,8 @@ def get_extensions():
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
     extensions.append(Extension("tau", files, **kwargs))
 
     return extensions
