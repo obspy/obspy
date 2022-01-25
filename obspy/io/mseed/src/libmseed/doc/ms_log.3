@@ -23,13 +23,13 @@ all output from libmseed functions.  They are also intended to be used
 by libmseed based programs if desired.
 
 Three message levels are recognized:
- 0  : Normal log messgaes, printed using log_print with logprefix
+ 0  : Normal log messages, printed using log_print with logprefix
  1  : Diagnostic messages, printed using diag_print with logprefix
  2+ : Error messages, printed using diag_print with errprefix
 
 It is the task of the \fBms_log\fP functions to format a message using
 \fBprintf\fP conventions and pass the formatted string to the
-appropriate printing function (\fIlog_print\fP or \fIdiag_print\fP)
+appropriate printing function (\fIlog_print\fP or \fIdiag_print\fP).
 
 \fBms_log\fP will process messages using the global logging
 parameters.
@@ -63,11 +63,11 @@ The default values for the logging parameters are:
   log_print  = fprintf  (printing to standard out)
   log_prefix = ""
   diag_print = fprintf  (printing to standard error)
-  err_prefix = "error: "
+  err_prefix = "Error: "
 
 By setting the printing functions it is possible to re-direct all of
 the output from these logging routines.  This is useful when the
-libmseed based software is embedded in a system with it's own logging
+libmseed based software is embedded in a system with its own logging
 facilities.
 
 Most of the libmseed internal messages are logged at either the
@@ -100,8 +100,8 @@ main () {
   /* Normal log message, "LOG: " will be prefixed */
   ms_log (0, "Normal log message for %s\n", argv[0]);
 
-  /* Diognostic message, "LOG: " will be prefixed */
-  ms_log (1, "Diagnositc message for %s\n", argv[0]);
+  /* Diagnostic message, "LOG: " will be prefixed */
+  ms_log (1, "Diagnostic message for %s\n", argv[0]);
 
   /* Error message, "ERR: " will be prefixed */
   ms_log (2, "Error message for %s\n", argv[0]);

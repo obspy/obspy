@@ -125,13 +125,13 @@ source name and time window parameters, see \fBms_selection(3)\fP for
 more information.
 
 .SH RETURN VALUES
-On the sucessful read and parsing of a record \fBms_readmsr\fP and
+On the successful read and parsing of a record \fBms_readmsr\fP and
 \fBms_readmsr_r\fP return MS_NOERROR and populate the MSRecord struct
 at \fI*ppmsr\fP.  Upon reaching the end of the input file these
 routines return MS_ENDOFFILE.  On error these routines return a
 libmseed error code (defined in libmseed.h)
 
-On the sucessful read and parsing of a file \fBms_readtraces\fP and
+On the successful read and parsing of a file \fBms_readtraces\fP and
 \fBms_readtracelist\fP return MS_NOERROR and populate the MSTraceGroup
 or MSTraceList struct.  On error these routines return a libmseed
 error code (defined in libmseed.h)

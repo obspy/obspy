@@ -6,14 +6,12 @@
  *
  * Some standard integer types are needed, namely uint8_t and
  * uint32_t, (these are normally declared by including inttypes.h or
- * stdint.h).  Each function expects it's input to be a void pointer
+ * stdint.h).  Each function expects its input to be a void pointer
  * to a quantity of the appropriate size.
  *
- * There are two versions of most routines, one that works on
- * quantities regardless of alignment (gswapX) and one that works on
- * memory aligned quantities (gswapXa).  The memory aligned versions
- * (gswapXa) are much faster than the other versions (gswapX), but the
- * memory *must* be aligned.
+ * There are two versions of most routines.  The memory aligned versions
+ * (gswapXa) are aliases of the other versions (gswapX) provided for backwards
+ * compatibility.  There is no difference between them.
  *
  * Written by Chad Trabant,
  *   IRIS Data Management Center
@@ -28,115 +26,73 @@
 void
 ms_gswap2 (void *data2)
 {
-  uint8_t temp;
-
-  union {
-    uint8_t c[2];
-  } dat;
+  uint16_t dat;
 
   memcpy (&dat, data2, 2);
-  temp     = dat.c[0];
-  dat.c[0] = dat.c[1];
-  dat.c[1] = temp;
+
+  dat = ((dat & 0xff00) >> 8) | ((dat & 0x00ff) << 8);
+
   memcpy (data2, &dat, 2);
 }
 
 void
 ms_gswap3 (void *data3)
 {
+  uint8_t dat[3];
   uint8_t temp;
 
-  union {
-    uint8_t c[3];
-  } dat;
-
   memcpy (&dat, data3, 3);
-  temp     = dat.c[0];
-  dat.c[0] = dat.c[2];
-  dat.c[2] = temp;
+  temp   = dat[0];
+  dat[0] = dat[2];
+  dat[2] = temp;
   memcpy (data3, &dat, 3);
 }
 
 void
 ms_gswap4 (void *data4)
 {
-  uint8_t temp;
-
-  union {
-    uint8_t c[4];
-  } dat;
+  uint32_t dat;
 
   memcpy (&dat, data4, 4);
-  temp     = dat.c[0];
-  dat.c[0] = dat.c[3];
-  dat.c[3] = temp;
-  temp     = dat.c[1];
-  dat.c[1] = dat.c[2];
-  dat.c[2] = temp;
+
+  dat = ((dat & 0xff000000) >> 24) | ((dat & 0x000000ff) << 24) |
+        ((dat & 0x00ff0000) >>  8) | ((dat & 0x0000ff00) <<  8);
+
   memcpy (data4, &dat, 4);
 }
 
 void
 ms_gswap8 (void *data8)
 {
-  uint8_t temp;
+  uint64_t dat;
 
-  union {
-    uint8_t c[8];
-  } dat;
+  memcpy (&dat, data8, sizeof(uint64_t));
 
-  memcpy (&dat, data8, 8);
-  temp     = dat.c[0];
-  dat.c[0] = dat.c[7];
-  dat.c[7] = temp;
+  dat = ((dat & 0xff00000000000000) >> 56) | ((dat & 0x00000000000000ff) << 56) |
+        ((dat & 0x00ff000000000000) >> 40) | ((dat & 0x000000000000ff00) << 40) |
+        ((dat & 0x0000ff0000000000) >> 24) | ((dat & 0x0000000000ff0000) << 24) |
+        ((dat & 0x000000ff00000000) >>  8) | ((dat & 0x00000000ff000000) <<  8);
 
-  temp     = dat.c[1];
-  dat.c[1] = dat.c[6];
-  dat.c[6] = temp;
-
-  temp     = dat.c[2];
-  dat.c[2] = dat.c[5];
-  dat.c[5] = temp;
-
-  temp     = dat.c[3];
-  dat.c[3] = dat.c[4];
-  dat.c[4] = temp;
-  memcpy (data8, &dat, 8);
+  memcpy (data8, &dat, sizeof(uint64_t));
 }
 
-/* Swap routines that work on memory aligned quantities */
+/* Swap routines that work on memory aligned quantities are the same as the
+ * generic routines. The symbols below exist for backwards compatibility. */
 
 void
 ms_gswap2a (void *data2)
 {
-  uint16_t *data = data2;
-
-  *data = (((*data >> 8) & 0xff) | ((*data & 0xff) << 8));
+  ms_gswap2 (data2);
 }
 
 void
 ms_gswap4a (void *data4)
 {
-  uint32_t *data = data4;
-
-  *data = (((*data >> 24) & 0xff) | ((*data & 0xff) << 24) |
-           ((*data >> 8) & 0xff00) | ((*data & 0xff00) << 8));
+  ms_gswap4 (data4);
 }
 
 void
 ms_gswap8a (void *data8)
 {
-  uint32_t *data4 = data8;
-  uint32_t h0, h1;
-
-  h0 = data4[0];
-  h0 = (((h0 >> 24) & 0xff) | ((h0 & 0xff) << 24) |
-        ((h0 >> 8) & 0xff00) | ((h0 & 0xff00) << 8));
-
-  h1 = data4[1];
-  h1 = (((h1 >> 24) & 0xff) | ((h1 & 0xff) << 24) |
-        ((h1 >> 8) & 0xff00) | ((h1 & 0xff00) << 8));
-
-  data4[0] = h1;
-  data4[1] = h0;
+  ms_gswap8 (data8);
 }

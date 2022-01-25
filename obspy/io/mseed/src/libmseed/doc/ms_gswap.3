@@ -23,13 +23,11 @@ ms_gswap - Generalized, in-place byte swapping routines
 
 .SH DESCRIPTION
 These routines swap between LSBF (little-endian) and MSBF (big-endian)
-byte orders.  The specified quantities are swapped in-place.  There
-are two versions of most routines: a generic one that works on
-quantities regardless of memory alignment (ms_gswap#) and one that works
-on memory aligned quantities (ms_gswap#a).  The versions for memory
-aligned quantities are much faster than their generic versions, but
-the memory *must* be aligned.  You have been warned. There is only a
-generic version for 3-byte quantities.
+byte orders.  The specified quantities are swapped in-place.
+
+The \fBms_gswap*a\fP routines are provided for backwards compatibility, but
+should not be used in new code. They are aliases for the regular versions
+above.
 
 .SH AUTHOR
 .nf

@@ -396,12 +396,12 @@ ms_parse_raw (char *record, int maxreclen, flag details, flag swapflag)
   if (swapflag)
   {
     MS_SWAPBTIME (&fsdh->start_time);
-    ms_gswap2a (&fsdh->numsamples);
-    ms_gswap2a (&fsdh->samprate_fact);
-    ms_gswap2a (&fsdh->samprate_mult);
-    ms_gswap4a (&fsdh->time_correct);
-    ms_gswap2a (&fsdh->data_offset);
-    ms_gswap2a (&fsdh->blockette_offset);
+    ms_gswap2 (&fsdh->numsamples);
+    ms_gswap2 (&fsdh->samprate_fact);
+    ms_gswap2 (&fsdh->samprate_mult);
+    ms_gswap4 (&fsdh->time_correct);
+    ms_gswap2 (&fsdh->data_offset);
+    ms_gswap2 (&fsdh->blockette_offset);
   }
 
   /* Validate fixed section header fields */
