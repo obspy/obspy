@@ -17,7 +17,7 @@ from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
 from obspy.core.inventory import Response
 from obspy.core.util import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
@@ -773,14 +773,9 @@ class TestPsd:
             current = start.ns + (i * 30 * 60) * 1e9
             assert time == current
 
-    @pytest.mark.skipif(MATPLOTLIB_VERSION[0] >= 3,
-                        reason='matplotlib >= 3 shifts labels')
     def test_ppsd_spectrogram_plot(self, state, image_path):
         """
         Test spectrogram type plot of PPSD
-
-        Matplotlib version 3 shifts the x-axis labels but everything else looks
-        the same. Skipping test for matplotlib >= 3 on 05/12/2018.
         """
         ppsd = PPSD.load_npz(state.example_ppsd_npz, allow_pickle=True)
 
