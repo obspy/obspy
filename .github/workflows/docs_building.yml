@@ -28,7 +28,7 @@ jobs:
         with:
           miniconda-version: 'latest'
           python-version: '3.9'
-          activate-environment: docs
+          activate-environment: obspydoc
           environment-file: .github/docs_conda_env.yml
       - name: install obspy
         shell: bash -l {0}
@@ -38,12 +38,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd misc/docs
-          make html -w warnings.txt
-      - name: show warnings
-        shell: bash -l {0}
-        run: |
-          echo `wc -l warnings.txt` warnings
-          cat warnings.txt
+          make html
       - name: compress with tar
         run: |
           cd misc/docs/build/html/

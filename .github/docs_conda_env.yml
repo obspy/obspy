@@ -1,4 +1,4 @@
-name: docs
+name: obspydoc
 channels:
   - conda-forge
   - defaults
