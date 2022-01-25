@@ -1,0 +1,27 @@
+name: docs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # obspy
+  - decorator
+  - lxml
+  - matplotlib  
+  - scipy
+  - requests  
+  - setuptools
+  - sqlalchemy
+  # docs
+  - sphinx>=4.2.0
+  - m2r2>=0.2.7 # m2r is not maintained anymore, this fork is
+  - pybtex>=0.24.2
+  - sphinx_rtd_theme
+  - cython # required by cartopy
+  - cartopy >= 0.20
+  #- numpy # required by cartopy
+  #- matplotlib
+  #- obspy
+  # deps used in tutorial but not working anymore
+  #- mlpy
+  
+  
