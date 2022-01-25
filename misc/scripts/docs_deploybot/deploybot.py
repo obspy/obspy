@@ -49,4 +49,4 @@ try:
 except KeyboardInterrupt:
     log.info('Received KeyboardInterrupt: Bye, bye')
 except Exception:
-    log.exception('Unexpected error: stop')
+    log.exception('Unexpected error: Bye, bye')

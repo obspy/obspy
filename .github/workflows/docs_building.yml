@@ -19,9 +19,17 @@ jobs:
   build:
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'build_docs')
     runs-on: ubuntu-latest
-    container: heavelock/obspydocs:latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: setup conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: 'latest'
+          python-version: '3.9'
+          activate-environment: obspydoc
+          environment-file: .github/docs_conda_env.yml
       - name: install obspy
         shell: bash -l {0}
         run: |
