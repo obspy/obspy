@@ -27,7 +27,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: 'latest'
-          python-version: '3.10'
+          python-version: '3.9'
           activate-environment: docs
           environment-file: .github/docs_conda_env.yml
       - name: install obspy
@@ -38,7 +38,12 @@ jobs:
         shell: bash -l {0}
         run: |
           cd misc/docs
-          make html
+          make html -w warnings.txt
+      - name: show warnings
+        shell: bash -l {0}
+        run: |
+          echo `wc -l warnings.txt` warnings
+          cat warnings.txt
       - name: compress with tar
         run: |
           cd misc/docs/build/html/

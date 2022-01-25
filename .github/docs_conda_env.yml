@@ -21,7 +21,6 @@ dependencies:
     - pybtex
   #- numpy # required by cartopy
   #- matplotlib
-  #- obspy
   # deps used in tutorial but not working anymore
   #- mlpy
   
