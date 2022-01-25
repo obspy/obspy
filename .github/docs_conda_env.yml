@@ -13,13 +13,12 @@ dependencies:
   - sqlalchemy
   # docs
   - sphinx>=4.2.0
-  - mistune==0.8.4 # fix mistune version, see https://github.com/obspy/obspy/runs/4935234560
-  - m2r2>=0.2.7 # m2r is not maintained anymore, this fork is  
   - sphinx_rtd_theme
   - cartopy>=0.20
   - pip
   - pip:
     - pybtex
+    - m2r2 >= 0.3.2  # m2r is not maintained anymore, this fork is, need for latest version which is not yet included in conda-forge
   #- numpy # required by cartopy
   #- matplotlib
   # deps used in tutorial but not working anymore
