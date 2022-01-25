@@ -27,7 +27,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: 'latest'
-          python-version: 3.10
+          python-version: '3.10'
           activate-environment: docs
           environment-file: .github/docs_conda_env.yml
       - name: install obspy
