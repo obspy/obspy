@@ -15,10 +15,10 @@ dependencies:
   - sphinx>=4.2.0
   - m2r2>=0.2.7 # m2r is not maintained anymore, this fork is  
   - sphinx_rtd_theme
-  - cython # required by cartopy
   - cartopy>=0.20
+  - pip
   - pip:
-    - pybtex>=0.24.2
+    - pybtex
   #- numpy # required by cartopy
   #- matplotlib
   #- obspy
