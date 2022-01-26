@@ -5,7 +5,7 @@ name: master
 on:
   push:
     branches:
-      - test_all
+      - master
 
 jobs:
   default_tests:
