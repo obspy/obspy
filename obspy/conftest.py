@@ -21,8 +21,8 @@ OBSPY_PATH = os.path.dirname(obspy.__file__)
 
 
 # Soft dependencies to include in ObsPy test report.
-SOFT_DEPENDENCIES = ['cartopy', 'flake8', 'geographiclib', 'pyproj',
-                     'shapefile']
+REPORT_DEPENDENCIES = ['cartopy', 'flake8', 'geographiclib', 'pyproj',
+                       'shapefile', 'pytest', 'pytest-json-report']
 
 # --- ObsPy fixtures
 
@@ -197,7 +197,7 @@ def get_dependency_info():
         name = req.name
         version = pkg_resources.get_distribution(name).version
         version_info[name] = version
-    for name in SOFT_DEPENDENCIES:
+    for name in REPORT_DEPENDENCIES:
         try:
             version = pkg_resources.get_distribution(name).version
         except pkg_resources.DistributionNotFound:
