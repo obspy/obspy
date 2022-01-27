@@ -1,40 +1,52 @@
-name: Build and upload to PyPI
+name: pypi
 
-# Build on every branch push, tag push, and pull request change:
-on: pull_request
-# Alternatively, to publish when a (published) GitHub Release is created, use the following:
-# on:
-#   push:
-#   pull_request:
-#   release:
-#     types:
-#       - published
+on:
+  push:
+    branches:
+      - master
+      - build_wheels  # TODO remove
+      - 'test_pypi*'
+    tags-ignore:
+      - '**'
+  release:
+    types: [published]
+
+concurrency:
+  group: pypi-${{ github.event_name }}-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
-
-  check_running_or_queue_jobs_to_cancel:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs in the same PR
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ secrets.GITHUB_TOKEN }}
-
   build_wheels:
-    env:
-      # Disable building PyPy wheels on windows (failed before)
-      CIBW_SKIP: pp38-win* *-musllinux* *-win32 *-manylinux_i686
-      # Only build on CPython 3.9 (=short build test - REMOVE BEFORE FLIGHT)
-      CIBW_BUILD: cp39-*
-
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    env:
+      # Disable building PyPy wheels on windows (failed before)
+      CIBW_BUILD: cp39-*  # TODO remove
+      CIBW_SKIP: pp38-win* *-musllinux* *-win32 *-manylinux_i686  # TODO
+      CIBW_ENVIRONMENT: OBSPY_NODE_NAME='wheel-builder'
+      CIBW_TEST_COMMAND: obspy-runtests --report
+      CIBW_TEST_EXTRAS: tests
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Adapt environment variables to build only some wheels
+        if: github.ref_name == 'master' && github.event_name == 'push'
+        shell: bash -l {0}
+        run: |
+          echo "CIBW_SKIP=pp38-win* *-musllinux* *-win32 *-manylinux_i686" >> "$GITHUB_ENV"
+          echo "CIBW_BUILD=cp39-*" >> "$GITHUB_ENV"
+
+      - name: Print environment variables
+        shell: bash -l {0}
+        run: |
+          echo "CIBW_SKIP: $CIBW_SKIP"
+          echo "CIBW_BUILD: $CIBW_BUILD"
+          echo "CIBW_TEST_COMMAND: $CIBW_TEST_COMMAND"
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
@@ -48,6 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Build sdist
         run: pipx run build --sdist
@@ -56,21 +70,32 @@ jobs:
         with:
           path: dist/*.tar.gz
 
-#  upload_pypi:
-#    needs: [build_wheels, build_sdist]
-#    runs-on: ubuntu-latest
-#    # upload to PyPI on every tag starting with 'v'
-#    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-#    # alternatively, to publish when a GitHub Release is created, use the following rule:
-#    # if: github.event_name == 'release' && github.event.action == 'published'
-#    steps:
-#      - uses: actions/download-artifact@v2
-#        with:
-#          name: artifact
-#          path: dist
-#
-#      - uses: pypa/gh-action-pypi-publish@v1.4.2
-#        with:
-#          user: __token__
-#          password: ${{ secrets.pypi_password }}
-#          # To test: repository_url: https://test.pypi.org/legacy/
+  # upload_test:
+  #   needs: [build_wheels, build_sdist]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: artifact
+  #         path: dist
+
+  #     - uses: pypa/gh-action-pypi-publish@v1.5.0
+  #       with:
+  #         user: __token__
+  #         password: ${{ secrets.testpypi_password }}
+  #         repository_url: https://test.pypi.org/legacy/
+
+  # upload:
+  #   if: github.event_name == 'release'
+  #   needs: [build_wheels, build_sdist, upload_test]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: artifact
+  #         path: dist
+
+  #     - uses: pypa/gh-action-pypi-publish@v1.5.0
+  #       with:
+  #         user: __token__
+  #         password: ${{ secrets.pypi_password }}

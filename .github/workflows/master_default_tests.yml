@@ -7,6 +7,9 @@ on:
     branches:
       - master
 
+env:
+  OBSPY_NODE_NAME: gh-actions
+
 jobs:
   default_tests:
     runs-on: ${{ matrix.os }}
