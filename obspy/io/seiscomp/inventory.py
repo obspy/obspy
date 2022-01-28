@@ -148,30 +148,6 @@ def _read_sc3ml(path_or_file_object, **kwargs):
             else:
                 dataloggers[public_id] = datalogger_element
 
-    #### this version in #2695 allows the the scxml inventory to be read but
-    #### the response stages are all None
-    # Register reponses
-    responses = {
-        "responsePAZ": {},
-        "responsePolynomial": {},
-        "responseFIR": {},
-        "responseIIR": {}
-    }
-    for response_type, all_elements in responses.items():
-        for response_element in inv_element.findall(_ns(response_type)):
-            public_id = response_element.get("publicID")
-            if public_id:
-                if public_id in all_elements:
-                    msg = ("Found multiple matching {} tags with the same "
-                           "publicID '{}'.".format(response_type, public_id))
-                    raise obspy.ObsPyException(msg)
-                else:
-                    all_elements[public_id] = response_element                
-                
-                
-    #### the below version from #2124 gives a instrumentation_register 'reponses' key error 
-    #### in read_response
-    """
     # Register reponses
     responses = {}
     for response_type in ["responseFAP", "responseFIR", "responsePAZ",
@@ -184,8 +160,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
                            "publicID '{}'.".format(response_type, public_id))
                     raise obspy.ObsPyException(msg)
                 else:
-                    responses[public_id] = response_element
-    """                
+                    responses[public_id] = response_element            
                     
     # Organize all the collection instrument information into a unified
     # intrumentation register
@@ -574,7 +549,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
         if digital_filter_chain is not None:
             response_dig_id = digital_filter_chain.split(" ")
 
-    channel.response = _read_response(instrumentation_register['responses'],
+    channel.response = _read_response(instrumentation_register,
                                       sensor_element, response_element,
                                       cha_element, data_log_element, _ns,
                                       channel.sample_rate,
