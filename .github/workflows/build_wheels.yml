@@ -64,6 +64,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build sdist
+        shell: bash -l {0}
         run: pipx run build --sdist
 
       - uses: actions/upload-artifact@v2
