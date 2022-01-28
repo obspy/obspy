@@ -431,6 +431,14 @@ class TestWaveformPlot:
         st.plot(outfile=image_path, type='dayplot',
                 timezone='EST', time_offset=-5)
 
+    @pytest.mark.parametrize('interval', [2, 10, 23, 25])
+    def test_plot_day_plot_interval(self, interval):
+        """Plot day plot, with different intervals."""
+        start = UTCDateTime(0)
+        st = self._create_stream(start, start + 3 * 3600, 100)
+        st.plot(type='dayplot', timezone='EST', time_offset=-5,
+                interval=interval)
+
     def test_plot_day_plot_explicit_event(self, image_path):
         """
         Plots day plot, starting Jan 1970, with several events.

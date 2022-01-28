@@ -80,7 +80,7 @@ class TestUtilMisc:
         Check files that are used at install time for obspy imports.
         """
         from obspy.core import util
-        files = ["libnames.py", "version.py", "requirements.py"]
+        files = ["version.py"]
 
         for file_ in files:
             file_ = os.path.join(os.path.dirname(util.__file__), file_)
