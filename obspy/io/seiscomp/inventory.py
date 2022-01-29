@@ -706,8 +706,9 @@ def _read_response(instrumentation_register, sen_element, resp_element,
         if fir_response is not None:
             response.response_stages.append(fir_response)
             stage += 1
-            
+
     return response
+
 
 def _map_transfer_type(pz_transfer_function_type):
 
@@ -753,7 +754,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
       "rate": None,
       "offset": None
     }
-    
+
     # Skip decimation for analogue outputs
     # Since 0.10 ResponsePAZ can have a decimation attributes
     if output_units != "V":
@@ -909,7 +910,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
             approximation_type=appr_type, frequency_lower_bound=f_low,
             frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
             approximation_upper_bound=appr_high, maximum_error=max_err,
-            coefficients=coeffs, **kwargs)  
+            coefficients=coeffs, **kwargs)
 
     elif(elem_type == 'responseFIR'):
         # For the responseFIR obtain the symmetry and

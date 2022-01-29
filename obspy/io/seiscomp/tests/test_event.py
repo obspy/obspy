@@ -158,7 +158,7 @@ class EventTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
-        expected_message = ("Can't read SC3ML version < 0.6, ObsPy can deal "
+        expected_message = ("Can't read SCXML version < 0.6, ObsPy can deal "
                             "with versions [0.6, 0.7, 0.8, 0.9, 0.10, "
                             "0.11, 0.12].")
         self.assertEqual(e.exception.args[0], expected_message)
@@ -167,7 +167,7 @@ class EventTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
-        expected_message = ("Can't read SC3ML version > 0.12, ObsPy can deal "
+        expected_message = ("Can't read SCXML version > 0.12, ObsPy can deal "
                             "with versions [0.6, 0.7, 0.8, 0.9, 0.10, "
                             "0.11, 0.12].")
         self.assertEqual(e.exception.args[0], expected_message)
@@ -279,7 +279,7 @@ class EventTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             read_events(filename, format='SC3ML')
 
-        expected_message = "Not a SC3ML compatible file or string."
+        expected_message = "Not a SCXML compatible file or string."
         self.assertEqual(e.exception.args[0], expected_message)
 
     def test_read_sc3ml_fields(self):
