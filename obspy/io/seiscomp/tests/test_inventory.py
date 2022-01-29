@@ -45,11 +45,11 @@ class SC3MLTestCase(unittest.TestCase):
         Test multiple schema versions
         """
         #n.b. 0.10 was the last version in seiscomp 3
-        for version in ['0.10','0.11','0.12']:
+        for version in ['0.10', '0.11', '0.12']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
             read_inventory(filename)
 
-        for version in ['0.10','0.11','0.12']:
+        for version in ['0.10', '0.11', '0.12']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
 
             with self.assertRaises(ValueError) as e:

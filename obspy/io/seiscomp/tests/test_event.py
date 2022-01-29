@@ -39,7 +39,7 @@ class EventTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.write_xslt_filename = os.path.join(
             self.io_directory, 'seiscomp', 'data',
-            'quakeml_1.2__sc3ml_0.12.xsl')
+            'quakeml_1.2__sc3ml_0.11.xsl')
         self.schema_pattern = re.compile(
             r'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[\d\.]+'
         )
@@ -47,7 +47,7 @@ class EventTestCase(unittest.TestCase):
 
     def change_reading_version(self, filename, version):
         """
-        Change the version number of a SC3ML file-like object and
+        Change the version number of a SCXML file-like object and
         return an etree document.
         """
         with open(filename, 'r') as f:
@@ -83,7 +83,7 @@ class EventTestCase(unittest.TestCase):
     def cmp_read_xslt_file(self, sc3ml_file, quakeml_file, validate=True):
         """
         Check if the QuakeML file generated with the XSLT file is the
-        same than the one in the data folder. Every available SC3ML
+        same than the one in the data folder. Every available SCXML
         versions are tested except those for which the file is not
         valid.
         """
@@ -98,7 +98,7 @@ class EventTestCase(unittest.TestCase):
             filename = os.path.join(self.path, sc3ml_file)
             sc3ml_doc = self.change_reading_version(filename, version)
 
-            # Only test valid SC3ML file
+            # Only test valid SCXML file
             if not validate_sc3ml(sc3ml_doc):
                 continue
 
@@ -115,7 +115,7 @@ class EventTestCase(unittest.TestCase):
     def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, target_version,
                             validate=True, path=None):
         """
-        Check if the SC3ML file generated with the XSLT file is the
+        Check if the SCXML file generated with the XSLT file is the
         same than the one in the data folder.
 
         The `target_version` parameter allows to change the version of
@@ -148,13 +148,13 @@ class EventTestCase(unittest.TestCase):
 
     def test_sc3ml_versions(self):
         """
-        Test multiple schema versions
+        Test multiple schema versions //TODO: add 0.12 tests
         """
-        for version in ['0.8', '0.10', '0.11', '0.12']:
+        for version in ['0.9', '0.10', '0.11']:
             filename = os.path.join(self.path, 'version%s' % version)
             read_events(filename)
 
-        filename = os.path.join(self.path, 'version0.3')
+        filename = os.path.join(self.path, 'version0.5')
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
@@ -262,7 +262,7 @@ class EventTestCase(unittest.TestCase):
 
     def test_read_string(self):
         """
-        Test reading a SC3ML string/unicode object via read_events.
+        Test reading a SCXML string/unicode object via read_events.
         """
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.sc3ml')
         with open(filename, 'rb') as fp:
@@ -284,7 +284,7 @@ class EventTestCase(unittest.TestCase):
 
     def test_read_sc3ml_fields(self):
         """
-        Test SC3ML fields which are not in the QuakeML 1.2.
+        Test SCXML fields which are not in the QuakeML 1.2.
         """
         filename = os.path.join(self.path, 'sc3ml_fields.sc3ml')
         catalog = read_events(filename, format='SC3ML')
@@ -312,20 +312,20 @@ class EventTestCase(unittest.TestCase):
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',
                                  'quakeml_1.2_event.sc3ml',
-                                 '0.12',
+                                 '0.11',
                                  path=self.quakeml_path)
 
     def test_write_xslt_origin(self):
         self.cmp_write_xslt_file('quakeml_1.2_origin.xml',
                                  'quakeml_1.2_origin.sc3ml',
-                                 '0.12',
+                                 '0.11',
                                  path=self.quakeml_path)
 
     def test_write_xslt_magnitude(self):
         # Missing origin in original QuakeML test case.
         self.cmp_write_xslt_file('quakeml_1.2_magnitude.xml',
                                  'quakeml_1.2_magnitude.sc3ml',
-                                 '0.12')
+                                 '0.11')
 
     def test_write_xslt_station_magnitude_contribution(self):
         # Missing origin in original QuakeML test case.
@@ -339,33 +339,33 @@ class EventTestCase(unittest.TestCase):
         # Missing origin in original QuakeML test case.
         self.cmp_write_xslt_file('quakeml_1.2_stationmagnitude.xml',
                                  'quakeml_1.2_stationmagnitude.sc3ml',
-                                 '0.12')
+                                 '0.11')
 
     def test_write_xslt_data_used_in_moment_tensor(self):
         self.cmp_write_xslt_file('quakeml_1.2_data_used.xml',
                                  'quakeml_1.2_data_used.sc3ml',
-                                 '0.12')
+                                 '0.11')
 
     def test_write_xslt_arrival(self):
         self.cmp_write_xslt_file('quakeml_1.2_arrival.xml',
                                  'quakeml_1.2_arrival_res.sc3ml',
-                                 '0.12')
+                                 '0.11')
 
     def test_write_xslt_pick(self):
         self.cmp_write_xslt_file('quakeml_1.2_pick.xml',
                                  'quakeml_1.2_pick.sc3ml',
-                                 '0.12')
+                                 '0.11')
 
     def test_write_xslt_focalmechanism(self):
         self.cmp_write_xslt_file('quakeml_1.2_focalmechanism.xml',
                                  'quakeml_1.2_focalmechanism.sc3ml',
-                                 '0.12',
+                                 '0.11',
                                  path=self.quakeml_path)
 
     def test_write_xslt_iris_events(self):
         self.cmp_write_xslt_file('iris_events.xml',
                                  'iris_events.sc3ml',
-                                 '0.12',
+                                 '0.11',
                                  path=self.quakeml_path)
 
     def test_write_xslt_neries_events(self):
@@ -386,14 +386,14 @@ class EventTestCase(unittest.TestCase):
         # unvalid)
         self.cmp_write_xslt_file('usgs_event.xml',
                                  'usgs_event.sc3ml',
-                                 '0.12',
+                                 '0.11',
                                  path=self.quakeml_path,
                                  validate=False)
 
     def test_write_xslt_example(self):
         self.cmp_write_xslt_file('qml-example-1.2-RC3.xml',
                                  'qml-example-1.2-RC3.sc3ml',
-                                 '0.12')
+                                 '0.11')
 
     def test_write_example(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')

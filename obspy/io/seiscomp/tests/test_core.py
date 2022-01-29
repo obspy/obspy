@@ -28,7 +28,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.10','0.11','0.12']:
+        for version in ['0.10', '0.11', '0.12']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
             self.assertTrue(_is_sc3ml(filename))
 
