@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ObsPy implementation for parsing the SeisComp XML format 
+ObsPy implementation for parsing the SeisComp XML format
 to an Inventory object.
 
 This is a modified version of obspy.io.stationxml.
@@ -160,8 +160,8 @@ def _read_sc3ml(path_or_file_object, **kwargs):
                            "publicID '{}'.".format(response_type, public_id))
                     raise obspy.ObsPyException(msg)
                 else:
-                    responses[public_id] = response_element            
-                    
+                    responses[public_id] = response_element
+
     # Organize all the collection instrument information into a unified
     # intrumentation register
     instrumentation_register = {
@@ -392,9 +392,9 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     sen_loc_element = cha_element.getparent()
     sen_sta_element = sen_loc_element.getparent()
     sen_net_element = sen_sta_element.getparent()
-    
+
     network_code = sen_net_element.get("code")
-    station_code = sen_sta_element.get("code")   
+    station_code = sen_sta_element.get("code")
     location_code = sen_loc_element.get("code")
     seed_id = '{}.{}.{}.{}'.format(
         network_code,
@@ -402,7 +402,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
         location_code,
         code
     )
-    
+
     # get site info from the <sensorLocation> element
     longitude = _read_floattype(sen_loc_element, _ns("longitude"), Longitude,
                                 datum=True)
@@ -443,7 +443,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     else:
         sensor_element = instrumentation_register['sensors']\
                          .get(sensor_id)
-    
+
     # obtain the poles and zeros responseID and link to particular
     # <responsePAZ> publicID element in the inventory base node
     if (sensor_element is not None and
@@ -462,8 +462,8 @@ def _read_channel(instrumentation_register, cha_element, _ns):
                 "channel '{channel}'.".format(response=response_id,
                                               channel=seed_id)
             )
-            warnings.warn(msg)      
-            response_element = None        
+            warnings.warn(msg)
+            response_element = None
     else:
         response_element = None
 
@@ -475,8 +475,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     else:
         data_log_element = instrumentation_register['dataloggers']\
                            .get(datalogger_id)
-    
-    
+
     channel.restricted_status = _get_restricted_status(cha_element, _ns)
 
     # There is no further information in the attributes of <stream>
@@ -602,12 +601,12 @@ def _read_response(instrumentation_register, sen_element, resp_element,
     if resp_element is None:
         return response
 
-    #uncomment to include resource id for response (not shown in stationXML)
+    # uncomment to include resource id for response (not shown in stationXML)
     """
     response.resource_id = resp_element.attrib.get('publicID')
     if response.resource_id is not None:
         response.resource_id = str(response.resource_id)
-    """    
+    """
 
     # The sampling rate is not given per fir filter as in stationXML
     # We are only given a decimation factor per stage, therefore we are
@@ -701,7 +700,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
                    "before stage %i") % (fir_id, stage)
             warnings.warn(msg)
             return response
-        
+
         fir_response = _read_response_stage(stage_element, _ns, rate, stage,
                                             'COUNTS', 'COUNTS')
         if fir_response is not None:
@@ -740,57 +739,13 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
     name = stage.get("name")
     if name is not None:
         name = str(name)
-    
+
     # And the public resource identifier
     resource_id = stage.get("publicID")
     if resource_id is not None:
         resource_id = str(resource_id)
 
-    # Determine the decimation parameters
-    # This is dependent on the type of stage
-    """
-    # Decimation delay/correction need to be normalized
-    if(elem_type == "responseFIR"):
-        decimation_factor = _tag2obj(stage, _ns("decimationFactor"), int)
-        if rate != 0.0:
-            temp = _tag2obj(stage, _ns("delay"), float) / rate
-            decimation_delay = _read_float_var(temp,
-                                               FloatWithUncertaintiesAndUnit,
-                                               unit=True)
-            temp = _tag2obj(stage, _ns("correction"), float) / rate
-            decimation_corr = _read_float_var(temp,
-                                              FloatWithUncertaintiesAndUnit,
-                                              unit=True)
-        else:
-            decimation_delay = _read_float_var("inf",
-                                               FloatWithUncertaintiesAndUnit,
-                                               unit=True)
-            decimation_corr = _read_float_var("inf",
-                                              FloatWithUncertaintiesAndUnit,
-                                              unit=True)
-        decimation_input_sample_rate = \
-            _read_float_var(rate, Frequency)
-        decimation_offset = int(0)
-    elif(elem_type == "datalogger"):
-        decimation_factor = int(1)
-        decimation_delay = _read_float_var(0.00,
-                                           FloatWithUncertaintiesAndUnit,
-                                           unit=True)
-        decimation_corr = _read_float_var(0.00,
-                                          FloatWithUncertaintiesAndUnit,
-                                          unit=True)
-        decimation_input_sample_rate = \
-            _read_float_var(rate, Frequency)
-        decimation_offset = int(0)
-    elif(elem_type == "responsePAZ" or elem_type == "responsePolynomial"):
-        decimation_factor = None
-        decimation_delay = None
-        decimation_corr = None
-        decimation_input_sample_rate = None
-        decimation_offset = None
-    else:
-        raise ValueError("Unknown type of response: " + str(elem_type))
-    """
+    # Set up decimation parameters
     decimation = {
       "factor": None,
       "delay": None,
@@ -842,7 +797,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         "decimation_factor": decimation['factor'],
         "decimation_offset": decimation['offset'],
         "decimation_delay": decimation['delay'],
-        "decimation_correction": decimation['correction']        
+        "decimation_correction": decimation['correction']
     }
 
     # Different processing for different types of responses
@@ -870,7 +825,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         # e.g. (-0.01234,0.01234) (-0.01234,-0.01234)
         zeros_array = stage.find(_ns("zeros")).text
         poles_array = stage.find(_ns("poles")).text
-        
+
         if zeros_array is not None:
             zeros_array = _parse_list_of_complex_string(zeros_array)
         else:
@@ -879,7 +834,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
             poles_array = _parse_list_of_complex_string(poles_array)
         else:
             poles_array = []
-            
+
         # Keep counter for pole/zero number
         cnt = 0
         poles = []
@@ -949,13 +904,12 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
                                        additional_mapping={str("number"): i})
                 coeffs_float.append(temp)
                 i += 1
-                
+
         return PolynomialResponseStage(
             approximation_type=appr_type, frequency_lower_bound=f_low,
             frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
             approximation_upper_bound=appr_high, maximum_error=max_err,
             coefficients=coeffs, **kwargs)  
-                
 
     elif(elem_type == 'responseFIR'):
         # For the responseFIR obtain the symmetry and
