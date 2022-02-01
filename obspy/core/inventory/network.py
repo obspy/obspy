@@ -512,8 +512,8 @@ class Network(BaseNode):
 
             Defaults to "global"
         :type resolution: str, optional
-        :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the cartopy module. Possible values are:
+        :param resolution: Resolution of the boundary database to use.
+            Possible values are:
 
             * ``"c"`` (crude)
             * ``"l"`` (low)
