@@ -1,0 +1,27 @@
+name: obspydoc
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # obspy
+  - decorator
+  - lxml
+  - matplotlib  
+  - scipy
+  - requests  
+  - setuptools
+  - sqlalchemy
+  # docs
+  - sphinx>=4.2.0
+  - sphinx_rtd_theme
+  - cartopy>=0.20
+  - pip
+  - pip:
+    - pybtex
+    - m2r2 >= 0.3.2  # m2r is not maintained anymore, this fork is, need for latest version which is not yet included in conda-forge
+  #- numpy # required by cartopy
+  #- matplotlib
+  # deps used in tutorial but not working anymore
+  #- mlpy
+  
+  

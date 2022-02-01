@@ -1,11 +1,3 @@
-# Unfortunately setuptools and numpy.distutils do not like each other and lot's
-# of small incompatibilities are around. One manifestation of this is that the
-# source code and data files included in the setup.py are included in binary
-# distributions but not in source distributions...
-# Therefore the MANIFEST.in files appears to be necessary.
-# See http://scipy-user.10969.n7.nabble.com/SciPy-User-setuptools-messing-with-sdists-using-numpy-distutils-and-Fortran-libraries-td19023.html
-# for more details.
-
 # Include all files in top-level and obspy-top-level directories (e.g. CHANGELOG, RELEASE-VERSION, ...)
 include *  # seem to catch only files, so ./misc and ./debian are not catched.. good!
 recursive-include obspy *  # includes all files in any subdirs, so it also catches *all* subdirs

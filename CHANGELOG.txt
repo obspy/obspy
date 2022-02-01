@@ -18,6 +18,7 @@ Changes:
      line arguments (see #2489)
    * removed calls to deprecated NumPy functionality (see #2949)
    * cleaned the documentation, build process, and docstrings (see #2662)
+   * refactored and modernized setup.py (see #2422)
  - obspy.core:
    * read_inventory(): add "level" option to read files faster when less level
      of detail is needed. currently only implemented for StationXML reading
@@ -38,7 +39,7 @@ Changes:
    * fix iso8601 regex for issue #2868 to cope with day 360 properly
    * fix crash when resampling very short traces (see #2926)
  - obspy.clients.fdsn:
-   * introduce fine-grained FDSN client exceptions (see #2653)
+   * introduce fine-grained FDSN client exceptions (see #2653, #2964)
    * support for "eventtype" parameter in get_events(), as specified in version
      1.2 of the FDSN event web service (see #2780)
    * Hostnames with hyphens and long TLDs are no longer rejected as invalid
@@ -51,6 +52,7 @@ Changes:
  - obspy.imaging:
    * fix section plot in case of a single trace only (see #2764)
    * removed basemap, now only cartopy is supported for maps (see #2961)
+   * fix day plot when passed a small interval (see #2967)
  - obspy.clients.filesystem.tsindex:
    * improvements to leap second file setup and other small fixes (see #2776)
  - obspy.clients.seedlink:
@@ -328,6 +330,8 @@ Changes:
    * The recordanalyzer can now detect calibration blockettes 300, 310,
      and 320 (see #2370).
    * Can now write zero sampling-rate traces. (see #2488, 2509)
+   * Updated to libmseed 2.19.6. (see #2966)
+   * Fixed byte swapping of data. (see #2966)
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
      information. (see #1924)

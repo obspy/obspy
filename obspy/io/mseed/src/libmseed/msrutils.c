@@ -388,6 +388,12 @@ msr_duplicate (MSRecord *msr, flag datadup)
   /* Copy MSRecord structure */
   memcpy (dupmsr, msr, sizeof (MSRecord));
 
+  /* Reset pointers to not alias memory held by other structures */
+  dupmsr->fsdh = NULL;
+  dupmsr->blkts = NULL;
+  dupmsr->datasamples = NULL;
+  dupmsr->ststate = NULL;
+
   /* Copy fixed-section data header structure */
   if (msr->fsdh)
   {
@@ -395,7 +401,7 @@ msr_duplicate (MSRecord *msr, flag datadup)
     if ((dupmsr->fsdh = (struct fsdh_s *)malloc (sizeof (struct fsdh_s))) == NULL)
     {
       ms_log (2, "msr_duplicate(): Error allocating memory\n");
-      free (dupmsr);
+      msr_free (&dupmsr);
       return NULL;
     }
 
@@ -437,7 +443,7 @@ msr_duplicate (MSRecord *msr, flag datadup)
     {
       ms_log (2, "msr_duplicate(): unrecognized sample type: '%c'\n",
               msr->sampletype);
-      free (dupmsr);
+      msr_free (&dupmsr);
       return NULL;
     }
 
@@ -445,7 +451,7 @@ msr_duplicate (MSRecord *msr, flag datadup)
     if ((dupmsr->datasamples = (void *)malloc ((size_t) (msr->numsamples * samplesize))) == NULL)
     {
       ms_log (2, "msr_duplicate(): Error allocating memory\n");
-      free (dupmsr);
+      msr_free (&dupmsr);
       return NULL;
     }
 

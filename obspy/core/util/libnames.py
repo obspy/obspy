@@ -8,14 +8,10 @@ Library name handling for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-# NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
-# installation time)
 import ctypes
+import importlib.machinery
 from pathlib import Path
-import platform
 import re
-import warnings
-from distutils import sysconfig
 
 
 def cleanse_pymodule_filename(filename):
@@ -39,43 +35,6 @@ def cleanse_pymodule_filename(filename):
     return filename
 
 
-def _get_lib_name(lib, add_extension_suffix):
-    """
-    Helper function to get an architecture and Python version specific library
-    filename.
-
-    :type add_extension_suffix: bool
-    :param add_extension_suffix: NumPy distutils adds a suffix to
-        the filename we specify to build internally (as specified by Python
-        builtin `sysconfig.get_config_var("EXT_SUFFIX")`. So when loading the
-        file we have to add this suffix, but not during building.
-    """
-    # our custom defined part of the extension file name
-    libname = "lib%s_%s_%s_py%s" % (
-        lib, platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    libname = cleanse_pymodule_filename(libname)
-    # NumPy distutils adds extension suffix by itself during build (#771, #755)
-    if add_extension_suffix:
-        # append any extension suffix defined by Python for current platform
-        ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
-        # in principle "EXT_SUFFIX" is what we want.
-        # "SO" seems to be deprecated on newer python
-        # but: older python seems to have empty "EXT_SUFFIX", so we fall back
-        if not ext_suffix:
-            try:
-                ext_suffix = sysconfig.get_config_var("SO")
-            except Exception as e:
-                msg = ("Empty 'EXT_SUFFIX' encountered while building CDLL "
-                       "filename and fallback to 'SO' variable failed "
-                       "(%s)." % str(e))
-                warnings.warn(msg)
-                pass
-        if ext_suffix:
-            libname = libname + ext_suffix
-    return libname
-
-
 def _load_cdll(name):
     """
     Helper function to load a shared library built during ObsPy installation
@@ -85,25 +44,24 @@ def _load_cdll(name):
     :param name: Name of the library to load (e.g. 'mseed').
     :rtype: :class:`ctypes.CDLL`
     """
-    # our custom defined part of the extension file name
-    libname = _get_lib_name(name, add_extension_suffix=True)
+    errors = []
     libdir = Path(__file__).parent.parent.parent / 'lib'
-    libpath = (libdir / libname).resolve()
-    try:
-        cdll = ctypes.CDLL(str(libpath))
-    except Exception as e:
-        dirlisting = sorted(libpath.parent.iterdir())
-        dirlisting = '  \n'.join(map(str, dirlisting))
-        msg = ['Could not load shared library "%s"' % libname,
-               'Path: %s' % libpath,
-               'Current directory: %s' % Path().resolve(),
-               'ctypes error message: %s' % str(e),
-               'Directory listing of lib directory:',
-               '   %s' % dirlisting,
-               ]
-        msg = '\n  '.join(msg)
-        raise ImportError(msg)
-    return cdll
+    for ext in importlib.machinery.EXTENSION_SUFFIXES:
+        libpath = (libdir / (name + ext)).resolve()
+        try:
+            cdll = ctypes.CDLL(str(libpath))
+        except Exception as e:
+            errors.append(f'    {str(e)}')
+        else:
+            return cdll
+    # If we got here, then none of the attempted extensions worked.
+    raise ImportError('\n  '.join([
+        f'Could not load shared library "{name}"',
+        *errors,
+        'Current directory: %s' % Path().resolve(),
+        'Directory listing of lib directory:',
+        *(f'    {str(d)}' for d in sorted(libpath.parent.iterdir())),
+    ]))
 
 
 if __name__ == '__main__':
