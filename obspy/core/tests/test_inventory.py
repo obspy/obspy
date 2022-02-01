@@ -11,6 +11,7 @@ Test suite for the inventory class.
 import copy
 import io
 import os
+import re
 import warnings
 from pathlib import Path
 from unittest import mock
@@ -581,7 +582,7 @@ class TestInventory:
         # try read_inventory() with invalid filename for all registered read
         # plugins and also for filetype autodiscovery
         formats = [None] + list(formats)
-        expected_error_message = exception_msg.format(doesnt_exist)
+        expected_error_message = re.escape(exception_msg.format(doesnt_exist))
         for format in formats[:1]:
             with pytest.raises(IOError, match=expected_error_message):
                 read_inventory(doesnt_exist, format=format)
