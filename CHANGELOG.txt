@@ -50,6 +50,7 @@ Changes:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
  - obspy.imaging:
    * fix section plot in case of a single trace only (see #2764)
+   * removed basemap, now only cartopy is supported for maps (see #2961)
  - obspy.clients.filesystem.tsindex:
    * improvements to leap second file setup and other small fixes (see #2776)
  - obspy.clients.seedlink:
