@@ -19,10 +19,8 @@ import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
-from obspy.core.util import (
-    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
+from obspy.core.util import CARTOPY_VERSION
 from obspy.core.util.testing import WarningsCapture
-from obspy.imaging.maps import HAS_BASEMAP
 
 
 @pytest.mark.usefixtures('ignore_numpy_errors')
@@ -300,56 +298,6 @@ class TestNetwork:
             inv2 = read_inventory(buf)
 
         assert inv == inv2
-
-
-@pytest.mark.usefixtures('ignore_numpy_errors')
-@pytest.mark.skipif(
-    not HAS_BASEMAP, reason='no or invalid basemap installation'
-)
-@pytest.mark.skipif(
-    BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-    reason='matplotlib 3.0.1 is not compatible with basemap'
-)
-class TestNetworkBasemap:
-    """
-    Tests for the :meth:`~obspy.station.network.Network.plot` with Basemap.
-    """
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_teardown(self):
-        """Perform class setup/teardown."""
-        nperr = np.geterr()
-        np.seterr(all='ignore')
-        yield
-        np.seterr(**nperr)
-
-    @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                        reason='unsupported proj4 library')
-    def test_location_plot_global(self, image_path):
-        """
-        Tests the network location preview plot, default parameters, using
-        Basemap.
-        """
-        net = read_inventory()[0]
-        net.plot(method='basemap', outfile=image_path)
-
-    def test_location_plot_ortho(self, image_path):
-        """
-        Tests the network location preview plot, ortho projection, some
-        non-default parameters, using Basemap.
-        """
-        net = read_inventory()[0]
-        net.plot(method='basemap', projection='ortho', resolution='c',
-                 continent_fill_color='0.5', marker='d',
-                 color='yellow', label=False, outfile=image_path)
-
-    def test_location_plot_local(self, image_path):
-        """
-        Tests the network location preview plot, local projection, some more
-        non-default parameters, using Basemap.
-        """
-        net = read_inventory()[0]
-        net.plot(method='basemap', projection='local', resolution='l',
-                 size=13**2, outfile=image_path)
 
 
 @pytest.mark.usefixtures('ignore_numpy_errors')

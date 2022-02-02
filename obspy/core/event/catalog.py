@@ -522,8 +522,8 @@ class Catalog(object):
 
             Defaults to "global"
         :type resolution: str, optional
-        :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are:
+        :param resolution: Resolution of the boundary database to use.
+            Possible values are:
 
             * ``"c"`` (crude)
             * ``"l"`` (low)
@@ -578,7 +578,6 @@ class Catalog(object):
         :type method: str
         :param method: Method to use for plotting. Possible values are:
 
-            * ``'basemap'`` to use the Basemap library
             * ``'cartopy'`` to use the Cartopy library
             * ``None`` to pick the best available library
 
@@ -586,9 +585,9 @@ class Catalog(object):
         :type fig: :class:`matplotlib.figure.Figure` (or
             :class:`matplotlib.axes.Axes`)
         :param fig: Figure instance to reuse, returned from a previous
-            inventory/catalog plot call with `method=basemap`.
-            If a previous basemap plot is reused, any kwargs regarding the
-            basemap plot setup will be ignored (i.e.  `projection`,
+            inventory/catalog plot call with `method=cartopy`.
+            If a previous cartopy plot is reused, any kwargs regarding the
+            cartopy plot setup will be ignored (i.e.  `projection`,
             `resolution`, `continent_fill_color`, `water_fill_color`). Note
             that multiple plots using colorbars likely are problematic, but
             e.g. one station plot (without colorbar) and one event plot (with
@@ -734,9 +733,9 @@ class Catalog(object):
             size_plot = 15.0 ** 2
 
         if isinstance(fig, matplotlib.axes.Axes):
-            if method is not None and method != "basemap":
+            if method is not None and method != "cartopy":
                 msg = ("Plotting into an matplotlib.axes.Axes instance "
-                       "currently only implemented for `method='basemap'`.")
+                       "currently only implemented for `method='cartopy'`.")
                 raise NotImplementedError(msg)
             ax = fig
             fig = ax.figure
