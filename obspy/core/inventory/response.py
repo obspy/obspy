@@ -18,7 +18,6 @@ from math import pi
 import warnings
 
 import numpy as np
-import scipy.interpolate
 
 from .. import compatibility
 from obspy.core.util.base import ComparingObject
@@ -1127,6 +1126,7 @@ class Response(ComparingObject):
                    "stages.")
             raise ObsPyException(msg)
 
+        import scipy.interpolate
         import obspy.signal.evrespwrapper as ew
         from obspy.signal.headers import clibevresp
 
