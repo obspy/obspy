@@ -22,6 +22,7 @@ import warnings
 from collections import OrderedDict
 from pathlib import PurePath
 
+import numpy as np
 import pkg_resources
 from pkg_resources import get_entry_info, iter_entry_points
 
@@ -156,7 +157,6 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
-    import numpy as np
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
         # fill with nan if float number and otherwise with a very small number
