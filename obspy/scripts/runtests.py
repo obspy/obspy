@@ -45,14 +45,11 @@ line argument is also accepted.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import re
 import sys
 from pathlib import Path
 
 import obspy
 from obspy.core.util.misc import change_directory
-from obspy.core.util.requirements import PYTEST_REQUIRES
-
 
 # URL to upload json report
 REPORT_URL = "tests.obspy.org"
@@ -65,16 +62,13 @@ def _ensure_tests_requirements_installed():
     This function is intended to help less experienced users run the tests.
     """
     import pkg_resources
-    delimiters = (" ", "=", "<", ">", "!")
-    patterns = '|'.join(map(re.escape, delimiters))
-    msg = (f"\nNot all ObsPy's test requirements are installed. You need to "
-           f"install them before using obspy-runtest. Example with pip: \n"
-           f"\t$ pip install {' '.join(PYTEST_REQUIRES)}")
-    for package_req in PYTEST_REQUIRES:
-        # strip off any requirements, just get pkg_name
-        pkg_name = re.split(patterns, package_req, maxsplit=1)[0]
+    msg = ("\nNot all ObsPy's test requirements are installed. You need to "
+           "install them before using obspy-runtest. Example with pip: \n"
+           "\t$ pip install obspy[tests]")
+    dist = pkg_resources.get_distribution('obspy')
+    for package_req in dist.requires(['tests']):
         try:
-            pkg_resources.get_distribution(pkg_name).version
+            pkg_resources.get_distribution(package_req).version
         except pkg_resources.DistributionNotFound:
             raise ImportError(msg)
 
