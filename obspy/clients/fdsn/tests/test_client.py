@@ -40,6 +40,8 @@ from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNNoServiceException,
                                        FDSNInternalServerException,
                                        FDSNTooManyRequestsException,
+                                       FDSNNotImplementedException,
+                                       FDSNBadGatewayException,
                                        FDSNServiceUnavailableException,
                                        FDSNUnauthorizedException,
                                        FDSNForbiddenException,
@@ -1539,6 +1541,26 @@ class ClientTestCase(unittest.TestCase):
         """
         self.assertRaises(FDSNNoServiceException, Client,
                           "http://nofdsnservice.org")
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_not_implemented_exception(self, download_url_mock):
+        """
+        Verify that a client receiving a 501 'Not Implemented' status
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (501, None)
+        self.assertRaises(FDSNNotImplementedException,
+                          self.client.get_stations)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_bad_gateway_exception(self, download_url_mock):
+        """
+        Verify that a client receiving a 502 'Bad Gateway' status
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (502, None)
+        self.assertRaises(FDSNBadGatewayException,
+                          self.client.get_stations)
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_service_unavailable_exception(self, download_url_mock):

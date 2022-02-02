@@ -60,6 +60,14 @@ class FDSNInternalServerException(FDSNException):
     status_code = 500
 
 
+class FDSNNotImplementedException(FDSNException):
+    status_code = 501
+
+
+class FDSNBadGatewayException(FDSNException):
+    status_code = 502
+
+
 class FDSNServiceUnavailableException(FDSNException):
     status_code = 503
 

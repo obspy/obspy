@@ -1,3 +1,8 @@
+2018.240: 2.19.6
+	- Allow ms_readleapsecondfile() to be called multiple times, by @pn2200
+	- Fix compiler warning in mst_printsynclist().
+	- Fix memory leak (on error) in msr_duplicate() and other fixes by @pn2200.
+
 2017.283: 2.19.5
 	- msr_endtime(): calculate correct end time during a leap second.
 	- Fixed signedness comparison warning.

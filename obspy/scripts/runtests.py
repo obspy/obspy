@@ -51,6 +51,7 @@ from pathlib import Path
 import obspy
 from obspy.core.util.misc import change_directory
 
+
 # URL to upload json report
 REPORT_URL = "tests.obspy.org"
 

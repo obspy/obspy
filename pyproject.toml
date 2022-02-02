@@ -2,7 +2,6 @@
 # Minimum requirements for the build system to execute.
 # see PEP518: https://www.python.org/dev/peps/pep-0518/
 requires = [
-    'numpy>=1.6.1',
     'setuptools'
     ]
 build-backend = "setuptools.build_meta"
