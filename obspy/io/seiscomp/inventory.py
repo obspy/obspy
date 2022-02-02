@@ -824,15 +824,15 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         # Parse string of poles and zeros
         # paz are stored as a string in scxml
         # e.g. (-0.01234,0.01234) (-0.01234,-0.01234)
-        zeros_array = stage.find(_ns("zeros")).text
-        poles_array = stage.find(_ns("poles")).text
+        zeros_array = stage.find(_ns("zeros"))
+        poles_array = stage.find(_ns("poles"))
 
-        if zeros_array is not None:
-            zeros_array = _parse_list_of_complex_string(zeros_array)
+        if zeros_array.text is not None:
+            zeros_array = _parse_list_of_complex_string(zeros_array.text)
         else:
             zeros_array = []
-        if poles_array is not None:
-            poles_array = _parse_list_of_complex_string(poles_array)
+        if poles_array.text is not None:
+            poles_array = _parse_list_of_complex_string(poles_array.text)
         else:
             poles_array = []
 
@@ -867,7 +867,8 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
 
         # Convert linear filter to pole, zero, gain repr.
         # See #2004 @andres-h
-        zeros, poles, gain = tf2zpk(numerators, denominators)
+        zeros, poles, gain = \
+            (np.round(ele,6) for ele in tf2zpk(numerators, denominators))
         msg = "ResponseIIR is not fully tested in ObsPy. Please be cautious"
         warnings.warn(msg)
 
