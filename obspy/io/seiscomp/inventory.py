@@ -868,7 +868,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         # Convert linear filter to pole, zero, gain repr.
         # See #2004 @andres-h
         zeros, poles, gain = \
-            (np.round(ele,6) for ele in tf2zpk(numerators, denominators))
+            (np.round(ele, 6) for ele in tf2zpk(numerators, denominators))
         msg = "ResponseIIR is not fully tested in ObsPy. Please be cautious"
         warnings.warn(msg)
 
