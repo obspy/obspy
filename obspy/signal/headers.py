@@ -147,6 +147,14 @@ clibsignal.calculate_kernel.argtypes = [
     C.c_int]
 clibsignal.calculate_kernel.restype = None
 
+clibsignal.aic_simple.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags='C_CONTIGUOUS'),
+    C.c_uint32]
+clibsignal.recstalta.restype = C.c_void_p
+
 STALEN = 64
 NETLEN = 64
 CHALEN = 64
