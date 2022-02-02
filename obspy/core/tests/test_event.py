@@ -13,8 +13,7 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
                               FocalMechanism, Magnitude, Origin, Pick,
                               ResourceIdentifier, WaveformStreamID)
 from obspy.core.event.source import farfield
-from obspy.core.util import (
-    BASEMAP_VERSION, CARTOPY_VERSION, PROJ4_VERSION, MATPLOTLIB_VERSION)
+from obspy.core.util import CARTOPY_VERSION
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import WarningsCapture
@@ -109,12 +108,9 @@ class TestEvent:
         assert not hasattr(p, "test_1")
         assert not hasattr(p, "test_2")
 
-    @pytest.mark.skipif(not BASEMAP_VERSION, reason='basemap not installed')
-    @pytest.mark.skipif(
-        BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-        reason='matplotlib 3.0.1 is not compatible with basemap')
-    @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                        reason='unsupported proj4 library')
+    @pytest.mark.skipif(not (CARTOPY_VERSION and CARTOPY_VERSION >=
+                             [0, 12, 0]),
+                        reason='cartopy not installed')
     def test_plot_farfield_without_quiver_with_maps(self, image_path):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
@@ -505,71 +501,6 @@ class TestCatalog:
         assert cat == read_events(self.iris_xml)
 
 
-@pytest.mark.skipif(not BASEMAP_VERSION, reason='basemap not installed')
-@pytest.mark.skipif(
-    BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-    reason='matplotlib 3.0.1 is not compatible with basemap')
-class TestBasemap:
-    """
-    Test suite for obspy.core.event.Catalog.plot with Basemap
-    """
-
-    @pytest.mark.skipif(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
-                        reason='unsupported proj4 library')
-    def test_catalog_plot_global(self, image_path):
-        """
-        Tests the catalog preview plot, default parameters, using Basemap.
-        """
-        cat = read_events()
-        cat.plot(method='basemap', outfile=image_path)
-
-    def test_catalog_plot_ortho(self, image_path):
-        """
-        Tests the catalog preview plot, ortho projection, some non-default
-        parameters, using Basemap.
-        """
-        cat = read_events()
-        cat.plot(method='basemap', outfile=image_path, projection='ortho',
-                 resolution='c', water_fill_color='#98b7e2', label=None,
-                 color='date')
-
-    def test_catalog_plot_ortho_longitude_wrap(self, image_path):
-        """
-        Tests the catalog preview plot, ortho projection, some non-default
-        parameters, using Basemap, with longitudes that need the mean to be
-        computed in a circular fashion.
-        """
-        cat = read_events('/path/to/events_longitude_wrap.zmap', format='ZMAP')
-        cat.plot(method='basemap', outfile=image_path, projection='ortho',
-                 resolution='c', label=None, title='', colorbar=False,
-                 water_fill_color='b')
-
-    def test_catalog_plot_local(self, image_path):
-        """
-        Tests the catalog preview plot, local projection, some more non-default
-        parameters, using Basemap.
-        """
-        cat = read_events()
-        cat.plot(method='basemap', outfile=image_path, projection='local',
-                 resolution='l', continent_fill_color='0.3',
-                 color='date', colormap='gist_heat')
-
-    def test_plot_catalog_before_1900(self):
-        """
-        Tests plotting events with origin times before 1900
-        """
-        cat = read_events()
-        cat[1].origins[0].time = UTCDateTime(813, 2, 4, 14, 13)
-
-        # just checking this runs without error is fine, no need to check
-        # content
-        with MatplotlibBackend("AGG", sloppy=True):
-            cat.plot(outfile=io.BytesIO(), method='basemap')
-            # also test with just a single event
-            cat.events = [cat[1]]
-            cat.plot(outfile=io.BytesIO(), method='basemap')
-
-
 @pytest.mark.skipif(not HAS_CARTOPY,
                     reason='Cartopy not installed or too old')
 class CatalogCartopyTestCase:
@@ -613,6 +544,21 @@ class CatalogCartopyTestCase:
         cat.plot(method='cartopy', outfile=image_path, projection='local',
                  resolution='50m', continent_fill_color='0.3',
                  color='date', colormap='gist_heat')
+
+    def test_plot_catalog_before_1900(self):
+        """
+        Tests plotting events with origin times before 1900
+        """
+        cat = read_events()
+        cat[1].origins[0].time = UTCDateTime(813, 2, 4, 14, 13)
+
+        # just checking this runs without error is fine, no need to check
+        # content
+        with MatplotlibBackend("AGG", sloppy=True):
+            cat.plot(outfile=io.BytesIO())
+            # also test with just a single event
+            cat.events = [cat[1]]
+            cat.plot(outfile=io.BytesIO())
 
 
 class TestWaveformStreamID:

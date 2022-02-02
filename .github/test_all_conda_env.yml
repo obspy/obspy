@@ -12,6 +12,10 @@ dependencies:
   - requests
   - setuptools
   - sqlalchemy
+  # soft dependencies
+  - cartopy
+  - geographiclib
+  - pyshp
   # tests
   - packaging
   - pip

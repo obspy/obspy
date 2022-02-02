@@ -6,22 +6,19 @@ dependencies:
   # obspy
   - decorator
   - lxml
-  - matplotlib  
+  - matplotlib
+  - numpy
   - scipy
   - requests  
   - setuptools
   - sqlalchemy
   # docs
-  - sphinx>=4.2.0
-  - sphinx_rtd_theme
   - cartopy>=0.20
   - pip
   - pip:
     - pybtex
-    - m2r2 >= 0.3.2  # m2r is not maintained anymore, this fork is, need for latest version which is not yet included in conda-forge
-  #- numpy # required by cartopy
-  #- matplotlib
+    - m2r2 >= 0.3.2  # latest version which is not yet included in conda-forge
+  - sphinx>=4.2.0
+  - sphinx_rtd_theme
   # deps used in tutorial but not working anymore
   #- mlpy
-  
-  
