@@ -41,7 +41,7 @@
             <correction>0</correction>
             <numberOfCoefficients>2</numberOfCoefficients>
             <symmetry>B</symmetry>
-            <coefficients>-3.37741e-07 -8.62909e-07 </coefficients>
+            <coefficients>-3.37741e-07 -8.62909e-07</coefficients>
         </responseFIR>
         <network publicID="NET/II/20200219143551.489081.8091" code="XX">
             <start>1986-01-01T00:00:00.0000Z</start>
