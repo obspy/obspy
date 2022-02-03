@@ -27,7 +27,6 @@ for seismology.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import requests
 import sys
 import warnings
 
