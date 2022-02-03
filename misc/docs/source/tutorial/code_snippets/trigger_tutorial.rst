@@ -424,12 +424,12 @@ Information directly from data (see [Maeda1985]_).
     >>> aic_f = aic_simple(trace_s.data)
     >>> p_idx = aic_f.argmin()
     >>> print(p_idx / df)
-    1.625
+    1.62
     >>> print(UTCDateTime('1970-01-01T01:00:31.6') + (p_idx / df))
-    1970-01-01T01:00:33.225000Z
+    1970-01-01T01:00:33.220000Z
 
 This yields the output of 4.225 seconds from the sliced trace start time.
-In UTC time this results in 1970-01-01T01:00:33.225.
+In UTC time this results in 1970-01-01T01:00:33.22.
 
 ----------------
 Advanced Example

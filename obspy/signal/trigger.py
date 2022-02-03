@@ -425,8 +425,8 @@ def aic_simple(a):
         AIC(k) = k\log(\var{x_{1..k}}) + (N-k-1)\log(\var{x_{k+1..N}})
 
     The true output is one data sample less. To make it convenient with other
-    metrics in this module, where the output length is preserved, the first
-    element is prepended to the output: ``aic[0] == aic[1]``.
+    metrics in this module, where the output length is preserved, the last
+    element is appended to the output: ``aic[-2] == aic[-1]``.
 
     :type a: :class:`numpy.ndarray` or list
     :param a: Input time series

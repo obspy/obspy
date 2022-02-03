@@ -39,14 +39,15 @@ void aic_simple(double *aic, const double *arr, uint32_t size) {
     OnlineMean_Init(&oMean, arr[0]);
     for (uint32_t i = 1; i < size - 1; i++) {
         OnlineMean_Update(&oMean, arr[i]);
-        aic[i + 1] = oMean.count * log(oMean.varsum / oMean.count);
+        aic[i] = oMean.count * log(oMean.varsum / oMean.count);
     }
 
     OnlineMean_Init(&oMean, arr[size - 1]);
     for (uint32_t i = size - 2; i > 0; i--) {
         OnlineMean_Update(&oMean, arr[i]);
-        aic[i] += (oMean.count - 1) * log(oMean.varsum / oMean.count);
+        aic[i - 1] += (oMean.count - 1) * log(oMean.varsum / oMean.count);
     }
 
-    aic[0] = aic[1];
+    // append the last element
+    aic[size - 1] = aic[size - 2];
 }

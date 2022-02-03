@@ -22,7 +22,7 @@ def aic_simple_python(a):
     if len(a) <= 2:
         return np.zeros(len(a), dtype=np.float64)
     a = np.asarray(a)
-    aic_cf = np.zeros(a.size - 1)
+    aic_cf = np.zeros(a.size - 1, dtype=np.float64)
     with np.errstate(divide='ignore'):
         aic_cf[0] = (a.size - 2) * np.log(np.var(a[1:]))
         aic_cf[-1] = (a.size - 1) * np.log(np.var(a[:-1]))
@@ -32,7 +32,7 @@ def aic_simple_python(a):
             val1 = ii * var1
             val2 = (a.size - ii - 1) * var2
             aic_cf[ii - 1] = (val1 + val2)
-    aic_cf = np.r_[aic_cf[0], aic_cf]
+    aic_cf = np.r_[aic_cf, aic_cf[-1]]
     return aic_cf
 
 
