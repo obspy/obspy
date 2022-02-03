@@ -896,7 +896,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         appr_high = _tag2obj(stage, _ns("approximationUpperBound"), float)
         coeffs_str = _tag2obj(stage, _ns("coefficients"), str)
         if coeffs_str is not None:
-            coeffs = coeffs_str.split(" ")
+            coeffs = coeffs_str.strip().split(" ")
             coeffs_float = []
             i = 0
             # pass additional mapping of coefficient counter
@@ -920,7 +920,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         coeffs_str = _tag2obj(stage, _ns("coefficients"), str)
         coeffs_float = []
         if coeffs_str is not None and coeffs_str != 'None':
-            coeffs = coeffs_str.split(" ")
+            coeffs = coeffs_str.strip().split(" ")
             i = 0
             # pass additional mapping of coefficient counter
             # so that a proper stationXML can be formatted
