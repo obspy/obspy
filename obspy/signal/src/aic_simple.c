@@ -36,14 +36,20 @@ void OnlineMean_Update(OnlineMean *oMean, double newVal) {
 void aic_simple(double *aic, const double *arr, uint32_t size) {
     OnlineMean oMean;
 
+    // special case: the forward loop skips the first element; init with zero
+    aic[0] = 0;
+
     OnlineMean_Init(&oMean, arr[0]);
     for (uint32_t i = 1; i < size - 1; i++) {
+        // forward loop: AIC(i) = (i + 1) log(Var{0..i})
         OnlineMean_Update(&oMean, arr[i]);
         aic[i] = oMean.count * log(oMean.varsum / oMean.count);
     }
 
     OnlineMean_Init(&oMean, arr[size - 1]);
     for (uint32_t i = size - 2; i > 0; i--) {
+        // backward loop: AIC(i) += (N - i - 2) log(Var{i+1..N-1})
+        // or AIC(i-1) += (N - i - 1) log(Var{i..N-1})
         OnlineMean_Update(&oMean, arr[i]);
         aic[i - 1] += (oMean.count - 1) * log(oMean.varsum / oMean.count);
     }
