@@ -148,9 +148,9 @@ class EventTestCase(unittest.TestCase):
 
     def test_sc3ml_versions(self):
         """
-        Test multiple schema versions //TODO: add 0.12 tests
+        Test multiple schema versions
         """
-        for version in ['0.9', '0.10', '0.11']:
+        for version in ['0.9', '0.10', '0.11', '0.12']:
             filename = os.path.join(self.path, 'version%s' % version)
             read_events(filename)
 
@@ -332,7 +332,7 @@ class EventTestCase(unittest.TestCase):
         self.cmp_write_xslt_file(
             'quakeml_1.2_stationmagnitudecontributions.xml',
             'quakeml_1.2_stationmagnitudecontributions.sc3ml',
-            '0.12',
+            '0.11',
         )
 
     def test_write_xslt_station_magnitude(self):
@@ -367,6 +367,12 @@ class EventTestCase(unittest.TestCase):
                                  'iris_events.sc3ml',
                                  '0.11',
                                  path=self.quakeml_path)
+
+    #def test_write_xslt_012_events(self):
+    #    self.cmp_write_xslt_file('westaus_events.xml',
+    #                             'westaus_events_0.12',
+    #                             '0.12',
+    #                             path=self.quakeml_path)
 
     def test_write_xslt_neries_events(self):
         # Some ID are generated automatically. File comparison can't be done.

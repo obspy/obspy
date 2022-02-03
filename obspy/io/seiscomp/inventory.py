@@ -827,11 +827,11 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         zeros_array = stage.find(_ns("zeros"))
         poles_array = stage.find(_ns("poles"))
 
-        if zeros_array is not None:
+        if zeros_array is not None and zeros_array.text is not None:
             zeros_array = _parse_list_of_complex_string(zeros_array.text)
         else:
             zeros_array = []
-        if poles_array is not None:
+        if poles_array is not None and poles_array.text is not None:
             poles_array = _parse_list_of_complex_string(poles_array.text)
         else:
             poles_array = []

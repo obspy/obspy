@@ -31,7 +31,7 @@ class SC3MLTestCase(unittest.TestCase):
 
     def setUp(self):
         """
-        Read example stationXML/sc3ml format to Inventory
+        Read example SeisComp XML format to Inventory
         """
         self.data_dir = os.path.join(os.path.dirname(__file__), "data")
         stationxml_path = os.path.join(self.data_dir, "EB_response_stationXML")
