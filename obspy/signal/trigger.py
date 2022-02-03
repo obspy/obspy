@@ -419,16 +419,19 @@ def aic_simple(a):
     r"""
     Simple Akaike Information Criterion [Maeda1985]_.
 
-    It's computed directly from data and defined as
+    It's computed directly from input data :math:`a` and defined as
 
     .. math::
-        AIC(k) = k\log(\var{x_{1..k}}) + (N-k-1)\log(\var{x_{k+1..N}})
+        \text{AIC}(k) = k\log(\text{Var}(a_{1..k})) +
+                        (N-k-1)\log(\text{Var}(a_{k+1..N}))
+
+    which variance denoted as :math:`\text{Var}`.
 
     The true output is one data sample less. To make it convenient with other
     metrics in this module, where the output length is preserved, the last
     element is appended to the output: ``aic[-2] == aic[-1]``.
 
-    :type a: :class:`numpy.ndarray` or list
+    :type a: :class:`numpy.ndarray` or /list/
     :param a: Input time series
     :rtype: :class:`numpy.ndarray`
     :return: aic - Akaike Information Criterion array
