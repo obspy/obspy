@@ -368,11 +368,13 @@ class EventTestCase(unittest.TestCase):
                                  '0.11',
                                  path=self.quakeml_path)
 
-    #def test_write_xslt_012_events(self):
-    #    self.cmp_write_xslt_file('westaus_events.xml',
-    #                             'westaus_events_0.12',
-    #                             '0.12',
-    #                             path=self.quakeml_path)
+    """
+    def test_write_xslt_012_events(self):
+        self.cmp_write_xslt_file('westaus_events.xml',
+                                 'westaus_events_0.12',
+                                 '0.12',
+                                 path=self.quakeml_path)
+    """
 
     def test_write_xslt_neries_events(self):
         # Some ID are generated automatically. File comparison can't be done.
