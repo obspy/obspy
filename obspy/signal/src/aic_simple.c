@@ -36,6 +36,13 @@ void OnlineMean_Update(OnlineMean *oMean, double newVal) {
 void aic_simple(double *aic, const double *arr, uint32_t size) {
     OnlineMean oMean;
 
+    if (size <= 2) {
+        for (int i = 0; i < size; i++) {
+            aic[i] = 0;
+        }
+        return;
+    }
+
     // special case: the forward loop skips the first element; init with zero
     aic[0] = 0;
 

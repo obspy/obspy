@@ -431,7 +431,7 @@ def aic_simple(a):
     metrics in this module, where the output length is preserved, the last
     element is appended to the output: ``aic[-2] == aic[-1]``.
 
-    :type a: :class:`numpy.ndarray` or /list/
+    :type a: :class:`numpy.ndarray` or :class:`list`
     :param a: Input time series
     :rtype: :class:`numpy.ndarray`
     :return: aic - Akaike Information Criterion array

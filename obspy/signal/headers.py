@@ -148,10 +148,13 @@ clibsignal.calculate_kernel.argtypes = [
 clibsignal.calculate_kernel.restype = None
 
 clibsignal.aic_simple.argtypes = [
+    # double *aic, output
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
                            flags='C_CONTIGUOUS'),
+    # double *arr, input
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
                            flags='C_CONTIGUOUS'),
+    # arr size
     C.c_uint32]
 clibsignal.recstalta.restype = C.c_void_p
 
