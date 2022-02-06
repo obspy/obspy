@@ -50,7 +50,7 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     .. rubric:: Example
 
     >>> from obspy import read_events
-    >>> cat = read_events('/path/to/iris_events.scxml')
+    >>> cat = read_events('/path/to/iris_events.sc3ml')
     >>> print(cat)
     2 Event(s) in Catalog:
     2011-03-11T05:46:24.120000Z | +38.297, +142.373
