@@ -373,7 +373,6 @@ class EventTestCase(unittest.TestCase):
                                  '0.10',
                                  path=self.quakeml_path)
 
-
     def test_write_xslt_neries_events(self):
         # Some ID are generated automatically. File comparison can't be done.
         filename = os.path.join(self.quakeml_path, 'neries_events.xml')

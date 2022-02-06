@@ -93,7 +93,7 @@ class SC3MLTestCase(unittest.TestCase):
 
         # We disregard these differences because they are unimportant
         excluded_tags = ["Source", "Sender", "Created", "Name", 
-            "Coefficients"]
+                         "Coefficients"]
 
         # also ignore StorageFormat which doesnt exist anymore in
         # StationXML 1.1 and is saved into extra / a foreign tag
