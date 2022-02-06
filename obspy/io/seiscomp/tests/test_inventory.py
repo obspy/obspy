@@ -92,7 +92,7 @@ class SC3MLTestCase(unittest.TestCase):
         # <Coefficients> | <Coefficients name="EBR.2002.091.H" ~
 
         # We disregard these differences because they are unimportant
-        excluded_tags = ["Source", "Sender", "Created", "Name", 
+        excluded_tags = ["Source", "Sender", "Created", "Name",
                          "Coefficients"]
 
         # also ignore StorageFormat which doesnt exist anymore in
@@ -197,8 +197,8 @@ class SC3MLTestCase(unittest.TestCase):
                     with warnings.catch_warnings(record=True):
                         self.assertEqual(sc3ml_cha.storage_format, None)
                         self.assertEqual(stationxml_cha.storage_format, None)
-                    # self.assertEqual(sc3ml_cha.extra['format']['value'],
-                    #                  'Steim2')
+                    self.assertEqual(sc3ml_cha.extra['format']['value'],
+                                     'Steim2')
                     namespace = sc3ml_cha.extra['format'].get('namespace')
                     self.assertTrue(
                         namespace.startswith(SCHEMA_NAMESPACE_BASE))
