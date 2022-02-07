@@ -19,8 +19,6 @@ The read in PAZ information can be used with
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import doctest
-
 import numpy as np
 
 from obspy.core import AttribDict
@@ -152,4 +150,5 @@ def attach_paz(tr, paz_file):
 
 
 if __name__ == '__main__':
+    import doctest
     doctest.testmod(exclude_empty=True)

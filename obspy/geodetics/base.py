@@ -12,7 +12,6 @@ import math
 import warnings
 
 import numpy as np
-from scipy.stats import circmean
 
 from obspy.core.util.misc import to_int_or_zero
 
@@ -389,6 +388,7 @@ def mean_longitude(longitudes):
     :param longitudes: Geographical longitude values ranging from -180 to 180
         in degrees.
     """
+    from scipy.stats import circmean
     mean_longitude = circmean(np.array(longitudes), low=-180, high=180)
     mean_longitude = _normalize_longitude(mean_longitude)
     return mean_longitude

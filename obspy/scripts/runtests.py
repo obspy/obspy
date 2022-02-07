@@ -49,8 +49,6 @@ import sys
 from pathlib import Path
 
 import pkg_resources
-import requests
-
 import obspy
 from obspy.core.util.misc import change_directory
 
@@ -110,6 +108,7 @@ def main():
 
 def upload_json_report(report=None, data=None):
     """Upload the json report to ObsPy test server."""
+    import requests
     if report is None:
         msg = f"Do you want to report this to {REPORT_URL} ? [n]: "
         answer = input(msg).lower()

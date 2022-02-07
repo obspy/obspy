@@ -29,8 +29,6 @@ import io
 import warnings
 
 import numpy as np
-from matplotlib import path as mplpath
-from matplotlib import collections, patches, transforms
 from decorator import decorator
 
 
@@ -116,6 +114,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         the returned collection to the axes instance.
     """
     # check if one or two widths are specified (Circle or Ellipse)
+    from matplotlib import collections, transforms
     try:
         assert(len(width) == 2)
     except TypeError:
@@ -291,6 +290,7 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
     .. _`Generic Mapping Tools (GMT)`: https://gmt.soest.hawaii.edu
     """
     # check if one or two widths are specified (Circle or Ellipse)
+    from matplotlib import patches
     try:
         assert(len(width) == 2)
     except TypeError:
@@ -692,6 +692,8 @@ def plot_dc(np1, size=200, xy=(0, 0), width=200):
 
 def xy2patch(x, y, res, xy):
     # check if one or two resolutions are specified (Circle or Ellipse)
+    from matplotlib import path as mplpath
+    from matplotlib import patches
     try:
         assert(len(res) == 2)
     except TypeError:

@@ -24,8 +24,6 @@ written by Lars Krieger and Sebastian Heimann.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import numpy as np
-import matplotlib.collections as mpl_collections
-from matplotlib import patches, transforms
 
 from obspy.imaging.beachball import xy2patch
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
@@ -122,6 +120,8 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     ``'NWU'`` North, West, Up     Stein and Wysession 2003
     ========= =================== =============================================
     """
+    import matplotlib.collections as mpl_collections
+    from matplotlib import patches, transforms
     fm = _normalize_focmec(fm)
     # initialize beachball
     mt = mopad_MomentTensor(fm, system=mopad_basis)
