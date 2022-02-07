@@ -689,7 +689,7 @@ class TestPsd:
             warnings.simplefilter('always', UserWarning)
             ppsd.add(st)
             msg = 'Already covered time spans detected'
-            w2 = [w_ for w_ in w if w_.startswith(msg)]
+            w2 = [w_ for w_ in w if str(w_.message).startswith(msg)]
             assert len(w2) == 4
         assert ppsd._current_hist_stack is not None
         # Adding new data invalidates the internal stack
@@ -700,7 +700,7 @@ class TestPsd:
             warnings.simplefilter('always', UserWarning)
             ppsd.add(st2)
             msg = 'Already covered time spans detected'
-            w2 = [w_ for w_ in w if w_.startswith(msg)]
+            w2 = [w_ for w_ in w if str(w_.message).startswith(msg)]
             assert len(w2) == 2
         assert ppsd._current_hist_stack is None
         # Accessing current_histogram again calculates the stack
