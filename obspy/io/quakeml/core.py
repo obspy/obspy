@@ -26,7 +26,7 @@ from pathlib import Path
 import re
 import warnings
 
-from collections import Mapping
+from collections.abc import Mapping
 from lxml import etree
 
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
