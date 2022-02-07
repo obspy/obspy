@@ -700,10 +700,10 @@ class TestPsd:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always', UserWarning)
             ppsd.add(st2)
-            assert len(w) == 2
             for w_ in w:
                 assert str(w_.message).startswith(
                     "Already covered time spans detected")
+            assert len(w) == 2
         assert ppsd._current_hist_stack is None
         # Accessing current_histogram again calculates the stack
         assert ppsd.current_histogram is not None
