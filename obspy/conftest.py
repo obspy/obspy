@@ -75,7 +75,10 @@ def image_path(request, save_image_directory):
             parent_name = str(parent_obj.__class__.__name__)
         node_name = parent_name + '_' + node_name
     new_path = save_image_directory / (node_name + '.png')
-    return new_path
+    yield new_path
+    # finally close all figs created by this test
+    from matplotlib.pyplot import close
+    close('all')
 
 
 # --- Pytest configuration
