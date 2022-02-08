@@ -120,9 +120,10 @@ def upload_json_report(report=None, data=None):
         report = 'y' in answer
     if report:
         # only include unique warnings.
-        data['warnings'] = [
-            dict(t) for t in {tuple(d.items()) for d in data['warnings']}
-        ]
+        if 'warnings' in data:
+            data['warnings'] = [
+                dict(t) for t in {tuple(d.items()) for d in data['warnings']}
+            ]
         response = requests.post(f"https://{REPORT_URL}/post/v2/", json=data)
         # get the response
         if response.status_code == 200:
