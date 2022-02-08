@@ -480,7 +480,7 @@ class Client(object):
         >>> client = Client()
         >>> dt = UTCDateTime("2005-01-01")
         >>> sacpz = client.sacpz("IU", "ANMO", "00", "BHZ", dt)
-        >>> print(sacpz.decode())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE +SKIP
+        >>> print(sacpz.decode())  # doctest: +SKIP
         * **********************************
         * NETWORK   (KNETWK): IU
         * STATION    (KSTNM): ANMO
