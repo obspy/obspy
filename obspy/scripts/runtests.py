@@ -81,25 +81,16 @@ def main():
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
+    if '-h' in sys.argv or '--help' in sys.argv:
+        print(__doc__)
+        sys.exit(0)
     _ensure_tests_requirements_installed()
-
     import pytest
     from pytest_jsonreport.plugin import JSONReport
-
     # hack to get rid of internal pytest warning, see
     # https://github.com/pytest-dev/pytest-cov/issues/148
     import pytest_jsonreport
     pytest_jsonreport.__doc__ = 'PYTEST_DONT_REWRITE'
-
-    report = (True if '--report' in sys.argv else
-              False if '--no-report' in sys.argv else None)
-    if '-h' in sys.argv or '--help' in sys.argv:
-        print(__doc__)
-        sys.exit(0)
-    elif all(['--json-report-file' not in arg for arg in sys.argv]):
-        sys.argv.append('--json-report-file=none')
-    # Use default traceback for nicer report display.
-    sys.argv.append("--tb=native")
     # Cd into ObsPy's directory and run tests.
     with change_directory(Path(obspy.__file__).parent):
         plugin = JSONReport()
@@ -107,6 +98,8 @@ def main():
     # Upload test report if tests were successfully run.
     # See https://docs.pytest.org/en/latest/reference/exit-codes.html
     if int(status) < 2:
+        report = (True if '--report' in sys.argv else
+                  False if '--no-report' in sys.argv else None)
         upload_json_report(report=report, data=plugin.report)
     sys.exit(status)
 
@@ -120,10 +113,10 @@ def upload_json_report(report=None, data=None):
         report = 'y' in answer
     if report:
         # only include unique warnings.
-        if 'warnings' in data:
-            data['warnings'] = [
-                dict(t) for t in {tuple(d.items()) for d in data['warnings']}
-            ]
+        data.setdefault('warnings', [])
+        data['warnings'] = [
+            dict(t) for t in {tuple(d.items()) for d in data['warnings']}
+        ]
         response = requests.post(f"https://{REPORT_URL}/post/v2/", json=data)
         # get the response
         if response.status_code == 200:

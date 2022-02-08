@@ -103,12 +103,14 @@ def pytest_addoption(parser):
 def pytest_collection_modifyitems(config, items):
     """ Preprocessor for collected tests. """
     network_module_names = set(NETWORK_MODULES)
-
     for item in items:
+        # explicitely add filter warnings to markers so that they have a higher
+        # priority than command line options, e.g. -W error
+        for fwarn in config.getini('filterwarnings'):
+            item.add_marker(pytest.mark.filterwarnings(fwarn))
         # automatically apply image mark to tests using image_path fixture.
         if 'image_path' in getattr(item, 'fixturenames', {}):
             item.add_marker('image')
-
         # Mark network doctests, network test files are already marked.
         name_split = item.name.replace('obspy.', '').split('.')
         if len(name_split) >= 2:
@@ -121,9 +123,6 @@ def pytest_configure(config):
     """
     Configure pytest with custom logic for ObsPy before test run.
     """
-    # Add doctest option so all doctests run
-    config.option.doctestmodules = True
-
     # Skip or select network options based on options
     network_selected = config.getoption('--network')
     all_selected = config.getoption('--all')
@@ -144,16 +143,6 @@ def pytest_configure(config):
     # Ensure matplotlib doesn't try to show anything.
     import matplotlib
     matplotlib.use('Agg')
-
-    # Register markers. We should really do this in pytest.ini or the like
-    # but the existence of that file messed with the config.py hooks for
-    # some reason.
-    config.addinivalue_line(
-        "markers", "network: Test requires network resources (internet)."
-    )
-    config.addinivalue_line(
-        "markers", "image: Test produces a matplotlib image."
-    )
 
 
 @pytest.hookimpl(optionalhook=True)
