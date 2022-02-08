@@ -86,6 +86,11 @@ def main():
     import pytest
     from pytest_jsonreport.plugin import JSONReport
 
+    # hack to get rid of internal pytest warning, see
+    # https://github.com/pytest-dev/pytest-cov/issues/148
+    import pytest_jsonreport
+    pytest_jsonreport.__doc__ = 'PYTEST_DONT_REWRITE'
+
     report = (True if '--report' in sys.argv else
               False if '--no-report' in sys.argv else None)
     if '-h' in sys.argv or '--help' in sys.argv:
