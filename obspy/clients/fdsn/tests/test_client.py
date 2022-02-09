@@ -508,6 +508,7 @@ class ClientTestCase(unittest.TestCase):
             # does not only check the preferred magnitude..
             self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
 
+    @pytest.mark.filterwarnings('ignore:.*cannot deal with')
     def test_irisph5_event(self):
         """
         Tests the IRISPH5 URL mapping, which is special due to its custom
