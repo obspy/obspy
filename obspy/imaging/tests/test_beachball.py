@@ -74,6 +74,7 @@ class TestBeachballPlot:
         for data_, filename in zip(data, filenames):
             file_name = image_path.parent / filename
             beachball(data_, outfile=file_name)
+            plt.close()
 
     def test_beachball_output_format(self):
         """
