@@ -24,7 +24,6 @@ See: http://www.orfeus-eu.org/software/seismo_softwarelibrary.html#gse
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import ctypes as C  # NOQA
-import doctest
 import warnings
 
 import numpy as np
@@ -572,4 +571,5 @@ def compile_sta2(stats):
 
 
 if __name__ == '__main__':
+    import doctest
     doctest.testmod(exclude_empty=True)

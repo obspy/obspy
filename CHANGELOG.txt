@@ -20,6 +20,7 @@ Changes:
    * cleaned the documentation, build process, and docstrings (see #2662)
    * refactored and modernized setup.py (see #2422)
  - obspy.core:
+   * speed up import of obspy core functions (see #2758)
    * read_inventory(): add "level" option to read files faster when less level
      of detail is needed. currently only implemented for StationXML reading
      (see #2759)

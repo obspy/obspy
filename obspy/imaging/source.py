@@ -14,7 +14,6 @@ Functions to compute and plot radiation patterns
 """
 
 import numpy as np
-from matplotlib.cm import get_cmap
 
 from itertools import chain
 
@@ -22,8 +21,7 @@ from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import beach
 from obspy.core.util import CARTOPY_VERSION
-if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
-    import cartopy.crs as ccrs
+if CARTOPY_VERSION:
     HAS_CARTOPY = True
 else:
     HAS_CARTOPY = False
@@ -71,6 +69,7 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0, **kwargs):
                 kwargs["projection"] = "3d"
                 kwargs["aspect"] = "auto"
             if kind__ in ("ortho", "local", "global"):
+                import cartopy.crs as ccrs
                 lats = []
                 lons = []
                 if "events" in kwargs:
@@ -230,6 +229,7 @@ def _plot_radiation_pattern_sphere(
     :param type: 'P' or 'S' (P or S wave).
     """
     import matplotlib.pyplot as plt
+    from matplotlib.cm import get_cmap
     type = type.upper()
     if type not in ("P", "S"):
         msg = ("type must be 'P' or 'S'")
@@ -311,6 +311,7 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
     :param type: 'P' or 'S' (P or S wave).
     """
     import matplotlib.pyplot as plt
+    from matplotlib.cm import get_cmap
 
     type = type.upper()
     if type not in ("P", "S"):
@@ -369,6 +370,7 @@ def _plot_beachball(ax2d, rtp_mt):
     :param rtp_mt: moment tensor in RTP convention
     """
     import matplotlib.pyplot as plt
+    from matplotlib.cm import get_cmap
     norm = plt.Normalize(-1., 1.)
     cmap = get_cmap('bwr')
     bball = beach(rtp_mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
