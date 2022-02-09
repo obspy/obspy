@@ -131,9 +131,6 @@ def pytest_configure(config):
     elif not network_selected and not all_selected:
         setattr(config.option, 'markexpr', 'not network')
 
-    # select appropriate options for report
-    config.option.json_report_indent = 2
-
     # Set numpy print options to try to not break doctests.
     try:
         np.set_printoptions(legacy='1.13')
