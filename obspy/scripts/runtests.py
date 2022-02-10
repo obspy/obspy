@@ -45,16 +45,30 @@ line argument is also accepted.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import contextlib
+import os
 import sys
 from pathlib import Path
-
-import pkg_resources
-import obspy
-from obspy.core.util.misc import change_directory
 
 
 # URL to upload json report
 REPORT_URL = "tests.obspy.org"
+
+
+@contextlib.contextmanager
+def change_directory(path):
+    """
+    A context manager to change directory to target path.
+
+    :param path: The path to change to.
+    :type path: A string or pathlib Path.
+    """
+    origin = Path().absolute()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(origin)
 
 
 def _ensure_tests_requirements_installed():
@@ -63,6 +77,7 @@ def _ensure_tests_requirements_installed():
 
     This function is intended to help less experienced users run the tests.
     """
+    import pkg_resources
     msg = ("\nNot all ObsPy's test requirements are installed. You need to "
            "install them before using obspy-runtest. Example with pip: \n"
            "\t$ pip install obspy[tests]")
@@ -84,15 +99,18 @@ def main():
     if '-h' in sys.argv or '--help' in sys.argv:
         print(__doc__)
         sys.exit(0)
-    _ensure_tests_requirements_installed()
-    import pytest
-    from pytest_jsonreport.plugin import JSONReport
+    try:
+        import pytest
+        from pytest_jsonreport.plugin import JSONReport
+    except ImportError:
+        _ensure_tests_requirements_installed()
+        raise
     # hack to get rid of internal pytest warning, see
     # https://github.com/pytest-dev/pytest-cov/issues/148
     import pytest_jsonreport
     pytest_jsonreport.__doc__ = 'PYTEST_DONT_REWRITE'
     # Cd into ObsPy's directory and run tests.
-    with change_directory(Path(obspy.__file__).parent):
+    with change_directory(Path(__file__).parent.parent):
         plugin = JSONReport()
         status = pytest.main(plugins=[plugin])
     # Upload test report if tests were successfully run.

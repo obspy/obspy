@@ -19,7 +19,6 @@ import sys
 import tempfile
 import warnings
 from subprocess import STDOUT, CalledProcessError, check_output
-from pathlib import Path
 
 
 import numpy as np
@@ -372,22 +371,6 @@ def SuppressOutput():  # noqa
     # reset to original stdout/stderr
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
-
-
-@contextlib.contextmanager
-def change_directory(path):
-    """
-    A context manager to change directory to target path.
-
-    :param path: The path to change to.
-    :type path: A string or pathlib Path.
-    """
-    origin = Path().absolute()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(origin)
 
 
 @contextlib.contextmanager
