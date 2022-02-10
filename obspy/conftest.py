@@ -144,6 +144,9 @@ def pytest_configure(config):
     import matplotlib
     matplotlib.use('Agg')
 
+    # do not collect tests in arclink module
+    pytest.importorskip('obspy.clients.arclink')
+
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_html_report_title(report):
