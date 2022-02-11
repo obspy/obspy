@@ -351,7 +351,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                 with NamedTemporaryFile() as tf2:
                     out_file2 = tf2.name
                     # Write twice and catch header warnings
-                    with pytest.warns(None):
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
                         segy_file.write(out_file1)
                         _write_segy(st, out_file2)
                     # Read and delete files.

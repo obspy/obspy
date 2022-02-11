@@ -311,7 +311,8 @@ class SEGYTestCase(unittest.TestCase):
                 self.assertEqual(segy.textual_header_encoding, header_enc)
             # The header writes to a file like object.
             new_header = io.BytesIO()
-            with pytest.warns(None):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
                 segy._write_textual_header(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -359,7 +360,8 @@ class SEGYTestCase(unittest.TestCase):
             segy_file = _read_segy(file, headonly=headonly)
             with NamedTemporaryFile() as tf:
                 out_file = tf.name
-                with pytest.warns(None):
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
                     segy_file.write(out_file)
                 # Read the new file again.
                 with open(out_file, 'rb') as f:
