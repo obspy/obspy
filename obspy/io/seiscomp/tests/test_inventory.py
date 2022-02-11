@@ -199,7 +199,7 @@ class SC3MLTestCase(unittest.TestCase):
                     # reading stationxml will ignore old StationXML 1.0 defined
                     # StorageFormat, Arclink Inventory XML and SC3ML get it
                     # stored in extra now
-                    with pytest.warns(None, match='.*storage_format.*'):
+                    with pytest.warns(UserWarning, match='.*storage_format.*'):
                         self.assertEqual(sc3ml_cha.storage_format, None)
                         self.assertEqual(stationxml_cha.storage_format, None)
                     self.assertEqual(sc3ml_cha.extra['format']['value'],
