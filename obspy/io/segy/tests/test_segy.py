@@ -9,7 +9,6 @@ import warnings
 from unittest import mock
 
 import numpy as np
-import pytest
 
 import obspy
 from obspy.core.compatibility import from_buffer
