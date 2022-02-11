@@ -9,6 +9,7 @@ import warnings
 from unittest import mock
 
 import numpy as np
+import pytest
 
 import obspy
 from obspy.core.compatibility import from_buffer
@@ -310,7 +311,7 @@ class SEGYTestCase(unittest.TestCase):
                 self.assertEqual(segy.textual_header_encoding, header_enc)
             # The header writes to a file like object.
             new_header = io.BytesIO()
-            with warnings.catch_warnings(record=True):
+            with pytest.warns(None):
                 segy._write_textual_header(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -358,7 +359,7 @@ class SEGYTestCase(unittest.TestCase):
             segy_file = _read_segy(file, headonly=headonly)
             with NamedTemporaryFile() as tf:
                 out_file = tf.name
-                with warnings.catch_warnings(record=True):
+                with pytest.warns(None):
                     segy_file.write(out_file)
                 # Read the new file again.
                 with open(out_file, 'rb') as f:

@@ -9,6 +9,7 @@ from struct import unpack
 import warnings
 
 import numpy as np
+import pytest
 
 from obspy import UTCDateTime, read, Trace, Stream
 from obspy.core.util import NamedTemporaryFile, AttribDict
@@ -350,7 +351,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 with NamedTemporaryFile() as tf2:
                     out_file2 = tf2.name
                     # Write twice and catch header warnings
-                    with warnings.catch_warnings(record=True):
+                    with pytest.warns(None):
                         segy_file.write(out_file1)
                         _write_segy(st, out_file2)
                     # Read and delete files.
@@ -658,7 +659,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 st.stats.textual_file_header = textual_file_header
                 with io.BytesIO() as buf:
                     # Warning raised to create a complete header.
-                    with warnings.catch_warnings(record=True):
+                    with pytest.warns(UserWarning):
                         st.write(buf, format="SEGY", data_encoding=5,
                                  textual_header_encoding=encoding)
                     buf.seek(0, 0)
