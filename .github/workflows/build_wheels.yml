@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-      - build_wheels  # TODO remove
       - 'test_wheels*'
     tags-ignore:
       - '**'
@@ -11,7 +10,7 @@ on:
     types: [published]
 
 concurrency:
-  group: wheels2-${{ github.event_name }}-${{ github.ref_name }}
+  group: wheels-${{ github.event_name }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -30,7 +29,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         build: [cp37, cp38, cp39, cp310]
         exclude-flag:
-          - ${{ github.ref_name == 'build_wheels' && github.event_name == 'push' }}
+          - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
         exclude:
           - build: cp37
             exclude-flag: true
@@ -44,7 +43,7 @@ jobs:
           fetch-depth: 0
 
       - name: Adapt environment variables to build only some wheels
-        if: ${{ github.ref_name == 'build_wheels' && github.event_name == 'push' }}
+        if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
         shell: bash -l {0}
         run: |
           echo "CIBW_SKIP=$CIBW_SKIP *aarch64" >> "$GITHUB_ENV"
