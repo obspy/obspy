@@ -11,18 +11,17 @@ on:
     types: [published]
 
 concurrency:
-  group: pypi-${{ github.event_name }}-${{ github.ref_name }}
+  group: wheels-${{ github.event_name }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   build_wheels:
-    name: build (${{ matrix.os }})
+    name: build (${{ matrix.os }}, ${{ matrix.build }})
     runs-on: ${{ matrix.os }}
     env:
-      # Disable building PyPy wheels on windows (failed before)
-      # *-musllinux* *-manylinux_i686 pp*-win*
-      CIBW_BUILD: 'cp*'
-      CIBW_SKIP: 'cp36-* *-win32 *-s390x *-ppc64le'
+      # do not build PyPy wheels
+      CIBW_BUILD: '${{ matrix.build }}-*'
+      CIBW_SKIP: '*-win32 *-s390x *-ppc64le'
       CIBW_ENVIRONMENT: OBSPY_NODE_NAME='wheel-builder'
       CIBW_TEST_COMMAND: obspy-runtests --report
       CIBW_TEST_EXTRAS: tests
@@ -30,6 +29,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        build: [cp37, cp38, cp39, cp310]
+        exclude-flag:
+          - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+        exclude:
+          - build: cp37
+            exclude-flag: true
+          - build: cp38
+            exclude-flag: true
+          - build: cp39
+            exclude-flag: true
     steps:
       - uses: actions/checkout@v2
         with:
@@ -39,7 +48,6 @@ jobs:
         if: github.ref_name == 'master' && github.event_name == 'push'
         shell: bash -l {0}
         run: |
-          echo "CIBW_BUILD=cp310-*" >> "$GITHUB_ENV"
           echo "CIBW_SKIP=$CIBW_SKIP *-musllinux* *-manylinux_i686" >> "$GITHUB_ENV"
 
       - name: Print environment variables
