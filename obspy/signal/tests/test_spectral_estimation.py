@@ -11,6 +11,8 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
+import pytest
+
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
 from obspy.core.inventory import Response
@@ -22,7 +24,6 @@ from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
 from obspy.signal.spectral_estimation import earthquake_models
 from obspy.signal.spectral_estimation import get_idc_infra_low_noise
 from obspy.signal.spectral_estimation import get_idc_infra_hi_noise
-import pytest
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -869,6 +870,7 @@ class TestPsd:
         with pytest.raises(ValueError, match='Loading PPSD results'):
             PPSD.load_npz(state.example_ppsd_npz)
 
+    @pytest.mark.filterwarnings('ignore:.*time ranges already covered.*')
     def test_can_add_npz_without_pickle(self):
         """
         Ensure PPSD can be added without using the pickle protocol, or
