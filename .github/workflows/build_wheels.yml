@@ -19,9 +19,8 @@ jobs:
     name: build (${{ matrix.os }}, ${{ matrix.build }})
     runs-on: ${{ matrix.os }}
     env:
-      # do not build PyPy wheels
       CIBW_BUILD: '${{ matrix.build }}-*'
-      CIBW_SKIP: '*-win32 *-s390x *-ppc64le'
+      CIBW_SKIP: '*i686 *win32 *s390x *ppc64le *musllinux*'
       CIBW_ENVIRONMENT: OBSPY_NODE_NAME='wheel-builder'
       CIBW_TEST_COMMAND: obspy-runtests --report
       CIBW_TEST_EXTRAS: tests
@@ -48,7 +47,7 @@ jobs:
         if: github.ref_name == 'master' && github.event_name == 'push'
         shell: bash -l {0}
         run: |
-          echo "CIBW_SKIP=$CIBW_SKIP *-musllinux* *-manylinux_i686" >> "$GITHUB_ENV"
+          echo "CIBW_SKIP=$CIBW_SKIP *aarch64" >> "$GITHUB_ENV"
 
       - name: Print environment variables
         shell: bash -l {0}
