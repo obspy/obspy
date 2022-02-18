@@ -47,7 +47,7 @@ def save_image_directory(request, tmp_path_factory):
     yield Path(tmp_image_path)
     # if keep images is selected then we move images to directory
     # and add info about environment.
-    if request.config.getoption('--keep-images'):
+    if request.config.getoption('--keep-images', default=False):
         new_path = Path(OBSPY_PATH) / 'obspy_test_images'
         if new_path.exists():  # get rid of old image folder
             shutil.rmtree(new_path)
@@ -144,7 +144,8 @@ def pytest_configure(config):
     import matplotlib
     matplotlib.use('Agg')
 
-    # do not collect tests in arclink module
+    # ignore possible import error due to DepreciationWarning
+    # when using -W error flag
     pytest.importorskip('obspy.clients.arclink')
 
 

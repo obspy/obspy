@@ -7,6 +7,7 @@ import warnings
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import Stats
+from obspy.core.util.testing import WarningsCapture
 from obspy.core.util import AttribDict
 
 
@@ -282,7 +283,7 @@ class TestStats:
         stats_items = set(Stats())
         new_stats = Stats()
         new_stats.__dict__.update({x: st[0].stats[x] for x in stats_items})
-        with pytest.warns(UserWarning):
+        with WarningsCapture():
             new_stats.network = 1
             new_stats.station = 1.1
         new_stats.channel = 'Non'

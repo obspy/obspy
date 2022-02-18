@@ -70,6 +70,7 @@ jobs:
   # Runs the tests on combinations of the supported python/os matrix.
   default_tests:
     runs-on: ${{ matrix.os }}
+    # Ensure warnings don't fail build for runs which are to test warnings.
     continue-on-error: ${{ matrix.err == 'warnings' }}
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_ci') }}
     env:
@@ -84,8 +85,8 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: '3.10'
-            err: warnings
-            allflag: _all
+            err: warnings  # When the err flag == warnings pytest will fail on warnings.
+            allflag: _all  # The all flag indicates optional dependencies should be installed.
           - os: ubuntu-latest
             python-version: '3.10'
             allflag: _all

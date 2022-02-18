@@ -3554,7 +3554,7 @@ class BeachBall:
         # correct for ONE special case: double couple with its
         # eigensystem = NED basis system:
         testarray = [1., 0, 0, 0, 1, 0, 0, 0, 1]
-        if np.prod(np.ravel(self.MT._rotation_matrix) == testarray) and \
+        if np.allclose(np.ravel(self.MT._rotation_matrix), testarray) and \
            (self.MT._eigenvalues[1] == 0):
             self._plot_curve_in_curve = -1
             self._plot_clr_order = 1

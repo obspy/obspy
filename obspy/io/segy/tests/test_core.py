@@ -13,6 +13,7 @@ import pytest
 
 from obspy import UTCDateTime, read, Trace, Stream
 from obspy.core.util import NamedTemporaryFile, AttribDict
+from obspy.core.util.testing import WarningsCapture
 from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
                                 _is_segy, _is_su, _read_segy, _read_su,
                                 _write_segy, _write_su)
@@ -351,7 +352,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 with NamedTemporaryFile() as tf2:
                     out_file2 = tf2.name
                     # Write twice and catch header warnings
-                    with warnings.catch_warnings():
+                    with WarningsCapture():
                         warnings.simplefilter("ignore")
                         segy_file.write(out_file1)
                         _write_segy(st, out_file2)
