@@ -415,6 +415,36 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
         return pptime.value + 1, pfm.value.decode('utf-8')
 
 
+def aic_simple(a):
+    r"""
+    Simple Akaike Information Criterion [Maeda1985]_.
+
+    It's computed directly from input data :math:`a` and defined as
+
+    .. math::
+        \text{AIC}(k) = k\log(\text{Var}(a_{1..k})) +
+                        (N-k-1)\log(\text{Var}(a_{k+1..N}))
+
+    which variance denoted as :math:`\text{Var}`.
+
+    The true output is one data sample less. To make it convenient with other
+    metrics in this module, where the output length is preserved, the last
+    element is appended to the output: ``aic[-2] == aic[-1]``.
+
+    :type a: :class:`numpy.ndarray` or :class:`list`
+    :param a: Input time series
+    :rtype: :class:`numpy.ndarray`
+    :return: aic - Akaike Information Criterion array
+    """
+    n = len(a)
+    if n <= 2:
+        return np.zeros(n, dtype=np.float64)
+    a = np.ascontiguousarray(a, np.float64)
+    aic_res = np.empty(n, dtype=np.float64)
+    clibsignal.aic_simple(aic_res, a, n)
+    return aic_res
+
+
 def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             l_p, l_s, s_pick=True):
     """

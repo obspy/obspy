@@ -131,6 +131,7 @@ Changes:
  - obspy.signal.trigger:
    * Improved clarity and speed of several STA/LTA triggers methods, namely
      classic_sta_lta_py, z_detector, and recursive_sta_lta_py (see #2892)
+   * Added simple AIC method by Maeda (1985)
 
 1.2.2 (doi: 10.5281/zenodo.3921997)
 ===================================

@@ -9,12 +9,31 @@ import warnings
 from ctypes import ArgumentError
 
 import numpy as np
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from obspy import Stream, UTCDateTime, read
 from obspy.signal.trigger import (
     ar_pick, classic_sta_lta, classic_sta_lta_py, coincidence_trigger, pk_baer,
-    recursive_sta_lta, recursive_sta_lta_py, trigger_onset)
+    recursive_sta_lta, recursive_sta_lta_py, trigger_onset, aic_simple)
 from obspy.signal.util import clibsignal
+
+
+def aic_simple_python(a):
+    if len(a) <= 2:
+        return np.zeros(len(a), dtype=np.float64)
+    a = np.asarray(a)
+    aic_cf = np.zeros(a.size - 1, dtype=np.float64)
+    with np.errstate(divide='ignore'):
+        aic_cf[0] = (a.size - 2) * np.log(np.var(a[1:]))
+        aic_cf[-1] = (a.size - 1) * np.log(np.var(a[:-1]))
+        for ii in range(2, a.size - 1):
+            var1 = np.log(np.var(a[:ii]))
+            var2 = np.log(np.var(a[ii:]))
+            val1 = ii * var1
+            val2 = (a.size - ii - 1) * var2
+            aic_cf[ii - 1] = (val1 + val2)
+    aic_cf = np.r_[aic_cf, aic_cf[-1]]
+    return aic_cf
 
 
 class TriggerTestCase(unittest.TestCase):
@@ -90,6 +109,23 @@ class TriggerTestCase(unittest.TestCase):
         self.assertEqual(nptime, 17545)
         self.assertEqual(pfm, 'IPU0')
         self.assertEqual(len(cf), 119999)
+
+    def test_aic_simple_constant_data(self):
+        data = [1] * 10
+        # all negative inf
+        assert_array_equal(aic_simple(data), -np.inf)
+
+    def test_aic_simple_small_size(self):
+        data = [3, 4]
+        assert_array_equal(aic_simple(data), [0, 0])
+
+    def test_aic_simple(self):
+        np.random.seed(0)
+        data = np.random.rand(100)
+        aic = aic_simple(data)
+        self.assertEqual(len(aic), len(data))
+        aic_true = aic_simple_python(data)
+        assert_array_almost_equal(aic, aic_true)
 
     def test_ar_pick(self):
         """
