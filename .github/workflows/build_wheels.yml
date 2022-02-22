@@ -5,6 +5,8 @@ on:
       - master
       - 'test_wheels*'
       - build_wheels
+    tags:
+      - '*'
   release:
     types: [published]
 
