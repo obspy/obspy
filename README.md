@@ -2,7 +2,7 @@
 
 [![NumFOCUS affiliated project](https://numfocus.org/wp-content/uploads/2018/01/optNumFocus_LRG.png)](https://numfocus.org/sponsored-projects/affiliated-projects)
 
-[![Github Action Status](https://github.com/obspy/obspy/workflows/master_default_tests/badge.svg)](https://github.com/obspy/obspy/actions)
+[![Github Action Status](https://github.com/obspy/obspy/workflows/tests/badge.svg?event=push)](https://github.com/obspy/obspy/actions)
 [![Coverage Status](https://codecov.io/gh/obspy/obspy/branch/master/graph/badge.svg)](https://codecov.io/gh/obspy/obspy)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/obspy.svg)](https://pypi.python.org/pypi/obspy/)
 
