@@ -172,15 +172,21 @@ def _normalize_version(version):
     """
     Normalize version number string to adhere with PEP440 strictly.
     """
-    # we have a clean release version:
-    if re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?$', version):
-        return version
-    # we have a release candidate version:
-    elif re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?rc[0-9]+?$', version):
+    pattern = (
+        r'^[0-9]+?\.[0-9]+?\.[0-9]+?'
+        r'((a|b|rc)[0-9]+?)?'
+        r'(\.post[0-9]+?)?'
+        r'(\.dev[0-9]+?)?$'
+        )
+    # we have a clean release version or another clean version
+    # according to PEP 440
+    if re.match(pattern, version):
         return version
     # we have an old-style version (i.e. a git describe string), prepare it for
     # the rest of clean up, i.e. put the '.post+' as separator for the local
     # version number part
+    elif '.post' in version:
+        version = re.sub(r'-', '+', version, count=1)
     elif re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?-[0-9]+?-g[0-9a-z]+?$', version):
         version = re.sub(r'-', '.post+', version, count=1)
     # only adapt local version part right
