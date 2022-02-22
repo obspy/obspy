@@ -1099,7 +1099,8 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                         break
             pick.backazimuth = _float_conv(line[37:44])
             app_velocity = _float_conv(line[44:50])
-            if app_velocity is not None and app_velocity != 999.0:
+            if (app_velocity is not None and app_velocity != 0 and
+                    app_velocity != 999.0):
                 pick.horizontal_slowness = 1 / kilometers2degrees(app_velocity)
         # Create new obspy.event.Amplitude class which references above Pick
         # only if there is an amplitude picked.
@@ -1931,8 +1932,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
         # Extract velocity: Note that horizontal slowness in quakeML is stored
         # as s/deg and Seisan stores apparent velocity in km/s
         if pick.horizontal_slowness is not None:
-            velocity = _str_conv(degrees2kilometers(
-                1.0 / pick.horizontal_slowness))
+            velocity = degrees2kilometers(1.0 / pick.horizontal_slowness)
         else:
             velocity = ' '
         azimuth = _str_conv(pick.backazimuth)
@@ -2021,16 +2021,11 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     # Otherwise we will assume that the amplitude is in counts
                 else:
                     amp = None
-                coda = ' '
-                mag_hint = (amplitude.magnitude_hint or amplitude.type)
-                if mag_hint is not None and mag_hint.upper() in ['AML', 'ML']:
-                    phase_hint = 'IAML'
-                    impulsivity = ' '
-            else:
-                coda = str(int(amplitude.generic_amplitude))
-                peri = ' '
-                peri_round = False
-                amp = None
+                    coda_eval_mode = INV_EVALUTATION_MAPPING.get(
+                        amplitude.evaluation_mode, None)
+                if nordic_format == 'OLD':  # only use 1st amplitude
+                    break
+                amp_list.append(amp)
         else:
             peri = ' '
             peri_round = False
@@ -2112,6 +2107,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             # Define par1, par2, & residual depending on type of observation:
             # Coda, backzimuth (add extra line), amplitude, or other phase pick
             add_amp_line = False
+            add_coda_line = False
             is_amp_pick = False
             add_baz_line = False
             par1 = '       '
@@ -2126,9 +2122,13 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                                          ).rjust(5)[0:5]
             # Coda
             if coda.strip() != '':
-                par1 = _str_conv(coda).rjust(7)[0:7]  # coda duration
-                phase_hint = 'END'
-                impulsivity = ''
+                add_coda_line = True
+                coda_phase_hint = 'END'
+                coda_par1 = _str_conv(coda).rjust(7)[0:7]  # coda duration
+                coda_par2 = '      '
+                # TODO: magnitude residual for coda
+                coda_residual = '     '
+                # TODO: weight for coda
             # Back Azimuth
             elif azimuth.strip() != '':  # back-azimuth
                 add_baz_line = True
@@ -2137,8 +2137,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 else:
                     baz_phase_hint = phase_hint
                 baz_par1 = _str_conv(azimuth, rounded=1).rjust(7)[0:7]
-                baz_par2 = _str_conv(
-                    velocity, rounded=2).rjust(6)[0:5].rjust(6)
+                baz_par2 = _str_conv(velocity, rounded=2).rjust(6)[0:6]
                 baz_residual = '     '
                 baz_finalweight = '  '
                 if arrival.backazimuth_residual is not None:
@@ -2181,8 +2180,9 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     tr_mag = [
                         sta_mag for sta_mag in event.station_magnitudes
                         if (sta_mag.amplitude_id == amplitudes[j].resource_id
-                            and sta_mag.creation_info.agency_id
-                            == pick.creation_info.agency_id
+                            and (not sta_mag.creation_info or
+                                 sta_mag.creation_info.agency_id
+                                 == pick.creation_info.agency_id)
                             and sta_mag.station_magnitude_type
                             == amplitudes[j].magnitude_hint)]
                     amp_residuals.append('     ')
@@ -2222,6 +2222,19 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     ain=ain.rjust(5)[0:5], residual=residual,
                     finalweight=finalweight,
                     distance=distance.rjust(5)[0:5],
+                    caz=_str_conv(caz).rjust(3)[0:3]))
+            if add_coda_line:
+                pick_strings.append(pick_string_formatter.format(
+                    station=pick.waveform_id.station_code,
+                    channel=channel_code, network=network_code,
+                    location=location_code, impulsivity=' ',
+                    phase_hint=coda_phase_hint.ljust(8)[0:8],
+                    weight=' ', eval_mode=coda_eval_mode,
+                    hour=pick_hour, minute=pick.time.minute,
+                    seconds=_str_conv(pick_seconds, rounded=3).rjust(6),
+                    par1=coda_par1, par2=coda_par2, agency=agency,
+                    author=author, ain='     ', residual=coda_residual,
+                    finalweight=' ', distance=distance.rjust(5)[0:5],
                     caz=_str_conv(caz).rjust(3)[0:3]))
             if add_amp_line:
                 pick_strings.append(pick_string_formatter.format(
