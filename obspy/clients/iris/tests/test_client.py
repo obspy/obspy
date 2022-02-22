@@ -19,6 +19,7 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.iris.client.Client.
     """
+
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.dirname(__file__)
@@ -247,6 +248,10 @@ class ClientTestCase(unittest.TestCase):
         dt = UTCDateTime("2010-02-27T06:30:00.000")
         result = client.resp("IU", "ANMO", "*", "*", dt)
         self.assertIn(b'B050F03     Station:     ANMO', result)
+
+        dt = UTCDateTime("2005-001T00:00:00")
+        result = client.resp("AK", "RIDG", "--", "LH?", dt)
+        self.assertIn(b'B050F03     Station:     RIDG', result)
 
     def test_timeseries(self):
         """
