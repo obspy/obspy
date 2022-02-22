@@ -22,6 +22,8 @@ jobs:
       CIBW_TEST_COMMAND: obspy-runtests --report
       CIBW_TEST_EXTRAS: tests
     strategy:
+      # for pushes to master, we only build a subset of wheels
+      # this does not apply to tags
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
