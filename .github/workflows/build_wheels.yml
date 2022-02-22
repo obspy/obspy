@@ -4,8 +4,6 @@ on:
     branches:
       - master
       - 'test_wheels*'
-    tags-ignore:
-      - '**'
   release:
     types: [published]
 
@@ -78,27 +76,27 @@ jobs:
         with:
           path: dist/*.tar.gz
 
-  # We can not test upload in between releases, because ObsPy version number
-  # includes a local version number, see PEP 440
-  # publish_test:
-  #   needs: [build_wheels, build_sdist]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: artifact
-  #         path: dist
+  publish_test:
+    name: publish tag or release to testpypi
+    if: github.event_name == 'push' && github.ref_type == 'tag' || github.event_name == 'release'
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
 
-  #     - uses: pypa/gh-action-pypi-publish@v1.5.0
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.TESTPYPI }}
-  #         repository_url: https://test.pypi.org/legacy/
+      - uses: pypa/gh-action-pypi-publish@v1.5.0
+        with:
+          user: __token__
+          password: ${{ secrets.TESTPYPI }}
+          repository_url: https://test.pypi.org/legacy/
 
   publish:
     name: publish release
     if: github.event_name == 'release'
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheels, build_sdist, publish_test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
