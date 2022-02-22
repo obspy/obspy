@@ -112,7 +112,8 @@ def call_git_describe(abbrev=10, dirty=True,
         parts = line.split('-', 1)
         version = parts[0]
         try:
-            version += '.post+' + parts[1]
+            modifier = '+' if '.post' in version else '.post+'
+            version += modifier + parts[1]
             if remote_tracking_branch is not None:
                 version += '.' + remote_tracking_branch
         # IndexError means we are at a release version tag cleanly,
@@ -144,7 +145,6 @@ def get_git_version(abbrev=10, dirty=True, append_remote_tracking_branch=True):
     version = call_git_describe(
         abbrev, dirty=dirty,
         append_remote_tracking_branch=append_remote_tracking_branch)
-
     # If that doesn't work, fall back on the value that's in
     # RELEASE-VERSION.
     if version is None:
@@ -177,7 +177,7 @@ def _normalize_version(version):
         r'((a|b|rc)[0-9]+?)?'
         r'(\.post[0-9]+?)?'
         r'(\.dev[0-9]+?)?$'
-        )
+    )
     # we have a clean release version or another clean version
     # according to PEP 440
     if re.match(pattern, version):
