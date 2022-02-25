@@ -71,24 +71,6 @@ def change_directory(path):
         os.chdir(origin)
 
 
-def _ensure_tests_requirements_installed():
-    """
-    Ensure all the tests requirements are installed or raise exception.
-
-    This function is intended to help less experienced users run the tests.
-    """
-    import pkg_resources
-    msg = ("\nNot all ObsPy's test requirements are installed. You need to "
-           "install them before using obspy-runtest. Example with pip: \n"
-           "\t$ pip install obspy[tests]")
-    dist = pkg_resources.get_distribution('obspy')
-    for package_req in dist.requires(['tests']):
-        try:
-            pkg_resources.get_distribution(package_req).version
-        except pkg_resources.DistributionNotFound:
-            raise ImportError(msg)
-
-
 def main():
     """
     Entry point for setup.py.
@@ -103,8 +85,14 @@ def main():
         import pytest
         from pytest_jsonreport.plugin import JSONReport
     except ImportError:
-        _ensure_tests_requirements_installed()
-        raise
+        msg = ("\nObsPy's test suite uses pytest and pytest-json-report. "
+               "Please install these packages before using obspy-runtests. "
+               "Example with pip:\n"
+               "\t$ pip install pytest pytest-json-report\n\n"
+               "Additional optional test requirements can be used and "
+               "installed with:\n"
+               "\t$ pip install obspy[tests]\n")
+        sys.exit(msg)
     # hack to get rid of internal pytest warning, see
     # https://github.com/pytest-dev/pytest-cov/issues/148
     import pytest_jsonreport

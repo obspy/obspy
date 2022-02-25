@@ -98,7 +98,6 @@ EXTRAS_REQUIRES = {
         'packaging',
         'pyproj',
         'pytest',
-        'pytest-cov',
         'pytest-json-report',
     ],
     # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
