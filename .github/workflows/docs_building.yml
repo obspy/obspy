@@ -40,6 +40,7 @@ jobs:
           cd misc/docs
           make html
       - name: compress with tar
+        shell: bash -l {0}
         run: |
           cd misc/docs/build/html/
           tar cfJ obspydoc.tar.xz *

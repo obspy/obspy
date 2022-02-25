@@ -112,7 +112,8 @@ def call_git_describe(abbrev=10, dirty=True,
         parts = line.split('-', 1)
         version = parts[0]
         try:
-            version += '.post+' + parts[1]
+            modifier = '+' if '.post' in version else '.post+'
+            version += modifier + parts[1]
             if remote_tracking_branch is not None:
                 version += '.' + remote_tracking_branch
         # IndexError means we are at a release version tag cleanly,
@@ -144,7 +145,6 @@ def get_git_version(abbrev=10, dirty=True, append_remote_tracking_branch=True):
     version = call_git_describe(
         abbrev, dirty=dirty,
         append_remote_tracking_branch=append_remote_tracking_branch)
-
     # If that doesn't work, fall back on the value that's in
     # RELEASE-VERSION.
     if version is None:
@@ -172,15 +172,21 @@ def _normalize_version(version):
     """
     Normalize version number string to adhere with PEP440 strictly.
     """
-    # we have a clean release version:
-    if re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?$', version):
-        return version
-    # we have a release candidate version:
-    elif re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?rc[0-9]+?$', version):
+    pattern = (
+        r'^[0-9]+?\.[0-9]+?\.[0-9]+?'
+        r'((a|b|rc)[0-9]+?)?'
+        r'(\.post[0-9]+?)?'
+        r'(\.dev[0-9]+?)?$'
+    )
+    # we have a clean release version or another clean version
+    # according to PEP 440
+    if re.match(pattern, version):
         return version
     # we have an old-style version (i.e. a git describe string), prepare it for
     # the rest of clean up, i.e. put the '.post+' as separator for the local
     # version number part
+    elif '.post' in version:
+        version = re.sub(r'-', '+', version, count=1)
     elif re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?-[0-9]+?-g[0-9a-z]+?$', version):
         version = re.sub(r'-', '.post+', version, count=1)
     # only adapt local version part right
