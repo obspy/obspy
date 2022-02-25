@@ -18,8 +18,8 @@ on:
 # Set globally scoped environmental variables used for test report.
 env:
   ISSUE_NUMBER: ${{ github.event.pull_request.number }}
-  PR_URL: https://github.com/obspy/obspy/pull/${{ github.event.pull_request.number }}
-  CI_URL: https://github.com/obspy/obspy/actions/runs/${{ github.run_id }}
+  PR_URL: ${{ github.event.pull_request.html_url }}
+  CI_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   OBSPY_NODE_NAME: gh-actions
 
 # Cancel previous runs
