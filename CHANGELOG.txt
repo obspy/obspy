@@ -45,6 +45,9 @@ Changes:
      safe route but it also prevents valid calculations as it is up to the user
      to make sure that signal spectrum is properly suppressed in those
      frequency ranges outside of the valid response information (see #2988)
+ - obspy.clients.arclink:
+   * submodule removed completely, since ArcLink was officially deprecated and
+     deactivated on all big datacenters years ago (see #2994)
  - obspy.clients.fdsn:
    * introduce fine-grained FDSN client exceptions (see #2653, #2964)
    * support for "eventtype" parameter in get_events(), as specified in version

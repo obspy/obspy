@@ -144,10 +144,6 @@ def pytest_configure(config):
     import matplotlib
     matplotlib.use('Agg')
 
-    # ignore possible import error due to DepreciationWarning
-    # when using -W error flag
-    pytest.importorskip('obspy.clients.arclink')
-
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_html_report_title(report):
