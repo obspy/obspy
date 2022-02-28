@@ -1,0 +1,1028 @@
+versions pytest-7.0.1, python-3.8.12.final.0
+cwd=/home/tct/obspy/obspy
+args=('clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query', '--all', '--debug', '--json-report-file=none', '--tb=native')
+
+  pytest_cmdline_main [hook]
+      config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+    pytest_plugin_registered [hook]
+        plugin: <Session obspy exitstatus='<UNSET>' testsfailed=0 testscollected=0>
+        manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+    finish pytest_plugin_registered --> [] [hook]
+    pytest_configure [hook]
+        config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+      pytest_metadata [hook]
+          metadata: {'Python': '3.8.12', 'Platform': 'Linux-5.10.16.3-microsoft-standard-WSL2-x86_64-with-glibc2.17', 'Packages': {'pytest': '7.0.1', 'py': '1.11.0', 'pluggy': '1.0.0'}, 'Plugins': {'cov': '3.0.0', 'metadata': '1.11.0', 'json-report': '1.4.1'}}
+      finish pytest_metadata --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.cacheprovider.LFPlugin object at 0x7f338998fe20>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.cacheprovider.NFPlugin object at 0x7f338998ff70>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+    early skip of rewriting module: matplotlib [assertion]
+    early skip of rewriting module: packaging [assertion]
+    early skip of rewriting module: packaging.__about__ [assertion]
+    early skip of rewriting module: packaging.version [assertion]
+    early skip of rewriting module: packaging._structures [assertion]
+    early skip of rewriting module: matplotlib._api [assertion]
+    early skip of rewriting module: matplotlib._api.deprecation [assertion]
+    early skip of rewriting module: matplotlib._version [assertion]
+    early skip of rewriting module: matplotlib.cbook [assertion]
+    early skip of rewriting module: gzip [assertion]
+    early skip of rewriting module: matplotlib._c_internal_utils [assertion]
+    early skip of rewriting module: matplotlib.docstring [assertion]
+    early skip of rewriting module: matplotlib.rcsetup [assertion]
+    early skip of rewriting module: matplotlib.colors [assertion]
+    early skip of rewriting module: PIL [assertion]
+    early skip of rewriting module: PIL._version [assertion]
+    early skip of rewriting module: PIL.Image [assertion]
+    early skip of rewriting module: defusedxml [assertion]
+    early skip of rewriting module: PIL.ImageMode [assertion]
+    early skip of rewriting module: PIL.TiffTags [assertion]
+    early skip of rewriting module: PIL._binary [assertion]
+    early skip of rewriting module: PIL._util [assertion]
+    early skip of rewriting module: PIL._imaging [assertion]
+    early skip of rewriting module: cffi [assertion]
+    early skip of rewriting module: cffi.api [assertion]
+    early skip of rewriting module: cffi.lock [assertion]
+    early skip of rewriting module: cffi.error [assertion]
+    early skip of rewriting module: cffi.model [assertion]
+    early skip of rewriting module: PIL.PngImagePlugin [assertion]
+    early skip of rewriting module: PIL.ImageChops [assertion]
+    early skip of rewriting module: PIL.ImageFile [assertion]
+    early skip of rewriting module: PIL.ImagePalette [assertion]
+    early skip of rewriting module: PIL.GimpGradientFile [assertion]
+    early skip of rewriting module: PIL.GimpPaletteFile [assertion]
+    early skip of rewriting module: PIL.ImageColor [assertion]
+    early skip of rewriting module: PIL.PaletteFile [assertion]
+    early skip of rewriting module: PIL.ImageSequence [assertion]
+    early skip of rewriting module: matplotlib.scale [assertion]
+    early skip of rewriting module: matplotlib.ticker [assertion]
+    early skip of rewriting module: matplotlib.transforms [assertion]
+    early skip of rewriting module: matplotlib._path [assertion]
+    early skip of rewriting module: matplotlib.path [assertion]
+    early skip of rewriting module: matplotlib.bezier [assertion]
+    early skip of rewriting module: matplotlib._color_data [assertion]
+    early skip of rewriting module: matplotlib.fontconfig_pattern [assertion]
+    early skip of rewriting module: pyparsing [assertion]
+    early skip of rewriting module: pyparsing.util [assertion]
+    early skip of rewriting module: pyparsing.exceptions [assertion]
+    early skip of rewriting module: pyparsing.unicode [assertion]
+    early skip of rewriting module: pyparsing.actions [assertion]
+    early skip of rewriting module: pyparsing.core [assertion]
+    early skip of rewriting module: pyparsing.results [assertion]
+    early skip of rewriting module: pyparsing.helpers [assertion]
+    early skip of rewriting module: html [assertion]
+    early skip of rewriting module: html.entities [assertion]
+    early skip of rewriting module: pyparsing.testing [assertion]
+    early skip of rewriting module: pyparsing.common [assertion]
+    early skip of rewriting module: matplotlib._enums [assertion]
+    early skip of rewriting module: cycler [assertion]
+    early skip of rewriting module: matplotlib.ft2font [assertion]
+    early skip of rewriting module: dateutil [assertion]
+    early skip of rewriting module: dateutil._version [assertion]
+    early skip of rewriting module: kiwisolver [assertion]
+    early skip of rewriting module: matplotlib.cm [assertion]
+    early skip of rewriting module: matplotlib._cm [assertion]
+    early skip of rewriting module: matplotlib._cm_listed [assertion]
+    early skip of rewriting module: faulthandler [assertion]
+      pytest_plugin_registered [hook]
+          plugin: <class '_pytest.legacypath.LegacyTmpdirPlugin'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+    early skip of rewriting module: pdb [assertion]
+    early skip of rewriting module: cmd [assertion]
+    early skip of rewriting module: code [assertion]
+    early skip of rewriting module: codeop [assertion]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.config.Config object at 0x7f33a1dc01f0>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.mark' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/mark/__init__.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.main' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/main.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.runner' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/runner.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.fixtures' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/fixtures.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.helpconfig' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/helpconfig.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.python' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/python.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.terminal' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/terminal.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.debugging' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/debugging.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.unittest' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/unittest.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.capture' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/capture.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.skipping' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/skipping.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.legacypath' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/legacypath.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.tmpdir' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/tmpdir.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.monkeypatch' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/monkeypatch.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.recwarn' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/recwarn.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.pastebin' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/pastebin.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.nose' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/nose.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.assertion' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/assertion/__init__.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.junitxml' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/junitxml.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.doctest' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/doctest.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.cacheprovider' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/cacheprovider.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.freeze_support' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/freeze_support.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.setuponly' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/setuponly.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.setupplan' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/setupplan.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.stepwise' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/stepwise.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.warnings' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/warnings.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.logging' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/logging.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.reports' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/reports.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.python_path' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/python_path.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.unraisableexception' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/unraisableexception.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.threadexception' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/threadexception.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.faulthandler' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/faulthandler.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <pytest_jsonreport.plugin.JSONReport object at 0x7f33a21cba60>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module 'pytest_cov.plugin' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_cov/plugin.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module 'pytest_metadata.plugin' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_metadata/plugin.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module 'pytest_jsonreport.plugin' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_jsonreport/plugin.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=6 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=7 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=8 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=3 _state='started' tmpfile=<_io.TextIOWrapper name='/dev/null' mode='r' encoding='UTF-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module 'obspy.conftest' from '/home/tct/obspy/obspy/conftest.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.cacheprovider.LFPlugin object at 0x7f338998fe20>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.cacheprovider.NFPlugin object at 0x7f338998ff70>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <class '_pytest.legacypath.LegacyTmpdirPlugin'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_warning_recorded [hook]
+          warning_message: {message : PytestAssertRewriteWarning('Module already imported so cannot be rewritten: pytest_jsonreport'), category : 'PytestAssertRewriteWarning', filename : '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/config/__init__.py', lineno : 1126, line : None}
+          when: config
+          nodeid: 
+          location: ('/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/config/__init__.py', 1126, '_consider_importhook')
+      finish pytest_warning_recorded --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.terminal.TerminalReporter object at 0x7f3388cb64c0>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.logging.LoggingPlugin object at 0x7f3388cb6760>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+    finish pytest_configure --> [] [hook]
+    pytest_sessionstart [hook]
+        session: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.config.Config object at 0x7f33a1dc01f0>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.mark' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/mark/__init__.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.main' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/main.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.runner' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/runner.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.fixtures' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/fixtures.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.helpconfig' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/helpconfig.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.python' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/python.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.terminal' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/terminal.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.debugging' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/debugging.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.unittest' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/unittest.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.capture' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/capture.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.skipping' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/skipping.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.legacypath' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/legacypath.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.tmpdir' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/tmpdir.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.monkeypatch' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/monkeypatch.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.recwarn' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/recwarn.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.pastebin' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/pastebin.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.nose' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/nose.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.assertion' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/assertion/__init__.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.junitxml' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/junitxml.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.doctest' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/doctest.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.cacheprovider' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/cacheprovider.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.freeze_support' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/freeze_support.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.setuponly' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/setuponly.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.setupplan' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/setupplan.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.stepwise' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/stepwise.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.warnings' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/warnings.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.logging' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/logging.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.reports' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/reports.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.python_path' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/python_path.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.unraisableexception' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/unraisableexception.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.threadexception' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/threadexception.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module '_pytest.faulthandler' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/faulthandler.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <pytest_jsonreport.plugin.JSONReport object at 0x7f33a21cba60>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module 'pytest_cov.plugin' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_cov/plugin.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module 'pytest_metadata.plugin' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_metadata/plugin.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module 'pytest_jsonreport.plugin' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_jsonreport/plugin.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=6 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=7 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=8 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=3 _state='started' tmpfile=<_io.TextIOWrapper name='/dev/null' mode='r' encoding='UTF-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <module 'obspy.conftest' from '/home/tct/obspy/obspy/conftest.py'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.cacheprovider.LFPlugin object at 0x7f338998fe20>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.cacheprovider.NFPlugin object at 0x7f338998ff70>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <class '_pytest.legacypath.LegacyTmpdirPlugin'>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.terminal.TerminalReporter object at 0x7f3388cb64c0>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.logging.LoggingPlugin object at 0x7f3388cb6760>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_plugin_registered [hook]
+          plugin: <_pytest.fixtures.FixtureManager object at 0x7f3388c5bdf0>
+          manager: <_pytest.config.PytestPluginManager object at 0x7f33a21cbd90>
+      finish pytest_plugin_registered --> [] [hook]
+      pytest_report_header [hook]
+          config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+          start_path: /home/tct/obspy/obspy
+          startdir: /home/tct/obspy/obspy
+      finish pytest_report_header --> [['rootdir: /home/tct/obspy', 'plugins: cov-3.0.0, metadata-1.11.0, json-report-1.4.1'], ['using: pytest-7.0.1', 'setuptools registered plugins:', '  pytest-cov-3.0.0 at /home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_cov/plugin.py', '  pytest-metadata-1.11.0 at /home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_metadata/plugin.py', '  pytest-json-report-1.4.1 at /home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest_jsonreport/plugin.py']] [hook]
+    finish pytest_sessionstart --> [] [hook]
+    pytest_collection [hook]
+        session: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+    perform_collect <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0> ['clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query'] [collection]
+        pytest_collectstart [hook]
+            collector: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+        finish pytest_collectstart --> [] [hook]
+        pytest_make_collect_report [hook]
+            collector: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+        processing argument (PosixPath('/home/tct/obspy/obspy/clients/fdsn/tests/test_client.py'), ['ClientTestCase', 'test_get_availability_unbounded_query']) [collection]
+            pytest_collect_file [hook]
+                parent: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+                file_path: /home/tct/obspy/obspy/clients/fdsn/tests/test_client.py
+                path: /home/tct/obspy/obspy/clients/fdsn/tests/test_client.py
+              pytest_pycollect_makemodule [hook]
+                  parent: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+                  module_path: /home/tct/obspy/obspy/clients/fdsn/tests/test_client.py
+                  path: /home/tct/obspy/obspy/clients/fdsn/tests/test_client.py
+              finish pytest_pycollect_makemodule --> <Module obspy/clients/fdsn/tests/test_client.py> [hook]
+            finish pytest_collect_file --> [<DoctestModule obspy/clients/fdsn/tests/test_client.py>, <Module obspy/clients/fdsn/tests/test_client.py>] [hook]
+          matchnodes [<DoctestModule obspy/clients/fdsn/tests/test_client.py>, <Module obspy/clients/fdsn/tests/test_client.py>] ['ClientTestCase', 'test_get_availability_unbounded_query'] [collection]
+              pytest_collectstart [hook]
+                  collector: <DoctestModule obspy/clients/fdsn/tests/test_client.py>
+              finish pytest_collectstart --> [] [hook]
+              pytest_make_collect_report [hook]
+                  collector: <DoctestModule obspy/clients/fdsn/tests/test_client.py>
+              early skip of rewriting module: doctest [assertion]
+              early skip of rewriting module: obspy.clients [assertion]
+              early skip of rewriting module: obspy.clients.fdsn [assertion]
+              early skip of rewriting module: obspy.clients.fdsn.client [assertion]
+              early skip of rewriting module: lxml [assertion]
+              early skip of rewriting module: lxml.etree [assertion]
+              early skip of rewriting module: backports_abc [assertion]
+              early skip of rewriting module: lxml._elementpath [assertion]
+              early skip of rewriting module: backports_abc [assertion]
+              early skip of rewriting module: rnc2rng [assertion]
+              early skip of rewriting module: obspy.clients.fdsn.header [assertion]
+              early skip of rewriting module: obspy.clients.fdsn.wadl_parser [assertion]
+              early skip of rewriting module: urllib.request [assertion]
+              early skip of rewriting module: http [assertion]
+              early skip of rewriting module: http.client [assertion]
+              early skip of rewriting module: urllib.error [assertion]
+              early skip of rewriting module: urllib.response [assertion]
+              early skip of rewriting module: obspy.clients.fdsn.routing [assertion]
+              early skip of rewriting module: _strptime [assertion]
+              early skip of rewriting module: obspy.clients.fdsn.routing.routing_client [assertion]
+              early skip of rewriting module: multiprocessing.dummy [assertion]
+              early skip of rewriting module: multiprocessing.dummy.connection [assertion]
+              early skip of rewriting module: obspy.clients.base [assertion]
+              early skip of rewriting module: requests [assertion]
+              early skip of rewriting module: urllib3 [assertion]
+              early skip of rewriting module: urllib3.exceptions [assertion]
+              early skip of rewriting module: urllib3.packages [assertion]
+              early skip of rewriting module: urllib3.packages.six [assertion]
+              early skip of rewriting module: urllib3.packages.six.moves [assertion]
+              early skip of rewriting module: urllib3.packages.six.moves.http_client [assertion]
+              early skip of rewriting module: urllib3._version [assertion]
+              early skip of rewriting module: urllib3.connectionpool [assertion]
+              early skip of rewriting module: urllib3.connection [assertion]
+              early skip of rewriting module: urllib3.util [assertion]
+              early skip of rewriting module: urllib3.util.connection [assertion]
+              early skip of rewriting module: urllib3.contrib [assertion]
+              early skip of rewriting module: urllib3.contrib._appengine_environ [assertion]
+              early skip of rewriting module: urllib3.util.wait [assertion]
+              early skip of rewriting module: urllib3.util.request [assertion]
+              early skip of rewriting module: brotli [assertion]
+              early skip of rewriting module: brotli.brotli [assertion]
+              early skip of rewriting module: brotli._brotli [assertion]
+              early skip of rewriting module: _cffi_backend [assertion]
+              early skip of rewriting module: urllib3.util.response [assertion]
+              early skip of rewriting module: urllib3.util.retry [assertion]
+              early skip of rewriting module: urllib3.util.ssl_ [assertion]
+              early skip of rewriting module: urllib3.util.url [assertion]
+              early skip of rewriting module: urllib3.util.ssltransport [assertion]
+              early skip of rewriting module: urllib3.util.timeout [assertion]
+              early skip of rewriting module: urllib3.util.proxy [assertion]
+              early skip of rewriting module: urllib3._collections [assertion]
+              early skip of rewriting module: urllib3.util.ssl_match_hostname [assertion]
+              early skip of rewriting module: ipaddress [assertion]
+              early skip of rewriting module: urllib3.request [assertion]
+              early skip of rewriting module: urllib3.filepost [assertion]
+              early skip of rewriting module: urllib3.fields [assertion]
+              early skip of rewriting module: mimetypes [assertion]
+              early skip of rewriting module: winreg [assertion]
+              early skip of rewriting module: urllib3.packages.six.moves.urllib [assertion]
+              early skip of rewriting module: urllib3.packages.six.moves.urllib.parse [assertion]
+              early skip of rewriting module: urllib3.response [assertion]
+              early skip of rewriting module: urllib3.util.queue [assertion]
+              early skip of rewriting module: urllib3.poolmanager [assertion]
+              early skip of rewriting module: requests.exceptions [assertion]
+              early skip of rewriting module: requests.compat [assertion]
+              early skip of rewriting module: chardet [assertion]
+              early skip of rewriting module: charset_normalizer [assertion]
+              early skip of rewriting module: charset_normalizer.api [assertion]
+              early skip of rewriting module: charset_normalizer.cd [assertion]
+              early skip of rewriting module: charset_normalizer.assets [assertion]
+              early skip of rewriting module: charset_normalizer.constant [assertion]
+              early skip of rewriting module: charset_normalizer.md [assertion]
+              early skip of rewriting module: charset_normalizer.utils [assertion]
+              early skip of rewriting module: unicodedata2 [assertion]
+              early skip of rewriting module: _multibytecodec [assertion]
+              early skip of rewriting module: charset_normalizer.models [assertion]
+              early skip of rewriting module: charset_normalizer.legacy [assertion]
+              early skip of rewriting module: charset_normalizer.version [assertion]
+              early skip of rewriting module: simplejson [assertion]
+              early skip of rewriting module: http.cookiejar [assertion]
+              early skip of rewriting module: http.cookies [assertion]
+              early skip of rewriting module: chardet [assertion]
+              early skip of rewriting module: requests.__version__ [assertion]
+              early skip of rewriting module: requests.utils [assertion]
+              early skip of rewriting module: requests.certs [assertion]
+              early skip of rewriting module: certifi [assertion]
+              early skip of rewriting module: certifi.core [assertion]
+              early skip of rewriting module: requests._internal_utils [assertion]
+              early skip of rewriting module: requests.cookies [assertion]
+              early skip of rewriting module: requests.structures [assertion]
+              early skip of rewriting module: requests.packages [assertion]
+              early skip of rewriting module: chardet [assertion]
+              early skip of rewriting module: idna [assertion]
+              early skip of rewriting module: idna.package_data [assertion]
+              early skip of rewriting module: idna.core [assertion]
+              early skip of rewriting module: idna.idnadata [assertion]
+              early skip of rewriting module: idna.intranges [assertion]
+              early skip of rewriting module: requests.models [assertion]
+              early skip of rewriting module: encodings.idna [assertion]
+              early skip of rewriting module: stringprep [assertion]
+              early skip of rewriting module: requests.hooks [assertion]
+              early skip of rewriting module: requests.auth [assertion]
+              early skip of rewriting module: requests.status_codes [assertion]
+              early skip of rewriting module: requests.api [assertion]
+              early skip of rewriting module: requests.sessions [assertion]
+              early skip of rewriting module: requests.adapters [assertion]
+              early skip of rewriting module: urllib3.contrib.socks [assertion]
+              early skip of rewriting module: socks [assertion]
+              early skip of rewriting module: obspy.clients.fdsn.tests [assertion]
+              find_module called for: obspy.clients.fdsn.tests.test_client [assertion]
+              matched test file (was specified on cmdline): '/home/tct/obspy/obspy/clients/fdsn/tests/test_client.py' [assertion]
+              _read_pyc(/home/tct/obspy/obspy/clients/fdsn/tests/test_client.py): out of date [assertion]
+              rewriting PosixPath('/home/tct/obspy/obspy/clients/fdsn/tests/test_client.py') [assertion]
+              early skip of rewriting module: unittest.mock [assertion]
+              finish pytest_make_collect_report --> <CollectReport 'obspy/clients/fdsn/tests/test_client.py' lenresult=0 outcome='passed'> [hook]
+              pytest_collectstart [hook]
+                  collector: <Module obspy/clients/fdsn/tests/test_client.py>
+              finish pytest_collectstart --> [] [hook]
+              pytest_make_collect_report [hook]
+                  collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: @py_builtins
+                    obj: <module 'builtins' (built-in)>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: @pytest_ar
+                    obj: <module '_pytest.assertion.rewrite' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/_pytest/assertion/rewrite.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: io
+                    obj: <module 'io' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/io.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: os
+                    obj: <module 'os' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/os.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: re
+                    obj: <module 're' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/re.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: sys
+                    obj: <module 'sys' (built-in)>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: unittest
+                    obj: <module 'unittest' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/unittest/__init__.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: warnings
+                    obj: <module 'warnings' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/warnings.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: Differ
+                    obj: <class 'difflib.Differ'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: mock
+                    obj: <module 'unittest.mock' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/unittest/mock.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: urllib_request
+                    obj: <module 'urllib.request' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/urllib/request.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: lxml
+                    obj: <module 'lxml' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/lxml/__init__.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: np
+                    obj: <module 'numpy' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/numpy/__init__.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: pytest
+                    obj: <module 'pytest' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/pytest/__init__.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: requests
+                    obj: <module 'requests' from '/home/tct/anaconda3/envs/obspy_dev/lib/python3.8/site-packages/requests/__init__.py'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: UTCDateTime
+                    obj: <class 'obspy.core.utcdatetime.UTCDateTime'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: read
+                    obj: <function read at 0x7f33a232b670>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: read_inventory
+                    obj: <function read_inventory at 0x7f33a2234ca0>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: Stream
+                    obj: <class 'obspy.core.stream.Stream'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: Trace
+                    obj: <class 'obspy.core.trace.Trace'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: NamedTemporaryFile
+                    obj: <class 'obspy.core.util.base.NamedTemporaryFile'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: Client
+                    obj: <class 'obspy.clients.fdsn.client.Client'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: RoutingClient
+                    obj: <function RoutingClient at 0x7f338862a310>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: build_url
+                    obj: <function build_url at 0x7f3388627ee0>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: parse_simple_xml
+                    obj: <function parse_simple_xml at 0x7f338862a160>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: get_bulk_string
+                    obj: <function get_bulk_string at 0x7f338862a1f0>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: DEFAULT_USER_AGENT
+                    obj: ObsPy/1.2.2.post0+548.g38d86b1b61.dirty (Linux-5.10.16.3-microsoft-standard-WSL2-x86_64-with-glibc2.17, Python 3.8.12)
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: URL_MAPPINGS
+                    obj: {'AUSPASS': 'http://auspass.edu.au', 'BGR': 'http://eida.bgr.de', 'ETH': 'http://eida.ethz.ch', 'EMSC': 'http://www.seismicportal.eu', 'GEONET': 'http://service.geonet.org.nz', 'GEOFON': 'http://geofon.gfz-potsdam.de', 'GFZ': 'http://geofon.gfz-potsdam.de', 'ICGC': 'http://ws.icgc.cat', 'IESDMC': 'http://batsws.earth.sinica.edu.tw', 'INGV': 'http://webservices.ingv.it', 'IPGP': 'http://ws.ipgp.fr', 'IRIS': 'http://service.iris.edu', 'IRISPH5': 'http://service.iris.edu', 'ISC': 'http://isc-mirror.iris.washington.edu', 'KNMI': 'http://rdsa.knmi.nl', 'KOERI': 'http://eida.koeri.boun.edu.tr', 'LMU': 'http://erde.geophysik.uni-muenchen.de', 'NCEDC': 'http://service.ncedc.org', 'NIEP': 'http://eida-sc3.infp.ro', 'NOA': 'http://eida.gein.noa.gr', 'ODC': 'http://www.orfeus-eu.org', 'ORFEUS': 'http://www.orfeus-eu.org', 'RESIF': 'http://ws.resif.fr', 'RESIFPH5': 'http://ph5ws.resif.fr', 'RASPISHAKE': 'https://fdsnws.raspberryshakedata.com', 'SCEDC': 'http://service.scedc.caltech.edu', 'TEXNET': 'http://rtserve.beg.utexas.edu', 'UIB-NORSAR': 'http://eida.geo.uib.no', 'USGS': 'http://earthquake.usgs.gov', 'USP': 'http://sismo.iag.usp.br'}
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNRedirectException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNRedirectException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNNoDataException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNNoDataException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNRequestTooLargeException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNRequestTooLargeException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNBadRequestException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNBadRequestException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNNoAuthenticationServiceException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNNoAuthenticationServiceException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNTimeoutException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNTimeoutException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNNoServiceException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNNoServiceException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNInternalServerException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNInternalServerException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNTooManyRequestsException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNTooManyRequestsException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNNotImplementedException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNNotImplementedException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNBadGatewayException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNBadGatewayException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNServiceUnavailableException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNServiceUnavailableException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNUnauthorizedException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNUnauthorizedException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNForbiddenException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNForbiddenException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNDoubleAuthenticationException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNDoubleAuthenticationException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: FDSNInvalidRequestException
+                    obj: <class 'obspy.clients.fdsn.header.FDSNInvalidRequestException'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: DEFAULT_SERVICES
+                    obj: {'dataselect': {'starttime': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'endtime': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'network': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'station': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'location': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'channel': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'quality': {'default_value': 'B', 'type': <class 'str'>, 'required': False}, 'minimumlength': {'default_value': 0.0, 'type': <class 'float'>, 'required': False}, 'longestonly': {'default_value': False, 'type': <class 'bool'>, 'required': False}}, 'event': {'starttime': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'endtime': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'minlatitude': {'default_value': -90.0, 'type': <class 'float'>, 'required': False}, 'maxlatitude': {'default_value': 90.0, 'type': <class 'float'>, 'required': False}, 'minlongitude': {'default_value': -180.0, 'type': <class 'float'>, 'required': False}, 'maxlongitude': {'default_value': 180.0, 'type': <class 'float'>, 'required': False}, 'mindepth': {'default_value': None, 'type': <class 'float'>, 'required': False}, 'maxdepth': {'default_value': None, 'type': <class 'float'>, 'required': False}, 'minmagnitude': {'default_value': None, 'type': <class 'float'>, 'required': False}, 'maxmagnitude': {'default_value': None, 'type': <class 'float'>, 'required': False}, 'orderby': {'default_value': 'time', 'type': <class 'str'>, 'required': False}, 'latitude': {'default_value': 0.0, 'type': <class 'float'>, 'required': False}, 'longitude': {'default_value': 0.0, 'type': <class 'float'>, 'required': False}, 'minradius': {'default_value': 0.0, 'type': <class 'float'>, 'required': False}, 'maxradius': {'default_value': 180.0, 'type': <class 'float'>, 'required': False}, 'magnitudetype': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'eventtype': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'includeallorigins': {'default_value': False, 'type': <class 'bool'>, 'required': False}, 'includeallmagnitudes': {'default_value': False, 'type': <class 'bool'>, 'required': False}, 'includearrivals': {'default_value': False, 'type': <class 'bool'>, 'required': False}, 'eventid': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'limit': {'default_value': None, 'type': <class 'int'>, 'required': False}, 'offset': {'default_value': 1, 'type': <class 'int'>, 'required': False}, 'catalog': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'contributor': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'updatedafter': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}}, 'station': {'starttime': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'endtime': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'network': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'station': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'location': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'channel': {'default_value': None, 'type': <class 'str'>, 'required': False}, 'minlatitude': {'default_value': -90.0, 'type': <class 'float'>, 'required': False}, 'maxlatitude': {'default_value': 90.0, 'type': <class 'float'>, 'required': False}, 'minlongitude': {'default_value': -180.0, 'type': <class 'float'>, 'required': False}, 'maxlongitude': {'default_value': 180.0, 'type': <class 'float'>, 'required': False}, 'level': {'default_value': 'station', 'type': <class 'str'>, 'required': False}, 'startbefore': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'startafter': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'endbefore': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'endafter': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'latitude': {'default_value': 0.0, 'type': <class 'float'>, 'required': False}, 'longitude': {'default_value': 0.0, 'type': <class 'float'>, 'required': False}, 'minradius': {'default_value': 0.0, 'type': <class 'float'>, 'required': False}, 'maxradius': {'default_value': 180.0, 'type': <class 'float'>, 'required': False}, 'includerestricted': {'default_value': True, 'type': <class 'bool'>, 'required': False}, 'includeavailability': {'default_value': False, 'type': <class 'bool'>, 'required': False}, 'updatedafter': {'default_value': None, 'type': <class 'obspy.core.utcdatetime.UTCDateTime'>, 'required': False}, 'matchtimeseries': {'default_value': False, 'type': <class 'bool'>, 'required': False}, 'format': {'default_value': 'xml', 'type': <class 'str'>, 'required': False}}}
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: Response
+                    obj: <class 'obspy.core.inventory.response.Response'>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: locations2degrees
+                    obj: <function locations2degrees at 0x7f33a2226700>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: USER_AGENT
+                    obj: ObsPy (test suite) ObsPy/1.2.2.post0+548.g38d86b1b61.dirty (Linux-5.10.16.3-microsoft-standard-WSL2-x86_64-with-glibc2.17, Python 3.8.12)
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: pytestmark
+                    obj: MarkDecorator(mark=Mark(name='network', args=(), kwargs={}))
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: _normalize_stats
+                    obj: <function _normalize_stats at 0x7f3343e00d30>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: failmsg
+                    obj: <function failmsg at 0x7f3343f734c0>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: normalize_version_number
+                    obj: <function normalize_version_number at 0x7f3343f73700>
+                finish pytest_pycollect_makeitem --> None [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: ClientTestCase
+                    obj: <class 'obspy.clients.fdsn.tests.test_client.ClientTestCase'>
+                finish pytest_pycollect_makeitem --> <UnitTestCase ClientTestCase> [hook]
+                pytest_pycollect_makeitem [hook]
+                    collector: <Module obspy/clients/fdsn/tests/test_client.py>
+                    name: suite
+                    obj: <function suite at 0x7f3343f73790>
+                finish pytest_pycollect_makeitem --> None [hook]
+              finish pytest_make_collect_report --> <CollectReport 'obspy/clients/fdsn/tests/test_client.py' lenresult=1 outcome='passed'> [hook]
+            matchnodes finished ->  0 nodes [collection]
+          matchnodes [<DoctestModule obspy/clients/fdsn/tests/test_client.py>, <Module obspy/clients/fdsn/tests/test_client.py>] ['ClientTestCase', 'test_get_availability_unbounded_query'] [collection]
+              pytest_collectstart [hook]
+                  collector: <UnitTestCase ClientTestCase>
+              finish pytest_collectstart --> [] [hook]
+              pytest_make_collect_report [hook]
+                  collector: <UnitTestCase ClientTestCase>
+              finish pytest_make_collect_report --> <CollectReport 'obspy/clients/fdsn/tests/test_client.py::ClientTestCase' lenresult=48 outcome='passed'> [hook]
+            matchnodes finished ->  0 nodes [collection]
+          matchnodes [<DoctestModule obspy/clients/fdsn/tests/test_client.py>, <Module obspy/clients/fdsn/tests/test_client.py>] ['ClientTestCase', 'test_get_availability_unbounded_query'] [collection]
+            matchnodes finished ->  1 nodes [collection]
+        finish pytest_make_collect_report --> <CollectReport '' lenresult=1 outcome='passed'> [hook]
+        pytest_collectreport [hook]
+            report: <CollectReport '' lenresult=1 outcome='passed'>
+        finish pytest_collectreport --> [] [hook]
+    genitems <TestCaseFunction test_get_availability_unbounded_query> [collection]
+      pytest_itemcollected [hook]
+          item: <TestCaseFunction test_get_availability_unbounded_query>
+      finish pytest_itemcollected --> [] [hook]
+      pytest_collection_modifyitems [hook]
+          session: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+          config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+          items: [<TestCaseFunction test_get_availability_unbounded_query>]
+      finish pytest_collection_modifyitems --> [] [hook]
+      pytest_collection_finish [hook]
+          session: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+        pytest_report_collectionfinish [hook]
+            config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+            items: [<TestCaseFunction test_get_availability_unbounded_query>]
+            start_path: /home/tct/obspy/obspy
+            startdir: /home/tct/obspy/obspy
+        finish pytest_report_collectionfinish --> [] [hook]
+      finish pytest_collection_finish --> [] [hook]
+    finish pytest_collection --> None [hook]
+    pytest_runtestloop [hook]
+        session: <Session obspy exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=1>
+      pytest_runtest_protocol [hook]
+          item: <TestCaseFunction test_get_availability_unbounded_query>
+          nextitem: None
+        pytest_runtest_logstart [hook]
+            nodeid: obspy/clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query
+            location: ('obspy/clients/fdsn/tests/test_client.py', 540, 'ClientTestCase.test_get_availability_unbounded_query')
+        finish pytest_runtest_logstart --> [] [hook]
+        pytest_runtest_setup [hook]
+            item: <TestCaseFunction test_get_availability_unbounded_query>
+          pytest_fixture_setup [hook]
+              fixturedef: <FixtureDef argname='tmp_path_factory' scope='session' baseid=''>
+              request: <SubRequest 'tmp_path_factory' for <TestCaseFunction test_get_availability_unbounded_query>>
+          finish pytest_fixture_setup --> TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f3389916280>, _basetemp=None) [hook]
+          pytest_fixture_setup [hook]
+              fixturedef: <FixtureDef argname='save_image_directory' scope='session' baseid='obspy'>
+              request: <SubRequest 'save_image_directory' for <TestCaseFunction test_get_availability_unbounded_query>>
+          early skip of rewriting module: getpass [assertion]
+          early skip of rewriting module: termios [assertion]
+          new basetemp /tmp/pytest-of-tct/pytest-157 [config:tmpdir]
+          mktemp /tmp/pytest-of-tct/pytest-157/images0 [config:tmpdir]
+          finish pytest_fixture_setup --> /tmp/pytest-of-tct/pytest-157/images0 [hook]
+          pytest_fixture_setup [hook]
+              fixturedef: <FixtureDef argname='_unittest_setUpClass_fixture_ClientTestCase' scope='class' baseid='obspy/clients/fdsn/tests/test_client.py::ClientTestCase'>
+              request: <SubRequest '_unittest_setUpClass_fixture_ClientTestCase' for <TestCaseFunction test_get_availability_unbounded_query>>
+          finish pytest_fixture_setup --> None [hook]
+        finish pytest_runtest_setup --> [] [hook]
+        pytest_runtest_makereport [hook]
+            item: <TestCaseFunction test_get_availability_unbounded_query>
+            call: <CallInfo when='setup' result: []>
+          pytest_json_runtest_metadata [hook]
+              item: <TestCaseFunction test_get_availability_unbounded_query>
+              call: <CallInfo when='setup' result: []>
+          finish pytest_json_runtest_metadata --> [] [hook]
+        finish pytest_runtest_makereport --> <TestReport 'obspy/clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query' when='setup' outcome='passed'> [hook]
+        pytest_runtest_logreport [hook]
+            report: <TestReport 'obspy/clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query' when='setup' outcome='passed'>
+          pytest_report_teststatus [hook]
+              report: <TestReport 'obspy/clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query' when='setup' outcome='passed'>
+              config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+          finish pytest_report_teststatus --> ('', '', '') [hook]
+          pytest_report_teststatus [hook]
+              report: <TestReport 'obspy/clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query' when='setup' outcome='passed'>
+              config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+          finish pytest_report_teststatus --> ('', '', '') [hook]
+          pytest_json_runtest_stage [hook]
+              report: <TestReport 'obspy/clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query' when='setup' outcome='passed'>
+          finish pytest_json_runtest_stage --> [hook]
+              duration: 0.3649017999996431
+              outcome: passed
+        finish pytest_runtest_logreport --> [] [hook]
+        pytest_runtest_call [hook]
+            item: <TestCaseFunction test_get_availability_unbounded_query>
+    pytest_keyboard_interrupt [hook]
+        excinfo: <ExceptionInfo KeyboardInterrupt() tblen=49>
+    finish pytest_keyboard_interrupt --> [] [hook]
+    pytest_sessionfinish [hook]
+        session: <Session obspy exitstatus=<ExitCode.INTERRUPTED: 2> testsfailed=0 testscollected=1>
+        exitstatus: 2
+      pytest_json_modifyreport [hook]
+          json_report: {'created': 1646077999.2738435, 'duration': 1.7154560089111328, 'exitcode': <ExitCode.INTERRUPTED: 2>, 'root': '/home/tct/obspy', 'environment': {'Python': '3.8.12', 'Platform': 'Linux-5.10.16.3-microsoft-standard-WSL2-x86_64-with-glibc2.17', 'Packages': {'pytest': '7.0.1', 'py': '1.11.0', 'pluggy': '1.0.0'}, 'Plugins': {'cov': '3.0.0', 'metadata': '1.11.0', 'json-report': '1.4.1'}}, 'summary': Counter({'passed': 1, 'total': 1, 'collected': 1}), 'collectors': [{'nodeid': '', 'outcome': 'passed', 'result': [{'nodeid': 'obspy/clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query', 'type': 'TestCaseFunction', 'lineno': 540}]}], 'tests': [{'nodeid': 'obspy/clients/fdsn/tests/test_client.py::ClientTestCase::test_get_availability_unbounded_query', 'lineno': 540, 'outcome': 'passed', 'keywords': ['test_get_availability_unbounded_query', 'network', 'ClientTestCase', 'obspy/clients/fdsn/tests/test_client.py', 'obspy'], 'setup': {'duration': 0.3649017999996431, 'outcome': 'passed'}}]}
+      finish pytest_json_modifyreport --> [] [hook]
+      pytest_fixture_post_finalizer [hook]
+          fixturedef: <FixtureDef argname='_unittest_setUpClass_fixture_ClientTestCase' scope='class' baseid='obspy/clients/fdsn/tests/test_client.py::ClientTestCase'>
+          request: <SubRequest '_unittest_setUpClass_fixture_ClientTestCase' for <TestCaseFunction test_get_availability_unbounded_query>>
+      finish pytest_fixture_post_finalizer --> [] [hook]
+      pytest_fixture_post_finalizer [hook]
+          fixturedef: <FixtureDef argname='save_image_directory' scope='session' baseid='obspy'>
+          request: <SubRequest 'save_image_directory' for <TestCaseFunction test_get_availability_unbounded_query>>
+      finish pytest_fixture_post_finalizer --> [] [hook]
+      pytest_fixture_post_finalizer [hook]
+          fixturedef: <FixtureDef argname='save_image_directory' scope='session' baseid='obspy'>
+          request: <SubRequest 'save_image_directory' for <TestCaseFunction test_get_availability_unbounded_query>>
+      finish pytest_fixture_post_finalizer --> [] [hook]
+      pytest_fixture_post_finalizer [hook]
+          fixturedef: <FixtureDef argname='tmp_path_factory' scope='session' baseid=''>
+          request: <SubRequest 'tmp_path_factory' for <TestCaseFunction test_get_availability_unbounded_query>>
+      finish pytest_fixture_post_finalizer --> [] [hook]
+      pytest_terminal_summary [hook]
+          terminalreporter: <_pytest.terminal.TerminalReporter object at 0x7f3388cb64c0>
+          exitstatus: 2
+          config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+      finish pytest_terminal_summary --> [] [hook]
+    finish pytest_sessionfinish --> [] [hook]
+    pytest_unconfigure [hook]
+        config: <_pytest.config.Config object at 0x7f33a1dc01f0>
+    finish pytest_unconfigure --> [] [hook]
