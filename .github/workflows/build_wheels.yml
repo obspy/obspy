@@ -81,8 +81,8 @@ jobs:
           path: dist/*.tar.gz
 
   publish_test:
-    name: publish tag or release to testpypi
-    if: github.event_name == 'push' && github.ref_type == 'tag' || github.event_name == 'release'
+    name: publish tag to testpypi
+    if: github.event_name == 'push' && github.ref_type == 'tag'
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
@@ -100,7 +100,7 @@ jobs:
   publish:
     name: publish release
     if: github.event_name == 'release'
-    needs: [build_wheels, build_sdist, publish_test]
+    needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
