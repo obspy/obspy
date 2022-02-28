@@ -464,7 +464,8 @@ def plot_map(method, *args, **kwargs):
 
         * ``'cartopy'`` to use the Cartopy library. For other arguments, see
           the :func:`plot_cartopy` function.
-        * ``None`` to use either will use the Cartopy library
+        * ``None`` will use the Cartopy library since it is the only supported
+          method right now.
     """
     if method is None:
         if HAS_CARTOPY:
