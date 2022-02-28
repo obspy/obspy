@@ -1,0 +1,113 @@
+name: wheels
+on:
+  push:
+    branches:
+      - master
+      - 'test_wheels*'
+    tags:
+      - '*'
+  release:
+    types: [published]
+
+concurrency:
+  group: wheels-${{ github.event_name }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build_wheels:
+    name: build (${{ matrix.os }}, ${{ matrix.build }})
+    runs-on: ${{ matrix.os }}
+    env:
+      CIBW_BUILD: '${{ matrix.build }}-*'
+      CIBW_SKIP: '*i686 *win32 *s390x *ppc64le *musllinux*'
+      CIBW_ENVIRONMENT: OBSPY_NODE_NAME='wheel-builder'
+      CIBW_TEST_COMMAND: obspy-runtests --report
+      CIBW_TEST_EXTRAS: tests
+    strategy:
+      # for pushes to master, we only build a subset of wheels
+      # this does not apply to tags
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build: [cp37, cp38, cp39, cp310]
+        exclude-flag:
+          - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+        exclude:
+          - build: cp37
+            exclude-flag: true
+          - build: cp38
+            exclude-flag: true
+          - build: cp39
+            exclude-flag: true
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Adapt environment variables to build only some wheels
+        if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+        shell: bash -l {0}
+        run: |
+          echo "CIBW_SKIP=$CIBW_SKIP *aarch64" >> "$GITHUB_ENV"
+
+      - name: Print environment variables
+        shell: bash -l {0}
+        run: |
+          echo "CIBW_BUILD: $CIBW_BUILD"
+          echo "CIBW_SKIP: $CIBW_SKIP"
+          echo "CIBW_TEST_COMMAND: $CIBW_TEST_COMMAND"
+
+      - name: Build and test wheels
+        uses: pypa/cibuildwheel@v2.3.1
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: build sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Build sdist
+        shell: bash -l {0}
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist/*.tar.gz
+
+  publish_test:
+    name: publish tag to testpypi
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@v1.5.0
+        with:
+          user: __token__
+          password: ${{ secrets.TESTPYPI }}
+          repository_url: https://test.pypi.org/legacy/
+
+  publish:
+    name: publish release
+    if: github.event_name == 'release'
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@v1.5.0
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI }}

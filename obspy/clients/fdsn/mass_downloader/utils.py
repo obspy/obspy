@@ -12,6 +12,7 @@ import collections
 import fnmatch
 import itertools
 import os
+from http.client import HTTPException
 from socket import timeout as socket_timeout
 from urllib.error import HTTPError, URLError
 
@@ -28,7 +29,8 @@ from obspy.io.mseed.util import get_record_information
 
 # Different types of errors that can happen when downloading data via the
 # FDSN clients.
-ERRORS = (FDSNException, HTTPError, URLError, socket_timeout, ConnectionError)
+ERRORS = (ConnectionError, FDSNException, HTTPError, HTTPException, URLError,
+          socket_timeout, )
 
 # mean earth radius in meter as defined by the International Union of
 # Geodesy and Geophysics. Used for the spherical kd-tree.
