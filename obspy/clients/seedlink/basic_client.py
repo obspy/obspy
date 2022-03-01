@@ -337,7 +337,7 @@ class Client(object):
             if self.debug:
                 print("Complete INFO:",
                       self._slclient.slconn.get_info_string())
-            return False
+            return True
 
         # process packet data
         trace = slpack.get_trace()
