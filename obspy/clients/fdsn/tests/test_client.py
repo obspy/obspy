@@ -1393,27 +1393,24 @@ class ClientTestCase(unittest.TestCase):
 
         # The error will already be raised during the initialization in most
         # cases.
-        self.assertRaises(
-            FDSNRedirectException,
-            Client, "IRIS", service_mappings={
-                "station": "http://ds.iris.edu/files/redirect/307/station/1",
-                "dataselect":
-                    "http://ds.iris.edu/files/redirect/307/dataselect/1",
-                "event": "http://ds.iris.edu/files/redirect/307/event/1"},
-            user="nobody@iris.edu", password="anonymous",
-            user_agent=USER_AGENT)
-
-        # The force_redirect flag overwrites that behaviour.
-        c_auth = Client("IRIS", service_mappings={
-            "station":
-                "http://ds.iris.edu/files/redirect/307/station/1",
-            "dataselect":
-                "http://ds.iris.edu/files/redirect/307/dataselect/1",
-            "event":
-                "http://ds.iris.edu/files/redirect/307/event/1"},
-            user="nobody@iris.edu", password="anonymous",
-            user_agent=USER_AGENT, force_redirect=True)
-
+        service_mappings = {
+            "station": "http://ds.iris.edu/files/redirect/307/station/1",
+            "dataselect": "http://ds.iris.edu/files/redirect/307/dataselect/1",
+            "event": "http://ds.iris.edu/files/redirect/307/event/1"}
+        with warnings.catch_warnings():
+            # ignore warnings about unclosed sockets
+            # These occur when rasing the FDSNRedirectException, but
+            # I was not able to fix in the code
+            warnings.filterwarnings('ignore', 'unclosed')
+            self.assertRaises(
+                FDSNRedirectException,
+                Client, "IRIS", service_mappings=service_mappings,
+                user="nobody@iris.edu", password="anonymous",
+                user_agent=USER_AGENT)
+            # The force_redirect flag overwrites that behaviour.
+            c_auth = Client("IRIS", service_mappings=service_mappings,
+                            user="nobody@iris.edu", password="anonymous",
+                            user_agent=USER_AGENT, force_redirect=True)
         st = c_auth.get_waveforms(
             network="IU", station="ANMO", location="00", channel="BHZ",
             starttime=UTCDateTime("2010-02-27T06:30:00.000"),
