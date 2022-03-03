@@ -2008,7 +2008,7 @@ class Stream(object):
 
         self._cleanup(**kwargs)
         if method == -1:
-            return
+            return self
         # check sampling rates and dtypes
         self._merge_checks()
         # remember order of traces
