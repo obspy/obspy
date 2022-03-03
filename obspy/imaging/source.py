@@ -192,7 +192,8 @@ def plot_radiation_pattern(
                 ax.spines['bottom'].set_position('center')
                 ax.spines['top'].set_color('none')
                 _plot_beachball(ax, rtp_mt)
-
+        # see https://github.com/SciTools/cartopy/issues/1207
+        fig.canvas.draw()
         fig.tight_layout(pad=0.1)
         if show:
             plt.show()

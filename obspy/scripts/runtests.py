@@ -45,33 +45,30 @@ line argument is also accepted.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import contextlib
+import os
 import sys
 from pathlib import Path
-
-import pkg_resources
-import obspy
-from obspy.core.util.misc import change_directory
 
 
 # URL to upload json report
 REPORT_URL = "tests.obspy.org"
 
 
-def _ensure_tests_requirements_installed():
+@contextlib.contextmanager
+def change_directory(path):
     """
-    Ensure all the tests requirements are installed or raise exception.
+    A context manager to change directory to target path.
 
-    This function is intended to help less experienced users run the tests.
+    :param path: The path to change to.
+    :type path: A string or pathlib Path.
     """
-    msg = ("\nNot all ObsPy's test requirements are installed. You need to "
-           "install them before using obspy-runtest. Example with pip: \n"
-           "\t$ pip install obspy[tests]")
-    dist = pkg_resources.get_distribution('obspy')
-    for package_req in dist.requires(['tests']):
-        try:
-            pkg_resources.get_distribution(package_req).version
-        except pkg_resources.DistributionNotFound:
-            raise ImportError(msg)
+    origin = Path().absolute()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(origin)
 
 
 def main():
@@ -81,27 +78,34 @@ def main():
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
-    _ensure_tests_requirements_installed()
-
-    import pytest
-    from pytest_jsonreport.plugin import JSONReport
-
-    report = (True if '--report' in sys.argv else
-              False if '--no-report' in sys.argv else None)
     if '-h' in sys.argv or '--help' in sys.argv:
         print(__doc__)
         sys.exit(0)
-    elif all(['--json-report-file' not in arg for arg in sys.argv]):
-        sys.argv.append('--json-report-file=none')
-    # Use default traceback for nicer report display.
-    sys.argv.append("--tb=native")
+    try:
+        import pytest
+        from pytest_jsonreport.plugin import JSONReport
+    except ImportError:
+        msg = ("\nObsPy's test suite uses pytest and pytest-json-report. "
+               "Please install these packages before using obspy-runtests. "
+               "Example with pip:\n"
+               "\t$ pip install pytest pytest-json-report\n\n"
+               "Additional optional test requirements can be used and "
+               "installed with:\n"
+               "\t$ pip install obspy[tests]\n")
+        sys.exit(msg)
+    # hack to get rid of internal pytest warning, see
+    # https://github.com/pytest-dev/pytest-cov/issues/148
+    import pytest_jsonreport
+    pytest_jsonreport.__doc__ = 'PYTEST_DONT_REWRITE'
     # Cd into ObsPy's directory and run tests.
-    with change_directory(Path(obspy.__file__).parent):
+    with change_directory(Path(__file__).parent.parent):
         plugin = JSONReport()
         status = pytest.main(plugins=[plugin])
     # Upload test report if tests were successfully run.
     # See https://docs.pytest.org/en/latest/reference/exit-codes.html
     if int(status) < 2:
+        report = (True if '--report' in sys.argv else
+                  False if '--no-report' in sys.argv else None)
         upload_json_report(report=report, data=plugin.report)
     sys.exit(status)
 
@@ -115,6 +119,7 @@ def upload_json_report(report=None, data=None):
         report = 'y' in answer
     if report:
         # only include unique warnings.
+        data.setdefault('warnings', [])
         data['warnings'] = [
             dict(t) for t in {tuple(d.items()) for d in data['warnings']}
         ]

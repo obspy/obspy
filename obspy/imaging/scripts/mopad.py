@@ -254,7 +254,7 @@ class MomentTensor:
             # these angles
             self._input_basis = 'NED'
 
-        return np.asmatrix(new_M)
+        return new_M
 
     def _rotate_2_NED(self):
         """
@@ -269,7 +269,7 @@ class MomentTensor:
                   self._list_of_possible_input_bases)
             raise MTError(' !! ')
 
-        NED_2_NED = np.asmatrix(np.diag([1, 1, 1]))
+        NED_2_NED = np.diag([1, 1, 1])
 
         rotmat_USE_2_NED = NED_2_NED.copy()
         rotmat_USE_2_NED[:] = 0
@@ -603,7 +603,7 @@ class MomentTensor:
         EV2 = EV[:, EW_order[1]]
         EV3 = EV[:, EW_order[2]]
 
-        chng_basis_tmp = np.asmatrix(np.zeros((3, 3)))
+        chng_basis_tmp = np.zeros((3, 3))
         chng_basis_tmp[:, 0] = EV1_devi
         chng_basis_tmp[:, 1] = EV2_devi
         chng_basis_tmp[:, 2] = EV3_devi
@@ -706,7 +706,7 @@ class MomentTensor:
         EVn = EV2
 
         # build the basis system change matrix:
-        chng_basis = np.asmatrix(np.zeros((3, 3)))
+        chng_basis = np.zeros((3, 3))
 
         # order of eigenvector's basis: (H,N,S)
         chng_basis[:, 0] = EVh
@@ -837,7 +837,7 @@ class MomentTensor:
         if np.linalg.norm(enodes) < 1e-10:
             enodes = exs
         enodess = rotmat @ enodes
-        cos_alpha = float((ez.T * ezs))
+        cos_alpha = float((ez.T @ ezs))
         if cos_alpha > 1.:
             cos_alpha = 1.
         if cos_alpha < -1.:
@@ -2942,7 +2942,7 @@ class BeachBall:
         rotmat_pos_raw[:, 1] = east_prime
         rotmat_pos_raw[:, 2] = down_prime
 
-        rotmat_pos = np.asmatrix(rotmat_pos_raw).T
+        rotmat_pos = rotmat_pos_raw.T
         # this matrix gives the coordinates of a given point in the old
         # coordinates w.r.t. the new system
 
@@ -2966,7 +2966,7 @@ class BeachBall:
         only_rotation[0, 1] = -s_az
         only_rotation[1, 0] = s_az
 
-        local_rotation = np.asmatrix(only_rotation)
+        local_rotation = only_rotation
 
         # apply rotation from left!!
         total_rotation_matrix = np.dot(local_rotation, rotmat_pos)
@@ -3554,7 +3554,7 @@ class BeachBall:
         # correct for ONE special case: double couple with its
         # eigensystem = NED basis system:
         testarray = [1., 0, 0, 0, 1, 0, 0, 0, 1]
-        if np.prod(self.MT._rotation_matrix.A1 == testarray) and \
+        if np.allclose(np.ravel(self.MT._rotation_matrix), testarray) and \
            (self.MT._eigenvalues[1] == 0):
             self._plot_curve_in_curve = -1
             self._plot_clr_order = 1

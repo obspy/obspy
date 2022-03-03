@@ -523,6 +523,7 @@ def main(argv=None):
                 print(str(e))
                 sys.exit(1)
     print(rec)
+    rec.file.close()
 
 
 if __name__ == "__main__":

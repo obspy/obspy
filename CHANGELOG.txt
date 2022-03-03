@@ -6,8 +6,8 @@ Changes:
    * removed os.path calls with pathlib library calls (see #2751).
    * temporarily removed macOS coverage reporting in github actions (see #2920)
      to solve test issues (#2900)
-   * added python 3.9 tests for all platforms, required to disable image
-     comparisons for 3.9 (#2925)
+   * added python 3.9 and 3.10 tests for all platforms,
+     required to disable image comparisons (#2925, #2489)
    * rewrote CI tests to make use of cache (see #2936)
    * removed individual logging configurations in Obspy, logging can be
      configured by the user, see documentation of Pythons logging module,
@@ -16,7 +16,7 @@ Changes:
      therefore deprecated and have no effect anymore (see #2720)
    * refactored obspy-runtest to use pytest and modified several command
      line arguments (see #2489)
-   * removed calls to deprecated NumPy functionality (see #2949)
+   * removed calls to deprecated NumPy functionality (see #2949, #2981)
    * cleaned the documentation, build process, and docstrings (see #2662)
    * refactored and modernized setup.py (see #2422)
  - obspy.core:

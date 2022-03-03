@@ -91,20 +91,24 @@ INSTALL_REQUIRES = [
     'decorator',
     'requests',
 ]
-
 # Extra dependencies
 EXTRAS_REQUIRES = {
     'tests': [
         'packaging',
         'pyproj',
         'pytest',
-        'pytest-cov',
         'pytest-json-report',
     ],
-    # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
-    'arclink': ['cryptography'],
+    'geo': ['geographiclib'],
+    'imaging': ['cartopy'],
     'io.shapefile': ['pyshp'],
 }
+EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
+                          for dep in depl]
+# arclink decryption also works with: pycrypto, m2crypto, pycryptodome
+# We do not include it in 'all', because the module is deprecated.
+EXTRAS_REQUIRES['arclink'] = ['cryptography']
+
 
 # package specific settings
 KEYWORDS = [
