@@ -30,7 +30,7 @@ from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
 # defining ObsPy modules currently used by runtests and the path function
-DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
+DEFAULT_MODULES = ['clients.filesystem', 'core', 'geodetics', 'imaging',
                    'io.ah', 'io.arclink', 'io.ascii', 'io.cmtsolution',
                    'io.cnv', 'io.css', 'io.dmx', 'io.focmec', 'io.hypodd',
                    'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
@@ -43,7 +43,7 @@ DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
                    'scripts', 'signal', 'taup']
 NETWORK_MODULES = ['clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.nrl',
-                   'clients.seedlink', 'clients.seishub', 'clients.syngine']
+                   'clients.seedlink', 'clients.syngine']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
