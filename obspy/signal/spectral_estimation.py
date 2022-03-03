@@ -2039,12 +2039,12 @@ class PPSD(object):
 
             self._plot_histogram(fig=fig)
 
-        ax.semilogx()
         if xaxis_frequency:
             ax.set_xlabel('Frequency [Hz]')
             ax.invert_xaxis()
         else:
             ax.set_xlabel('Period [s]')
+        ax.set_xscale('log')
         ax.set_xlim(period_lim)
         ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
         if self.special_handling is None:

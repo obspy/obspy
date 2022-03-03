@@ -1893,7 +1893,7 @@ def _validate(xml_file, verbose=False):
     schema_location = schema_location / "data" / "QuakeML-1.2.rng"
 
     try:
-        relaxng = RelaxNG(etree.parse(schema_location))
+        relaxng = RelaxNG(etree.parse(str(schema_location)))
     except TypeError:
         msg = "Could not validate QuakeML - try using a newer lxml version"
         warnings.warn(msg, UserWarning)

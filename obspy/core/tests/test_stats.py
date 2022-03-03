@@ -7,6 +7,7 @@ import warnings
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import Stats
+from obspy.core.util.testing import WarningsCapture
 from obspy.core.util import AttribDict
 
 
@@ -266,10 +267,11 @@ class TestStats:
         """
         stats = Stats()
         for val in self.nslc:
-            with warnings.catch_warnings(record=True):
+            with pytest.warns(UserWarning):
                 setattr(stats, val, None)
             assert getattr(stats, val) == 'None'
 
+    @pytest.mark.filterwarnings('ignore:Attribute')
     def test_casted_stats_nscl_writes_to_mseed(self):
         """
         Ensure a Stream object that has had its nslc types cast to str can
@@ -281,7 +283,7 @@ class TestStats:
         stats_items = set(Stats())
         new_stats = Stats()
         new_stats.__dict__.update({x: st[0].stats[x] for x in stats_items})
-        with warnings.catch_warnings(record=True):
+        with WarningsCapture():
             new_stats.network = 1
             new_stats.station = 1.1
         new_stats.channel = 'Non'
@@ -297,6 +299,7 @@ class TestStats:
         del stt[0].stats._format  # format gets added upon writing
         assert st == stt
 
+    @pytest.mark.filterwarnings('ignore:Attribute')
     def test_different_string_types(self):
         """
         Test the various types of strings found in the wild get converted to
@@ -309,8 +312,7 @@ class TestStats:
 
         for a_str in the_strs:
             for nslc in self.nslc:
-                with warnings.catch_warnings(record=True):
-                    setattr(stats, nslc, a_str)
+                setattr(stats, nslc, a_str)
                 assert isinstance(getattr(stats, nslc), str)
 
     def test_component(self):

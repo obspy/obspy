@@ -834,7 +834,7 @@ def _ctypes_array_2_numpy_array(buffer_, buffer_elements, sampletype):
     """
     # Allocate NumPy array to move memory to
     numpy_array = np.empty(buffer_elements, dtype=sampletype)
-    datptr = numpy_array.ctypes.get_data()
+    datptr = numpy_array.ctypes.data
     # Manually copy the contents of the C allocated memory area to
     # the address of the previously created NumPy array
     C.memmove(datptr, buffer_, buffer_elements * SAMPLESIZES[sampletype])

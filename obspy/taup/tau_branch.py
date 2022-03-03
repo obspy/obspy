@@ -2,8 +2,6 @@
 """
 Object dealing with branches in the model.
 """
-import warnings
-
 import numpy as np
 
 from .c_wrappers import clibtau
@@ -18,6 +16,7 @@ class TauBranch(object):
     branch. A branch is a group of layers bounded by discontinuities or
     reversals in slowness gradient.
     """
+
     def __init__(self, top_depth=0, bot_depth=0, is_p_wave=False):
         self.top_depth = top_depth
         self.bot_depth = bot_depth
@@ -141,25 +140,10 @@ class TauBranch(object):
                 new_time = np.sum(time)
                 new_dist = np.sum(dist)
 
-        self.shift_branch(index)
-        self.time[index] = new_time
-        self.dist[index] = new_dist
-        self.tau[index] = new_time - ray_param * new_dist
-
-    def shift_branch(self, index):
-        new_size = len(self.dist) + 1
-
-        self._robust_resize('time', new_size)
-        self.time[index + 1:] = self.time[index:-1]
-        self.time[index] = 0
-
-        self._robust_resize('dist', new_size)
-        self.dist[index + 1:] = self.dist[index:-1]
-        self.dist[index] = 0
-
-        self._robust_resize('tau', new_size)
-        self.tau[index + 1:] = self.tau[index:-1]
-        self.tau[index] = 0
+        new_tau = new_time - ray_param * new_dist
+        self.time = np.insert(self.time, index, new_time)
+        self.dist = np.insert(self.dist, index, new_dist)
+        self.tau = np.insert(self.tau, index, new_tau)
 
     def difference(self, top_branch, index_p, index_s, s_mod, min_p_so_far,
                    ray_params):
@@ -473,18 +457,3 @@ class TauBranch(object):
                 arr_ = arr_[()]
             setattr(branch, key, arr_)
         return branch
-
-    def _robust_resize(self, attr, new_size):
-        """
-        Try to resize an array inplace. If an error is raised use numpy
-        resize function to create a new array. Assign the array to self as
-        attribute listed in attr.
-        """
-        try:
-            getattr(self, attr).resize(new_size)
-        except ValueError:
-            msg = ('Resizing a TauP array inplace failed due to the '
-                   'existence of other references to the array, creating '
-                   'a new array. See Obspy #2280.')
-            warnings.warn(msg)
-            setattr(self, attr, np.resize(getattr(self, attr), new_size))

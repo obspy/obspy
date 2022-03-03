@@ -10,6 +10,7 @@ from datetime import datetime
 from struct import unpack
 
 import numpy as np
+import pytest
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
@@ -1115,10 +1116,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # check for expected Userwarning
-            with warnings.catch_warnings(record=True):
-                warnings.simplefilter('error', UserWarning)
-                self.assertRaises(UserWarning, st.write, tempfile,
-                                  format="MSEED")
+            with pytest.warns(UserWarning):
+                st.write(tempfile, format="MSEED")
 
     def test_read_timing_qual(self):
         """

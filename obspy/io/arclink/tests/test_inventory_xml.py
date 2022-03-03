@@ -17,10 +17,10 @@ Modified after obspy.io.stationXML
 import inspect
 import os
 import unittest
-import warnings
 
 from obspy.core.inventory import read_inventory
 from obspy.io.arclink.inventory import validate_arclink_xml, SCHEMA_NAMESPACE
+import pytest
 
 
 class ArclinkInventoryTestCase(unittest.TestCase):
@@ -79,6 +79,7 @@ class ArclinkInventoryTestCase(unittest.TestCase):
         self.assertEqual(e.exception.args[0], "responsePolynomial not"
                          "implemented. Contact the ObsPy developers")
 
+    @pytest.mark.filterwarnings("ignore:Attribute 'storage_format'.*removed")
     def test_auto_read_arclink_xml(self):
         arclink_inv = read_inventory(self.arclink_xml_path)
         self.assertIsNotNone(arclink_inv)
@@ -105,9 +106,8 @@ class ArclinkInventoryTestCase(unittest.TestCase):
                 # reading stationxml will ignore old StationXML 1.0 defined
                 # StorageFormat, Arclink Inventory XML and SC3ML get it stored
                 # in extra now
-                with warnings.catch_warnings(record=True):
-                    self.assertEqual(st_xml.storage_format, None)
-                    self.assertEqual(arc.storage_format, None)
+                self.assertEqual(st_xml.storage_format, None)
+                self.assertEqual(arc.storage_format, None)
                 self.assertEqual(
                     arc.extra['format'],
                     {'namespace': SCHEMA_NAMESPACE, 'value': None})

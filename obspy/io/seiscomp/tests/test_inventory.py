@@ -20,6 +20,7 @@ import re
 import unittest
 import warnings
 
+import pytest
 from obspy.core.inventory import read_inventory
 from obspy.core.inventory.response import (CoefficientsTypeResponseStage,
                                            FIRResponseStage)
@@ -59,6 +60,7 @@ class SC3MLTestCase(unittest.TestCase):
             self.assertEqual(e.exception.args[0],
                              "Schema version not supported.")
 
+    @pytest.mark.filterwarnings('ignore:.*rate of 0')
     def test_channel_level(self):
         """
         Test inventory without repsonse information up to
@@ -197,7 +199,7 @@ class SC3MLTestCase(unittest.TestCase):
                     # reading stationxml will ignore old StationXML 1.0 defined
                     # StorageFormat, Arclink Inventory XML and SC3ML get it
                     # stored in extra now
-                    with warnings.catch_warnings(record=True):
+                    with pytest.warns(UserWarning, match='.*storage_format.*'):
                         self.assertEqual(sc3ml_cha.storage_format, None)
                         self.assertEqual(stationxml_cha.storage_format, None)
                     self.assertEqual(sc3ml_cha.extra['format']['value'],
