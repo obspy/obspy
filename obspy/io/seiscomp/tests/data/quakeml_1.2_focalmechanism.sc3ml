@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.11" version="0.11">
   <EventParameters publicID="smi:ISC/bulletin">
     <focalMechanism publicID="smi:ISC/fmid=292309">
       <triggeringOriginID>smi:local/originId=7680412</triggeringOriginID>

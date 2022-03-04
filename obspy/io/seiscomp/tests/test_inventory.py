@@ -32,7 +32,7 @@ class SC3MLTestCase(unittest.TestCase):
 
     def setUp(self):
         """
-        Read example stationXML/sc3ml format to Inventory
+        Read example SeisComp XML format to Inventory
         """
         self.data_dir = os.path.join(os.path.dirname(__file__), "data")
         stationxml_path = os.path.join(self.data_dir, "EB_response_stationXML")
@@ -45,11 +45,7 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.5', '0.6', '0.7', '0.8', '0.9']:
-            filename = os.path.join(self.data_dir, 'version%s' % version)
-            read_inventory(filename)
-
-        for version in ['0.3', '0.10']:
+        for version in ['0.5', '0.99']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
 
             with self.assertRaises(ValueError) as e:
@@ -98,7 +94,8 @@ class SC3MLTestCase(unittest.TestCase):
         # <Coefficients> | <Coefficients name="EBR.2002.091.H" ~
 
         # We disregard these differences because they are unimportant
-        excluded_tags = ["Source", "Sender", "Created", "Coefficients"]
+        excluded_tags = ["Source", "Sender", "Created", "Name",
+                         "Coefficients"]
 
         # also ignore StorageFormat which doesnt exist anymore in
         # StationXML 1.1 and is saved into extra / a foreign tag

@@ -170,6 +170,8 @@
  *
  *  * 07.12.2018: Copy picks referenced by amplitudes
  *
+ *  * 10.12.2018: Put the non-QuakeML nodes in a custom namespace
+ *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -201,7 +203,10 @@
                         </xsl:call-template>
                     </xsl:attribute>
 
-                    <xsl:apply-templates/>
+                    <!-- Put the QuakeML nodes at the beginning -->
+                    <xsl:apply-templates select="*[not(self::scs:reading)]" />
+                    <!-- Put the non-QuakeML nodes at the end -->
+                    <xsl:apply-templates select="scs:reading" mode="scs-only" />
                 </eventParameters>
             </xsl:for-each>
         </q:quakeml>
@@ -278,15 +283,11 @@
     <!-- Delete elements -->
     <xsl:template match="scs:EventParameters/scs:pick"/>
     <xsl:template match="scs:EventParameters/scs:amplitude"/>
-    <xsl:template match="scs:EventParameters/scs:reading"/>
     <xsl:template match="scs:EventParameters/scs:origin"/>
     <xsl:template match="scs:EventParameters/scs:focalMechanism"/>
     <xsl:template match="scs:event/scs:originReference"/>
     <xsl:template match="scs:event/scs:focalMechanismReference"/>
-    <xsl:template match="scs:creationInfo/scs:modificationTime"/>
     <xsl:template match="scs:comment/scs:id"/>
-    <xsl:template match="scs:comment/scs:start"/>
-    <xsl:template match="scs:comment/scs:end"/>
     <xsl:template match="scs:arrival/scs:weight"/>
     <xsl:template match="scs:arrival/scs:timeUsed"/>
     <xsl:template match="scs:arrival/scs:horizontalSlownessUsed"/>
@@ -294,12 +295,6 @@
     <xsl:template match="scs:origin/scs:stationMagnitude"/>
     <xsl:template match="scs:origin/scs:magnitude"/>
     <xsl:template match="scs:momentTensor/scs:method"/>
-    <xsl:template match="scs:momentTensor/scs:stationMomentTensorContribution"/>
-    <xsl:template match="scs:momentTensor/scs:status"/>
-    <xsl:template match="scs:momentTensor/scs:cmtName"/>
-    <xsl:template match="scs:momentTensor/scs:cmtVersion"/>
-    <xsl:template match="scs:momentTensor/scs:phaseSetting"/>
-    <xsl:template match="scs:pdf"/>
 
     <!-- Converts a scs magnitude/stationMagnitude to a qml
          magnitude/stationMagnitude -->
@@ -316,7 +311,11 @@
                     </xsl:call-template>
                 </originID>
             </xsl:if>
-            <xsl:apply-templates/>
+
+            <!-- Put the QuakeML nodes at the beginning -->
+            <xsl:apply-templates select="*[not(self::scs:passedQC)]" />
+            <!-- Put the non-QuakeML nodes at the end -->
+            <xsl:apply-templates select="scs:passedQC" mode="scs-only" />
         </xsl:element>
     </xsl:template>
 
@@ -527,7 +526,11 @@
                     </xsl:call-template>
                 </xsl:attribute>
             </xsl:if>
-            <xsl:apply-templates/>
+
+            <!-- Put the QuakeML nodes at the beginning -->
+            <xsl:apply-templates select="*[not(self::scs:start|self::scs:end)]" />
+            <!-- Put the non-QuakeML nodes at the end -->
+            <xsl:apply-templates select="scs:start|scs:end" mode="scs-only" />
         </xsl:element>
     </xsl:template>
 
@@ -548,6 +551,60 @@
             </xsl:choose>
         </xsl:attribute>
     </xsl:template>
+
+<!--
+    ************************************************************************
+    Unmapped nodes
+    ************************************************************************
+-->
+
+    <xsl:template match="scs:creationInfo">
+        <xsl:element name="{local-name()}">
+            <xsl:apply-templates select="@*"/>
+
+            <!-- Put the QuakeML nodes at the beginning -->
+            <xsl:apply-templates select="*[not(self::scs:modificationTime)]" />
+            <!-- Put the non-QuakeML nodes at the end -->
+            <xsl:apply-templates select="scs:modificationTime" mode="scs-only" />
+        </xsl:element>
+    </xsl:template>
+
+    <xsl:template match="scs:momentTensor">
+        <xsl:element name="{local-name()}">
+            <xsl:apply-templates select="@*"/>
+
+            <!-- Put the QuakeML nodes at the beginning -->
+            <xsl:apply-templates select="*[not(self::scs:stationMomentTensorContribution
+                                               | self::scs:status
+                                               | self::scs:cmtName
+                                               | self::scs:cmtVersion
+                                               | self::scs:phaseSetting)]" />
+            <!-- Put the non-QuakeML nodes at the end -->
+            <xsl:apply-templates select="scs:stationMomentTensorContribution
+                                         | scs:status
+                                         | scs:cmtName
+                                         | scs:cmtVersion
+                                         | scs:phaseSetting" mode="scs-only" />
+        </xsl:element>
+    </xsl:template>
+
+    <xsl:template match="scs:pdf">
+        <xsl:apply-templates select="." mode="scs-only" />
+    </xsl:template>
+
+    <xsl:template match="node()|@*" mode="scs-only">
+      <xsl:copy>
+        <xsl:apply-templates select="node()|@*"/>
+      </xsl:copy>
+    </xsl:template>
+
+    <!-- Keep seiscomp namespace for unmapped node -->
+    <xsl:template match="scs:*" mode="scs-only">
+      <xsl:element name="scs:{local-name()}">
+        <xsl:apply-templates select="@*|node()" mode="scs-only" />
+      </xsl:element>
+  </xsl:template>
+
 
 <!--
     ************************************************************************
