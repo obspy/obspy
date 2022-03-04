@@ -24,8 +24,8 @@ Basic Usage
       'AKV',
       '--',
       'BHE',
-      2021-12-30T14:36:15.761000Z,
-      2022-02-28T14:35:57.199000Z)]
+      UTCDateTime(2021, 10, 30, 12, 2, 27, 473000),
+      UTCDateTime(2021, 12, 29, 12, 2, 16, 899000)]
     >>> t = response[0][4]
     >>> st = client.get_waveforms('AV', 'AKV', '', 'BH*', t + 100, t + 130)
     >>> st.plot()  # doctest: +SKIP
