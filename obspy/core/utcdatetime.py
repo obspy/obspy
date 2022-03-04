@@ -1271,6 +1271,12 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
+        # This is an attempt to get consistent behavior across platforms.
+        # See https://bugs.python.org/issue32195
+        # and https://bugs.python.org/issue13305
+        # This is an issue of glibc implementation differing across platforms,
+        # out of control of Python, but we still try to be consistent across
+        # all platforms
         if sys.platform.startswith("linux"):
             format = format.replace("%Y", "%04Y")
         return self.datetime.strftime(format)
