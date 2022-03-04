@@ -20,7 +20,9 @@ import scipy.interpolate
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
-    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage, Response)
+    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage, Response,
+    ResponseListResponseStage, ResponseListElement, InstrumentSensitivity)
+from obspy.core.util import CatchAndAssertWarnings
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
 from obspy.core.util.testing import WarningsCapture
@@ -180,9 +182,10 @@ class TestResponse:
         t_samp = 1.0 / sampling_rate
         nfft = 100
 
-        cpx_response, freq = inv[0][0][0].response.get_evalresp_response(
-            t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
-            end_stage=None)
+        with WarningsCapture():
+            cpx_response, freq = inv[0][0][0].response.get_evalresp_response(
+                t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
+                end_stage=None)
 
         # Cut of the zero frequency.
         cpx_response = cpx_response[1:]
@@ -208,29 +211,6 @@ class TestResponse:
         np.testing.assert_allclose(amp, exp_amp, rtol=1E-3)
         np.testing.assert_allclose(phase, exp_ph, rtol=1E-3)
 
-    def test_response_list_raises_error_if_out_of_range(self):
-        """
-        If extrpolating a lot it should raise an error.
-        """
-        inv = read_inventory(os.path.join(self.data_dir, "IM_IL31__BHZ.xml"))
-
-        # The true sampling rate is 40 - this will thus request data that is
-        # too high frequent and thus cannot be extracted from the response
-        # list.
-        sampling_rate = 45.0
-        t_samp = 1.0 / sampling_rate
-        nfft = 100
-
-        msg = '' \
-            "Cannot calculate the response as it contains a response list " \
-            "stage with frequencies only from -0.0096 - 20.0096 Hz. You are " \
-            "requesting a response from 0.4500 - 22.5000 Hz."
-
-        with pytest.raises(ValueError, match=msg):
-            inv[0][0][0].response.get_evalresp_response(
-                t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
-                end_stage=None)
-
     def test_response_with_no_units_in_stage_1(self):
         """
         ObsPy has some heuristics to deal with this particular degenerate case.
@@ -244,7 +224,7 @@ class TestResponse:
         # files...
         assert r.response_stages[0].input_units == "M/S"
         assert r.response_stages[0].input_units_description == \
-               "Meters per second"
+            "Meters per second"
         assert r.response_stages[0].output_units == "V"
         assert r.response_stages[0].output_units_description == "VOLTS"
 
@@ -515,3 +495,27 @@ class TestResponse:
         np.testing.assert_allclose(
             resp.instrument_sensitivity.frequency,
             1.0)
+
+    def test_warning_response_list_extrapolation(self):
+        """
+        Tests that a warning message is shown when a response calculation
+        involving a response list stage includes (spline) extrapolation into
+        frequency ranges outside of the band defined by the response list stage
+        elements (frequency-amplitude-phase pairs).
+        """
+        # create some bogus response list stage for the test
+        elems = [
+            ResponseListElement(x, 1, 0) for x in (1, 2, 5, 10, 20, 40, 50)]
+        stage = ResponseListResponseStage(
+            1, 1, 10, "M/S", "M/S", response_list_elements=elems)
+        sens = InstrumentSensitivity(1, 10, "M/S", "M/S")
+        resp = Response(response_stages=[stage], instrument_sensitivity=sens)
+        msg = ("The response contains a response list stage with frequencies "
+               "only from 1.0000 - 50.0000 Hz. You are requesting a response "
+               "from 25.0000 - 100.0000 Hz. The calculated response will "
+               "contain extrapolation beyond the frequency band constrained "
+               "by the response list stage. Please consider adjusting "
+               "'pre_filt' and/or 'water_level' during response removal "
+               "accordingly.")
+        with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
+            resp.get_evalresp_response(0.005, 2**3)
