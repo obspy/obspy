@@ -1,14 +1,12 @@
-master
-======
+1.3.0 (doi: 10.5281/zenodo.6327346)
+===================================
 
 Changes:
  - obspy.*
    * no more support for Python 2 (see #2577)
-   * removed os.path calls with pathlib library calls (see #2751).
-   * temporarily removed macOS coverage reporting in github actions (see #2920)
-     to solve test issues (#2900)
    * added python 3.9 and 3.10 tests for all platforms,
-     required to disable image comparisons (#2925, #2489)
+     minimal supported python version is 3.7 (#2925, #2489)
+   * removed os.path calls with pathlib library calls (see #2751).
    * rewrote CI tests to make use of cache (see #2936)
    * removed individual logging configurations in Obspy, logging can be
      configured by the user, see documentation of Pythons logging module,
@@ -16,9 +14,9 @@ Changes:
      but this behavior can be turned off now. The loglevel keywords are
      therefore deprecated and have no effect anymore (see #2720)
    * refactored obspy-runtest to use pytest and modified several command
-     line arguments (see #2489)
+     line arguments, required to disable image comparisons (see #2489)
    * removed calls to deprecated NumPy functionality (see #2949, #2981)
-   * cleaned the documentation, build process, and docstrings (see #2662)
+   * cleaned the documentation, build process, and docstrings (see #2662, #2954)
    * refactored and modernized setup.py (see #2422)
  - obspy.core:
    * speed up import of obspy core functions (see #2758)
@@ -120,7 +118,8 @@ Changes:
    * properly take into account native system byteorder, should fix reading
      rt130 data on big endian systems (see #2678)
  - obspy.io.seiscomp:
-   * Add support for SC3ML 0.11 (see #2284).
+   * Add support for SC3ML 0.11 and 0.12, dropped support for SC3ML < 0.6
+     (see #2284).
    * Add support for custom tags (see #2284).
  - obspy.io.sh:
    * fix appending traces to existing Q file (see #2870)
@@ -129,10 +128,6 @@ Changes:
      encountered (see #2668)
    * Properly read a given value of 0.0 in station elevation and not replace it
      with bogus value (see #2763)
- - obspy.scripts
-   * obspy-runtests can take one or two -v flags for a more smooth verbosity
-     control (see #2720)
-   * fix broken "--raise-all-warnings" flag in obspy-runtests (see #2720)
  - obspy.signal.array_analysis
    * fixed an issue in array_processing function returning wrong times
      for matplotlib versions >= 3.3 due to the epoch change in matplotlib
@@ -141,8 +136,8 @@ Changes:
    * Remove deprecated xcorr function, remove deprecated domain keyword
      argument in correlate function (see #1979)
  - obspy.signal.spectral_estimation.PPSD:
-   * Added special handling option for infrasound data and global infrasound noise
-     models for plotting (see #2740)
+   * Added special handling option for infrasound data and global infrasound
+     noise models for plotting (see #2740)
    * Replaced use of deprecated Matplotlib functionality (see #2951)
  - obspy.signal.trigger:
    * Improved clarity and speed of several STA/LTA triggers methods, namely
