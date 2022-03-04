@@ -182,9 +182,10 @@ class TestResponse:
         t_samp = 1.0 / sampling_rate
         nfft = 100
 
-        cpx_response, freq = inv[0][0][0].response.get_evalresp_response(
-            t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
-            end_stage=None)
+        with WarningsCapture():
+            cpx_response, freq = inv[0][0][0].response.get_evalresp_response(
+                t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
+                end_stage=None)
 
         # Cut of the zero frequency.
         cpx_response = cpx_response[1:]
