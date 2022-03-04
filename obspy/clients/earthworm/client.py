@@ -74,7 +74,7 @@ class Client(object):
 
         >>> from obspy.clients.earthworm import Client
         >>> client = Client("pubavo1.wr.usgs.gov", 16022)
-        >>> dt = UTCDateTime() - 10000  # now - 10000 seconds
+        >>> dt = UTCDateTime() - 15000  # now - 15000 seconds
         >>> st = client.get_waveforms('AV', 'AKV', '', 'BHE', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
         >>> st = client.get_waveforms('AV', 'AKV', '', 'BH*', dt, dt + 10)
@@ -85,7 +85,7 @@ class Client(object):
             from obspy.clients.earthworm import Client
             from obspy import UTCDateTime
             client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
-            dt = UTCDateTime() - 10000  # now - 10000 seconds
+            dt = UTCDateTime() - 15000  # now - 15000 seconds
             st = client.get_waveforms('AV', 'AKV', '', 'BHE', dt, dt + 10)
             st.plot()
             st = client.get_waveforms('AV', 'AKV', '', 'BH*', dt, dt + 10)
