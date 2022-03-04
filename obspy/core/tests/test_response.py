@@ -224,7 +224,7 @@ class TestResponse:
         # files...
         assert r.response_stages[0].input_units == "M/S"
         assert r.response_stages[0].input_units_description == \
-               "Meters per second"
+            "Meters per second"
         assert r.response_stages[0].output_units == "V"
         assert r.response_stages[0].output_units_description == "VOLTS"
 
