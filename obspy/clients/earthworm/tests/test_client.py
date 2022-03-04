@@ -56,7 +56,7 @@ class TestEWClient:
         # example 1 -- 1 channel, cleanup
         kwargs = dict(
             network='AV',
-            station='ACH',
+            station='AKV',
             channel='BHE',
         )
         return self.try_get_stream(ew_client, kwargs)
@@ -66,7 +66,7 @@ class TestEWClient:
         """Return a stream fetched from the test ew client with no cleanup."""
         kwargs = dict(
             network='AV',
-            station='ACH',
+            station='AKV',
             channel='BHE',
             cleanup=False,
         )
@@ -77,7 +77,7 @@ class TestEWClient:
         """Return a stream fetched from the test ew client with wildcard."""
         kwargs = dict(
             network='AV',
-            station='ACH',
+            station='AKV',
             channel='BH?',
         )
         return self.try_get_stream(ew_client, kwargs)
@@ -96,7 +96,7 @@ class TestEWClient:
         assert trace.stats.endtime >= self.end - delta
         assert trace.stats.endtime <= self.end + delta
         assert trace.stats.network == 'AV'
-        assert trace.stats.station == 'ACH'
+        assert trace.stats.station == 'AKV'
         assert trace.stats.location in ('--', '')
         assert trace.stats.channel == 'BHE'
 
@@ -117,7 +117,7 @@ class TestEWClient:
         assert ew_stream[-1].stats.endtime <= self.end + delta
         for trace in ew_stream:
             assert trace.stats.network == 'AV'
-            assert trace.stats.station == 'ACH'
+            assert trace.stats.station == 'AKV'
             assert trace.stats.location in ('--', '')
             assert trace.stats.channel == 'BHE'
 
@@ -137,7 +137,7 @@ class TestEWClient:
             assert trace.stats.endtime >= self.end - delta
             assert trace.stats.endtime <= self.end + delta
             assert trace.stats.network == 'AV'
-            assert trace.stats.station == 'ACH'
+            assert trace.stats.station == 'AKV'
             assert trace.stats.location in ('--', '')
         assert stream[0].stats.channel == 'BHZ'
         assert stream[1].stats.channel == 'BHN'
@@ -155,7 +155,7 @@ class TestEWClient:
             ew_client.save_waveforms(
                 testfile,
                 'AV',
-                'ACH',
+                'AKV',
                 '--',
                 'BHE',
                 self.start,
@@ -172,7 +172,7 @@ class TestEWClient:
         assert trace.stats.endtime >= self.end - delta
         assert trace.stats.endtime <= self.end + delta
         assert trace.stats.network == 'AV'
-        assert trace.stats.station == 'ACH'
+        assert trace.stats.station == 'AKV'
         assert trace.stats.location in ('--', '')
         assert trace.stats.channel == 'BHE'
 
@@ -180,4 +180,4 @@ class TestEWClient:
     def test_availability(self, ew_client):
         data = ew_client.get_availability()
         seeds = ["%s.%s.%s.%s" % (d[0], d[1], d[2], d[3]) for d in data]
-        assert 'AV.ACH.--.BHZ' in seeds
+        assert 'AV.AKV.--.BHZ' in seeds

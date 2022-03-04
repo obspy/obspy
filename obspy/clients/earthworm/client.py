@@ -74,10 +74,10 @@ class Client(object):
 
         >>> from obspy.clients.earthworm import Client
         >>> client = Client("pubavo1.wr.usgs.gov", 16022)
-        >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> st = client.get_waveforms('AV', 'ACH', '', 'BHE', dt, dt + 10)
+        >>> dt = UTCDateTime() - 15000  # now - 15000 seconds
+        >>> st = client.get_waveforms('AV', 'AKV', '', 'BHE', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
-        >>> st = client.get_waveforms('AV', 'ACH', '', 'BH*', dt, dt + 10)
+        >>> st = client.get_waveforms('AV', 'AKV', '', 'BH*', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
@@ -85,10 +85,10 @@ class Client(object):
             from obspy.clients.earthworm import Client
             from obspy import UTCDateTime
             client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
-            dt = UTCDateTime() - 2000  # now - 2000 seconds
-            st = client.get_waveforms('AV', 'ACH', '', 'BHE', dt, dt + 10)
+            dt = UTCDateTime() - 15000  # now - 15000 seconds
+            st = client.get_waveforms('AV', 'AKV', '', 'BHE', dt, dt + 10)
             st.plot()
-            st = client.get_waveforms('AV', 'ACH', '', 'BH*', dt, dt + 10)
+            st = client.get_waveforms('AV', 'AKV', '', 'BH*', dt, dt + 10)
             st.plot()
         """
         # replace wildcards in last char of channel and fetch all 3 components
@@ -154,8 +154,8 @@ class Client(object):
         >>> from obspy.clients.earthworm import Client
         >>> client = Client("pubavo1.wr.usgs.gov", 16022)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> client.save_waveforms('AV.ACH.--.BHE.mseed',
-        ...                       'AV', 'ACH', '', 'BHE',
+        >>> client.save_waveforms('AV.AKV.--.BHE.mseed',
+        ...                       'AV', 'AKV', '', 'BHE',
         ...                       t, t + 10, format='MSEED')  # doctest: +SKIP
         """
         st = self.get_waveforms(network, station, location, channel, starttime,
@@ -190,22 +190,22 @@ class Client(object):
         >>> from obspy.clients.earthworm import Client
         >>> client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
         >>> response = client.get_availability(
-        ...     network="AV", station="ACH", channel="BH*")
+        ...     network="AV", station="AKV", channel="BH*")
         >>> print(response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         [('AV',
-          'ACH',
+          'AKV',
           '--',
           'BHE',
           UTCDateTime(...),
           UTCDateTime(...)),
          ('AV',
-          'ACH',
+          'AKV',
           '--',
           'BHN',
           UTCDateTime(...),
           UTCDateTime(...)),
          ('AV',
-          'ACH',
+          'AKV',
           '--',
           'BHZ',
           UTCDateTime(...),
