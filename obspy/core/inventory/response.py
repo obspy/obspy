@@ -1378,12 +1378,6 @@ class Response(ComparingObject):
                 min_f_avail = min(f)
                 max_f_avail = max(f)
 
-                # Allow interpolation for at most two samples.
-                _d = np.abs(np.diff(f))
-                _d = _d[_d > 0].min() * 2
-                min_f_avail -= _d
-                max_f_avail += _d
-
                 if min_f < min_f_avail or max_f > max_f_avail:
                     msg = (
                         "The response contains a "
