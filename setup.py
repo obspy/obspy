@@ -105,9 +105,6 @@ EXTRAS_REQUIRES = {
 }
 EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
                           for dep in depl]
-# arclink decryption also works with: pycrypto, m2crypto, pycryptodome
-# We do not include it in 'all', because the module is deprecated.
-EXTRAS_REQUIRES['arclink'] = ['cryptography']
 
 
 # package specific settings

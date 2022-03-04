@@ -1,13 +1,12 @@
 import matplotlib.pyplot as plt
 
 import obspy
-from obspy.clients.arclink import Client
+from obspy.clients.fdsn import Client
 from obspy.signal.trigger import recursive_sta_lta, trigger_onset
 
 
-# Retrieve waveforms via ArcLink
-client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
-                user="test@obspy.de")
+# Retrieve waveforms via FDSNWS
+client = Client("LMU")
 t = obspy.UTCDateTime("2009-08-24 00:19:45")
 st = client.get_waveforms('BW', 'RTSH', '', 'EHZ', t, t + 50)
 
