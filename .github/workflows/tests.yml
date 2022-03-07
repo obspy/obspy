@@ -50,7 +50,7 @@ jobs:
             "target_url": "https://tests.obspy.org/?pr=${{ github.event.pull_request.number }}"
             }'
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -133,7 +133,7 @@ jobs:
       # set additional runtest options (--keep-images, --network, -W error)
       runtest_options: ${{ github.event_name == 'pull_request' && '--keep-images' || '' }} ${{ contains(matrix.options, 'network') && '--network' || '' }} ${{ contains(matrix.options, 'warnings') && '-W error' || '' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
