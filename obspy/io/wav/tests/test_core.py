@@ -11,14 +11,7 @@ import numpy as np
 
 from obspy import Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.base import NUMPY_VERSION
 from obspy.io.wav.core import WIDTH2DTYPE
-
-
-if NUMPY_VERSION <= [1, 3]:
-    OLD_NUMPY = True
-else:
-    OLD_NUMPY = False
 
 
 class CoreTestCase(unittest.TestCase):
@@ -77,7 +70,6 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(tr3.stats, tr.stats)
             np.testing.assert_array_equal(tr3.data[:13], testdata)
 
-    @unittest.skipIf(OLD_NUMPY, 'needs a recent NumPy version')
     def test_rescale_on_write(self):
         """
         Read and Write files via obspy.core.Trace
