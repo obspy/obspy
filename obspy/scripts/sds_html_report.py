@@ -381,8 +381,9 @@ def main(argv=None):
             latency = []
             # check latency of all channels that should be checked
             for cha in args.channels:
-                latency_ = client.get_latency(net, sta, loc, cha,
-                                              stop_time=stop_time)
+                latency_ = client.get_latency(
+                    net, sta, loc, cha, stop_time=stop_time,
+                    check_has_no_data=False)
                 latency.append(latency_ or np.inf)
             # only include the channel with lowest latency in our stream list
             cha = args.channels[np.argmin(latency)]
@@ -390,8 +391,9 @@ def main(argv=None):
             nslc.append((net, sta, loc, cha, latency))
         for id in args.ids:
             net, sta, loc, cha = id.split(".")
-            latency = client.get_latency(net, sta, loc, cha,
-                                         stop_time=stop_time)
+            latency = client.get_latency(
+                net, sta, loc, cha, stop_time=stop_time,
+                check_has_no_data=False)
             latency = latency or np.inf
             nslc.append((net, sta, loc, cha, latency))
         nslc_ = []
@@ -428,8 +430,9 @@ def main(argv=None):
     data = []
     for net, sta, loc, cha, latency, percentage, gap_count in nslc:
         if args.update:
-            latency = client.get_latency(net, sta, loc, cha,
-                                         stop_time=stop_time)
+            latency = client.get_latency(
+                net, sta, loc, cha, stop_time=stop_time,
+                check_has_no_data=False)
             latency = latency or np.inf
         data.append((net, sta, loc, cha, latency, percentage, gap_count))
 

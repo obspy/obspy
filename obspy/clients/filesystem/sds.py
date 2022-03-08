@@ -366,7 +366,8 @@ class Client(object):
         return (1 - (gap_sum / total_duration), gap_count)
 
     def _get_current_endtime(self, network, station, location, channel,
-                             sds_type=None, stop_time=None):
+                             sds_type=None, stop_time=None,
+                             check_has_no_data=True):
         """
         Get time of last sample for given stream.
 
@@ -387,13 +388,20 @@ class Client(object):
         :type stop_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param stop_time: Time at which the search for data is stopped and
             ``None`` is returned. If not specified, stops at ``1950-01-01T00``.
+        :type check_has_no_data: bool
+        :param check_has_no_data: Whether to perform a check with
+            :meth:`has_data` if any data is available at all for the given SEED
+            ID. Turns out that this check can take a long time on slow
+            filesystems (e.g. NFS), so it might actually make the latency check
+            take longer than necessary, so deactivating it might be worth a try
+            if speed issues occur.
         :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime` or ``None``
         """
         sds_type = sds_type or self.sds_type
 
         seed_pattern = ".".join((network, station, location, channel))
 
-        if not self.has_data(
+        if check_has_no_data and not self.has_data(
                 network=network, station=station, location=location,
                 channel=channel, sds_type=sds_type):
             return None
@@ -428,7 +436,7 @@ class Client(object):
         return max([tr.stats.endtime for tr in st])
 
     def get_latency(self, network, station, location, channel,
-                    sds_type=None, stop_time=None):
+                    sds_type=None, stop_time=None, check_has_no_data=True):
         """
         Get latency for given stream, i.e. difference of current time and
         latest available data for stream in SDS archive. ``None`` is returned
@@ -449,13 +457,21 @@ class Client(object):
         :type stop_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param stop_time: Time at which the search for data is stopped and
             ``None`` is returned. If not specified, stops at ``1950-01-01T00``.
+        :type check_has_no_data: bool
+        :param check_has_no_data: Whether to perform a check with
+            :meth:`has_data` if any data is available at all for the given SEED
+            ID. Turns out that this check can take a long time on slow
+            filesystems (e.g. NFS), so it might actually make the latency check
+            take longer than necessary, so deactivating it might be worth a try
+            if speed issues occur.
         :rtype: float or ``None``
         :returns: Latency in seconds or ``None`` if no data was encountered
             from current time backwards until ``stop_time``.
         """
         endtime = self._get_current_endtime(
             network=network, station=station, location=location,
-            channel=channel, sds_type=sds_type, stop_time=stop_time)
+            channel=channel, sds_type=sds_type, stop_time=stop_time,
+            check_has_no_data=check_has_no_data)
 
         if endtime is None:
             return endtime
