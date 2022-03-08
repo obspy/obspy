@@ -58,6 +58,8 @@ Changes:
    * update RESIF URL mapping to use http and add RESIFPH5 (see #2938)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
+   * SDS client get_latency(): make one internal check optional which can be a
+     massive speedup on slow filesystems (see #3009)
  - obspy.clients.seedlink:
    * basic client: properly terminate after finished get_info() request (see
      #2996)
