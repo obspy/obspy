@@ -18,6 +18,8 @@ Changes:
    * removed calls to deprecated NumPy functionality (see #2949, #2981)
    * cleaned the documentation, build process, and docstrings (see #2662, #2954)
    * refactored and modernized setup.py (see #2422)
+ - scripts:
+   * SDS report: try to be faster on slow filesystems (see #3009)
  - obspy.core:
    * speed up import of obspy core functions (see #2758)
    * read_inventory(): add "level" option to read files faster when less level
