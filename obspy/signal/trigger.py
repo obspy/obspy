@@ -348,6 +348,10 @@ def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     else:
         # include it
         of.extend([ind2[-1]])
+
+    # add last sample to ensure trigger gets switched off if ctf does not fall
+    # below off-threshold before hitting the end
+    of.append(len(charfct))
     #
     pick = []
     while on[-1] > of[0]:
