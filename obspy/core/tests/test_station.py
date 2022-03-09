@@ -13,6 +13,8 @@ Test suite for the station handling.
 import pytest
 
 from obspy import read_inventory, UTCDateTime
+from obspy.core.inventory import Station
+from obspy.core.util import CatchAndAssertWarnings
 from obspy.core.util.testing import WarningsCapture
 
 
@@ -153,3 +155,14 @@ class TestStation:
         assert len(sta.select(
             latitude=47.95, longitude=12.95,
             minradius=0.08, maxradius=0.1)) == 0
+
+    def test_warn_identifier_invalid_uri_syntax(self):
+        """
+        Tests the warning on Identifiers getting set with an invalid URI (not
+        having scheme-colon-path)
+        """
+        sta = Station(code='A', latitude=1, longitude=1, elevation=1)
+        invalid_uri = "this-has-no-URI-scheme-and-no-colon"
+        msg = f"Given string seems to not be a valid URI: '{invalid_uri}'"
+        with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
+            sta.identifiers = [invalid_uri]

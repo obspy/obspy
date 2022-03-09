@@ -46,6 +46,8 @@ Changes:
      safe route but it also prevents valid calculations as it is up to the user
      to make sure that signal spectrum is properly suppressed in those
      frequency ranges outside of the valid response information (see #2988)
+   * fix a bug while checking for valid URI syntax when setting identifiers on
+     inventory type objects (see #2905)
  - obspy.clients.arclink:
    * submodule removed completely, since ArcLink was officially deprecated and
      deactivated on all big datacenters years ago (see #2994)
