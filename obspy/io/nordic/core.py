@@ -1498,6 +1498,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     # Write header line(s)
     sfile.write(_write_header_line(
         event, origin, evtype, is_preferred_origin=True))
+    if high_accuracy:
+        sfile.write(_write_high_accuracy_origin(origin))
     # Write hyp error line
     try:
         sfile.write(_write_hyp_error_line(origin) + '\n')
@@ -1508,6 +1510,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         if not add_origin == origin:
             sfile.write(_write_header_line(event, add_origin, evtype,
                                            is_preferred_origin=False))
+            if high_accuracy:
+                sfile.write(_write_high_accuracy_origin(add_origin))
     # Write fault plane solution
     if hasattr(event, 'focal_mechanisms') and len(event.focal_mechanisms) > 0:
         for focal_mechanism in event.focal_mechanisms:
@@ -1683,6 +1687,46 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
                 conv_mags[5]['mag'].rjust(4), conv_mags[5]['type'].rjust(1),
                 conv_mags[5]['agency'][0:3].rjust(3)))
     return ''.join([''.join(line) for line in lines])
+
+
+def _write_high_accuracy_origin(origin):
+    """
+    Write high accuracy hypocenter line
+    E.g.:
+    1996  6 3 2006 35.511  46.78711  153.72245   33.011  1.923
+    """
+    # Write the header info.
+    if origin.latitude is not None:
+        lat = '{0:.5f}'.format(origin.latitude)
+    else:
+        lat = ''
+    if origin.longitude is not None:
+        lon = '{0:.5f}'.format(origin.longitude)
+    else:
+        lon = ''
+    if origin.depth is not None:
+        depth = '{0:.3f}'.format(origin.depth / 1000.0)
+    else:
+        depth = ''
+    evtime = origin.time
+    if not evtime:
+        return
+
+    # Cope with differences in event uncertainty naming
+    if origin.quality and origin.quality['standard_error']:
+        timerms = '{0:.3f}'.format(origin.quality['standard_error'])
+    else:
+        timerms = '0.000'
+
+    ha_origin_line = (
+        " {0} {1}{2} {3}{4} {5}.{6} {7} {8} {9} {10} {11}H\n".format(
+            evtime.year, str(evtime.month).rjust(2), str(evtime.day).rjust(2),
+            str(evtime.hour).rjust(2), str(evtime.minute).rjust(2),
+            str(evtime.second).rjust(2), str(evtime.microsecond).ljust(3)[0:3],
+            lat.rjust(9), lon.rjust(10), depth.rjust(8), timerms.rjust(6),
+            " " * 19))
+
+    return ha_origin_line
 
 
 def _write_moment_tensor_line(focal_mechanism):
