@@ -445,7 +445,7 @@ def _write_sac(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
+def _internal_write_sac(trace, buf, byteorder="<", keep_sac_header=True):
     """
     Writes a single trace to an open file or file-like object
 
@@ -475,6 +475,5 @@ def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
         msg = "Invalid byte order. It must be either '<', '>', 0 or 1"
         raise ValueError(msg)
 
-    keep_sac_header = kwargs.get('keep_sac_header', True)
     sac = SACTrace.from_obspy_trace(trace, keep_sac_header)
     sac.write(buf, ascii=False, byteorder=byteorder)
