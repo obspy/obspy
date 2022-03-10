@@ -25,6 +25,8 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 - [ ] This PR is not directly related to an existing issue (which has no PR yet).
 - [ ] If the PR is making changes to documentation, docs pages can be built automatically.
       Just add the "build_docs" tag to this PR.
+      Docs will be served at [docs.obspy.org/pr/{branch_name}](https://docs.obspy.org/pr/) (do not use master branch).
+      Please post a link to the relevant piece of documentation.
 - [ ] If all tests including network modules (e.g. `clients.fdsn`) should be tested for the PR,
       just add the "test_network" tag to this PR.
 - [ ] All tests still pass.
