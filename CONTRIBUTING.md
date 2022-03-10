@@ -8,7 +8,7 @@ community process works in practice.
 * To directly propose changes, a bug fix or to add a new feature, please open a pull request (please read the information on this page and also check the points mentioned in our [pull request template](https://github.com/obspy/obspy/blob/master/.github/PULL_REQUEST_TEMPLATE.md))
 * If you have questions that you want ask before opening an issue/pull request on Github, you can contact a developer..
    * on our public gitter channel: https://gitter.im/obspy/obspy
-   * or writing to our [user's mailing list](https://github.com/obspy/obspy/wiki#obspy-users)
+   * or writing in our [forum](https://discourse.obspy.org/)
 
 ## Getting Started
 
