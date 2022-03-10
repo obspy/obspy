@@ -9,6 +9,8 @@ import sched
 import signal
 import sys
 
+import requests
+
 handlers = [TimedRotatingFileHandler('log.txt', 'D', 30, 5)]
 format_ = '%(levelname)s:%(name)s:%(asctime)s %(message)s'
 datefmt = '%Y-%m-%d %H:%M:%S'
@@ -26,7 +28,12 @@ T2 = 24 * 3600
 
 
 def sdeploy():
-    deploy()
+    try:
+        deploy()
+    except requests.exceptions.RequestException as ex:
+        log.error(str(ex))
+    except Exception:
+        log.exception('Unexpected error: continue')
     s.enter(T1, 1, sdeploy)
 
 
@@ -38,8 +45,6 @@ def sremove():
 def signal_term_handler(signal, frame):
     log.info('Received SIGTERM: Bye, bye')
     sys.exit(0)
-
-
 signal.signal(signal.SIGTERM, signal_term_handler)
 
 

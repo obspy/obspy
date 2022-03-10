@@ -49,9 +49,12 @@ def get_runs(event=None, time=0):
 
 def deploy_artifact(run, other_path=None, overwrite=False):
     if run['event'] == 'pull_request':
-        if len(run['pull_requests']) != 1:
-            raise DeployError(f"found {len(run['pull_requests'])} PRs")
-        pr = run['pull_requests'][0]['number']
+        #if len(run['pull_requests']) != 1:
+        #    raise DeployError(f"found {len(run['pull_requests'])} PRs")
+        #pr = run['pull_requests'][0]['number']
+        pr = run['head_branch']
+        if pr == 'master':
+            raise DeployError('Rename branch')
         path = (other_path or PATH['pr']).format(pr=pr)
         overwrite = False
     elif run['event'] == 'push':
@@ -59,8 +62,8 @@ def deploy_artifact(run, other_path=None, overwrite=False):
         path = (other_path or PATH['master'])
     elif run['event'] == 'release':
         pr = None
-        version = run['github_ref']
-        path = (other_path or PATH['archive']).fomat(v=version)
+        version = run['head_branch']
+        path = (other_path or PATH['archive']).format(v=version)
     else:
         raise DeployError(f"unexpected event {run['event']}")
     msg = (f"Check run {run['id']} triggered by {run['event']}, "
@@ -84,7 +87,7 @@ def deploy_artifact(run, other_path=None, overwrite=False):
         with z1.open('obspydoc.tar.xz') as z2:
             z2_data = BytesIO(z2.read())
     if os.path.exists(path):
-        if run['event'] == 'release':
+        if run['event'] == 'release' and not overwrite:
             raise DeployError(f'Release {version} already exists"')
         log.info('Remove old docs')
         shutil.rmtree(path)
@@ -93,8 +96,8 @@ def deploy_artifact(run, other_path=None, overwrite=False):
         tar.extractall(path)
     if run['event'] == 'release' and other_path is None:
         log.info('Update symlink')
-        os.remove(PATH['stable'])
-        os.symlink(path, PATH['stable'], True)
+        os.remove(PATH['stable'].rstrip('/'))
+        os.symlink(path.rstrip('/'), PATH['stable'].rstrip('/'), True)
     os.utime(path, (run['time'], run['time']))
     log.info('Done')
     return 'success'
@@ -106,13 +109,12 @@ def post_state(run, state, msg=None):
             'context': f"docs / deploy ({run['event']})"}
     if run['event'] == 'pull_request':
         try:
-            pr = run['pull_requests'][0]['number']
+            pr = run['head_branch']
         except IndexError:
             pass
         else:
             if msg is None:
                 msg = 'See Details link'
-            pr = run['pull_requests'][0]['number']
             data['target_url'] = URL.format(pr=pr)
     if msg:
         data['description'] = msg
