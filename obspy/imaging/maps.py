@@ -34,17 +34,6 @@ if not HAS_CARTOPY:
     warnings.warn(msg)
 
 
-_BASEMAP_RESOLUTIONS = {
-    '110m': 'l',
-    '50m': 'i',
-    '10m': 'f',
-    'c': 'c',
-    'l': 'l',
-    'i': 'i',
-    'h': 'h',
-    'f': 'f',
-}
-
 _CARTOPY_RESOLUTIONS = {
     'c': '110m',
     'l': '110m',
