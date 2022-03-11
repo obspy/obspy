@@ -32,10 +32,9 @@ Getting Started
 
       Use the source, Luke
 
-    * `Announcements <http://lists.obspy.org/cgi-bin/mailman/listinfo/obspy-announcements>`_
+    * `Announcements Mailing List <https://mail.python.org/mailman3/lists/obspy.python.org/>`_
       /
-      `User <http://lists.obspy.org/cgi-bin/mailman/listinfo/obspy-users>`_
-      mailing lists
+      `User Forum <https://discourse.obspy.org/>`_
 
       *Stay informed*
 
@@ -45,7 +44,7 @@ Getting Started
 
     * `FAQs on GitHub <https://github.com/obspy/obspy/issues?q=label%3Aquestion>`_
       /
-      `Mailing list <https://www.google.de/#q=site:http:%2F%2Flists.swapbytes.de%2Farchives%2Fobspy-users%2F>`_
+      `Search Forum <https://discourse.obspy.org/>`_
 
       *Frequently asked questions*
 
