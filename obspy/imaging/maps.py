@@ -168,7 +168,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                  resolution='110m', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
                  marker="o", title=None, colorbar_ticklabel_format=None,
-                 show=True, proj_kwargs=None, fig=None,
+                 show=True, proj_kwargs=None, ax=None,
                  **kwargs):  # @UnusedVariable
     """
     Creates a Cartopy plot with a data point scatter plot.
@@ -254,149 +254,18 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     else:
         datetimeplot = False
 
-    if fig is None:
-        fig = plt.figure()
-
-        # The colorbar should only be plotted if more then one event is
-        # present.
-        if colorbar is not None:
-            show_colorbar = colorbar
-        else:
-            if len(lons) > 1 and hasattr(color, "__len__") and \
-                    not isinstance(color, str):
-                show_colorbar = True
-            else:
-                show_colorbar = False
-
-        if projection == "local":
-            ax_x0, ax_width = 0.10, 0.80
-        elif projection == "global":
-            ax_x0, ax_width = 0.01, 0.98
-        else:
-            ax_x0, ax_width = 0.05, 0.90
-
-        proj_kwargs = proj_kwargs or {}
-        if projection == 'global':
-            proj_kwargs['central_longitude'] = np.mean(lons)
-            proj = ccrs.Mollweide(**proj_kwargs)
-        elif projection == 'ortho':
-            proj_kwargs['central_latitude'] = np.mean(lats)
-            proj_kwargs['central_longitude'] = mean_longitude(lons)
-            proj = ccrs.Orthographic(**proj_kwargs)
-        elif projection == 'local':
-            if min(lons) < -150 and max(lons) > 150:
-                max_lons = max(np.array(lons) % 360)
-                min_lons = min(np.array(lons) % 360)
-            else:
-                max_lons = max(lons)
-                min_lons = min(lons)
-            lat_0 = max(lats) / 2. + min(lats) / 2.
-            lon_0 = max_lons / 2. + min_lons / 2.
-            if lon_0 > 180:
-                lon_0 -= 360
-            deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
-            deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
-            if len(lats) > 1:
-                height = (max(lats) - min(lats)) * deg2m_lat
-                width = (max_lons - min_lons) * deg2m_lon
-                margin = 0.2 * (width + height)
-                height += margin
-                width += margin
-            else:
-                height = 2.0 * deg2m_lat
-                width = 5.0 * deg2m_lon
-            # Do intelligent aspect calculation for local projection
-            # adjust to figure dimensions
-            w, h = fig.get_size_inches()
-            aspect = w / h
-            if show_colorbar:
-                aspect *= 1.2
-            if width / height < aspect:
-                width = height * aspect
-            else:
-                height = width / aspect
-
-            proj_kwargs['central_latitude'] = lat_0
-            proj_kwargs['central_longitude'] = lon_0
-            proj_kwargs['standard_parallels'] = [lat_0, lat_0]
-            proj = ccrs.AlbersEqualArea(**proj_kwargs)
-
-        # User-supplied projection.
-        elif isinstance(projection, type):
-            if 'central_longitude' in proj_kwargs:
-                if proj_kwargs['central_longitude'] == 'auto':
-                    proj_kwargs['central_longitude'] = mean_longitude(lons)
-            if 'central_latitude' in proj_kwargs:
-                if proj_kwargs['central_latitude'] == 'auto':
-                    proj_kwargs['central_latitude'] = np.mean(lats)
-            if 'pole_longitude' in proj_kwargs:
-                if proj_kwargs['pole_longitude'] == 'auto':
-                    proj_kwargs['pole_longitude'] = np.mean(lons)
-            if 'pole_latitude' in proj_kwargs:
-                if proj_kwargs['pole_latitude'] == 'auto':
-                    proj_kwargs['pole_latitude'] = np.mean(lats)
-
-            proj = projection(**proj_kwargs)
-
-        else:
-            msg = "Projection '%s' not supported." % projection
-            raise ValueError(msg)
-
-        if show_colorbar:
-            map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77],
-                                  projection=proj)
-            cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
-            plt.sca(map_ax)
-        else:
-            ax_y0, ax_height = 0.05, 0.85
-            if projection == "local":
-                ax_y0 += 0.05
-                ax_height -= 0.05
-            map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height],
-                                  projection=proj)
-
-        if projection == 'local':
-            x0, y0 = proj.transform_point(lon_0, lat_0, proj.as_geodetic())
-            map_ax.set_xlim(x0 - width / 2, x0 + width / 2)
-            map_ax.set_ylim(y0 - height / 2, y0 + height / 2)
-        else:
-            map_ax.set_global()
-
-        # Pick features at specified resolution.
-        resolution = _CARTOPY_RESOLUTIONS[resolution]
-        try:
-            borders, land, ocean = _CARTOPY_FEATURES[resolution]
-        except KeyError:
-            borders = cfeature.NaturalEarthFeature(
-                cfeature.BORDERS.category, cfeature.BORDERS.name, resolution,
-                edgecolor='none', facecolor='none')
-            land = cfeature.NaturalEarthFeature(
-                cfeature.LAND.category, cfeature.LAND.name, resolution,
-                edgecolor='face', facecolor='none')
-            ocean = cfeature.NaturalEarthFeature(
-                cfeature.OCEAN.category, cfeature.OCEAN.name, resolution,
-                edgecolor='face', facecolor='none')
-            _CARTOPY_FEATURES[resolution] = (borders, land, ocean)
-
-        # Draw coast lines, country boundaries, fill continents.
-        map_ax.set_facecolor(water_fill_color)
-        map_ax.add_feature(ocean, facecolor=water_fill_color)
-        map_ax.add_feature(land, facecolor=continent_fill_color)
-        map_ax.add_feature(borders, edgecolor='0.75')
-        map_ax.coastlines(resolution=resolution, color='0.4')
-
-        # Draw grid lines - TODO: draw_labels=True doesn't work yet.
-        if projection == 'local':
-            map_ax.gridlines()
-        else:
-            # Draw lat/lon grid lines every 30 degrees.
-            map_ax.gridlines(xlocs=range(-180, 181, 30),
-                             ylocs=range(-90, 91, 30))
-
-        fig.bmap = map_ax
+    if ax is None:
+        fig, map_ax, cm_ax, show_colorbar = _basic_setup(
+            lons=lons, lats=lats, size=size, color=color, labels=None,
+            projection='global', resolution='110m', continent_fill_color='0.8',
+            water_fill_color='1.0', colormap=None, colorbar=None, marker="o",
+            title=None, colorbar_ticklabel_format=None,
+            proj_kwargs=None)
 
     else:
-        map_ax = fig.bmap
+        fig = ax.figure
+        map_ax = ax
+        cm_ax = None
         show_colorbar = False
 
     # Plot labels
@@ -414,7 +283,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                              transform=ccrs.PlateCarree())
 
     if title:
-        plt.suptitle(title)
+        fig.suptitle(title)
 
     # Only show the colorbar for more than one event.
     if show_colorbar:
@@ -448,6 +317,151 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         plt.show()
 
     return fig
+
+
+def _basic_setup(
+        lons, lats, size, color, labels, projection, resolution,
+        continent_fill_color, water_fill_color, colormap, colorbar, marker,
+        title, colorbar_ticklabel_format, proj_kwargs):
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure()
+
+    # The colorbar should only be plotted if more then one event is
+    # present.
+    if colorbar is not None:
+        show_colorbar = colorbar
+    else:
+        if len(lons) > 1 and hasattr(color, "__len__") and \
+                not isinstance(color, str):
+            show_colorbar = True
+        else:
+            show_colorbar = False
+
+    if projection == "local":
+        ax_x0, ax_width = 0.10, 0.80
+    elif projection == "global":
+        ax_x0, ax_width = 0.01, 0.98
+    else:
+        ax_x0, ax_width = 0.05, 0.90
+
+    proj_kwargs = proj_kwargs or {}
+    if projection == 'global':
+        proj_kwargs['central_longitude'] = np.mean(lons)
+        proj = ccrs.Mollweide(**proj_kwargs)
+    elif projection == 'ortho':
+        proj_kwargs['central_latitude'] = np.mean(lats)
+        proj_kwargs['central_longitude'] = mean_longitude(lons)
+        proj = ccrs.Orthographic(**proj_kwargs)
+    elif projection == 'local':
+        if min(lons) < -150 and max(lons) > 150:
+            max_lons = max(np.array(lons) % 360)
+            min_lons = min(np.array(lons) % 360)
+        else:
+            max_lons = max(lons)
+            min_lons = min(lons)
+        lat_0 = max(lats) / 2. + min(lats) / 2.
+        lon_0 = max_lons / 2. + min_lons / 2.
+        if lon_0 > 180:
+            lon_0 -= 360
+        deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
+        deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
+        if len(lats) > 1:
+            height = (max(lats) - min(lats)) * deg2m_lat
+            width = (max_lons - min_lons) * deg2m_lon
+            margin = 0.2 * (width + height)
+            height += margin
+            width += margin
+        else:
+            height = 2.0 * deg2m_lat
+            width = 5.0 * deg2m_lon
+        # Do intelligent aspect calculation for local projection
+        # adjust to figure dimensions
+        w, h = fig.get_size_inches()
+        aspect = w / h
+        if show_colorbar:
+            aspect *= 1.2
+        if width / height < aspect:
+            width = height * aspect
+        else:
+            height = width / aspect
+
+        proj_kwargs['central_latitude'] = lat_0
+        proj_kwargs['central_longitude'] = lon_0
+        proj_kwargs['standard_parallels'] = [lat_0, lat_0]
+        proj = ccrs.AlbersEqualArea(**proj_kwargs)
+
+    # User-supplied projection.
+    elif isinstance(projection, type):
+        if 'central_longitude' in proj_kwargs:
+            if proj_kwargs['central_longitude'] == 'auto':
+                proj_kwargs['central_longitude'] = mean_longitude(lons)
+        if 'central_latitude' in proj_kwargs:
+            if proj_kwargs['central_latitude'] == 'auto':
+                proj_kwargs['central_latitude'] = np.mean(lats)
+        if 'pole_longitude' in proj_kwargs:
+            if proj_kwargs['pole_longitude'] == 'auto':
+                proj_kwargs['pole_longitude'] = np.mean(lons)
+        if 'pole_latitude' in proj_kwargs:
+            if proj_kwargs['pole_latitude'] == 'auto':
+                proj_kwargs['pole_latitude'] = np.mean(lats)
+
+        proj = projection(**proj_kwargs)
+
+    else:
+        msg = "Projection '%s' not supported." % projection
+        raise ValueError(msg)
+
+    if show_colorbar:
+        map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77], projection=proj)
+        cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
+        plt.sca(map_ax)
+    else:
+        ax_y0, ax_height = 0.05, 0.85
+        if projection == "local":
+            ax_y0 += 0.05
+            ax_height -= 0.05
+        map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height],
+                              projection=proj)
+
+    if projection == 'local':
+        x0, y0 = proj.transform_point(lon_0, lat_0, proj.as_geodetic())
+        map_ax.set_xlim(x0 - width / 2, x0 + width / 2)
+        map_ax.set_ylim(y0 - height / 2, y0 + height / 2)
+    else:
+        map_ax.set_global()
+
+    # Pick features at specified resolution.
+    resolution = _CARTOPY_RESOLUTIONS[resolution]
+    try:
+        borders, land, ocean = _CARTOPY_FEATURES[resolution]
+    except KeyError:
+        borders = cfeature.NaturalEarthFeature(
+            cfeature.BORDERS.category, cfeature.BORDERS.name, resolution,
+            edgecolor='none', facecolor='none')
+        land = cfeature.NaturalEarthFeature(
+            cfeature.LAND.category, cfeature.LAND.name, resolution,
+            edgecolor='face', facecolor='none')
+        ocean = cfeature.NaturalEarthFeature(
+            cfeature.OCEAN.category, cfeature.OCEAN.name, resolution,
+            edgecolor='face', facecolor='none')
+        _CARTOPY_FEATURES[resolution] = (borders, land, ocean)
+
+    # Draw coast lines, country boundaries, fill continents.
+    map_ax.set_facecolor(water_fill_color)
+    map_ax.add_feature(ocean, facecolor=water_fill_color)
+    map_ax.add_feature(land, facecolor=continent_fill_color)
+    map_ax.add_feature(borders, edgecolor='0.75')
+    map_ax.coastlines(resolution=resolution, color='0.4')
+
+    # Draw grid lines - TODO: draw_labels=True doesn't work yet.
+    if projection == 'local':
+        map_ax.gridlines()
+    else:
+        # Draw lat/lon grid lines every 30 degrees.
+        map_ax.gridlines(xlocs=range(-180, 181, 30), ylocs=range(-90, 91, 30))
+
+    return fig, map_ax, cm_ax, show_colorbar
 
 
 def plot_map(method, *args, **kwargs):
