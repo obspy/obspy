@@ -12,6 +12,7 @@ import datetime
 import warnings
 
 import numpy as np
+import matplotlib
 from matplotlib.colorbar import Colorbar
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
 from matplotlib import patheffects
@@ -20,9 +21,11 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
 
 from obspy import UTCDateTime
 from obspy.core.util import CARTOPY_VERSION
+from obspy.core.util.decorator import deprecated_keywords
 from obspy.geodetics.base import mean_longitude
 
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
+    import cartopy
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
     HAS_CARTOPY = True
@@ -51,33 +54,34 @@ if HAS_CARTOPY:
     }
 
 
+@deprecated_keywords({'bmap': None})
 def _plot_cartopy_into_axes(
         ax, lons, lats, size, color, bmap=None, labels=None,
         projection='global', resolution='l', continent_fill_color='0.8',
         water_fill_color='1.0', colormap=None, marker="o", title=None,
         adjust_aspect_to_colorbar=False, **kwargs):  # @UnusedVariable
+
     """
     Creates a (or adds to existing) cartopy plot with a data point scatter
     plot in given axes.
 
     See :func:`plot_cartopy` for details on most args/kwargs.
 
-    :type ax: :class:`matplotlib.axes.Axes`
+
+    :type ax: :class:`matplotlib.axes.Axes` or
+        :class:`cartopy.mpl.geoaxes.GeoAxes`
     :param ax: Existing matplotlib axes instance, optionally with previous
-        cartopy plot (see `bmap` kwarg).
+        cartopy plot. If a cartopy GeoAxes is provided, most setup steps will
+        be skipped.
     :type bmap: :class:`matplotlib.axes.Axes`
-    :param bmap: Axes instance in provided matplotlib Axes `ax` to reuse. If
-        specified, any kwargs regarding the cartopy plot setup will be ignored
-        (i.e.  `projection`, `resolution`, `continent_fill_color`,
-        `water_fill_color`).
+    :param bmap: Deprecated and unused. Whether `ax` is a plain matplotlib Axes
+        or a cartopy GeoAxes will determine if cartopy related setup on the
+        axis is skipped (setting up projection etc.).
     :rtype: :class:`matplotlib.collections.PathCollection`
     :returns: Matplotlib path collection (e.g. to reuse for colorbars).
     """
 
-    fig = ax.figure
-    fig.bmap = ax
-
-    if not isinstance(getattr(ax, 'projection'), ccrs.Projection):
+    if not isinstance(ax, cartopy.mpl.geoaxes.GeoAxes):
         if projection in ['global', 'ortho']:
             pass
         elif projection == 'local':
@@ -93,8 +97,8 @@ def _plot_cartopy_into_axes(
         else:
             msg = "Projection '%s' not supported." % projection
             raise ValueError(msg)
-        ax.gridlines()
-        ax.coastlines()
+        # ax.gridlines()
+        # ax.coastlines()
         # draw coast lines, country boundaries, fill continents.
         # ax.set_facecolor(water_fill_color)
         # newer matplotlib errors out if called with empty coastline data (no
@@ -109,9 +113,9 @@ def _plot_cartopy_into_axes(
         # draw lat/lon grid lines every 30 degrees.
         # bmap.drawmeridians(np.arange(-180, 180, 30))
         # bmap.drawparallels(np.arange(-90, 90, 30))
-    ax.stock_img()
-    ax.gridlines()
-    ax.coastlines()
+        ax.stock_img()
+        ax.gridlines()
+        ax.coastlines()
 
     # compute the native bmap projection coordinates for events.
     # x, y = bmap(lons, lats)
@@ -164,6 +168,7 @@ def _plot_cartopy_into_axes(
     return scatter
 
 
+@deprecated_keywords({'fig': 'ax'})
 def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                  resolution='110m', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
@@ -245,6 +250,11 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         this function calculate the latitude or longitude as it would for other
         projections. Some arguments may be ignored if you choose one of the
         built-in ``projection`` choices.
+    :type ax: :class:`matplotlib.axes.Axes` or
+        :class:`cartopy.mpl.geoaxes.GeoAxes`
+    :param ax: Existing matplotlib axes instance, optionally with previous
+        cartopy plot. If a cartopy GeoAxes is provided, most setup steps will
+        be skipped.
     """
     import matplotlib.pyplot as plt
 
@@ -263,8 +273,12 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
             proj_kwargs=None)
 
     else:
-        fig = ax.figure
-        map_ax = ax
+        if isinstance(ax, matplotlib.figure.Figure):
+            fig = ax
+            map_ax = fig.axes[0]
+        else:
+            fig = ax.figure
+            map_ax = ax
         cm_ax = None
         show_colorbar = False
 
