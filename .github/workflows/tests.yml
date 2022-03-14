@@ -186,6 +186,12 @@ jobs:
         if: runner.os == 'Linux' && contains(matrix.python-version, '3.8')
         run: conda install libffi=3.3.*
 
+      # try to remove when min dep versions are upped
+      - name: remove cartopy for mindepversion MacOS
+        shell: bash -l {0}
+        if: startsWith(matrix.os, 'macos') && contains(matrix.python-version, '3.7') && contains(matrix.options, 'mindepversion')
+        run: conda uninstall --force cartopy shapely
+
       - name: run tests
         id: tests
         shell: bash -l {0}
