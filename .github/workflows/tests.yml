@@ -92,16 +92,23 @@ jobs:
         include:
           # The mindep option indicates optional dependencies should not be installed.
           - os: ubuntu-latest
-            python-version: '3.7'
+            python-version: '3.10'
             options: default mindep
+          # The mindepversion option indicates dependencies should be installed with minimal supported version.
+          - os: ubuntu-latest
+            python-version: '3.7'
+            options: default mindepversion
           - os: macos-latest
             python-version: '3.7'
-            options: default mindep
+            options: default mindepversion
           - os: windows-latest
             python-version: '3.7'
-            options: default mindep
+            options: default mindepversion
           # For push events and for test_network labels, options is set to 'network' and runs for network tests are added.
           # Otherwise these include statements do nothing, because options='default' is already present in matrix.
+          - os: ubuntu-latest
+            python-version: '3.7'
+            options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network mindepversion' || 'default' }}
           - os: ubuntu-latest
             python-version: '3.10'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
@@ -127,9 +134,9 @@ jobs:
       # set path of test environment for caching
       prefix: ${{ startsWith(matrix.os, 'ubuntu') && '/usr/share/miniconda3/envs/test' || startsWith(matrix.os, 'macos') && '/Users/runner/miniconda3/envs/test' || startsWith(matrix.os, 'windows') && 'C:\Miniconda3\envs\test' }}
       # set individual cache key
-      cache_key: ${{ matrix.os }}-py${{ matrix.python-version }}-${{ contains(matrix.options, 'mindep') }}
+      cache_key: ${{ matrix.os }}-py${{ matrix.python-version }}-${{ contains(matrix.options, 'mindep') }}-${{ contains(matrix.options, 'mindepversion') }}
       # set conda environment file with dependencies
-      env_file: .github/test${{ contains(matrix.options, 'mindep') && '_mindep' || '' }}_conda_env.yml
+      env_file: .github/test${{ contains(matrix.options, 'mindepversion') && '_mindepversion' || contains(matrix.options, 'mindep') && '_mindep' || '' }}_conda_env.yml
       # set additional runtest options (--keep-images, --network, -W error)
       runtest_options: ${{ github.event_name == 'pull_request' && '--keep-images' || '' }} ${{ contains(matrix.options, 'network') && '--network' || '' }} ${{ contains(matrix.options, 'warnings') && '-W error' || '' }}
     steps:
@@ -178,6 +185,12 @@ jobs:
         shell: bash -l {0}
         if: runner.os == 'Linux' && contains(matrix.python-version, '3.8')
         run: conda install libffi=3.3.*
+
+      # try to remove when min dep versions are upped
+      - name: remove cartopy for mindepversion MacOS
+        shell: bash -l {0}
+        if: startsWith(matrix.os, 'macos') && contains(matrix.python-version, '3.7') && contains(matrix.options, 'mindepversion')
+        run: conda uninstall --force cartopy shapely
 
       - name: run tests
         id: tests
