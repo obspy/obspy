@@ -195,7 +195,8 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
 
         _request_args = {"url": url,
                          "headers": {"User-Agent": self._user_agent},
-                         "params": params}
+                         "params": params,
+                         "timeout": self._timeout}
 
         # Stream to file - no need to keep it in memory for large files.
         if filename:
