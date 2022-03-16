@@ -26,7 +26,7 @@ pytestmark = pytest.mark.network
 
 class EIDAWSRoutingClientTestCase(unittest.TestCase):
     def setUp(self):
-        self.client = EIDAWSRoutingClient()
+        self.client = EIDAWSRoutingClient(timeout=20)
         self._cls = ("obspy.clients.fdsn.routing.eidaws_routing_client."
                      "EIDAWSRoutingClient")
 
