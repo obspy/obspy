@@ -134,7 +134,6 @@ ENTRY_POINTS = {
         'obspy-reftek-rescue = obspy.scripts.reftekrescue:main',
         'obspy-print = obspy.scripts._print:main',
         'obspy-sds-report = obspy.scripts.sds_html_report:main',
-        'obspy-indexer = obspy.db.scripts.indexer:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',
         'obspy-mopad = obspy.imaging.scripts.mopad:main',
@@ -520,10 +519,6 @@ ENTRY_POINTS = {
         'zdetect = obspy.signal.trigger:z_detect',
         'recstaltapy = obspy.signal.trigger:recursive_sta_lta_py',
         'classicstaltapy = obspy.signal.trigger:classic_sta_lta_py',
-        ],
-    'obspy.db.feature': [
-        'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
-        'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
         ],
     }
 
