@@ -18,7 +18,7 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 
 ### Why was it initiated?  Any relevant Issues?
 
-*Please fill in*
+*Please fill in (link relevant issues with "see #123456", mark issues that get resolved with "fixes #12345")*
 
 ### PR Checklist
 - [ ] Correct base branch selected? `master` for new features, `maintenance_...` for bug fixes
