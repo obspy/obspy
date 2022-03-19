@@ -21,7 +21,8 @@ from obspy.core.util.obspy_types import (ObsPyException, ZeroSamplingRate,
 from obspy.geodetics import inside_geobounds
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
-                   Longitude, _unified_content_strings, _textwrap, Site)
+                   Longitude, _unified_content_strings, _textwrap, Site,
+                  _unified_content_strings_expanded)
 
 
 class Station(BaseNode):
@@ -164,7 +165,7 @@ class Station(BaseNode):
                "\tChannel Count: {selected}/{total} (Selected/Total)\n"
                "\t{start_date} - {end_date}\n"
                "\tAccess: {restricted} {alternate_code}{historical_code}\n"
-               "\tLatitude: {lat:.2f}, Longitude: {lng:.2f}, "
+               "\tLatitude: {lat:.4f}, Longitude: {lng:.4f}, "
                "Elevation: {elevation:.1f} m\n")
         ret = ret.format(
             station_name=contents["stations"][0],
@@ -180,10 +181,12 @@ class Station(BaseNode):
             historical_code="historical Code: %s " % self.historical_code if
             self.historical_code else "")
         ret += "\tAvailable Channels:\n"
-        ret += "\n".join(_textwrap(
-            ", ".join(_unified_content_strings(contents["channels"])),
-            initial_indent="\t\t", subsequent_indent="\t\t",
-            expand_tabs=False))
+        #ret += "\n".join(_textwrap(
+        #    ", ".join(_unified_content_strings(contents["channels"])),
+        #    initial_indent="\t\t", subsequent_indent="\t\t",
+        #    expand_tabs=False))
+        for ele in _unified_content_strings_expanded(self.channels):
+            ret += "\t%s\n" % ele
         return ret
 
     def _repr_pretty_(self, p, cycle):
