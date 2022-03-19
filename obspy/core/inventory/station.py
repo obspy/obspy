@@ -21,8 +21,7 @@ from obspy.core.util.obspy_types import (ObsPyException, ZeroSamplingRate,
 from obspy.geodetics import inside_geobounds
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
-                   Longitude, _unified_content_strings, _textwrap, Site,
-                  _unified_content_strings_expanded)
+                   Longitude, Site, _unified_content_strings_expanded)
 
 
 class Station(BaseNode):
@@ -181,7 +180,7 @@ class Station(BaseNode):
             historical_code="historical Code: %s " % self.historical_code if
             self.historical_code else "")
         ret += "\tAvailable Channels:\n"
-        #ret += "\n".join(_textwrap(
+        # ret += "\n".join(_textwrap(
         #    ", ".join(_unified_content_strings(contents["channels"])),
         #    initial_indent="\t\t", subsequent_indent="\t\t",
         #    expand_tabs=False))
