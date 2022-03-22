@@ -1129,6 +1129,8 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
             # Magnitude for single trace / station computed from amplitude
             # if line[63:68].strip() != '':
             mag_residual = _float_conv(line[63:68])
+            if mag_residual is None:
+                mag_residual = 0
             # assoc_mag = new_event.magnitudes[0]
             assoc_mag = None
             for mag in new_event.magnitudes:
