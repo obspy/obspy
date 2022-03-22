@@ -76,7 +76,7 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     comment MEMBACH
     duration 230
     elevation 298
-    gpslastlock 2013-08-15T09:19:20.000Z
+    gpslastlock 2013-08-15T09:19:20.000000Z
     gpsstatus Present ON
     installedchan 4
     instrument New Etna
@@ -87,10 +87,10 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     nscans 6
     samplebytes 3
     serialnumber 4823
-    starttime 2013-08-15T09:20:28.000Z
+    starttime 2013-08-15T09:20:28.000000Z
     stnid MEMA
     temperature 76
-    triggertime 2013-08-15T09:20:34.600Z
+    triggertime 2013-08-15T09:20:34.600000Z
 
 The actual data is stored as :class:`numpy.ndarray` in the ``data`` attribute
 of each trace.

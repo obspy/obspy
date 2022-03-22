@@ -324,6 +324,7 @@ class TestWaveformPlugins:
                     os.remove(outfile[:-4] + '.QBN')
                     os.remove(outfile[:-4] + '.QHD')
 
+    @pytest.mark.filterwarnings('ignore:Detected non contiguous data array')
     def test_issue_193(self):
         """
         Test for issue #193: if non-contiguous array is written correctly.

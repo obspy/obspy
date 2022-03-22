@@ -1,0 +1,704 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+  <eventParameters publicID="smi:local/29023719-af89-47aa-997d-d43806233047">
+    <event publicID="smi:local/event/200828VEqeMv">
+      <preferredOriginID>smi:local/origin/200828zgnPN</preferredOriginID>
+      <type>earthquake</type>
+      <creationInfo>
+        <agencyID>RSES</agencyID>
+        <author>NLL</author>
+        <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+      </creationInfo>
+      <origin publicID="smi:local/origin/200828zgnPN">
+        <time>
+          <value>2020-08-28T06:26:43.312800Z</value>
+        </time>
+        <latitude>
+          <value>-32.39879</value>
+          <uncertainty>11.1</uncertainty>
+        </latitude>
+        <longitude>
+          <value>116.256529</value>
+          <uncertainty>34.1</uncertainty>
+        </longitude>
+        <depth>
+          <value>2583.0</value>
+          <uncertainty>43502</uncertainty>
+        </depth>
+        <methodID>smi:local/NonLinLoc</methodID>
+        <quality>
+          <usedPhaseCount>7</usedPhaseCount>
+          <associatedStationCount>4</associatedStationCount>
+          <standardError>0.800454</standardError>
+          <azimuthalGap>189.515</azimuthalGap>
+          <minimumDistance>0.4</minimumDistance>
+          <maximumDistance>2.3</maximumDistance>
+        </quality>
+        <type>hypocenter</type>
+        <evaluationMode>automatic</evaluationMode>
+        <evaluationStatus>preliminary</evaluationStatus>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+        <originUncertainty>
+          <preferredDescription>confidence ellipsoid</preferredDescription>
+          <minHorizontalUncertainty>16.8334</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>51.773</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>88.9492</azimuthMaxHorizontalUncertainty>
+          <confidenceEllipsoid>
+            <semiMajorAxisLength>98.4908</semiMajorAxisLength>
+            <semiMinorAxisLength>20.8133</semiMinorAxisLength>
+            <semiIntermediateAxisLength>33.0972</semiIntermediateAxisLength>
+            <majorAxisPlunge>53.6747</majorAxisPlunge>
+            <majorAxisAzimuth>88.5008</majorAxisAzimuth>
+            <majorAxisRotation>349.712</majorAxisRotation>
+          </confidenceEllipsoid>
+        </originUncertainty>
+        <arrival publicID="smi:local/ariv/200828ytWFBzLp">
+          <pickID>smi:local/pick/200828InLZwb5Z</pickID>
+          <phase>P</phase>
+          <azimuth>354.4160915071281</azimuth>
+          <distance>0.42246647564636314</distance>
+          <timeResidual>-0.0522</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/2008283MmQKhpi">
+          <pickID>smi:local/pick/200828gUv9zIP8</pickID>
+          <phase>S</phase>
+          <azimuth>354.4160915071281</azimuth>
+          <distance>0.42246647564636314</distance>
+          <timeResidual>0.0852</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/200828fXpvu7HZ">
+          <pickID>smi:local/pick/200828630le7jh</pickID>
+          <phase>S</phase>
+          <azimuth>123.92616576020531</azimuth>
+          <distance>1.417111860681429</distance>
+          <timeResidual>-0.0199</timeResidual>
+          <timeWeight>0.845</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/200828UO5DU4A4">
+          <pickID>smi:local/pick/200828NE9FYI0N</pickID>
+          <phase>P</phase>
+          <azimuth>12.380386585022352</azimuth>
+          <distance>1.8253308525626706</distance>
+          <timeResidual>2.3</timeResidual>
+          <timeWeight>0.657</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/200828JjMpe5UO">
+          <pickID>smi:local/pick/200828sRvnNVCE</pickID>
+          <phase>S</phase>
+          <azimuth>12.380386585022352</azimuth>
+          <distance>1.8253308525626706</distance>
+          <timeResidual>2.2924</timeResidual>
+          <timeWeight>0.598</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/200828Go6hye5P">
+          <pickID>smi:local/pick/200828Og8YtK9V</pickID>
+          <phase>P</phase>
+          <azimuth>164.92023072491142</azimuth>
+          <distance>2.2908311064979676</distance>
+          <timeResidual>0.9076</timeResidual>
+          <timeWeight>0.833</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/2008284QBH55tt">
+          <pickID>smi:local/pick/200828roCO7hnm</pickID>
+          <phase>S</phase>
+          <azimuth>164.92023072491142</azimuth>
+          <distance>2.2908311064979676</distance>
+          <timeResidual>-0.1472</timeResidual>
+          <timeWeight>0.607</timeWeight>
+        </arrival>
+      </origin>
+      <stationMagnitude publicID="smi:local/stamag/200828rkqx4NCu">
+        <originID>smi:local/origin/200828zgnPN</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828sTVTOEmk</amplitudeID>
+        <waveformID networkCode="AU" stationCode="MUN" locationCode="" channelCode="BHZ"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828CtwvnVuX">
+        <originID>smi:local/origin/200828zgnPN</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/2008284k59H6s6</amplitudeID>
+        <waveformID networkCode="AU" stationCode="MUN" locationCode="" channelCode="BHE"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828ZLJErFPp">
+        <originID>smi:local/origin/200828zgnPN</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828Yw5q4OeY</amplitudeID>
+        <waveformID networkCode="2P" stationCode="SWN15" locationCode="" channelCode="CHN"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828GpaAMG4j">
+        <originID>smi:local/origin/200828zgnPN</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828TC2zo8vU</amplitudeID>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHZ"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828Gt9GeXtL">
+        <originID>smi:local/origin/200828zgnPN</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828OGyGiZir</amplitudeID>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHE"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828Oq5hXaLV">
+        <originID>smi:local/origin/200828zgnPN</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828HfjobTrs</amplitudeID>
+        <waveformID networkCode="AU" stationCode="RKGY" locationCode="" channelCode="HHZ"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828LrbnqpPo">
+        <originID>smi:local/origin/200828zgnPN</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828x9txXA1o</amplitudeID>
+        <waveformID networkCode="AU" stationCode="RKGY" locationCode="" channelCode="HHE"></waveformID>
+      </stationMagnitude>
+      <pick publicID="smi:local/pick/200828InLZwb5Z">
+        <time>
+          <value>2020-08-28T06:26:51.179700Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="MUN" locationCode="" channelCode="BHZ"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>P</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828gUv9zIP8">
+        <time>
+          <value>2020-08-28T06:26:57.639700Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="MUN" locationCode="" channelCode="BHE"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>S</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828630le7jh">
+        <time>
+          <value>2020-08-28T06:27:25.319700Z</value>
+        </time>
+        <waveformID networkCode="2P" stationCode="SWN15" locationCode="" channelCode="CHN"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>S</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828NE9FYI0N">
+        <time>
+          <value>2020-08-28T06:27:16.499700Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHZ"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>P</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828sRvnNVCE">
+        <time>
+          <value>2020-08-28T06:27:40.819700Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHE"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>S</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828Og8YtK9V">
+        <time>
+          <value>2020-08-28T06:27:21.319700Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="RKGY" locationCode="" channelCode="HHZ"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>P</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828roCO7hnm">
+        <time>
+          <value>2020-08-28T06:27:48.739700Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="RKGY" locationCode="" channelCode="HHE"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>S</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <amplitude publicID="smi:local/amp/200828sTVTOEmk">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T06:26:51.179700Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828InLZwb5Z</pickID>
+        <waveformID networkCode="AU" stationCode="MUN" locationCode="" channelCode="BHZ"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/2008284k59H6s6">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T06:26:57.639700Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828gUv9zIP8</pickID>
+        <waveformID networkCode="AU" stationCode="MUN" locationCode="" channelCode="BHE"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828Yw5q4OeY">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T06:27:25.319700Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828630le7jh</pickID>
+        <waveformID networkCode="2P" stationCode="SWN15" locationCode="" channelCode="CHN"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828TC2zo8vU">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T06:27:16.499700Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828NE9FYI0N</pickID>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHZ"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828OGyGiZir">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T06:27:40.819700Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828sRvnNVCE</pickID>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHE"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828HfjobTrs">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T06:27:21.319700Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828Og8YtK9V</pickID>
+        <waveformID networkCode="AU" stationCode="RKGY" locationCode="" channelCode="HHZ"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828x9txXA1o">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T06:27:48.739700Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828roCO7hnm</pickID>
+        <waveformID networkCode="AU" stationCode="RKGY" locationCode="" channelCode="HHE"></waveformID>
+      </amplitude>
+    </event>
+    <event publicID="smi:local/event/200828otwrPi">
+      <preferredOriginID>smi:local/origin/200828jHoj6</preferredOriginID>
+      <type>earthquake</type>
+      <creationInfo>
+        <agencyID>RSES</agencyID>
+        <author>NLL</author>
+        <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+      </creationInfo>
+      <origin publicID="smi:local/origin/200828jHoj6">
+        <time>
+          <value>2020-08-28T22:47:16.255700Z</value>
+        </time>
+        <latitude>
+          <value>-30.343448</value>
+          <uncertainty>4.7</uncertainty>
+        </latitude>
+        <longitude>
+          <value>117.710643</value>
+          <uncertainty>4.0</uncertainty>
+        </longitude>
+        <depth>
+          <value>-1865.0</value>
+          <uncertainty>3306</uncertainty>
+        </depth>
+        <methodID>smi:local/NonLinLoc</methodID>
+        <quality>
+          <usedPhaseCount>6</usedPhaseCount>
+          <associatedStationCount>4</associatedStationCount>
+          <standardError>0.0699871</standardError>
+          <azimuthalGap>188.048</azimuthalGap>
+          <minimumDistance>0.0</minimumDistance>
+          <maximumDistance>4.1</maximumDistance>
+        </quality>
+        <type>hypocenter</type>
+        <evaluationMode>automatic</evaluationMode>
+        <evaluationStatus>preliminary</evaluationStatus>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+        <originUncertainty>
+          <preferredDescription>confidence ellipsoid</preferredDescription>
+          <minHorizontalUncertainty>6.06386</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>7.08297</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>9.7885</azimuthMaxHorizontalUncertainty>
+          <confidenceEllipsoid>
+            <semiMajorAxisLength>8.82439</semiMajorAxisLength>
+            <semiMinorAxisLength>5.87685</semiMinorAxisLength>
+            <semiIntermediateAxisLength>7.72098</semiIntermediateAxisLength>
+            <majorAxisPlunge>8.84374</majorAxisPlunge>
+            <majorAxisAzimuth>13.3335</majorAxisAzimuth>
+            <majorAxisRotation>109.69</majorAxisRotation>
+          </confidenceEllipsoid>
+        </originUncertainty>
+        <arrival publicID="smi:local/ariv/200828aTrdxIcs">
+          <pickID>smi:local/pick/200828LOQftw8s</pickID>
+          <phase>P</phase>
+          <azimuth>80.84250772351315</azimuth>
+          <distance>0.04743871572841928</distance>
+          <timeResidual>-0.0046</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/2008288pv4wK9X">
+          <pickID>smi:local/pick/200828d9gPd2i3</pickID>
+          <phase>S</phase>
+          <azimuth>80.84250772351315</azimuth>
+          <distance>0.04743871572841928</distance>
+          <timeResidual>-0.0</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/200828WFkjiliU">
+          <pickID>smi:local/pick/2008282Kx0TnVf</pickID>
+          <phase>S</phase>
+          <azimuth>132.76612386178118</azimuth>
+          <distance>0.5724736042196121</distance>
+          <timeResidual>0.199</timeResidual>
+          <timeWeight>0.274</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/2008288KONobwY">
+          <pickID>smi:local/pick/200828IYHE7Gqs</pickID>
+          <phase>P</phase>
+          <azimuth>252.38223071517234</azimuth>
+          <distance>0.9047593120376757</distance>
+          <timeResidual>0.2645</timeResidual>
+          <timeWeight>0.146</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/200828sv1Ol7nf">
+          <pickID>smi:local/pick/200828rbEbHcwp</pickID>
+          <phase>S</phase>
+          <azimuth>252.38223071517234</azimuth>
+          <distance>0.9047593120376757</distance>
+          <timeResidual>-0.1676</timeResidual>
+          <timeWeight>0.148</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/ariv/2008288OaSdzly">
+          <pickID>smi:local/pick/2008281aOTI1OE</pickID>
+          <phase>P</phase>
+          <azimuth>192.4782908781334</azimuth>
+          <distance>4.094688802679198</distance>
+          <timeResidual>-0.7859</timeResidual>
+          <timeWeight>0.293</timeWeight>
+        </arrival>
+      </origin>
+      <stationMagnitude publicID="smi:local/stamag/200828pbtHKyzV">
+        <originID>smi:local/origin/200828jHoj6</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828RwtoUt4j</amplitudeID>
+        <waveformID networkCode="AU" stationCode="BCON" locationCode="" channelCode="BHZ"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828IcYmpkia">
+        <originID>smi:local/origin/200828jHoj6</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828nDEo6mmj</amplitudeID>
+        <waveformID networkCode="AU" stationCode="BCON" locationCode="" channelCode="BHE"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828mGT7VuWX">
+        <originID>smi:local/origin/200828jHoj6</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828mfcltjj8</amplitudeID>
+        <waveformID networkCode="AU" stationCode="WATNG" locationCode="" channelCode="BHE"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828T01fDCDC">
+        <originID>smi:local/origin/200828jHoj6</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828y0lslJxs</amplitudeID>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHZ"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/2008287YCRbaiY">
+        <originID>smi:local/origin/200828jHoj6</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828HB7UWhdS</amplitudeID>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHE"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/stamag/200828s0AqPYni">
+        <originID>smi:local/origin/200828jHoj6</originID>
+        <mag>
+          <value>2.0</value>
+        </mag>
+        <type>mb</type>
+        <amplitudeID>smi:local/amp/200828Stp8jRxp</amplitudeID>
+        <waveformID networkCode="2P" stationCode="SWN23" locationCode="" channelCode="CHZ"></waveformID>
+      </stationMagnitude>
+      <pick publicID="smi:local/pick/200828LOQftw8s">
+        <time>
+          <value>2020-08-28T22:47:17.760000Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="BCON" locationCode="" channelCode="BHZ"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>P</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828d9gPd2i3">
+        <time>
+          <value>2020-08-28T22:47:18.960000Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="BCON" locationCode="" channelCode="BHE"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>S</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/2008282Kx0TnVf">
+        <time>
+          <value>2020-08-28T22:47:35.540000Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="WATNG" locationCode="" channelCode="BHE"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>S</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828IYHE7Gqs">
+        <time>
+          <value>2020-08-28T22:47:33.120000Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHZ"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>P</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/200828rbEbHcwp">
+        <time>
+          <value>2020-08-28T22:47:45.840000Z</value>
+        </time>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHE"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>S</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <pick publicID="smi:local/pick/2008281aOTI1OE">
+        <time>
+          <value>2020-08-28T22:48:20.320000Z</value>
+        </time>
+        <waveformID networkCode="2P" stationCode="SWN23" locationCode="" channelCode="CHZ"></waveformID>
+        <methodID>smi:local/eqt</methodID>
+        <phaseHint>P</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>NLL</author>
+          <creationTime>2022-01-21T10:59:21.926186Z</creationTime>
+        </creationInfo>
+      </pick>
+      <amplitude publicID="smi:local/amp/200828RwtoUt4j">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T22:47:17.760000Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828LOQftw8s</pickID>
+        <waveformID networkCode="AU" stationCode="BCON" locationCode="" channelCode="BHZ"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828nDEo6mmj">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T22:47:18.960000Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828d9gPd2i3</pickID>
+        <waveformID networkCode="AU" stationCode="BCON" locationCode="" channelCode="BHE"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828mfcltjj8">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T22:47:35.540000Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/2008282Kx0TnVf</pickID>
+        <waveformID networkCode="AU" stationCode="WATNG" locationCode="" channelCode="BHE"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828y0lslJxs">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T22:47:33.120000Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828IYHE7Gqs</pickID>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHZ"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828HB7UWhdS">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T22:47:45.840000Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/200828rbEbHcwp</pickID>
+        <waveformID networkCode="AU" stationCode="BLDU" locationCode="" channelCode="BHE"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/amp/200828Stp8jRxp">
+        <genericAmplitude>
+          <value>1.0</value>
+        </genericAmplitude>
+        <type>mb</type>
+        <snr>3.0</snr>
+        <timeWindow>
+          <reference>2020-08-28T22:48:20.320000Z</reference>
+          <begin>-3.0</begin>
+          <end>3.0</end>
+        </timeWindow>
+        <pickID>smi:local/pick/2008281aOTI1OE</pickID>
+        <waveformID networkCode="2P" stationCode="SWN23" locationCode="" channelCode="CHZ"></waveformID>
+      </amplitude>
+    </event>
+  </eventParameters>
+</q:quakeml>

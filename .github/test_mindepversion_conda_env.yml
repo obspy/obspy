@@ -4,11 +4,11 @@ channels:
   - defaults
 dependencies:
   # obspy
+  - numpy=1.15
+  - scipy=1.1
+  - matplotlib=3.2
   - decorator
   - lxml
-  - matplotlib
-  - numpy
-  - scipy
   - requests
   - setuptools
   - sqlalchemy
@@ -18,9 +18,7 @@ dependencies:
   - pyshp
   # tests
   - packaging
-  - pip
-  - pip:
-    - pytest-json-report
   - pyproj
   - pytest
   - pytest-cov
+  - pytest-json-report >= 1.4

@@ -8,7 +8,7 @@ community process works in practice.
 * To directly propose changes, a bug fix or to add a new feature, please open a pull request (please read the information on this page and also check the points mentioned in our [pull request template](https://github.com/obspy/obspy/blob/master/.github/PULL_REQUEST_TEMPLATE.md))
 * If you have questions that you want ask before opening an issue/pull request on Github, you can contact a developer..
    * on our public gitter channel: https://gitter.im/obspy/obspy
-   * or writing to our [user's mailing list](https://github.com/obspy/obspy/wiki#obspy-users)
+   * or writing in our [forum](https://discourse.obspy.org/)
 
 ## Getting Started
 
@@ -36,9 +36,9 @@ Please make sure to select the correct base branch (`master` vs. `maintenance_x.
 
 If your PR is adding a new submodule, please go through the [to-do items for new submodules in the wiki](https://github.com/obspy/obspy/wiki/How-to%3A-add-a-new-submodule).
 
-If you want to request an automated build of ObsPy's API docs for your PR, simply include the magic string `+DOCS` somewhere in the PR's comments. Once finished, the docs build will show up in the PR's review/commit status section alongside the results from Continuous Integration (PR docs builds can be looked up [here](http://docs.obspy.org/pull-requests/)).
+If you want to request an automated build of ObsPy's API docs for your PR, simply add the `build_docs` label in the PR. Once finished, the docs build will show up in the PR's review/commit status section alongside the results from Continuous Integration (PR docs builds can be looked up [here](http://docs.obspy.org/pr/)).
 
-If any specific networking modules should be tested for the PR, e.g. when proposing changes to the FDSN client module, please include a magic string like e.g. `+TESTS:clients.fdsn` somewhere in the PR's comments. Multiple modules can be comma separated (e.g. `+TESTS:clients.fdsn,clients.iris`) or put in separate `+TESTS:...` strings, which will be accumulated across all of the PR's comments. To run *all* modules' test suites, include `+TESTS:ALL` somewhere in a comment.
+If any specific networking modules should be tested for the PR, e.g. when proposing changes to the FDSN client module, please add the `test_network` label to the PR.
 
 **All the submitted pieces including potential data must be compatible with the LGPLv3 license and will be LGPLv3 licensed as soon as they are part of ObsPy. Sending a pull request implies that you agree with this.**
 
@@ -48,13 +48,13 @@ Additionally take care to not add big files. Even for tests we generally only ac
 
 If you want to ask a question about a specific ObsPy aspect, please first of all..
 
+ * search the [forum](discourse.obspy.org), e.g.
+   [searching for term "mseed" via Google with search string "mseed site:discourse.obspy.org"](
+    https://www.google.com/search?q=mseed+site:discourse.obspy.org)
  * search through [Github issues tagged as "question"](https://github.com/obspy/obspy/issues?q=label%3Aquestion)
    (you can add more search terms in the search box, e.g.
    [search for Mini SEED related questions with additional search term "mseed"](
     https://github.com/obspy/obspy/issues?utf8=%E2%9C%93&q=label%3Aquestion+mseed))
- * search the [obspy-users] mailing list archives, e.g.
-   [searching for term "mseed" via Google with search string "mseed site:http://lists.swapbytes.de/archives/obspy-users/"](
-    https://www.google.de/#q=mseed+site:http:%2F%2Flists.swapbytes.de%2Farchives%2Fobspy-users%2F)
 
 If you want to post a problem/bug, to help us understand and resolve your issue
 please check that you have provided the information below:

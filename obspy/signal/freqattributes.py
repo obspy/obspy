@@ -320,7 +320,7 @@ def log_spaced_filterbank_matrix(p, n, fs, w):
     # bugfix for #70 - scipy.sparse.csr_matrix() delivers sometimes a
     # transposed matrix depending on the installed NumPy version - using
     # scipy.sparse.coo_matrix() ensures compatibility with old NumPy versions
-    xx = sparse.coo_matrix((v, (c, r))).transpose().todense()
+    xx = np.array(sparse.coo_matrix((v, (c, r))).transpose().todense())
     return xx, mn - 1, mx - 1
 
 
@@ -355,7 +355,7 @@ def log_cepstrum(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     ath = np.sqrt(pth)
     # h1 = np.transpose(np.array([[ath] * int(b + 1 - a)]))
     # h2 = m * abs(f[a - 1:b, :])
-    y = np.log(np.maximum(m * abs(f[a - 1:b, :]), ath))
+    y = np.log(np.maximum(m @ abs(f[a - 1:b, :]), ath))
     z = util.rdct(y)
     z = z[1:, :]
     # nc = nc + 1

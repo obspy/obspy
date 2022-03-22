@@ -1378,20 +1378,18 @@ class Response(ComparingObject):
                 min_f_avail = min(f)
                 max_f_avail = max(f)
 
-                # Allow interpolation for at most two samples.
-                _d = np.abs(np.diff(f))
-                _d = _d[_d > 0].min() * 2
-                min_f_avail -= _d
-                max_f_avail += _d
-
                 if min_f < min_f_avail or max_f > max_f_avail:
                     msg = (
-                        "Cannot calculate the response as it contains a "
+                        "The response contains a "
                         "response list stage with frequencies only from "
                         "%.4f - %.4f Hz. You are requesting a response from "
-                        "%.4f - %.4f Hz.")
-                    raise ValueError(msg % (min_f_avail, max_f_avail, min_f,
-                                            max_f))
+                        "%.4f - %.4f Hz. The calculated response will contain "
+                        "extrapolation beyond the frequency band constrained "
+                        "by the response list stage. Please consider "
+                        "adjusting 'pre_filt' and/or 'water_level' during "
+                        "response removal accordingly.")
+                    warnings.warn(
+                        msg % (min_f_avail, max_f_avail, min_f, max_f))
 
                 amp = scipy.interpolate.InterpolatedUnivariateSpline(
                     f, amp, k=3)(frequencies)

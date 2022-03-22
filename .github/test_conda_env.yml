@@ -12,11 +12,13 @@ dependencies:
   - requests
   - setuptools
   - sqlalchemy
+  # soft dependencies
+  - cartopy
+  - geographiclib
+  - pyshp
   # tests
   - packaging
-  - pip
-  - pip:
-    - pytest-json-report
   - pyproj
   - pytest
   - pytest-cov
+  - pytest-json-report >= 1.4

@@ -33,7 +33,7 @@ from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
-from obspy.core.util import AttribDict, NUMPY_VERSION
+from obspy.core.util import AttribDict
 from obspy.core.util.base import MATPLOTLIB_VERSION
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.imaging.cm import obspy_sequential
@@ -1442,21 +1442,14 @@ class PPSD(object):
             ppsd.ppsd_version = PPSD._CURRENT_VERSION
             return ppsd
 
-        # XXX get rid of if/else again when bumping minimal numpy to 1.7
-        if NUMPY_VERSION >= [1, 7]:
-            # XXX get rid of if/else again when bumping minimal numpy to 1.10
-            if NUMPY_VERSION >= [1, 10]:
-                kwargs = {'allow_pickle': allow_pickle}
-            else:
-                kwargs = {}
-            with np.load(filename, **kwargs) as data:
+        try:
+            with np.load(filename, allow_pickle=allow_pickle) as data:
                 return _load(data)
-        else:
-            data = np.load(filename)
-            try:
-                return _load(data)
-            finally:
-                data.close()
+        except ValueError:
+            msg = ("Loading PPSD results saved with ObsPy versions < "
+                   "1.2 requires setting the allow_pickle parameter "
+                   "of PPSD.load_npz to True")
+            raise ValueError(msg)
 
     def add_npz(self, filename, allow_pickle=False):
         """
@@ -1543,27 +1536,14 @@ class PPSD(object):
                 msg = msg % (duplicates, len(_times_processed), filename)
                 warnings.warn(msg)
 
-        # XXX get rid of if/else again when bumping minimal numpy to 1.7
-        if NUMPY_VERSION >= [1, 7]:
-            # XXX get rid of if/else again when bumping minimal numpy to 1.10
-            if NUMPY_VERSION >= [1, 10]:
-                kwargs = {'allow_pickle': allow_pickle}
-            else:
-                kwargs = {}
-            try:
-                with np.load(filename, **kwargs) as data:
-                    _add(data)
-            except ValueError:
-                msg = ("Loading PPSD results saved with ObsPy versions < "
-                       "1.2 requires setting the allow_pickle parameter "
-                       "of PPSD.load_npz to True (needs numpy>=1.10).")
-                raise ValueError(msg)
-        else:
-            data = np.load(filename)
-            try:
+        try:
+            with np.load(filename, allow_pickle=allow_pickle) as data:
                 _add(data)
-            finally:
-                data.close()
+        except ValueError:
+            msg = ("Loading PPSD results saved with ObsPy versions < "
+                   "1.2 requires setting the allow_pickle parameter "
+                   "of PPSD.load_npz to True")
+            raise ValueError(msg)
 
     def _split_lists(self, times, psds):
         """
@@ -2039,12 +2019,12 @@ class PPSD(object):
 
             self._plot_histogram(fig=fig)
 
-        ax.semilogx()
         if xaxis_frequency:
             ax.set_xlabel('Frequency [Hz]')
             ax.invert_xaxis()
         else:
             ax.set_xlabel('Period [s]')
+        ax.set_xscale('log')
         ax.set_xlim(period_lim)
         ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
         if self.special_handling is None:

@@ -1464,17 +1464,6 @@ class TestUTCDateTime:
         t = UTC(998, 11, 9, 1, 39, 37)
         assert '0998-11-09' == t.strftime('%Y-%m-%d')
 
-    def test_strftime_replacement(self):
-        """
-        Explicitly test this function.
-
-        Can be removed once we drop support for Python 2.
-        """
-        t = UTC(1888, 1, 2, 1, 39, 37)
-        assert t._strftime_replacement('%Y-%m-%d') == '1888-01-02'
-        t = UTC(998, 11, 9, 1, 39, 37)
-        assert t._strftime_replacement('%Y-%m-%d') == '0998-11-09'
-
     def test_string_parsing_at_instantiating_before_1000(self):
         """
         Try instantiating the UTCDateTime object with strings containing years

@@ -15,7 +15,6 @@ categories.*
     :nosignatures:
 
     obspy.core
-    obspy.db
     obspy.geodetics
     obspy.imaging
     obspy.realtime
@@ -55,7 +54,6 @@ categories.*
     :toctree: .
     :nosignatures:
 
-    obspy.clients.arclink
     obspy.clients.earthworm
     obspy.clients.fdsn
     obspy.clients.filesystem
@@ -63,7 +61,6 @@ categories.*
     obspy.clients.neic
     obspy.clients.nrl
     obspy.clients.seedlink
-    obspy.clients.seishub
     obspy.clients.syngine
 
 
@@ -177,7 +174,6 @@ categories.*
     :toctree: .
     :nosignatures:
 
-    obspy.io.arclink
     obspy.io.css
     obspy.io.kml
     obspy.io.sac.sacpz

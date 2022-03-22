@@ -2,12 +2,28 @@ master
 ======
 
 Changes:
+ - obspy.db:
+   * submodule removed completely, since mostly being used in discontinued
+     seishub server (see #2994)
+ - obspy.clients.seishub:
+   * submodule removed completely, since it is outdated and not even test
+     servers have been running for years (see #2994)
+
+maintenance_1.3.x
+=================
+
+Changes:
+
+
+1.3.0 (doi: 10.5281/zenodo.6327346)
+===================================
+
+Changes:
  - obspy.*
+   * no more support for Python 2 (see #2577)
+   * added python 3.9 and 3.10 tests for all platforms,
+     minimal supported python version is 3.7 (#2925, #2489)
    * removed os.path calls with pathlib library calls (see #2751).
-   * temporarily removed macOS coverage reporting in github actions (see #2920)
-     to solve test issues (#2900)
-   * added python 3.9 tests for all platforms, required to disable image
-     comparisons for 3.9 (#2925)
    * rewrote CI tests to make use of cache (see #2936)
    * removed individual logging configurations in Obspy, logging can be
      configured by the user, see documentation of Pythons logging module,
@@ -15,10 +31,12 @@ Changes:
      but this behavior can be turned off now. The loglevel keywords are
      therefore deprecated and have no effect anymore (see #2720)
    * refactored obspy-runtest to use pytest and modified several command
-     line arguments (see #2489)
-   * removed calls to deprecated NumPy functionality (see #2949)
-   * cleaned the documentation, build process, and docstrings (see #2662)
+     line arguments, required to disable image comparisons (see #2489)
+   * removed calls to deprecated NumPy functionality (see #2949, #2981)
+   * cleaned the documentation, build process, and docstrings (see #2662, #2954)
    * refactored and modernized setup.py (see #2422)
+ - scripts:
+   * SDS report: try to be faster on slow filesystems (see #3009)
  - obspy.core:
    * speed up import of obspy core functions (see #2758)
    * read_inventory(): add "level" option to read files faster when less level
@@ -39,6 +57,17 @@ Changes:
      numpy 1.22 (see #2912, #2913)
    * fix iso8601 regex for issue #2868 to cope with day 360 properly
    * fix crash when resampling very short traces (see #2926)
+   * response list stages: do not raise an exception if response calculation
+     involves extrapolation outside of frequency range defined by the response
+     list stage but rather only show a warning. raising an exception is the
+     safe route but it also prevents valid calculations as it is up to the user
+     to make sure that signal spectrum is properly suppressed in those
+     frequency ranges outside of the valid response information (see #2988)
+   * fix a bug while checking for valid URI syntax when setting identifiers on
+     inventory type objects (see #2905)
+ - obspy.clients.arclink:
+   * submodule removed completely, since ArcLink was officially deprecated and
+     deactivated on all big datacenters years ago (see #2994)
  - obspy.clients.fdsn:
    * introduce fine-grained FDSN client exceptions (see #2653, #2964)
    * support for "eventtype" parameter in get_events(), as specified in version
@@ -50,6 +79,11 @@ Changes:
    * update RESIF URL mapping to use http and add RESIFPH5 (see #2938)
  - obspy.clients.filesystem:
    * add get_waveforms_bulk() method to SDS client (see #2616, #2626)
+   * SDS client get_latency(): make one internal check optional which can be a
+     massive speedup on slow filesystems (see #3009)
+ - obspy.clients.seedlink:
+   * basic client: properly terminate after finished get_info() request (see
+     #2996)
  - obspy.imaging:
    * fix section plot in case of a single trace only (see #2764)
    * removed basemap, now only cartopy is supported for maps (see #2961)
@@ -106,6 +140,10 @@ Changes:
      (see #2678)
    * properly take into account native system byteorder, should fix reading
      rt130 data on big endian systems (see #2678)
+ - obspy.io.seiscomp:
+   * Add support for SC3ML 0.11 and 0.12, dropped support for SC3ML < 0.6
+     (see #2284).
+   * Add support for custom tags (see #2284).
  - obspy.io.sh:
    * fix appending traces to existing Q file (see #2870)
  - obspy.io.xseed:
@@ -113,10 +151,6 @@ Changes:
      encountered (see #2668)
    * Properly read a given value of 0.0 in station elevation and not replace it
      with bogus value (see #2763)
- - obspy.scripts
-   * obspy-runtests can take one or two -v flags for a more smooth verbosity
-     control (see #2720)
-   * fix broken "--raise-all-warnings" flag in obspy-runtests (see #2720)
  - obspy.signal.array_analysis
    * fixed an issue in array_processing function returning wrong times
      for matplotlib versions >= 3.3 due to the epoch change in matplotlib
@@ -125,8 +159,8 @@ Changes:
    * Remove deprecated xcorr function, remove deprecated domain keyword
      argument in correlate function (see #1979)
  - obspy.signal.spectral_estimation.PPSD:
-   * Added special handling option for infrasound data and global infrasound noise
-     models for plotting (see #2740)
+   * Added special handling option for infrasound data and global infrasound
+     noise models for plotting (see #2740)
    * Replaced use of deprecated Matplotlib functionality (see #2951)
  - obspy.signal.trigger:
    * Improved clarity and speed of several STA/LTA triggers methods, namely

@@ -70,25 +70,6 @@ data sets, ready for research, including some basic quality control.
 
 See the :mod:`obspy.clients.fdsn.mass_downloader` page for more details.
 
--------
-ArcLink
--------
-
-+----------------------+--------------------------------+
-| Available Data Types | Format                         |
-+======================+================================+
-| Waveforms            | MiniSEED, SEED                 |
-+----------------------+--------------------------------+
-| Station Information  | dataless SEED, SEED            |
-+----------------------+--------------------------------+
-
-ArcLink is a distributed data request protocol usable to access archived
-waveform data in the MiniSEED or SEED format and associated meta information as
-Dataless SEED files. You can use the :mod:`obspy.clients.arclink` module to
-request data from the `EIDA <http://www.orfeus-eu.org/eida/>`_ initiative but
-most (or all) of that data can also be requested using the
-:mod:`obspy.clients.fdsn` module.
-
 -----------------
 IRIS Web Services
 -----------------

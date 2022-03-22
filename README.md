@@ -2,7 +2,7 @@
 
 [![NumFOCUS affiliated project](https://numfocus.org/wp-content/uploads/2018/01/optNumFocus_LRG.png)](https://numfocus.org/sponsored-projects/affiliated-projects)
 
-[![Github Action Status](https://github.com/obspy/obspy/workflows/master_default_tests/badge.svg)](https://github.com/obspy/obspy/actions)
+[![Github Action Status](https://github.com/obspy/obspy/workflows/tests/badge.svg?event=push)](https://github.com/obspy/obspy/actions)
 [![Coverage Status](https://codecov.io/gh/obspy/obspy/branch/master/graph/badge.svg)](https://codecov.io/gh/obspy/obspy)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/obspy.svg)](https://pypi.python.org/pypi/obspy/)
 
@@ -10,7 +10,7 @@
 [![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
 
 [![PyPI Version](https://img.shields.io/pypi/v/obspy.svg)](https://pypi.python.org/pypi/obspy)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3921997.svg)](http://dx.doi.org/10.5281/zenodo.3921997)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.6327346.svg)](http://dx.doi.org/10.5281/zenodo.6327346)
 [![Conda](https://img.shields.io/conda/dn/conda-forge/obspy?label=conda%20downloads)](https://anaconda.org/conda-forge/obspy)
 
 [![Discourse status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.obspy.org)](https://discourse.obspy.org)

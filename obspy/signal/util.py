@@ -124,6 +124,7 @@ def enframe(x, win, inc):
     of inc. Each frame is multiplied by the window win().
     The length of the frames is given by the length of the window win().
     The centre of frame I is x((I-1)*inc+(length(win)+1)/2) for I=1,2,...
+    The mean is also subtracted from each individual frame.
 
     :param x: signal to split in frames
     :param win: window multiplied to each frame, length determines frame length

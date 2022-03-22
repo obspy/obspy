@@ -539,9 +539,7 @@ class TauModel(object):
         """
         Deserialize model from numpy npz binary file.
         """
-        # XXX: Make this a with statement when old NumPy support is dropped.
-        npz = np.load(filename)
-        try:
+        with np.load(filename) as npz:
             model = TauModel(s_mod=None,
                              radius_of_planet=float(npz["radius_of_planet"]),
                              cache=cache, skip_calc=True)
@@ -617,11 +615,6 @@ class TauModel(object):
             )
             setattr(slowness_model, "v_mod", velocity_model)
             setattr(velocity_model, 'layers', npz['v_mod.layers'])
-        finally:
-            if hasattr(npz, 'close'):
-                npz.close()
-            else:
-                del npz
         return model
 
     @staticmethod

@@ -523,11 +523,6 @@ from .domain import (Domain, RectangularDomain,  # NOQA
 __all__ = ['MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
            'CircularDomain', 'GlobalDomain']
 
-if SCIPY_VERSION < [0, 12]:
-    msg = ('At least some parts of FDSN Mass downloader might not '
-           'work with old scipy versions <0.12.0 (installed: {})')
-    warnings.warn(msg.format(SCIPY_VERSION))
-
 
 if __name__ == '__main__':
     import doctest

@@ -47,7 +47,7 @@ def save_image_directory(request, tmp_path_factory):
     yield Path(tmp_image_path)
     # if keep images is selected then we move images to directory
     # and add info about environment.
-    if request.config.getoption('--keep-images'):
+    if request.config.getoption('--keep-images', default=False):
         new_path = Path(OBSPY_PATH) / 'obspy_test_images'
         if new_path.exists():  # get rid of old image folder
             shutil.rmtree(new_path)
@@ -75,7 +75,10 @@ def image_path(request, save_image_directory):
             parent_name = str(parent_obj.__class__.__name__)
         node_name = parent_name + '_' + node_name
     new_path = save_image_directory / (node_name + '.png')
-    return new_path
+    yield new_path
+    # finally close all figs created by this test
+    from matplotlib.pyplot import close
+    close('all')
 
 
 # --- Pytest configuration
@@ -103,12 +106,14 @@ def pytest_addoption(parser):
 def pytest_collection_modifyitems(config, items):
     """ Preprocessor for collected tests. """
     network_module_names = set(NETWORK_MODULES)
-
     for item in items:
+        # explicitely add filter warnings to markers so that they have a higher
+        # priority than command line options, e.g. -W error
+        for fwarn in config.getini('filterwarnings'):
+            item.add_marker(pytest.mark.filterwarnings(fwarn))
         # automatically apply image mark to tests using image_path fixture.
         if 'image_path' in getattr(item, 'fixturenames', {}):
             item.add_marker('image')
-
         # Mark network doctests, network test files are already marked.
         name_split = item.name.replace('obspy.', '').split('.')
         if len(name_split) >= 2:
@@ -121,9 +126,6 @@ def pytest_configure(config):
     """
     Configure pytest with custom logic for ObsPy before test run.
     """
-    # Add doctest option so all doctests run
-    config.option.doctestmodules = True
-
     # Skip or select network options based on options
     network_selected = config.getoption('--network')
     all_selected = config.getoption('--all')
@@ -131,9 +133,6 @@ def pytest_configure(config):
         setattr(config.option, 'markexpr', 'network')
     elif not network_selected and not all_selected:
         setattr(config.option, 'markexpr', 'not network')
-
-    # select appropriate options for report
-    config.option.json_report_indent = 2
 
     # Set numpy print options to try to not break doctests.
     try:
@@ -144,16 +143,6 @@ def pytest_configure(config):
     # Ensure matplotlib doesn't try to show anything.
     import matplotlib
     matplotlib.use('Agg')
-
-    # Register markers. We should really do this in pytest.ini or the like
-    # but the existence of that file messed with the config.py hooks for
-    # some reason.
-    config.addinivalue_line(
-        "markers", "network: Test requires network resources (internet)."
-    )
-    config.addinivalue_line(
-        "markers", "image: Test produces a matplotlib image."
-    )
 
 
 @pytest.hookimpl(optionalhook=True)
@@ -236,12 +225,9 @@ def get_environmental_info():
             platform_info[name] = temp
         except Exception:
             platform_info[name] = ''
-    # add node name, but change if running on github CI
-    if os.environ.get('GITHUB_ACTION'):
-        node_name = 'gh-actions'
-    else:
-        node_name = os.environ.get('OBSPY_NODE_NAME')
-        if not node_name:
-            node_name = platform.node().split('.', 1)[0]
+    # add node name
+    node_name = os.environ.get('OBSPY_NODE_NAME')
+    if not node_name:
+        node_name = platform.node().split('.', 1)[0]
     platform_info['node'] = node_name
     return platform_info

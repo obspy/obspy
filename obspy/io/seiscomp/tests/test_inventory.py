@@ -20,6 +20,7 @@ import re
 import unittest
 import warnings
 
+import pytest
 from obspy.core.inventory import read_inventory
 from obspy.core.inventory.response import (CoefficientsTypeResponseStage,
                                            FIRResponseStage)
@@ -31,7 +32,7 @@ class SC3MLTestCase(unittest.TestCase):
 
     def setUp(self):
         """
-        Read example stationXML/sc3ml format to Inventory
+        Read example SeisComp XML format to Inventory
         """
         self.data_dir = os.path.join(os.path.dirname(__file__), "data")
         stationxml_path = os.path.join(self.data_dir, "EB_response_stationXML")
@@ -44,11 +45,7 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.5', '0.6', '0.7', '0.8', '0.9']:
-            filename = os.path.join(self.data_dir, 'version%s' % version)
-            read_inventory(filename)
-
-        for version in ['0.3', '0.10']:
+        for version in ['0.5', '0.99']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
 
             with self.assertRaises(ValueError) as e:
@@ -59,6 +56,7 @@ class SC3MLTestCase(unittest.TestCase):
             self.assertEqual(e.exception.args[0],
                              "Schema version not supported.")
 
+    @pytest.mark.filterwarnings('ignore:.*rate of 0')
     def test_channel_level(self):
         """
         Test inventory without repsonse information up to
@@ -96,7 +94,8 @@ class SC3MLTestCase(unittest.TestCase):
         # <Coefficients> | <Coefficients name="EBR.2002.091.H" ~
 
         # We disregard these differences because they are unimportant
-        excluded_tags = ["Source", "Sender", "Created", "Coefficients"]
+        excluded_tags = ["Source", "Sender", "Created", "Name",
+                         "Coefficients"]
 
         # also ignore StorageFormat which doesnt exist anymore in
         # StationXML 1.1 and is saved into extra / a foreign tag
@@ -197,7 +196,7 @@ class SC3MLTestCase(unittest.TestCase):
                     # reading stationxml will ignore old StationXML 1.0 defined
                     # StorageFormat, Arclink Inventory XML and SC3ML get it
                     # stored in extra now
-                    with warnings.catch_warnings(record=True):
+                    with pytest.warns(UserWarning, match='.*storage_format.*'):
                         self.assertEqual(sc3ml_cha.storage_format, None)
                         self.assertEqual(stationxml_cha.storage_format, None)
                     self.assertEqual(sc3ml_cha.extra['format']['value'],

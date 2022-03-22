@@ -14,6 +14,16 @@ pytestmark = pytest.mark.network
 
 
 class SLClientTestCase(unittest.TestCase):
+    """
+    These test routines use SLClient, which is actually not expected to be
+    used, but expected to be subclassed since at least the packet_handler
+    method needs to be reimplemented.
+    The original packet_handler method does not do anything with the received
+    metadata or waveforms but only prints some information and not even checks
+    when the requested waveform data (if any) is fully received to break out of
+    the loop that is waiting for more packets. That is why these data requests
+    below get stuck and not terminate.
+    """
 
     @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
     def test_info(self):

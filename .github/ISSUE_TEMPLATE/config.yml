@@ -1,0 +1,9 @@
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests
+blank_issues_enabled: true
+contact_links:
+  - name: Generic / Usage Question
+    url: https://discourse.obspy.org/
+    about: Please use our User Forum for generic and usage questions, you can simply log in with your existing GitHub account
+  - name: Chat
+    url: https://gitter.im/obspy/obspy
+    about: You can also try to reach people in our chat room

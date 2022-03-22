@@ -28,7 +28,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.3', '0.5', '0.9', '0.10']:
+        for version in ['0.10', '0.11', '0.12']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
             self.assertTrue(_is_sc3ml(filename))
 
@@ -42,10 +42,10 @@ class CoreTestCase(unittest.TestCase):
         self.assertFalse(validate(filename, version='0.8'))
 
         with self.assertRaises(ValueError) as e:
-            validate(filename, version='0.11')
+            validate(filename, version='0.99')
 
-        expected_error = ("0.11 is not a supported version. Use one of these "
-                          "versions: [0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 0.10].")
+        expected_error = ("0.99 is not a supported version. Use one of these "
+                          "versions: [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12].")
         self.assertEqual(e.exception.args[0], expected_error)
 
 

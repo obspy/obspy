@@ -139,7 +139,7 @@ class ClientTestCase(unittest.TestCase):
 
         test_urls_valid = list(URL_MAPPINGS.values())
         test_urls_valid += [
-            "http://arclink.ethz.ch",
+            "http://something.ethz.ch",
             "http://example.org",
             "https://webservices.rm.ingv.it",
             "http://localhost:8080/test/",
@@ -526,6 +526,7 @@ class ClientTestCase(unittest.TestCase):
             # does not only check the preferred magnitude..
             self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
 
+    @pytest.mark.filterwarnings('ignore:.*cannot deal with')
     def test_irisph5_event(self):
         """
         Tests the IRISPH5 URL mapping, which is special due to its custom
@@ -1493,29 +1494,24 @@ class ClientTestCase(unittest.TestCase):
 
         # The error will already be raised during the initialization in most
         # cases.
-        self.assertRaises(
-            FDSNRedirectException,
-            Client, "IRIS", service_mappings={
-                "station": "http://ds.iris.edu/files/redirect/307/station/1",
-                "dataselect":
-                    "http://ds.iris.edu/files/redirect/307/dataselect/1",
-                "event": "http://ds.iris.edu/files/redirect/307/event/1",
-                "availability": "http://ds.iris.edu/files/redirect/307/availability/1", 
-                },
-            user="nobody@iris.edu", password="anonymous",
-            user_agent=USER_AGENT)
-
-        # The force_redirect flag overwrites that behaviour.
-        c_auth = Client("IRIS", service_mappings={
-            "station":
-                "http://ds.iris.edu/files/redirect/307/station/1",
-            "dataselect":
-                "http://ds.iris.edu/files/redirect/307/dataselect/1",
-            "event":
-                "http://ds.iris.edu/files/redirect/307/event/1"},
-            user="nobody@iris.edu", password="anonymous",
-            user_agent=USER_AGENT, force_redirect=True)
-
+        service_mappings = {
+            "station": "http://ds.iris.edu/files/redirect/307/station/1",
+            "dataselect": "http://ds.iris.edu/files/redirect/307/dataselect/1",
+            "event": "http://ds.iris.edu/files/redirect/307/event/1"}
+        with warnings.catch_warnings():
+            # ignore warnings about unclosed sockets
+            # These occur when rasing the FDSNRedirectException, but
+            # I was not able to fix in the code
+            warnings.filterwarnings('ignore', 'unclosed')
+            self.assertRaises(
+                FDSNRedirectException,
+                Client, "IRIS", service_mappings=service_mappings,
+                user="nobody@iris.edu", password="anonymous",
+                user_agent=USER_AGENT)
+            # The force_redirect flag overwrites that behaviour.
+            c_auth = Client("IRIS", service_mappings=service_mappings,
+                            user="nobody@iris.edu", password="anonymous",
+                            user_agent=USER_AGENT, force_redirect=True)
         st = c_auth.get_waveforms(
             network="IU", station="ANMO", location="00", channel="BHZ",
             starttime=UTCDateTime("2010-02-27T06:30:00.000"),

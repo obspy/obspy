@@ -26,9 +26,9 @@ from pathlib import Path
 import re
 import warnings
 
+from collections.abc import Mapping
 from lxml import etree
 
-from obspy.core import compatibility
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               CompositeTime, ConfidenceEllipsoid, CreationInfo,
                               DataUsed, Event, EventDescription,
@@ -329,6 +329,11 @@ class Unpickler(object):
             upper_uncertainty = self._xpath2obj('upperUncertainty', el, int)
             if upper_uncertainty is not None:
                 error.upper_uncertainty = upper_uncertainty
+
+        # Silent QuantityError warning for extra attribute
+        error.do_not_warn_on.append('extra')
+        self._extra(el, error)
+
         return value, error
 
     def _float_value(self, element, name):
@@ -1003,38 +1008,40 @@ class Unpickler(object):
         """
         Add information stored in custom tags/attributes in obj.extra.
         """
-        # search all namespaces in current scope
-        for ns in element.nsmap.values():
+        for el in element:
+            # Separate namespace and tag name
+            try:
+                ns, name = el.tag[1:].split("}")
+            except ValueError:
+                # Node without namespace, so no extra nodes
+                continue
+
             # skip the two top-level quakeml namespaces,
             # we're not interested in quakeml defined tags here
             if ns in self._quakeml_namespaces:
                 continue
-            # process all elements of this custom namespace, if any
-            for el in element.iterfind("{%s}*" % ns):
-                # remove namespace from tag name
-                _, name = el.tag.split("}")
-                # check if element has children (nested tags)
-                if len(el):
-                    sub_obj = AttribDict()
-                    self._extra(el, sub_obj)
-                    value = sub_obj.extra
+
+            # check if element has children (nested tags)
+            if len(el):
+                sub_obj = AttribDict()
+                self._extra(el, sub_obj)
+                value = sub_obj.extra
+            else:
+                value = el.text
+            try:
+                extra = obj.setdefault("extra", AttribDict())
+            # Catalog object is not based on AttribDict..
+            except AttributeError:
+                if not isinstance(obj, Catalog):
+                    raise
+                if hasattr(obj, "extra"):
+                    extra = obj.extra
                 else:
-                    value = el.text
-                try:
-                    extra = obj.setdefault("extra", AttribDict())
-                # Catalog object is not based on AttribDict..
-                except AttributeError:
-                    if not isinstance(obj, Catalog):
-                        raise
-                    if hasattr(obj, "extra"):
-                        extra = obj.extra
-                    else:
-                        extra = AttribDict()
-                        obj.extra = extra
-                extra[name] = {'value': value,
-                               'namespace': '%s' % ns}
-                if el.attrib:
-                    extra[name]['attrib'] = el.attrib
+                    extra = AttribDict()
+                    obj.extra = extra
+            extra[name] = {'value': value, 'namespace': '%s' % ns}
+            if el.attrib:
+                extra[name]['attrib'] = el.attrib
         # process all attributes of custom namespaces, if any
         for key, value in element.attrib.items():
             # no custom namespace
@@ -1133,6 +1140,7 @@ class Pickler(object):
             self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
             self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
             self._str(error.confidence_level, subelement, 'confidenceLevel')
+            self._extra(error, subelement)
         element.append(subelement)
 
     def _waveform_id(self, obj, element, required=False):
@@ -1218,8 +1226,11 @@ class Pickler(object):
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
+                if value is None:
+                    subelement = etree.SubElement(element, tag, attrib=attrib)
+                    element.append(subelement)
                 # check if value is dictionary-like
-                if isinstance(value, compatibility.collections_abc.Mapping):
+                elif isinstance(value, Mapping):
                     subelement = etree.SubElement(element, tag, attrib=attrib)
                     self._custom(value, subelement)
                 elif isinstance(value, bool):
@@ -1893,7 +1904,7 @@ def _validate(xml_file, verbose=False):
     schema_location = schema_location / "data" / "QuakeML-1.2.rng"
 
     try:
-        relaxng = RelaxNG(etree.parse(schema_location))
+        relaxng = RelaxNG(etree.parse(str(schema_location)))
     except TypeError:
         msg = "Could not validate QuakeML - try using a newer lxml version"
         warnings.warn(msg, UserWarning)

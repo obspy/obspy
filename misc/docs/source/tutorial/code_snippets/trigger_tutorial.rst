@@ -435,7 +435,7 @@ In UTC time this results in 1970-01-01T01:00:33.22.
 Advanced Example
 ----------------
 
-A more complicated example, where the data are retrieved via ArcLink and
+A more complicated example, where the data are retrieved via FDSNWS and
 results are plotted step by step, is shown here:
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_advanced.py

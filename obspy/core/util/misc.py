@@ -19,7 +19,6 @@ import sys
 import tempfile
 import warnings
 from subprocess import STDOUT, CalledProcessError, check_output
-from pathlib import Path
 
 
 import numpy as np
@@ -30,9 +29,9 @@ WIN32 = sys.platform.startswith('win32')
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
 # to SEED MANUAL p.124
-# We use this e.g. in seishub.client.getWaveform to request two samples more on
-# both start and end to cut to the samples that really are nearest to requested
-# start/end time afterwards.
+# It can e.g. be used to request additional samples on both start and end to
+# cut to the samples that really are nearest to requested start/end time
+# afterwards.
 BAND_CODE = {'F': 1000.0,
              'G': 1000.0,
              'D': 250.0,
@@ -372,22 +371,6 @@ def SuppressOutput():  # noqa
     # reset to original stdout/stderr
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
-
-
-@contextlib.contextmanager
-def change_directory(path):
-    """
-    A context manager to change directory to target path.
-
-    :param path: The path to change to.
-    :type path: A string or pathlib Path.
-    """
-    origin = Path().absolute()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(origin)
 
 
 @contextlib.contextmanager

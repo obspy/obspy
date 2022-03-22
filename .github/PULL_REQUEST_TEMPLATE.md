@@ -18,13 +18,15 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 
 ### Why was it initiated?  Any relevant Issues?
 
-*Please fill in*
+*Please fill in (link relevant issues with "see #123456", mark issues that get resolved with "fixes #12345")*
 
 ### PR Checklist
 - [ ] Correct base branch selected? `master` for new features, `maintenance_...` for bug fixes
 - [ ] This PR is not directly related to an existing issue (which has no PR yet).
 - [ ] If the PR is making changes to documentation, docs pages can be built automatically.
       Just add the "build_docs" tag to this PR.
+      Docs will be served at [docs.obspy.org/pr/{branch_name}](https://docs.obspy.org/pr/) (do not use master branch).
+      Please post a link to the relevant piece of documentation.
 - [ ] If all tests including network modules (e.g. `clients.fdsn`) should be tested for the PR,
       just add the "test_network" tag to this PR.
 - [ ] All tests still pass.

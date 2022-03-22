@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12" version="0.12">
+  <EventParameters publicID="smi:eu.emsc/unid">
+    <reading publicID="smi:test/reading">
+      <pickReference>smi:test/pickReference</pickReference>
+    </reading>
+    <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+      <time>
+        <value>2011-03-11T05:46:24.120000Z</value>
+        <pdf>
+          <variable>2002-05-30T09:00:00 2003-05-30T09:00:00 2004-05-30T09:00:00</variable>
+          <probability>0.5 1.3 2.8</probability>
+        </pdf>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <creationInfo>
+        <creationTime>2011-03-11T05:46:24.120000Z</creationTime>
+        <modificationTime>2011-03-11T05:46:24.120000Z</modificationTime>
+      </creationInfo>
+      <comment>
+        <text>comment</text>
+        <start>2002-05-30T09:00:00</start>
+        <end>2003-05-30T09:00:00</end>
+      </comment>
+      <stationMagnitude publicID="smi:test/stationMagnitude">
+        <originID>smi:www.iris.edu/ws/event/query?originId=7680412</originID>
+        <magnitude>
+          <value>3.1</value>
+        </magnitude>
+        <passedQC>true</passedQC>
+      </stationMagnitude>
+    </origin>
+    <focalMechanism publicID="smi:test/focalMechanism">
+      <triggeringOriginID>smi:www.iris.edu/ws/event/query?originId=7680412</triggeringOriginID>
+      <momentTensor publicID="smi:test/momentTensor">
+        <derivedOriginID>smi:www.iris.edu/ws/event/query?originId=7680412</derivedOriginID>
+        <status>standard CMT solution</status>
+        <cmtName>Test cmtName</cmtName>
+        <cmtVersion>Test cmtVersion</cmtVersion>
+        <phaseSetting code="test" lowerPeriod="0.1" upperPeriod="0.2"/>
+        <stationMomentTensorContribution publicID="smi:test/sMTC" active="true">
+          <waveformID networkCode="FR" stationCode="STR"/>
+        </stationMomentTensorContribution>
+      </momentTensor>
+    </focalMechanism>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:www.iris.edu/ws/event/query?originId=7680412</originReference>
+      <focalMechanismReference>smi:test/focalMechanism</focalMechanismReference>
+    </event>
+  </EventParameters>
+</seiscomp>

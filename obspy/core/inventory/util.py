@@ -1072,7 +1072,7 @@ def _is_valid_uri(uri):
 
 def _warn_on_invalid_uri(uri):
     if not _is_valid_uri(uri):
-        msg = "Given string seems to not be a valid URI: ''" % uri
+        msg = f"Given string seems to not be a valid URI: '{uri}'"
         warnings.warn(msg)
 
 

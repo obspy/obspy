@@ -9,6 +9,8 @@ import sched
 import signal
 import sys
 
+import requests
+
 handlers = [TimedRotatingFileHandler('log.txt', 'D', 30, 5)]
 format_ = '%(levelname)s:%(name)s:%(asctime)s %(message)s'
 datefmt = '%Y-%m-%d %H:%M:%S'
@@ -26,7 +28,12 @@ T2 = 24 * 3600
 
 
 def sdeploy():
-    deploy()
+    try:
+        deploy()
+    except requests.exceptions.RequestException as ex:
+        log.error(str(ex))
+    except Exception:
+        log.exception('Unexpected error: continue')
     s.enter(T1, 1, sdeploy)
 
 

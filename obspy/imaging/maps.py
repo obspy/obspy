@@ -167,8 +167,10 @@ def _plot_cartopy_into_axes(
             size_ = np.array(size)[nan_points]
             bmap.scatter(x_, y_, marker=marker, s=size_, c="0.3",
                          zorder=10, cmap=None, transform=ccrs.Geodetic())
+    # Had to change transform to ccrs.PlateCarree, see:
+    # https://stackoverflow.com/a/13657749/3645626
     scatter = bmap.scatter(x, y, marker=marker, s=size, c=color, zorder=10,
-                           cmap=colormap, transform=ccrs.Geodetic(),)
+                           cmap=colormap, transform=ccrs.PlateCarree(),)
 
     if title:
         ax.set_title(title)
@@ -464,7 +466,8 @@ def plot_map(method, *args, **kwargs):
 
         * ``'cartopy'`` to use the Cartopy library. For other arguments, see
           the :func:`plot_cartopy` function.
-        * ``None`` to use either will use the Cartopy library
+        * ``None`` will use the Cartopy library since it is the only supported
+          method right now.
     """
     if method is None:
         if HAS_CARTOPY:

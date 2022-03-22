@@ -91,20 +91,21 @@ INSTALL_REQUIRES = [
     'decorator',
     'requests',
 ]
-
 # Extra dependencies
 EXTRAS_REQUIRES = {
     'tests': [
         'packaging',
         'pyproj',
         'pytest',
-        'pytest-cov',
         'pytest-json-report',
     ],
-    # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
-    'arclink': ['cryptography'],
+    'geo': ['geographiclib'],
+    'imaging': ['cartopy'],
     'io.shapefile': ['pyshp'],
 }
+EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
+                          for dep in depl]
+
 
 # package specific settings
 KEYWORDS = [
@@ -126,11 +127,6 @@ KEYWORDS = [
     'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
     'XSEED']
 
-# when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
-# and in obspy/io/mseed/core.py change downcasting check to numpy.can_cast()
-# when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
-# and get rid of helper function _np_copy_astype() in obspy/io/mseed/core.py
-
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-flinn-engdahl = obspy.scripts.flinnengdahl:main',
@@ -138,7 +134,6 @@ ENTRY_POINTS = {
         'obspy-reftek-rescue = obspy.scripts.reftekrescue:main',
         'obspy-print = obspy.scripts._print:main',
         'obspy-sds-report = obspy.scripts.sds_html_report:main',
-        'obspy-indexer = obspy.db.scripts.indexer:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',
         'obspy-mopad = obspy.imaging.scripts.mopad:main',
@@ -525,10 +520,6 @@ ENTRY_POINTS = {
         'recstaltapy = obspy.signal.trigger:recursive_sta_lta_py',
         'classicstaltapy = obspy.signal.trigger:classic_sta_lta_py',
         ],
-    'obspy.db.feature': [
-        'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
-        'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
-        ],
     }
 
 
@@ -764,6 +755,8 @@ def setupPackage():
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
