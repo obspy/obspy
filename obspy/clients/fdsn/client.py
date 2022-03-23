@@ -51,7 +51,8 @@ import urllib.request as urllib_request
 import queue
 
 
-DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1, 'availability': 1}
+DEFAULT_SERVICE_VERSIONS = {'dataselect': 1,
+                            'station': 1, 'event': 1, 'availability': 1}
 
 
 class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
@@ -555,9 +556,9 @@ class Client(object):
             data_stream.close()
             return cat
 
-    def get_availability(self, network=None, station=None, location=None, 
-                         channel=None, starttime=None, endtime=None, 
-                         quality=None, minimumlength=None, longestonly=None, 
+    def get_availability(self, network=None, station=None, location=None,
+                         channel=None, starttime=None, endtime=None,
+                         quality=None, minimumlength=None, longestonly=None,
                          format=None, filename=None, **kwargs):
         if "availability" not in self.services:
             msg = "The current client does not have an availability service."
@@ -570,10 +571,11 @@ class Client(object):
             "availability", DEFAULT_PARAMETERS['availability'], kwargs)
 
         availability = self._download(url, return_string=True).decode()
-        lines = [line.split() for line in availability.strip().split('\n')[1:]] # skip header 
-        extents = [(line[0], line[1], line[2], line[3], UTCDateTime(line[6]), UTCDateTime(line[7])) for line in lines]
+        lines = [line.split()
+                 for line in availability.strip().split('\n')[1:]]  # skip header
+        extents = [(line[0], line[1], line[2], line[3], UTCDateTime(
+            line[6]), UTCDateTime(line[7])) for line in lines]
         return extents
-
 
     def get_stations(self, starttime=None, endtime=None, startbefore=None,
                      startafter=None, endbefore=None, endafter=None,
@@ -1242,7 +1244,7 @@ class Client(object):
             if req_param not in parameters:
                 msg = "Parameter '%s' is required." % req_param
                 raise TypeError(msg)
- 
+
         final_parameter_set = {}
 
         # Now loop over all parameters, convert them and make sure they are
@@ -1518,7 +1520,7 @@ class Client(object):
             threadurl = ThreadURL()
             threadurl._timeout = self.timeout
             return threadurl
-        
+
         threads = list(map(get_download_thread, urls))
         for thread in threads:
             thread.start()
@@ -1529,7 +1531,7 @@ class Client(object):
         # Collect the redirection exceptions to be able to raise nicer
         # exceptions.
         redirect_messages = set()
-        
+
         for _ in range(wadl_queue.qsize()):
             item = wadl_queue.get()
             url, wadl = item
@@ -1564,7 +1566,7 @@ class Client(object):
             elif "availability" in url:
                 self.services["availability"] = WADLParser(wadl).parameters
                 if self.debug is True:
-                    print ("Discovered availability service")
+                    print("Discovered availability service")
             elif "event" in url and "application.wadl" in url:
                 self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:

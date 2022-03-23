@@ -108,6 +108,7 @@ class ClientTestCase(unittest.TestCase):
     Test cases for obspy.clients.fdsn.client.Client.
     """
     maxDiff = None
+
     @classmethod
     def setUpClass(cls):
         # directory where the test files are located
@@ -312,7 +313,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertIn("location=--", p.call_args[0][0])
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 self.client.get_availability(1, 2, loc, 4, 0, 0,
-                                          filename=mock.Mock())
+                                             filename=mock.Mock())
             self.assertEqual(p.call_count, 1)
             self.assertIn("location=--", p.call_args[0][0])
 
@@ -410,8 +411,8 @@ class ClientTestCase(unittest.TestCase):
                  )))
         self.assertEqual(
             set(client.services['availability'].keys()),
-            set(('starttime', 'endtime', 'network', 'station', 'location', 
-                 'channel', 'merge', 'show', 'format', 'mergegaps', 'orderby', 
+            set(('starttime', 'endtime', 'network', 'station', 'location',
+                 'channel', 'merge', 'show', 'format', 'mergegaps', 'orderby',
                  'location', 'limit', 'includerestricted', 'quality'
                  )))
 
@@ -544,25 +545,26 @@ class ClientTestCase(unittest.TestCase):
         Extent information for all network IU, station ANMO channel BHZ
         http://service.iris.edu/fdsnws/availability/1/query?network=IU&station=ANMO&channel=BHZ
         """
-        
-        client = self.client 
 
-        avail = client.get_availability(network='IU', station='ANMO', channel='BHZ')
+        client = self.client
 
-        # check that we have a list 
+        avail = client.get_availability(
+            network='IU', station='ANMO', channel='BHZ')
+
+        # check that we have a list
         self.assertIsInstance(avail, list)
         self.assertTrue(len(avail) >= 1)
-        
+
         # check that the structure of the list is as we expect
         self.assertTrue(all([type(list_item) == tuple for list_item in avail]))
         self.assertTrue(all([len(list_item) == 6 for list_item in avail]))
-        self.assertTrue(all([[type(x) for x in list_item] == [str, str, str, str, UTCDateTime, UTCDateTime] for list_item in avail]))
-        
+        self.assertTrue(all([[type(x) for x in list_item] == [
+                        str, str, str, str, UTCDateTime, UTCDateTime] for list_item in avail]))
+
         # check that the network and station are as we expect
         self.assertTrue(all([list_item[0] == 'IU' for list_item in avail]))
         self.assertTrue(all([list_item[1] == 'ANMO' for list_item in avail]))
 
-        
     def test_get_availability_bounded_query(self):
         """
         Tests a bounded (in time) example query
@@ -572,26 +574,28 @@ class ClientTestCase(unittest.TestCase):
         client = self.client
         starttime = UTCDateTime('2000-03-23T00:00:00')
         endtime = UTCDateTime('2001-03-23T00:00:00')
-        avail = client.get_availability(network='IU', station='ANMO', channel = "BHZ", starttime=starttime, endtime=endtime)
+        avail = client.get_availability(
+            network='IU', station='ANMO', channel="BHZ", starttime=starttime, endtime=endtime)
 
-        # check that we have a list 
+        # check that we have a list
         self.assertIsInstance(avail, list)
         self.assertTrue(len(avail) >= 1)
 
         # check that the structure of the list is as we expect
         self.assertTrue(all([type(list_item) == tuple for list_item in avail]))
         self.assertTrue(all([len(list_item) == 6 for list_item in avail]))
-        self.assertTrue(all([[type(x) for x in list_item] == [str, str, str, str, UTCDateTime, UTCDateTime] for list_item in avail]))
+        self.assertTrue(all([[type(x) for x in list_item] == [
+                        str, str, str, str, UTCDateTime, UTCDateTime] for list_item in avail]))
 
-        # check that the network, station, and channel are as we expect 
+        # check that the network, station, and channel are as we expect
         self.assertTrue(all([list_item[0] == 'IU' for list_item in avail]))
         self.assertTrue(all([list_item[1] == 'ANMO' for list_item in avail]))
         self.assertTrue(all([list_item[3] == 'BHZ' for list_item in avail]))
 
         # check that all returned data are within bounds
-        self.assertTrue(all([list_item[4] >= starttime for list_item in avail]))
+        self.assertTrue(
+            all([list_item[4] >= starttime for list_item in avail]))
         self.assertTrue(all([list_item[5] <= endtime for list_item in avail]))
-
 
     def test_iris_example_queries_station(self):
         """
@@ -1210,7 +1214,8 @@ class ClientTestCase(unittest.TestCase):
         # Replace all
         download_url_mock.reset_mock()
         download_url_mock.return_value = (404, None)
-        major_versions = {"event": 7, "station": 8, "dataselect": 9, "availability": 10}
+        major_versions = {"event": 7, "station": 8,
+                          "dataselect": 9, "availability": 10}
         # An exception will be raised if not actual WADLs are returned.
         try:
             Client(base_url=base_url, major_versions=major_versions)
@@ -1320,7 +1325,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(sorted(client.services.keys()),
                          ['availability', 'dataselect', 'station'])
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
-                       service_mappings={"availability": None})
+                        service_mappings={"availability": None})
         self.assertEqual(sorted(client.services.keys()),
                          ['available_event_catalogs', 'available_event_contributors', 'dataselect', 'event', 'station'])
 
