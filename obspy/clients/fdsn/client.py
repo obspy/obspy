@@ -594,9 +594,9 @@ class Client(object):
         url = self._create_url_from_parameters(
             "availability", DEFAULT_PARAMETERS['availability'], kwargs)
 
-        availability = self._download(url, return_string=True).decode()
-        lines = [line.split()
-                 for line in availability.strip().split('\n')[1:]]  # skip header
+        availability = self._download(url)
+        lines = [line.decode().split()
+                 for line in availability.readlines()[1:]]
         extents = [(line[0], line[1], line[2], line[3], UTCDateTime(
             line[6]), UTCDateTime(line[7])) for line in lines]
         return extents
