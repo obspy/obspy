@@ -28,8 +28,23 @@ body:
     attributes:
       label: Code to Reproduce
       description: If possible, please provide a [minimum self-contained example](http://sscce.org/) Python snippet. The shorter and more down to the point, the easier it is for us to identify the problem and the faster it will get fixed =)
-      placeholder: Paste your Python code here
+      placeholder: |
+          Paste your Python code here
+
+          x.append(3)
       render: python
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Error Traceback
+      description: If applicable, please provide an error traceback
+      placeholder: |
+          Paste your error traceback here
+
+          Traceback (most recent call last):
+            File "<stdin>", line 1, in <module>
+          AttributeError: 'tuple' object has no attribute 'append'
+      render: Python traceback
   - type: input
     id: obspy-version
     attributes:
