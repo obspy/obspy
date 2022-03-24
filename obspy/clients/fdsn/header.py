@@ -179,7 +179,7 @@ DEFAULT_AVAILABILITY_PARAMETERS = [
 ]
 
 OPTIONAL_AVAILABILITY_PARAMETERS = [
-    "quality", "minimumlength", "longestonly", "format"
+    "quality", "orderby", "limit", "format"
 ]
 
 DEFAULT_PARAMETERS = {

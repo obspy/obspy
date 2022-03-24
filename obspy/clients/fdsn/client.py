@@ -558,7 +558,7 @@ class Client(object):
 
     def get_availability(self, network=None, station=None, location=None,
                          channel=None, starttime=None, endtime=None,
-                         quality=None, minimumlength=None, longestonly=None,
+                         quality=None, orderby=None, limit=None,
                          format=None, filename=None, **kwargs):
         if "availability" not in self.services:
             msg = "The current client does not have an availability service."
