@@ -182,7 +182,7 @@ DEFAULT_AVAILABILITY_PARAMETERS = [
 ]
 
 OPTIONAL_AVAILABILITY_PARAMETERS = [
-    "quality", "orderby", "limit", "format"
+    "quality", "orderby", "limit", "format", "mergegaps"
 ]
 
 DEFAULT_PARAMETERS = {
