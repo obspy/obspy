@@ -158,7 +158,7 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
             dtype = WIDTH2DTYPE[tr_width]
             if rescale:
                 # optimal scale, account for +/- and the zero
-                maxint = 2 ** (width * 8 - 1) - 1
+                maxint = 2 ** (tr_width * 8 - 1) - 1
                 # upcast for following rescaling
                 data = data.astype(np.float64)
                 data = data / abs(data).max() * maxint

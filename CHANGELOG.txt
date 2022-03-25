@@ -13,6 +13,9 @@ maintenance_1.3.x
 =================
 
 Changes:
+ - obspy.io.wav:
+   * fix writing of wav files with rescale=True and default width=None
+     (see #3029)
 
 
 1.3.0 (doi: 10.5281/zenodo.6327346)
