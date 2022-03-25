@@ -202,8 +202,8 @@ jobs:
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v2
         with:
-          name: "report.json"
-          path: obspy
+          name: "report_${{ matrix.python-version }}_${{ matrix.os }}.json"
+          path: obspy/report.json
           retention-days: 10
 
       - name: upload coverage
