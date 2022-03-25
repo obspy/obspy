@@ -196,7 +196,15 @@ jobs:
         id: tests
         shell: bash -l {0}
         run: |
-          obspy-runtests --cov obspy --cov-report='xml' --cov-append --report ${{ env.runtest_options }}
+          obspy-runtests io/wav --cov obspy --cov-report='xml' --cov-append --report ${{ env.runtest_options }} --json-report-file=report.json
+
+      - name: upload report file
+        if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v2
+        with:
+          name: "report.json"
+          path: obspy
+          retention-days: 10
 
       - name: upload coverage
         uses: codecov/codecov-action@v2.1.0
