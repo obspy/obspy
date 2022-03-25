@@ -18,6 +18,7 @@ class CoreTestCase(unittest.TestCase):
     """
     Test cases for audio WAV support
     """
+
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
@@ -78,16 +79,17 @@ class CoreTestCase(unittest.TestCase):
             testfile = fh.name
             self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
             tr = read(self.file, format='WAV')[0]
-            for width in (1, 2, 4):
+            for width in (1, 2, 4, None):
                 tr.write(testfile, format='WAV', framerate=7000, width=width,
                          rescale=True)
-                tr2 = read(testfile, format='WAV')[0]
-                maxint = 2 ** (8 * width - 1) - 1
-                dtype = WIDTH2DTYPE[width]
-                self.assertEqual(maxint, abs(tr2.data).max())
-                expected = (tr.data / abs(tr.data).max() *
-                            maxint).astype(dtype)
-                np.testing.assert_array_almost_equal(tr2.data, expected)
+                if width is not None:
+                    tr2 = read(testfile, format='WAV')[0]
+                    maxint = 2 ** (8 * width - 1) - 1
+                    dtype = WIDTH2DTYPE[width]
+                    self.assertEqual(maxint, abs(tr2.data).max())
+                    expected = (tr.data / abs(tr.data).max() *
+                                maxint).astype(dtype)
+                    np.testing.assert_array_almost_equal(tr2.data, expected)
 
     def test_write_stream_via_obspy(self):
         """

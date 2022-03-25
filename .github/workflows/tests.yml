@@ -189,7 +189,7 @@ jobs:
       # try to remove when min dep versions are upped
       - name: remove cartopy for mindepversion MacOS
         shell: bash -l {0}
-        if: startsWith(matrix.os, 'macos') && contains(matrix.python-version, '3.7') && contains(matrix.options, 'mindepversion')
+        if: startsWith(matrix.os, 'macos') && contains(matrix.python-version, '3.7') && contains(matrix.options, 'mindepversion') && steps.cache.outputs.cache-hit != 'true'
         run: conda uninstall --force cartopy shapely
 
       - name: run tests
