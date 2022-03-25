@@ -133,6 +133,7 @@ def upload_json_report(report=None, data=None):
         else:
             print(f"Error: Could not sent a test report to {REPORT_URL}.")
             print(response.reason)
+            print(response.content)
 
 
 if __name__ == "__main__":
