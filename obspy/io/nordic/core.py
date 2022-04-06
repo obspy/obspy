@@ -1857,7 +1857,7 @@ def _write_hyp_error_line(origin):
             #     error_line[67:79] = ("%.4e" % (cov(1, 2) / 1.e06)).rjust(12)
             # else:
 
-    if origin.depth_errors.uncertainty:
+    if origin.depth_errors and origin.depth_errors.uncertainty:
         errors['z_err'] = origin.depth_errors.uncertainty / 1000.0
     else:
         errors['z_err'] = None
@@ -1981,7 +1981,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             velocity = degrees2kilometers(1.0 / pick.horizontal_slowness)
         else:
             velocity = ' '
-        azimuth = _str_conv(pick.backazimuth)
+        backazimuth = _str_conv(pick.backazimuth)
         # Extract the correct arrival info for this pick - assuming only one
         # arrival per pick...
         arrival = [arrival for arrival in origin.arrivals
@@ -1992,9 +1992,9 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             arrival = arrival[0]
             # Extract azimuth residual
             if arrival.backazimuth_residual is not None:
-                azimuthres = _str_conv(int(arrival.backazimuth_residual))
+                backazimuthres = _str_conv(int(arrival.backazimuth_residual))
             else:
-                azimuthres = ' '
+                backazimuthres = ' '
             if arrival.takeoff_angle is not None:
                 ain = _str_conv(arrival.takeoff_angle, rounded=1)
             else:
@@ -2027,13 +2027,13 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             if arrival.time_weight is not None:
                 finalweight = _str_conv(int(round(
                     arrival.time_weight * 10))).rjust(2)[0:2]
-            if azimuth != ' ':
+            if backazimuth != ' ':
                 if arrival.backazimuth_weight is not None:
                     finalweight = _str_conv(int(round(
                         arrival.backazimuth_weight * 10))).rjust(2)[0:2]
         else:
-            (caz, distance, timeres, azimuthres, azimuth, finalweight,
-             ain) = (' ', ' ', ' ', ' ', ' ', '  ', ' ')
+            (caz, distance, timeres, backazimuthres, finalweight, ain) = (
+                ' ', ' ', ' ', ' ', '  ', ' ')
         phase_hint = pick.phase_hint or ' '
         # Extract amplitude: note there can be multiple amplitudes, but they
         # should be associated with different picks.
@@ -2122,8 +2122,8 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             pick_string_formatter = (
                 " {station:5s}{instrument:1s}{component:1s}{phase_info:10s}"
                 "{hour:2d}{minute:2d}{seconds:>6s}{coda:5s}{amp:7s}{period:5s}"
-                "{azimuth:6s}{velocity:5s}{ain:4s}{azimuthres:3s}{timeres:5s}"
-                "{finalweight:2s}{distance:5s}{caz:4s} ")
+                "{backazimuth:6s}{velocity:5s}{ain:4s}{backazimuthres:3s}"
+                "{timeres:5s}{finalweight:2s}{distance:5s}{caz:4s} ")
             # Note that pick seconds rounding only works because SEISAN does
             # not enforce that seconds stay 0 <= seconds < 60, so rounding
             # something like seconds = 59.997 to 2dp gets to 60.00, which
@@ -2138,10 +2138,10 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 coda=_str_conv(coda).rjust(5)[0:5],
                 amp=_str_conv(amp, rounded=1).rjust(7)[0:7],
                 period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],
-                azimuth=_str_conv(azimuth).rjust(6)[0:6],
+                backazimuth=_str_conv(backazimuth).rjust(6)[0:6],
                 velocity=_str_conv(velocity).rjust(5)[0:5],
                 ain=ain[:-2].rjust(4)[0:4],
-                azimuthres=_str_conv(azimuthres).rjust(3)[0:3],
+                backazimuthres=_str_conv(backazimuthres).rjust(3)[0:3],
                 timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
                 finalweight=finalweight, distance=distance.rjust(5)[0:5],
                 caz=_str_conv(caz).rjust(4)[0:4]))
@@ -2176,22 +2176,34 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 coda_residual = '     '
                 # TODO: weight for coda
             # Back Azimuth
-            elif azimuth.strip() != '':  # back-azimuth
+            elif backazimuth.strip() != '':  # back-azimuth
                 add_baz_line = True
+                # If the BAZ-measurement is an extra pick in addition to the 
+                # actual phase, then don't duplicate the BAZ-line. Instead,
+                # write the BAZ-pick into a single line.
+                if pick.phase_hint.startswith('BAZ-'):
+                    add_baz_line = False
                 if len(phase_hint) <= 4:  # max total phase name length is 8
                     baz_phase_hint = 'BAZ-' + phase_hint
                 else:
                     baz_phase_hint = phase_hint
-                baz_par1 = _str_conv(azimuth, rounded=1).rjust(7)[0:7]
+                baz_par1 = _str_conv(backazimuth, rounded=1).rjust(7)[0:7]
                 baz_par2 = _str_conv(velocity, rounded=2).rjust(6)[0:6]
                 baz_residual = '     '
                 baz_finalweight = '  '
-                if arrival.backazimuth_residual is not None:
-                    baz_residual = _str_conv(
-                        arrival.backazimuth_residual, rounded=1).rjust(5)[0:5]
-                if arrival.backazimuth_weight is not None:
-                    baz_finalweight = _str_conv(
-                        arrival.backazimuth_weight*10, rounded=0).rjust[2][0:2]
+                if arrival:
+                    if arrival.backazimuth_residual is not None:
+                        baz_residual = _str_conv(arrival.backazimuth_residual,
+                                                 rounded=1).rjust(5)[0:5]
+                    if arrival.backazimuth_weight is not None:
+                        baz_finalweight = _str_conv(
+                            arrival.backazimuth_weight*10,
+                            rounded=0).rjust[2][0:2]
+                if not add_baz_line:
+                    par1 = baz_par1
+                    par2 = baz_par2
+                    residual = baz_residual
+                    finalweight = baz_finalweight
             # Amplitude
             elif amp is not None:
                 add_amp_line = True
