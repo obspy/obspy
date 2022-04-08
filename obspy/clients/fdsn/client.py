@@ -19,6 +19,7 @@ import textwrap
 import threading
 import warnings
 from collections import OrderedDict
+from http.client import HTTPException, IncompleteRead
 from urllib.parse import urlparse
 
 from lxml import etree
@@ -1844,7 +1845,13 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
             print("Uncompressing gzipped response for %s" % url)
         # Cannot directly stream to gzip from urllib!
         # http://www.enricozini.org/2011/cazzeggio/python-gzip/
-        buf = io.BytesIO(url_obj.read())
+        try:
+            reader = url_obj.read()
+        except IncompleteRead:
+            msg = 'Problem retrieving data from datacenter. '
+            msg += 'Try reducing size of request.'
+            raise HTTPException(msg)
+        buf = io.BytesIO(reader)
         buf.seek(0, 0)
         f = gzip.GzipFile(fileobj=buf)
     else:
