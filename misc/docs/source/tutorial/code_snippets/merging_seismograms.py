@@ -1,6 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Agg')
 import obspy
 
 
@@ -11,18 +9,22 @@ st += obspy.read("https://examples.obspy.org/dis.G.SCZ.__.BHE.2")
 
 # sort
 st.sort(['starttime'])
-# start time in plot equals 0
-dt = st[0].stats.starttime.timestamp
 
-# Go through the stream object, determine time range in julian seconds
-# and plot the data with a shared x axis
-ax = plt.subplot(4, 1, 1)  # dummy for tying axis
-for i in range(3):
-    plt.subplot(4, 1, i + 1, sharex=ax)
-    plt.plot(st[i].times(), st[i].data)
+# use common reference time and have x-Axis as relative time in seconds.
+# Another option would be to plot absolute times by using
+# Trace.times(type='matplotlib') and letting matplotlib know that x-Axis has
+# absolute times, by using ax.xaxis_date() and fig.autofmt_xdate()
+t0 = st[0].stats.starttime
 
-# Merge the data together and show plot in a similar way
+# Go through the stream object and plot the data with a shared x axis
+fig, axes = plt.subplots(nrows=len(st)+1, sharex=True)
+ax = None
+
+for (tr, ax) in zip(st, axes):
+    ax.plot(tr.times(reftime=t0), tr.data)
+
+# Merge the data together and plot in a similar way in the bottom Axes
 st.merge(method=1)
-plt.subplot(4, 1, 4, sharex=ax)
-plt.plot(st[0].times(), st[0].data, 'r')
+axes[-1].plot(st[0].times(reftime=t0), st[0].data, 'r')
+axes[-1].set_xlabel(f'seconds relative to {t0}')
 plt.show()
