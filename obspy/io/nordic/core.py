@@ -944,7 +944,8 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime, **kwargs):
         if _float_conv(line[46:51]) is not None:
             pick.backazimuth = _float_conv(line[46:51])
         app_velocity = _float_conv(line[51:56])
-        if app_velocity is not None and app_velocity != 999.0:
+        if (app_velocity is not None and app_velocity != 999.0 and
+                app_velocity != 0):
             pick.horizontal_slowness = 1 / kilometers2degrees(app_velocity)
         # Create new obspy.event.Amplitude class which references above Pick
         # only if there is an amplitude picked.
