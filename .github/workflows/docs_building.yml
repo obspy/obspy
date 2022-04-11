@@ -44,7 +44,7 @@ jobs:
         run: |
           cd misc/docs/build/html/
           tar cfJ obspydoc.tar.xz *
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: obspydoc
           path: misc/docs/build/html/obspydoc.tar.xz
