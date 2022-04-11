@@ -61,13 +61,13 @@ def split_ray_path(path, model):
     """
     Split and label ray path according to type of wave.
 
-    :param path: Path taken by ray
+    :param path: Path taken by ray.
     :type path: :class:`~numpy.ndarray`
         (dtype = :class:`~obspy.taup.helper_classes.TimeDist`)
-    :param model: The model used to calculate the ray path
+    :param model: The model used to calculate the ray path.
     :type model: :class:`obspy.taup.tau_model.TauModel`
-    :returns: a list of paths and a list of wave types
-        wave types are either "p", "s", or "diff"
+    :returns: A list of paths and a list of wave types.
+        Wave types are either "p", "s", or "diff".
     :rtype: list[:class:`~numpy.ndarray`]
         and list[str]
 
