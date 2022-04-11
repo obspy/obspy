@@ -80,8 +80,6 @@ Nesbitt, Ian M.
 Nof, Ran Novitsky
 Panning, Mark P.
 Rapagnani, Giovanni
-Rudge, John F.
-Russell, Stuart
 Parker, Tom
 Pestourie, Romain
 Pourpoint, Maeva
@@ -90,7 +88,7 @@ Reyes, Celso
 Ringler, Adam
 Rothenhäusler, Nicolas
 Russo, Emiliano
-Rudge, John
+Rudge, John F.
 Russell, Stuart
 Sales de Andrade, Elliott
 Satriano, Claudio
