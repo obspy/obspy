@@ -17,7 +17,7 @@ from .taup_path import TauPPath
 from .taup_pierce import TauPPierce
 from .taup_time import TauPTime
 from .taup_geo import calc_dist, add_geo_to_arrivals
-from .utils import parse_phase_list
+from .utils import parse_phase_list, split_ray_path
 import obspy.geodetics.base as geodetics
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
@@ -246,6 +246,7 @@ class Arrivals(list):
 
     def plot_rays(self, phase_list=None, plot_type="spherical",
                   plot_all=True, legend=False, label_arrivals=False,
+                  indicate_wave_type=False,
                   show=True, fig=None, ax=None):
         """
         Plot ray paths if any have been calculated.
@@ -275,6 +276,9 @@ class Arrivals(list):
             or clip. Consider using the ``legend`` parameter instead if you
             are plotting multiple phases.
         :type label_arrivals: bool
+        :param indicate_wave_type: Distinguish between p and s waves when
+            plotting ray path. s waves indicated by wiggly lines.
+        :type indicate_wave_type: bool
         :param show: Show the plot
         :type show: bool
         :param fig: Figure to plot in. If not given, a new figure will be
@@ -304,7 +308,6 @@ class Arrivals(list):
             requested_phase_name_map[phase_name] = i
             i += 1
 
-        phase_names = sorted(parse_phase_list(phase_list))
         arrivals = []
         for arrival in self:
             if arrival.path is None:
@@ -328,6 +331,18 @@ class Arrivals(list):
         # get the velocity discontinuities in your model, for plotting:
         discons = self.model.s_mod.v_mod.get_discontinuity_depths()
 
+        # line colors
+        phase_names_encountered = {ray.name for ray in arrivals}
+        colors = {
+            name: COLORS[i % len(COLORS)]
+            for name, i in requested_phase_name_map.items()}
+        i = len(colors)
+        for name in sorted(phase_names_encountered):
+            if name in colors:
+                continue
+            colors[name] = COLORS[i % len(COLORS)]
+            i += 1
+
         if plot_type == "spherical":
             if ax and not isinstance(ax, mpl.projections.polar.PolarAxes):
                 msg = ("Axes instance provided for plotting with "
@@ -350,22 +365,35 @@ class Arrivals(list):
 
             intp = matplotlib.cbook.simple_linear_interpolation
             radius = self.model.radius_of_planet
-            phase_names_encountered = {ray.name for ray in arrivals}
-            colors = {
-                name: COLORS[i % len(COLORS)]
-                for name, i in requested_phase_name_map.items()}
-            i = len(colors)
-            for name in sorted(phase_names_encountered):
-                if name in colors:
-                    continue
-                colors[name] = COLORS[i % len(COLORS)]
-                i += 1
+
             for ray in arrivals:
                 color = colors.get(ray.name, 'k')
-                # Requires interpolation,or diffracted phases look funny.
-                ax.plot(intp(ray.path["dist"], 100),
-                        radius - intp(ray.path["depth"], 100),
-                        color=color, label=ray.name, lw=2.0)
+
+                # Requires interpolation, or diffracted phases look funny.
+                if indicate_wave_type:
+                    # Plot p, s, and diff phases separately
+                    paths, waves = split_ray_path(ray.path, self.model)
+                    for path, wave in zip(paths, waves):
+                        if wave == "diff":
+                            ax.plot(intp(path["dist"], 100),
+                                    radius - intp(path["depth"], 100),
+                                    color=color, label=ray.name, lw=2.0)
+                        elif wave == "s":
+                            # Make s waves wiggly
+                            with mpl.rc_context({'path.sketch': (2, 10, 1)}):
+                                ax.plot(intp(path["dist"], 100),
+                                        radius - intp(path["depth"], 100),
+                                        color=color, label=ray.name, lw=1.0)
+                        else:
+                            # p waves
+                            ax.plot(intp(path["dist"], 100),
+                                    radius - intp(path["depth"], 100),
+                                    color=color, label=ray.name, lw=2.0)
+                else:
+                    # Plot each ray as a single path
+                    ax.plot(intp(ray.path["dist"], 100),
+                            radius - intp(ray.path["depth"], 100),
+                            color=color, label=ray.name, lw=2.0)
                 ax.set_yticks(radius - discons)
                 ax.xaxis.set_major_formatter(plt.NullFormatter())
                 ax.yaxis.set_major_formatter(plt.NullFormatter())
@@ -441,14 +469,30 @@ class Arrivals(list):
 
             # Plot the ray paths:
             for ray in arrivals:
-                if ray.name in phase_names:
-                    ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
-                            color=COLORS[phase_names.index(ray.name) %
-                                         len(COLORS)],
-                            label=ray.name, lw=2.0)
+                color = colors.get(ray.name, 'k')
+
+                if indicate_wave_type:
+                    # Plot p, s, and diff phases separately
+                    paths, waves = split_ray_path(ray.path, self.model)
+                    for path, wave in zip(paths, waves):
+                        if wave == "diff":
+                            ax.plot(np.rad2deg(path["dist"]), path["depth"],
+                                    color=color, label=ray.name, lw=2.0)
+                        elif wave == "s":
+                            # Make s waves wiggly
+                            with mpl.rc_context({'path.sketch': (2, 10, 1)}):
+                                ax.plot(np.rad2deg(path["dist"]),
+                                        path["depth"],
+                                        color=color, label=ray.name, lw=1.0)
+                        else:
+                            # p waves
+                            ax.plot(np.rad2deg(path["dist"]), path["depth"],
+                                    color=color, label=ray.name, lw=2.0)
                 else:
+                    # Plot each ray as a single path
                     ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
-                            color='k', label=ray.name, lw=2.0)
+                            color=color,
+                            label=ray.name, lw=2.0)
 
             # Pretty station marker:
             ms = 14
