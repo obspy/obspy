@@ -246,8 +246,8 @@ class Arrivals(list):
 
     def plot_rays(self, phase_list=None, plot_type="spherical",
                   plot_all=True, legend=False, label_arrivals=False,
-                  indicate_wave_type=False,
-                  show=True, fig=None, ax=None):
+                  show=True, fig=None, ax=None,
+                  indicate_wave_type=False):
         """
         Plot ray paths if any have been calculated.
 
