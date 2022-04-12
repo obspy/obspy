@@ -372,18 +372,14 @@ class Arrivals(list):
                     # Plot p, s, and diff phases separately
                     paths, waves = split_ray_path(ray.path, self.model)
                     for path, wave in zip(paths, waves):
-                        if wave == "diff":
-                            ax.plot(intp(path["dist"], 100),
-                                    radius - intp(path["depth"], 100),
-                                    color=color, label=ray.name, lw=2.0)
-                        elif wave == "s":
+                        if wave == "s":
                             # Make s waves wiggly
                             with mpl.rc_context({'path.sketch': (2, 10, 1)}):
                                 ax.plot(intp(path["dist"], 100),
                                         radius - intp(path["depth"], 100),
-                                        color=color, label=ray.name, lw=1.0)
+                                        color=color, label=ray.name, lw=1.5)
                         else:
-                            # p waves
+                            # p and diff waves
                             ax.plot(intp(path["dist"], 100),
                                     radius - intp(path["depth"], 100),
                                     color=color, label=ray.name, lw=2.0)
@@ -472,17 +468,14 @@ class Arrivals(list):
                     # Plot p, s, and diff phases separately
                     paths, waves = split_ray_path(ray.path, self.model)
                     for path, wave in zip(paths, waves):
-                        if wave == "diff":
-                            ax.plot(np.rad2deg(path["dist"]), path["depth"],
-                                    color=color, label=ray.name, lw=2.0)
-                        elif wave == "s":
+                        if wave == "s":
                             # Make s waves wiggly
                             with mpl.rc_context({'path.sketch': (2, 10, 1)}):
                                 ax.plot(np.rad2deg(path["dist"]),
                                         path["depth"],
-                                        color=color, label=ray.name, lw=1.0)
+                                        color=color, label=ray.name, lw=1.5)
                         else:
-                            # p waves
+                            # p and diff waves
                             ax.plot(np.rad2deg(path["dist"]), path["depth"],
                                     color=color, label=ray.name, lw=2.0)
                 else:
