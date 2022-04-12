@@ -276,9 +276,6 @@ class Arrivals(list):
             or clip. Consider using the ``legend`` parameter instead if you
             are plotting multiple phases.
         :type label_arrivals: bool
-        :param indicate_wave_type: Distinguish between p and s waves when
-            plotting ray path. s waves indicated by wiggly lines.
-        :type indicate_wave_type: bool
         :param show: Show the plot
         :type show: bool
         :param fig: Figure to plot in. If not given, a new figure will be
@@ -288,6 +285,9 @@ class Arrivals(list):
             will be created. Must be a polar axes for the spherical plot and
             a regular one for the Cartesian plot.
         :type ax: :class:`matplotlib.axes.Axes`
+        :param indicate_wave_type: Distinguish between p and s waves when
+            plotting ray path. s waves indicated by wiggly lines.
+        :type indicate_wave_type: bool
         :returns: Matplotlib axes with the plot
         :rtype: :class:`matplotlib.axes.Axes`
         """
@@ -1014,7 +1014,7 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
                    plot_type='spherical', phase_list=['P', 'S', 'PP'],
                    model='iasp91', plot_all=True, legend=False,
                    label_arrivals=False, verbose=False, fig=None, show=True,
-                   ax=None):
+                   ax=None, indicate_wave_type=False):
     """
     Plot ray paths for seismic phases.
 
@@ -1057,6 +1057,9 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
     :param ax: Axes to plot in. If not given, a new figure with an axes
         will be created.
     :type ax: :class:`matplotlib.axes.Axes`
+    :param indicate_wave_type: Distinguish between p and s waves when
+        plotting ray path. s waves indicated by wiggly lines.
+    :type indicate_wave_type: bool
     :returns: Matplotlib axes with the plot
     :rtype: :class:`matplotlib.axes.Axes`
 
@@ -1095,7 +1098,8 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
                                            phase_list=phase_list)
             ax = arrivals.plot_rays(phase_list=phase_list, show=False,
                                     ax=ax, plot_type=plot_type,
-                                    plot_all=plot_all, legend=False)
+                                    plot_all=plot_all, legend=False,
+                                    indicate_wave_type=indicate_wave_type)
             plotted = True
         except ValueError:
             norays.append(degree)
