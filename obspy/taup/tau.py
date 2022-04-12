@@ -304,7 +304,6 @@ class Arrivals(list):
             requested_phase_name_map[phase_name] = i
             i += 1
 
-        phase_names = sorted(parse_phase_list(phase_list))
         arrivals = []
         for arrival in self:
             if arrival.path is None:
@@ -328,6 +327,17 @@ class Arrivals(list):
         # get the velocity discontinuities in your model, for plotting:
         discons = self.model.s_mod.v_mod.get_discontinuity_depths()
 
+        phase_names_encountered = {ray.name for ray in arrivals}
+        colors = {
+            name: COLORS[i % len(COLORS)]
+            for name, i in requested_phase_name_map.items()}
+        i = len(colors)
+        for name in sorted(phase_names_encountered):
+            if name in colors:
+                continue
+            colors[name] = COLORS[i % len(COLORS)]
+            i += 1
+
         if plot_type == "spherical":
             if ax and not isinstance(ax, mpl.projections.polar.PolarAxes):
                 msg = ("Axes instance provided for plotting with "
@@ -350,16 +360,6 @@ class Arrivals(list):
 
             intp = matplotlib.cbook.simple_linear_interpolation
             radius = self.model.radius_of_planet
-            phase_names_encountered = {ray.name for ray in arrivals}
-            colors = {
-                name: COLORS[i % len(COLORS)]
-                for name, i in requested_phase_name_map.items()}
-            i = len(colors)
-            for name in sorted(phase_names_encountered):
-                if name in colors:
-                    continue
-                colors[name] = COLORS[i % len(COLORS)]
-                i += 1
             for ray in arrivals:
                 color = colors.get(ray.name, 'k')
                 # Requires interpolation,or diffracted phases look funny.
@@ -441,14 +441,9 @@ class Arrivals(list):
 
             # Plot the ray paths:
             for ray in arrivals:
-                if ray.name in phase_names:
-                    ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
-                            color=COLORS[phase_names.index(ray.name) %
-                                         len(COLORS)],
-                            label=ray.name, lw=2.0)
-                else:
-                    ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
-                            color='k', label=ray.name, lw=2.0)
+                color = colors.get(ray.name, 'k')
+                ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
+                        color=color, label=ray.name, lw=2.0)
 
             # Pretty station marker:
             ms = 14

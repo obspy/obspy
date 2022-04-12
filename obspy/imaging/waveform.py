@@ -16,9 +16,10 @@ Waveform plotting for obspy.Stream objects.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import io
-import warnings
 import functools
+import io
+import os
+import warnings
 from copy import copy
 from datetime import datetime
 
@@ -219,6 +220,15 @@ class WaveformPlotting(object):
         Destructor closes the figure instance if it has been created by the
         class.
         """
+        # this garbage collector quick n dirty fix causes things like st.plot()
+        # in plot directive code for images in the docs to not appear anymore,
+        # because apparently newer sphinx looks for still active Figure objects
+        # *after* running the code and ignores figures that get shown *during*
+        # running the code, so for now add more magic that prevents garbage
+        # collection of figures here, when in CI (detected by env variable set
+        # by github actions) see #3036
+        if os.environ.get('CI') == 'true':
+            return
         import matplotlib.pyplot as plt
         if self.kwargs.get('fig', None) is None and \
                 not self.kwargs.get('handle'):
