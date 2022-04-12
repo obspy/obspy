@@ -316,7 +316,7 @@ class Arrivals(list):
             distance = arrival.distance
             if distance < 0:
                 distance = (distance % 360)
-            if abs(dist - distance) / dist > 1E-5:
+            if abs(dist - distance) > 1E-5 * dist:
                 if plot_all is False:
                     continue
                 # Mirror on axis.
