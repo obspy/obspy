@@ -29,7 +29,7 @@ URL = 'https://docs.obspy.org/pr/{pr}'
 
 
 def get_runs(event=None, time=0):
-    data = {'status': 'success', 'per_page': 100}
+    data = {'conclusion': 'success', 'per_page': 100}
     r = requests.get(API + 'actions/runs', params=data, **RKW)
     r.raise_for_status()
     runs = r.json()['workflow_runs']
