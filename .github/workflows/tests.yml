@@ -199,7 +199,7 @@ jobs:
           obspy-runtests --cov obspy --cov-report='xml' --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3.0.0
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
         with:
           flags: unittests
@@ -210,7 +210,7 @@ jobs:
 
       - name: optionally upload image directory
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'upload_images')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: "images_${{ github.event.pull_request.number }}_${{ matrix.python-version }}_${{ matrix.os }}"
           path: obspy/obspy_test_images

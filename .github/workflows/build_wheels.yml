@@ -58,9 +58,9 @@ jobs:
           echo "CIBW_TEST_COMMAND: $CIBW_TEST_COMMAND"
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v2.3.1
+        uses: pypa/cibuildwheel@v2.4.0
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -76,7 +76,7 @@ jobs:
         shell: bash -l {0}
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: dist/*.tar.gz
 
@@ -86,7 +86,7 @@ jobs:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: artifact
           path: dist
@@ -103,7 +103,7 @@ jobs:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: artifact
           path: dist

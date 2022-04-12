@@ -331,7 +331,6 @@ class Arrivals(list):
         # get the velocity discontinuities in your model, for plotting:
         discons = self.model.s_mod.v_mod.get_discontinuity_depths()
 
-        # line colors
         phase_names_encountered = {ray.name for ray in arrivals}
         colors = {
             name: COLORS[i % len(COLORS)]
@@ -365,7 +364,6 @@ class Arrivals(list):
 
             intp = matplotlib.cbook.simple_linear_interpolation
             radius = self.model.radius_of_planet
-
             for ray in arrivals:
                 color = colors.get(ray.name, 'k')
 
@@ -470,7 +468,6 @@ class Arrivals(list):
             # Plot the ray paths:
             for ray in arrivals:
                 color = colors.get(ray.name, 'k')
-
                 if indicate_wave_type:
                     # Plot p, s, and diff phases separately
                     paths, waves = split_ray_path(ray.path, self.model)
