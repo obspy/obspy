@@ -37,7 +37,7 @@ for phase, distance in PHASES:
     ax = arrivals.plot_rays(plot_type='spherical',
                             legend=False, label_arrivals=True,
                             plot_all=True,
-                            show=False, ax=ax)
+                            show=False, ax=ax, indicate_wave_type=True)
 
 # Annotate regions
 ax.text(0, 0, 'Solid\ninner\ncore',
