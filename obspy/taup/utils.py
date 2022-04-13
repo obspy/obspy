@@ -4,6 +4,7 @@ Misc functionality.
 """
 import inspect
 from pathlib import Path
+
 import numpy as np
 
 ROOT = Path(Path(inspect.getfile(inspect.currentframe())).resolve()).parent
