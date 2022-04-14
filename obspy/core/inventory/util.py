@@ -963,7 +963,7 @@ def _unified_content_strings(contents):
     return items
 
 
-def _unified_content_strings_expanded(contents):
+def _unified_content_strings_expanded_simple(contents):
     contents2 = [["." + item.location_code, item.code,
                   item.sample_rate, item.start_date, item.end_date]
                  for item in contents]
@@ -974,6 +974,48 @@ def _unified_content_strings_expanded(contents):
                      end=str(item[4])) for item in contents2]
     return items
 
+def _unified_content_strings_expanded(contents):
+    contents2 = [["." + item.location_code, item.code,
+                  item.sample_rate, item.start_date, item.end_date, 
+                  item.depth, item.azimuth]
+                 for item in contents]
+
+    cha_codes = list(set([ele[1][0:2] for ele in contents2]))
+
+    contents2 = sorted(contents2, key=lambda x: (x[2], x[1], x[3]),
+                       reverse=True)
+
+    #combine similar channels into one
+    contents3 = []
+    for ch in cha_codes:
+        c = [ele for ele in contents2 if ele[1][0:2] == ch]
+        test = [[e[0], e[2], e[3], e[4], e[5]] for e in c] #*only track depth not azi
+        if all(test[0]==x for x in test):
+            mergedch = ch+'['+''.join(map(str,[e[1][-1] for e in c]))+']'
+            c[0][1] = mergedch
+            c = c[0]
+        contents3.append(c)
+
+    #contents3 seems to work out as [ZNE] not sure if best or not
+
+    #now work out formatting (easy way)
+    items = ["{l: >7s}.{c: <6s}{sr: 6.0f} Hz  {start: <.10s} to {end: <.10s}"
+             .format(l=item[0], c=item[1], sr=item[2],
+                start=str(item[3]), end=str(item[4])) for item in contents3]
+ 
+    #hard way... if wanted to add local depth (and azimuth?)
+    items2 = []
+    for item in contents3:
+        if item[5] > 1:
+            items2.append("{l: >7s}.{c: <6s}{sr: 6.0f} Hz  {start: <.10s} to \
+    {end: <.10s}  depth {ldepth: <.1f} m".format(l=item[0], c=item[1], sr=item[2],
+                start=str(item[3]), end=str(item[4]), ldepth=item[5]))
+        else:
+            items2.append("{l: >7s}.{c: <6s}{sr: 6.0f} Hz  {start: <.10s} to \
+    {end: <.10s}".format(l=item[0], c=item[1], sr=item[2],
+                start=str(item[3]), end=str(item[4])))
+
+    return items2
 
 # make TextWrapper only split on colons, so that we avoid splitting in between
 # e.g. network code and network code occurence count (can be controlled with
