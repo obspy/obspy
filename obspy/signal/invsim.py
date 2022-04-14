@@ -407,6 +407,8 @@ def invert_spectrum(spec, wlev):
     :param wlev: Water level to use
     """
     # Calculated water level in the scale of spec
+    if wlev is None:
+        wlev = np.inf
     swamp = waterlevel(spec, wlev)
 
     # Find length in real fft frequency domain, spec is complex
