@@ -1007,12 +1007,13 @@ def _unified_content_strings_expanded(contents):
     items2 = []
     for item in contents3:
         if item[5] > 1:
-            items2.append("{l: >7s}.{c: <6s}{sr: 6.0f} Hz  {start: <.10s} to \
-    {end: <.10s}  depth {ldepth: <.1f} m".format(l=item[0], c=item[1], sr=item[2],
-                start=str(item[3]), end=str(item[4]), ldepth=item[5]))
+            items2.append("{l: >7s}.{c: <6s}{sr: 6.0f} Hz  {start: <.10s} to " \
+                "{end: <.10s}  depth {ldepth: <.1f} m".format(l=item[0], 
+                    c=item[1], sr=item[2], start=str(item[3]), end=str(item[4]),
+                    ldepth=item[5]))
         else:
-            items2.append("{l: >7s}.{c: <6s}{sr: 6.0f} Hz  {start: <.10s} to \
-    {end: <.10s}".format(l=item[0], c=item[1], sr=item[2],
+            items2.append("{l: >7s}.{c: <6s}{sr: 6.0f} Hz  {start: <.10s} to " \
+                "{end: <.10s}".format(l=item[0], c=item[1], sr=item[2],
                 start=str(item[3]), end=str(item[4])))
 
     return items2
