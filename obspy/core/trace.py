@@ -1352,12 +1352,15 @@ class Trace(object):
         """
         Correct for instrument response / Simulate new instrument response.
 
-        :type paz_remove: dict, None
-        :param paz_remove: Dictionary containing keys ``'poles'``, ``'zeros'``,
-            ``'gain'`` (A0 normalization factor). Poles and zeros must be a
-            list of complex floating point numbers, gain must be of type float.
-            Poles and Zeros are assumed to correct to m/s, SEED convention.
-            Use ``None`` for no inverse filtering.
+        :type paz_remove: :class:`~obspy.core.inventory.inventory.Inventory`,
+            dict, None
+        :param paz_remove: Inventory with response information of the original
+            instrument. Alternatively, a dictionary containing keys
+            ``'poles'``, ``'zeros'``, ``'gain'`` (A0 normalization factor) can
+            be specified. In that case, poles and zeros must be a list of
+            complex floating point numbers, gain must be of type float.  Poles
+            and Zeros are assumed to correct to m/s, SEED convention.  Use
+            ``None`` for no inverse filtering.
         :type paz_simulate: dict, None
         :param paz_simulate: Dictionary containing keys ``'poles'``,
             ``'zeros'``, ``'gain'``. Poles and zeros must be a list of complex
@@ -1367,7 +1370,8 @@ class Trace(object):
         :param remove_sensitivity: Determines if data is divided by
             ``paz_remove['sensitivity']`` to correct for overall sensitivity of
             recording instrument (seismometer/digitizer) during instrument
-            correction.
+            correction. If using an Inventory for ``paz_remove`` this will
+            always be ``True``.
         :type simulate_sensitivity: bool
         :param simulate_sensitivity: Determines if data is multiplied with
             ``paz_simulate['sensitivity']`` to simulate overall sensitivity of
@@ -1383,7 +1387,9 @@ class Trace(object):
 
         `paz_remove` and `paz_simulate` are expected to be dictionaries
         containing information on poles, zeros and gain (and usually also
-        sensitivity).
+        sensitivity). `paz_remove` can also be an
+        :class:`~obspy.core.inventory.inventory.Inventory` specifying the
+        original instrument response.
 
         If both `paz_remove` and `paz_simulate` are specified, both steps are
         performed in one go in the frequency domain, otherwise only the
@@ -1443,6 +1449,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             tr.plot()
         """
+        from obspy import Inventory
+
         # XXX accepting string "self" and using attached PAZ then
         if paz_remove == 'self':
             paz_remove = self.stats.paz
@@ -1472,6 +1480,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             # Set the SEED identifiers!
             for item in ["network", "station", "location", "channel"]:
                 seedresp[item] = self.stats[item]
+
+        if isinstance(paz_remove, Inventory):
+            paz_remove = paz_remove.get_response(
+                self.id, self.stats.starttime)
 
         from obspy.signal.invsim import simulate_seismometer
         self.data = simulate_seismometer(
