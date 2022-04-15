@@ -90,7 +90,7 @@ Station RJOB (Jochberg, Bavaria, BW-Net)
 >>> print(cha)  # doctest: +NORMALIZE_WHITESPACE
 Channel 'EHZ', Location ''
    Time range: 2007-12-17T00:00:00.000000Z - --
-   Latitude: 47.74, Longitude: 12.80, Elevation: 860.0 m, Local Depth: 0.0 m
+   Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m, Local Depth: 0.0 m
    Azimuth: 0.00 degrees from north, clockwise
    Dip: -90.00 degrees down from horizontal
    Channel types: TRIGGERED, GEOPHYSICAL
