@@ -380,8 +380,8 @@ class Station(BaseNode):
             Access: None
             Latitude: 48.1629, Longitude: 11.2752, Elevation: 565.0 m
             Available Channels:
-              ..BH[Z] 20 Hz 2006-12-16 to None
-              ..LH[Z]  1 Hz 2006-12-16 to None
+             ..BHZ        20.0 Hz  2006-12-16 to None
+             ..LHZ         1.0 Hz  2006-12-16 to None            
 
         The `location` and `channel` selection criteria  may also contain UNIX
         style wildcards (e.g. ``*``, ``?``, ...; see
