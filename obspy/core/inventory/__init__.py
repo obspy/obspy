@@ -81,9 +81,9 @@ Station RJOB (Jochberg, Bavaria, BW-Net)
     Channel Count: None/None (Selected/Total)
     2007-12-17T00:00:00.000000Z -
     Access: None
-    Latitude: 47.74, Longitude: 12.80, Elevation: 860.0 m
+    Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m
     Available Channels:
-        RJOB..EHZ, RJOB..EHN, RJOB..EHE
+      ..EH[ZNE] 200 Hz 2007-12-17 to None
 
 >>> cha = sta[0]
 >>> print(cha)  # doctest: +NORMALIZE_WHITESPACE
