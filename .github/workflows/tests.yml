@@ -80,6 +80,10 @@ jobs:
             reviewdog -f=pep8 -name=flake8 \
               -tee -reporter=github-check -filter-mode nofilter
 
+      # make sure contributor list stays sorted
+      - name: Contributor list sorting
+        run: sort -u -c CONTRIBUTORS.txt || (sort -u CONTRIBUTORS.txt > /tmp/CONTRIBUTORS_EXPECTED; diff -u CONTRIBUTORS.txt /tmp/CONTRIBUTORS_EXPECTED; echo 'Please sort CONTRIBUTORS.txt according to above diff.'; exit 1)
+
   # Runs the tests on combinations of the supported python/os matrix.
   run_tests:
     if: github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')
