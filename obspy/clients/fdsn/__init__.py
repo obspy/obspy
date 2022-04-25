@@ -36,6 +36,7 @@ available providers are:
 ...     print("{0:<11} {1}".format(key,  URL_MAPPINGS[key]))
 AUSPASS     http://auspass.edu.au
 BGR         http://eida.bgr.de
+EIDA        http://eida-federator.ethz.ch
 EMSC        http://www.seismicportal.eu
 ETH         http://eida.ethz.ch
 GEOFON      http://geofon.gfz-potsdam.de

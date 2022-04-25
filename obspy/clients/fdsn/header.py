@@ -102,6 +102,7 @@ class FDSNNoServiceException(FDSNException):
 URL_MAPPINGS = {
     "AUSPASS": "http://auspass.edu.au",
     "BGR": "http://eida.bgr.de",
+    "EIDA": "http://eida-federator.ethz.ch",
     "ETH": "http://eida.ethz.ch",
     "EMSC": "http://www.seismicportal.eu",
     "GEONET": "http://service.geonet.org.nz",
