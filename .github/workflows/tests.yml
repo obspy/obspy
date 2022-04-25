@@ -90,8 +90,7 @@ jobs:
           TMPFILE=$(mktemp)
           git diff obspy/CONTRIBUTORS.txt >"${TMPFILE}"
           git stash -u && git stash drop
-          cat "${TMPFILE}"
-          reviewdog -f=diff -reporter=github-check -filter-mode nofilter < "${TMPFILE}"
+          cat "${TMPFILE}" | clang-format-diff-10 -p1 | reviewdog -f=diff -f.diff.strip=0 -reporter=github-check -filter-mode nofilter -fail-on-error
 
   # Runs the tests on combinations of the supported python/os matrix.
   run_tests:
