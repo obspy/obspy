@@ -70,7 +70,7 @@ parsed in a :class:`~obspy.io.xseed.parser.Parser` structure.
   headers will be written in case they are needed by SEED/XSEED conventions.)
 
 After parsing a `SEED` or `XML-SEED` file the Blockette objects for each
-volume will be stored in the attributes``Parser.volume``,
+volume will be stored in the attributes ``Parser.volume``,
 ``Parser.abbreviations`` and ``Parser.stations``. Each item is a list of all
 related Blockettes and ``Parser.stations`` is a list of stations which contains
 all related Blockettes.

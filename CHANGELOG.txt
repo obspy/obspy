@@ -16,6 +16,8 @@ maintenance_1.3.x
 =================
 
 Changes:
+ - obspy.clients.fdsn:
+   * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
  - obspy.io.wav:
    * fix writing of wav files with rescale=True and default width=None
      (see #3029)
