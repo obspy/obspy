@@ -81,7 +81,6 @@ Murray-Bergquist, Louisa
 Nesbitt, Ian M.
 Nof, Ran Novitsky
 Panning, Mark P.
-Rapagnani, Giovanni
 Parker, Tom
 Pestourie, Romain
 Pourpoint, Maeva
@@ -108,6 +107,7 @@ Tian, Dongdong
 Trabant, Chad
 Trani, Luca
 Uieda, Leonardo
+Ulianych, Danylo
 Walker, Andrew
 Walther, Marcus
 Wang, Yinzhi
@@ -119,4 +119,3 @@ Winkelman, Andrew
 Zaccarelli, Riccardo
 Zad, Seyed Kasra Hosseini
 Zhu, Lijun
-Ulianych, Danylo
