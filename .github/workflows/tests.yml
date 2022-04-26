@@ -108,7 +108,7 @@ jobs:
           # alternative without reviewdog
           TMPFILE=$(mktemp)
           # sort -c has non-zero return code if it finds a need to sort
-          sort -u -c obspy/CONTRIBUTORS.txt || (sort -u obspy/CONTRIBUTORS.txt > "${TMPFILE}"; diff -u obspy/CONTRIBUTORS.txt "${TMPFILE}"; echo 'Please sort CONTRIBUTORS.txt according to above diff.'; exit 1)
+          sort -u -c obspy/CONTRIBUTORS.txt || (sort -u obspy/CONTRIBUTORS.txt > "${TMPFILE}"; diff -u obspy/CONTRIBUTORS.txt "${TMPFILE}"; echo '::error::Please sort CONTRIBUTORS.txt according to above diff.'; exit 1)
 
   # Runs the tests on combinations of the supported python/os matrix.
   run_tests:
