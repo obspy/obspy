@@ -82,19 +82,33 @@ jobs:
 
       # make sure contributor list stays sorted
       - name: Contributor list sorting
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # env:
+        #   REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sort -u -o obspy/CONTRIBUTORS.txt obspy/CONTRIBUTORS.txt
-          TMPFILE=$(mktemp)
-          git diff obspy/CONTRIBUTORS.txt >"${TMPFILE}"
-          git stash -u && git stash drop
-          # with the following, reviewdog states the detected changes as
-          # "filtered findings" and reports success, and the lines that should
-          # be reported as diff are just links to the respective lines in the
-          # code base
+          # # this is how it should work, according to reviewdog README
+          # sort -u -o obspy/CONTRIBUTORS.txt obspy/CONTRIBUTORS.txt
+          # TMPFILE=$(mktemp)
+          # git diff obspy/CONTRIBUTORS.txt >"${TMPFILE}"
+          # git stash -u && git stash drop
+          # # with the following, reviewdog states the detected changes as
+          # # "filtered findings" and reports success, and the lines that should
+          # # be reported as diff are just links to the respective lines in the
+          # # code base
           # reviewdog -f=diff -f.diff.strip=1 -reporter=github-pr-check < "${TMPFILE}"
-          reviewdog -f=diff -f.diff.strip=1 -reporter=github-pr-check -filter-mode nofilter < "${TMPFILE}"
+          # # with setting "nofilter" to force reporting the one file we diff,
+          # # reviewdog errors out with:
+          # # reviewdog: post failed for diff: failed to post result: failed to
+          # # post annotations: PATCH
+          # # https://api.github.com/repos/obspy/obspy/check-runs/6159957608: 422
+          # # Validation Failed [{Resource:CheckRun Field:annotations
+          # # Code:invalid Message:}]
+          # reviewdog -f=diff -f.diff.strip=1 -reporter=github-pr-check -filter-mode nofilter < "${TMPFILE}"
+          # # it seems that we run into a bug described in reviewdog/reviewdog#924
+          #
+          # alternative without reviewdog
+          TMPFILE=$(mktemp)
+          # sort -c has non-zero return code if it finds a need to sort
+          sort -u -c obspy/CONTRIBUTORS.txt || (sort -u obspy/CONTRIBUTORS.txt > "${TMPFILE}"; diff -u obspy/CONTRIBUTORS.txt "${TMPFILE}"; echo 'Please sort CONTRIBUTORS.txt according to above diff.'; exit 1)
 
   # Runs the tests on combinations of the supported python/os matrix.
   run_tests:
