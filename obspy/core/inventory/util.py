@@ -969,7 +969,7 @@ def _unified_content_strings_expanded(contents):
                   item.depth]
                  for item in contents]
 
-    # sorting this to keep the channels Z-N-E
+    # sorts by sample rate, startdate, and channel code (ZNE321)
     contents2 = sorted(contents2, key=lambda x: (x[2], x[1], x[3]),
                        reverse=True)
 
@@ -992,12 +992,6 @@ def _unified_content_strings_expanded(contents):
     contents3 = sorted(contents3, key=lambda x: (x[2], x[3], x[5]),
                        reverse=True)
 
-    # now work out formatting (easy way)
-    # items = ["{l: >7s}.{c: <6s}{sr: 6.1f} Hz  {start: <.10s} to {end: <.10s}"
-    #          .format(l=item[0], c=item[1], sr=item[2],
-    #             start=str(item[3]), end=str(item[4])) for item in contents3]
-
-    # if wanted to add local depth (when relevant)
     items = []
     for item in contents3:
         if item[5] != 0:
