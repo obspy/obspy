@@ -1,0 +1,5 @@
+LIBRARY gcf_io.dll
+EXPORTS
+   read_gcf
+   write_gcf
+   free_GcfFile

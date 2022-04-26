@@ -283,6 +283,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.GCF': [
         'isFormat = obspy.io.gcf.core:_is_gcf',
         'readFormat = obspy.io.gcf.core:_read_gcf',
+        'writeFormat = obspy.io.gcf.core:_write_gcf',
         ],
     'obspy.plugin.waveform.REFTEK130': [
         'isFormat = obspy.io.reftek.core:_is_reftek130',
@@ -593,6 +594,18 @@ def get_extensions():
     Config function mainly used to compile C code.
     """
     extensions = []
+
+    # GCF
+    path = os.path.join("obspy", "io", "gcf", "src")
+    files = [os.path.join(path, "gcf_io.c")]
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'gcf_io.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
+    extensions.append(Extension("gcf", files, **kwargs))
 
     # GSE2
     path = os.path.join("obspy", "io", "gse2", "src", "GSE_UTI")
