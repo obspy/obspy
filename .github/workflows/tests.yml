@@ -89,7 +89,12 @@ jobs:
           TMPFILE=$(mktemp)
           git diff obspy/CONTRIBUTORS.txt >"${TMPFILE}"
           git stash -u && git stash drop
-          reviewdog -f=diff -f.diff.strip=1 -reporter=github-pr-check < "${TMPFILE}"
+          # with the following, reviewdog states the detected changes as
+          # "filtered findings" and reports success, and the lines that should
+          # be reported as diff are just links to the respective lines in the
+          # code base
+          # reviewdog -f=diff -f.diff.strip=1 -reporter=github-pr-check < "${TMPFILE}"
+          reviewdog -f=diff -f.diff.strip=1 -reporter=github-pr-check -filter-mode nofilter < "${TMPFILE}"
 
   # Runs the tests on combinations of the supported python/os matrix.
   run_tests:
