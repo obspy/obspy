@@ -180,10 +180,6 @@ class Station(BaseNode):
             historical_code="historical Code: %s " % self.historical_code if
             self.historical_code else "")
         ret += "\tAvailable Channels:\n"
-        # ret += "\n".join(_textwrap(
-        #    ", ".join(_unified_content_strings(contents["channels"])),
-        #    initial_indent="\t\t", subsequent_indent="\t\t",
-        #    expand_tabs=False))
         for ele in _unified_content_strings_expanded(self.channels):
             ret += "\t%s\n" % ele
         return ret
