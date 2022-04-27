@@ -1546,7 +1546,7 @@ class Client(object):
         """
         # authenticated dataselect queries have different target URL
         if self.user is not None:
-            if service == "dataselect" and resource_type == "query":
+            if service in ("dataselect", "availability") and resource_type == "query":
                 resource_type = "queryauth"
         return build_url(self.base_url, service, self.major_versions[service],
                          resource_type, parameters,
