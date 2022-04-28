@@ -17,6 +17,8 @@
 // (C) Peter Schmidt 2017-2022
 
 #include <stdint.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #define UNKNOWN -2147483647
 #define MAX_DATA_BLOCK 1004
 
@@ -25,6 +27,36 @@
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
   #include <windows.h>
   #include <sys/types.h>
+  #include <io.h>
+  
+  #ifndef O_RDONLY
+    #define O_RDONLY _O_RDONLY
+  #endif 
+  
+  #ifndef O_WRONLY
+    #define O_WRONLY _O_WRONLY
+  #endif  
+  
+  #ifndef O_CREAT
+    #define O_CREAT _O_CREAT
+  #endif  
+  
+  #ifndef O_TRUNC
+    #define O_TRUNC _O_TRUNC
+  #endif 
+  
+  #ifndef open
+    #define open(path, flags) _open(path, flags)
+  #endif
+  
+  #ifndef close
+    #define close(fd) _close(fd)
+  #endif
+  
+  #ifndef write
+    #define write(fd, buffer, count) _write(fd, buffer, count)
+  #endif
+  #define FPERM _S_IWRITE
 
   /* For MSVC 2012 and earlier define standard int types, otherwise use inttypes.h */
   #if defined(_MSC_VER) && _MSC_VER <= 1700
@@ -38,6 +70,7 @@
   #endif
 #else
   #include <unistd.h>
+  #define FPERM  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
 #endif
 
 

@@ -173,9 +173,9 @@ class CoreTestCase(unittest.TestCase):
             nsamples = int(sps*duration)
             data = np.random.randint(-3600, 3600, nsamples,dtype=np.int32)
             gcf_stat = AttribDict({
-                     "systemID":("ABCDZ2")[:6-sysType],
-                     "streamID":'XXXXZ2',
-                     "sysType":sysType,
+                     "system_id":("ABCDZ2")[:6-sysType],
+                     "stream_id":'XXXXZ2',
+                     "sys_type":sysType,
                      "t_leap":0,
                      "gain":-1 if sysType == 0 else 2,
                      "digi":0,
@@ -201,7 +201,7 @@ class CoreTestCase(unittest.TestCase):
                _write_gcf(out_stream, filename)
                
                # Read temporary file
-               in_stream = _read_gcf(filename,networkcode='XY',stationcode="ABCD")
+               in_stream = _read_gcf(filename,network='XY',station="ABCD")
                         
             # compare
             self.assertEqual(out_stream,in_stream)

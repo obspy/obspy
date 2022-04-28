@@ -51,11 +51,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
-#include <sys/stat.h>
 #include "gcf_io.h"
 
 
@@ -309,11 +307,17 @@ void add_GcfSeg(GcfFile *obj, GcfSeg seg, int mode, double tol) {
 /* function merge_GcfFile() merges the segments in a GcfFile object if aligned and metadata agrees */
 void merge_GcfFile(GcfFile *obj, int mode, double tol) {
    if (obj->n_seg > 1) {
-      int i, j, k, ii, jj, i0, i1, n, aligned, Ord[obj->n_seg], NewOrd[obj->n_seg],chunk;
+      int i, j, k, ii, jj, i0, i1, n, aligned, *Ord, *NewOrd, chunk;
       int32 dd;
-      double ord[obj->n_seg], is,js,ie,je,sps;
+      double *ord, is,js,ie,je,sps;
       GcfSeg tmp;
    
+      // Allocate
+      Ord = (int *)malloc(obj->n_seg*sizeof(int));
+      NewOrd = (int *)malloc(obj->n_seg*sizeof(int)); 
+      ord = (double *)malloc(obj->n_seg*sizeof(double));
+      
+      
       // chunks to use when reallocating 
       chunk = MAX_DATA_BLOCK*10;
       
@@ -476,6 +480,11 @@ void merge_GcfFile(GcfFile *obj, int mode, double tol) {
       }
       // finally set number of segments proper
       obj->n_seg = n;
+      
+      // release memory
+      free(Ord);
+      free(NewOrd);
+      free(ord);
    }
 }
 
@@ -531,7 +540,7 @@ int opengcf(const char *fname, int32 *fid) {
 
 
 /* reads in data from file*/
-ssize_t Read(int fd, void *buf, size_t count) {
+ssize_t gcf_read(int fd, void *buf, size_t count) {
    ssize_t n;
    n = read(fd,buf,count);
    if (n < 0) {
@@ -553,7 +562,7 @@ ssize_t Read(int fd, void *buf, size_t count) {
  */
 int FillBuffer(int size, unsigned char buffer[], int32 *fid) {
    int n;
-   n=Read(*fid,buffer,size);
+   n=gcf_read(*fid,buffer,size);
    if (n <= 0) return(0);
    return(n);
 }
@@ -947,7 +956,7 @@ int verify_GcfFile(GcfFile *obj) {
                obj->seg[i].sps != 1000 &&  obj->seg[i].sps != 2000 &&  obj->seg[i].sps != 4000 && obj->seg[i].sps != 625 && 
                obj->seg[i].sps != 1250  && obj->seg[i].sps != 2500 &&  obj->seg[i].sps != 5000) ret = 2; 
 //             else if (obj->seg[i].sps > 250 && obj->seg[i].t_denominator < 1) ret = 3; // this is actually not used so no need to check
-            else if (((n=strlen(obj->seg[i].systemID)) > 6 || (obj->seg[i].sysType == 1 && n > 5) || (obj->seg[i].sysType == 2 && n > 4))) ret = 6;
+            else if (((n=(int)strlen(obj->seg[i].systemID)) > 6 || (obj->seg[i].sysType == 1 && n > 5) || (obj->seg[i].sysType == 2 && n > 4))) ret = 6;
             if (!ret) {
                if (obj->seg[i].gain > -1) {
                   if (obj->seg[i].gain && obj->seg[i].gain != 1 && obj->seg[i].gain != 2 && obj->seg[i].gain != 4 && obj->seg[i].gain != 8 && 
@@ -1072,7 +1081,7 @@ int write_gcf(const char *f, GcfFile *obj) {
    // check that obj contains some data
    if (!(ret=verify_GcfFile(obj))) {
       // open file with read/write for owner and read for group and others
-      if((FID = open(f,O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) >= 0) {
+      if((FID = open(f, O_WRONLY | O_CREAT | O_TRUNC, FPERM)) >= 0) {
          bh = (BH*)&buffer[0];
          ret = 0;
          

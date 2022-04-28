@@ -167,10 +167,12 @@ class TestWaveformPlugins:
 
                     # network/station/location/channel codes
                     if format in ['GCF']:
-                        # no network, station or location code in GCF, however first 4
-                        #  characters in station code will be set in current implementation
-                        #  if streamID is not set. Further no bandcode or instrumentcode, if
-                        #  not set by argument in call to read function both default to H
+                        # no network, station or location code in GCF, however
+                        #  first 4 characters in station code will be set in
+                        #  current implementation if stream_id is not set. 
+                        #  Further no bandcode or instrumentcode, if not set
+                        #  by argument in call to read function both default
+                        #  to H
                         assert st[0].id == ".MANZ..HHE"
                     elif format in ['Q', 'SH_ASC', 'AH']:
                         # no network or location code in Q, SH_ASC
@@ -274,15 +276,16 @@ class TestWaveformPlugins:
         data = np.arange(0, 500)
         formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
-            start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000) 
+            start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers. Also skip GCF as format does not permitt fractional
             # start time for sampling rates < 250
-            if format in ['SEGY', 'SU', 'SEG2','GCF']:
+            if format in ['SEGY', 'SU', 'SEG2', 'GCF']:
                 continue
             elif format in ['GCF']:
-               # XXX: GCF format does not support fractional for sampling rates <= 250 Hz
-               start = UTCDateTime(2009, 1, 13, 12, 1, 3)
+                # XXX: GCF format does not support fractional for sampling
+                # rates <= 250 Hz
+                start = UTCDateTime(2009, 1, 13, 12, 1, 3)
 
             dt = np.int_
             if format in ('MSEED', 'GSE2'):

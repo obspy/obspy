@@ -31,15 +31,15 @@ GCF specific metadata is stored in ``stats.gcf``
 'digi': 0
 'gain': 1
 'stat': 0
-'streamID': 6018N4
-'sysType': 1
-'systemID': 6281
+'stream_id': 6018N4
+'sys_type': 1
+'system_id': 6281
 't_leap': False
 'ttl': 6
 
 Several keyword arguments are available to set parameters required by the returned 
 :class:`~obspy.core.stream.Stream` object as well as to control merging of data blocks
-on reading: ``networkcode``, ``stationcode``, ``locationcode``, ``bandcode``, 
+on reading: ``network``, ``station``, ``locationcode``, ``bandcode``, 
 ``instrumentcode``, ``channel_prefix``, ``blockmerge``, ``headonly``, 
 ``cleanoverlap``, ``errorret``. They are passed to the :meth:`~obspy.io.gcf.core._read_gcf` 
 method so refer to this for details of each parameter.
@@ -60,7 +60,7 @@ Write data back to disc or a file like object using the
 
 Several key word arguments are available to set required GCF specific header information and
 allowed missalignment of supported starttime of first data sample:
-``streamID``, ``systemID``, ``isLeap``, ``gain``, ``ttl``, ``digi``, ``sysType``, ``missalign``
+``stream_id``, ``system_id``, ``is_leap``, ``gain``, ``ttl``, ``digi``, ``sys_type``, ``missalign``
 
 GCF specific header information can also be provided in ``stats.gcf`` on each
 :class:`~obspy.core.trace.Trace` object. If a specific piece of header information is available
