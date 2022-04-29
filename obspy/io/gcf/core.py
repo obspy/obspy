@@ -756,7 +756,7 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
             elif gcf_stats is not None and hasattr(gcf_stats, "stream_id"):
                 use_stream_id = gcf_stats.stream_id.upper()
             else:
-                use_stream_id = (trace.stats.station.ljust(4, "X")[:4]+
+                use_stream_id = (trace.stats.station.ljust(4, "X")[:4] +
                                  (trace.stats.channel[-1]
                                   if trace.stats.channel
                                   else 'X')+'0').upper()
