@@ -289,7 +289,7 @@ class RemoteNRL(NRL):
     """
     Subclass of NRL for accessing remote copy of NRL.
     """
-    def __init__(self, root='http://ds.iris.edu/NRL'):
+    def __init__(self, root='https://ds.iris.edu/NRL'):
         self.root = root
         super(self.__class__, self).__init__()
 
