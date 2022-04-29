@@ -16,7 +16,7 @@ import codecs
 import io
 import os
 import warnings
-from configparser import ConfigParser
+from configparser import ConfigParser, DuplicateSectionError
 from urllib.parse import urlparse
 
 import requests
@@ -295,9 +295,17 @@ class LocalNRL(NRL):
         """
         Returns a configparser from a path to an index.txt
         """
-        cp = ConfigParser()
-        with codecs.open(path, mode='r', encoding='UTF-8') as f:
-            cp.read_file(f)
+        try:
+            cp = ConfigParser()
+            with codecs.open(path, mode='r', encoding='UTF-8') as f:
+                cp.read_file(f)
+        # it seems requesting a full RESP archive of NRL version 2 has all
+        # items duplicated in the index.txt files. expecting this to be fixed
+        # upstream so this is just for now
+        except DuplicateSectionError:
+            cp = ConfigParser(strict=False)
+            with codecs.open(path, mode='r', encoding='UTF-8') as f:
+                cp.read_file(f)
         return cp
 
     def _read_resp(self, path):
