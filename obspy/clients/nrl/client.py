@@ -58,11 +58,22 @@ class NRL(object):
         return super(NRL, cls).__new__(RemoteNRL)
 
     def __init__(self):
-        sensor_index = self._join(self.root, 'sensors', self._index)
-        self.sensors = self._parse_ini(sensor_index)
+        try:
+            sensor_index = self._join(self.root, 'sensors', self._index)
+            self.sensors = self._parse_ini(sensor_index)
 
-        datalogger_index = self._join(self.root, 'dataloggers', self._index)
-        self.dataloggers = self._parse_ini(datalogger_index)
+            datalogger_index = self._join(self.root, 'dataloggers',
+                                          self._index)
+            self.dataloggers = self._parse_ini(datalogger_index)
+            self._nrl_version = 1
+        except FileNotFoundError:
+            sensor_index = self._join(self.root, 'sensor', self._index)
+            self.sensors = self._parse_ini(sensor_index)
+
+            datalogger_index = self._join(self.root, 'datalogger', self._index)
+            self.dataloggers = self._parse_ini(datalogger_index)
+            # version 2 also has additional base nodes "integrated" and "soh"
+            self._nrl_version = 2
 
     def __str__(self):
         info = ['NRL library at ' + self.root]
@@ -210,12 +221,22 @@ class NRL(object):
         """
         dl_resp = self.get_datalogger_response(datalogger_keys)
         sensor_resp = self.get_sensor_response(sensor_keys)
-
-        # Combine both by replace stage one in the data logger with stage
-        # one of the sensor.
-        dl_resp.response_stages.pop(0)
         sensor_stage0 = sensor_resp.response_stages[0]
-        dl_resp.response_stages.insert(0, sensor_stage0)
+
+        # information on changes between NRL v1 and v2:
+        # https://ds.iris.edu/files/nrl/NominalResponseLibraryVersions.pdf
+        if self._nrl_version == 1:
+            # Combine both by replace stage one in the data logger with stage
+            # one of the sensor.
+            dl_resp.response_stages.pop(0)
+            dl_resp.response_stages.insert(0, sensor_stage0)
+        elif self._nrl_version == 2:
+            for stage in dl_resp.response_stages:
+                stage.stage_sequence_number += len(sensor_resp.response_stages)
+            dl_resp.response_stages = (
+                sensor_resp.response_stages + dl_resp.response_stages)
+        else:
+            raise NotImplementedError()
         dl_resp.instrument_sensitivity.input_units = sensor_stage0.input_units
         dl_resp.instrument_sensitivity.input_units_description = \
             sensor_stage0.input_units_description
