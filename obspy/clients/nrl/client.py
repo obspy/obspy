@@ -112,6 +112,8 @@ class NRL(object):
             newpath = cp.get(choice, 'path')
         elif 'resp' in options:
             newpath = cp.get(choice, 'resp')
+        elif 'xml' in options:
+            newpath = cp.get(choice, 'xml')
         # Strip quotes of new path
         newpath = self._clean_str(newpath)
         path = os.path.dirname(path)
@@ -136,8 +138,11 @@ class NRL(object):
                     continue
                 # sometimes the description field is named 'description', but
                 # sometimes also 'descr'
+                # NRL version 2 does not seem to have any of the 'descr = '
+                # oddities anymore, but it can be downloaded in RESP format or
+                # StationXML format and then the option name is different
                 elif options in (['description', 'resp'], ['descr', 'resp'],
-                                 ['resp']):
+                                 ['resp'], ['description', 'xml']):
                     if 'descr' in options:
                         descr = cp.get(section, 'descr')
                     elif 'description' in options:
@@ -146,7 +151,13 @@ class NRL(object):
                         descr = '<no description>'
                     descr = self._clean_str(descr)
                     resp_path = self._choose(section, path)
-                    nrl_dict[section] = (descr, resp_path)
+                    if 'resp' in options:
+                        resp_type = 'RESP'
+                    elif 'xml' in options:
+                        resp_type = 'STATIONXML'
+                    else:
+                        raise NotImplementedError(msg)
+                    nrl_dict[section] = (descr, resp_path, resp_type)
                     continue
                 else:  # pragma: no cover
                     msg = "Unexpected structure of NRL file '{}'".format(path)
@@ -168,9 +179,11 @@ class NRL(object):
             datalogger = datalogger[key]
 
         # Parse to an inventory object and return a response object.
-        with io.BytesIO(self._read_resp(datalogger[1]).encode()) as buf:
+        description, path, resp_type = datalogger
+        with io.BytesIO(self._read_resp(path).encode()) as buf:
             buf.seek(0, 0)
-            return obspy.read_inventory(buf, format="RESP")[0][0][0].response
+            return obspy.read_inventory(
+                buf, format=resp_type)[0][0][0].response
 
     def get_sensor_response(self, sensor_keys):
         """
@@ -184,9 +197,11 @@ class NRL(object):
             sensor = sensor[key]
 
         # Parse to an inventory object and return a response object.
-        with io.BytesIO(self._read_resp(sensor[1]).encode()) as buf:
+        description, path, resp_type = sensor
+        with io.BytesIO(self._read_resp(path).encode()) as buf:
             buf.seek(0, 0)
-            return obspy.read_inventory(buf, format="RESP")[0][0][0].response
+            return obspy.read_inventory(
+                buf, format=resp_type)[0][0][0].response
 
     def get_response(self, datalogger_keys, sensor_keys):
         """
