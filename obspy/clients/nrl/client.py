@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Client for accessing the Nominal Response Library (http://ds.iris.edu/NRL/).
+Client for accessing the `IRIS Library of Nominal Response for Seismic
+Instruments <https://ds.iris.edu/NRL/>`_ (NRL).  To cite use of the NRL, please
+see [Templeton2017]_.
 
 :copyright:
     Lloyd Carothers IRIS/PASSCAL, 2016
@@ -33,7 +35,7 @@ class NRL(object):
     """
     NRL client base class for accessing the Nominal Response Library.
 
-    http://ds.iris.edu/NRL/
+    https://ds.iris.edu/NRL/
 
     Created with a URL for remote access or filesystem accessing a local copy.
     """
