@@ -532,7 +532,7 @@ void closegcf(int32 *fid) {
 
 /* open a file for reading */
 int opengcf(const char *fname, int32 *fid) {
-   if ((*fid = open(fname,O_RDONLY)) <  0 ) {
+   if ((*fid = open(fname,O_RDONLY, FPERM)) <  0 ) {
       return 1;
    }
    return 0;
