@@ -11,7 +11,7 @@ Modified after obspy.io.stationXML
 
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 
 import inspect
