@@ -1007,11 +1007,11 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
 
 
 /* function read_gcf() parses a gcf data file */
-int read_gcf(const char *f, GcfFile *obj, int mode)  {
+int read_gcf(const char *f, GcfFile *obj, int mode) {
    int ret=0, endian, d=0, err=0, b1 = 0; 
    int32 fid=0, n_alloc=0;
    GcfSeg seg;
-   double tol = 1.E-3;;
+   double tol = 1.E-3;
    unsigned char buffer[1024]; 
    
    // initiate and allocate segment

@@ -63,8 +63,9 @@ class TestWaveformPlugins:
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
             elif format in ['GCF']:
-               # XXX: GCF format does not support fractional start time for sampling rates <= 250 Hz
-               start = UTCDateTime(2009, 1, 13, 12, 1, 3)
+                # XXX: GCF format does not support fractional start time for
+                # sampling rates <= 250 Hz
+                start = UTCDateTime(2009, 1, 13, 12, 1, 3)
             for native_byteorder in ['<', '>']:
                 for byteorder in (['<', '>', '='] if format in
                                   WAVEFORM_ACCEPT_BYTEORDER else [None]):
@@ -155,7 +156,8 @@ class TestWaveformPlugins:
                         assert st[0].data.dtype.byteorder == '='
                     # check meta data
                     # some formats do not contain a calibration factor
-                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST', 'AH','GCF']:
+                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST', 'AH',
+                                      'GCF']:
                         assert round(abs(st[0].stats.calib-0.199999), 5) == 0
                     else:
                         assert st[0].stats.calib == 1.0
@@ -169,7 +171,7 @@ class TestWaveformPlugins:
                     if format in ['GCF']:
                         # no network, station or location code in GCF, however
                         #  first 4 characters in station code will be set in
-                        #  current implementation if stream_id is not set. 
+                        #  current implementation if stream_id is not set.
                         #  Further no bandcode or instrumentcode, if not set
                         #  by argument in call to read function both default
                         #  to H

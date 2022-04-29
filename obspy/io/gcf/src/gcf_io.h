@@ -28,6 +28,8 @@
   #include <windows.h>
   #include <sys/types.h>
   #include <io.h>
+  #include <BaseTsd.h>
+  typedef SSIZE_T ssize_t; 
   
   #ifndef O_RDONLY
     #define O_RDONLY _O_RDONLY
@@ -46,7 +48,7 @@
   #endif 
   
   #ifndef open
-    #define open(path, flags) _open(path, flags)
+    #define open(path, flags, mode) _open(path, flags, mode)
   #endif
   
   #ifndef close
@@ -56,6 +58,12 @@
   #ifndef write
     #define write(fd, buffer, count) _write(fd, buffer, count)
   #endif
+  
+  #ifndef read
+    #define read(fd, buffer, count) _write(fd, buffer, count)
+  #endif
+  
+  
   #define FPERM _S_IWRITE
 
   /* For MSVC 2012 and earlier define standard int types, otherwise use inttypes.h */
