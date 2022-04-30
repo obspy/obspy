@@ -542,7 +542,11 @@ int opengcf(const char *fname, int32 *fid) {
 /* reads in data from file*/
 ssize_t gcf_read(int fd, void *buf, size_t count) {
    ssize_t n;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+   n = (ssize_t)_read(fd,buf,(unsigned const)count);
+#else
    n = read(fd,buf,count);
+#endif
    if (n < 0) {
       return -1;
    }
@@ -1032,9 +1036,6 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
          obj->n_blk += 1;
          if ((err=parse_gcf_block(buffer,&seg,mode,endian)) < 0) {
             // not a data block
-            if (!strncmp(f+strlen(f)-4, ".gcf",4)) {
-                printf("\n #=#=#=# L1036: err = %d, endian = %d\n #=#=#=#\n", err, endian); 
-            }
             d++;
          } else if (err >= 10) {
             // there were some issues with the data block
@@ -1062,7 +1063,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
 
    // merge segments if asked for
    if (abs(mode) < 2) merge_GcfFile(obj,mode,tol);
-   if (!ret && obj->n_blk==d) ret = 1; // no data blocks in file   
+   if (!ret && obj->n_blk==d) ret = 1 + endian; // no data blocks in file   
    return ret;
 }
 

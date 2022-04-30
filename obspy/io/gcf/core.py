@@ -184,11 +184,6 @@ def _is_gcf(filename):
         # File either does not point at a file object or file is not of
         # proper size
         is_gcf = False
-        if filename[-4:] == ".gcf":
-            print("os.path.isfile(%s) = %s" % (filename,
-                                               os.path.isfile(filename)))
-            print("os.path.isfile(%s) = %s" % (filename,
-                                               os.path.getsize(filename)))
     else:
         # Load shared library
         gcf_io = _load_cdll("gcf")
@@ -209,8 +204,12 @@ def _is_gcf(filename):
                 or obj.n_errData:
             is_gcf = False
             if filename[-4:] == ".gcf":
-                print("file %s: ret = %d; obj.n_errHead = %d; obj.n_errData ="
-                      " %d" % (filename, ret, obj.n_errHead, obj.n_errData))
+                print("file: %s" % (filename))
+                print("ret: %d" % (ret))
+                print("n-blocks: %d" % os.path.getsize(filename)/1024.)
+                print("obj.n_blk = %d" % (obj.n_blk))
+                print("obj.n_errHead = %d" % (obj.n_errHead))
+                print("obj.n_errData = %d" % (obj.n_errData))
 
         # release allocated memory
         gcf_io.free_GcfFile(obj)
