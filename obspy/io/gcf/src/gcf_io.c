@@ -1032,8 +1032,8 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
          obj->n_blk += 1;
          if ((err=parse_gcf_block(buffer,&seg,mode,endian)) < 0) {
             // not a data block
-            if (!strncmp(f+strlen(f)-5, ".gcf",4)) {
-                printf("err = %d", err); 
+            if (!strncmp(f+strlen(f)-4, ".gcf",4)) {
+                printf("\n #=#=#=# L1036: err = %d, endian = %d\n #=#=#=#\n", err, endian); 
             }
             d++;
          } else if (err >= 10) {
