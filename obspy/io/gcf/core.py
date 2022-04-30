@@ -184,31 +184,34 @@ def _is_gcf(filename):
         # File either does not point at a file object or file is not of
         # proper size
         is_gcf = False
+        print("os.path.isfile(%s) = %s" % (filename,
+                                           os.path.isfile(filename)))
+        print("os.path.isfile(%s) = %s" % (filename,
+                                           os.path.getsize(filename)))
     else:
         # Load shared library
-        try:
-            gcf_io = _load_cdll("gcf")
-        except Exception as e:
-            print(str(e))
-        else:
-            # declare function argument and return types
-            gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
-                                        ctypes.POINTER(_GcfFile),
-                                        ctypes.c_int]
-            gcf_io.read_gcf.restype = ctypes.c_int
-            gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
-            gcf_io.free_GcfFile.restype = None
+        gcf_io = _load_cdll("gcf")
 
-            # Decode first block
-            obj = _GcfFile()
-            b_filename = filename.encode('utf-8')
-            ret = gcf_io.read_gcf(b_filename, obj, 3)
-            if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
-                    or obj.n_errData:
-                is_gcf = False
+        # declare function argument and return types
+        gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
+                                    ctypes.POINTER(_GcfFile),
+                                    ctypes.c_int]
+        gcf_io.read_gcf.restype = ctypes.c_int
+        gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
+        gcf_io.free_GcfFile.restype = None
 
-            # release allocated memory
-            gcf_io.free_GcfFile(obj)
+        # Decode first block
+        obj = _GcfFile()
+        b_filename = filename.encode('utf-8')
+        ret = gcf_io.read_gcf(b_filename, obj, 3)
+        if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
+                or obj.n_errData:
+            is_gcf = False
+            print("file %s: ret = %d; obj.n_errHead = %d; obj.n_errData ="
+                  " %d" % (filename, ret, obj.n_errHead, obj.n_errData))
+
+        # release allocated memory
+        gcf_io.free_GcfFile(obj)
     return is_gcf
 
 
