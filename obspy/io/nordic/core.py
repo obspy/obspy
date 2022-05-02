@@ -1947,10 +1947,10 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
 
     .. note::
 
-        Currently angle of incidence is unsupported. This is because
-        :class:`~obspy.core.event.event.Event` stores takeoff angle rather than
-        incident angle, which would require computation from the value stored
-        in seisan.  Multiple weights are also not supported.
+        Nordic files contain an angle of incidence ("AIN") that is actually the
+        takeoff angle from the source, and hence now properly supported as
+        arrival.takeoff_angle.
+        Multiple weights are not supported.
     """
     # Nordic picks do not have a date associated with them - we need time
     # relative to some origin time.
@@ -2147,10 +2147,9 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
                 finalweight=finalweight, distance=distance.rjust(5)[0:5],
                 caz=_str_conv(caz).rjust(4)[0:4]))
-            # Note that currently angle of incidence is not supported. This is
-            # because obspy.event stores takeoff angle, which would require
-            # computation from the value stored in seisan. Multiple weights
-            # are also not supported in Obspy.event
+                # Nordic files contain an angle of incidence ("AIN") that is
+                # actually the takeoff angle from the source, and hence now
+                # properly supported as arrival.takeoff_angle.
         elif nordic_format == 'NEW':
             # Define par1, par2, & residual depending on type of observation:
             # Coda, backzimuth (add extra line), amplitude, or other phase pick
