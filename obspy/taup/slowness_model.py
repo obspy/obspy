@@ -1800,6 +1800,7 @@ class SlownessModel(object):
             out[other_index[0]] = new_bot_layer
             out = np.insert(out, other_index[0], new_top_layer)
 
+        number_added = 0
         for other_layer_num, s_layer in enumerate(out.copy()):
             if (s_layer['top_p'] - p) * (p - s_layer['bot_p']) > 0:
                 # Found a slowness layer with the other wave type that
@@ -1810,12 +1811,13 @@ class SlownessModel(object):
                     dtype=SlownessLayer)
                 bot_layer = (p, top_layer['bot_depth'],
                              s_layer['bot_p'], s_layer['bot_depth'])
-                out[other_layer_num] = bot_layer
-                out = np.insert(out, other_layer_num, top_layer)
+                out[other_layer_num+number_added] = bot_layer
+                out = np.insert(out, other_layer_num+number_added, top_layer)
                 # Fix critical layers since we have added a slowness layer.
                 _fix_critical_depths(critical_depths,
                                      other_layer_num, not is_p_wave)
                 # Skip next layer as it was just added: achieved by slicing
                 # the list iterator.
+                number_added += 1
 
         return out
