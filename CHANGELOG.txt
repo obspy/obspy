@@ -10,6 +10,8 @@ Changes:
  - obspy.taup:
    * Fix cycling through colors in ray path plots, now also fixes cartesian
      plot version (see #2470, #2478, #3041)
+   * Fix slowness layer splits to avoid "TauBranch depths not compatible with
+     slowness sampling." errors. (see #3062, #2682, #1938)
 
 
 1.3.0 (doi: 10.5281/zenodo.6327346)
