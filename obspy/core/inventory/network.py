@@ -39,6 +39,8 @@ class Network(BaseNode):
         """
         :type code: str
         :param code: The SEED network code.
+        :type stations: list of :class:`~obspy.core.inventory.station.Station`
+        :param stations: List of stations for the network.
         :type total_number_of_stations: int
         :param total_number_of_stations: The total number of stations
             contained in this network, including inactive or terminated
