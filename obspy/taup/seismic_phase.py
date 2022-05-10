@@ -1276,7 +1276,7 @@ class SeismicPhase(object):
         """
 
         # can't shoot/refine for non-body waves
-        if (self.name.endswith('kmps') or
+        if (recursion_limit <= 0 or self.name.endswith('kmps') or
                 any(phase in self.name
                     for phase in ['Pdiff', 'Sdiff', 'Pn', 'Sn'])):
             left = Arrival(self, degrees, self.time[ray_index],
@@ -1301,7 +1301,8 @@ class SeismicPhase(object):
         left_ray_param = self.ray_param[ray_index]
         right_ray_param = self.ray_param[ray_index + 1]
         new_ray_param = brentq(residual, left_ray_param, right_ray_param,
-                               xtol=tolerance, maxiter=recursion_limit, disp=False)
+                               xtol=tolerance, maxiter=recursion_limit,
+                               disp=False)
 
         return self.shoot_ray(degrees, new_ray_param)
 
