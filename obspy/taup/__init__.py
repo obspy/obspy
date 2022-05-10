@@ -106,7 +106,7 @@ object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
 >>> arr.ray_param, arr.time, arr.incident_angle  # doctest: +ELLIPSIS
-(453.7535..., 485.2100..., 24.3988...)
+(453.7536..., 485.2100..., 24.3988...)
 
 Ray Paths
 ^^^^^^^^^
