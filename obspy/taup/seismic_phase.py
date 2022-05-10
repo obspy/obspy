@@ -17,7 +17,7 @@ from .helper_classes import (Arrival, SlownessModelError, TauModelError,
 from .c_wrappers import clibtau
 
 
-REFINE_DIST_RADIAN_TOL = 0.0049 * math.pi / 180
+REFINE_DIST_RADIAN_TOL = 4.9e-6 * math.pi / 180
 
 
 _ACTIONS = Enum([
@@ -79,7 +79,7 @@ class SeismicPhase(object):
             # the CMB.
             "max_diffraction_in_radians": np.radians(60.0),
             # The maximum number of refinements to make to an Arrival.
-            "max_recursion": 5
+            "max_recursion": 50
         }
 
         # Enables phases originating in core.
