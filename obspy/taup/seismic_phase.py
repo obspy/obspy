@@ -1275,30 +1275,34 @@ class SeismicPhase(object):
         Use a shooting method to improve ray path.
         """
 
+        left = Arrival(self, degrees, self.time[ray_index],
+                       self.dist[ray_index], self.ray_param[ray_index],
+                       ray_index, self.name, self.purist_name,
+                       self.source_depth, self.receiver_depth)
+        right = Arrival(self, degrees, self.time[ray_index + 1],
+                        self.dist[ray_index + 1],
+                        self.ray_param[ray_index + 1],
+                        # Use ray_index since dist is between ray_index and
+                        # (ray_index + 1).
+                        ray_index, self.name, self.purist_name,
+                        self.source_depth, self.receiver_depth)
+
+        new_estimate = self.linear_interp_arrival(degrees, dist_radian,
+                                                  left, right)
+
         # can't shoot/refine for non-body waves
         if (recursion_limit <= 0 or self.name.endswith('kmps') or
                 any(phase in self.name
                     for phase in ['Pdiff', 'Sdiff', 'Pn', 'Sn'])):
-            left = Arrival(self, degrees, self.time[ray_index],
-                           self.dist[ray_index], self.ray_param[ray_index],
-                           ray_index, self.name, self.purist_name,
-                           self.source_depth, self.receiver_depth)
-            right = Arrival(self, degrees, self.time[ray_index + 1],
-                            self.dist[ray_index + 1],
-                            self.ray_param[ray_index + 1],
-                            # Use ray_index since dist is between ray_index and
-                            # (ray_index + 1).
-                            ray_index, self.name, self.purist_name,
-                            self.source_depth, self.receiver_depth)
-            return self.linear_interp_arrival(degrees, dist_radian,
-                                              left, right)
+            return new_estimate
 
+        # Find more accurate ray parameter by root-finding
+        new_arrivals = [new_estimate]
         left_ray_param = self.ray_param[ray_index]
         right_ray_param = self.ray_param[ray_index + 1]
         left_dist = self.dist[ray_index]
         right_dist = self.dist[ray_index + 1]
 
-        # Find more accurate ray parameter by root-finding
         def residual(ray_param):
             if ray_param == left_ray_param:
                 dist = left_dist
@@ -1306,14 +1310,15 @@ class SeismicPhase(object):
                 dist = right_dist
             else:
                 shoot = self.shoot_ray(degrees, ray_param)
+                new_arrivals.append(shoot)
                 dist = shoot.purist_dist
             return dist_radian - dist
 
-        new_ray_param = brentq(residual, left_ray_param, right_ray_param,
-                               xtol=tolerance, maxiter=recursion_limit,
-                               disp=False)
-
-        return self.shoot_ray(degrees, new_ray_param)
+        brentq(residual, left_ray_param, right_ray_param,
+               xtol=tolerance, maxiter=recursion_limit,
+               disp=False)
+        # return the arrival brentq calculated at its last iteration
+        return new_arrivals[-1]
 
     def shoot_ray(self, degrees, ray_param):
         if (any(phase in self.name
