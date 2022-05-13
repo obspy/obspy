@@ -12,7 +12,7 @@ Changes:
    * add option "indicate_wave_type" to distinguish S waves in ray paths
      plot by using wiggly lines for shear waves (see #3047)
    * improved accuracy of ray paths by change of root-finding algorithm
-     in SeismicPhase.refine_arrival
+     in SeismicPhase.refine_arrival (see #3064)
 
 maintenance_1.3.x
 =================
