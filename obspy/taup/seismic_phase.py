@@ -1293,13 +1293,22 @@ class SeismicPhase(object):
             return self.linear_interp_arrival(degrees, dist_radian,
                                               left, right)
 
-        # Find more accurate ray parameter by root-finding
-        def residual(ray_param):
-            shoot = self.shoot_ray(degrees, ray_param)
-            return dist_radian - shoot.purist_dist
-
         left_ray_param = self.ray_param[ray_index]
         right_ray_param = self.ray_param[ray_index + 1]
+        left_dist = self.dist[ray_index]
+        right_dist = self.dist[ray_index + 1]
+
+        # Find more accurate ray parameter by root-finding
+        def residual(ray_param):
+            if ray_param == left_ray_param:
+                dist = left_dist
+            elif ray_param == right_ray_param:
+                dist = right_dist
+            else:
+                shoot = self.shoot_ray(degrees, ray_param)
+                dist = shoot.purist_dist
+            return dist_radian - dist
+
         new_ray_param = brentq(residual, left_ray_param, right_ray_param,
                                xtol=tolerance, maxiter=recursion_limit,
                                disp=False)
