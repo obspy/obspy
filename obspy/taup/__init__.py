@@ -64,7 +64,7 @@ and model. By default it returns arrivals for a number of phases.
     PcP phase arrival at 674.865 seconds
     PP phase arrival at 794.992 seconds
     PKiKP phase arrival at 1034.098 seconds
-    pPKiKP phase arrival at 1050.529 seconds
+    pPKiKP phase arrival at 1050.528 seconds
     sPKiKP phase arrival at 1056.721 seconds
     S phase arrival at 1176.948 seconds
     pS phase arrival at 1195.508 seconds
@@ -106,7 +106,7 @@ object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
 >>> arr.ray_param, arr.time, arr.incident_angle  # doctest: +ELLIPSIS
-(453.7535..., 485.2100..., 24.3988...)
+(453.7536..., 485.2100..., 24.3988...)
 
 Ray Paths
 ^^^^^^^^^

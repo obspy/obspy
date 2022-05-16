@@ -7,6 +7,7 @@ import math
 import re
 
 import numpy as np
+from scipy.optimize import brentq
 
 from obspy.core.util.obspy_types import Enum
 
@@ -16,7 +17,7 @@ from .helper_classes import (Arrival, SlownessModelError, TauModelError,
 from .c_wrappers import clibtau
 
 
-REFINE_DIST_RADIAN_TOL = 0.0049 * math.pi / 180
+REFINE_DIST_RADIAN_TOL = 4.9e-6 * math.pi / 180
 
 
 _ACTIONS = Enum([
@@ -78,7 +79,7 @@ class SeismicPhase(object):
             # the CMB.
             "max_diffraction_in_radians": np.radians(60.0),
             # The maximum number of refinements to make to an Arrival.
-            "max_recursion": 5
+            "max_recursion": 50
         }
 
         # Enables phases originating in core.
@@ -1270,6 +1271,10 @@ class SeismicPhase(object):
 
     def refine_arrival(self, degrees, ray_index, dist_radian, tolerance,
                        recursion_limit):
+        """
+        Use a shooting method to improve ray path.
+        """
+
         left = Arrival(self, degrees, self.time[ray_index],
                        self.dist[ray_index], self.ray_param[ray_index],
                        ray_index, self.name, self.purist_name,
@@ -1281,46 +1286,39 @@ class SeismicPhase(object):
                         # (ray_index + 1).
                         ray_index, self.name, self.purist_name,
                         self.source_depth, self.receiver_depth)
-        return self._refine_arrival(degrees, left, right, dist_radian,
-                                    tolerance, recursion_limit)
 
-    def _refine_arrival(self, degrees, left_estimate, right_estimate,
-                        search_dist, tolerance, recursion_limit):
-        new_estimate = self.linear_interp_arrival(degrees, search_dist,
-                                                  left_estimate,
-                                                  right_estimate)
+        new_estimate = self.linear_interp_arrival(degrees, dist_radian,
+                                                  left, right)
+
+        # can't shoot/refine for non-body waves
         if (recursion_limit <= 0 or self.name.endswith('kmps') or
                 any(phase in self.name
                     for phase in ['Pdiff', 'Sdiff', 'Pn', 'Sn'])):
-            # can't shoot/refine for non-body waves
             return new_estimate
 
-        try:
-            shoot = self.shoot_ray(degrees, new_estimate.ray_param)
-            if ((left_estimate.purist_dist - search_dist) *
-                    (search_dist - shoot.purist_dist)) > 0:
-                # search between left and shoot
-                if abs(shoot.purist_dist -
-                       new_estimate.purist_dist) < tolerance:
-                    return self.linear_interp_arrival(degrees, search_dist,
-                                                      left_estimate, shoot)
-                else:
-                    return self._refine_arrival(degrees, left_estimate, shoot,
-                                                search_dist, tolerance,
-                                                recursion_limit - 1)
+        # Find more accurate ray parameter by root-finding
+        new_arrivals = [new_estimate]
+        left_ray_param = self.ray_param[ray_index]
+        right_ray_param = self.ray_param[ray_index + 1]
+        left_dist = self.dist[ray_index]
+        right_dist = self.dist[ray_index + 1]
+
+        def residual(ray_param):
+            if ray_param == left_ray_param:
+                dist = left_dist
+            elif ray_param == right_ray_param:
+                dist = right_dist
             else:
-                # search between shoot and right
-                if abs(shoot.purist_dist -
-                       new_estimate.purist_dist) < tolerance:
-                    return self.linear_interp_arrival(degrees, search_dist,
-                                                      shoot, right_estimate)
-                else:
-                    return self._refine_arrival(degrees, shoot, right_estimate,
-                                                search_dist, tolerance,
-                                                recursion_limit - 1)
-        except (IndexError, LookupError, SlownessModelError) as e:
-            msg = 'Please contact the developers. This error should not occur.'
-            raise RuntimeError(msg) from e
+                shoot = self.shoot_ray(degrees, ray_param)
+                new_arrivals.append(shoot)
+                dist = shoot.purist_dist
+            return dist_radian - dist
+
+        brentq(residual, left_ray_param, right_ray_param,
+               xtol=tolerance, maxiter=recursion_limit,
+               disp=False)
+        # return the arrival brentq calculated at its last iteration
+        return new_arrivals[-1]
 
     def shoot_ray(self, degrees, ray_param):
         if (any(phase in self.name
