@@ -282,7 +282,7 @@ class TestWaveformPlugins:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers. Also skip GCF as format does not permitt fractional
             # start time for sampling rates < 250
-            if format in ['SEGY', 'SU', 'SEG2', 'GCF']:
+            if format in ['SEGY', 'SU', 'SEG2']:
                 continue
             elif format in ['GCF']:
                 # XXX: GCF format does not support fractional for sampling

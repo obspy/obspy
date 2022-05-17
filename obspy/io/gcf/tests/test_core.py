@@ -201,7 +201,7 @@ class CoreTestCase(unittest.TestCase):
 
                     # Read temporary file
                     in_stream = _read_gcf(filename, network='XY',
-                                          station="ABCD")
+                                          station="ABCD", errorret=True)
 
                 # compare
                 self.assertEqual(out_stream, in_stream)

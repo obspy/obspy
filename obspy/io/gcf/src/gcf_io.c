@@ -542,11 +542,11 @@ int opengcf(const char *fname, int32 *fid) {
 /* reads in data from file*/
 ssize_t gcf_read(int fd, void *buf, size_t count) {
    ssize_t n;
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-   n = (ssize_t)_read(fd,buf,(unsigned const)count);
-#else
+// #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+//    n = (ssize_t)_read(fd,buf,(unsigned const)count);
+// #else
    n = read(fd,buf,count);
-#endif
+// #endif
    if (n < 0) {
       return -1;
    }

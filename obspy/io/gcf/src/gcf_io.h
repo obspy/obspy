@@ -59,9 +59,9 @@
     #define write(fd, buffer, count) _write(fd, buffer, count)
   #endif
   
-//   #ifndef read
-//     #define read(fd, buffer, count) _write(fd, buffer, count)
-//   #endif
+  #ifndef read
+    #define read(fd, buffer, count) _read(fd, buffer, count)
+  #endif
   
   
   #define FPERM _S_IWRITE
