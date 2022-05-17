@@ -2,9 +2,10 @@
 """
 obspy.io.gcf - Guralp Compressed Format, GCF, read and write support for ObsPy
 ==============================================================================
-This module provides read and write support for `GCF <https://www.guralp.com/apps/ok?doc=GCF_Intro>`_ 
-waveform data and header info according to GCF Reference `SWA-RFC-GCFR Issue F, December 2021
-<https://www.guralp.com/apps/ok?doc=GCF_format>`_.
+This module provides read and write support for `GCF
+<https://www.guralp.com/apps/ok?doc=GCF_Intro>`_ waveform data and header info
+acording to GCF Reference `SWA-RFC-GCFR Issue F, December 2021
+<https://www.guralp.com/apps/ok?doc=GCF_format>`_
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Ran Novitsky Nof, 
