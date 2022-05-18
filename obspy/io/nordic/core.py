@@ -2147,9 +2147,9 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
                 finalweight=finalweight, distance=distance.rjust(5)[0:5],
                 caz=_str_conv(caz).rjust(4)[0:4]))
-                # Nordic files contain an angle of incidence ("AIN") that is
-                # actually the takeoff angle from the source, and hence now
-                # properly supported as arrival.takeoff_angle.
+            # Nordic files contain an angle of incidence ("AIN") that is
+            # actually the takeoff angle from the source, and hence now
+            # properly supported as arrival.takeoff_angle.
         elif nordic_format == 'NEW':
             # Define par1, par2, & residual depending on type of observation:
             # Coda, backzimuth (add extra line), amplitude, or other phase pick
@@ -2179,7 +2179,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             # Back Azimuth
             elif backazimuth.strip() != '':  # back-azimuth
                 add_baz_line = True
-                # If the BAZ-measurement is an extra pick in addition to the 
+                # If the BAZ-measurement is an extra pick in addition to the
                 # actual phase, then don't duplicate the BAZ-line. Instead,
                 # write the BAZ-pick into a single line.
                 if pick.phase_hint.startswith('BAZ-'):
