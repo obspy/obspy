@@ -837,7 +837,7 @@ class SeismicPhase(object):
         if self.max_ray_param_index == 0 \
                 and self.min_ray_param_index == len(tau_model.ray_params) - 1:
             # All ray parameters are valid so just copy:
-            self.ray_param = tau_model.ray_param.copy()
+            self.ray_param = tau_model.ray_params.copy()
         elif self.max_ray_param_index == self.min_ray_param_index:
             # if "Sdiff" in self.name or "Pdiff" in self.name:
             # self.ray_param = [self.min_ray_param, self.min_ray_param]
