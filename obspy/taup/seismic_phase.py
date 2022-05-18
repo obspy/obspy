@@ -1317,6 +1317,7 @@ class SeismicPhase(object):
         new_ray_param = brentq(residual, left_ray_param, right_ray_param,
                                xtol=tolerance, maxiter=recursion_limit,
                                disp=False)
+        new_ray_param = np.float64(new_ray_param)
 
         # the arrival brentq calculated at its last iteration
         last = new_arrivals[-1]
