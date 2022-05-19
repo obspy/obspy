@@ -165,9 +165,8 @@ class CoreTestCase(unittest.TestCase):
         test preserving individual blocks in file as is, i.e. do not
         merge traces
         """
-        filename = os.path.join(self.path, '20160603_1910n.gcf',
-                                channel_prefix="HN")
-        st = read(filename, blockmerge=False)
+        filename = os.path.join(self.path, '20160603_1910n.gcf')
+        st = read(filename, blockmerge=False, channel_prefix="HN")
         self.assertEqual(len(st), 2)
         # 1
         self.assertEqual(st[0].stats.starttime,
