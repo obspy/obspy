@@ -64,7 +64,7 @@
   #endif
   
   
-  #define FPERM _S_IWRITE
+  #define FPERM _O_BINARY | _S_IWRITE
 
   /* For MSVC 2012 and earlier define standard int types, otherwise use inttypes.h */
   #if defined(_MSC_VER) && _MSC_VER <= 1700

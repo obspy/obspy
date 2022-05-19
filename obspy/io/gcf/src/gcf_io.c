@@ -540,9 +540,9 @@ int opengcf(const char *fname, int32 *fid) {
 
 
 /* reads in data from file*/
-ssize_t gcf_read(int fd, void *buf, size_t count) {
-   ssize_t n;
-   n = read(fd,buf,count);
+int gcf_read(int fd, void *buf, size_t count) {
+   int n;
+   n = (int)read(fd,buf,count);
    if (n < 0) {
       return -1;
    }
@@ -555,14 +555,14 @@ ssize_t gcf_read(int fd, void *buf, size_t count) {
  * ARGUMENTS:
  *  size      size in bytes of block to read
  *  buffer    will upon successful return hold read data block
- *  fid      location to read from
+ *  fid       location to read from
  * 
  * RETURN
  *  upon successful return function returns number of bytes read, else 0
  */
 int FillBuffer(int size, unsigned char buffer[], int32 *fid) {
    int n;
-   n=gcf_read(*fid,buffer,size);
+   n = gcf_read(*fid,buffer,size);
    if (n <= 0) return(0);
    return(n);
 }
