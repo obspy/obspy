@@ -150,7 +150,6 @@ Changes:
    * stop writing waveform-file link to a DUMMY-file by default
    * add support for I/O of apparent velocity / horizontal slowness
    * add support for writing of multiple origins
-   * add support for writing multiple amplitudes for one pick (only new format)
    * add event-type mapping between Nordic and Obspy/Quakeml (do not fully
      match)
    * read pick-weight as pick.extra.nordic_pick_weight (was arrival.time_weight)
