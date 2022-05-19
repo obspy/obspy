@@ -449,7 +449,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
 
             if err_msg:
                 raise IOError(err_msg)
-            
+
             if sys.platform == 'win32' and blockmerge:
                 # By some reason the C-code fails to merge blocks properly,
                 # hence force merge if on windows and merge is asked for

@@ -177,19 +177,19 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(st[0].stats.sampling_rate, 500.0)
         self.assertEqual(st[0].stats.channel, 'HNN')
         self.assertEqual(st[0].stats.station, '6018')
-        self.assertEqual(st[0].stats.gcf.FIC, '-49345')
-        self.assertEqual(st[0].stats.gcf.RIC, '-49952')
+        self.assertEqual(st[0].stats.gcf.FIC, -49345)
+        self.assertEqual(st[0].stats.gcf.RIC, -49952)
         # 2
-        self.assertEqual(st[0].stats.starttime,
+        self.assertEqual(st[1].stats.starttime,
                          UTCDateTime('2016-06-03T19:10:01.000000Z'))
-        self.assertEqual(st[0].stats.endtime,
+        self.assertEqual(st[1].stats.endtime,
                          UTCDateTime('2016-06-03T19:10:01.998000Z'))
-        self.assertEqual(st[0].stats.npts, 500)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 500.0)
-        self.assertEqual(st[0].stats.channel, 'HNN')
-        self.assertEqual(st[0].stats.station, '6018')
-        self.assertEqual(st[0].stats.gcf.FIC, '-49519')
-        self.assertEqual(st[0].stats.gcf.RIC, '-49625')
+        self.assertEqual(st[1].stats.npts, 500)
+        self.assertAlmostEqual(st[1].stats.sampling_rate, 500.0)
+        self.assertEqual(st[1].stats.channel, 'HNN')
+        self.assertEqual(st[1].stats.station, '6018')
+        self.assertEqual(st[1].stats.gcf.FIC, -49519)
+        self.assertEqual(st[1].stats.gcf.RIC, -49625)
 
     def test_write_read(self):
         """
