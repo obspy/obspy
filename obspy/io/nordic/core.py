@@ -1023,7 +1023,7 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
         if _nordic_iasp_phase_ok(phase) and phase not in ['END', 'BAZ']:
             polarity = line[43]
         else:
-            polarity = ''
+            polarity = 'undecidable'
         polarity = POLARITY_MAPPING.get(polarity, None)  # Empty could be None
         # or undecidable.
         # It is valid nordic for the origin to be hour 23 and picks to be hour
@@ -1107,6 +1107,7 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                 pick.horizontal_slowness = 1 / kilometers2degrees(app_velocity)
         # Create new obspy.event.Amplitude class which references above Pick
         # only if there is an amplitude picked.
+        is_coda_ref_pick = False
         if (_is_iasp_ampl_phase(phase) and _float_conv(line[37:44]) is not None
                 and not found_baz_associated_pick):
             _amplitude = Amplitude(generic_amplitude=_float_conv(line[37:44]),
@@ -1156,6 +1157,14 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                     creation_info=pick.creation_info)
                 new_event.station_magnitudes.append(_trace_mag)
         elif phase == 'END' and _int_conv(line[37:44]) is not None:
+            # Coda duration amplitude - should be generally in reference to the
+            # previous pick, then it can be added simply as an amplitude
+            # referencing the pick; or it could become its own pick.
+            if (len(new_event.picks) > 0
+                    and new_event.picks[-1].waveform_id.station_code ==\
+                        pick.waveform_id.station_code):
+                pick = new_event.picks[-1]
+                is_coda_ref_pick = True
             # Create an amplitude instance for coda duration also
             _amplitude = Amplitude(generic_amplitude=_int_conv(line[37:44]),
                                    pick_id=pick.resource_id,
@@ -1171,7 +1180,7 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
             new_event.amplitudes.append(_amplitude)
 
         # Create new obspy.event.Arrival class referencing above Pick
-        if not _is_iasp_ampl_phase(phase):
+        if not _is_iasp_ampl_phase(phase) and not phase == 'END':
             # If there is a pick associated with a BAZ, then there's also an
             # arrival for that pick already
             if found_baz_associated_pick:
@@ -1201,7 +1210,7 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                 new_event.origins[0].arrivals.append(arrival)
         # Add the pick, but do not add it as new if the pick was only updated
         # with new information (BAZ, slowness etc.)
-        if not found_baz_associated_pick:
+        if not (found_baz_associated_pick or is_coda_ref_pick):
             new_event.picks.append(pick)
 
     return new_event
@@ -2084,7 +2093,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     peri_round = False
                     amp = None
                     coda_eval_mode = INV_EVALUTATION_MAPPING.get(
-                        amplitude.evaluation_mode, None)
+                        amplitude.evaluation_mode, ' ')
                 if nordic_format == 'OLD':  # only use 1st amplitude
                     break
                 amp_list.append(amp)
@@ -2191,7 +2200,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 coda_residual = '     '
                 # TODO: weight for coda
             # Back Azimuth
-            elif backazimuth.strip() != '':  # back-azimuth
+            if backazimuth.strip() != '':  # back-azimuth
                 add_baz_line = True
                 # If the BAZ-measurement is an extra pick in addition to the
                 # actual phase, then don't duplicate the BAZ-line. Instead,
@@ -2220,7 +2229,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     residual = baz_residual
                     finalweight = baz_finalweight
             # Amplitude
-            elif amp is not None:
+            if amp is not None:
                 add_amp_line = True
                 # In New Nordic format, multiple amplitudes can now be associ-
                 # ated with one pick (e.g., measured at different periods)
