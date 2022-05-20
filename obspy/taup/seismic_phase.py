@@ -589,6 +589,17 @@ class SeismicPhase(object):
                             current_leg, next_leg))
 
             elif current_leg == "K":
+                # Now deal with K.
+                if tau_model.cmb_depth == tau_model.radius_of_planet:
+                    # degenerate case, CMB is at center, so model
+                    # without a core
+                    self.max_ray_param = -1
+                    return
+                if tau_model.cmb_depth == tau_model.iocb_depth:
+                    # degenerate case, CMB is same as IOCB, so model
+                    # without an outer core
+                    self.max_ray_param = -1
+                    return
                 if next_leg in ("P", "S"):
                     if prev_leg in ("P", "S", "K", "k", "START"):
                         end_action = _ACTIONS["turn"]
@@ -610,6 +621,12 @@ class SeismicPhase(object):
                         tau_model, self.current_branch, tau_model.cmb_branch,
                         is_p_wave, end_action)
                 elif next_leg in ("I", "J"):
+                    # And now consider inner core, I and J.
+                    if tau_model.iocb_depth == tau_model.radius_of_planet:
+                        # degenerate case, IOCB is at center,
+                        # so model without a inner core
+                        self.max_ray_param = -1
+                        return
                     end_action = _ACTIONS["transdown"]
                     self.add_to_branch(
                         tau_model, self.current_branch,
