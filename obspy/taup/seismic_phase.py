@@ -1314,11 +1314,22 @@ class SeismicPhase(object):
                 dist = shoot.purist_dist
             return dist_radian - dist
 
-        brentq(residual, left_ray_param, right_ray_param,
-               xtol=tolerance, maxiter=recursion_limit,
-               disp=False)
-        # return the arrival brentq calculated at its last iteration
-        return new_arrivals[-1]
+        new_ray_param = brentq(residual, left_ray_param, right_ray_param,
+                               xtol=tolerance, maxiter=recursion_limit,
+                               disp=False)
+        new_ray_param = np.float64(new_ray_param)
+
+        # the arrival brentq calculated at its last iteration
+        last = new_arrivals[-1]
+
+        # Use stationarity of the theta function to get better estimate of time
+        # Buland and Chapman (1983), equations (16) and (20)
+        theta = last.time + last.ray_param * (dist_radian - last.purist_dist)
+
+        return Arrival(self, degrees, theta,
+                       dist_radian, new_ray_param,
+                       ray_index, self.name, self.purist_name,
+                       self.source_depth, self.receiver_depth)
 
     def shoot_ray(self, degrees, ray_param):
         if (any(phase in self.name
