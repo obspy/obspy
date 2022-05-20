@@ -1019,7 +1019,7 @@ class TestTauPyModel:
              ("sP", 22.992), ("PcS", 23.051), ("sP", 24.039), ("sP", 24.042),
              ("Sn", 30.029), ("S", 30.563), ("s", 30.801), ("S", 30.913),
              ("ScS", 31.208)],
-             None]
+            None]
 
         for model_name, expects in zip(model_names, expected_results):
             with TemporaryWorkingDirectory():
@@ -1030,10 +1030,10 @@ class TestTauPyModel:
                     output_folder=folder, verbose=False)
                 model = TauPyModel(os.path.join(folder, model_name + ".npz"))
 
-            arrvials = model.get_ray_paths(source_depth_in_km=18.0,
+            arrivals = model.get_ray_paths(source_depth_in_km=18.0,
                                            distance_in_degree=1.0)
 
-            assert len(arrvials) == len(expects)
-            for arrival, expect in zip(arrvials, expects):
+            assert len(arrivals) == len(expects)
+            for arrival, expect in zip(arrivals, expects):
                 assert arrival.name == expect[0]
                 assert round(abs(arrival.time-expect[1]), 2) == 0
