@@ -235,4 +235,5 @@ class CoreTestCase(unittest.TestCase):
                                           station="ABCD", errorret=True)
 
                 # compare
+                self.assertEqual(len(out_stream), len(in_stream))
                 self.assertEqual(out_stream, in_stream)

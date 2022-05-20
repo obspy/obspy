@@ -1008,7 +1008,7 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
 
 /* function read_gcf() parses a gcf data file */
 int read_gcf(const char *f, GcfFile *obj, int mode) {
-   int ret=0, endian, d=0, err=0; //, b1 = 0; 
+   int ret=0, endian, d=0, err=0, b1 = 0; 
    int32 fid=0, n_alloc=0;
    GcfSeg seg;
    double tol = 1.E-3;
@@ -1021,7 +1021,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
    // adjust mode if nedded
    if (mode > 2) {
       mode = 2;
-//       b1 = 1;
+      b1 = 1;
    }
    
    // get endianess of current machine
@@ -1050,7 +1050,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
          }
          add_GcfSeg(obj,seg,abs(mode),tol);
          if (mode >= 0 && (seg.err == 3 || seg.err == 4)) seg.n_alloc = n_alloc;
-//          if (b1) break;
+         if (b1) break;
       }
       closegcf(&fid);
    }
