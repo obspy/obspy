@@ -235,5 +235,9 @@ class CoreTestCase(unittest.TestCase):
                                           station="ABCD", errorret=True)
 
                 # compare
-                self.assertEqual(len(out_stream), len(in_stream))
+                if len(in_stream) != 1:
+                    print(in_stream)
+                    for tr in in_stream:
+                        print(tr.id,tr.id,tr.stats.delta,tr.stats.npts,
+                              tr.stats.starttime,tr.stats.endtime)
                 self.assertEqual(out_stream, in_stream)
