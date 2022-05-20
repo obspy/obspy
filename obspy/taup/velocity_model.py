@@ -243,9 +243,9 @@ class VelocityModel(object):
                 self.cmb_depth,
                 self.moho_depth))
 
-        # Is cmb_depth positive?
-        if self.cmb_depth <= 0.0:
-            raise ValueError("cmb_depth is not positive: %f" % (
+        # Is cmb_depth non-negative?
+        if self.cmb_depth < 0.0:
+            raise ValueError("cmb_depth is negative: %f" % (
                 self.cmb_depth, ))
 
         # Is iocb_depth >= cmb_depth?
@@ -254,9 +254,9 @@ class VelocityModel(object):
                 self.iocb_depth,
                 self.cmb_depth))
 
-        # Is iocb_depth positive?
-        if self.iocb_depth <= 0.0:
-            raise ValueError("iocb_depth is not positive: %f" % (
+        # Is iocb_depth non-negative?
+        if self.iocb_depth < 0.0:
+            raise ValueError("iocb_depth is negative: %f" % (
                 self.iocb_depth, ))
 
         # Is min_radius non-negative?
