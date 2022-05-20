@@ -169,11 +169,22 @@ class TauModel(object):
                 self.iocb_branch = branch_num
                 best_iocb = abs(t_branch.top_depth -
                                 self.s_mod.v_mod.iocb_depth)
+        # check bottom of last layer, zero radius, in case no core for
+        # cmb and iocb
+        t_branch = self.tau_branches[0, -1]
+        if abs(t_branch.bot_depth - self.s_mod.v_mod.cmb_depth) < best_cmb:
+            self.cmb_branch = len(self.tau_branches[0])
+            self.cmb_depth = t_branch.bot_depth
+        if abs(t_branch.bot_depth - self.s_mod.v_mod.iocb_depth) < best_iocb:
+            self.iocb_branch = len(self.tau_branches[0])
+            self.iocb_depth = t_branch.bot_depth
         # Now set moho_depth etc. to the top of the branches we have decided
         # on.
         self.moho_depth = self.tau_branches[0, self.moho_branch].top_depth
-        self.cmb_depth = self.tau_branches[0, self.cmb_branch].top_depth
-        self.iocb_depth = self.tau_branches[0, self.iocb_branch].top_depth
+        if (self.cmb_branch < len(self.tau_branches[0])):
+            self.cmb_depth = self.tau_branches[0, self.cmb_branch].top_depth
+        if (self.iocb_branch < len(self.tau_branches[0])):
+            self.iocb_depth = self.tau_branches[0, self.iocb_branch].top_depth
         self.validate()
 
     def __str__(self):
