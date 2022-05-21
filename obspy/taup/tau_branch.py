@@ -224,9 +224,9 @@ class TauBranch(object):
 
         if index_p == -1:
             # Then both indices are -1 so no new ray parameters are added.
-            bot_branch.time = self.time - top_branch.time
-            bot_branch.dist = self.dist - top_branch.dist
-            bot_branch.tau = self.tau - top_branch.tau
+            bot_branch.time = self.time - top_branch.time[:len(self.dist)]
+            bot_branch.dist = self.dist - top_branch.dist[:len(self.dist)]
+            bot_branch.tau = self.tau - top_branch.tau[:len(self.dist)]
         else:
             bot_branch.time = np.empty(array_length)
             bot_branch.dist = np.empty(array_length)
