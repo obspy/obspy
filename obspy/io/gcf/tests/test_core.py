@@ -245,7 +245,7 @@ class CoreTestCase(unittest.TestCase):
                                           station="ABCD", errorret=True)
 
                     # compare
-                    if len(in_stream) != 1:
+                    if out_stream != in_stream:
                         print(sps, sysType)
                         print(os.stat(filename).st_size)
                         print(in_stream)
