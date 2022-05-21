@@ -74,6 +74,15 @@ class CoreTestCase(unittest.TestCase):
         st = _read_gcf(filename)
         st.verify()
         self.assertEqual(len(st), 1)
+        # debug
+        ref = UTCDateTime('2016-06-03T19:55:00.000000Z')
+        if not st[0].stats.starttime == ref:
+            print(st, os.stat(filename).st_size)
+            for tr in st:
+                print(tr.id, tr.stats.delta, tr.stats.npts,
+                      tr.stats.starttime, tr.stats.endtime,
+                      tr.stats.gcf.stat, tr.stats.gcf.blk)
+        # debug
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime('2016-06-03T19:55:00.000000Z'))
         self.assertEqual(st[0].stats.endtime,
@@ -234,10 +243,11 @@ class CoreTestCase(unittest.TestCase):
                     in_stream = _read_gcf(filename, network='XY',
                                           station="ABCD", errorret=True)
 
-                # compare
-                if len(in_stream) != 1:
-                    print(in_stream)
-                    for tr in in_stream:
-                        print(tr.id,tr.id,tr.stats.delta,tr.stats.npts,
-                              tr.stats.starttime,tr.stats.endtime)
+                    # compare
+                    if len(in_stream) != 1:
+                        print(in_stream, os.stat(filename).st_size)
+                        for tr in in_stream:
+                            print(tr.id, tr.stats.delta, tr.stats.npts,
+                                  tr.stats.starttime, tr.stats.endtime,
+                                  tr.stats.gcf.stat, tr.stats.gcf.blk)
                 self.assertEqual(out_stream, in_stream)
