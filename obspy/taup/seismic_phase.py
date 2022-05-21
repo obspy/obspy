@@ -817,7 +817,7 @@ class SeismicPhase(object):
         if self.name.endswith("kmps"):
             self.dist = np.zeros(2)
             self.time = np.zeros(2)
-            self.ray_param = np.empty(2)
+            self.ray_param = np.empty(2, dtype=np.float64)
 
             self.ray_param[0] = \
                 tau_model.radius_of_planet / float(self.name[:-4])
@@ -835,7 +835,7 @@ class SeismicPhase(object):
 
         if self.max_ray_param < 0 or self.min_ray_param > self.max_ray_param:
             # Phase has no arrivals, possibly due to source depth.
-            self.ray_param = np.empty(0)
+            self.ray_param = np.empty(0, dtype=np.float64)
             self.min_ray_param = -1
             self.max_ray_param = -1
             self.dist = np.empty(0)
@@ -861,10 +861,12 @@ class SeismicPhase(object):
             # elif "Pn" in self.name or "Sn" in self.name:
             # self.ray_param = [self.min_ray_param, self.min_ray_param]
             if self.name.endswith("kmps"):
-                self.ray_param = np.array([0, self.max_ray_param])
+                self.ray_param = np.array([0.0, self.max_ray_param],
+                                          dtype=np.float64)
             else:
                 self.ray_param = np.array([self.min_ray_param,
-                                           self.min_ray_param])
+                                           self.min_ray_param],
+                                          dtype=np.float64)
         else:
             # Only a subset of the ray parameters is valid so use these.
             self.ray_param = \
