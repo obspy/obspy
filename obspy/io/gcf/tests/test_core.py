@@ -75,9 +75,10 @@ class CoreTestCase(unittest.TestCase):
         st.verify()
         self.assertEqual(len(st), 1)
         # debug
-        ref = UTCDateTime('2016-06-03T19:55:00.000000Z')
-        if not st[0].stats.starttime == ref:
-            print(st, os.stat(filename).st_size)
+        ref = UTCDateTime('2016-06-03T19:55:02.990000Z')
+        if not st[0].stats.endtime == ref:
+            print(os.stat(filename).st_size)
+            print(st)
             for tr in st:
                 print(tr.id, tr.stats.delta, tr.stats.npts,
                       tr.stats.starttime, tr.stats.endtime,
@@ -206,7 +207,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # Tests, write and read a series of 60 sec gcf files
         for sysType in [0, 1, 2]:
-            for sps in [0.1, 1, 100, 134, 250, 625, 2000, 5000]:
+            for sps in [5000, 2000, 625, 250, 134, 100, 1, 0.1]:
                 # Set up a Stream object
                 duration = 60
                 nsamples = int(sps*duration)
@@ -245,7 +246,9 @@ class CoreTestCase(unittest.TestCase):
 
                     # compare
                     if len(in_stream) != 1:
-                        print(in_stream, os.stat(filename).st_size)
+                        print(sps, sysType)
+                        print(os.stat(filename).st_size)
+                        print(in_stream)
                         for tr in in_stream:
                             print(tr.id, tr.stats.delta, tr.stats.npts,
                                   tr.stats.starttime, tr.stats.endtime,
