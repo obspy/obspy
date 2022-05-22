@@ -643,8 +643,11 @@ class VelocityModel(object):
         cmb_diff = np.abs(self.cmb_depth - above['bot_depth'])
         cmb_diff[~mask] = cmb_min
         cmb = np.argmin(cmb_diff)
-        if cmb_diff[cmb] < cmb_min:
+        # don't set cmb to be same as moho, unless fixed
+        if (cmb_diff[cmb] < cmb_min
+                and above[cmb]['bot_depth'] > temp_moho_depth):
             temp_cmb_depth = above[cmb]['bot_depth']
+            cmb_min = np.abs(self.cmb_depth - above[cmb]['bot_depth'])
 
         # Find discontinuity closest to current IOCB
         iocb_diff = self.iocb_depth - above['bot_depth']
@@ -655,6 +658,25 @@ class VelocityModel(object):
         iocb = np.argmin(iocb_diff)
         if iocb_diff[iocb] < iocb_min:
             temp_iocb_depth = above[iocb]['bot_depth']
+            iocb_min = np.abs(self.iocb_depth - above[iocb]['bot_depth'])
+
+        # may need to set named discon to center of planet
+        # in case of degenerate model without a core
+        # final is bottommost layer, so
+        # final['bot_depth'] == radius of planet
+        final = below[-1]
+        if (final['bot_depth'] > temp_moho_depth and
+                np.abs(self.cmb_depth - final['bot_depth']) < cmb_min):
+            temp_cmb_depth = final['bot_depth']
+            cmb_min = np.abs(self.cmb_depth - final['bot_depth'])
+
+        # iocb is either below a fluid layer or is equal to cmb
+        # or center of planet
+        if (final['bot_depth'] == temp_cmb_depth or
+            (final['bot_s_velocity'] == 0.0 and
+             temp_iocb_depth == temp_cmb_depth)):
+            temp_iocb_depth = final['bot_depth']
+            iocb_min = np.abs(self.iocb_depth - final['bot_depth'])
 
         if self.moho_depth != temp_moho_depth \
                 or self.cmb_depth != temp_cmb_depth \
