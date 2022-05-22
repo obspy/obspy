@@ -508,9 +508,9 @@ class VelocityModel(object):
 
         :raises ValueError: If model file is in error.
         """
-        moho_depth = None
-        cmb_depth = None
-        iocb_depth = None
+        moho_depth = _DEFAULT_VALUES["default_moho"]
+        cmb_depth = _DEFAULT_VALUES["default_cmb"]
+        iocb_depth = _DEFAULT_VALUES["default_iocb"]
 
         # Read all lines from file to enable identifying top and bottom values
         # for each layer and find named discontinuities if present
@@ -548,13 +548,6 @@ class VelocityModel(object):
                         row.append(float(item))
                     data = np.vstack((data, np.array(row)))
                     ii = ii + 1
-
-        if moho_depth is None:
-            raise ValueError("Moho depth is not specified in model file!")
-        if cmb_depth is None:
-            raise ValueError("CMB depth is not specified in model file!")
-        if iocb_depth is None:
-            raise ValueError("IOCB depth is not specified in model file!")
 
         # Check if density is present.
         if data.shape[1] < 4:
