@@ -828,7 +828,7 @@ class TauPyModel(object):
         :param add_depth: List of additional depths for which to get pierce
             points.
         :type add_depth: list[float]
-        
+
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
             attributes.
