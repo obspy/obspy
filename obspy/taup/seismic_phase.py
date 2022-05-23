@@ -589,6 +589,17 @@ class SeismicPhase(object):
                             current_leg, next_leg))
 
             elif current_leg == "K":
+                # Now deal with K.
+                if tau_model.cmb_depth == tau_model.radius_of_planet:
+                    # degenerate case, CMB is at center, so model
+                    # without a core
+                    self.max_ray_param = -1
+                    return
+                if tau_model.cmb_depth == tau_model.iocb_depth:
+                    # degenerate case, CMB is same as IOCB, so model
+                    # without an outer core
+                    self.max_ray_param = -1
+                    return
                 if next_leg in ("P", "S"):
                     if prev_leg in ("P", "S", "K", "k", "START"):
                         end_action = _ACTIONS["turn"]
@@ -610,6 +621,12 @@ class SeismicPhase(object):
                         tau_model, self.current_branch, tau_model.cmb_branch,
                         is_p_wave, end_action)
                 elif next_leg in ("I", "J"):
+                    # And now consider inner core, I and J.
+                    if tau_model.iocb_depth == tau_model.radius_of_planet:
+                        # degenerate case, IOCB is at center,
+                        # so model without a inner core
+                        self.max_ray_param = -1
+                        return
                     end_action = _ACTIONS["transdown"]
                     self.add_to_branch(
                         tau_model, self.current_branch,
@@ -800,7 +817,7 @@ class SeismicPhase(object):
         if self.name.endswith("kmps"):
             self.dist = np.zeros(2)
             self.time = np.zeros(2)
-            self.ray_param = np.empty(2)
+            self.ray_param = np.empty(2, dtype=np.float64)
 
             self.ray_param[0] = \
                 tau_model.radius_of_planet / float(self.name[:-4])
@@ -818,7 +835,7 @@ class SeismicPhase(object):
 
         if self.max_ray_param < 0 or self.min_ray_param > self.max_ray_param:
             # Phase has no arrivals, possibly due to source depth.
-            self.ray_param = np.empty(0)
+            self.ray_param = np.empty(0, dtype=np.float64)
             self.min_ray_param = -1
             self.max_ray_param = -1
             self.dist = np.empty(0)
@@ -837,17 +854,19 @@ class SeismicPhase(object):
         if self.max_ray_param_index == 0 \
                 and self.min_ray_param_index == len(tau_model.ray_params) - 1:
             # All ray parameters are valid so just copy:
-            self.ray_param = tau_model.ray_param.copy()
+            self.ray_param = tau_model.ray_params.copy()
         elif self.max_ray_param_index == self.min_ray_param_index:
             # if "Sdiff" in self.name or "Pdiff" in self.name:
             # self.ray_param = [self.min_ray_param, self.min_ray_param]
             # elif "Pn" in self.name or "Sn" in self.name:
             # self.ray_param = [self.min_ray_param, self.min_ray_param]
             if self.name.endswith("kmps"):
-                self.ray_param = np.array([0, self.max_ray_param])
+                self.ray_param = np.array([0.0, self.max_ray_param],
+                                          dtype=np.float64)
             else:
                 self.ray_param = np.array([self.min_ray_param,
-                                           self.min_ray_param])
+                                           self.min_ray_param],
+                                          dtype=np.float64)
         else:
             # Only a subset of the ray parameters is valid so use these.
             self.ray_param = \
