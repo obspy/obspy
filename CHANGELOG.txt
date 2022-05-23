@@ -16,7 +16,7 @@ Changes:
    * improved accuracy of travel time estimates by using theta function
      (see #3068)
    * add support for models without a core or inner core
-     (see #1200, #1423, #2086, #2192, #2390)
+     (see #1200, #1423, #2086, #2192, #2390, #3070)
 
 maintenance_1.3.x
 =================
