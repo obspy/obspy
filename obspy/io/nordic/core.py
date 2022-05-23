@@ -1161,8 +1161,8 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
             # previous pick, then it can be added simply as an amplitude
             # referencing the pick; or it could become its own pick.
             if (len(new_event.picks) > 0
-                    and new_event.picks[-1].waveform_id.station_code ==\
-                        pick.waveform_id.station_code):
+                    and new_event.picks[-1].waveform_id.station_code ==
+                    pick.waveform_id.station_code):
                 pick = new_event.picks[-1]
                 is_coda_ref_pick = True
             # Create an amplitude instance for coda duration also

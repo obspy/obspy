@@ -125,8 +125,8 @@ class TestNordicMethods:
             assert read_ev.amplitudes[2].snr == \
                 test_ev.amplitudes[2].snr
             # Check coda magnitude pick
-            # Resource ids get overwritten because you can't have two the same in
-            # memory
+            # Resource ids get overwritten because you can't have two the same
+            # in memory
             # self.assertEqual(read_ev.amplitudes[1].resource_id,
             #                  test_ev.amplitudes[1].resource_id)
             assert read_ev.amplitudes[1].type == \
@@ -135,8 +135,8 @@ class TestNordicMethods:
                 test_ev.amplitudes[1].unit
             assert read_ev.amplitudes[1].generic_amplitude == \
                 test_ev.amplitudes[1].generic_amplitude
-            # Resource ids get overwritten because you can't have two the same in
-            # memory
+            # Resource ids get overwritten because you can't have two the same
+            # in memory
             # self.assertEqual(read_ev.amplitudes[1].pick_id,
             #                  test_ev.amplitudes[1].pick_id)
             assert read_ev.amplitudes[1].waveform_id.station_code == \
