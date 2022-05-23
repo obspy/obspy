@@ -27,7 +27,7 @@ Changes:
      (see #3085)
    * allow rapid travel time plotting in plot_travel_times by using
      precalculated travel times (see #3092)
-   * return pierce points for any depth (see #1742)
+   * return pierce points for any depth (see #1742, #3072)
 
 maintenance_1.3.x
 =================
