@@ -172,7 +172,8 @@ def build_taup_model(filename, output_folder=None, verbose=True):
     if verbose:
         print("Building obspy.taup model for '%s' ..." % filename)
     mod_create = TauPCreate(input_filename=filename,
-                            output_filename=output_filename)
+                            output_filename=output_filename,
+                            verbose=verbose)
     mod_create.load_velocity_model()
     mod_create.run()
 
