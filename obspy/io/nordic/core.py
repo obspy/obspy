@@ -2250,7 +2250,10 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                             mag_hint.upper() in ['AML', 'ML']):
                         amp_phase_hints.append('IAML')
                     else:
-                        amp_phase_hints.append('A')
+                        if amplitudes[j].type is not None:
+                            amp_phase_hints.append(amplitudes[j].type)
+                        else:  # Generic amplitude
+                            amp_phase_hints.append('A')
                     amp_eval_modes.append(' ' or INV_EVALUTATION_MAPPING.get(
                         amplitude.evaluation_mode, None))
                     amp_finalweights.append('  ')
