@@ -1008,16 +1008,24 @@ class TestTauPyModel:
         The problem is first in finding the moho, and second in coarsely-
         sampling slowness. Also, why bother.
         """
-        model_names = ["2_layer_model", "5_layer_model"]
+        model_names = ["2_layer_model", "5_layer_model",
+                       "2_layer_no_discontinuity_model"]
         expected_results = [
-            [("p", 18.143), ("Pn", 19.202), ("PcP", 19.884), ("sP", 22.054),
-             ("ScP", 23.029), ("PcS", 26.410), ("s", 31.509), ("Sn", 33.395),
-             ("ScS", 34.533)],
-            [("Pn", 17.358), ("P", 17.666), ("p", 17.804), ("P", 17.869),
-             ("PcP", 18.039), ("ScP", 19.988), ("sP", 22.640), ("sP", 22.716),
-             ("sP", 22.992), ("PcS", 23.051), ("sP", 24.039), ("sP", 24.042),
-             ("Sn", 30.029), ("S", 30.563), ("s", 30.801), ("S", 30.913),
-             ("ScS", 31.208)]]
+            [("p", 18.143), ("P", 19.202), ("Pn", 19.202), ("P", 19.884),
+             ("sP", 22.054), ("pP", 23.023), ("pP", 23.038), ("sP", 25.656),
+             ("sP", 25.759), ("s", 31.509), ("S", 33.395), ("Sn", 33.395),
+             ("S", 34.533), ("sS", 39.991), ("sS", 40.009), ("PP", 3110.537),
+             ("SP", 4267.568), ("PS", 4269.707), ("SS", 5426.732)],
+            [("P", 17.358), ("Pn", 17.358), ("P", 17.666), ("p", 17.804),
+             ("P", 17.869), ("P", 18.039), ("pP", 21.125), ("pP", 21.164),
+             ("sP", 22.640), ("sP", 22.716), ("sP", 22.992), ("sP", 23.766),
+             ("sP", 23.918), ("sP", 24.039), ("sP", 24.041), ("S", 30.029),
+             ("Sn", 30.029), ("S", 30.563), ("s", 30.800), ("S", 30.913),
+             ("S", 31.208), ("sS", 36.547), ("sS", 36.613), ("PP", 3147.085),
+             ("SP", 4294.699), ("PS", 4296.826), ("SS", 5444.434)],
+            [("p", 18.143), ("sP", 22.054), ("s", 31.509), ("PP", 3562.683),
+             ("SP", 4881.292), ("PS", 4883.430), ("SS", 6202.037)]
+            ]
 
         for model_name, expects in zip(model_names, expected_results):
             with TemporaryWorkingDirectory():
@@ -1028,10 +1036,10 @@ class TestTauPyModel:
                     output_folder=folder, verbose=False)
                 model = TauPyModel(os.path.join(folder, model_name + ".npz"))
 
-            arrvials = model.get_ray_paths(source_depth_in_km=18.0,
+            arrivals = model.get_ray_paths(source_depth_in_km=18.0,
                                            distance_in_degree=1.0)
 
-            assert len(arrvials) == len(expects)
-            for arrival, expect in zip(arrvials, expects):
+            assert len(arrivals) == len(expects)
+            for arrival, expect in zip(arrivals, expects):
                 assert arrival.name == expect[0]
                 assert round(abs(arrival.time-expect[1]), 2) == 0

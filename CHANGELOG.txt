@@ -13,6 +13,10 @@ Changes:
      plot by using wiggly lines for shear waves (see #3047)
    * improved accuracy of ray paths by change of root-finding algorithm
      in SeismicPhase.refine_arrival (see #3064)
+   * improved accuracy of travel time estimates by using theta function
+     (see #3068)
+   * add support for models without a core or inner core
+     (see #1200, #1423, #2086, #2192, #2390, #3070)
  - obspy.io.nordic:
    * add support for writing multiple amplitudes for one pick (only new format)
      and writes some amplitude lines more compact
@@ -23,7 +27,6 @@ Changes:
      takeoff angle)
    * add function to check whether phase is valid IASPEI phase in Seisan
    * full support for writing high-accuracy origin line
-
 
 maintenance_1.3.x
 =================
