@@ -11,6 +11,9 @@ Changes:
    * trigger_onset(): fix a bug when trigger off threshold is higher than
      trigger on threshold and a trigger is active at the end of the
      characteristic function (see #2891, #3013)
+ - obspy.signal.PPSD:
+   * show warning on input of a trace that is too short to be processed (see
+     #3073)
  - obspy.taup:
    * Fix cycling through colors in ray path plots, now also fixes cartesian
      plot version (see #2470, #2478, #3041)

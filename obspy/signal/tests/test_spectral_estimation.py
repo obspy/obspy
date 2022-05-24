@@ -16,7 +16,7 @@ import pytest
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
 from obspy.core.inventory import Response
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, CatchAndAssertWarnings
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.xseed import Parser
@@ -888,3 +888,21 @@ class TestPsd:
             # If not allow_pickle,  a helpful error msg should be raised.
             with pytest.raises(ValueError, match='Loading PPSD results'):
                 ppsd.add_npz(temp_path)
+
+    def test_short_trace_warning(self):
+        """
+        Makes sure a warning is shown if a trace shorter than ppsd length is
+        added which is doing nothing. see #2386
+        """
+        tr, paz = _get_sample_data()
+        ppsd = PPSD(stats=tr.stats, metadata=paz)
+        tr.data = tr.data[:4]  # shorten trace
+        msg = (f"Trace is shorter than this PPSD's 'ppsd_length' "
+               f"({str(ppsd.ppsd_length)} seconds). Skipping trace: "
+               f"{str(tr)}")
+        with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
+            success = ppsd.add(tr)
+        assert not success  # add returns False on noop
+        assert not len(ppsd.times_processed)  # should be empty, nothing added
+        # contains start/end times of traces added in, even if not processed
+        assert len(ppsd.times_data) == 1
