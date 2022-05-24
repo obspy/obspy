@@ -878,6 +878,12 @@ class PPSD(object):
                 continue
             t1 = tr.stats.starttime
             t2 = tr.stats.endtime
+            if t1 + self.ppsd_length - tr.stats.delta > t2:
+                msg = (f"Trace is shorter than this PPSD's 'ppsd_length' "
+                       f"({str(self.ppsd_length)} seconds). Skipping trace: "
+                       f"{str(tr)}")
+                warnings.warn(msg)
+                continue
             while t1 + self.ppsd_length - tr.stats.delta <= t2:
                 if self.__check_time_present(t1):
                     msg = "Already covered time spans detected (e.g. %s), " + \
