@@ -243,9 +243,9 @@ class VelocityModel(object):
                 self.cmb_depth,
                 self.moho_depth))
 
-        # Is cmb_depth positive?
-        if self.cmb_depth <= 0.0:
-            raise ValueError("cmb_depth is not positive: %f" % (
+        # Is cmb_depth non-negative?
+        if self.cmb_depth < 0.0:
+            raise ValueError("cmb_depth is negative: %f" % (
                 self.cmb_depth, ))
 
         # Is iocb_depth >= cmb_depth?
@@ -254,9 +254,9 @@ class VelocityModel(object):
                 self.iocb_depth,
                 self.cmb_depth))
 
-        # Is iocb_depth positive?
-        if self.iocb_depth <= 0.0:
-            raise ValueError("iocb_depth is not positive: %f" % (
+        # Is iocb_depth non-negative?
+        if self.iocb_depth < 0.0:
+            raise ValueError("iocb_depth is negative: %f" % (
                 self.iocb_depth, ))
 
         # Is min_radius non-negative?
@@ -508,9 +508,9 @@ class VelocityModel(object):
 
         :raises ValueError: If model file is in error.
         """
-        moho_depth = None
-        cmb_depth = None
-        iocb_depth = None
+        moho_depth = _DEFAULT_VALUES["default_moho"]
+        cmb_depth = _DEFAULT_VALUES["default_cmb"]
+        iocb_depth = _DEFAULT_VALUES["default_iocb"]
 
         # Read all lines from file to enable identifying top and bottom values
         # for each layer and find named discontinuities if present
@@ -548,13 +548,6 @@ class VelocityModel(object):
                         row.append(float(item))
                     data = np.vstack((data, np.array(row)))
                     ii = ii + 1
-
-        if moho_depth is None:
-            raise ValueError("Moho depth is not specified in model file!")
-        if cmb_depth is None:
-            raise ValueError("CMB depth is not specified in model file!")
-        if iocb_depth is None:
-            raise ValueError("IOCB depth is not specified in model file!")
 
         # Check if density is present.
         if data.shape[1] < 4:
@@ -643,8 +636,11 @@ class VelocityModel(object):
         cmb_diff = np.abs(self.cmb_depth - above['bot_depth'])
         cmb_diff[~mask] = cmb_min
         cmb = np.argmin(cmb_diff)
-        if cmb_diff[cmb] < cmb_min:
+        # don't set cmb to be same as moho, unless fixed
+        if (cmb_diff[cmb] < cmb_min
+                and above[cmb]['bot_depth'] > temp_moho_depth):
             temp_cmb_depth = above[cmb]['bot_depth']
+            cmb_min = np.abs(self.cmb_depth - above[cmb]['bot_depth'])
 
         # Find discontinuity closest to current IOCB
         iocb_diff = self.iocb_depth - above['bot_depth']
@@ -655,6 +651,25 @@ class VelocityModel(object):
         iocb = np.argmin(iocb_diff)
         if iocb_diff[iocb] < iocb_min:
             temp_iocb_depth = above[iocb]['bot_depth']
+            iocb_min = np.abs(self.iocb_depth - above[iocb]['bot_depth'])
+
+        # may need to set named discon to center of planet
+        # in case of degenerate model without a core
+        # final is bottommost layer, so
+        # final['bot_depth'] == radius of planet
+        final = below[-1]
+        if (final['bot_depth'] > temp_moho_depth and
+                np.abs(self.cmb_depth - final['bot_depth']) < cmb_min):
+            temp_cmb_depth = final['bot_depth']
+            cmb_min = np.abs(self.cmb_depth - final['bot_depth'])
+
+        # iocb is either below a fluid layer or is equal to cmb
+        # or center of planet
+        if (final['bot_depth'] == temp_cmb_depth or
+            (final['bot_s_velocity'] == 0.0 and
+             temp_iocb_depth == temp_cmb_depth)):
+            temp_iocb_depth = final['bot_depth']
+            iocb_min = np.abs(self.iocb_depth - final['bot_depth'])
 
         if self.moho_depth != temp_moho_depth \
                 or self.cmb_depth != temp_cmb_depth \
