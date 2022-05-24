@@ -13,5 +13,4 @@ jobs:
         - uses: jenschelkopf/issue-label-notification-action@1.3
           with:
              recipients: |
-                  .taup=@crotwell @johnrudge
-                  .io.nordic=@flixha
+                 bug=@megies
