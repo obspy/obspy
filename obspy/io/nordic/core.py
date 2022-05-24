@@ -48,7 +48,6 @@ from pathlib import Path
 import io
 import os
 import re
-import os
 from math import sqrt
 import datetime
 from obspy import UTCDateTime, read
