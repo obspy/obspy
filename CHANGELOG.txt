@@ -15,6 +15,7 @@ Changes:
      in SeismicPhase.refine_arrival (see #3064)
  - obspy.io.nordic:
    * add support for writing multiple amplitudes for one pick (only new format)
+     and writes some amplitude lines more compact
    * add full support for reading and writing apparent velocity and backazimuth
      with new nordic format.
    * fix comments on angle of incidence vs. takeoff angle (What is called
