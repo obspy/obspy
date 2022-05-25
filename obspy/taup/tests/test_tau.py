@@ -16,6 +16,7 @@ from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.taup import TauPyModel
 from obspy.taup.tau import Arrivals
 from obspy.taup.taup_create import build_taup_model
+from obspy.taup.seismic_phase import SeismicPhase
 import obspy.geodetics.base as geodetics
 
 
@@ -1061,3 +1062,41 @@ class TestTauPyModel:
             for arrival, expect in zip(arrivals, expects):
                 assert arrival.name == expect[0]
                 assert round(abs(arrival.time-expect[1]), 2) == 0
+
+    def test_fruit(self):
+        """
+        Check handling of low velocity zones.
+
+        Test case where bottom of mantle has a negative velocity gradient
+        so phase cannot turn.
+        """
+        model_name = "fruit"
+        with TemporaryWorkingDirectory():
+            folder = os.path.abspath(os.curdir)
+            build_taup_model(
+              filename=os.path.join(DATA, os.path.pardir, model_name + ".nd"),
+              output_folder=folder, verbose=False)
+            model = TauPyModel(os.path.join(folder, model_name + ".npz"))
+
+            s_mod = model.model.s_mod
+            high_slow_range = s_mod.high_slowness_layer_depths_p[0]
+            assert s_mod.depth_in_high_slowness(1360, 18, True)
+            assert s_mod.depth_in_high_slowness(
+                1360,
+                high_slow_range.ray_param+0.00000001,
+                True)
+            assert not s_mod.depth_in_high_slowness(
+                1360,
+                high_slow_range.ray_param,
+                True)
+            assert not s_mod.depth_in_high_slowness(
+                1360,
+                high_slow_range.ray_param-0.00000001,
+                True)
+
+            p = SeismicPhase("P", model.model)
+            atol = 1e-2
+            np.testing.assert_allclose(p.min_distance, 0.0, atol=atol)
+            np.testing.assert_allclose(p.max_distance*180.0/np.pi,
+                                       72.66, atol=atol)
+            assert p.branch_seq == [0, 0]

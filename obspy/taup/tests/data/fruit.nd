@@ -1,0 +1,15 @@
+#/* below is a simple named discontinuities model. */
+# depth to the sample point [km], P velocity [km/s], S velocity [km/s], density [g/cm^3], in grams per cubic centimeter, Qp attenuation for compressional waves and Qs attenuation for shear waves (only first 3 required)
+0 118 1 1
+5 118 1 1
+25 118 1 1
+500 118 1 1
+mantle
+500 117 1 1
+1360 29 1 1
+outer-core
+1360 28 0 1
+2200 28 0 1
+inner-core
+2200 180 1 1
+2572 180 1 1
