@@ -213,6 +213,22 @@ class TriggerTestCase(unittest.TestCase):
             plt.legend()
             plt.show()
 
+    def test_trigger_onset_issue_2891(self):
+        """
+        Regression test for issue 2891
+
+        This used to raise an error if a trigger was activated near the end of
+        the trace, and all sample values after that trigger on threshold are
+        above the designated off threshold. So basically this can only happen
+        if the on threshold is below the off threshold, which is kind of
+        unusual, but we fixed it nevertheless, since people can run into this
+        playing around with different threshold settings
+        """
+        tr = read(os.path.join(
+            self.path, 'BW.UH1._.EHZ.D.2010.147.a.slist.gz'))[0]
+        cft = recursive_sta_lta(tr.data, 5, 30)
+        trigger_onset(cft, 2.5, 3.2)
+
     def test_coincidence_trigger(self):
         """
         Test network coincidence trigger.

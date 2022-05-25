@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Client for accessing the Nominal Response Library (http://ds.iris.edu/NRL/).
+Client for accessing the `IRIS Library of Nominal Response for Seismic
+Instruments <https://ds.iris.edu/NRL/>`_ (NRL).  To cite use of the NRL, please
+see [Templeton2017]_.
 
 :copyright:
     Lloyd Carothers IRIS/PASSCAL, 2016
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 import codecs
 import io
@@ -33,7 +35,7 @@ class NRL(object):
     """
     NRL client base class for accessing the Nominal Response Library.
 
-    http://ds.iris.edu/NRL/
+    https://ds.iris.edu/NRL/
 
     Created with a URL for remote access or filesystem accessing a local copy.
     """
@@ -287,7 +289,7 @@ class RemoteNRL(NRL):
     """
     Subclass of NRL for accessing remote copy of NRL.
     """
-    def __init__(self, root='http://ds.iris.edu/NRL'):
+    def __init__(self, root='https://ds.iris.edu/NRL'):
         self.root = root
         super(self.__class__, self).__init__()
 

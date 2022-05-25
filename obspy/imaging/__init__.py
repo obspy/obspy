@@ -91,7 +91,7 @@ Draws a beach ball diagram of an earthquake focal mechanism.
 
     respectively.
 
-.. _`Generic Mapping Tools (GMT)`: https://gmt.soest.hawaii.edu
+.. _`Generic Mapping Tools (GMT)`: https://www.generic-mapping-tools.org
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 
 

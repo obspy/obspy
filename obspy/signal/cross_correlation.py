@@ -310,7 +310,7 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
     separately, stacks them together and estimates the maximum and shift of
     maximum on the stack.
 
-    Basically the same as `~obspy.signal.cross_correlation.xcorr` but
+    Basically the same as `~obspy.signal.cross_correlation.correlate` but
     for (normally) three components, please also take a look at the
     documentation of that function. Useful e.g. for estimation of waveform
     similarity on a three component seismogram.

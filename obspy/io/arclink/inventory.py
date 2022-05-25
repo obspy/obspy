@@ -11,7 +11,7 @@ This is a modified version of obspy.io.stationxml and obspy.io.sc3ml.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 import inspect
 import math

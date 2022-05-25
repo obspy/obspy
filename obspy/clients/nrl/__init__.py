@@ -3,8 +3,9 @@
 obspy.clients.nrl - Nominal Response Library client for ObsPy
 =============================================================
 
-This module contains a client to access the Nominal Response Library (NRL)
-hosted by IRIS (http://ds.iris.edu/NRL/).
+This module contains a client to access the `IRIS Library of Nominal Response
+for Seismic Instruments <https://ds.iris.edu/NRL/>`_ (NRL).
+To cite use of the NRL, please see [Templeton2017]_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
