@@ -874,10 +874,17 @@ class SeismicPhase(object):
         elif end_action == _ACTIONS["diffract"]:
             end_offset = 0
             is_down_going = True
+<<<<<<< HEAD
             self.max_ray_param = min(
                 self.max_ray_param,
                 tau_model.get_tau_branch(
                     end_branch, is_p_wave).min_turn_ray_param)
+=======
+            self.min_ray_param = max(
+                self.min_ray_param,
+                tau_model.get_tau_branch(end_branch,
+                                         is_p_wave).min_turn_ray_param)
+>>>>>>> a9839224c (Separate action for diffracted phase, like recent java.)
         else:
             raise TauModelError("Illegal end_action: {}".format(end_action))
 
