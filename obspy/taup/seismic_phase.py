@@ -996,10 +996,12 @@ class SeismicPhase(object):
                 self.time[:size] += tbs * taubs.time[index]
 
         if "Sdiff" in self.name or "Pdiff" in self.name:
-            if tau_model.s_mod.depth_in_high_slowness(
+            if (tau_model.cmb_depth == tau_model.radius_of_planet
+                or tau_model.s_mod.depth_in_high_slowness(
                     tau_model.cmb_depth - 1e-10, self.min_ray_param,
-                    self.name[0] == "P"):
-                # No diffraction if there is a high slowness zone at the CMB.
+                    self.name[0] == "P")):
+                # No diffraction if cmb is zero radius or
+                # there is a high slowness zone at the CMB.
                 self.min_ray_param = -1
                 self.max_ray_param = -1
                 self.max_distance = -1
