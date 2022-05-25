@@ -28,6 +28,8 @@ Changes:
    * allow rapid travel time plotting in plot_travel_times by using
      precalculated travel times (see #3092)
    * return pierce points for any depth (see #1742, #3072)
+   * bug fix for rays which cannot turn due to low velocity at bottom
+     of layer (see #3080)
 
 maintenance_1.3.x
 =================
