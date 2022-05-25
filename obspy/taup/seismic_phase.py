@@ -832,6 +832,20 @@ class SeismicPhase(object):
                 self.min_ray_param,
                 tau_model.get_tau_branch(end_branch,
                                          is_p_wave).min_turn_ray_param)
+            # careful if the ray param cannot turn due to high slowness at
+            # bottom. Do not use these layers if their top in in high slowness
+            # for the given ray parameter
+            b_num = end_branch
+            while (b_num >= start_branch):
+                if (tau_model.s_mod.depth_in_high_slowness(
+                     tau_model.get_tau_branch(b_num, is_p_wave).top_depth,
+                     self.min_ray_param,
+                     is_p_wave)):
+                    # tau branch is in high slowness, so turn is not possible,
+                    # only non-critical reflect, so do not add these branches
+                    end_branch = b_num - 1
+                b_num -= 1
+
         elif end_action == _ACTIONS["reflect_underside"]:
             end_offset = 0
             is_down_going = False
