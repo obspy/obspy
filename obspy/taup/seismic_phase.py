@@ -36,7 +36,9 @@ _ACTIONS = Enum([
     "transup",
     # Used by add_to_branch when the path transmits down through the end of a
     # segment.
-    "transdown"
+    "transdown",
+    # Used by add_to_branch when the path diffracts
+    "diffract"
 ])
 
 
@@ -114,6 +116,9 @@ class SeismicPhase(object):
         # Note that this depends upon both the planet model and the source
         # depth.
         self.branch_seq = []
+        # List of branch_seq positions where a head or diffracted
+        # segment occurs.
+        self.head_or_diffract_seq = []
         # True if the current leg of the phase is down going. This allows a
         # check to make sure the path is correct.
         # Used in addToBranch() and parseName().
@@ -253,7 +258,7 @@ class SeismicPhase(object):
                 # upgoing at receiver
                 self.max_ray_param = min(
                     tau_model.get_tau_branch(upgoing_rec_branch,
-                                             is_p_wave).min_turn_ray_param,
+                                             is_p_wave).max_ray_param,
                     self.max_ray_param)
 
         self.min_ray_param = 0
@@ -310,6 +315,48 @@ class SeismicPhase(object):
                         # depth which can be called p or P.
                         self.max_ray_param = -1
                         self.min_ray_param = -1
+                        return
+                elif next_leg in ('Pdiff', 'Sdiff'):
+                    end_action = _ACTIONS["diffract"]
+                    self.add_to_branch(tau_model, self.current_branch,
+                                       tau_model.cmb_branch - 1, is_p_wave,
+                                       end_action)
+                    if current_leg[0] != next_leg[0]:
+                        # like Sed Pdiff conversion
+                        is_p_wave = not is_p_wave
+                elif next_leg == "K":
+                    end_action = _ACTIONS["transdown"]
+                    self.add_to_branch(tau_model, self.current_branch,
+                                       tau_model.cmb_branch - 1, is_p_wave,
+                                       end_action)
+                elif next_leg == "m":
+                    end_action = _ACTIONS["transdown"]
+                    self.add_to_branch(tau_model, self.current_branch,
+                                       tau_model.moho_branch - 1, is_p_wave,
+                                       end_action)
+                elif next_leg.startswith("v"):
+                    discon_branch = closest_branch_to_depth(
+                        tau_model, next_leg[1:])
+                    if self.current_branch <= discon_branch - 1:
+                        end_action = _ACTIONS["reflect_topside"]
+                        self.add_to_branch(
+                            tau_model, self.current_branch, discon_branch - 1,
+                            is_p_wave, end_action)
+                    else:
+                        raise TauModelError(
+                            "Phase not recognized: {} followed by {}".format(
+                                current_leg, next_leg))
+                elif next_leg in ('I', 'J'):
+                    if tau_model.cmb_depth == tau_model.iocb_depth:
+                        # degenerate case of no fluid outer core,
+                        # so allow phases like PIP or SJS
+                        end_action = _ACTIONS["transdown"]
+                        self.add_to_branch(
+                            tau_model, self.current_branch,
+                            tau_model.cmb_branch - 1,
+                            is_p_wave, end_action)
+                    else:
+                        self.max_ray_param = -1
                         return
                 else:
                     raise TauModelError(
@@ -513,21 +560,42 @@ class SeismicPhase(object):
                             tau_model.cmb_branch - 1,
                             is_p_wave).min_turn_ray_param >=
                             self.min_ray_param):
-                        end_action = _ACTIONS["turn"]
-                        self.add_to_branch(tau_model, self.current_branch,
-                                           tau_model.cmb_branch - 1, is_p_wave,
-                                           end_action)
-                        self.max_ray_param = self.min_ray_param
+                        if (self.current_branch < tau_model.cmb_branch - 1 or
+                            (self.current_branch == tau_model.cmb_branch - 1
+                             and end_action != _ACTIONS["diffract"])):
+                            end_action = _ACTIONS["diffract"]
+                            self.add_to_branch(
+                                tau_model, self.current_branch,
+                                tau_model.cmb_branch - 1, is_p_wave,
+                                end_action)
+                        # otherwise we are already at the right branch to
+                        # diffract. remember where the diff or head happened
+                        # (one less than size)
+                        self.head_or_diffract_seq.append(
+                            len(self.branch_seq) - 1)
+                        self.max_ray_param = tau_model.get_tau_branch(
+                            tau_model.cmb_branch - 1, is_p_wave
+                            ).min_turn_ray_param
+                        self.min_ray_param = self.max_ray_param
+
                         if next_leg == "END":
                             end_action = _ACTIONS["reflect_underside"]
                             self.add_to_branch(tau_model, self.current_branch,
                                                upgoing_rec_branch, is_p_wave,
                                                end_action)
+                        elif next_leg == "K":
+                            end_action = _ACTIONS["transdown"]
+                            self.current_branch += 1
                         elif next_leg[0] in "PS":
                             end_action = _ACTIONS["reflect_underside"]
                             self.add_to_branch(
                                 tau_model, self.current_branch, 0, is_p_wave,
                                 end_action)
+                        else:
+                            raise TauModelError(
+                                "Phase not recognized: "
+                                "{} followed by {}".format(
+                                    current_leg, next_leg))
                     else:
                         # Can't have head wave as ray param is not within
                         # range.
@@ -563,6 +631,9 @@ class SeismicPhase(object):
                             self.add_to_branch(
                                 tau_model, self.current_branch,
                                 tau_model.moho_branch, is_p_wave, end_action)
+                            # remember where the head happened
+                            self.head_or_diffract_seq.append(
+                                len(self.branch_seq) - 1)
                             end_action = _ACTIONS["transup"]
                             self.add_to_branch(
                                 tau_model, self.current_branch,
@@ -601,7 +672,8 @@ class SeismicPhase(object):
                     self.max_ray_param = -1
                     return
                 if next_leg in ("P", "S"):
-                    if prev_leg in ("P", "S", "K", "k", "START"):
+                    if prev_leg in ("P", "S", "Pdiff", "Sdiff",
+                                    "K", "k", "START"):
                         end_action = _ACTIONS["turn"]
                         self.add_to_branch(
                             tau_model, self.current_branch,
@@ -784,6 +856,13 @@ class SeismicPhase(object):
             self.max_ray_param = min(
                 self.max_ray_param,
                 tau_model.get_tau_branch(end_branch, is_p_wave).min_ray_param)
+        elif end_action == _ACTIONS["diffract"]:
+            end_offset = 0
+            is_down_going = True
+            self.max_ray_param = min(
+                self.max_ray_param,
+                tau_model.get_tau_branch(
+                    end_branch, is_p_wave).min_turn_ray_param)
         else:
             raise TauModelError("Illegal end_action: {}".format(end_action))
 
@@ -1092,7 +1171,8 @@ class SeismicPhase(object):
         dist_ray_param = dist_ratio * (ray_param_b - ray_param_a) + ray_param_a
 
         # + 2 for first point and kmps, if it exists.
-        pierce = np.empty(len(self.branch_seq) + 2, dtype=TimeDist)
+        pierce = np.empty(len(self.branch_seq) +
+                          len(self.head_or_diffract_seq) + 2, dtype=TimeDist)
         # First pierce point is always 0 distance at the source depth.
         pierce[0] = (dist_ray_param, 0, 0, self.tau_model.source_depth)
         index = 1
@@ -1104,8 +1184,8 @@ class SeismicPhase(object):
         # Use linear interpolation between rays that we know.
         assert len(self.branch_seq) == len(self.wave_type) == \
             len(self.down_going)
-        for branch_num, is_p_wave, is_down_going in zip(
-                self.branch_seq, self.wave_type, self.down_going):
+        for i, branch_num, is_p_wave, is_down_going in zip(
+                count(), self.branch_seq, self.wave_type, self.down_going):
             # Save the turning depths for the ray parameter for both P and
             # S waves. This way we get the depth correct for any rays that
             # turn within a layer. We have to do this on a per branch basis
@@ -1156,11 +1236,21 @@ class SeismicPhase(object):
                                  branch_depth)
                 index += 1
 
-        if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
-            pierce, index = self.handle_special_waves(curr_arrival,
-                                                      pierce,
-                                                      index)
-        elif "kmps" in self.name:
+            if i in self.head_or_diffract_seq:
+                refract_dist = (
+                    curr_arrival.purist_dist - self.dist[0]
+                    )/len(self.head_or_diffract_seq)
+                refract_time = refract_dist * curr_arrival.ray_param
+                pierce[index] = (dist_ray_param,
+                                 branch_time + refract_time,
+                                 branch_dist + refract_dist,
+                                 branch_depth)
+                branch_dist += refract_dist
+                prev_branch_time = branch_time
+                branch_time += refract_time
+                index += 1
+
+        if "kmps" in self.name:
             pierce[index] = (dist_ray_param, curr_arrival.time,
                              curr_arrival.purist_dist, 0)
             index += 1
@@ -1203,32 +1293,25 @@ class SeismicPhase(object):
                                        "this is impossible.")
 
             # Special case for head and diffracted waves:
-            if(branch_num == self.tau_model.cmb_branch - 1 and
-               i < len(self.branch_seq) - 1 and
-               self.branch_seq[i + 1] == self.tau_model.cmb_branch - 1 and
-               ("Pdiff" in self.name or "Sdiff" in self.name)):
-                dist_diff = curr_arrival.purist_dist - self.dist[0]
+            if i in self.head_or_diffract_seq:
+                dist_diff = (
+                    curr_arrival.purist_dist - self.dist[0]
+                    )/len(self.head_or_diffract_seq)
+                if "Pdiff" in self.name or "Sdiff" in self.name:
+                    branch_depth = self.tau_model.cmb_depth
+                elif "Pn" in self.name or "Sn" in self.name:
+                    branch_depth = self.tau_model.moho_depth
+                else:
+                    raise RuntimeError(
+                        "Path adding head and diffracted wave, "
+                        "but did not find P/Sdiff or P/Sn, expected")
                 diff_td = (
                     curr_arrival.ray_param,
                     dist_diff * curr_arrival.ray_param,
                     dist_diff,
-                    self.tau_model.cmb_depth)
-                path_list.append(diff_td)
+                    branch_depth)
 
-            elif(branch_num == self.tau_model.moho_branch and
-                 i < len(self.branch_seq) - 1 and
-                 self.branch_seq[i + 1] == self.tau_model.moho_branch and
-                 ("Pn" in self.name or "Sn" in self.name)):
-                # Can't have both Pn and Sn in a wave, so one of these is 0.
-                num_found = max(self.name.count("Pn"), self.name.count("Sn"))
-                dist_head = (curr_arrival.purist_dist -
-                             self.dist[0]) / num_found
-                head_td = (
-                    curr_arrival.ray_param,
-                    dist_head * curr_arrival.ray_param,
-                    dist_head,
-                    self.tau_model.moho_depth)
-                path_list.append(head_td)
+                path_list.append(diff_td)
 
         if "kmps" in self.name:
             # kmps phases have no branches, so need to end them at the arrival
@@ -1245,48 +1328,6 @@ class SeismicPhase(object):
         np.cumsum(curr_arrival.path['dist'], out=curr_arrival.path['dist'])
 
         return curr_arrival
-
-    def handle_special_waves(self, curr_arrival, pierce, index):
-        """
-        Handle head or diffracted waves.
-
-        It is assumed that a phase can be a diffracted wave or a head wave, but
-        not both. Nor can it be a head wave or diffracted wave for both P and
-        S.
-        """
-        for ps in ["Pn", "Sn", "Pdiff", "Sdiff"]:
-            if ps in self.name:
-                phase_seg = ps
-                break
-        else:
-            raise TauModelError("No head/diff segment in" + str(self.name))
-
-        if phase_seg in ["Pn", "Sn"]:
-            head_depth = self.tau_model.moho_depth
-        else:
-            head_depth = self.tau_model.cmb_depth
-
-        num_found = self.name.count(phase_seg)
-        refract_dist = curr_arrival.purist_dist - self.dist[0]
-        refract_time = refract_dist * curr_arrival.ray_param
-
-        # This is a little weird as we are not checking where we are in
-        # the phase name, but simply if the depth matches. This likely
-        # works in most cases, but may not for head/diffracted waves that
-        # undergo a phase change, if that type of phase can even exist.
-        mask = pierce['depth'][:index] == head_depth
-        adjust = np.cumsum(mask)
-        pierce['time'][:index] += adjust * refract_time / num_found
-        pierce['dist'][:index] += adjust * refract_dist / num_found
-
-        head_index = np.where(mask)[0]
-        if len(head_index):
-            head_index += 1
-            td = pierce[head_index]
-            pierce = np.insert(pierce, head_index, td)
-            index += len(head_index)
-
-        return pierce, index
 
     def refine_arrival(self, degrees, ray_index, dist_radian, tolerance,
                        recursion_limit):

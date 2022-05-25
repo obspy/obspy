@@ -78,3 +78,24 @@ class TestTauPySeismicPhase:
             m = TauPyModel(os.path.join(folder, model_name + ".npz"))
         arr = m.get_ray_paths(172.8000, 46.762440693494824, ["SS"])
         assert len(arr) > 10
+
+    def test_diffracted_phases(self):
+        """
+        Test of exotic diffracted phases.
+        """
+        model = TauPyModel('iasp91')
+        phs = ["SedPdiffKP", "PdiffPdiff"]
+        dists = [155.0, 210.0]
+        times = [1464.97, 1697.88]
+
+        for ph, dist, time in zip(phs, dists, times):
+            phase = SeismicPhase(ph, model.model)
+            arrivals = phase.calc_time(dist)
+            arrival = arrivals[0]
+            phase.calc_pierce_from_arrival(arrival)
+            phase.calc_path_from_arrival(arrival)
+
+            tol = 1e-2
+            assert abs(arrival.time - time) < tol
+            assert abs(arrival.pierce["time"][-1] - time) < tol
+            assert abs(arrival.path["time"][-1] - time) < tol
