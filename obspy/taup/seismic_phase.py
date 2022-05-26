@@ -117,6 +117,8 @@ class SeismicPhase(object):
         # List of branch_seq positions where a head or diffracted
         # segment occurs.
         self.head_or_diffract_seq = []
+        # Description of segments of the phase.
+        self.segment_list = []
         # True if the current leg of the phase is down going. This allows a
         # check to make sure the path is correct.
         # Used in addToBranch() and parseName().
@@ -936,6 +938,57 @@ class SeismicPhase(object):
         else:
             raise TauModelError("Illegal end_action: {}".format(end_action))
 
+        segment = SeismicPhaseSegment(self.tau_model, start_branch, end_branch,
+                                      is_p_wave, end_action, is_down_going)
+        if len(self.segment_list) > 0:
+            prev_segment = self.segment_list[-1]
+            if is_down_going:
+                if prev_segment.end_branch > start_branch:
+                    raise TauModelError(
+                        f"Segment is downgoing, but we are already below the "
+                        f"start: {end_action}")
+                if prev_segment.end_action == _ACTIONS["reflect_topside"]:
+                    raise TauModelError(
+                        f"Segment is downgoing, but previous action was to "
+                        f"reflect up: {end_action}")
+                if prev_segment.end_action == _ACTIONS["turn"]:
+                    raise TauModelError(
+                        f"Segment is downgoing, but previous action was to "
+                        f"turn: {end_action}")
+                if prev_segment.end_action == _ACTIONS["transup"]:
+                    raise TauModelError(
+                        f"Segment is downgoing, but previous action was to "
+                        f"transmit up: {end_action}")
+                if (prev_segment.end_branch == start_branch
+                        and not prev_segment.is_down_going and
+                        prev_segment.end_action !=
+                        _ACTIONS["reflect_underside"]):
+                    raise TauModelError(
+                        f"Segment is downgoing, but previous action was not to"
+                        f"reflect underside: {end_action}")
+            else:
+                if prev_segment.end_branch < start_branch:
+                    raise TauModelError(
+                        f"Segment is upgoing, but we are already above the "
+                        f"start: {end_action}")
+                if prev_segment.end_action == _ACTIONS["reflect_underside"]:
+                    raise TauModelError(
+                        f"Segment is upgoing, but previous action was to "
+                        f"underside reflect down:  {end_action}")
+                if prev_segment.end_action == _ACTIONS["transdown"]:
+                    raise TauModelError(
+                        f"Segment is upgoing, but previous action was to "
+                        f"trans down: {end_action}")
+                if (prev_segment.end_branch == start_branch
+                        and prev_segment.is_down_going and
+                        prev_segment.end_action not in
+                        (_ACTIONS["turn"], _ACTIONS["diffract"],
+                         _ACTIONS["reflect_topside"])):
+                    raise TauModelError(
+                        f"Segment is upgoing, but previous action was not to "
+                        f"reflect topside: {end_action}")
+        self.segment_list.append(segment)
+
         if is_down_going:
             if start_branch > end_branch:
                 # Can't be downgoing as we are already below.
@@ -1697,3 +1750,14 @@ def leg_puller(name):
         raise ValueError("Invalid phase name: %s could not be parsed in %s"
                          % (str(remainder), name))
     return results + ["END"]
+
+
+class SeismicPhaseSegment(object):
+    def __init__(self, tau_model, start_branch, end_branch, is_p_wave,
+                 end_action, is_down_going):
+        self.tau_model = tau_model
+        self.start_branch = start_branch
+        self.end_branch = end_branch
+        self.is_p_wave = is_p_wave
+        self.end_action = end_action
+        self.is_down_going = is_down_going
