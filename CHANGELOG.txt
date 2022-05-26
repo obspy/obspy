@@ -33,6 +33,9 @@ Changes:
    * return pierce points for any depth (see #1742, #3072)
    * bug fix for rays which cannot turn due to low velocity at bottom
      of layer (see #3080)
+   * add some checks for bad phases, so "ScScS" is not allowed
+     (see #2774, #3082)
+
 
 maintenance_1.3.x
 =================
