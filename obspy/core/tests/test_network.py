@@ -143,6 +143,21 @@ class TestNetwork:
         finally:
             plt.close(fig)
 
+    def test_response_plot_no_match(self):
+        """
+        Tests response plot with no matches in network
+        """
+        import matplotlib.pyplot as plt
+        net = read_inventory()[0]
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            fig = net.plot_response(0.01, station="ABCDE", show=False)
+        try:
+            legend = fig.axes[0].get_legend()
+            self.assertEqual(legend, None)
+        finally:
+            plt.close(fig)
+
     def test_len(self):
         """
         Tests the __len__ property.

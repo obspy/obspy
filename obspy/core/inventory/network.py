@@ -644,7 +644,8 @@ class Network(BaseNode):
                       label_epoch_dates=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
-        network's channels.
+        network's channels. If the subset of channels is empty, a warning
+        is emitted and the plot will be empty.
 
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.
@@ -724,6 +725,10 @@ class Network(BaseNode):
                                channel=channel, time=time,
                                starttime=starttime, endtime=endtime)
 
+        if not matching.stations:
+            msg = "No matching channels for the given filters"
+            warnings.warn(msg, UserWarning)
+
         for sta in matching.stations:
             for cha in sta.channels:
                 label = _response_plot_label(
@@ -741,7 +746,7 @@ class Network(BaseNode):
                     warnings.warn(msg % (str(e), str(cha)), UserWarning)
 
         # final adjustments to plot if we created the figure in here
-        if not axes:
+        if not axes and matching.stations:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, show=False)
 

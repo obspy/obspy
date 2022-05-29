@@ -207,6 +207,21 @@ class TestInventory:
         finally:
             plt.close(fig)
 
+    def test_response_plot_no_match(self):
+        """
+        Tests response plot with no matches in inventory
+        """
+        import matplotlib.pyplot as plt
+        inv = read_inventory()
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            fig = inv.plot_response(0.01, station="ABCDE", show=False)
+        try:
+            legend = fig.axes[0].get_legend()
+            self.assertEqual(legend, None)
+        finally:
+            plt.close(fig)
+
     def test_inventory_merging_metadata_update(self):
         """
         Tests the metadata update during merging of inventory objects.

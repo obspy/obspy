@@ -1042,7 +1042,8 @@ class Inventory(ComparingObject):
                       label_epoch_dates=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
-        inventory's channels.
+        inventory's channels. If the subset of channels is empty, a warning
+        is emitted and the plot will be empty.
 
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.
@@ -1137,6 +1138,10 @@ class Inventory(ComparingObject):
                                location=location, channel=channel, time=time,
                                starttime=starttime, endtime=endtime)
 
+        if not matching.networks:
+            msg = "No matching channels for the given filters"
+            warnings.warn(msg, UserWarning)
+
         for net in matching.networks:
             for sta in net.stations:
                 for cha in sta.channels:
@@ -1156,7 +1161,7 @@ class Inventory(ComparingObject):
                         msg = "Skipping plot of channel (%s):\n%s"
                         warnings.warn(msg % (str(e), str(cha)), UserWarning)
         # final adjustments to plot if we created the figure in here
-        if axes is None:
+        if axes is None and matching.networks:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, plot_degrees, show=False)
         if outfile:
