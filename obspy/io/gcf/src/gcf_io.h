@@ -63,8 +63,9 @@
     #define read(fd, buffer, count) _read(fd, buffer, count)
   #endif
   
-  
-  #define FPERM _O_BINARY | _S_IWRITE
+  #define ORFLAG _O_RDONLY | _O_BINARY
+  #define OWFLAG _O_WRONLY | _O_CREAT | _O_TRUNC  | _O_BINARY
+  #define FPERM  _S_IWRITE
 
   /* For MSVC 2012 and earlier define standard int types, otherwise use inttypes.h */
   #if defined(_MSC_VER) && _MSC_VER <= 1700
@@ -78,6 +79,8 @@
   #endif
 #else
   #include <unistd.h>
+  #define ORFLAG O_RDONLY 
+  #define OWFLAG O_WRONLY | O_CREAT | O_TRUNC
   #define FPERM  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
 #endif
 
