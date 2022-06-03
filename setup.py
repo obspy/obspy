@@ -793,7 +793,7 @@ def setupPackage():
             'obspy.io.css': ['contrib/*'],
             # NOTE: If the libmseed test data wasn't used in our tests, we
             # could just ignore src/* everywhere.
-            'obspy.io.gcf':[src/*],
+            'obspy.io.gcf':['src/*'],
             'obspy.io.gse2': ['src/*'],
             'obspy.io.mseed': [
                 # Only keep src/libmseed/test/* except for the C files.
