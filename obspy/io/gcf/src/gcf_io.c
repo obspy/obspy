@@ -532,7 +532,7 @@ void closegcf(int32 *fid) {
 
 /* open a file for reading */
 int opengcf(const char *fname, int32 *fid) {
-   if ((*fid = open(fname, ORFLAG)) <  0 ) {
+   if ((*fid = open_r(fname, ORFLAG)) <  0 ) {
       return 1;
    }
    return 0;
@@ -1081,7 +1081,7 @@ int write_gcf(const char *f, GcfFile *obj) {
    // check that obj contains some data
    if (!(ret=verify_GcfFile(obj))) {
       // open file with read/write for owner and read for group and others
-      if((FID = open(f, OWFLAG, FPERM)) >= 0) {
+      if((FID = open_w(f, OWFLAG, FPERM)) >= 0) {
          bh = (BH*)&buffer[0];
          ret = 0;
          

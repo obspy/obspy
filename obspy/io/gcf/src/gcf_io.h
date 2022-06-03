@@ -47,10 +47,6 @@
     #define O_TRUNC _O_TRUNC
   #endif 
   
-  #ifndef open
-    #define open(path, flags, mode) _open(path, flags, mode)
-  #endif
-  
   #ifndef close
     #define close(fd) _close(fd)
   #endif
@@ -63,6 +59,8 @@
     #define read(fd, buffer, count) _read(fd, buffer, count)
   #endif
   
+  #define open_w(path, flags, mode) _open(path, flags, mode)
+  #define open_r(path, flags) _open(path, flags)
   #define ORFLAG _O_RDONLY | _O_BINARY
   #define OWFLAG _O_WRONLY | _O_CREAT | _O_TRUNC  | _O_BINARY
   #define FPERM  _S_IWRITE
@@ -79,6 +77,8 @@
   #endif
 #else
   #include <unistd.h>
+  #define open_w(path, flags, mode) open(path, flags, mode)
+  #define open_r(path, flags) open(path, flags)
   #define ORFLAG O_RDONLY 
   #define OWFLAG O_WRONLY | O_CREAT | O_TRUNC
   #define FPERM  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
