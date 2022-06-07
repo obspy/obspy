@@ -672,7 +672,7 @@ class SeismicPhase(object):
                     # without an outer core
                     self.max_ray_param = -1
                     return
-                if next_leg in ("P", "S", "Pdiff", "Sdiff"):
+                if next_leg in ("P", "S", "p", "s", "Pdiff", "Sdiff"):
                     if prev_leg in ("P", "S", "Pdiff", "Sdiff",
                                     "K", "k", "START"):
                         end_action = _ACTIONS["turn"]
