@@ -84,9 +84,9 @@ class TestTauPySeismicPhase:
         Test of exotic diffracted phases.
         """
         model = TauPyModel('iasp91')
-        phs = ["SedPdiffKP", "PdiffPdiff", "PedPdiffKKP"]
-        dists = [155.0, 210.0, 310.0]
-        times = [1464.97, 1697.88, 2052.42]
+        phs = ["SedPdiffKP", "PdiffPdiff", "PedPdiffKKP", "PdiffKKPdiff"]
+        dists = [155.0, 210.0, 310.0, 300.0]
+        times = [1464.97, 1697.88, 2052.42, 2008.03]
 
         for ph, dist, time in zip(phs, dists, times):
             phase = SeismicPhase(ph, model.model)

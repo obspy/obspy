@@ -562,7 +562,8 @@ class SeismicPhase(object):
                             self.min_ray_param):
                         if (self.current_branch < tau_model.cmb_branch - 1 or
                             (self.current_branch == tau_model.cmb_branch - 1
-                             and end_action != _ACTIONS["diffract"])):
+                             and end_action != _ACTIONS["diffract"])
+                                and prev_leg != "K"):
                             end_action = _ACTIONS["diffract"]
                             self.add_to_branch(
                                 tau_model, self.current_branch,
@@ -671,7 +672,7 @@ class SeismicPhase(object):
                     # without an outer core
                     self.max_ray_param = -1
                     return
-                if next_leg in ("P", "S"):
+                if next_leg in ("P", "S", "Pdiff", "Sdiff"):
                     if prev_leg in ("P", "S", "Pdiff", "Sdiff",
                                     "K", "k", "START"):
                         end_action = _ACTIONS["turn"]
