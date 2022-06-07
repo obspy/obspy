@@ -416,7 +416,7 @@ class SeismicPhase(object):
 
             # Now deal with P and S case.
             elif current_leg in ("P", "S"):
-                if next_leg in ("P", "S", "Pn", "Sn", "END"):
+                if next_leg in ("P", "S", "Pn", "Sn", "Pdiff", "Sdiff", "END"):
                     if end_action == _ACTIONS["transdown"] or \
                             end_action == _ACTIONS["reflect_underside"]:
                         # Was downgoing, so must first turn in mantle.
