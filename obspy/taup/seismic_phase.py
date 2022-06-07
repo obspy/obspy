@@ -683,7 +683,7 @@ class SeismicPhase(object):
                         tau_model, self.current_branch, tau_model.cmb_branch,
                         is_p_wave, end_action)
                 elif next_leg == "K":
-                    if prev_leg in ("P", "S", "K"):
+                    if prev_leg in ("P", "S", "K", "Pdiff", "Sdiff"):
                         end_action = _ACTIONS["turn"]
                         self.add_to_branch(
                             tau_model, self.current_branch,
