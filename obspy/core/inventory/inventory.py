@@ -1018,12 +1018,12 @@ class Inventory(ComparingObject):
                                color=color, label=code, marker=marker))
             # workaround for older matplotlib versions
             try:
-                leg = ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                                fontsize="medium", markerscale=0.8,
-                                handletextpad=0.1)
+                ax.legend(loc=legend, fancybox=True, scatterpoints=1,
+                          fontsize="medium", markerscale=0.8,
+                          handletextpad=0.1)
             except TypeError:
-                leg_ = ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                                 markerscale=0.8, handletextpad=0.1)
+                ax.legend(loc=legend, fancybox=True, scatterpoints=1,
+                          markerscale=0.8, handletextpad=0.1)
             # remove collections again solely created for legend handles
             # ax.collections = ax.collections[:count]
             for helper in helpers:
