@@ -1211,7 +1211,7 @@ class SeismicPhase(object):
                         tau_branch.bot_depth,
                         is_p_wave)
 
-            if len(self.head_or_diffract_seq) > 0:
+            if self.head_or_diffract_seq:
                 # Head waves and diffracted waves are a special case.
                 dist_a = tau_branch.dist[ray_num]
                 time_a = tau_branch.time[ray_num]
@@ -1353,7 +1353,7 @@ class SeismicPhase(object):
 
         # can't shoot/refine for non-body waves
         if (recursion_limit <= 0 or self.name.endswith('kmps') or
-                len(self.head_or_diffract_seq) > 0):
+                self.head_or_diffract_seq):
             return new_estimate
 
         # Find more accurate ray parameter by root-finding
@@ -1392,7 +1392,7 @@ class SeismicPhase(object):
                        self.source_depth, self.receiver_depth)
 
     def shoot_ray(self, degrees, ray_param):
-        if ((len(self.head_or_diffract_seq) > 0) or
+        if (self.head_or_diffract_seq or
                 self.name.endswith('kmps')):
             raise SlownessModelError('Unable to shoot ray in non-body waves')
 
