@@ -239,7 +239,7 @@ def _read_origin(line):
     new_event.event_type = EventType(EVENT_TYPE_MAPPING_FROM_SEISAN.get(
         line[22]))
     new_event.event_type_certainty = EventTypeCertainty(
-        EVENT_TYPE_CERTAINTY_MAPPING_FROM_SEISAN.get(line[21]))
+        EVENT_TYPE_CERTAINTY_MAPPING_FROM_SEISAN.get(line[22]))
     for key, _slice in [('latitude', slice(23, 30)),
                         ('longitude', slice(30, 38)),
                         ('depth', slice(38, 43))]:
@@ -687,7 +687,7 @@ def _read_moment_tensors(tagged_lines, event):
             depth=float(mt_line_1[38:43]) * 1000,
             creation_info=CreationInfo(agency_id=mt_line_1[45:48].strip())))
         event.magnitudes.append(Magnitude(
-            mag=float(mt_line_1[55:59]),
+            mag=_float_conv(mt_line_1[55:59]),
             magnitude_type=_nortoevmag(mt_line_1[59]),
             creation_info=CreationInfo(agency_id=mt_line_1[60:63].strip()),
             origin_id=event.origins[-1].resource_id))
@@ -1988,7 +1988,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
             weight = ' '
         # Extract velocity: Note that horizontal slowness in quakeML is stored
         # as s/deg and Seisan stores apparent velocity in km/s
-        if pick.horizontal_slowness is not None:
+        if pick.horizontal_slowness:
             velocity = degrees2kilometers(1.0 / pick.horizontal_slowness)
         else:
             velocity = ' '
@@ -2204,7 +2204,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                 # If the BAZ-measurement is an extra pick in addition to the
                 # actual phase, then don't duplicate the BAZ-line. Instead,
                 # write the BAZ-pick into a single line.
-                if pick.phase_hint.startswith('BAZ-'):
+                if pick.phase_hint and pick.phase_hint.startswith('BAZ-'):
                     add_baz_line = False
                 if len(phase_hint) <= 4:  # max total phase name length is 8
                     baz_phase_hint = 'BAZ-' + phase_hint

@@ -203,6 +203,7 @@ def _evmagtonor(mag_type):
     mag = MAG_MAPPING.get(mag_type, '')
     if mag == '':
         warnings.warn(mag_type + ' is not convertible')
+        return ' '
     return mag
 
 
