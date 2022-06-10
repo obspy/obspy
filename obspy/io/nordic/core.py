@@ -148,7 +148,7 @@ def readheader(sfile, encoding='latin-1'):
     return header
 
 
-def _readheader(head_lines):
+def _readheader(head_lines, return_origin_line_numbers=False):
     """
     Internal header reader.
 
@@ -164,20 +164,40 @@ def _readheader(head_lines):
     # Construct a rough catalog, then merge events together to cope with
     # multiple origins
     _cat = Catalog()
+    # Make a list of the line numbers that are associated with proper origins
+    # (i.e., not just extended origin lines)
+    origin_line_numbers = []
     for line in head_lines:
         _cat.append(_read_origin(line=line[0]))
+        origin_line_numbers.append(line[1])
     new_event = _cat.events.pop(0)
-    for event in _cat:
+
+    for ie, event in enumerate(_cat):
         matched = False
         origin_times = [origin.time for origin in new_event.origins]
         origin = event.origins[0]
-        if origin.time in origin_times:
+        otime = origin.time
+        if (otime in origin_times and not origin.latitude and
+                not origin.longitude and not origin.depth):
             origin_index = origin_times.index(origin.time)
             agency = new_event.origins[origin_index].creation_info.agency_id
             if event.creation_info.agency_id == agency:
                 event_desc = new_event.event_descriptions[origin_index].text
                 if event.event_descriptions[0].text == event_desc:
                     matched = True
+                    origin_line_numbers.pop(ie)
+        # Nordic format actually only requires year, month, day, and agency
+        # to appear in extended hypocenter line.
+        if not matched:
+            if otime.hour == 0 and otime.minute == 0 and otime.second == 0:
+                agency_ids = [origin.creation_info.agency_id
+                              for origin in new_event.origins]
+                agency_id = event.origins[0].creation_info.agency_id
+                if agency_id in agency_ids:
+                    origin_index = agency_ids.index(agency_id)
+                    matched = True
+                    origin_line_numbers.pop(ie)
+
         new_event.magnitudes.extend(event.magnitudes)
         if not matched:
             new_event.origins.append(event.origins[0])
@@ -211,6 +231,8 @@ def _readheader(head_lines):
                 resource_id
         except IndexError:
             pass
+    if return_origin_line_numbers:
+        return new_event, origin_line_numbers
     return new_event
 
 
@@ -488,9 +510,11 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False,
     for event_line in event_str:
         tmp_sfile.write(event_line)
     tagged_lines = _get_line_tags(f=tmp_sfile)
-    new_event = _readheader(head_lines=tagged_lines['1'])
+    new_event, origin_line_numbers = _readheader(
+        head_lines=tagged_lines['1'], return_origin_line_numbers=True)
     new_event = _read_uncertainty(tagged_lines, new_event)
-    new_event = _read_highaccuracy(tagged_lines, new_event)
+    new_event = _read_highaccuracy(
+        tagged_lines, new_event, origin_line_numbers)
     new_event = _read_focal_mechanisms(tagged_lines, new_event)
     new_event = _read_moment_tensors(tagged_lines, new_event)
     new_event = _read_comments(tagged_lines, new_event)
@@ -563,56 +587,85 @@ def _read_uncertainty(tagged_lines, event):
     return event
 
 
-def _read_highaccuracy(tagged_lines, event):
+def _read_highaccuracy(tagged_lines, event, origin_line_numbers):
     """
     Read high accuracy origin line.
 
     :param tagged_lines: Lines keyed by line type
     :type tagged_lines: dict
+    :param origin_line_numbers:
+        List of the line numbers of the proper origins (i.e., exluding ex-
+        tended origin lines)
+    :type origin_line_numbers: list of int
     :returns: updated event
     :rtype: :class:`~obspy.core.event.event.Event`
+
+    note:
+    The S-file can include a type=H line for each hypocenter (new from
+    version 12). Prior to version 12.0 only one type=H line was allowed in
+    SEISAN. The H line gives the same solution as the type=1 line, but with
+    higher accuracy. In order to know which H-line belongs to which 1-line,
+    the location program indicator and the agency must match. If only one
+    H-line and no agency, it is assumed it belongs to the main hypocenter.
+    This ensures backwards compatibility.
     """
     if 'H' not in tagged_lines.keys():
         return event
-    # In principle there shouldn't be more than one high precision line
-    line = tagged_lines['H'][0][0]
-    try:
-        dt = {'Y': _int_conv(line[1:5]),
-              'MO': _int_conv(line[6:8]),
-              'D': _int_conv(line[8:10]),
-              'H': _int_conv(line[11:13]),
-              'MI': _int_conv(line[13:15]),
-              'S': _float_conv(line[16:23])}
-    except ValueError:
-        pass
-    try:
-        ev_time = UTCDateTime(dt['Y'], dt['MO'], dt['D'],
-                              dt['H'], dt['MI'], 0, 0) + dt['S']
-        if abs(event.origins[0].time - ev_time) < 0.1:
-            event.origins[0].time = ev_time
+    agency_ids = [origin.creation_info.agency_id for origin in event.origins]
+
+    for line, ha_line_number in tagged_lines['H']:
+        agency_id = _str_conv(line[60:63])
+        # Prior to version 12 there could only be one high accuracy line; if
+        # there is no agency id or no origin with matching agency id, then
+        # refer to the first origin.
+        if (len(tagged_lines['H']) == 1 and
+                (agency_id is None or agency_id not in agency_ids)):
+            origin_index = 0
         else:
-            print('High accuracy time differs from normal time by >0.1s')
-    except ValueError:
-        pass
-    try:
-        values = {'latitude': _float_conv(line[23:32]),
-                  'longitude': _float_conv(line[33:43]),
-                  'depth': _float_conv(line[44:52]),
-                  'rms': _float_conv(line[53:59])}
-    except ValueError:
-        pass
-    if values['latitude'] is not None:
-        event.origins[0].latitude = values['latitude']
-    if values['longitude'] is not None:
-        event.origins[0].longitude = values['longitude']
-    if values['depth'] is not None:
-        event.origins[0].depth = values['depth'] * 1000.
-    if values['rms'] is not None:
-        if event.origins[0].quality is not None:
-            event.origins[0].quality.standard_error = values['rms']
-        else:
-            event.origins[0].quality = OriginQuality(
-                standard_error=values['rms'])
+            # Select the proper origin header line that is written just above
+            # the high accuracy line and select the relevant origin index.
+            origin_index = [
+                jl for jl, oline_no in enumerate(origin_line_numbers)
+                if oline_no < ha_line_number][-1]
+        try:
+            dt = {'Y': _int_conv(line[1:5]),
+                  'MO': _int_conv(line[6:8]),
+                  'D': _int_conv(line[8:10]),
+                  'H': _int_conv(line[11:13]),
+                  'MI': _int_conv(line[13:15]),
+                  'S': _float_conv(line[16:23])}
+        except ValueError:
+            pass
+        try:
+            ev_time = UTCDateTime(dt['Y'], dt['MO'], dt['D'],
+                                  dt['H'], dt['MI'], 0, 0) + dt['S']
+            if abs(event.origins[origin_index].time - ev_time) < 0.1:
+                event.origins[origin_index].time = ev_time
+            else:
+                print('High accuracy time differs from normal time by >0.1s')
+        except ValueError:
+            pass
+        try:
+            values = {'latitude': _float_conv(line[23:32]),
+                      'longitude': _float_conv(line[33:43]),
+                      'depth': _float_conv(line[44:52]),
+                      'rms': _float_conv(line[53:59])}
+        except ValueError:
+            pass
+
+        if values['latitude'] is not None:
+            event.origins[origin_index].latitude = values['latitude']
+        if values['longitude'] is not None:
+            event.origins[origin_index].longitude = values['longitude']
+        if values['depth'] is not None:
+            event.origins[origin_index].depth = values['depth'] * 1000.
+        if values['rms'] is not None:
+            if event.origins[origin_index].quality is not None:
+                event.origins[origin_index].quality.standard_error = (
+                    values['rms'])
+            else:
+                event.origins[origin_index].quality = OriginQuality(
+                    standard_error=values['rms'])
     return event
 
 
