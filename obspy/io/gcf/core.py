@@ -665,7 +665,7 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                 t_denom = _SPS_MAP[sps]
                 numerator = dt*t_denom
                 t_numerator = int(round(numerator))
-                if abs(numerator-t_numerator) > missalign/t_denom:
+                if abs(numerator-t_numerator)/t_denom > missalign/sps:
                     raise TypeError("start time in trace %d not aligned with "
                                     "supported (fractional) start time" %
                                     (i+1))

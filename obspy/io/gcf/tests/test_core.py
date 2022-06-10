@@ -74,16 +74,6 @@ class CoreTestCase(unittest.TestCase):
         st = _read_gcf(filename)
         st.verify()
         self.assertEqual(len(st), 1)
-        # debug
-        ref = UTCDateTime('2016-06-03T19:55:02.990000Z')
-        if not st[0].stats.endtime == ref:
-            print(os.stat(filename).st_size)
-            print(st)
-            for tr in st:
-                print(tr.id, tr.stats.delta, tr.stats.npts,
-                      tr.stats.starttime, tr.stats.endtime,
-                      tr.stats.gcf.stat, tr.stats.gcf.blk)
-        # debug
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime('2016-06-03T19:55:00.000000Z'))
         self.assertEqual(st[0].stats.endtime,
@@ -201,6 +191,82 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[1].stats.gcf.FIC, -49519)
         self.assertEqual(st[1].stats.gcf.RIC, -49625)
 
+    def test_write_read_fractional_start(self):
+        """
+        writes and (if succsesfull) re-reads a file with fractional
+        (non-integer) start time
+        """
+        # 1
+        # set up a stream object with supported proper non-integer start time
+        sps = 1000
+        duration = 60
+        sysType = 1
+        nsamples = int(sps*duration)
+        data = np.random.randint(-3600, 3600, nsamples, dtype=np.int32)
+        gcf_stat = AttribDict({
+                    "system_id": ("ABCDZ2")[:6-sysType],
+                    "stream_id": 'XXXXZ2',
+                    "sys_type": sysType,
+                    "t_leap": 0,
+                    "gain": -1 if sysType == 0 else 2,
+                    "digi": 0,
+                    "ttl": 27,
+                    "blk": 0,
+                    "FIC": data[0],
+                    "RIC": data[-1],
+                    "stat": 0
+            })
+        stats = {
+                "network": "XY",
+                "station": "ABCD",
+                "channel": "HHZ",
+                "sampling_rate": sps,
+                "starttime": UTCDateTime("20220301000000.250"),
+                "gcf": gcf_stat
+            }
+        out_stream = Stream(traces=Trace(data, header=stats))
+
+        # Write to temporary file, then re-read
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            _write_gcf(out_stream, filename)
+
+            # Read temporary file
+            in_stream = _read_gcf(filename, network='XY',
+                                  station="ABCD", errorret=True)
+        # compare
+        self.assertEqual(out_stream, in_stream)
+
+        # 2
+        # adjust start time in stream object to be miss-aligned more
+        #  than set tolerance
+        stats["starttime"] = UTCDateTime("20220301000000.25016")
+        out_stream = Stream(traces=Trace(data, header=stats))
+
+        # Try to write to temporary file, this should fail
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            try:
+                _write_gcf(out_stream, filename, missalign=0.15)
+            except TypeError:
+                pass
+            else:
+                # Raise TypeError exception if this were successful
+                err = "write_gcf erroneously passed a miss-aligned " +  \
+                      "start time above set tolerance"
+                raise TypeError(err)
+
+        # 2
+        # adjust start time in stream object to be miss-aligned within
+        # set tolerance
+        stats["starttime"] = UTCDateTime("20220301000000.25015")
+        out_stream = Stream(traces=Trace(data, header=stats))
+
+        # Try to write to temporary file, this should fail
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            _write_gcf(out_stream, filename, missalign=0.15)
+
     def test_write_read(self):
         """
         Writes a file then re-reads it and compares
@@ -235,7 +301,7 @@ class CoreTestCase(unittest.TestCase):
                   }
                 out_stream = Stream(traces=Trace(data, header=stats))
 
-                # Write to temporary file
+                # Write to temporary file, then re-read
                 with NamedTemporaryFile() as tf:
                     filename = tf.name
                     _write_gcf(out_stream, filename)
@@ -244,13 +310,5 @@ class CoreTestCase(unittest.TestCase):
                     in_stream = _read_gcf(filename, network='XY',
                                           station="ABCD", errorret=True)
 
-                    # compare
-                    if out_stream != in_stream:
-                        print(sps, sysType)
-                        print(os.stat(filename).st_size)
-                        print(in_stream)
-                        for tr in in_stream:
-                            print(tr.id, tr.stats.delta, tr.stats.npts,
-                                  tr.stats.starttime, tr.stats.endtime,
-                                  tr.stats.gcf.stat, tr.stats.gcf.blk)
+                # compare
                 self.assertEqual(out_stream, in_stream)
