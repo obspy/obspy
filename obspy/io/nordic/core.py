@@ -172,7 +172,7 @@ def _readheader(head_lines, return_origin_line_numbers=False):
         origin_line_numbers.append(line[1])
     new_event = _cat.events.pop(0)
 
-    for ie, event in enumerate(_cat):
+    for event, orig_line_number in zip(_cat, origin_line_numbers[1:]):
         matched = False
         origin_times = [origin.time for origin in new_event.origins]
         origin = event.origins[0]
@@ -185,7 +185,7 @@ def _readheader(head_lines, return_origin_line_numbers=False):
                 event_desc = new_event.event_descriptions[origin_index].text
                 if event.event_descriptions[0].text == event_desc:
                     matched = True
-                    origin_line_numbers.pop(ie)
+                    origin_line_numbers.remove(orig_line_number)
         # Nordic format actually only requires year, month, day, and agency
         # to appear in extended hypocenter line.
         if not matched:
@@ -196,7 +196,7 @@ def _readheader(head_lines, return_origin_line_numbers=False):
                 if agency_id in agency_ids:
                     origin_index = agency_ids.index(agency_id)
                     matched = True
-                    origin_line_numbers.pop(ie)
+                    origin_line_numbers.remove(orig_line_number)
 
         new_event.magnitudes.extend(event.magnitudes)
         if not matched:
@@ -567,7 +567,7 @@ def _read_uncertainty(tagged_lines, event):
     # But lat / lon / depth-errors may still be filled
     if errors['y_err'] is not None:
         orig.latitude_errors = QuantityError(_km_to_deg_lat(errors['y_err']))
-    if errors['x_err'] is not None:
+    if errors['x_err'] is not None and orig.latitude:
         orig.longitude_errors = QuantityError(_km_to_deg_lon(errors['x_err'],
                                                              orig.latitude))
     if errors['z_err'] is not None:
