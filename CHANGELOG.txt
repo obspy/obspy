@@ -2,6 +2,9 @@ master
 ======
 
 Changes:
+ - obspy.core:
+   * Improved expanded channel information in string representation of Station,
+     e.g. when displaying station in IPython shell (see #3024)
  - obspy.db:
    * submodule removed completely, since mostly being used in discontinued
      seishub server (see #2994)
