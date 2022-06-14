@@ -6,6 +6,7 @@ import copy
 import warnings
 
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import matplotlib.cbook
 from matplotlib.cm import get_cmap
 import matplotlib.text
@@ -17,6 +18,7 @@ from .taup_path import TauPPath
 from .taup_pierce import TauPPierce
 from .taup_time import TauPTime
 from .taup_geo import calc_dist, add_geo_to_arrivals
+from .seismic_phase import SeismicPhase
 from .utils import parse_phase_list, split_ray_path
 import obspy.geodetics.base as geodetics
 
@@ -914,7 +916,7 @@ class TauPyModel(object):
 
 
 def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
-                      max_degrees=180, npoints=50, model='iasp91',
+                      max_degrees=180, npoints=None, model='iasp91',
                       plot_all=True, legend=True, verbose=False, fig=None,
                       ax=None, show=True):
     """
@@ -927,7 +929,9 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
     :type min_degrees: float
     :param max_degrees: maximum distance from the source (in degrees)
     :type max_degrees: float
-    :param npoints: Number of points to plot.
+    :param npoints: Number of points to plot. If None, the precomputed
+        times in the TauModel are shown. If an integer, arrivals are
+        calculated at npoints discrete epicentral distances.
     :type npoints: int
     :param phase_list: List of phase names to plot.
     :type phase_list: list[str], optional
@@ -966,44 +970,81 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
         from obspy.taup import plot_travel_times
         ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'])
     """
-    import matplotlib.pyplot as plt
-
-    # compute the requested arrivals:
     if not isinstance(model, TauPyModel):
         model = TauPyModel(model)
 
-    # a list of epicentral distances without a travel time, and a flag:
-    notimes = []
-    plotted = False
+    # use existing travel times in TauModel
+    if npoints is None:
+        # create an axis/figure, if there is none yet:
+        if fig and ax:
+            pass
+        elif not fig and not ax:
+            fig, ax = plt.subplots()
+        elif not ax:
+            ax = fig.add_subplot(1, 1, 1)
+        elif not fig:
+            fig = ax.figure
 
-    # calculate the arrival times and plot vs. epicentral distance:
-    degrees = np.linspace(min_degrees, max_degrees, npoints)
-    for degree in degrees:
-        try:
-            arrivals = model.get_ray_paths(source_depth, degree,
-                                           phase_list=phase_list)
-            ax = arrivals.plot_times(phase_list=phase_list, show=False,
-                                     ax=ax, plot_all=plot_all)
-            plotted = True
-        except ValueError:
-            notimes.append(degree)
+        # correct TauModel for source depth
+        depth_corrected_model = model.model.depth_correct(source_depth)
 
-    if plotted:
-        if verbose:
-            if len(notimes) == 1:
-                tmpl = "There was {} epicentral distance without an arrival"
-            else:
-                tmpl = "There were {} epicentral distances without an arrival"
-            print(tmpl.format(len(notimes)))
+        phase_names = sorted(parse_phase_list(phase_list))
+        for i, phase in enumerate(phase_names):
+            ph = SeismicPhase(phase, depth_corrected_model)
+            dist_deg = (180.0/np.pi)*ph.dist
+            if plot_all:
+                dist_deg = dist_deg % 360.0
+                mask = dist_deg > 180
+                dist_deg[mask] = 360.0 - dist_deg[mask]
+            time_min = ph.time/60
+            ax.plot(dist_deg, time_min, label=phase,
+                    color=COLORS[i % len(COLORS)])
+
+        if legend:
+            ax.legend(loc=2, numpoints=1)
+
+        ax.grid()
+        ax.set_xlabel("Distance (degrees)")
+        ax.set_ylabel("Time (minutes)")
+        ax.set_xlim(min_degrees, max_degrees)
+        ax.set_ylim(bottom=0.0)
+
+    # get travel times at discrete epicentral distances
     else:
-        raise ValueError("No arrival times to plot.")
+        # a list of epicentral distances without a travel time, and a flag:
+        notimes = []
+        plotted = False
 
-    if legend:
-        # merge all arrival labels of a certain phase:
-        handles, labels = ax.get_legend_handles_labels()
-        labels, ids = np.unique(labels, return_index=True)
-        handles = [handles[i] for i in ids]
-        ax.legend(handles, labels, loc=2, numpoints=1)
+        # calculate the arrival times and plot vs. epicentral distance:
+        degrees = np.linspace(min_degrees, max_degrees, npoints)
+        for degree in degrees:
+            try:
+                arrivals = model.get_ray_paths(source_depth, degree,
+                                               phase_list=phase_list)
+                ax = arrivals.plot_times(phase_list=phase_list, show=False,
+                                         ax=ax, plot_all=plot_all)
+                plotted = True
+            except ValueError:
+                notimes.append(degree)
+
+        if plotted:
+            if verbose:
+                if len(notimes) == 1:
+                    tmpl = ("There was {} epicentral distance "
+                            "without an arrival")
+                else:
+                    tmpl = ("There were {} epicentral distances "
+                            "without an arrival")
+                print(tmpl.format(len(notimes)))
+        else:
+            raise ValueError("No arrival times to plot.")
+
+        if legend:
+            # merge all arrival labels of a certain phase:
+            handles, labels = ax.get_legend_handles_labels()
+            labels, ids = np.unique(labels, return_index=True)
+            handles = [handles[i] for i in ids]
+            ax.legend(handles, labels, loc=2, numpoints=1)
 
     if show:
         plt.show()
