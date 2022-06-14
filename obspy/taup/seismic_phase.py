@@ -1454,9 +1454,12 @@ class SeismicPhase(object):
         if left.purist_dist == search_dist:
             return left
 
-        arrival_time = ((search_dist - left.purist_dist) /
-                        (right.purist_dist - left.purist_dist) *
-                        (right.time - left.time)) + left.time
+        left_theta = left.time + left.ray_param * (
+            search_dist - left.purist_dist)
+        right_theta = right.time + right.ray_param * (
+            search_dist - right.purist_dist)
+        arrival_time = min(left_theta, right_theta)
+
         if math.isnan(arrival_time):
             msg = ('Time is NaN, search=%f leftDist=%f leftTime=%f '
                    'rightDist=%f rightTime=%f')

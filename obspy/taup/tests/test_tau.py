@@ -88,7 +88,7 @@ class TestTauPyModel:
         assert arr.distance == expected_arr["distance"]
         assert arr.source_depth == expected_arr["depth"]
         assert arr.name == expected_arr["name"]
-        assert round(abs(arr.time - expected_arr["time"]), 2) == 0
+        assert abs(arr.time - expected_arr["time"]) < 2e-2
         diff = arr.ray_param_sec_degree - expected_arr["ray_param_sec_degree"]
         assert round(abs(diff), 2) == 0
         diff = arr.takeoff_angle - expected_arr["takeoff_angle"]
