@@ -104,7 +104,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 
     # set wlen from samp_rate if not specified otherwise
     if not wlen:
-        wlen = samp_rate / 100.
+        wlen = 128 / samp_rate
 
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
