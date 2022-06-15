@@ -112,6 +112,12 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     # XXX add condition for too many windows => calculation takes for ever
     nfft = int(_nearest_pow_2(wlen * samp_rate))
 
+    if npts < nfft:
+        msg = (f'Input signal too short ({npts} samples, window length '
+               f'{wlen} seconds, nfft {nfft} samples, sampling rate '
+               f'{samp_rate} Hz)')
+        raise ValueError(msg)
+
     if mult is not None:
         mult = int(_nearest_pow_2(mult))
         mult = mult * nfft
@@ -126,6 +132,13 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
                                          pad_to=mult, noverlap=nlap)
+
+    if len(time) < 2:
+        msg = (f'Input signal too short ({npts} samples, window length '
+               f'{wlen} seconds, nfft {nfft} samples, {nlap} samples window '
+               f'overlap, sampling rate {samp_rate} Hz)')
+        raise ValueError(msg)
+
     # db scale and remove zero/offset for amplitude
     if dbscale:
         specgram = 10 * np.log10(specgram[1:, :])
