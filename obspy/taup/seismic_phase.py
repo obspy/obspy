@@ -812,7 +812,6 @@ class SeismicPhase(object):
 
             self.min_distance = 0
             self.max_distance = 2 * math.pi
-            self.down_going.append(True)
             return
 
         if self.max_ray_param < 0 or self.min_ray_param > self.max_ray_param:
