@@ -211,8 +211,7 @@ size or subplot setup:
 >>> import matplotlib.pyplot as plt
 >>> fig, ax = plt.subplots(figsize=(9, 9))
 >>> ax = plot_travel_times(source_depth=10, phase_list=["P", "S", "PP"],
-...                        ax=ax, fig=fig, verbose=True)
-There was 1 epicentral distance without an arrival
+...                        ax=ax, fig=fig)
 
 .. plot::
     :width: 50%
@@ -222,8 +221,8 @@ There was 1 epicentral distance without an arrival
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(9, 9))
-    ax = plot_travel_times(source_depth=10, ax=ax, phase_list=["P", "S", "PP"],
-                           fig=fig)
+    ax = plot_travel_times(source_depth=10, phase_list=["P", "S", "PP"],
+                           ax=ax, fig=fig)
 
 The ray path plot wrapper function is :func:`~obspy.taup.tau.plot_ray_paths`.
 Again, creating the figure and axes first is optional to have control over e.g.
@@ -246,7 +245,7 @@ There were rays for all but the following epicentral distances:
     from obspy.taup import plot_ray_paths
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplot(subplot_kw=dict(projection='polar'))
+    fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
     ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
 
 More examples of plotting may be found in the :doc:`ObsPy tutorial
