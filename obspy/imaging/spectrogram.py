@@ -107,11 +107,10 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         wlen = 128 / samp_rate
 
     npts = len(data)
+
     # nfft needs to be an integer, otherwise a deprecation will be raised
     # XXX add condition for too many windows => calculation takes for ever
     nfft = int(_nearest_pow_2(wlen * samp_rate))
-    if nfft > npts:
-        nfft = int(_nearest_pow_2(npts / 8.0))
 
     if mult is not None:
         mult = int(_nearest_pow_2(mult))
