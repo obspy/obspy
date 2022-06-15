@@ -1495,7 +1495,7 @@ class TestTrace:
         """
         Tests spectrogram method if matplotlib is installed
         """
-        tr = Trace(data=np.arange(25))
+        tr = Trace(data=np.arange(250))
         tr.stats.sampling_rate = 20
         tr.spectrogram(show=False)
 
