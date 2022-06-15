@@ -10,7 +10,8 @@ class TauPPierce(TauPTime):
     The methods here allow using TauPTime to calculate the pierce points
     relating to the different arrivals.
     """
-    def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0):
+    def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0,
+                 add_depth=[]):
         super(TauPPierce, self).__init__(
             model=model, phase_list=phase_list, depth=depth, degrees=degrees,
             receiver_depth=receiver_depth)
@@ -18,7 +19,7 @@ class TauPPierce(TauPTime):
         self.only_rev_points = False
         self.only_under_points = False
         self.only_add_points = False
-        self.add_depth = []
+        self.add_depth = add_depth
 
     def depth_correct(self, depth, receiver_depth=None):
         """
@@ -32,7 +33,7 @@ class TauPPierce(TauPTime):
         # each add_depth is in the model.
         if self.depth_corrected_model.source_depth == depth:
             if self.add_depth:
-                branch_depths = self.depth_corrected_model.getBranchDepths()
+                branch_depths = self.depth_corrected_model.get_branch_depths()
                 for add_depth in self.add_depth:
                     for branch_depth in branch_depths:
                         if add_depth == branch_depth:
