@@ -863,7 +863,6 @@ class TestTauPyModel:
             # AK135 value.
             assert abs(arrivals[0].time - expected) < 50
 
-    @pytest.mark.skip(reason="Unsure if these test paths are accurate.")
     def test_paths_for_crustal_phases(self):
         """
         Tests that Pn and PmP are correctly modelled and not mixed up.
@@ -942,14 +941,21 @@ class TestTauPyModel:
             [0.017452419277763337, 0.005402127286288305],
             [0.017453292519943295, 0.0]]
 
+        # Tolerance set to 2e-3 due to limited accuracy of
+        # ray path values above
+        atol = 2e-3
         np.testing.assert_allclose([_i[0] for _i in pmp_path],
-                                   paths[0].path["dist"])
+                                   paths[0].path["dist"],
+                                   atol=atol)
         np.testing.assert_allclose([_i[1] for _i in pmp_path],
-                                   paths[0].path["depth"])
+                                   paths[0].path["depth"],
+                                   atol=atol)
         np.testing.assert_allclose([_i[0] for _i in pn_path],
-                                   paths[1].path["dist"])
+                                   paths[1].path["dist"],
+                                   atol=atol)
         np.testing.assert_allclose([_i[1] for _i in pn_path],
-                                   paths[1].path["depth"])
+                                   paths[1].path["depth"],
+                                   atol=atol)
 
     def test_arrivals_class(self):
         """
