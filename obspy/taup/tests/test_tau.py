@@ -499,8 +499,8 @@ class TestTauPyModel:
         arrivals = model.get_pierce_points(300.0, 50.0, ["PcP"],
                                            add_depth=[depth])
         pierce = arrivals[0].pierce
-        assert(pierce[3]['depth'] == depth)
-        assert(abs(pierce[3]['dist']-0.051) < 2e-3)
+        assert pierce[3]['depth'] == depth
+        assert abs(pierce[3]['dist'] - 0.051) < 2e-3
 
     def test_single_path_iasp91(self):
         """
