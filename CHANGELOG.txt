@@ -8,6 +8,12 @@ Changes:
  - obspy.clients.seishub:
    * submodule removed completely, since it is outdated and not even test
      servers have been running for years (see #2994)
+ - obspy.imaging:
+   * spectrogram: change the computation for default window length if not
+     specified to give useful values for sampling rates much higher or lower
+     than 100 Hz (see #3093)
+   * spectrogram: better exception type and messages when input signal is too
+     short (see #3093)
  - obspy.taup:
    * add option "indicate_wave_type" to distinguish S waves in ray paths
      plot by using wiggly lines for shear waves (see #3047)
