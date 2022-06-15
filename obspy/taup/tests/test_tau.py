@@ -490,6 +490,18 @@ class TestTauPyModel:
             expected_values = sorted(expected[key])
             assert actual_values == expected_values
 
+    def test_pierce_add_depth(self):
+        """
+        Test pierce points requested at a specific depth.
+        """
+        model = TauPyModel("iasp91")
+        depth = 1000.0
+        arrivals = model.get_pierce_points(300.0, 50.0, ["PcP"],
+                                           add_depth=[depth])
+        pierce = arrivals[0].pierce
+        assert(pierce[3]['depth'] == depth)
+        assert(abs(pierce[3]['dist']-0.051) < 2e-3)
+
     def test_single_path_iasp91(self):
         """
         Test the raypath for a single phase.
