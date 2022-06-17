@@ -324,7 +324,7 @@ class SeismicPhase(object):
                     if current_leg[0] != next_leg[0]:
                         # like Sed Pdiff conversion
                         is_p_wave = not is_p_wave
-                elif next_leg == "K":
+                elif next_leg[0] == "K":
                     end_action = _ACTIONS["transdown"]
                     self.add_to_branch(tau_model, self.current_branch,
                                        tau_model.cmb_branch - 1, is_p_wave,
@@ -388,14 +388,14 @@ class SeismicPhase(object):
                     self.add_to_branch(
                         tau_model, self.current_branch, tau_model.moho_branch,
                         is_p_wave, end_action)
-                elif next_leg[0] in ("P", "S") or next_leg in ("K", "END"):
+                elif next_leg[0] in ("P", "S", "K") or next_leg == "END":
                     if next_leg == 'END':
                         discon_branch = upgoing_rec_branch
-                    elif next_leg == 'K':
+                    elif next_leg[0] == 'K':
                         discon_branch = tau_model.cmb_branch
                     else:
                         discon_branch = 0
-                    if current_leg == 'k' and next_leg != 'K':
+                    if current_leg == 'k' and next_leg[0] != 'K':
                         end_action = _ACTIONS["transup"]
                     else:
                         end_action = _ACTIONS["reflect_underside"]
@@ -450,7 +450,7 @@ class SeismicPhase(object):
                 elif next_leg[0] == "^":
                     discon_branch = closest_branch_to_depth(tau_model,
                                                             next_leg[1:])
-                    if prev_leg == "K":
+                    if prev_leg[0] == "K":
                         end_action = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tau_model, self.current_branch,
                                            discon_branch, is_p_wave,
@@ -563,7 +563,7 @@ class SeismicPhase(object):
                         if (self.current_branch < tau_model.cmb_branch - 1 or
                             (self.current_branch == tau_model.cmb_branch - 1
                              and end_action != _ACTIONS["diffract"])
-                                and prev_leg != "K"):
+                                and prev_leg[0] != "K"):
                             end_action = _ACTIONS["diffract"]
                             self.add_to_branch(
                                 tau_model, self.current_branch,
@@ -683,7 +683,7 @@ class SeismicPhase(object):
                     self.add_to_branch(
                         tau_model, self.current_branch, tau_model.cmb_branch,
                         is_p_wave, end_action)
-                elif next_leg in ("K", "Kdiff"):
+                elif next_leg[0] == "K":
                     if prev_leg in ("P", "S", "K", "Pdiff", "Sdiff", "Kdiff"):
                         end_action = _ACTIONS["turn"]
                         self.add_to_branch(
@@ -766,7 +766,7 @@ class SeismicPhase(object):
                     self.add_to_branch(
                         tau_model, self.current_branch, tau_model.iocb_branch,
                         is_p_wave, end_action)
-                elif next_leg == "K":
+                elif next_leg[0] == "K":
                     end_action = _ACTIONS["transup"]
                     self.add_to_branch(
                         tau_model, self.current_branch, tau_model.iocb_branch,
