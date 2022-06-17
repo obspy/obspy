@@ -308,6 +308,8 @@ depth to an interface involved in an interaction.
       interfaces
     * ``diff`` appended to ``P`` or ``S`` - diffracted wave along the core
       mantle boundary
+    * ``diff`` appended to ``K`` - diffracted wave along the inner-core
+      outer-core boundary
     * ``kmps`` appended to a velocity - horizontal phase velocity (see 10
       below)
     * ``ed`` appended to ``P`` or ``S`` - an exclusively downgoing path, for a
