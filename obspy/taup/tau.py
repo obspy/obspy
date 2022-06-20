@@ -673,7 +673,7 @@ class TauPyModel(object):
         :type phase_list: list[str]
         :param receiver_depth_in_km: Receiver depth in km
         :type receiver_depth_in_km: float
-        :param ray_param_tol: absolute tolerance in s used in estimation of
+        :param ray_param_tol: Absolute tolerance in s used in estimation of
             ray parameter.
         :type ray_param_tol: float
 
@@ -713,7 +713,7 @@ class TauPyModel(object):
         :param add_depth: List of additional depths for which to get pierce
             points.
         :type add_depth: list[float]
-        :param ray_param_tol: absolute tolerance in s used in estimation of
+        :param ray_param_tol: Absolute tolerance in s used in estimation of
             ray parameter.
         :type ray_param_tol: float
 
@@ -746,7 +746,7 @@ class TauPyModel(object):
         :type phase_list: list[str]
         :param receiver_depth_in_km: Receiver depth in km
         :type receiver_depth_in_km: float
-        :param ray_param_tol: absolute tolerance in s used in estimation of
+        :param ray_param_tol: Absolute tolerance in s used in estimation of
             ray parameter.
         :type ray_param_tol: float
 
