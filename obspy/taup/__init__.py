@@ -83,7 +83,7 @@ and model. By default it returns arrivals for a number of phases.
     PKIKKIKS phase arrival at 2069.756 seconds
     SKIKKIKS phase arrival at 2277.857 seconds
     PKIKPPKIKP phase arrival at 2353.934 seconds
-    PKPPKP phase arrival at 2356.425 seconds
+    PKPPKP phase arrival at 2356.426 seconds
     PKPPKP phase arrival at 2358.899 seconds
     SKIKSSKIKS phase arrival at 3208.155 seconds
 
