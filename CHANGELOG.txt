@@ -18,7 +18,7 @@ Changes:
    * add option "indicate_wave_type" to distinguish S waves in ray paths
      plot by using wiggly lines for shear waves (see #3047)
    * improved accuracy of ray paths by change of root-finding algorithm
-     in SeismicPhase.refine_arrival (see #3064)
+     in SeismicPhase.refine_arrival (see #3064, #3096)
    * improved accuracy of travel time estimates by using theta function
      (see #3068)
    * add support for models without a core or inner core
