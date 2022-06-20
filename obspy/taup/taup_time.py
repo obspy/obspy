@@ -5,6 +5,7 @@ Travel time calculations.
 from .helper_classes import TauModelError
 from .seismic_phase import SeismicPhase
 from .utils import parse_phase_list
+from . import _DEFAULT_VALUES
 
 
 class TauPTime(object):
@@ -82,16 +83,19 @@ class TauPTime(object):
                           str(temp_phase_name))
             self.phases = new_phases
 
-    def calculate(self, degrees):
+    def calculate(self, degrees,
+                  ray_param_tol=_DEFAULT_VALUES["default_time_ray_param_tol"]
+                  ):
         """
         Calculate the arrival times.
         """
         self.depth_correct(self.source_depth, self.receiver_depth)
         # Called before, but depth_correct might have changed the phases.
         self.recalc_phases()
-        self.calc_time(degrees)
+        self.calc_time(degrees, ray_param_tol)
 
-    def calc_time(self, degrees):
+    def calc_time(self, degrees,
+                  ray_param_tol=_DEFAULT_VALUES["default_time_ray_param_tol"]):
         """
         Calls the calc_time method of SeismicPhase to calculate arrival
         times for every phase, each sorted by time.
@@ -99,7 +103,7 @@ class TauPTime(object):
         self.degrees = degrees
         self.arrivals = []
         for phase in self.phases:
-            self.arrivals += phase.calc_time(degrees)
+            self.arrivals += phase.calc_time(degrees, ray_param_tol)
         # Sort them.
         self.arrivals = sorted(self.arrivals,
                                key=lambda arrivals: arrivals.time)

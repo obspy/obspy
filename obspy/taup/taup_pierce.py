@@ -3,6 +3,7 @@
 Pierce point calculations.
 """
 from .taup_time import TauPTime
+from . import _DEFAULT_VALUES
 
 
 class TauPPierce(TauPTime):
@@ -59,20 +60,25 @@ class TauPPierce(TauPTime):
             TauPTime.depth_correct(self, depth, receiver_depth)
             self.model = orig_tau_model
 
-    def calculate(self, degrees):
+    def calculate(self, degrees,
+                  ray_param_tol=_DEFAULT_VALUES["default_path_ray_param_tol"]
+                  ):
         """
         Call all the necessary calculations to obtain the pierce points.
         """
         self.depth_correct(self.source_depth, self.receiver_depth)
         self.recalc_phases()
         self.arrivals = []
-        self.calculate_pierce(degrees)
+        self.calculate_pierce(degrees, ray_param_tol)
 
-    def calculate_pierce(self, degrees):
+    def calculate_pierce(self, degrees,
+                         ray_param_tol=_DEFAULT_VALUES[
+                            "default_path_ray_param_tol"]
+                         ):
         """
         Calculates the pierce points for phases at the given distance by
         calling the calculate_pierce method of the SeismicPhase class.
         The results are then in self.arrivals.
         """
         for phase in self.phases:
-            self.arrivals += phase.calc_pierce(degrees)
+            self.arrivals += phase.calc_pierce(degrees, ray_param_tol)
