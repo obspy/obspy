@@ -15,6 +15,7 @@ from .helper_classes import (Arrival, SlownessModelError, TauModelError,
                              TimeDist)
 
 from .c_wrappers import clibtau
+from . import _DEFAULT_VALUES
 
 
 _ACTIONS = Enum([
@@ -1098,7 +1099,8 @@ class SeismicPhase(object):
                 times_branches[1][bs] += 1
         return times_branches
 
-    def calc_time(self, degrees, ray_param_tol=1e-1):
+    def calc_time(self, degrees,
+                  ray_param_tol=_DEFAULT_VALUES["default_time_ray_param_tol"]):
         """
         Calculate arrival times for this phase, sorted by time.
         """
@@ -1126,7 +1128,9 @@ class SeismicPhase(object):
                 self._settings["max_recursion"]))
         return arrivals
 
-    def calc_pierce(self, degrees, ray_param_tol=1e-6):
+    def calc_pierce(self, degrees,
+                    ray_param_tol=_DEFAULT_VALUES["default_path_ray_param_tol"]
+                    ):
         """
         Calculate pierce points for this phase.
 
@@ -1256,7 +1260,8 @@ class SeismicPhase(object):
         # The arrival is modified in place and must (?) thus be returned.
         return curr_arrival
 
-    def calc_path(self, degrees, ray_param_tol=1e-6):
+    def calc_path(self, degrees,
+                  ray_param_tol=_DEFAULT_VALUES["default_path_ray_param_tol"]):
         """
         Calculate the paths this phase takes through the planet model.
 

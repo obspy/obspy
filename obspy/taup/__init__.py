@@ -438,7 +438,9 @@ _DEFAULT_VALUES = {
     "qp": 1000.0,
     "qs": 2000.0,
     # Slowness tolerance
-    "slowness_tolerance": 1e-16
+    "slowness_tolerance": 1e-16,
+    "default_time_ray_param_tol": 1e-1,
+    "default_path_ray_param_tol": 1e-6
 }
 
 
