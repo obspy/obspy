@@ -307,8 +307,7 @@ depth to an interface involved in an interaction.
     * ``v`` - topside reflection, used primarily for crustal and mantle
       interfaces
     * ``diff`` appended to ``P`` or ``S`` - diffracted wave along the core
-      mantle boundary
-    * ``diff`` appended to ``K`` - diffracted wave along the inner-core
+      mantle boundary; appended to ``K`` - diffracted wave along the inner-core
       outer-core boundary
     * ``kmps`` appended to a velocity - horizontal phase velocity (see 10
       below)
