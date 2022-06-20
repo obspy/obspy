@@ -764,7 +764,9 @@ class TauPyModel(object):
 
     def get_travel_times_geo(self, source_depth_in_km, source_latitude_in_deg,
                              source_longitude_in_deg, receiver_latitude_in_deg,
-                             receiver_longitude_in_deg, phase_list=("ttall",)):
+                             receiver_longitude_in_deg, phase_list=("ttall",),
+                             ray_param_tol=_DEFAULT_VALUES[
+                                "default_time_ray_param_tol"]):
         """
         Return travel times of every given phase given geographical data.
 
@@ -791,6 +793,9 @@ class TauPyModel(object):
             calculated. If this is empty, all phases in arrivals object
             will be used.
         :type phase_list: list[str]
+        :param ray_param_tol: Absolute tolerance in s used in estimation of
+            ray parameter.
+        :type ray_param_tol: float
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -804,7 +809,8 @@ class TauPyModel(object):
                                     self.model.radius_of_planet,
                                     self.planet_flattening)
         arrivals = self.get_travel_times(source_depth_in_km, distance_in_deg,
-                                         phase_list)
+                                         phase_list,
+                                         ray_param_tol=ray_param_tol)
         return arrivals
 
     def get_pierce_points_geo(self, source_depth_in_km, source_latitude_in_deg,
@@ -812,7 +818,9 @@ class TauPyModel(object):
                               receiver_latitude_in_deg,
                               receiver_longitude_in_deg,
                               phase_list=("ttall",),
-                              resample=False, add_depth=[]):
+                              resample=False, add_depth=[],
+                              ray_param_tol=_DEFAULT_VALUES[
+                                "default_path_ray_param_tol"]):
         """
         Return pierce points of every given phase with geographical info.
 
@@ -846,6 +854,9 @@ class TauPyModel(object):
         :param add_depth: List of additional depths for which to get pierce
             points.
         :type add_depth: list[float]
+        :param ray_param_tol: Absolute tolerance in s used in estimation of
+            ray parameter.
+        :type ray_param_tol: float
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -860,7 +871,8 @@ class TauPyModel(object):
                                     self.planet_flattening)
 
         arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
-                                          phase_list, add_depth=add_depth)
+                                          phase_list, add_depth=add_depth,
+                                          ray_param_tol=ray_param_tol)
 
         if geodetics.HAS_GEOGRAPHICLIB:
             arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
@@ -882,7 +894,9 @@ class TauPyModel(object):
     def get_ray_paths_geo(self, source_depth_in_km, source_latitude_in_deg,
                           source_longitude_in_deg, receiver_latitude_in_deg,
                           receiver_longitude_in_deg, phase_list=("ttall",),
-                          resample=False):
+                          resample=False,
+                          ray_param_tol=_DEFAULT_VALUES[
+                              "default_path_ray_param_tol"]):
         """
         Return ray paths of every given phase with geographical info.
 
@@ -909,6 +923,10 @@ class TauPyModel(object):
             calculated. If this is empty, all phases in arrivals object
             will be used.
         :type phase_list: list[str]
+        :param ray_param_tol: Absolute tolerance in s used in estimation of
+            ray parameter.
+        :type ray_param_tol: float
+
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
             attributes.
@@ -922,7 +940,7 @@ class TauPyModel(object):
                                     self.planet_flattening)
 
         arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
-                                      phase_list)
+                                      phase_list, ray_param_tol=ray_param_tol)
 
         if geodetics.HAS_GEOGRAPHICLIB:
             arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
