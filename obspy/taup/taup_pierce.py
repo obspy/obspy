@@ -12,10 +12,11 @@ class TauPPierce(TauPTime):
     relating to the different arrivals.
     """
     def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0,
-                 add_depth=[]):
+                 add_depth=[],
+                 ray_param_tol=_DEFAULT_VALUES["default_path_ray_param_tol"]):
         super(TauPPierce, self).__init__(
             model=model, phase_list=phase_list, depth=depth, degrees=degrees,
-            receiver_depth=receiver_depth)
+            receiver_depth=receiver_depth, ray_param_tol=ray_param_tol)
         self.only_turn_points = False
         self.only_rev_points = False
         self.only_under_points = False
@@ -60,25 +61,20 @@ class TauPPierce(TauPTime):
             TauPTime.depth_correct(self, depth, receiver_depth)
             self.model = orig_tau_model
 
-    def calculate(self, degrees,
-                  ray_param_tol=_DEFAULT_VALUES["default_path_ray_param_tol"]
-                  ):
+    def calculate(self, degrees):
         """
         Call all the necessary calculations to obtain the pierce points.
         """
         self.depth_correct(self.source_depth, self.receiver_depth)
         self.recalc_phases()
         self.arrivals = []
-        self.calculate_pierce(degrees, ray_param_tol)
+        self.calculate_pierce(degrees)
 
-    def calculate_pierce(self, degrees,
-                         ray_param_tol=_DEFAULT_VALUES[
-                            "default_path_ray_param_tol"]
-                         ):
+    def calculate_pierce(self, degrees):
         """
         Calculates the pierce points for phases at the given distance by
         calling the calculate_pierce method of the SeismicPhase class.
         The results are then in self.arrivals.
         """
         for phase in self.phases:
-            self.arrivals += phase.calc_pierce(degrees, ray_param_tol)
+            self.arrivals += phase.calc_pierce(degrees, self.ray_param_tol)
