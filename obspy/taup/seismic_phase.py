@@ -1447,24 +1447,26 @@ class SeismicPhase(object):
         if right.purist_dist == search_dist:
             return right
 
-        # use closest edge to interpolate time
-        if abs(search_dist - left.purist_dist) < abs(
-                search_dist - right.purist_dist):
-            arrival_time = left.time + left.ray_param * (
-                search_dist - left.purist_dist)
+        dp_dx = (left.ray_param - right.ray_param) / (
+                 left.purist_dist - right.purist_dist)
+        ray_param = (search_dist - right.purist_dist) * dp_dx + right.ray_param
+
+        # Use stationarity of the theta function to estimate arrival time
+        # Buland and Chapman (1983), equations (16) and (20)
+        left_theta = left.time + left.ray_param * (
+            search_dist - left.purist_dist)
+        right_theta = right.time + right.ray_param * (
+            search_dist - right.purist_dist)
+        if dp_dx > 0:
+            arrival_time = max(left_theta, right_theta)
         else:
-            arrival_time = right.time + right.ray_param * (
-                search_dist - right.purist_dist)
+            arrival_time = min(left_theta, right_theta)
 
         if math.isnan(arrival_time):
             msg = ('Time is NaN, search=%f leftDist=%f leftTime=%f '
                    'rightDist=%f rightTime=%f')
             raise RuntimeError(msg % (search_dist, left.purist_dist, left.time,
                                       right.purist_dist, right.time))
-
-        ray_param = ((search_dist - right.purist_dist) /
-                     (left.purist_dist - right.purist_dist) *
-                     (left.ray_param - right.ray_param)) + right.ray_param
         return Arrival(self, degrees, arrival_time, search_dist, ray_param,
                        left.ray_param_index, self.name, self.purist_name,
                        self.source_depth, self.receiver_depth)
