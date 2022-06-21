@@ -1002,20 +1002,17 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
             ph = SeismicPhase(phase, depth_corrected_model)
             dist_deg = (180.0/np.pi)*ph.dist
             time_min = ph.time/60
+            c = COLORS[i % len(COLORS)]
             if len(dist_deg) > 0:
                 if plot_all:
                     # wrap-around plotting
                     while dist_deg[0] > 360.0:
                         dist_deg = dist_deg - 360.0
-                    ax.plot(dist_deg, time_min, label=phase,
-                            color=COLORS[i % len(COLORS)])
-                    ax.plot(dist_deg - 360.0, time_min, label=None,
-                            color=COLORS[i % len(COLORS)])
-                    ax.plot(360.0 - dist_deg, time_min, label=None,
-                            color=COLORS[i % len(COLORS)])
+                    ax.plot(dist_deg, time_min, label=phase, color=c)
+                    ax.plot(dist_deg - 360.0, time_min, label=None, color=c)
+                    ax.plot(360.0 - dist_deg, time_min, label=None, color=c)
                 else:
-                    ax.plot(dist_deg, time_min, label=phase,
-                            color=COLORS[i % len(COLORS)])
+                    ax.plot(dist_deg, time_min, label=phase, color=c)
 
         if legend:
             ax.legend(loc=2, numpoints=1)
