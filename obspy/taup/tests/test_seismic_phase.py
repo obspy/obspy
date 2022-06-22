@@ -106,7 +106,7 @@ class TestTauPySeismicPhase:
         Simple check to see if illegal phase names are caught.
         """
         legal_phase_names = ["ScS", "ScSScS"]
-        illegal_phase_names = ["ScScS"]
+        illegal_phase_names = ["ScScS", "PKIKPKIKP", "PKIKIKP"]
 
         for name in legal_phase_names:
             SeismicPhase(name, tau_model)
