@@ -838,16 +838,20 @@ class SeismicPhase(object):
             # rp > max rp in next branch
             b_num = end_branch
             while (b_num >= start_branch):
-                if (tau_model.s_mod.depth_in_high_slowness(
-                     tau_model.get_tau_branch(b_num, is_p_wave).top_depth,
-                     self.min_ray_param,
-                     is_p_wave) and
-                    (b_num + 1 >= len(tau_model.tau_branches[0])
-                     or self.min_ray_param <=
-                     tau_model.get_tau_branch(b_num+1,
-                                              is_p_wave
-                                              ).max_ray_param
-                     )):
+                branch_top_in_high_slowness = (
+                    tau_model.s_mod.depth_in_high_slowness(
+                        tau_model.get_tau_branch(b_num, is_p_wave).top_depth,
+                        self.min_ray_param,
+                        is_p_wave))
+                is_bottom_branch = (
+                    b_num + 1 >= len(tau_model.tau_branches[0]))
+                not_critical_reflect = (
+                    is_bottom_branch or
+                    self.min_ray_param <=
+                    tau_model.get_tau_branch(b_num+1,
+                                             is_p_wave
+                                             ).max_ray_param)
+                if branch_top_in_high_slowness and not_critical_reflect:
                     # tau branch is in high slowness, so turn is not possible,
                     # only non-critical reflect, so do not add these branches
                     end_branch = b_num - 1
