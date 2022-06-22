@@ -27,7 +27,7 @@ Changes:
    * add support for models without a core or inner core
      (see #1200, #1423, #2086, #2192, #2390, #3070)
    * add support for a wider range of diffracted phases, like SedPdiffKP
-     (see #3085)
+     (see #3085) and PKdiffP (see #3095)
    * allow rapid travel time plotting in plot_travel_times by using
      precalculated travel times (see #3092)
    * return pierce points for any depth (see #1742, #3072)
