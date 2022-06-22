@@ -54,7 +54,7 @@ class TestWaveformPlugins:
         """
         Tests read and write methods for all waveform plug-ins.
         """
-        data = np.arange(0, 2000)
+        data = np.random.randint(-500, 500, 2000)
         formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
@@ -64,7 +64,7 @@ class TestWaveformPlugins:
                 continue
             elif format in ['GCF']:
                 # XXX: GCF format does not support fractional start time for
-                # sampling rates <= 250 Hz, hence set to integer sec.
+                # sampling rates <= 250 Hz, hence set to integer sec start
                 start = UTCDateTime(2009, 1, 13, 12, 1, 3)
             for native_byteorder in ['<', '>']:
                 for byteorder in (['<', '>', '='] if format in
