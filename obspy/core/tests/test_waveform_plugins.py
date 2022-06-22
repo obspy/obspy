@@ -64,7 +64,7 @@ class TestWaveformPlugins:
                 continue
             elif format in ['GCF']:
                 # XXX: GCF format does not support fractional start time for
-                # sampling rates <= 250 Hz
+                # sampling rates <= 250 Hz, hence set to integer sec.
                 start = UTCDateTime(2009, 1, 13, 12, 1, 3)
             for native_byteorder in ['<', '>']:
                 for byteorder in (['<', '>', '='] if format in
