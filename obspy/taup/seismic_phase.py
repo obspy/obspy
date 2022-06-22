@@ -872,6 +872,35 @@ class SeismicPhase(object):
                 self.min_ray_param,
                 tau_model.get_tau_branch(end_branch,
                                          is_p_wave).min_turn_ray_param)
+            # careful if the ray param cannot turn due to high slowness.
+            # Do not use these layers if their top is in high slowness for the
+            # given ray parameter and the bottom is not a critical reflection,
+            # rp > max rp in next branch
+            b_num = end_branch
+            while (b_num >= start_branch):
+                branch_top_in_high_slowness = (
+                    tau_model.s_mod.depth_in_high_slowness(
+                        tau_model.get_tau_branch(b_num, is_p_wave).top_depth,
+                        self.min_ray_param,
+                        is_p_wave))
+                is_bottom_branch = (
+                    b_num + 1 >= len(tau_model.tau_branches[0]))
+                not_critical_reflect = (
+                    is_bottom_branch or
+                    self.min_ray_param <=
+                    tau_model.get_tau_branch(b_num+1,
+                                             is_p_wave
+                                             ).max_ray_param)
+                if branch_top_in_high_slowness and not_critical_reflect:
+                    # tau branch is in high slowness, so turn is not possible,
+                    # only non-critical reflect, so do not add these branches
+                    end_branch = b_num - 1
+                    b_num -= 1
+                else:
+                    # can turn in b_num layer, so don't worry about shallower
+                    # high slowness layers
+                    break
+
         elif end_action == _ACTIONS["reflect_underside"]:
             end_offset = 0
             is_down_going = False
@@ -1015,10 +1044,12 @@ class SeismicPhase(object):
                 self.time[:size] += tbs * taubs.time[index]
 
         if "Sdiff" in self.name or "Pdiff" in self.name:
-            if tau_model.s_mod.depth_in_high_slowness(
+            if (tau_model.cmb_depth == tau_model.radius_of_planet
+                or tau_model.s_mod.depth_in_high_slowness(
                     tau_model.cmb_depth - 1e-10, self.min_ray_param,
-                    self.name[0] == "P"):
-                # No diffraction if there is a high slowness zone at the CMB.
+                    self.name[0] == "P")):
+                # No diffraction if cmb is zero radius or
+                # there is a high slowness zone at the CMB.
                 self.min_ray_param = -1
                 self.max_ray_param = -1
                 self.max_distance = -1
