@@ -5,6 +5,7 @@ Travel time calculations.
 from .helper_classes import TauModelError
 from .seismic_phase import SeismicPhase
 from .utils import parse_phase_list
+from . import _DEFAULT_VALUES
 
 
 class TauPTime(object):
@@ -12,7 +13,9 @@ class TauPTime(object):
     Calculate travel times for different branches using linear interpolation
     between known slowness samples.
     """
-    def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0):
+    def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0,
+                 ray_param_tol=_DEFAULT_VALUES["default_time_ray_param_tol"]
+                 ):
         self.source_depth = depth
         self.receiver_depth = receiver_depth
         self.degrees = degrees
@@ -24,6 +27,7 @@ class TauPTime(object):
         # A standard and a depth corrected model. Both are needed.
         self.model = model
         self.depth_corrected_model = self.model
+        self.ray_param_tol = ray_param_tol
 
     def run(self):
         """
@@ -99,7 +103,7 @@ class TauPTime(object):
         self.degrees = degrees
         self.arrivals = []
         for phase in self.phases:
-            self.arrivals += phase.calc_time(degrees)
+            self.arrivals += phase.calc_time(degrees, self.ray_param_tol)
         # Sort them.
         self.arrivals = sorted(self.arrivals,
                                key=lambda arrivals: arrivals.time)

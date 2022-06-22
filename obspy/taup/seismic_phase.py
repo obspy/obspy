@@ -15,9 +15,7 @@ from .helper_classes import (Arrival, SlownessModelError, TauModelError,
                              TimeDist)
 
 from .c_wrappers import clibtau
-
-
-REFINE_DIST_RADIAN_TOL = 4.9e-6 * math.pi / 180
+from . import _DEFAULT_VALUES
 
 
 _ACTIONS = Enum([
@@ -1151,7 +1149,8 @@ class SeismicPhase(object):
                 times_branches[1][bs] += 1
         return times_branches
 
-    def calc_time(self, degrees):
+    def calc_time(self, degrees,
+                  ray_param_tol=_DEFAULT_VALUES["default_time_ray_param_tol"]):
         """
         Calculate arrival times for this phase, sorted by time.
         """
@@ -1175,11 +1174,13 @@ class SeismicPhase(object):
         arrivals = []
         for _i in range(phase_count):
             arrivals.append(self.refine_arrival(
-                degrees, r_ray_num[_i], r_dist[_i], REFINE_DIST_RADIAN_TOL,
+                degrees, r_ray_num[_i], r_dist[_i], ray_param_tol,
                 self._settings["max_recursion"]))
         return arrivals
 
-    def calc_pierce(self, degrees):
+    def calc_pierce(self, degrees,
+                    ray_param_tol=_DEFAULT_VALUES["default_path_ray_param_tol"]
+                    ):
         """
         Calculate pierce points for this phase.
 
@@ -1187,7 +1188,7 @@ class SeismicPhase(object):
         the stored arrivals. The pierce points are stored within each arrival
         object.
         """
-        arrivals = self.calc_time(degrees)
+        arrivals = self.calc_time(degrees, ray_param_tol=ray_param_tol)
         for arrival in arrivals:
             self.calc_pierce_from_arrival(arrival)
         return arrivals
@@ -1309,13 +1310,14 @@ class SeismicPhase(object):
         # The arrival is modified in place and must (?) thus be returned.
         return curr_arrival
 
-    def calc_path(self, degrees):
+    def calc_path(self, degrees,
+                  ray_param_tol=_DEFAULT_VALUES["default_path_ray_param_tol"]):
         """
         Calculate the paths this phase takes through the planet model.
 
         Only calls :meth:`calc_path_from_arrival`.
         """
-        arrivals = self.calc_time(degrees)
+        arrivals = self.calc_time(degrees, ray_param_tol=ray_param_tol)
         for arrival in arrivals:
             self.calc_path_from_arrival(arrival)
         return arrivals
@@ -1497,27 +1499,31 @@ class SeismicPhase(object):
                        self.source_depth, self.receiver_depth)
 
     def linear_interp_arrival(self, degrees, search_dist, left, right):
-        if left.ray_param_index == 0 and search_dist == self.dist[0]:
-            # degenerate case
-            return Arrival(self, degrees, self.time[0], search_dist,
-                           self.ray_param[0], 0, self.name, self.purist_name,
-                           self.source_depth, self.receiver_depth, 0, 0)
-
         if left.purist_dist == search_dist:
             return left
+        if right.purist_dist == search_dist:
+            return right
 
-        arrival_time = ((search_dist - left.purist_dist) /
-                        (right.purist_dist - left.purist_dist) *
-                        (right.time - left.time)) + left.time
+        dp_dx = (left.ray_param - right.ray_param) / (
+                 left.purist_dist - right.purist_dist)
+        ray_param = (search_dist - right.purist_dist) * dp_dx + right.ray_param
+
+        # Use stationarity of the theta function to estimate arrival time
+        # Buland and Chapman (1983), equations (16) and (20)
+        left_theta = left.time + left.ray_param * (
+            search_dist - left.purist_dist)
+        right_theta = right.time + right.ray_param * (
+            search_dist - right.purist_dist)
+        if dp_dx > 0:
+            arrival_time = max(left_theta, right_theta)
+        else:
+            arrival_time = min(left_theta, right_theta)
+
         if math.isnan(arrival_time):
             msg = ('Time is NaN, search=%f leftDist=%f leftTime=%f '
                    'rightDist=%f rightTime=%f')
             raise RuntimeError(msg % (search_dist, left.purist_dist, left.time,
                                       right.purist_dist, right.time))
-
-        ray_param = ((search_dist - right.purist_dist) /
-                     (left.purist_dist - right.purist_dist) *
-                     (left.ray_param - right.ray_param)) + right.ray_param
         return Arrival(self, degrees, arrival_time, search_dist, ray_param,
                        left.ray_param_index, self.name, self.purist_name,
                        self.source_depth, self.receiver_depth)

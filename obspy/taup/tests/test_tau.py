@@ -88,15 +88,15 @@ class TestTauPyModel:
         assert arr.distance == expected_arr["distance"]
         assert arr.source_depth == expected_arr["depth"]
         assert arr.name == expected_arr["name"]
-        assert round(abs(arr.time - expected_arr["time"]), 2) == 0
+        assert abs(arr.time - expected_arr["time"]) < 2e-2
         diff = arr.ray_param_sec_degree - expected_arr["ray_param_sec_degree"]
-        assert round(abs(diff), 2) == 0
+        assert abs(diff) < 2e-2
         diff = arr.takeoff_angle - expected_arr["takeoff_angle"]
-        assert round(abs(diff), 1) == 0
+        assert abs(diff) < 2e-1
         diff = arr.incident_angle - expected_arr["incident_angle"]
-        assert round(abs(diff), 1) == 0
+        assert abs(diff) < 2e-1
         diff = arr.purist_distance - expected_arr["purist_distance"]
-        assert round(abs(diff), 2) == 0
+        assert abs(diff) < 2e-2
         assert arr.purist_name == expected_arr["purist_name"]
 
     def test_p_iasp91_manual(self):
@@ -111,11 +111,11 @@ class TestTauPyModel:
         p_arrival = arrivals[0]
 
         assert p_arrival.name == "P"
-        assert round(abs(p_arrival.time-412.43), 2) == 0
-        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
-        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
-        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
-        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert abs(p_arrival.time-412.43) < 2e-2
+        assert abs(p_arrival.ray_param_sec_degree-8.613) < 2e-3
+        assert abs(p_arrival.takeoff_angle-26.74) < 2e-2
+        assert abs(p_arrival.incident_angle-26.70) < 2e-2
+        assert abs(p_arrival.purist_distance-35.00) < 2e-2
         assert p_arrival.purist_name == "P"
 
     @pytest.mark.skipif(not geodetics.HAS_GEOGRAPHICLIB,
@@ -137,11 +137,11 @@ class TestTauPyModel:
         p_arrival = arrivals[0]
 
         assert p_arrival.name == "P"
-        assert round(abs(p_arrival.time-412.43), 2) == 0
-        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
-        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
-        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
-        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert abs(p_arrival.time-412.43) < 2e-2
+        assert abs(p_arrival.ray_param_sec_degree-8.613) < 2e-3
+        assert abs(p_arrival.takeoff_angle-26.74) < 2e-2
+        assert abs(p_arrival.incident_angle-26.70) < 2e-2
+        assert abs(p_arrival.purist_distance-35.00) < 2e-2
         assert p_arrival.purist_name == "P"
 
     def test_p_iasp91_geo_fallback_manual(self):
@@ -165,11 +165,11 @@ class TestTauPyModel:
         p_arrival = arrivals[0]
 
         assert p_arrival.name == "P"
-        assert round(abs(p_arrival.time-412.43), 2) == 0
-        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
-        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
-        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
-        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert abs(p_arrival.time-412.43) < 2e-2
+        assert abs(p_arrival.ray_param_sec_degree-8.613) < 2e-3
+        assert abs(p_arrival.takeoff_angle-26.74) < 2e-2
+        assert abs(p_arrival.incident_angle-26.70) < 2e-2
+        assert abs(p_arrival.purist_distance-35.00) < 2e-2
         assert p_arrival.purist_name == "P"
 
     def test_p_iasp91(self, caches):

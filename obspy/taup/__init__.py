@@ -83,7 +83,7 @@ and model. By default it returns arrivals for a number of phases.
     PKIKKIKS phase arrival at 2069.756 seconds
     SKIKKIKS phase arrival at 2277.857 seconds
     PKIKPPKIKP phase arrival at 2353.934 seconds
-    PKPPKP phase arrival at 2356.425 seconds
+    PKPPKP phase arrival at 2356.426 seconds
     PKPPKP phase arrival at 2358.899 seconds
     SKIKSSKIKS phase arrival at 3208.155 seconds
 
@@ -106,7 +106,7 @@ object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
 >>> arr.ray_param, arr.time, arr.incident_angle  # doctest: +ELLIPSIS
-(453.7536..., 485.2100..., 24.3988...)
+(453.7..., 485.210..., 24.39...)
 
 Ray Paths
 ^^^^^^^^^
@@ -439,7 +439,9 @@ _DEFAULT_VALUES = {
     "qp": 1000.0,
     "qs": 2000.0,
     # Slowness tolerance
-    "slowness_tolerance": 1e-16
+    "slowness_tolerance": 1e-16,
+    "default_time_ray_param_tol": 1e-1,
+    "default_path_ray_param_tol": 1e-6
 }
 
 

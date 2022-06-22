@@ -26,4 +26,4 @@ class TauPPath(TauPPierce):
         """
         self.degrees = degrees
         for phase in self.phases:
-            self.arrivals += phase.calc_path(degrees)
+            self.arrivals += phase.calc_path(degrees, self.ray_param_tol)
