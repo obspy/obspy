@@ -117,6 +117,8 @@ class SeismicPhase(object):
         # List of branch_seq positions where a head or diffracted
         # segment occurs.
         self.head_or_diffract_seq = []
+        # Description of segments of the phase.
+        self.segment_list = []
         # True if the current leg of the phase is down going. This allows a
         # check to make sure the path is correct.
         # Used in addToBranch() and parseName().
@@ -936,6 +938,14 @@ class SeismicPhase(object):
         else:
             raise TauModelError("Illegal end_action: {}".format(end_action))
 
+        segment = SeismicPhaseSegment(self.tau_model, start_branch, end_branch,
+                                      is_p_wave, end_action, is_down_going)
+        if self.segment_list:
+            # Perform some sanity checks on the segment being added
+            prev_segment = self.segment_list[-1]
+            _check_segment_consistency(prev_segment, segment)
+        self.segment_list.append(segment)
+
         if is_down_going:
             if start_branch > end_branch:
                 # Can't be downgoing as we are already below.
@@ -1697,3 +1707,67 @@ def leg_puller(name):
         raise ValueError("Invalid phase name: %s could not be parsed in %s"
                          % (str(remainder), name))
     return results + ["END"]
+
+
+class SeismicPhaseSegment(object):
+    def __init__(self, tau_model, start_branch, end_branch, is_p_wave,
+                 end_action, is_down_going):
+        self.tau_model = tau_model
+        self.start_branch = start_branch
+        self.end_branch = end_branch
+        self.is_p_wave = is_p_wave
+        self.end_action = end_action
+        self.is_down_going = is_down_going
+
+
+def _check_segment_consistency(prev_segment, segment):
+    """
+    Sanity checks to see if the SeismicPhaseSegment
+    being added is consistent with the previous segment.
+    Raises a TauModelError is there is a problem.
+    """
+    if segment.is_down_going:
+        if prev_segment.end_branch > segment.start_branch:
+            raise TauModelError(
+                f"Segment is downgoing, but we are already below the "
+                f"start: {segment.end_action}")
+        if prev_segment.end_action == _ACTIONS["reflect_topside"]:
+            raise TauModelError(
+                f"Segment is downgoing, but previous action was to "
+                f"reflect up: {segment.end_action}")
+        if prev_segment.end_action == _ACTIONS["turn"]:
+            raise TauModelError(
+                f"Segment is downgoing, but previous action was to "
+                f"turn: {segment.end_action}")
+        if prev_segment.end_action == _ACTIONS["transup"]:
+            raise TauModelError(
+                f"Segment is downgoing, but previous action was to "
+                f"transmit up: {segment.end_action}")
+        if (prev_segment.end_branch == segment.start_branch
+                and not prev_segment.is_down_going and
+                prev_segment.end_action !=
+                _ACTIONS["reflect_underside"]):
+            raise TauModelError(
+                f"Segment is downgoing, but previous action was not to"
+                f"reflect underside: {segment.end_action}")
+    else:
+        if prev_segment.end_branch < segment.start_branch:
+            raise TauModelError(
+                f"Segment is upgoing, but we are already above the "
+                f"start: {segment.end_action}")
+        if prev_segment.end_action == _ACTIONS["reflect_underside"]:
+            raise TauModelError(
+                f"Segment is upgoing, but previous action was to "
+                f"underside reflect down:  {segment.end_action}")
+        if prev_segment.end_action == _ACTIONS["transdown"]:
+            raise TauModelError(
+                f"Segment is upgoing, but previous action was to "
+                f"trans down: {segment.end_action}")
+        if (prev_segment.end_branch == segment.start_branch
+                and prev_segment.is_down_going and
+                prev_segment.end_action not in
+                (_ACTIONS["turn"], _ACTIONS["diffract"],
+                    _ACTIONS["reflect_topside"])):
+            raise TauModelError(
+                f"Segment is upgoing, but previous action was not to "
+                f"reflect topside: {segment.end_action}")
