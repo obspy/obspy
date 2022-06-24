@@ -35,6 +35,7 @@ Changes:
      of layer (see #3080)
    * add some checks for bad phases, so "ScScS" is not allowed
      (see #2774, #3082)
+   * bug fix for sources within high slowness regions (see #2976, #3100)
 
 
 maintenance_1.3.x
