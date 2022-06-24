@@ -1216,11 +1216,11 @@ class SlownessModel(object):
         :param is_p_wave: Whether to check the P wave (``True``) or the S wave
             (``False``).
         :type is_p_wave: bool
-        :param return_range: Whether to also return the DepthRange of the high
-        slowness zone.
+        :param return_depth_range: Whether to also return the DepthRange of
+            the high slowness zone.
 
         :returns: ``True`` if within a high slowness zone, ``False`` otherwise.
-            If return_range is ``True``, also returns a DepthRange object
+            If return_depth_range is ``True``, also returns a DepthRange object
         :rtype: bool, or (bool, DepthRange)
         """
         if is_p_wave:
