@@ -1100,3 +1100,17 @@ class TestTauPyModel:
             np.testing.assert_allclose(p.max_distance*180.0/np.pi,
                                        72.66, atol=atol)
             assert p.branch_seq == [0, 0]
+
+    def test_high_slowness_crust(self):
+        """
+        Check handling of sources located in a high slowness layer.
+        """
+        model_name = "high_slowness_crust"
+        with TemporaryWorkingDirectory():
+            folder = os.path.abspath(os.curdir)
+            build_taup_model(
+              filename=os.path.join(DATA, os.path.pardir, model_name + ".nd"),
+              output_folder=folder, verbose=False)
+            model = TauPyModel(os.path.join(folder, model_name + ".npz"))
+            arrivals = model.get_ray_paths(20.0, 0.84, phase_list=["sS"])
+            assert len(arrivals) == 0
