@@ -231,6 +231,20 @@ class SeismicPhase(object):
                 layer = tau_model.s_mod.get_slowness_layer(
                     s_layer_num, is_p_wave_previous)
                 self.max_ray_param = layer['bot_p']
+                #  check if source is in high slowness zone
+                in_high_slowness, high_slowness_range = \
+                    tau_model.s_mod.depth_in_high_slowness(
+                        tau_model.source_depth,
+                        self.max_ray_param,
+                        is_p_wave_previous,
+                        return_depth_range=True)
+                if in_high_slowness:
+                    # need to reduce max_ray_param until it can propagate out
+                    # of high slowness zone
+                    self.max_ray_param = min(
+                        self.max_ray_param,
+                        high_slowness_range.ray_param)
+
             except SlownessModelError as e:
                 msg = ('Please contact the developers. This error should not '
                        'occur.')
