@@ -1657,11 +1657,13 @@ class SeismicPhase(object):
 
     def _shadow_zone_splits(self):
         """
-        A list of slices that split  on any shadow zones.
+        A list of slices that split on any shadow zones.
         """
         if self.head_or_diffract_seq:
+            # don't split any diffracted waves
             return [slice(0, None)]
         else:
+            # shadow zones are where ray parameter repeats
             return _repeated_value_splits(self.ray_param)
 
 
