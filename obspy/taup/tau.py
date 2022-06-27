@@ -445,7 +445,11 @@ class Arrivals(list):
                         loc = "upper right"
                 else:
                     loc = legend
-                ax.legend(loc=loc, prop=dict(size="small"))
+                # plot legend, avoiding duplicate labels
+                handles, labels = ax.get_legend_handles_labels()
+                by_label = dict(zip(labels, handles))
+                ax.legend(by_label.values(), by_label.keys(),
+                          loc=loc, prop=dict(size="small"))
 
         elif plot_type == "cartesian":
             if ax and isinstance(ax, mpl.projections.polar.PolarAxes):
@@ -540,7 +544,12 @@ class Arrivals(list):
                     loc = "lower left"
                 else:
                     loc = legend
-                ax.legend(loc=loc, prop=dict(size="small"))
+                # plot legend, avoiding duplicate labels
+                handles, labels = ax.get_legend_handles_labels()
+                by_label = dict(zip(labels, handles))
+                ax.legend(by_label.values(), by_label.keys(),
+                          loc=loc, prop=dict(size="small"))
+
             ax.set_xlabel("Distance [deg]")
             ax.set_ylabel("Depth [km]")
         else:
@@ -1036,22 +1045,28 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
         phase_names = sorted(parse_phase_list(phase_list))
         for i, phase in enumerate(phase_names):
             ph = SeismicPhase(phase, depth_corrected_model)
-            dist_deg = (180.0/np.pi)*ph.dist
-            time_min = ph.time/60
-            c = COLORS[i % len(COLORS)]
-            if len(dist_deg) > 0:
-                if plot_all:
-                    # wrap-around plotting
-                    while dist_deg[0] > 360.0:
-                        dist_deg = dist_deg - 360.0
-                    ax.plot(dist_deg, time_min, label=phase, color=c)
-                    ax.plot(dist_deg - 360.0, time_min, label=None, color=c)
-                    ax.plot(360.0 - dist_deg, time_min, label=None, color=c)
-                else:
-                    ax.plot(dist_deg, time_min, label=phase, color=c)
-
+            # don't join lines across shadow zones
+            for s in ph._shadow_zone_splits():
+                dist_deg = (180.0/np.pi)*ph.dist[s]
+                time_min = ph.time[s]/60
+                c = COLORS[i % len(COLORS)]
+                if len(dist_deg) > 0:
+                    if plot_all:
+                        # wrap-around plotting
+                        while dist_deg[0] > 360.0:
+                            dist_deg = dist_deg - 360.0
+                        ax.plot(dist_deg, time_min, label=phase, color=c)
+                        ax.plot(dist_deg - 360.0, time_min,
+                                label=None, color=c)
+                        ax.plot(360.0 - dist_deg, time_min,
+                                label=None, color=c)
+                    else:
+                        ax.plot(dist_deg, time_min, label=phase, color=c)
         if legend:
-            ax.legend(loc=2, numpoints=1)
+            # plot legend, avoiding duplicate labels
+            handles, labels = ax.get_legend_handles_labels()
+            by_label = dict(zip(labels, handles))
+            ax.legend(by_label.values(), by_label.keys(), loc=2, numpoints=1)
 
         ax.grid()
         ax.set_xlabel("Distance (degrees)")

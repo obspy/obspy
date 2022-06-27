@@ -1655,6 +1655,30 @@ class SeismicPhase(object):
     def get_earliest_arrival(cls, rel_phases, degrees):
         raise NotImplementedError("baaa")
 
+    def _shadow_zone_splits(self):
+        """
+        A list of slices that split  on any shadow zones.
+        """
+        if self.head_or_diffract_seq:
+            return [slice(0, None)]
+        else:
+            return _repeated_value_splits(self.ray_param)
+
+
+def _repeated_value_splits(x):
+    """
+    A list of slices that split a 1D numpy array where values repeat.
+    """
+    split_indices = []
+    idxs = np.where(x[1:] - x[:-1] == 0)[0] + 1
+    left_index = 0
+    for i in idxs:
+        split_indices.append(slice(left_index, i))
+        left_index = i
+    split_indices.append(slice(left_index, None))
+
+    return split_indices
+
 
 def closest_branch_to_depth(tau_model, depth_string):
     """
