@@ -1672,7 +1672,7 @@ def _repeated_value_splits(x):
     A list of slices that split a 1D numpy array where values repeat.
     """
     split_indices = []
-    idxs = np.where(x[1:] - x[:-1] == 0)[0] + 1
+    idxs = np.where(np.diff(x) == 0)[0] + 1
     left_index = 0
     for i in idxs:
         split_indices.append(slice(left_index, i))
