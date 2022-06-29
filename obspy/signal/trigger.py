@@ -729,12 +729,22 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
                              cft_std))
     triggers.sort()
 
+    for i, (on, off, tr_id, cft_peak, cft_std) in enumerate(triggers):
+        sta = tr_id.split(".")[1]
+        templates = event_templates.get(sta)
+        if templates:
+            simil = templates_max_similarity(
+                stream, UTCDateTime(on), templates)
+        else:
+            simil = None
+        triggers[i] = (on, off, tr_id, cft_peak, cft_std, simil)
+
     # the coincidence triggering and coincidence sum computation
     coincidence_triggers = []
     last_off_time = 0.0
     while triggers != []:
         # remove first trigger from list and look for overlaps
-        on, off, tr_id, cft_peak, cft_std = triggers.pop(0)
+        on, off, tr_id, cft_peak, cft_std, simil = triggers.pop(0)
         sta = tr_id.split(".")[1]
         event = {}
         event['time'] = UTCDateTime(on)
@@ -747,13 +757,11 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             event['cft_stds'] = [cft_std]
         # evaluate maximum similarity for station if event templates were
         # provided
-        templates = event_templates.get(sta)
-        if templates:
-            event['similarity'][sta] = \
-                templates_max_similarity(stream, event['time'], templates)
+        if simil is not None:
+            event['similarity'][sta] = simil
         # compile the list of stations that overlap with the current trigger
-        for trigger in triggers:
-            tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
+        for (tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std,
+                tmp_simil) in triggers:
             tmp_sta = tmp_tr_id.split(".")[1]
             # skip retriggering of already present station in current
             # coincidence trigger
@@ -774,10 +782,8 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             off = max(off, tmp_off)
             # evaluate maximum similarity for station if event templates were
             # provided
-            templates = event_templates.get(tmp_sta)
-            if templates:
-                event['similarity'][tmp_sta] = \
-                    templates_max_similarity(stream, event['time'], templates)
+            if tmp_simil is not None:
+                event['similarity'][tmp_sta] = tmp_simil
         # skip if both coincidence sum and similarity thresholds are not met
         if event['coincidence_sum'] < thr_coincidence_sum:
             if not event['similarity']:
