@@ -689,23 +689,23 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
     :rtype: list
     :returns: List of event triggers sorted chronologically.
     """
-    st = stream.copy()
     # if no trace ids are specified use all traces ids found in stream
     if trace_ids is None:
-        trace_ids = [tr.id for tr in st]
+        trace_ids = [tr.id for tr in stream]
     # we always work with a dictionary with trace ids and their weights later
     if isinstance(trace_ids, list) or isinstance(trace_ids, tuple):
         trace_ids = dict.fromkeys(trace_ids, 1)
     # set up similarity thresholds as a dictionary if necessary
     if not isinstance(similarity_threshold, dict):
-        similarity_threshold = dict.fromkeys([tr.stats.station for tr in st],
-                                             similarity_threshold)
+        similarity_threshold = dict.fromkeys(
+            [tr.stats.station for tr in stream], similarity_threshold)
 
     # the single station triggering
     triggers = []
     # prepare kwargs for trigger_onset
     kwargs = {'max_len_delete': delete_long_trigger}
-    for tr in st:
+    for tr in stream:
+        tr = tr.copy()
         if tr.id not in trace_ids:
             msg = "At least one trace's ID was not found in the " + \
                   "trace ID list and was disregarded (%s)" % tr.id
@@ -729,12 +729,22 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
                              cft_std))
     triggers.sort()
 
+    for i, (on, off, tr_id, cft_peak, cft_std) in enumerate(triggers):
+        sta = tr_id.split(".")[1]
+        templates = event_templates.get(sta)
+        if templates:
+            simil = templates_max_similarity(
+                stream, UTCDateTime(on), templates)
+        else:
+            simil = None
+        triggers[i] = (on, off, tr_id, cft_peak, cft_std, simil)
+
     # the coincidence triggering and coincidence sum computation
     coincidence_triggers = []
     last_off_time = 0.0
     while triggers != []:
         # remove first trigger from list and look for overlaps
-        on, off, tr_id, cft_peak, cft_std = triggers.pop(0)
+        on, off, tr_id, cft_peak, cft_std, simil = triggers.pop(0)
         sta = tr_id.split(".")[1]
         event = {}
         event['time'] = UTCDateTime(on)
@@ -747,13 +757,11 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             event['cft_stds'] = [cft_std]
         # evaluate maximum similarity for station if event templates were
         # provided
-        templates = event_templates.get(sta)
-        if templates:
-            event['similarity'][sta] = \
-                templates_max_similarity(stream, event['time'], templates)
+        if simil is not None:
+            event['similarity'][sta] = simil
         # compile the list of stations that overlap with the current trigger
-        for trigger in triggers:
-            tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
+        for (tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std,
+                tmp_simil) in triggers:
             tmp_sta = tmp_tr_id.split(".")[1]
             # skip retriggering of already present station in current
             # coincidence trigger
@@ -774,10 +782,8 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             off = max(off, tmp_off)
             # evaluate maximum similarity for station if event templates were
             # provided
-            templates = event_templates.get(tmp_sta)
-            if templates:
-                event['similarity'][tmp_sta] = \
-                    templates_max_similarity(stream, event['time'], templates)
+            if tmp_simil is not None:
+                event['similarity'][tmp_sta] = tmp_simil
         # skip if both coincidence sum and similarity thresholds are not met
         if event['coincidence_sum'] < thr_coincidence_sum:
             if not event['similarity']:
