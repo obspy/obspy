@@ -689,23 +689,23 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
     :rtype: list
     :returns: List of event triggers sorted chronologically.
     """
-    st = stream.copy()
     # if no trace ids are specified use all traces ids found in stream
     if trace_ids is None:
-        trace_ids = [tr.id for tr in st]
+        trace_ids = [tr.id for tr in stream]
     # we always work with a dictionary with trace ids and their weights later
     if isinstance(trace_ids, list) or isinstance(trace_ids, tuple):
         trace_ids = dict.fromkeys(trace_ids, 1)
     # set up similarity thresholds as a dictionary if necessary
     if not isinstance(similarity_threshold, dict):
-        similarity_threshold = dict.fromkeys([tr.stats.station for tr in st],
-                                             similarity_threshold)
+        similarity_threshold = dict.fromkeys(
+            [tr.stats.station for tr in stream], similarity_threshold)
 
     # the single station triggering
     triggers = []
     # prepare kwargs for trigger_onset
     kwargs = {'max_len_delete': delete_long_trigger}
-    for tr in st:
+    for tr in stream:
+        tr = tr.copy()
         if tr.id not in trace_ids:
             msg = "At least one trace's ID was not found in the " + \
                   "trace ID list and was disregarded (%s)" % tr.id
