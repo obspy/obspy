@@ -54,7 +54,7 @@ jobs:
           echo "CIBW_TEST_COMMAND: $CIBW_TEST_COMMAND"
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@2.6.1
+        uses: pypa/cibuildwheel@2.7.0
 
       - uses: actions/upload-artifact@v3
         with:
