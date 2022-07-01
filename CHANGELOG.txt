@@ -17,6 +17,8 @@ Changes:
      than 100 Hz (see #3093)
    * spectrogram: better exception type and messages when input signal is too
      short (see #3093)
+ - obspy.io.win:
+   * read support for WIN32 waveform format (see #1692)
  - obspy.signal:
    * coincidence trigger: improve speed of template matching and less memory
      usage (see #3104)
