@@ -113,7 +113,12 @@ def _get_ah_version(filename):
 
 
 def _unpack_string(data):
-    return data.unpack_string().split(b'\x00', 1)[0].strip().decode("utf-8")
+    try:
+        string = data.unpack_string().split(b'\x00',
+                                            1)[0].strip().decode("utf-8")
+    except Exception:
+        string = data.unpack_string().split()[0].strip().decode("utf-8")
+    return string
 
 
 def _read_ah1(filename):
