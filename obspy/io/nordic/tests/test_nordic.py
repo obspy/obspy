@@ -351,7 +351,7 @@ class TestNordicMethods:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 tagged_lines = _get_line_tags(f=f)
-                head_2 = _readheader(head_lines=tagged_lines['1'])
+                head_2, _ = _readheader(head_lines=tagged_lines['1'])
         _assert_similarity(head_1, head_2, strict=True)
 
     def test_missing_header(self):

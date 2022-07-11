@@ -144,11 +144,11 @@ def readheader(sfile, encoding='latin-1'):
         tagged_lines = _get_line_tags(f)
         if len(tagged_lines['1']) == 0:
             raise NordicParsingError("No header lines found")
-        header = _readheader(head_lines=tagged_lines['1'])
+        header, _ = _readheader(head_lines=tagged_lines['1'])
     return header
 
 
-def _readheader(head_lines, return_origin_line_numbers=False):
+def _readheader(head_lines):
     """
     Internal header reader.
 
@@ -171,8 +171,17 @@ def _readheader(head_lines, return_origin_line_numbers=False):
         _cat.append(_read_origin(line=line[0]))
         origin_line_numbers.append(line[1])
     new_event = _cat.events.pop(0)
+    # No need to check first origin line for whether it is an extended line -
+    # it has to be the main defining line.
+    check_origin_line_numbers = origin_line_numbers.copy()
+    check_origin_line_numbers.pop(0)
 
-    for event, orig_line_number in zip(_cat, origin_line_numbers[1:]):
+    # origin_line_numbers is a list of line numbers where a new origin
+    # definitino starts in the S-file. Hence origin lines that contain extended
+    # information (more magnitudes, higher accuracy) for a previous origin line
+    # are not part of the list.
+    # for event, orig_line_number in zip(_cat, origin_line_numbers[1:]):
+    for event, orig_line_number in zip(_cat, check_origin_line_numbers):
         matched = False
         origin_times = [origin.time for origin in new_event.origins]
         origin = event.origins[0]
@@ -231,9 +240,7 @@ def _readheader(head_lines, return_origin_line_numbers=False):
                 resource_id
         except IndexError:
             pass
-    if return_origin_line_numbers:
-        return new_event, origin_line_numbers
-    return new_event
+    return new_event, origin_line_numbers
 
 
 def _read_origin(line):
@@ -351,7 +358,7 @@ def _read_spectral_info(tagged_lines, event=None):
     if '3' not in tagged_lines.keys():
         return {}
     if event is None:
-        event = _readheader(head_lines=tagged_lines['1'])
+        event, _ = _readheader(head_lines=tagged_lines['1'])
     origin_date = UTCDateTime(event.origins[0].time.date)
     relevant_lines = []
     for line in tagged_lines['3']:
@@ -510,8 +517,7 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False,
     for event_line in event_str:
         tmp_sfile.write(event_line)
     tagged_lines = _get_line_tags(f=tmp_sfile)
-    new_event, origin_line_numbers = _readheader(
-        head_lines=tagged_lines['1'], return_origin_line_numbers=True)
+    new_event, origin_line_numbers = _readheader(head_lines=tagged_lines['1'])
     new_event = _read_uncertainty(tagged_lines, new_event)
     new_event = _read_highaccuracy(
         tagged_lines, new_event, origin_line_numbers)
@@ -625,8 +631,8 @@ def _read_highaccuracy(tagged_lines, event, origin_line_numbers):
             # Select the proper origin header line that is written just above
             # the high accuracy line and select the relevant origin index.
             origin_index = [
-                jl for jl, oline_no in enumerate(origin_line_numbers)
-                if oline_no < ha_line_number][-1]
+                jl for jl, o_line_no in enumerate(origin_line_numbers)
+                if o_line_no < ha_line_number][-1]
         try:
             dt = {'Y': _int_conv(line[1:5]),
                   'MO': _int_conv(line[6:8]),
@@ -645,6 +651,10 @@ def _read_highaccuracy(tagged_lines, event, origin_line_numbers):
                 print('High accuracy time differs from normal time by >0.1s')
         except ValueError:
             pass
+        values = {'latitude': None,
+                  'longitude': None,
+                  'depth': None,
+                  'rms': None}
         try:
             values = {'latitude': _float_conv(line[23:32]),
                       'longitude': _float_conv(line[33:43]),
