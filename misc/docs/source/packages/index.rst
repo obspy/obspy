@@ -36,7 +36,6 @@ categories.*
     obspy.scripts.reftekrescue
     obspy.scripts.print
     obspy.scripts.sds_html_report
-    obspy.db.scripts.indexer
     obspy.imaging.scripts.scan
     obspy.imaging.scripts.plot
     obspy.imaging.scripts.mopad

@@ -5,6 +5,7 @@ Ammon, Charles J.
 Antunes, Emanuel
 Armbruster, Daniel
 Arnarsson, Ólafur St.
+Assink, Jelle
 Bagagli, Matteo
 Bank, Markus
 Barsch, Robert
@@ -84,13 +85,14 @@ Nof, Ran Novitsky
 Panning, Mark P.
 Parker, Tom
 Pestourie, Romain
+Pickle, Robert
 Pourpoint, Maeva
 Rapagnani, Giovanni
 Reyes, Celso
 Ringler, Adam
 Rothenhäusler, Nicolas
-Russo, Emiliano
 Rudge, John F.
+Russo, Emiliano
 Russell, Stuart
 Sales de Andrade, Elliott
 Satriano, Claudio

@@ -15,7 +15,7 @@ This class hierarchy is closely modelled after the de-facto standard format
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from obspy import UTCDateTime
 from obspy.core.event.base import (

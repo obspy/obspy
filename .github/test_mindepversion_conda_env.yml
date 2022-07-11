@@ -4,9 +4,9 @@ channels:
   - defaults
 dependencies:
   # obspy
-  - numpy=1.15
-  - scipy=1.1
-  - matplotlib=3.2
+  - numpy=1.20
+  - scipy=1.7
+  - matplotlib=3.3
   - decorator
   - lxml
   - requests

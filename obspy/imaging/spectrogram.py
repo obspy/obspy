@@ -63,8 +63,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         to 1. High overlaps take a long time to compute.
     :type wlen: int or float
     :param wlen: Window length for fft in seconds. If this parameter is too
-        small, the calculation will take forever. If None, it defaults to
-        (samp_rate/100.0).
+        small, the calculation will take forever. If None, it defaults to a
+        window length matching 128 samples.
     :type log: bool
     :param log: Logarithmic frequency axis if True, linear frequency axis
         otherwise.
@@ -104,14 +104,19 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 
     # set wlen from samp_rate if not specified otherwise
     if not wlen:
-        wlen = samp_rate / 100.
+        wlen = 128 / samp_rate
 
     npts = len(data)
+
     # nfft needs to be an integer, otherwise a deprecation will be raised
     # XXX add condition for too many windows => calculation takes for ever
     nfft = int(_nearest_pow_2(wlen * samp_rate))
-    if nfft > npts:
-        nfft = int(_nearest_pow_2(npts / 8.0))
+
+    if npts < nfft:
+        msg = (f'Input signal too short ({npts} samples, window length '
+               f'{wlen} seconds, nfft {nfft} samples, sampling rate '
+               f'{samp_rate} Hz)')
+        raise ValueError(msg)
 
     if mult is not None:
         mult = int(_nearest_pow_2(mult))
@@ -127,6 +132,13 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
                                          pad_to=mult, noverlap=nlap)
+
+    if len(time) < 2:
+        msg = (f'Input signal too short ({npts} samples, window length '
+               f'{wlen} seconds, nfft {nfft} samples, {nlap} samples window '
+               f'overlap, sampling rate {samp_rate} Hz)')
+        raise ValueError(msg)
+
     # db scale and remove zero/offset for amplitude
     if dbscale:
         specgram = 10 * np.log10(specgram[1:, :])

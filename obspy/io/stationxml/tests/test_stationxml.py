@@ -1179,7 +1179,8 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(
             w[0].message.args[0],
             "Channel 00.BHZ of station LATE does not have a complete set of "
-            "coordinates and thus it cannot be read. It will not be part of "
+            "coordinates (latitude, longitude), elevation and depth and thus "
+            "it cannot be read. It will not be part of "
             "the final inventory object.")
 
         self.assertEqual(

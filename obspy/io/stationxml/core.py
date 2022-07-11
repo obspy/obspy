@@ -289,7 +289,8 @@ def _read_station(sta_element, _ns, level):
                 # This is None if, and only if, one of the coordinates could
                 # not be set.
                 msg = ("Channel %s.%s of station %s does not have a complete "
-                       "set of coordinates and thus it cannot be read. It "
+                       "set of coordinates (latitude, longitude), elevation "
+                       "and depth and thus it cannot be read. It "
                        "will not be part of the final inventory object." % (
                            channel.get("locationCode"), channel.get("code"),
                            sta_element.get("code")))

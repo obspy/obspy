@@ -16,6 +16,7 @@ from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.taup import TauPyModel
 from obspy.taup.tau import Arrivals
 from obspy.taup.taup_create import build_taup_model
+from obspy.taup.seismic_phase import SeismicPhase
 import obspy.geodetics.base as geodetics
 
 
@@ -88,15 +89,15 @@ class TestTauPyModel:
         assert arr.distance == expected_arr["distance"]
         assert arr.source_depth == expected_arr["depth"]
         assert arr.name == expected_arr["name"]
-        assert round(abs(arr.time - expected_arr["time"]), 2) == 0
+        assert abs(arr.time - expected_arr["time"]) < 2e-2
         diff = arr.ray_param_sec_degree - expected_arr["ray_param_sec_degree"]
-        assert round(abs(diff), 2) == 0
+        assert abs(diff) < 2e-2
         diff = arr.takeoff_angle - expected_arr["takeoff_angle"]
-        assert round(abs(diff), 1) == 0
+        assert abs(diff) < 2e-1
         diff = arr.incident_angle - expected_arr["incident_angle"]
-        assert round(abs(diff), 1) == 0
+        assert abs(diff) < 2e-1
         diff = arr.purist_distance - expected_arr["purist_distance"]
-        assert round(abs(diff), 2) == 0
+        assert abs(diff) < 2e-2
         assert arr.purist_name == expected_arr["purist_name"]
 
     def test_p_iasp91_manual(self):
@@ -111,11 +112,11 @@ class TestTauPyModel:
         p_arrival = arrivals[0]
 
         assert p_arrival.name == "P"
-        assert round(abs(p_arrival.time-412.43), 2) == 0
-        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
-        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
-        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
-        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert abs(p_arrival.time-412.43) < 2e-2
+        assert abs(p_arrival.ray_param_sec_degree-8.613) < 2e-3
+        assert abs(p_arrival.takeoff_angle-26.74) < 2e-2
+        assert abs(p_arrival.incident_angle-26.70) < 2e-2
+        assert abs(p_arrival.purist_distance-35.00) < 2e-2
         assert p_arrival.purist_name == "P"
 
     @pytest.mark.skipif(not geodetics.HAS_GEOGRAPHICLIB,
@@ -137,11 +138,11 @@ class TestTauPyModel:
         p_arrival = arrivals[0]
 
         assert p_arrival.name == "P"
-        assert round(abs(p_arrival.time-412.43), 2) == 0
-        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
-        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
-        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
-        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert abs(p_arrival.time-412.43) < 2e-2
+        assert abs(p_arrival.ray_param_sec_degree-8.613) < 2e-3
+        assert abs(p_arrival.takeoff_angle-26.74) < 2e-2
+        assert abs(p_arrival.incident_angle-26.70) < 2e-2
+        assert abs(p_arrival.purist_distance-35.00) < 2e-2
         assert p_arrival.purist_name == "P"
 
     def test_p_iasp91_geo_fallback_manual(self):
@@ -165,11 +166,11 @@ class TestTauPyModel:
         p_arrival = arrivals[0]
 
         assert p_arrival.name == "P"
-        assert round(abs(p_arrival.time-412.43), 2) == 0
-        assert round(abs(p_arrival.ray_param_sec_degree-8.613), 3) == 0
-        assert round(abs(p_arrival.takeoff_angle-26.74), 2) == 0
-        assert round(abs(p_arrival.incident_angle-26.70), 2) == 0
-        assert round(abs(p_arrival.purist_distance-35.00), 2) == 0
+        assert abs(p_arrival.time-412.43) < 2e-2
+        assert abs(p_arrival.ray_param_sec_degree-8.613) < 2e-3
+        assert abs(p_arrival.takeoff_angle-26.74) < 2e-2
+        assert abs(p_arrival.incident_angle-26.70) < 2e-2
+        assert abs(p_arrival.purist_distance-35.00) < 2e-2
         assert p_arrival.purist_name == "P"
 
     def test_p_iasp91(self, caches):
@@ -489,6 +490,18 @@ class TestTauPyModel:
             actual_values = sorted(actual[key])
             expected_values = sorted(expected[key])
             assert actual_values == expected_values
+
+    def test_pierce_add_depth(self):
+        """
+        Test pierce points requested at a specific depth.
+        """
+        model = TauPyModel("iasp91")
+        depth = 1000.0
+        arrivals = model.get_pierce_points(300.0, 50.0, ["PcP"],
+                                           add_depth=[depth])
+        pierce = arrivals[0].pierce
+        assert pierce[3]['depth'] == depth
+        assert abs(pierce[3]['dist'] - 0.051) < 2e-3
 
     def test_single_path_iasp91(self):
         """
@@ -863,7 +876,6 @@ class TestTauPyModel:
             # AK135 value.
             assert abs(arrivals[0].time - expected) < 50
 
-    @pytest.mark.skip(reason="Unsure if these test paths are accurate.")
     def test_paths_for_crustal_phases(self):
         """
         Tests that Pn and PmP are correctly modelled and not mixed up.
@@ -942,14 +954,21 @@ class TestTauPyModel:
             [0.017452419277763337, 0.005402127286288305],
             [0.017453292519943295, 0.0]]
 
+        # Tolerance set to 2e-3 due to limited accuracy of
+        # ray path values above
+        atol = 2e-3
         np.testing.assert_allclose([_i[0] for _i in pmp_path],
-                                   paths[0].path["dist"])
+                                   paths[0].path["dist"],
+                                   atol=atol)
         np.testing.assert_allclose([_i[1] for _i in pmp_path],
-                                   paths[0].path["depth"])
+                                   paths[0].path["depth"],
+                                   atol=atol)
         np.testing.assert_allclose([_i[0] for _i in pn_path],
-                                   paths[1].path["dist"])
+                                   paths[1].path["dist"],
+                                   atol=atol)
         np.testing.assert_allclose([_i[1] for _i in pn_path],
-                                   paths[1].path["depth"])
+                                   paths[1].path["depth"],
+                                   atol=atol)
 
     def test_arrivals_class(self):
         """
@@ -1043,3 +1062,55 @@ class TestTauPyModel:
             for arrival, expect in zip(arrivals, expects):
                 assert arrival.name == expect[0]
                 assert round(abs(arrival.time-expect[1]), 2) == 0
+
+    def test_fruit(self):
+        """
+        Check handling of low velocity zones.
+
+        Test case where bottom of mantle has a negative velocity gradient
+        so phase cannot turn.
+        """
+        model_name = "fruit"
+        with TemporaryWorkingDirectory():
+            folder = os.path.abspath(os.curdir)
+            build_taup_model(
+              filename=os.path.join(DATA, os.path.pardir, model_name + ".nd"),
+              output_folder=folder, verbose=False)
+            model = TauPyModel(os.path.join(folder, model_name + ".npz"))
+
+            s_mod = model.model.s_mod
+            high_slow_range = s_mod.high_slowness_layer_depths_p[0]
+            assert s_mod.depth_in_high_slowness(1360, 18, True)
+            assert s_mod.depth_in_high_slowness(
+                1360,
+                high_slow_range.ray_param+0.00000001,
+                True)
+            assert not s_mod.depth_in_high_slowness(
+                1360,
+                high_slow_range.ray_param,
+                True)
+            assert not s_mod.depth_in_high_slowness(
+                1360,
+                high_slow_range.ray_param-0.00000001,
+                True)
+
+            p = SeismicPhase("P", model.model)
+            atol = 1e-2
+            np.testing.assert_allclose(p.min_distance, 0.0, atol=atol)
+            np.testing.assert_allclose(p.max_distance*180.0/np.pi,
+                                       72.66, atol=atol)
+            assert p.branch_seq == [0, 0]
+
+    def test_high_slowness_crust(self):
+        """
+        Check handling of sources located in a high slowness layer.
+        """
+        model_name = "high_slowness_crust"
+        with TemporaryWorkingDirectory():
+            folder = os.path.abspath(os.curdir)
+            build_taup_model(
+              filename=os.path.join(DATA, os.path.pardir, model_name + ".nd"),
+              output_folder=folder, verbose=False)
+            model = TauPyModel(os.path.join(folder, model_name + ".npz"))
+            arrivals = model.get_ray_paths(20.0, 0.84, phase_list=["sS"])
+            assert len(arrivals) == 0

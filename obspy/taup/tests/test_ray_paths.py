@@ -7,6 +7,7 @@ import pytest
 import obspy
 import obspy.geodetics.base as geodetics
 from obspy.taup.ray_paths import get_ray_paths
+from obspy.taup import TauPyModel
 
 
 class TestRayPathCalculations:
@@ -172,3 +173,9 @@ class TestRayPathCalculations:
              0.53004245, 0.52531799]]
         np.testing.assert_allclose(path[:, ::10], path_steps_expected,
                                    rtol=1e-6)
+
+    def test_deep_source(self):
+        # Regression test -- check if deep sources are ok
+        model = TauPyModel("ak135")
+        arrivals = model.get_ray_paths(2000.0, 60.0, ["P"])
+        assert abs(arrivals[0].time - 480.32) < 1e-2

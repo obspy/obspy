@@ -83,7 +83,7 @@ and model. By default it returns arrivals for a number of phases.
     PKIKKIKS phase arrival at 2069.756 seconds
     SKIKKIKS phase arrival at 2277.857 seconds
     PKIKPPKIKP phase arrival at 2353.934 seconds
-    PKPPKP phase arrival at 2356.425 seconds
+    PKPPKP phase arrival at 2356.426 seconds
     PKPPKP phase arrival at 2358.899 seconds
     SKIKSSKIKS phase arrival at 3208.155 seconds
 
@@ -106,7 +106,7 @@ object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
 >>> arr.ray_param, arr.time, arr.incident_angle  # doctest: +ELLIPSIS
-(453.7536..., 485.2100..., 24.3988...)
+(453.7..., 485.210..., 24.39...)
 
 Ray Paths
 ^^^^^^^^^
@@ -211,8 +211,7 @@ size or subplot setup:
 >>> import matplotlib.pyplot as plt
 >>> fig, ax = plt.subplots(figsize=(9, 9))
 >>> ax = plot_travel_times(source_depth=10, phase_list=["P", "S", "PP"],
-...                        ax=ax, fig=fig, verbose=True)
-There was 1 epicentral distance without an arrival
+...                        ax=ax, fig=fig)
 
 .. plot::
     :width: 50%
@@ -222,8 +221,8 @@ There was 1 epicentral distance without an arrival
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(9, 9))
-    ax = plot_travel_times(source_depth=10, ax=ax, phase_list=["P", "S", "PP"],
-                           fig=fig)
+    ax = plot_travel_times(source_depth=10, phase_list=["P", "S", "PP"],
+                           ax=ax, fig=fig)
 
 The ray path plot wrapper function is :func:`~obspy.taup.tau.plot_ray_paths`.
 Again, creating the figure and axes first is optional to have control over e.g.
@@ -246,7 +245,7 @@ There were rays for all but the following epicentral distances:
     from obspy.taup import plot_ray_paths
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplot(subplot_kw=dict(projection='polar'))
+    fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
     ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
 
 More examples of plotting may be found in the :doc:`ObsPy tutorial
@@ -308,7 +307,8 @@ depth to an interface involved in an interaction.
     * ``v`` - topside reflection, used primarily for crustal and mantle
       interfaces
     * ``diff`` appended to ``P`` or ``S`` - diffracted wave along the core
-      mantle boundary
+      mantle boundary; appended to ``K`` - diffracted wave along the inner-core
+      outer-core boundary
     * ``kmps`` appended to a velocity - horizontal phase velocity (see 10
       below)
     * ``ed`` appended to ``P`` or ``S`` - an exclusively downgoing path, for a
@@ -439,7 +439,9 @@ _DEFAULT_VALUES = {
     "qp": 1000.0,
     "qs": 2000.0,
     # Slowness tolerance
-    "slowness_tolerance": 1e-16
+    "slowness_tolerance": 1e-16,
+    "default_time_ray_param_tol": 1e-1,
+    "default_path_ray_param_tol": 1e-6
 }
 
 

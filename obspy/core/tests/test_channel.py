@@ -40,7 +40,7 @@ class TestChannel:
         assert str(c) == (
             "Channel 'BHE', Location '10' \n"
             "\tTime range: -- - --\n"
-            "\tLatitude: 1.00, Longitude: 2.00, Elevation: 3.0 m, "
+            "\tLatitude: 1.0000, Longitude: 2.0000, Elevation: 3.0 m, "
             "Local Depth: 4.0 m\n"
             "\tAzimuth: 5.00 degrees from north, clockwise\n"
             "\tDip: 6.00 degrees down from horizontal\n")
@@ -50,7 +50,7 @@ class TestChannel:
         assert str(c) == (
             "Channel 'BHE', Location '10' \n"
             "\tTime range: -- - --\n"
-            "\tLatitude: 1.00, Longitude: 2.00, Elevation: 3.0 m, "
+            "\tLatitude: 1.0000, Longitude: 2.0000, Elevation: 3.0 m, "
             "Local Depth: 4.0 m\n"
             "\tAzimuth: 5.00 degrees from north, clockwise\n"
             "\tDip: 6.00 degrees down from horizontal\n"
@@ -61,7 +61,7 @@ class TestChannel:
         assert str(c) == (
             "Channel 'BHE', Location '10' \n"
             "\tTime range: -- - --\n"
-            "\tLatitude: 1.00, Longitude: 2.00, Elevation: 3.0 m, "
+            "\tLatitude: 1.0000, Longitude: 2.0000, Elevation: 3.0 m, "
             "Local Depth: 4.0 m\n"
             "\tAzimuth: 5.00 degrees from north, clockwise\n"
             "\tDip: 6.00 degrees down from horizontal\n"
@@ -73,7 +73,7 @@ class TestChannel:
         assert str(c) == (
             "Channel 'BHE', Location '10' \n"
             "\tTime range: -- - --\n"
-            "\tLatitude: 1.00, Longitude: 2.00, Elevation: 3.0 m, "
+            "\tLatitude: 1.0000, Longitude: 2.0000, Elevation: 3.0 m, "
             "Local Depth: 4.0 m\n"
             "\tAzimuth: 5.00 degrees from north, clockwise\n"
             "\tDip: 6.00 degrees down from horizontal\n"
@@ -87,7 +87,7 @@ class TestChannel:
         assert str(c) == (
             "Channel 'BHE', Location '10' \n"
             "\tTime range: -- - --\n"
-            "\tLatitude: 1.00, Longitude: 2.00, Elevation: 3.0 m, "
+            "\tLatitude: 1.0000, Longitude: 2.0000, Elevation: 3.0 m, "
             "Local Depth: 4.0 m\n"
             "\tAzimuth: 5.00 degrees from north, clockwise\n"
             "\tDip: 6.00 degrees down from horizontal\n"
@@ -102,7 +102,7 @@ class TestChannel:
         assert str(c) == (
             "Channel 'BHE', Location '10' \n"
             "\tTime range: -- - --\n"
-            "\tLatitude: 1.00, Longitude: 2.00, Elevation: 3.0 m, "
+            "\tLatitude: 1.0000, Longitude: 2.0000, Elevation: 3.0 m, "
             "Local Depth: 4.0 m\n"
             "\tAzimuth: 5.00 degrees from north, clockwise\n"
             "\tDip: 6.00 degrees down from horizontal\n"
@@ -117,7 +117,7 @@ class TestChannel:
         assert str(c) == (
             "Channel 'BHE', Location '10' \n"
             "\tTime range: -- - --\n"
-            "\tLatitude: 1.00, Longitude: 2.00, Elevation: 3.0 m, "
+            "\tLatitude: 1.0000, Longitude: 2.0000, Elevation: 3.0 m, "
             "Local Depth: 4.0 m\n"
             "\tAzimuth: 5.00 degrees from north, clockwise\n"
             "\tDip: 6.00 degrees down from horizontal\n"
@@ -132,7 +132,7 @@ class TestChannel:
         assert str(c) == (
             "Channel 'BHE', Location '10' \n"
             "\tTime range: -- - --\n"
-            "\tLatitude: 1.00, Longitude: 2.00, Elevation: 3.0 m, "
+            "\tLatitude: 1.0000, Longitude: 2.0000, Elevation: 3.0 m, "
             "Local Depth: 4.0 m\n"
             "\tAzimuth: 5.00 degrees from north, clockwise\n"
             "\tDip: 6.00 degrees down from horizontal\n"
