@@ -1371,7 +1371,7 @@ ms_reduce_rate (double samprate, int16_t *factor1, int16_t *factor2)
   /* Handle case of non-integer less than 16-bit int range */
   else if (samprate <= 32767.0)
   {
-    /* For samples/seconds, determine, potentially approximate, numerator and denomiator */
+    /* For samples/seconds, determine, potentially approximate, numerator and denominator */
     ms_ratapprox (samprate, &num, &den, 32767, 1e-8);
 
     /* Negate the factor2 to denote a division operation */

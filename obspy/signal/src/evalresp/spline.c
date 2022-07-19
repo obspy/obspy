@@ -5051,7 +5051,7 @@ double *penta ( int n, double a1[], double a2[], double a3[], double a4[],
   Discussion:
 
     The matrix A is pentadiagonal.  It is entirely zero, except for
-    the main diagaonal, and the two immediate sub- and super-diagonals.
+    the main diagonal, and the two immediate sub- and super-diagonals.
 
     The entries of Row I are stored as:
 
