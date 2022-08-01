@@ -9,6 +9,8 @@ Changes:
      #3117)
  - obspy.clients.fdsn:
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
+ - obspy.imaging:
+   * Scanner/obspy-scan: skip directories without read permission (see #3115)
  - obspy.io.gse2:
    * bulletin reading: correctly add Mag2 and amplitudes even if Mag1 is not
      present (see #2420)
