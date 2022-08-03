@@ -154,7 +154,7 @@ def differentiate(trace, rtmemory_list=None):
 
     sample = trace.data
     if np.size(sample) < 1:
-        return(sample)
+        return sample
 
     delta_time = trace.stats.delta
 

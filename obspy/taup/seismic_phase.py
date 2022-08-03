@@ -1182,10 +1182,10 @@ class SeismicPhase(object):
                                        "this is impossible.")
 
             # Special case for head and diffracted waves:
-            if(branch_num == self.tau_model.cmb_branch - 1 and
-               i < len(self.branch_seq) - 1 and
-               self.branch_seq[i + 1] == self.tau_model.cmb_branch - 1 and
-               ("Pdiff" in self.name or "Sdiff" in self.name)):
+            if (branch_num == self.tau_model.cmb_branch - 1 and
+                    i < len(self.branch_seq) - 1 and
+                    self.branch_seq[i + 1] == self.tau_model.cmb_branch - 1 and
+                    ("Pdiff" in self.name or "Sdiff" in self.name)):
                 dist_diff = curr_arrival.purist_dist - self.dist[0]
                 diff_td = (
                     curr_arrival.ray_param,
@@ -1194,10 +1194,10 @@ class SeismicPhase(object):
                     self.tau_model.cmb_depth)
                 path_list.append(diff_td)
 
-            elif(branch_num == self.tau_model.moho_branch and
-                 i < len(self.branch_seq) - 1 and
-                 self.branch_seq[i + 1] == self.tau_model.moho_branch and
-                 ("Pn" in self.name or "Sn" in self.name)):
+            elif (branch_num == self.tau_model.moho_branch and
+                  i < len(self.branch_seq) - 1 and
+                  self.branch_seq[i + 1] == self.tau_model.moho_branch and
+                  ("Pn" in self.name or "Sn" in self.name)):
                 # Can't have both Pn and Sn in a wave, so one of these is 0.
                 num_found = max(self.name.count("Pn"), self.name.count("Sn"))
                 dist_head = (curr_arrival.purist_dist -

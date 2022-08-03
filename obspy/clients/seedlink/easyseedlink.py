@@ -404,7 +404,7 @@ class EasySeedLinkClient(object):
             # At this point the received data should be a SeedLink packet
             # XXX In SLClient there is a check for data == None, but I think
             #     there is no way that self.conn.collect() can ever return None
-            assert(isinstance(data, SLPacket))
+            assert isinstance(data, SLPacket)
 
             packet_type = data.get_type()
 

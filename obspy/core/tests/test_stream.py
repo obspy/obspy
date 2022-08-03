@@ -581,9 +581,9 @@ class TestStream:
         stream2 = deepcopy(stream)
         # Use the remove method of the Stream object and of the list of Traces.
         stream.remove(stream[1])
-        del(stream2[1])
+        del stream2[1]
         stream.remove(stream[-1])
-        del(stream2[-1])
+        del stream2[-1]
         # Compare remaining Streams.
         assert stream == stream2
 
