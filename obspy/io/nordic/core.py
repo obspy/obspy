@@ -1274,8 +1274,58 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
         # with new information (BAZ, slowness etc.)
         if not (found_baz_associated_pick or is_coda_ref_pick):
             new_event.picks.append(pick)
+    new_event = _check_baz_appvel_assignment(new_event)
 
     return new_event
+
+
+def _check_baz_appvel_assignment(event):
+    """
+    When a BAZ-line comes before the respective pick line, then we need to
+    check afterwards whether all baz - app-vel values are properly assigned
+    """
+    remove_pick_list = []
+    for pick in event.picks:
+        found_baz_associated_pick = False
+        if 'BAZ' in pick.phase_hint and pick.backazimuth is not None:
+            # Seisan phase name can be e.g. "BAZ-P"
+            baz_phase_type = pick.phase_hint.removeprefix('BAZ-')
+            # Check if there is matching pick for the BAZ. THIS MEANS THAT
+            # THE BAZ-line in Nordic file has to follow the actual time pick!
+            for existing_pick in event.picks:
+                if (existing_pick.waveform_id == pick.waveform_id and
+                        existing_pick.phase_hint == baz_phase_type and
+                        existing_pick.time == pick.time):
+                    pick = existing_pick
+                    found_baz_associated_pick = True
+                    break
+            # BAZ-phase name doesn't have to specify the associated phase
+            # name - as a secondary resort, compare pick times only.
+            if not found_baz_associated_pick:
+                for existing_pick in event.picks:
+                    if (existing_pick.waveform_id == pick.waveform_id and
+                            existing_pick.time == pick.time and
+                            not _is_iasp_ampl_phase(existing_pick.phase_hint)):
+                        pick = existing_pick
+                        found_baz_associated_pick = True
+                        break
+            if not found_baz_associated_pick:
+                continue
+            existing_pick.backazimuth = pick.backazimuth
+            if pick.horizontal_slowness:
+                existing_pick.horizontal_slowness = pick.horizontal_slowness
+            remove_pick_list.append(pick)
+            for amplitude in event.amplitudes:
+                if amplitude.pick_id == pick.resource_id:
+                    amplitude.pick_id = existing_pick.resource_id
+            for origin in event.origins:
+                for arrival in origin.arrivals:
+                    if arrival.pick_id == pick.resource_id:
+                        arrival.pick_id = existing_pick.resource_id
+    # Remove the BAZ-picks that have become obsolete:
+    for pick in remove_pick_list:
+        event.picks.remove(pick)
+    return event
 
 
 def readwavename(sfile, encoding='latin-1'):
