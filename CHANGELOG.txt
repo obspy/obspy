@@ -39,7 +39,16 @@ Changes:
    * add some checks for bad phases, so "ScScS" is not allowed
      (see #2774, #3082)
    * bug fix for sources within high slowness regions (see #2976, #3100)
-
+ - obspy.io.nordic:
+   * add support for writing multiple amplitudes for one pick (only new format)
+     and writes some amplitude lines more compact (see #3075, also #2814)
+   * add full support for reading and writing apparent velocity and backazimuth
+     with new nordic format (see #3075)
+   * fix comments on angle of incidence vs. takeoff angle (What is called
+     angle of incidence in Seisan is the same as what is usually referred to as
+     takeoff angle, see #3075)
+   * add function to check whether phase is valid IASPEI phase in Seisan (#3075)
+   * full support for writing high-accuracy origin line (see #3075)
 
 maintenance_1.3.x
 =================

@@ -203,6 +203,7 @@ def _evmagtonor(mag_type):
     mag = MAG_MAPPING.get(mag_type, '')
     if mag == '':
         warnings.warn(mag_type + ' is not convertible')
+        return ' '
     return mag
 
 
@@ -255,7 +256,6 @@ def _nordic_iasp_phase_ok(phase):
     """
     Function to check whether a phase-string is a valid IASPEI-compatible
     phase in Seisan.
-
     :param phase: Phase string to check
 
     :returns: bool, whether phase string is valid in Seisan.

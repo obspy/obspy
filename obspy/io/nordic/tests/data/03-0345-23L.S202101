@@ -1,5 +1,5 @@
- 2021 0103 0345 23.9 LQ 60.110   5.402 13.8  BER 16 .60 1.2LBER                1
- GAP=120   BER  1.57       2.7     5.2  4.0  0.7033E+01 -0.7376E+01 -0.1164E+01E
+ 2021 0103 0345 23.9 LQ 60.109   5.402 13.9  BER 17 .60 1.2LBER                1
+ GAP=120   BER  1.57       2.7     5.2  3.9  0.7044E+01 -0.7490E+01 -0.1028E+01E
  LOCALITY: Bjornafjorden, Vestland                                             3
  ARC _BAS            2021  1 3  344 53   300                                   6
  2021-01-03-0343-59S.NNSN__051                                                 6
@@ -42,58 +42,63 @@
  OLDACT:UPD 21-01-21 09:48 OP:mls  STATUS:               ID:20210103034523 S   3
  OLDACT:UPS 21-01-22 11:08 OP:mls  STATUS:               ID:20210103034523 S   3
  OLDACT:UPS 21-01-22 12:12 OP:mls  STATUS:               ID:20210103034523 S   3
- ACTION:UP  21-05-21 16:11 OP:fh   STATUS:               ID:20210103034523 S   I
  OLDACT:UPD 21-03-03 10:39 OP:mls  STATUS:               ID:20210103034523 S   3
+ ACTION:UP  22-05-19 10:02 OP:fh   STATUS:               ID:20210103034523 S   I
+ OLDACT:UP  21-05-21 16:11 OP:fh   STATUS:               ID:20210103034523 S   3
  STAT COM NTLO IPHASE   W HHMM SS.SSS   PAR1  PAR2 AGA OPE  AIN  RES W  DIS CAZ7
- BAS17HHZ NS   IP        A0345 26.970      C       BER ml 147.0 0.4710 8.43 347 
- BAS17HHE NS   ES         0345 29.600              BER ml 147.0 1.1810 8.43 347 
- BAS17HHZ NS    IAML      0345 29.670   27.7  0.09 BER mls     -0.47   8.43 347 
- BAS16HHZ NS   IP         0345 27.850      C       BER ml 122.0 0.2610 18.5 318 
- BAS16HHE NS   ES         0345 31.150              BER ml 122.0 0.8210 18.5 318 
- BAS16HHZ NS    IAML      0345 31.270   44.4  0.20 BER mls     -0.03   18.5 318 
- BAS15HHZ NS   EP         0345 29.000              BER ml 109.0 0.1210 28.0 305 
- BAS15HHN NS   ES         0345 33.100              BER ml 109.0 0.5310 28.0 305 
+ BAS17HHZ NS   IP        A0345 26.970      C       BER ml 147.0 0.4710 8.53 347 
+ BAS17HHE NS   ES         0345 29.600              BER ml 147.0 1.1610 8.53 347 
+ BAS17HHZ NS    IAML      0345 29.670   27.7  0.09 BER mls     -0.46   8.53 347 
+ BAS17HHZ NS    A         0345 29.670   99.9  0.99 BER mls             8.53 347 
+ BAS16HHZ NS   IP         0345 27.850      C       BER ml 123.0 0.2610 18.6 318 
+ BAS16HHE NS   ES         0345 31.150              BER ml 123.0 0.8110 18.6 318 
+ BAS16HHZ NS    IAML      0345 31.270   44.4  0.20 BER mls     -0.03   18.6 318 
+ BAS15HHZ NS   EP         0345 29.000              BER ml 110.0 0.1210 28.0 305 
+ BAS15HHN NS   ES         0345 33.100              BER ml 110.0 0.5210 28.0 305 
  BAS15HHZ NS    IAML      0345 33.570   48.5  0.20 BER mls      0.18   28.0 305 
- BER  HHZ NS00 IP         0345 29.140      C       BER ml 107.0-0.1510 30.8 353 
- BER  HHZ NS00  BAZ-P     0345 29.140  172.5   7.0 BER DUM        0.   30.8 353 
- BER  HHE NS00 ES         0345 33.280              BER ml 107.0-0.0110 30.8 353 
- BER  HHZ NS00  IAML      0345 33.500   47.3  0.22 BER mls      0.21   30.8 353 
- ASK  HHZ NS00 IP         0345 30.610      C       BER ml  98.0-0.3710 42.2 345 
- ASK  HHN NS00 ES         0345 35.910              BER ml  98.0-0.3110 42.2 345 
- ASK  HHZ NS00  IAML      0345 36.690   12.9  0.14 BER mls     -0.22   42.2 345 
- BAS0DHHZ NS   IP         0345 30.900      C       BER ml  98.0-0.3610 44.0 353 
- BAS0DHHE NS   E          0345 36.450              BER ml              44.0 353 
- BAS0DHHZ NS    IAML      0345 36.790   23.1  0.16 BER mls      0.06   44.0 353 
- BAS03HHZ NS   IP         0345 31.930      C       BER ml  95.0-0.3710 51.0 340 
- BAS03HHE NS   ES         0345 38.170              BER ml  95.0-0.3510 51.0 340 
- BAS03HHZ NS    IAML      0345 42.600   21.1  0.22 BER mls      0.08   51.0 340 
- BAS02HHZ NS   IP         0345 33.290      C       BER ml  94.0-0.4510 60.5 336 
- BAS02HHN NS   ES         0345 40.610              BER ml  94.0-0.4110 60.5 336 
- BAS02HHZ NS    IAML      0345 40.900   14.2  0.26 BER mls     -0.02   60.5 336 
- REIN HHZ NS00 EP         0345 33.690      D       BER ml  93.0-0.3910 62.7  92 
- REIN HHN NS00 ES         0345 41.160              BER ml  93.0-0.4510 62.7  92 
+ BER  HHZ NS00 IP         0345 29.140      C       BER ml 107.0-0.1610 30.9 353 
+ BER  HHZ NS00  BAZ-P     0345 29.140  172.5   7.0 BER DUM        0.   30.9 353 
+ BER  HHE NS00 ES         0345 33.280              BER ml 107.0-0.0210 30.9 353 
+ BER  HHZ NS00  IAML      0345 33.500   47.3  0.22 BER mls      0.21   30.9 353 
+ ASK  HHZ NS00 IP         0345 30.610      C       BER ml  99.0-0.3710 42.3 345 
+ ASK  HHN NS00 ES         0345 35.910              BER ml  99.0-0.3210 42.3 345 
+ ASK  HHZ NS00  IAML      0345 36.690   12.9  0.14 BER mls     -0.21   42.3 345 
+ BAS0DHHZ NS   IP         0345 30.900      C       BER ml  98.0-0.3610 44.1 353 
+ BAS0DHHE NS   E          0345 36.450              BER ml              44.1 353 
+ BAS0DHHZ NS    IAML      0345 36.790   23.1  0.16 BER mls      0.06   44.1 353 
+ BAS03HHZ NS   IP         0345 31.930      C       BER ml  96.0-0.3710 51.1 340 
+ BAS03HHE NS   ES         0345 38.170              BER ml  96.0-0.3610 51.1 340 
+ BAS03HHZ NS    IAML      0345 42.600   21.1  0.22 BER mls      0.08   51.1 340 
+ BAS02HHZ NS   IP         0345 33.290      C       BER ml  94.0-0.4510 60.6 336 
+ BAS02HHN NS   ES         0345 40.610              BER ml  94.0-0.4210 60.6 336 
+ BAS02HHZ NS    IAML      0345 40.900   14.2  0.26 BER mls     -0.01   60.6 336 
+ REIN HHZ NS00 EP         0345 33.690      D       BER ml  94.0-0.3710 62.7  92 
+ REIN HHN NS00 ES         0345 41.160              BER ml  94.0-0.4310 62.7  92 
  REIN HHZ NS00  IAML      0345 41.470   14.4  0.12 BER mls      0.01   62.7  92 
- ODD1 HHZ NS00 IP         0345 35.220      D       BER ml  93.0-0.2710 71.8 107 
- ODD1 HHE NS00 ES         0345 43.870              BER ml  93.0-0.1910 71.8 107 
+ ODD1 HHZ NS00 IP         0345 35.220      D       BER ml  93.0-0.2510 71.8 107 
+ ODD1 HHE NS00 ES         0345 43.870              BER ml  93.0-0.1710 71.8 107 
  ODD1 HHZ NS00  IAML      0345 46.310    8.5  0.46 BER mls     -0.16   71.8 107 
- BLS5 HHZ NS00 EP         0345 39.200              BER ml  92.0-0.0710 96.8 142 
- BLS5 HHE NS00 ES         0345 50.640              BER ml  92.0-0.0110 96.8 142 
+ BLS5 HHZ NS00 EP         0345 39.200              BER ml  92.0-0.0410 96.8 142 
+ BLS5 HHE NS00 ES         0345 50.640              BER ml  92.0 0.0310 96.8 142 
  BLS5 HHZ NS00  IAML      0345 51.990   33.7  0.16 BER mls      0.57   96.8 142 
- KMY  HHZ NS00 EP         0345 39.650              BER ml  91.0-0.1610  101 185 
+ BLS5 HHZ NS00  A         0345 51.990  200.0  5.00 BER mls             96.8 142 
+ KMY  HHZ NS00 EP         0345 39.650              BER ml  92.0-0.1310  101 185 
  KMY  HHZ NS00 E          0345 40.310              BER mls              101 185 
- KMY  HHN NS00 ES       4 0345 51.710              BER ml  91.0 0.12 0  101 185 
+ KMY  HHN NS00 ES       4 0345 51.710              BER ml  92.0 0.17 0  101 185 
  KMY  HHZ NS00  IAML      0345 52.240    6.3  0.12 BER mls     -0.13    101 185 
- SUE  HHZ NS00 EP         0345 40.330              BER ml  91.0-1.0910  111 342 
- SUE  HHZ NS00 EPg        0345 41.070              BER ml  91.0-0.3510  111 342 
- SUE  HHE NS00 ESg        0345 54.230              BER ml  91.0-0.1510  111 342 
+ SUE  HHZ NS00 EP         0345 40.330              BER ml  91.0-1.0810  111 342 
+ SUE  HHZ NS00 EPg        0345 41.070              BER ml  91.0-0.3410  111 342 
+ SUE  HHE NS00 ESg        0345 54.230              BER ml  91.0-0.1610  111 342 
  SUE  HHZ NS00  IAML      0345 55.110    6.2  0.20 BER mls     -0.10    111 342 
- HYA  HHZ NS00 EP         0345 42.720              BER ml  55.0-0.7510  125  20 
- HYA  HHN NS00 ESg        0345 57.640              BER ml  91.0-0.3510  125  20 
+ HYA  HHZ NS00 EP         0345 42.720              BER ml  55.0-0.7310  125  20 
+ HYA  HHN NS00 ESg        0345 57.640              BER ml  91.0-0.3610  125  20 
  HYA  HHZ NS00  IAML      0346 01.170    5.4  0.46 BER mls     -0.10    125  20 
- FOO  HHZ NS00 EP         0345 48.880              BER ml  55.0 0.2010  167 353 
- FOO  HHN NS00 ES         0346 08.050              BER ml  55.0 1.0410  167 353 
+ FOO  HHZ NS00 EP         0345 48.880              BER ml  55.0 0.2210  167 353 
+ FOO  HHN NS00 ES         0346 08.050              BER ml  55.0 1.0510  167 353 
  FOO  HHZ NS00  IAML      0346 09.350    5.6  0.38 BER mls      0.07    167 353 
- SKAR HHZ NS00 EP         0345 50.190              BER ml  55.0 0.7710  172  67 
- SKAR HHN NS00 ES         0346 09.920              BER ml  55.0 1.6210  172  67 
+ SKAR HHZ NS00 EP         0345 50.190              BER ml  55.0 0.8010  172  67 
+ SKAR HHN NS00 ES         0346 09.920              BER ml  55.0 1.6510  172  67 
  SKAR HHZ NS00  IAML      0346 11.100    5.4  0.18 BER mls      0.07    172  67 
+ NC6  SHZ NO00  Pn        0346 10.120                      55.0-0.1910  341  75 
+ NC6  SHZ NO00  BAZ-Pn    0346 10.120  256.9   9.2               -4.    341  75 
                                                                                 

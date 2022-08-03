@@ -50,106 +50,108 @@ class TestNordicMethods:
         # Add the event to a catalogue which can be used for QuakeML testing
         test_cat = Catalog()
         test_cat += test_event
-        # Check the read-write s-file functionality
-        with TemporaryWorkingDirectory():
-            with warnings.catch_warnings():
-                # Evaluation mode mapping warning
-                warnings.simplefilter('ignore', UserWarning)
-                sfile = _write_nordic(
-                    test_cat[0], filename=None, userid='TEST', evtype='L',
-                    outdir='.', wavefiles='test', explosion=True,
-                    overwrite=True)
-            assert readwavename(sfile) == ['test']
-            read_cat = Catalog()
-            # raises "UserWarning: AIN in header, currently unsupported"
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore', UserWarning)
-                read_cat += read_nordic(sfile)
-        read_ev = read_cat[0]
-        test_ev = test_cat[0]
-        for read_pick, test_pick in zip(read_ev.picks, test_ev.picks):
-            assert read_pick.time == test_pick.time
-            assert read_pick.backazimuth == test_pick.backazimuth
-            assert read_pick.onset == test_pick.onset
-            assert read_pick.phase_hint == test_pick.phase_hint
-            if test_pick.polarity == "undecidable":
-                assert read_pick.polarity is None
-            elif read_pick.polarity == "undecidable":
-                assert test_pick.polarity is None
-            else:
-                assert read_pick.polarity == test_pick.polarity
-            assert read_pick.waveform_id.station_code == \
-                   test_pick.waveform_id.station_code
-            assert read_pick.waveform_id.channel_code[-1] == \
-                   test_pick.waveform_id.channel_code[-1]
-        # assert read_ev.origins[0].resource_id ==\
-        #     test_ev.origins[0].resource_id
-        assert read_ev.origins[0].time == \
-               test_ev.origins[0].time
-        # Note that time_residual_RMS is not a quakeML format
-        assert read_ev.origins[0].longitude == \
-               test_ev.origins[0].longitude
-        assert read_ev.origins[0].latitude == \
-               test_ev.origins[0].latitude
-        assert read_ev.origins[0].depth == \
-               test_ev.origins[0].depth
-        assert read_ev.magnitudes[0].mag == \
-               test_ev.magnitudes[0].mag
-        assert read_ev.magnitudes[1].mag == \
-               test_ev.magnitudes[1].mag
-        assert read_ev.magnitudes[2].mag == \
-               test_ev.magnitudes[2].mag
-        assert read_ev.magnitudes[0].creation_info == \
-               test_ev.magnitudes[0].creation_info
-        assert read_ev.magnitudes[1].creation_info == \
-               test_ev.magnitudes[1].creation_info
-        assert read_ev.magnitudes[2].creation_info == \
-               test_ev.magnitudes[2].creation_info
-        assert read_ev.magnitudes[0].magnitude_type == \
-               test_ev.magnitudes[0].magnitude_type
-        assert read_ev.magnitudes[1].magnitude_type == \
-               test_ev.magnitudes[1].magnitude_type
-        assert read_ev.magnitudes[2].magnitude_type == \
-               test_ev.magnitudes[2].magnitude_type
-        assert read_ev.event_descriptions == \
-               test_ev.event_descriptions
-        # assert read_ev.amplitudes[0].resource_id ==\
-        #     test_ev.amplitudes[0].resource_id
-        assert read_ev.amplitudes[0].period == \
-               test_ev.amplitudes[0].period
-        assert read_ev.amplitudes[0].snr == \
-               test_ev.amplitudes[0].snr
-        assert read_ev.amplitudes[2].period == \
-               test_ev.amplitudes[2].period
-        assert read_ev.amplitudes[2].snr == \
-               test_ev.amplitudes[2].snr
-        # Check coda magnitude pick
-        # Resource ids get overwritten because you can't have two the same in
-        # memory
-        # self.assertEqual(read_ev.amplitudes[1].resource_id,
-        #                  test_ev.amplitudes[1].resource_id)
-        assert read_ev.amplitudes[1].type == \
-               test_ev.amplitudes[1].type
-        assert read_ev.amplitudes[1].unit == \
-               test_ev.amplitudes[1].unit
-        assert read_ev.amplitudes[1].generic_amplitude == \
-               test_ev.amplitudes[1].generic_amplitude
-        # Resource ids get overwritten because you can't have two the same in
-        # memory
-        # self.assertEqual(read_ev.amplitudes[1].pick_id,
-        #                  test_ev.amplitudes[1].pick_id)
-        assert read_ev.amplitudes[1].waveform_id.station_code == \
-               test_ev.amplitudes[1].waveform_id.station_code
-        assert read_ev.amplitudes[1].waveform_id.channel_code == \
-               test_ev.amplitudes[1].waveform_id.channel_code[0] + \
-               test_ev.amplitudes[1].waveform_id.channel_code[-1]
-        assert read_ev.amplitudes[1].magnitude_hint == \
-               test_ev.amplitudes[1].magnitude_hint
-        # snr is not supported in s-file
-        # self.assertEqual(read_ev.amplitudes[1].snr,
-        #                  test_ev.amplitudes[1].snr)
-        assert read_ev.amplitudes[1].category == \
-               test_ev.amplitudes[1].category
+        for nordic_format in ['OLD', 'NEW']:
+            # Check the read-write s-file functionality
+            with TemporaryWorkingDirectory():
+                with warnings.catch_warnings():
+                    # Evaluation mode mapping warning
+                    warnings.simplefilter('ignore', UserWarning)
+                    sfile = _write_nordic(
+                        test_cat[0], filename=None, userid='TEST', evtype='L',
+                        outdir='.', wavefiles='test', explosion=True,
+                        overwrite=True, nordic_format=nordic_format)
+                assert readwavename(sfile) == ['test']
+                read_cat = Catalog()
+                # raises "UserWarning: AIN in header, currently unsupported"
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', UserWarning)
+                    read_cat += read_nordic(sfile)
+            read_ev = read_cat[0]
+            test_ev = test_cat[0]
+            for read_pick, test_pick in zip(read_ev.picks, test_ev.picks):
+                assert read_pick.time == test_pick.time
+                assert read_pick.backazimuth == test_pick.backazimuth
+                assert read_pick.onset == test_pick.onset
+                assert read_pick.phase_hint == test_pick.phase_hint
+                if test_pick.polarity == "undecidable":
+                    assert read_pick.polarity is None
+                elif read_pick.polarity == "undecidable":
+                    assert test_pick.polarity is None
+                else:
+                    assert read_pick.polarity == test_pick.polarity
+                assert read_pick.waveform_id.station_code == \
+                    test_pick.waveform_id.station_code
+                assert read_pick.waveform_id.channel_code[-1] == \
+                    test_pick.waveform_id.channel_code[-1]
+            # assert read_ev.origins[0].resource_id ==\
+            #     test_ev.origins[0].resource_id
+            assert read_ev.origins[0].time == \
+                test_ev.origins[0].time
+            # Note that time_residual_RMS is not a quakeML format
+            assert read_ev.origins[0].longitude == \
+                test_ev.origins[0].longitude
+            assert read_ev.origins[0].latitude == \
+                test_ev.origins[0].latitude
+            assert read_ev.origins[0].depth == \
+                test_ev.origins[0].depth
+            assert read_ev.magnitudes[0].mag == \
+                test_ev.magnitudes[0].mag
+            assert read_ev.magnitudes[1].mag == \
+                test_ev.magnitudes[1].mag
+            assert read_ev.magnitudes[2].mag == \
+                test_ev.magnitudes[2].mag
+            assert read_ev.magnitudes[0].creation_info == \
+                test_ev.magnitudes[0].creation_info
+            assert read_ev.magnitudes[1].creation_info == \
+                test_ev.magnitudes[1].creation_info
+            assert read_ev.magnitudes[2].creation_info == \
+                test_ev.magnitudes[2].creation_info
+            assert read_ev.magnitudes[0].magnitude_type == \
+                test_ev.magnitudes[0].magnitude_type
+            assert read_ev.magnitudes[1].magnitude_type == \
+                test_ev.magnitudes[1].magnitude_type
+            assert read_ev.magnitudes[2].magnitude_type == \
+                test_ev.magnitudes[2].magnitude_type
+            assert read_ev.event_descriptions == \
+                test_ev.event_descriptions
+            # assert read_ev.amplitudes[0].resource_id ==\
+            #     test_ev.amplitudes[0].resource_id
+            assert read_ev.amplitudes[0].period == \
+                test_ev.amplitudes[0].period
+            assert read_ev.amplitudes[0].snr == \
+                test_ev.amplitudes[0].snr
+            assert read_ev.amplitudes[2].period == \
+                test_ev.amplitudes[2].period
+            assert read_ev.amplitudes[2].snr == \
+                test_ev.amplitudes[2].snr
+            # Check coda magnitude pick
+            # Resource ids get overwritten because you can't have two the same
+            # in memory
+            # self.assertEqual(read_ev.amplitudes[1].resource_id,
+            #                  test_ev.amplitudes[1].resource_id)
+            assert read_ev.amplitudes[1].type == \
+                test_ev.amplitudes[1].type
+            assert read_ev.amplitudes[1].unit == \
+                test_ev.amplitudes[1].unit
+            assert read_ev.amplitudes[1].generic_amplitude == \
+                test_ev.amplitudes[1].generic_amplitude
+            # Resource ids get overwritten because you can't have two the same
+            # in memory
+            # self.assertEqual(read_ev.amplitudes[1].pick_id,
+            #                  test_ev.amplitudes[1].pick_id)
+            assert read_ev.amplitudes[1].waveform_id.station_code == \
+                test_ev.amplitudes[1].waveform_id.station_code
+            if nordic_format == 'OLD':
+                assert read_ev.amplitudes[1].waveform_id.channel_code == \
+                    test_ev.amplitudes[1].waveform_id.channel_code[0] + \
+                    test_ev.amplitudes[1].waveform_id.channel_code[-1]
+            assert read_ev.amplitudes[1].magnitude_hint == \
+                test_ev.amplitudes[1].magnitude_hint
+            # snr is not supported in s-file
+            # self.assertEqual(read_ev.amplitudes[1].snr,
+            #                  test_ev.amplitudes[1].snr)
+            assert read_ev.amplitudes[1].category == \
+                test_ev.amplitudes[1].category
 
     def test_write_read_quakeml(self):
         """
@@ -349,7 +351,7 @@ class TestNordicMethods:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 tagged_lines = _get_line_tags(f=f)
-                head_2 = _readheader(head_lines=tagged_lines['1'])
+                head_2, _ = _readheader(head_lines=tagged_lines['1'])
         _assert_similarity(head_1, head_2, strict=True)
 
     def test_missing_header(self):
@@ -497,8 +499,8 @@ class TestNordicMethods:
             warnings.simplefilter('ignore', UserWarning)
             event = read_nordic(testing_path)[0]
         assert len(event.origins) == 1
-        assert len(event.picks) == 50
-        assert len(event.origins[0].arrivals) == 34
+        assert len(event.picks) == 53
+        assert len(event.origins[0].arrivals) == 35
 
     def test_read_latin1(self):
         """
@@ -1161,7 +1163,7 @@ class TestNordicMethods:
             seedid = 'XX.{}.00.H{}'
             event = read_nordic(testing_path, default_seedid=seedid)[0]
         assert len(event.origins) == 1
-        assert len(event.picks) == 50
+        assert len(event.picks) == 53
         # no changes because net code and location given in nordic file
         assert event.picks[0].waveform_id.network_code != 'XX'
 
@@ -1323,7 +1325,8 @@ def full_test_event():
              evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_1, onset='impulsive', phase_hint='PN',
              polarity='positive', time=UTCDateTime("2012-03-26") + 1.68,
-             evaluation_mode="manual"),
+             evaluation_mode="manual", backazimuth=120.2,
+             horizontal_slowness=9.1),
         Pick(waveform_id=_waveform_id_1, phase_hint='IAML',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.68,
              evaluation_mode="manual"),
