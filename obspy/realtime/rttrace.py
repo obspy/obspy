@@ -123,7 +123,7 @@ class RtTrace(Trace):
             string += '\n'
             string += '  ' + (str(key) + ' ' + 80 * '-')[:80]
             string += str(REALTIME_PROCESS_FUNCTIONS[key][0].__doc__)
-        return(string)
+        return string
 
     def __init__(self, max_length=None, *args, **kwargs):  # @UnusedVariable
         """

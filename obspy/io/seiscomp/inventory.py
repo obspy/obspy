@@ -244,7 +244,7 @@ def _get_restricted_status(element, _ns):
     """
 
     restricted_status = _tag2obj(element, _ns("restricted"), str)
-    if(restricted_status == 'false'):
+    if restricted_status == 'false':
         return 'open'
     else:
         return 'closed'
@@ -804,7 +804,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
     # Different processing for different types of responses
     # currently supported: PAZ, COEFF, FIR
     # Polynomial response is not supported, could not find example
-    if(elem_type == 'responsePAZ'):
+    if elem_type == 'responsePAZ':
 
         # read normalization params
         normalization_freq = _read_floattype(stage,
@@ -854,7 +854,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
             poles=poles, **kwargs)
 
     # For IIR filters reuse the PolesZerosResponseStage
-    elif(elem_type == 'responseIIR'):
+    elif elem_type == 'responseIIR':
         pz_transfer_function_type = _tag2obj(stage, _ns("type"), str)
         pz_transfer_function_type = _map_transfer_type(
             pz_transfer_function_type)
@@ -880,12 +880,12 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
 
     # Datalogger element: V => Counts
     # Set empty coefficients and hard code as digital
-    elif(elem_type == "datalogger"):
+    elif elem_type == "datalogger":
         return CoefficientsTypeResponseStage(
             cf_transfer_function_type="DIGITAL",
             numerator=[], denominator=[], **kwargs)
 
-    elif(elem_type == 'responsePolynomial'):
+    elif elem_type == 'responsePolynomial':
         # Polynomial response (UNTESTED)
         # Currently not implemented in ObsPy (20-11-2015)
         f_low = None
@@ -913,7 +913,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
             approximation_upper_bound=appr_high, maximum_error=max_err,
             coefficients=coeffs, **kwargs)
 
-    elif(elem_type == 'responseFIR'):
+    elif elem_type == 'responseFIR':
         # For the responseFIR obtain the symmetry and
         # list of coefficients
 
@@ -935,11 +935,11 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         # B: ODD,
         # C: EVEN
         symmetry = _tag2obj(stage, _ns("symmetry"), str)
-        if(symmetry == 'A'):
+        if symmetry == 'A':
             symmetry = 'NONE'
-        elif(symmetry == 'B'):
+        elif symmetry == 'B':
             symmetry = 'ODD'
-        elif(symmetry == 'C'):
+        elif symmetry == 'C':
             symmetry = 'EVEN'
         else:
             raise ValueError('Unknown symmetry metric; expected A, B, or C')
@@ -947,7 +947,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         return FIRResponseStage(
             coefficients=coeffs_float, symmetry=symmetry, **kwargs)
 
-    elif(elem_type == 'responseFAP'):
+    elif elem_type == 'responseFAP':
 
         data = _tag2obj(stage, _ns("tuples"), str)
         data = np.array(data.split(), dtype=np.float64)
