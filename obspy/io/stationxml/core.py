@@ -1651,7 +1651,7 @@ def _read_element(prefix, ns, element, extra):
     etree.register_namespace(prefix, ns)
     extra[name] = AttribDict()
     extra[name].namespace = ns
-    if(len(element) > 0):  # element contains nested elements
+    if len(element) > 0:  # element contains nested elements
         extra[name].value = AttribDict()
         for nested_el in element:
             _read_element(prefix, ns, nested_el, extra[name].value)

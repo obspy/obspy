@@ -398,10 +398,10 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
                    delimiter='')
         np.savetxt(f, np.reshape(hs, (8, 3)).astype('|U8'),
                    fmt='%-8s', delimiter='')
-    except Exception as e:
+    except Exception:
         if is_file_name:
             f.close()
-        raise(e, "Cannot write header values: " + f.name)
+        raise SacIOError("Cannot write header values: " + f.name)
 
     if data is not None:
         npts = hi[9]

@@ -675,3 +675,9 @@ class TestBase:
 
         with pytest.raises(ValueError, match='is not a finite'):
             o.latitude = float('-inf')
+
+    def test_issue3105(self):
+        evs = read_events()
+        evs[0].magnitudes[0].mag = 0
+        assert len(evs) == 3
+        assert len(evs.filter('magnitude < 3.5')) == 2

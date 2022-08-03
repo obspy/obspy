@@ -111,9 +111,9 @@ class SC3MLTestCase(unittest.TestCase):
         # Often the stationXML has a double sensor <type>/<model> tag that
         # sc3ml lacks
         for sc3ml, stationxml in zip(sc3ml_arr, stationxml_arr):
-            if(sc3ml != stationxml):
+            if sc3ml != stationxml:
                 tag = str(stationxml).split(">")[0][1:]
-                assert(tag in excluded_tags)
+                assert tag in excluded_tags
 
     def test_empty_depth(self):
         """

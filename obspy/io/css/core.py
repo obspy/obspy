@@ -57,12 +57,12 @@ def _is_css(filename):
                 return False
             # check every line
             for line in lines:
-                assert(len(line.rstrip(b"\n\r")) == 283)
-                assert(b"." in line[26:28])
+                assert len(line.rstrip(b"\n\r")) == 283
+                assert b"." in line[26:28]
                 UTCDateTime(float(line[16:33]))
-                assert(b"." in line[71:73])
+                assert b"." in line[71:73]
                 UTCDateTime(float(line[61:78]))
-                assert(line[143:145] in DTYPE)
+                assert line[143:145] in DTYPE
     except Exception:
         return False
     return True
@@ -91,12 +91,12 @@ def _is_nnsa_kb_core(filename):
                 return False
             # check every line
             for line in lines:
-                assert(len(line.rstrip(b"\n\r")) == 287)
-                assert(line[27:28] == b".")
+                assert len(line.rstrip(b"\n\r")) == 287
+                assert line[27:28] == b"."
                 UTCDateTime(float(line[16:33]))
-                assert(line[73:74] == b".")
+                assert line[73:74] == b"."
                 UTCDateTime(float(line[62:79]))
-                assert(line[144:146] in DTYPE)
+                assert line[144:146] in DTYPE
     except Exception:
         return False
     return True

@@ -238,7 +238,7 @@ def get_flags(files, starttime=None, endtime=None,
 
         msr = clibmseed.msr_init(C.POINTER(MSRecord)())
 
-        while(True):
+        while True:
             # Read up to max record length.
             record = bfr_np[offset: offset + 8192]
             if len(record) < 48:
@@ -1507,7 +1507,7 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
                     event_start = tuple_value[0]
                     event_end = tuple_value[1]
 
-                    if(event_start < recend) and (recstart <= event_end):
+                    if (event_start < recend) and (recstart <= event_end):
                         use_in_this_record = True
                         break
 

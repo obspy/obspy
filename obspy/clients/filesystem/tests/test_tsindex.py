@@ -871,8 +871,6 @@ class IndexerTestCase(TestCase):
                                                  keys[j]),
                                          getattr(tsindex_data[i], keys[j]))
                 self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
-        except Exception as err:
-            raise(err)
         finally:
             purge(filepath, '^{}.*$'.format(fname))
 

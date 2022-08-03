@@ -61,32 +61,32 @@ class CoreTestCase(unittest.TestCase):
         Read files via obspy.core.stream.read function.
         """
         # 1
-        assert(_is_css(self.filename_css))
+        assert _is_css(self.filename_css)
         # check that empty files are not recognized as CSS
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             fh = open(tempfile, "wb")
             fh.close()
-            assert(not _is_css(tempfile))
+            assert not _is_css(tempfile)
 
     def test_is_nnsa_kb_core(self):
         """
         Read files via obspy.core.stream.read function.
         """
         # 1
-        assert(_is_nnsa_kb_core(self.filename_nnsa))
+        assert _is_nnsa_kb_core(self.filename_nnsa)
         # check that empty files are not recognized as NNSA_KB_CORE
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             fh = open(tempfile, "wb")
             fh.close()
-            assert(not _is_nnsa_kb_core(tempfile))
+            assert not _is_nnsa_kb_core(tempfile)
 
     def test_is_not_this_format_core(self):
         # check that NNSA files are not recognized as CSS
-        assert(not _is_css(self.filename_nnsa))
+        assert not _is_css(self.filename_nnsa)
         # check that CSS file is not recognized as NNSA_KB_CORE
-        assert(not _is_nnsa_kb_core(self.filename_css))
+        assert not _is_nnsa_kb_core(self.filename_css)
 
     def test_css_read_via_obspy(self):
         """
