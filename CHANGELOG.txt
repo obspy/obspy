@@ -200,6 +200,7 @@ Changes:
    * fix a bug while checking for valid URI syntax when setting identifiers on
      inventory type objects (see #2905)
    * fix a bug unpacking strings while reading event comments of AH files
+     (see #3107)
  - obspy.clients.arclink:
    * submodule removed completely, since ArcLink was officially deprecated and
      deactivated on all big datacenters years ago (see #2994)
