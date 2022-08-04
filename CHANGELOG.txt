@@ -19,6 +19,9 @@ Changes:
  - obspy.signal.PPSD:
    * show warning on input of a trace that is too short to be processed (see
      #3073)
+   * fix time comparisons in time restrictions when doing custom stacks,
+     compare less/greater or equal instead of strict less/greater than (see
+     #1477)
  - obspy.taup:
    * Fix cycling through colors in ray path plots, now also fixes cartesian
      plot version (see #2470, #2478, #3041)
