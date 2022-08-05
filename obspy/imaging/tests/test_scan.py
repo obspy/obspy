@@ -53,6 +53,10 @@ class TestScan:
 
             obspy_scan([os.curdir] + ['--output', str(image_path)])
 
+    @pytest.mark.xfail(
+        os.environ.get('RUNNER_OS') == "Windows",
+        reason="changing directory permission to non-readable does not seem "
+               "to work")
     def test_scan_dir_no_permission(self, all_files):
         """
         Run obspy-scan on a directory without read permission.
