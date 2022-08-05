@@ -347,7 +347,7 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(sta_mag_3.amplitude_id.id,
                          'quakeml:ldg/amplitude/6867444')
         self.assertEqual(sta_mag_3.method_id, None)
-        self.assertEqual(sta_mag_3.waveform_id, None)
+        self.assertEqual(sta_mag_3.waveform_id.get_seed_string(), 'XX.MBDF..')
         self.assertNotEqual(sta_mag_3.creation_info, None)
         self.assertEqual(len(sta_mag_3.comments), 0)
 
