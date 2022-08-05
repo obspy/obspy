@@ -905,14 +905,16 @@ class Unpickler(object):
                 public_id = "amplitude/%s" % line_id
                 amplitude.resource_id = self._get_res_id(public_id)
                 event.amplitudes.append(amplitude)
-
                 for i in [0, 1]:
                     sta_mag = StationMagnitude()
                     sta_mag.creation_info = self._get_creation_info()
                     sta_mag.origin_id = origin_res_id
                     sta_mag.amplitude_id = amplitude.resource_id
                     sta_mag.station_magnitude_type = magnitude_types[i]
-                    sta_mag.mag = magnitude_values[i]
+                    try:
+                        sta_mag.mag = magnitude_values[i]
+                    except ValueError:
+                        continue
                     sta_mag.waveform_id = pick.waveform_id
                     public_id = "magnitude/station/%s/%s" % (line_id, i)
                     sta_mag.resource_id = self._get_res_id(public_id)
