@@ -2116,7 +2116,7 @@ class TestTrace:
                      'starttime': starttime})
         # downsample
         tr = tr0.copy()
-        tr.resample(0.5, window='hanning', no_filter=True)
+        tr.resample(0.5, window='hann', no_filter=True)
         assert len(tr.data) == 5
         expected = np.array([0.19478735, 0.83618307, 0.32200221,
                              -0.7794053, -0.57356732])
@@ -2130,7 +2130,7 @@ class TestTrace:
 
         # upsample
         tr = tr0.copy()
-        tr.resample(2.0, window='hanning', no_filter=True)
+        tr.resample(2.0, window='hann', no_filter=True)
         assert len(tr.data) == 20
         assert tr.stats.sampling_rate == 2.0
         assert tr.stats.delta == 0.5
@@ -2141,7 +2141,7 @@ class TestTrace:
 
         # downsample with non integer ratio
         tr = tr0.copy()
-        tr.resample(0.75, window='hanning', no_filter=True)
+        tr.resample(0.75, window='hann', no_filter=True)
         assert len(tr.data) == int(10 * .75)
         expected = np.array([0.15425413, 0.66991128, 0.74610418, 0.11960477,
                              -0.60644662, -0.77403839, -0.30938935])
@@ -2166,7 +2166,7 @@ class TestTrace:
 
         # downsample with window and automatic filtering
         tr = tr0.copy()
-        tr.resample(0.5, window='hanning', no_filter=False)
+        tr.resample(0.5, window='hann', no_filter=False)
         assert len(tr.data) == 5
         assert tr.stats.sampling_rate == 0.5
         assert tr.stats.delta == 2.0
