@@ -168,7 +168,6 @@ def _plot_cartopy_into_axes(
     return scatter
 
 
-@deprecated_keywords({'fig': 'ax'})
 def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                  resolution='110m', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
@@ -263,6 +262,10 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         color = [date2num(getattr(t, 'datetime', t)) for t in color]
     else:
         datetimeplot = False
+
+    # If ax wasn't specified, look for fig in kwargs
+    if ax is None and kwargs.get("fig"):
+        ax = kwargs['fig'].axes[0]
 
     if ax is None:
         fig, map_ax, cm_ax, show_colorbar = _basic_setup(
