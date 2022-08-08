@@ -440,6 +440,7 @@ def _basic_setup(
             ax_height -= 0.05
         map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height],
                               projection=proj)
+        cm_ax = None
 
     if projection == 'local':
         x0, y0 = proj.transform_point(lon_0, lat_0, proj.as_geodetic())
