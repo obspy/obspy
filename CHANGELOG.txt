@@ -7,6 +7,8 @@ Changes:
    * Trace.resample: Changed default for `window` to "hanning" following a name
      change in scipy, "hann" is not recognized anymore in newest scipy (see
      #3117)
+   * Fix missing legend and plot artifacts in Inventory map plots at
+     intersection of equator and prime meridian (see #3067)
  - obspy.clients.fdsn:
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
  - obspy.clients.nrl:
