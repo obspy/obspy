@@ -16,6 +16,8 @@ Changes:
    * Add a warning in `Trace.remove_response()` docs, regarding using water
      level mechanism with instrument response non-flat with the requested
      output units (see #3172, #3136)
+   * Fix reusing Catalog/Inventory map plots, i.e. doing multiple cartopy plots
+     with these objects into the same axes (see #3018)
  - obspy.clients.fdsn:
    * Fix a bug in `get_stations_bulk` regarding parameter "includerestricted"
      (see #3158)
