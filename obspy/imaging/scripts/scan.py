@@ -160,7 +160,13 @@ def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
         counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter,
                                      format, verbose, quiet=quiet)
     elif os.path.isdir(path):
-        for file in (os.path.join(path, file) for file in os.listdir(path)):
+        try:
+            dirlist = os.listdir(path)
+        except PermissionError:
+            if verbose or not quiet:
+                print(f"Can not read directory {path} ('Permission denied')")
+            return counter
+        for file in (os.path.join(path, file) for file in dirlist):
             counter = recursive_parse(data_dict, samp_int_dict, file, counter,
                                       format, verbose, quiet, ignore_links)
     else:

@@ -316,6 +316,40 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(sta_mag_2.method_id, None)
         self.assertNotEqual(sta_mag_2.creation_info, None)
         self.assertEqual(len(sta_mag_2.comments), 0)
+        # Test with a file containig Mag2 but not Mag1
+        fields = {
+            'line_1': {
+                'author': slice(105, 113),
+                'id': slice(114, 123),
+            },
+            'line_2': {
+                'az': slice(40, 46),
+                'antype': slice(105, 106),
+                'loctype': slice(107, 108),
+                'evtype': slice(109, 111),
+            },
+            'arrival': {
+                'amp': slice(94, 104),
+            },
+        }
+        filename = os.path.join(self.path, 'event.txt')
+        catalog = _read_gse2(filename, fields=fields,
+                             res_id_prefix="quakeml:ldg",
+                             event_point_separator=True)
+        station_magnitudes = catalog[0].station_magnitudes
+        self.assertEqual(len(station_magnitudes), 5)
+        sta_mag_3 = station_magnitudes[0]
+        self.assertEqual(sta_mag_3.resource_id.id,
+                         'quakeml:ldg/magnitude/station/6867444/1')
+        self.assertEqual(sta_mag_3.origin_id.id, 'quakeml:ldg/origin/375628')
+        self.assertEqual(sta_mag_3.mag, 1.7)
+        self.assertEqual(sta_mag_3.station_magnitude_type, 'Md')
+        self.assertEqual(sta_mag_3.amplitude_id.id,
+                         'quakeml:ldg/amplitude/6867444')
+        self.assertEqual(sta_mag_3.method_id, None)
+        self.assertEqual(sta_mag_3.waveform_id.get_seed_string(), 'XX.MBDF..')
+        self.assertNotEqual(sta_mag_3.creation_info, None)
+        self.assertEqual(len(sta_mag_3.comments), 0)
 
         waveform_2 = sta_mag_2.waveform_id
         self.assertEqual(waveform_2.network_code, 'XX')
@@ -332,6 +366,8 @@ class BulletinTestCase(unittest.TestCase):
         catalog = _read_gse2(filename)
         self.assertEqual(len(catalog), 1)
         amplitudes = catalog[0].amplitudes
+        # test a new feature: don't store an object amplitude if the magnitude
+        # type is not defined
         self.assertEqual(len(amplitudes), 6)
         # Test first amplitude
         amplitude_1 = amplitudes[0]

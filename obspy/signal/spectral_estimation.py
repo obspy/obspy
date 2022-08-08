@@ -1052,9 +1052,9 @@ class PPSD(object):
         times_all = np.array(self._times_processed)
         selected = np.ones(len(times_all), dtype=bool)
         if starttime is not None:
-            selected &= times_all > starttime._ns
+            selected &= times_all >= starttime._ns
         if endtime is not None:
-            selected &= times_all < endtime._ns
+            selected &= times_all <= endtime._ns
         if time_of_weekday is not None:
             times_all_details = self._get_times_all_details()
             # we need to do a logical OR over all different user specified time
@@ -1068,8 +1068,8 @@ class PPSD(object):
                 else:
                     selected_ = (
                         times_all_details['iso_weekday'] == weekday)
-                selected_ &= times_all_details['time_of_day'] > start
-                selected_ &= times_all_details['time_of_day'] < end
+                selected_ &= times_all_details['time_of_day'] >= start
+                selected_ &= times_all_details['time_of_day'] <= end
                 selected_time_of_weekday |= selected_
             selected &= selected_time_of_weekday
         if year is not None:

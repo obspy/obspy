@@ -1644,7 +1644,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @skip_if_no_data
     @_add_processing_info
-    def resample(self, sampling_rate, window='hanning', no_filter=True,
+    def resample(self, sampling_rate, window='hann', no_filter=True,
                  strict_length=False):
         """
         Resample trace data using Fourier method. Spectra are linearly
@@ -1655,7 +1655,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type window: :class:`numpy.ndarray`, callable, str, float, or tuple,
             optional
         :param window: Specifies the window applied to the signal in the
-            Fourier domain. Defaults to ``'hanning'`` window. See
+            Fourier domain. Defaults to ``'hann'`` window. See
             :func:`scipy.signal.resample` for details.
         :type no_filter: bool, optional
         :param no_filter: Deactivates automatic filtering if set to ``True``.

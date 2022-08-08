@@ -4,11 +4,13 @@ The obspy.signal.trigger test suite.
 """
 import gzip
 import os
+import sys
 import unittest
 import warnings
 from ctypes import ArgumentError
 
 import numpy as np
+import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from obspy import Stream, UTCDateTime, read
@@ -80,6 +82,10 @@ class TriggerTestCase(unittest.TestCase):
         self.assertRaises(ArgumentError, clibsignal.recstalta,
                           np.array([1], dtype=np.int32), charfct, ndat, 5, 10)
 
+    @pytest.mark.xfail(
+        os.environ.get('CI') == 'true'
+        and os.environ.get('RUNNER_OS') == 'Linux'
+        and '3.8.13' in sys.version, reason='see #2984')
     def test_pk_baer(self):
         """
         Test pk_baer against implementation for UNESCO short course
@@ -94,6 +100,10 @@ class TriggerTestCase(unittest.TestCase):
         self.assertEqual(nptime, 17545)
         self.assertEqual(pfm, 'IPU0')
 
+    @pytest.mark.xfail(
+        os.environ.get('CI') == 'true'
+        and os.environ.get('RUNNER_OS') == 'Linux'
+        and '3.8.13' in sys.version, reason='see #2984')
     def test_pk_baer_cf(self):
         """
         Test pk_baer against implementation for UNESCO short course

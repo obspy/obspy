@@ -56,8 +56,21 @@ maintenance_1.3.x
 Changes:
  - obspy.core:
    * Fix exclusion of magnitude 0 events in Catalog.filter (see #3105)
+   * Trace.resample: Changed default for `window` to "hanning" following a name
+     change in scipy, "hann" is not recognized anymore in newest scipy (see
+     #3117)
+   * Fix missing legend and plot artifacts in Inventory map plots at
+     intersection of equator and prime meridian (see #3067)
  - obspy.clients.fdsn:
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
+ - obspy.clients.nrl:
+   * enable reading from a downloaded full copy of the NRLv2 at
+     http://ds.iris.edu/ds/nrl/ (see #3058)
+ - obspy.imaging:
+   * Scanner/obspy-scan: skip directories without read permission (see #3115)
+ - obspy.io.gse2:
+   * bulletin reading: correctly add Mag2 and amplitudes even if Mag1 is not
+     present (see #2420)
  - obspy.io.wav:
    * fix writing of wav files with rescale=True and default width=None
      (see #3029)
@@ -68,6 +81,9 @@ Changes:
  - obspy.signal.PPSD:
    * show warning on input of a trace that is too short to be processed (see
      #3073)
+   * fix time comparisons in time restrictions when doing custom stacks,
+     compare less/greater or equal instead of strict less/greater than (see
+     #1477)
  - obspy.taup:
    * Fix cycling through colors in ray path plots, now also fixes cartesian
      plot version (see #2470, #2478, #3041)

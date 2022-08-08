@@ -4,8 +4,9 @@ The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
 import os
 import shutil
-from os.path import abspath, dirname, join, pardir
 import warnings
+from os.path import abspath, dirname, join, pardir
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -51,6 +52,38 @@ class TestScan:
                 shutil.copy(filename, os.curdir)
 
             obspy_scan([os.curdir] + ['--output', str(image_path)])
+
+    @pytest.mark.xfail(
+        os.environ.get('RUNNER_OS') == "Windows",
+        reason="changing directory permission to non-readable does not seem "
+               "to work")
+    def test_scan_dir_no_permission(self, all_files):
+        """
+        Run obspy-scan on a directory without read permission.
+        Should just skip it and not raise an exception. see #3115
+        """
+        # Copy files to a temp folder to avoid wildcard scans.
+        scanner = Scanner()
+        with TemporaryWorkingDirectory():
+            no_permission_dir = Path('no_permission_dir')
+            no_permission_dir.mkdir()
+            # copy one test file in
+            shutil.copy(all_files[0], no_permission_dir)
+            # take away read permissions
+            no_permission_dir.chmod(0o000)
+            scanner.parse(str(no_permission_dir))
+            # should not have been able to read test file but also not raised
+            # an error
+            assert scanner.counter == 1
+            assert not scanner.data
+            # now allow read permission and read again
+            no_permission_dir.chmod(0o777)
+            scanner.parse(str(no_permission_dir))
+            assert scanner.counter == 2
+            assert '.LMOW..BHE' in scanner.data
+            for child in no_permission_dir.iterdir():
+                child.unlink()
+            no_permission_dir.rmdir()
 
     def test_scan_function_and_scanner_class(self, all_files, image_path):
         """

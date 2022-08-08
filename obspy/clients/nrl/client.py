@@ -16,7 +16,7 @@ import codecs
 import io
 import os
 import warnings
-from configparser import ConfigParser
+from configparser import ConfigParser, DuplicateSectionError
 from urllib.parse import urlparse
 
 import requests
@@ -58,11 +58,22 @@ class NRL(object):
         return super(NRL, cls).__new__(RemoteNRL)
 
     def __init__(self):
-        sensor_index = self._join(self.root, 'sensors', self._index)
-        self.sensors = self._parse_ini(sensor_index)
+        try:
+            sensor_index = self._join(self.root, 'sensors', self._index)
+            self.sensors = self._parse_ini(sensor_index)
 
-        datalogger_index = self._join(self.root, 'dataloggers', self._index)
-        self.dataloggers = self._parse_ini(datalogger_index)
+            datalogger_index = self._join(self.root, 'dataloggers',
+                                          self._index)
+            self.dataloggers = self._parse_ini(datalogger_index)
+            self._nrl_version = 1
+        except FileNotFoundError:
+            sensor_index = self._join(self.root, 'sensor', self._index)
+            self.sensors = self._parse_ini(sensor_index)
+
+            datalogger_index = self._join(self.root, 'datalogger', self._index)
+            self.dataloggers = self._parse_ini(datalogger_index)
+            # version 2 also has additional base nodes "integrated" and "soh"
+            self._nrl_version = 2
 
     def __str__(self):
         info = ['NRL library at ' + self.root]
@@ -101,6 +112,8 @@ class NRL(object):
             newpath = cp.get(choice, 'path')
         elif 'resp' in options:
             newpath = cp.get(choice, 'resp')
+        elif 'xml' in options:
+            newpath = cp.get(choice, 'xml')
         # Strip quotes of new path
         newpath = self._clean_str(newpath)
         path = os.path.dirname(path)
@@ -125,8 +138,11 @@ class NRL(object):
                     continue
                 # sometimes the description field is named 'description', but
                 # sometimes also 'descr'
+                # NRL version 2 does not seem to have any of the 'descr = '
+                # oddities anymore, but it can be downloaded in RESP format or
+                # StationXML format and then the option name is different
                 elif options in (['description', 'resp'], ['descr', 'resp'],
-                                 ['resp']):
+                                 ['resp'], ['description', 'xml']):
                     if 'descr' in options:
                         descr = cp.get(section, 'descr')
                     elif 'description' in options:
@@ -135,7 +151,13 @@ class NRL(object):
                         descr = '<no description>'
                     descr = self._clean_str(descr)
                     resp_path = self._choose(section, path)
-                    nrl_dict[section] = (descr, resp_path)
+                    if 'resp' in options:
+                        resp_type = 'RESP'
+                    elif 'xml' in options:
+                        resp_type = 'STATIONXML'
+                    else:
+                        raise NotImplementedError(msg)
+                    nrl_dict[section] = (descr, resp_path, resp_type)
                     continue
                 else:  # pragma: no cover
                     msg = "Unexpected structure of NRL file '{}'".format(path)
@@ -157,9 +179,11 @@ class NRL(object):
             datalogger = datalogger[key]
 
         # Parse to an inventory object and return a response object.
-        with io.BytesIO(self._read_resp(datalogger[1]).encode()) as buf:
+        description, path, resp_type = datalogger
+        with io.BytesIO(self._read_resp(path).encode()) as buf:
             buf.seek(0, 0)
-            return obspy.read_inventory(buf, format="RESP")[0][0][0].response
+            return obspy.read_inventory(
+                buf, format=resp_type)[0][0][0].response
 
     def get_sensor_response(self, sensor_keys):
         """
@@ -173,9 +197,11 @@ class NRL(object):
             sensor = sensor[key]
 
         # Parse to an inventory object and return a response object.
-        with io.BytesIO(self._read_resp(sensor[1]).encode()) as buf:
+        description, path, resp_type = sensor
+        with io.BytesIO(self._read_resp(path).encode()) as buf:
             buf.seek(0, 0)
-            return obspy.read_inventory(buf, format="RESP")[0][0][0].response
+            return obspy.read_inventory(
+                buf, format=resp_type)[0][0][0].response
 
     def get_response(self, datalogger_keys, sensor_keys):
         """
@@ -210,12 +236,22 @@ class NRL(object):
         """
         dl_resp = self.get_datalogger_response(datalogger_keys)
         sensor_resp = self.get_sensor_response(sensor_keys)
-
-        # Combine both by replace stage one in the data logger with stage
-        # one of the sensor.
-        dl_resp.response_stages.pop(0)
         sensor_stage0 = sensor_resp.response_stages[0]
-        dl_resp.response_stages.insert(0, sensor_stage0)
+
+        # information on changes between NRL v1 and v2:
+        # https://ds.iris.edu/files/nrl/NominalResponseLibraryVersions.pdf
+        if self._nrl_version == 1:
+            # Combine both by replace stage one in the data logger with stage
+            # one of the sensor.
+            dl_resp.response_stages.pop(0)
+            dl_resp.response_stages.insert(0, sensor_stage0)
+        elif self._nrl_version == 2:
+            for stage in dl_resp.response_stages:
+                stage.stage_sequence_number += len(sensor_resp.response_stages)
+            dl_resp.response_stages = (
+                sensor_resp.response_stages + dl_resp.response_stages)
+        else:
+            raise NotImplementedError()
         dl_resp.instrument_sensitivity.input_units = sensor_stage0.input_units
         dl_resp.instrument_sensitivity.input_units_description = \
             sensor_stage0.input_units_description
@@ -274,9 +310,17 @@ class LocalNRL(NRL):
         """
         Returns a configparser from a path to an index.txt
         """
-        cp = ConfigParser()
-        with codecs.open(path, mode='r', encoding='UTF-8') as f:
-            cp.read_file(f)
+        try:
+            cp = ConfigParser()
+            with codecs.open(path, mode='r', encoding='UTF-8') as f:
+                cp.read_file(f)
+        # it seems requesting a full RESP archive of NRL version 2 has all
+        # items duplicated in the index.txt files. expecting this to be fixed
+        # upstream so this is just for now
+        except DuplicateSectionError:
+            cp = ConfigParser(strict=False)
+            with codecs.open(path, mode='r', encoding='UTF-8') as f:
+                cp.read_file(f)
         return cp
 
     def _read_resp(self, path):
