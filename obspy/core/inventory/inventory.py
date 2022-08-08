@@ -964,6 +964,7 @@ class Inventory(ComparingObject):
         """
         from obspy.imaging.maps import plot_map
         import matplotlib.pyplot as plt
+        from matplotlib.lines import Line2D
 
         # The empty ones must be kept as otherwise inventory files without
         # channels will end up with nothing.
@@ -1012,17 +1013,13 @@ class Inventory(ComparingObject):
 
         if legend is not None and color_per_network:
             ax = fig.axes[0]
-            helpers = []
-            for code, color in sorted(color_per_network.items()):
-                helpers.append(ax.scatter([0], [0], size,
-                               color=color, label=code, marker=marker))
-            ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                      fontsize="medium", markerscale=0.8,
+            legend_elements = [
+                Line2D([0], [0], marker=marker, color=color, label=code,
+                       markersize=size ** 0.5, ls='')
+                for code, color in sorted(color_per_network.items())]
+            ax.legend(handles=legend_elements, loc=legend, fancybox=True,
+                      scatterpoints=1, fontsize="medium", markerscale=0.8,
                       handletextpad=0.1)
-            # remove collections again solely created for legend handles
-            # ax.collections = ax.collections[:count]
-            for helper in helpers:
-                helper.remove()
 
         if outfile:
             fig.savefig(outfile)
