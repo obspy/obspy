@@ -1016,14 +1016,9 @@ class Inventory(ComparingObject):
             for code, color in sorted(color_per_network.items()):
                 helpers.append(ax.scatter([0], [0], size,
                                color=color, label=code, marker=marker))
-            # workaround for older matplotlib versions
-            try:
-                ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                          fontsize="medium", markerscale=0.8,
-                          handletextpad=0.1)
-            except TypeError:
-                ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                          markerscale=0.8, handletextpad=0.1)
+            ax.legend(loc=legend, fancybox=True, scatterpoints=1,
+                      fontsize="medium", markerscale=0.8,
+                      handletextpad=0.1)
             # remove collections again solely created for legend handles
             # ax.collections = ax.collections[:count]
             for helper in helpers:
