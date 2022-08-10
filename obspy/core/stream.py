@@ -1456,7 +1456,7 @@ class Stream(object):
         write_format(self, filename, **kwargs)
 
     def trim(self, starttime=None, endtime=None, pad=False,
-             nearest_sample=True, fill_value=None):
+             keep_empty_traces=False, nearest_sample=True, fill_value=None):
         """
         Cut all traces of this Stream object to given start and end time.
 
@@ -1468,6 +1468,9 @@ class Stream(object):
         :param pad: Gives the possibility to trim at time points outside the
             time frame of the original trace, filling the trace with the
             given ``fill_value``. Defaults to ``False``.
+        :type keep_empty_traces: bool, optional
+        :param keep_empty_traces: Empty traces will be kept if set to ``True``.
+            Defaults to ``False``.
         :type nearest_sample: bool, optional
         :param nearest_sample: If set to ``True``, the closest sample is
             selected, if set to ``False``, the inner (next sample for a
@@ -1512,8 +1515,6 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
         BW.RJOB..EHE | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
         """
-        if not self:
-            return
         # select start/end time fitting to a sample point of the first trace
         if nearest_sample:
             tr = self.traces[0]
@@ -1535,8 +1536,9 @@ class Stream(object):
         for trace in self.traces:
             trace.trim(starttime, endtime, pad=pad,
                        nearest_sample=nearest_sample, fill_value=fill_value)
-        # remove empty traces after trimming
-        self.traces = [_i for _i in self.traces if _i.stats.npts]
+        if not keep_empty_traces:
+            # remove empty traces after trimming
+            self.traces = [_i for _i in self.traces if _i.stats.npts]
         return self
 
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
