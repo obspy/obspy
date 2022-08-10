@@ -10,6 +10,7 @@ Changes:
    * Fix missing legend and plot artifacts in Inventory map plots at
      intersection of equator and prime meridian (see #3067)
    * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
+   * Fix Stream.rotate with multiple-station or multiple-event Streams (see #2623)
  - obspy.clients.fdsn:
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
    * Fix issue where "https://" URLs were not matched by the IRIS federator
