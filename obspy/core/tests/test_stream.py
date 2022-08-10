@@ -2820,3 +2820,16 @@ class TestStream:
         npts = np.sum(same_sign)
         assert np.sum(np.abs(st4[0].data[same_sign]) <=
                       np.abs(st2[0].data[same_sign])) == npts
+
+    def test_stream_trim_slice_same_length(self):
+        """
+        See issue #2608
+
+        End time 00:20:04.045 is in the middle of two samples
+        00:20:04.04 versus 00:20:04.05
+        """
+        st = read()
+        utc = st[0].stats.starttime + 1.045
+        n1 = len(st.slice(None, utc)[0])
+        n2 = len(st.trim(None, utc)[0])
+        assert n1 == n2
