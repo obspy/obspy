@@ -11,6 +11,9 @@ Changes:
      intersection of equator and prime meridian (see #3067)
  - obspy.clients.fdsn:
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
+   * Fix issue where "https://" URLs were not matched by the IRIS federator
+     client, resulting in raspberry shake matches being excluded from results
+     (see #3127)
  - obspy.clients.nrl:
    * enable reading from a downloaded full copy of the NRLv2 at
      http://ds.iris.edu/ds/nrl/ (see #3058)
