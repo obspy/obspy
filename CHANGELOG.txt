@@ -4,9 +4,9 @@ maintenance_1.3.x
 Changes:
  - obspy.core:
    * Fix exclusion of magnitude 0 events in Catalog.filter (see #3105)
-   * Trace.resample: Changed default for `window` to "hanning" following a name
-     change in scipy, "hann" is not recognized anymore in newest scipy (see
-     #3117)
+   * Trace.resample: Changed default for `window` to "hann" following a name
+     change in scipy, "hanning" is not recognized anymore in newest scipy
+     (see #3117)
    * Fix missing legend and plot artifacts in Inventory map plots at
      intersection of equator and prime meridian (see #3067)
  - obspy.clients.fdsn:
