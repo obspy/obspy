@@ -1610,6 +1610,28 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         del tr2.stats["mseed"]
         self.assertEqual(tr, tr2)
 
+    def test_truncation_warning_captured(self):
+        """
+        Certain metadata fields such as: network, station, location, channel
+        are truncated to lengths < size allowed in C-Struct.
+        """
+        tr = Trace(
+            data=np.linspace(0, 1, 10),
+            header={
+                'network': 'AAAAAAA',
+                'station': 'BBBBBBB',
+                'location': '0000000',
+                'channel': 'CCCCCCC'
+            })
+        st = Stream([tr])
+
+        # Check for expected UserWarning
+        with NamedTemporaryFile() as tf:
+            with warnings.catch_warnings(record=True):
+                warnings.simplefilter('error', UserWarning)
+                with self.assertRaises(UserWarning):
+                    st.write(tf, format="MSEED")
+
 
 def suite():
     return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')

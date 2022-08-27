@@ -985,6 +985,15 @@ class MST(object):
         self.mst.contents.numsamples = trace.stats.npts
         self.mst.contents.sampletype = sampletype.encode('ascii', 'strict')
 
+        # Check fields will not be truncated.
+        _trunk_fields = {
+            'network': 2, 'station': 5, 'location': 2, 'channel': 3
+        }
+
+        for field_type, limit in _trunk_fields.items():
+            field_size = len(getattr(self.mst.contents, field_type))
+            self._check_truncated_field(field_size, field_type, trace, limit)
+
         # libmseed expects data in the native byte order.
         if data.dtype.byteorder != "=":
             data = data.byteswap()
@@ -996,6 +1005,16 @@ class MST(object):
         self.mst.contents.datasamples = clibmseed.allocate_bytes(bytecount)
         C.memmove(self.mst.contents.datasamples, data.ctypes.data,
                   bytecount)
+
+    def _check_truncated_field(self, field_size, field_type, trace, limit):
+        if field_size > limit:
+            msg = (
+                "Information loss will be present when writing '%s' field for"
+                "'%s' as field is truncated to %d characters upon conversion "
+                "to mseed.\n'%s' is size %d"
+            ) % (field_type, trace.id, limit, field_type, field_size)
+
+            warnings.warn(msg)
 
     def __del__(self):
         """
