@@ -553,8 +553,8 @@ class TriggerTestCase(unittest.TestCase):
         self.assertAlmostEqual(trig[3].pop('duration'), 3.92, places=6)
         self.assertAlmostEqual(trig[0]['similarity'].pop('UH1'),
                                0.94149447384, places=6)
-        self.assertAlmostEqual(trig[0]['similarity'].pop('UH3'), 1,
-                               places=6)
+        self.assertAlmostEqual(trig[0]['similarity'].pop('UH3'),
+                               0.61511420434, places=6)
         self.assertAlmostEqual(trig[1]['similarity'].pop('UH1'),
                                0.65228204570, places=6)
         self.assertAlmostEqual(trig[1]['similarity'].pop('UH3'),

@@ -1018,7 +1018,7 @@ class UTCDateTime(object):
         86400.0
         """
         if isinstance(value, UTCDateTime):
-            return round((self._ns - value._ns) / 1e9, self.__precision)
+            return (self._ns - value._ns) / 1e9
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *

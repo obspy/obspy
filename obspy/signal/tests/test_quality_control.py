@@ -481,7 +481,7 @@ class QualityControlTestCase(unittest.TestCase):
                         header={"starttime": obspy.UTCDateTime(10)}).write(
                 tf1.name, format="mseed")
             md = MSEEDMetadata([tf1.name])
-            self.assertTrue(md.meta["sample_rms"] == np.iinfo(np.int32).max)
+            self.assertEqual(md.meta["sample_rms"], np.iinfo(np.int32).max)
 
     def test_overlap_fire_testing(self):
         """
@@ -512,17 +512,17 @@ class QualityControlTestCase(unittest.TestCase):
                                    endtime=obspy.UTCDateTime(end))
                 return md.meta['sum_overlaps']
 
-            self.assertTrue(_rapid_overlap_testing(0, 12) == 7.5)
-            self.assertTrue(_rapid_overlap_testing(3, 7) == 4.0)
-            self.assertTrue(_rapid_overlap_testing(3, 5.5) == 2.5)
-            self.assertTrue(_rapid_overlap_testing(4.5, 5.5) == 1.0)
-            self.assertTrue(_rapid_overlap_testing(2, 5.25) == 2.25)
-            self.assertTrue(_rapid_overlap_testing(2, 3) == 0.0)
-            self.assertTrue(_rapid_overlap_testing(2, 3.1) == 0.1)
-            self.assertTrue(_rapid_overlap_testing(7, 9) == 1.5)
-            self.assertTrue(_rapid_overlap_testing(6.9, 9) == 1.6)
-            self.assertTrue(_rapid_overlap_testing(4.30, 9) == 4.2)
-            self.assertTrue(_rapid_overlap_testing(5.20, 9000) == 5.3)
+            self.assertEqual(_rapid_overlap_testing(0, 12), 7.5)
+            self.assertEqual(_rapid_overlap_testing(3, 7), 4.0)
+            self.assertEqual(_rapid_overlap_testing(3, 5.5), 2.5)
+            self.assertEqual(_rapid_overlap_testing(4.5, 5.5), 1.0)
+            self.assertEqual(_rapid_overlap_testing(2, 5.25), 2.25)
+            self.assertEqual(_rapid_overlap_testing(2, 3), 0.0)
+            self.assertEqual(_rapid_overlap_testing(2, 3.1), 0.1)
+            self.assertEqual(_rapid_overlap_testing(7, 9), 1.5)
+            self.assertEqual(_rapid_overlap_testing(6.9, 9), 1.6)
+            self.assertEqual(_rapid_overlap_testing(4.30, 9), 4.2)
+            self.assertEqual(_rapid_overlap_testing(5.20, 9000), 5.3)
 
     def test_gap_fire_testing(self):
         """
@@ -551,23 +551,23 @@ class QualityControlTestCase(unittest.TestCase):
                                    endtime=obspy.UTCDateTime(end))
                 return md.meta['sum_gaps']
 
-            self.assertTrue(_rapid_gap_testing(5, 17) == 5)
-            self.assertTrue(_rapid_gap_testing(5, 10) == 2)
-            self.assertTrue(_rapid_gap_testing(8.30, 9.5) == 0.70)
-            self.assertTrue(_rapid_gap_testing(9, 12) == 2)
-            self.assertTrue(_rapid_gap_testing(12, 17) == 1)
-            self.assertTrue(_rapid_gap_testing(10, 13) == 2)
-            self.assertTrue(_rapid_gap_testing(10.25, 13) == 1.75)
-            self.assertTrue(_rapid_gap_testing(11.75, 17) == 1.25)
-            self.assertTrue(_rapid_gap_testing(6, 10.5) == 2.5)
-            self.assertTrue(_rapid_gap_testing(11.99, 12.01) == 0.01)
-            self.assertTrue(_rapid_gap_testing(10.1, 12.01) == 1.9)
-            self.assertTrue(_rapid_gap_testing(7.5, 14.25) == 3.75)
-            self.assertTrue(_rapid_gap_testing(5, 17.5) == 5.5)
-            self.assertTrue(_rapid_gap_testing(5, 17.6) == 5.6)
-            self.assertTrue(_rapid_gap_testing(5, 18) == 6)
-            self.assertTrue(_rapid_gap_testing(0, 5.01) == 5)
-            self.assertTrue(_rapid_gap_testing(0, 20) == 13)
+            self.assertEqual(_rapid_gap_testing(5, 17), 5)
+            self.assertEqual(_rapid_gap_testing(5, 10), 2)
+            self.assertEqual(_rapid_gap_testing(8.30, 9.5), 0.70)
+            self.assertEqual(_rapid_gap_testing(9, 12), 2)
+            self.assertEqual(_rapid_gap_testing(12, 17), 1)
+            self.assertEqual(_rapid_gap_testing(10, 13), 2)
+            self.assertEqual(_rapid_gap_testing(10.25, 13), 1.75)
+            self.assertEqual(_rapid_gap_testing(11.75, 17), 1.25)
+            self.assertEqual(_rapid_gap_testing(6, 10.5), 2.5)
+            self.assertEqual(_rapid_gap_testing(11.99, 12.01), 0.01)
+            self.assertEqual(_rapid_gap_testing(10.1, 12.01), 1.9)
+            self.assertEqual(_rapid_gap_testing(7.5, 14.25), 3.75)
+            self.assertEqual(_rapid_gap_testing(5, 17.5), 5.5)
+            self.assertEqual(_rapid_gap_testing(5, 17.6), 5.6)
+            self.assertEqual(_rapid_gap_testing(5, 18), 6)
+            self.assertEqual(_rapid_gap_testing(0, 5.01), 5)
+            self.assertEqual(_rapid_gap_testing(0, 20), 13)
 
     def test_start_gap(self):
         """
@@ -584,9 +584,9 @@ class QualityControlTestCase(unittest.TestCase):
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
                            add_c_segments=True)
 
-        self.assertTrue(md.meta["num_gaps"] == 1)
-        self.assertTrue(md.meta["sum_gaps"] == 0.025)
-        self.assertTrue(md.meta["start_gap"] == 0.025)
+        self.assertEqual(md.meta["num_gaps"], 1)
+        self.assertAlmostEqual(md.meta["sum_gaps"], 0.025, places=3)
+        self.assertAlmostEqual(md.meta["start_gap"], 0.025, places=3)
 
         # Test single continuous segments
         # Gap in beginning, cseg starts at first sample
@@ -601,7 +601,7 @@ class QualityControlTestCase(unittest.TestCase):
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
                            add_c_segments=True)
-        self.assertTrue(md.meta["num_gaps"] == 0)
+        self.assertEqual(md.meta["num_gaps"], 0)
         self.assertTrue(md.meta["start_gap"] is None)
 
         # Test single continuous segments
@@ -613,7 +613,7 @@ class QualityControlTestCase(unittest.TestCase):
                          obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000))
 
         md = MSEEDMetadata([file], add_c_segments=True)
-        self.assertTrue(md.meta["num_gaps"] == 0)
+        self.assertEqual(md.meta["num_gaps"], 0)
         self.assertTrue(md.meta["start_gap"] is None)
 
         # Test single continuous segments
@@ -636,8 +636,8 @@ class QualityControlTestCase(unittest.TestCase):
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 22, 646572)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 38, 265749)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
-        self.assertTrue(md.meta["num_gaps"] == 0)
-        self.assertTrue(md.meta["num_overlaps"] == 0)
+        self.assertEqual(md.meta["num_gaps"], 0)
+        self.assertEqual(md.meta["num_overlaps"], 0)
 
         # Slicing to a start & end without asking for flags, num_records
         # will be set to None
@@ -656,16 +656,16 @@ class QualityControlTestCase(unittest.TestCase):
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 325000)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
-        self.assertTrue(md.meta["num_gaps"] == 0)
-        self.assertTrue(md.meta["sum_gaps"] == 0.0)
+        self.assertEqual(md.meta["num_gaps"], 0)
+        self.assertEqual(md.meta["sum_gaps"], 0.0)
         self.assertTrue(md.meta["end_gap"] is None)
 
         # Add 1μs; exceed projected sample plus time tolerance - GAP!
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 350001)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
-        self.assertTrue(md.meta["num_gaps"] == 1)
-        self.assertTrue(md.meta["sum_gaps"] == 0.025001)
-        self.assertTrue(md.meta["end_gap"] == 0.025001)
+        self.assertEqual(md.meta["num_gaps"], 1)
+        self.assertAlmostEqual(md.meta["sum_gaps"], 0.025001, places=6)
+        self.assertAlmostEqual(md.meta["end_gap"], 0.025001, places=6)
 
     def test_clock_locked_percentage(self):
         """
@@ -712,26 +712,26 @@ class QualityControlTestCase(unittest.TestCase):
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
-        self.assertTrue(md.meta["num_samples"] == 2307)
-        self.assertTrue(md.meta["end_time"] == endtime)
+        self.assertEqual(md.meta["num_samples"], 2306)
+        self.assertEqual(md.meta["end_time"], endtime)
 
         # Set T0 on sample and T1 1μ after sample (N)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300001)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
-        self.assertTrue(md.meta["num_samples"] == 2308)
-        self.assertTrue(md.meta["end_time"] == endtime)
+        self.assertEqual(md.meta["num_samples"], 2307)
+        self.assertEqual(md.meta["end_time"], endtime)
 
         # Set T0 and T1 1μ after sample (N-1)
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625001)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
-        self.assertTrue(md.meta["num_samples"] == 2307)
-        self.assertTrue(md.meta["start_time"] == starttime)
+        self.assertEqual(md.meta["num_samples"], 2307)
+        self.assertEqual(md.meta["start_time"], starttime)
 
         # Set T0 1μ after sample and T1 on sample (N-2)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
-        self.assertTrue(md.meta["num_samples"] == 2306)
-        self.assertTrue(md.meta["start_time"] == starttime)
+        self.assertEqual(md.meta["num_samples"], 2306)
+        self.assertEqual(md.meta["start_time"], starttime)
 
     def test_continuous_segments_combined(self):
         """
