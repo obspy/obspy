@@ -818,7 +818,7 @@ def _read_event_id(tagged_lines, event):
         warnings.warn('Nordic file has more than one ID line, will use first' +
                       'ID line only.')
     for id_line, tag in id_lines:
-        event_id = id_line.split('ID:')[-1].strip('SI')
+        event_id = id_line.split('ID:')[-1].split(' ')[0]
         break
     event.extra = {
         'nordic_event_id': {
@@ -2086,11 +2086,11 @@ def _write_event_id_line(event, userid=''):
     """
     id_line_str = (
         " Action:ARG {0} OP:{1} STATUS:               ID:{2}     I\n")
-    if (hasattr(event, 'extra') and
-            hasattr(event.extra, '.nordic_event_id.value')):
+    if hasattr(event, 'extra') and 'nordic_event_id' in event.extra.keys():
         id_line = id_line_str.format(
             datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
-            userid.ljust(4)[0:4], event.nordic_event_id.value)
+            userid.ljust(4)[0:4],
+            event.extra.get('nordic_event_id')['value'])
     else:
         # Determine name from origin time
         try:
