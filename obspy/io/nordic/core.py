@@ -528,6 +528,7 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False,
         wav_names.append(_readwavename(tagged_lines=tagged_lines['6']))
     new_event = _read_picks(tagged_lines=tagged_lines, new_event=new_event,
                             nordic_format=nordic_format, **kwargs)
+    new_event = _read_event_id(tagged_lines=tagged_lines, event=new_event)
     catalog += new_event
     return catalog, wav_names
 
@@ -795,6 +796,35 @@ def _read_comments(tagged_lines, event):
         save_comment = 'Waveform-filename: ' + re.sub(
             '6\\n', '', wav_line).strip()
         event.comments.append(Comment(text=save_comment))
+    return event
+
+
+def _read_event_id(tagged_lines, event):
+    """
+    Internal reader for ID line.
+
+    :type tagged_lines: dict
+    :param tagged_lines: dictionary of tagged lines
+    :type event: :class:`~obspy.core.event.event.Event`
+    :param event: Event to associate spectral info with
+
+    :returns:
+        event with event.extra.nordic_event_id set to event ID from Nordic file
+    """
+    if 'I' not in tagged_lines.keys():
+        return event
+    id_lines = tagged_lines['I']
+    if len(id_lines) > 1:
+        warnings.warn('Nordic file has more than one ID line, will use first' +
+                      'ID line only.')
+    for id_line, tag in id_lines:
+        event_id = id_line.split('ID:')[-1].strip('SI')
+        break
+    event.extra = {
+        'nordic_event_id': {
+            'value': event_id,
+            'namespace':
+                'https://seis.geus.net/software/seisan/node239.html'}}
     return event
 
 
@@ -1654,10 +1684,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             except AttributeError:
                 pass
     # Write line 2 (type: I) of s-file
-    sfile.write(
-        " Action:ARG {0} OP:{1} STATUS:               ID:{2}     I\n".format(
-            datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
-            userid.ljust(4)[0:4], evtime.strftime("%Y%m%d%H%M%S")))
+    event_id_line = _write_event_id_line(event, userid=userid)
+    sfile.write(event_id_line)
     # Write line-type 6 of s-file
     for wavefile in wavefiles:
         # Do not write names that do not actually link to a waveform file
@@ -2037,8 +2065,8 @@ def _write_comment(comment):
         comment_line[-1] = '6'
 
     # Check if it's a type-I line comment:
-    if "ACTION" in comment_str.upper() and comment_str[-2:] == ' I':
-        comment_line[-1] = 'I'
+    # if "ACTION" in comment_str.upper() and comment_str[-2:] == ' I':
+    #     comment_line[-1] = 'I'
 
     n_comment_chars = len(comment_str)
     if n_comment_chars > 78:
@@ -2049,6 +2077,36 @@ def _write_comment(comment):
     comment_line[1:n_comment_chars+1] = comment_str[:n_comment_chars]
     comment_line = ''.join(comment_line)
     return comment_line
+
+
+def _write_event_id_line(event, userid=''):
+    """
+    Write type-I line from value in event.extra.nordic_event_id.value if
+    available, otherwise define event-ID from origin time.
+    """
+    id_line_str = (
+        " Action:ARG {0} OP:{1} STATUS:               ID:{2}     I\n")
+    if (hasattr(event, 'extra') and
+            hasattr(event.extra, '.nordic_event_id.value')):
+        id_line = id_line_str.format(
+            datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
+            userid.ljust(4)[0:4], event.nordic_event_id.value)
+    else:
+        # Determine name from origin time
+        try:
+            origin = event.preferred_origin() or event.origins[0]
+        except IndexError:
+            msg = 'Need at least one origin with at least an origin time'
+            raise NordicParsingError(msg)
+        evtime = origin.time
+        if not evtime:
+            msg = ('event has an origin, but time is not populated.  ' +
+                   'This is required!')
+            raise NordicParsingError(msg)
+        id_line = id_line_str.format(
+            datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
+            userid.ljust(4)[0:4], evtime.strftime("%Y%m%d%H%M%S"))
+    return id_line
 
 
 def nordpick(event, high_accuracy=True, nordic_format='OLD'):
