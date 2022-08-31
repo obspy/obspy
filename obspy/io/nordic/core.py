@@ -1336,7 +1336,7 @@ def _check_baz_appvel_assignment(event):
                     if (existing_pick.waveform_id == pick.waveform_id and
                             existing_pick.time == pick.time and
                             not _is_iasp_ampl_phase(existing_pick.phase_hint)):
-                        pick = existing_pick
+                        # pick = existing_pick
                         found_baz_associated_pick = True
                         break
             if not found_baz_associated_pick:
