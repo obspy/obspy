@@ -1326,7 +1326,7 @@ def _check_baz_appvel_assignment(event):
                 if (existing_pick.waveform_id == pick.waveform_id and
                         existing_pick.phase_hint == baz_phase_type and
                         existing_pick.time == pick.time):
-                    pick = existing_pick
+                    # pick = existing_pick  # wrong, right??
                     found_baz_associated_pick = True
                     break
             # BAZ-phase name doesn't have to specify the associated phase
