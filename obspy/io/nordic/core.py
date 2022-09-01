@@ -818,7 +818,7 @@ def _read_event_id(tagged_lines, event):
         warnings.warn('Nordic file has more than one ID line, will use first' +
                       'ID line only.')
     for id_line, tag in id_lines:
-        event_id = id_line.split('ID:')[-1].strip('dSLRD').split(' ')[0]
+        event_id = id_line.split('ID:')[-1].split(' ')[0].strip('dSLRD')
         break
     event.extra = {
         'nordic_event_id': {
