@@ -9,6 +9,7 @@ Changes:
      (see #3117)
    * Fix missing legend and plot artifacts in Inventory map plots at
      intersection of equator and prime meridian (see #3067)
+   * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
  - obspy.clients.fdsn:
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
    * Fix issue where "https://" URLs were not matched by the IRIS federator
@@ -17,6 +18,9 @@ Changes:
  - obspy.clients.nrl:
    * enable reading from a downloaded full copy of the NRLv2 at
      http://ds.iris.edu/ds/nrl/ (see #3058)
+   * Fix a bug in recaculation of overall instrument sensitivity after
+     assembling response from separate sensor and datalogger response parts
+     (see #3099)
  - obspy.imaging:
    * Scanner/obspy-scan: skip directories without read permission (see #3115)
  - obspy.io.gse2:

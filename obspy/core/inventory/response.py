@@ -1077,6 +1077,7 @@ class Response(ComparingObject):
             # XXX is this safe enough, or should we lookup the stage sequence
             # XXX number explicitly?
             frequency = self.response_stages[0].normalization_frequency
+        self.instrument_sensitivity.frequency = float(frequency)
         response_at_frequency = self._call_eval_resp_for_frequencies(
             frequencies=[frequency], output=output,
             hide_sensitivity_mismatch_warning=True)[0][0]
