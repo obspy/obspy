@@ -10,12 +10,23 @@ from obspy.core.inventory import (Response, PolesZerosResponseStage,
 from obspy.clients.nrl.client import NRL, LocalNRL, RemoteNRL
 
 
-pytestmark = pytest.mark.network
-
-
-class NRLTestCase(unittest.TestCase):
+@pytest.mark.network
+class NRLRemoteTestCase(unittest.TestCase):
     """
-    NRL test suite.
+    Minimal NRL test suite connecting to online NRL
+
+    """
+    def setUp(self):
+        # This is also the default URL.
+        self.nrl_online = NRL(root='http://ds.iris.edu/NRL')
+
+    def test_nrl_type(self):
+        self.assertIsInstance(self.nrl_online, RemoteNRL)
+
+
+class NRLLocalTestCase(unittest.TestCase):
+    """
+    NRL test suite using stripped down local NRL without network usage.
 
     """
     def setUp(self):
@@ -28,16 +39,8 @@ class NRLTestCase(unittest.TestCase):
         self.local_dl_key = ['REF TEK', 'RT 130 & 130-SMA', '1', '1']
         self.local_sensor_key = ['Guralp', 'CMG-3T', '120s - 50Hz', '1500']
 
-        # This is also the default URL.
-        self.nrl_online = NRL(root='http://ds.iris.edu/NRL')
-
-        self.list_of_nrls = [self.nrl_local, self.nrl_online]
-
-    def test_nrl_types(self):
-        for nrl in self.list_of_nrls:
-            self.assertIsInstance(nrl, NRL)
+    def test_nrl_type(self):
         self.assertIsInstance(self.nrl_local, LocalNRL)
-        self.assertIsInstance(self.nrl_online, RemoteNRL)
 
     def test_get_response(self):
         # Get only the sensor response.
@@ -122,11 +125,3 @@ Select the sensor manufacturer (20 items):
             err.exception.args[0],
             "Provided path '/some/really/random/path' seems to be a local "
             "file path but the directory does not exist.")
-
-
-def suite():  # pragma: no cover
-    return unittest.makeSuite(NRLTestCase, 'test')
-
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main(defaultTest='suite')
