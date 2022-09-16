@@ -337,11 +337,3 @@ class NLLOCTestCase(unittest.TestCase):
         pick1, pick2 = cat[0].picks[-1], cat[0].picks[-2]
         self.assertEqual(pick1.time.hour, 0)
         self.assertEqual(pick2.time.second, 0)
-
-
-def suite():
-    return unittest.makeSuite(NLLOCTestCase, "test")
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")

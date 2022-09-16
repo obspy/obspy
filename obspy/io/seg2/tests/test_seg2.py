@@ -135,11 +135,3 @@ class SEG2TestCase(unittest.TestCase):
         # test seg2 specific header values
         # (trace headers include SEG2 file header)
         self.assertEqual(st[0].stats.seg2, TRACE3_HEADER)
-
-
-def suite():
-    return unittest.makeSuite(SEG2TestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

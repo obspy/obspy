@@ -209,11 +209,3 @@ class CoreTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(st1[0].data, st2[0].data))
         self.assertTrue(np.allclose(st1[1].data, st2[1].data))
         self.assertTrue(np.allclose(st1[2].data, st2[2].data))
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

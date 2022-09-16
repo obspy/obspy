@@ -291,11 +291,3 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self.rt_trace.label = "RT Trace"
         st += self.rt_trace
         st.plot(automerge=False, color='blue', equal_scale=False)
-
-
-def suite():
-    return unittest.makeSuite(RealTimeSignalTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

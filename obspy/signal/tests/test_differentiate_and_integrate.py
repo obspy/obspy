@@ -57,11 +57,3 @@ class IntegrateTestCase(unittest.TestCase):
             np.testing.assert_allclose(
                 integrate_spline(np.zeros(10), dx=0.5, k=k),
                 np.zeros(10))
-
-
-def suite():
-    return unittest.makeSuite(IntegrateTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -168,11 +168,3 @@ class TraceTestCase(unittest.TestCase):
         self.assertAlmostEqual(0.0811378285461, fp, places=7)
         tr2.decimate(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, tr2.data)
-
-
-def suite():
-    return unittest.makeSuite(TraceTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

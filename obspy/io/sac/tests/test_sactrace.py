@@ -454,11 +454,3 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(result[0x1b8:(0x1b8+8)], b'TEST    ')
         # kcmpnm is at offset 0x258 in the file
         self.assertEqual(result[0x258:(0x258+8)], b'Z       ')
-
-
-def suite():
-    return unittest.makeSuite(SACTraceTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

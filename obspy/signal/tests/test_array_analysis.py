@@ -186,11 +186,3 @@ class ArrayTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(la[:, 0].sum(), 0., decimal=8)
         np.testing.assert_almost_equal(la[:, 1].sum(), 0., decimal=8)
         np.testing.assert_almost_equal(la[:, 2].sum(), 0., decimal=8)
-
-
-def suite():
-    return unittest.makeSuite(ArrayTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

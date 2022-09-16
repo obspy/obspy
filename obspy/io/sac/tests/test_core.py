@@ -925,11 +925,3 @@ class CoreTestCase(unittest.TestCase):
         """
         tr0 = read(self.file_encode, encoding='cp1252')[0]
         self.assertEqual(tr0.stats.get('channel'), 'ÇÏÿÿÇÏÿÿ')
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -325,11 +325,3 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
             warnings.simplefilter('always')
             catalog = read_events(filename)
             self.assertTrue(len(catalog), 1)
-
-
-def suite():
-    return unittest.makeSuite(MchedrTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

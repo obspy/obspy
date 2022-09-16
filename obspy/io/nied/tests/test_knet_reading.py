@@ -97,11 +97,3 @@ class KnetReadingTestCase(unittest.TestCase):
             filename = os.path.join(self.path, _i)
             is_knet = _is_knet_ascii(filename)
             self.assertFalse(is_knet)
-
-
-def suite():
-    return unittest.makeSuite(KnetReadingTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

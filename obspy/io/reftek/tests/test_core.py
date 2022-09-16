@@ -617,11 +617,3 @@ class ReftekTestCase(unittest.TestCase):
         self.assertEqual(len(st[2]), 2090)
         for tr, (_, expected) in zip(st, sorted(npz.items())):
             np.testing.assert_array_equal(expected, tr.data)
-
-
-def suite():
-    return unittest.makeSuite(ReftekTestCase, "test")
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")

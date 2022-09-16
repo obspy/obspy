@@ -188,11 +188,3 @@ class SACPZTestCase(unittest.TestCase):
         # plt.semilogx(f,phase1)
         # plt.semilogx(f,phase2,'k--')
         # plt.show()
-
-
-def suite():
-    return unittest.makeSuite(SACPZTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

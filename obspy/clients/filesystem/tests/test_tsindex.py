@@ -8,7 +8,6 @@ import os
 import re
 import requests
 import tempfile
-import unittest
 import uuid
 from unittest import mock, TestCase
 
@@ -962,16 +961,3 @@ class TSIndexDatabaseHandlerTestCase(TestCase):
         for idx, r in enumerate(query_results):
             result = r[:6]  # ignore updt date
             self.assertEqual(result, expected_ts_summary_data[idx])
-
-
-def suite():
-    testsuite = unittest.TestSuite()
-    testsuite.addTest(unittest.makeSuite(ClientTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(IndexerTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(TSIndexDatabaseHandlerTestCase,
-                                         'test'))
-    return testsuite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

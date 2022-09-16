@@ -132,11 +132,3 @@ Parsing file %s
             parser1 = Parser(expected)
             parser2 = Parser(actual)
             self.assertEqual(parser1.get_seed(), parser2.get_seed())
-
-
-def suite():
-    return unittest.makeSuite(ScriptTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

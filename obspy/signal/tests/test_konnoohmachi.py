@@ -144,11 +144,3 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         self.assertFalse(np.all(smoothed_4 == smoothed_5))
         # Input dtype should be output dtype.
         self.assertEqual(smoothed_4.dtype, np.float64)
-
-
-def suite():
-    return unittest.makeSuite(KonnoOhmachiTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

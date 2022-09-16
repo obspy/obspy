@@ -276,11 +276,3 @@ class FilterTestCase(unittest.TestCase):
                 for got in (got1, got2, got3):
                     np.testing.assert_allclose(got, expected, rtol=1e-3,
                                                atol=0.9)
-
-
-def suite():
-    return unittest.makeSuite(FilterTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

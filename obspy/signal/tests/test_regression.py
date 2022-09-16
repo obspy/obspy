@@ -62,11 +62,3 @@ class RegressionTestCase(unittest.TestCase):
         result = linear_regression(self.x, self.y, intercept_origin=True)
         np.testing.assert_equal(len(result), 2)
         np.testing.assert_allclose(result, ref_result)
-
-
-def suite():
-    return unittest.makeSuite(RegressionTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

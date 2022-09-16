@@ -63,11 +63,3 @@ class PAZTestCase(unittest.TestCase):
         self.assertAlmostEqual(30.08709, z[2].imag)
         self.assertAlmostEqual(0.5, k)
         f.close()
-
-
-def suite():
-    return unittest.makeSuite(PAZTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

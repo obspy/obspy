@@ -381,11 +381,3 @@ class NDKTestCase(unittest.TestCase):
         date, time = "2009/07/20", "10:44:60.0"
         self.assertEqual(_parse_date_time(date, time),
                          UTCDateTime(2009, 7, 20, 10, 45))
-
-
-def suite():
-    return unittest.makeSuite(NDKTestCase, "test")
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")

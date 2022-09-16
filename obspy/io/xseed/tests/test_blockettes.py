@@ -320,11 +320,3 @@ class BlocketteTestCase(unittest.TestCase):
         self.assertFalse(a != b)
         self.assertFalse(a == c)
         self.assertFalse(a == d)
-
-
-def suite():
-    return unittest.makeSuite(BlocketteTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

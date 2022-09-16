@@ -74,11 +74,3 @@ class CNVTestCase(unittest.TestCase):
                 assert "with unmapped phase hint: S" in str(w[-1].message)
 
         self.assertEqual(expected.splitlines(), got.splitlines())
-
-
-def suite():
-    return unittest.makeSuite(CNVTestCase, "test")
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")

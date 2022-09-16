@@ -849,11 +849,3 @@ class ParserTestCase(unittest.TestCase):
         evresp = evalresp_for_frequencies(0.01, [0.0, 1.0, 10.0], filename,
                                           obspy.UTCDateTime(2015, 1, 2))
         np.testing.assert_allclose(obs_r, evresp)
-
-
-def suite():
-    return unittest.makeSuite(ParserTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

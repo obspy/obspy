@@ -1334,11 +1334,3 @@ class StationXMLTestCase(unittest.TestCase):
         assert stage.decimation_factor == 2
         assert stage.decimation_input_sample_rate == 1024000.0
         assert stage.decimation_offset == 1
-
-
-def suite():
-    return unittest.makeSuite(StationXMLTestCase, "test")
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

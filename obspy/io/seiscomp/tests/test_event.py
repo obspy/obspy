@@ -439,11 +439,3 @@ class EventTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             catalog.write(tf, format='SC3ML', validate=True)
             self.assertTrue(filecmp.cmp(filename, tf.name))
-
-
-def suite():
-    return unittest.makeSuite(EventTestCase, "test")
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

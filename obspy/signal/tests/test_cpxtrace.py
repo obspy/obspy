@@ -135,11 +135,3 @@ class CpxTraceTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((sigma[1] - self.res[:, 10]) ** 2) /
                       np.sum(self.res[:, 10] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
-
-
-def suite():
-    return unittest.makeSuite(CpxTraceTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

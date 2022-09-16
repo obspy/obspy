@@ -178,11 +178,3 @@ class ScardecTestCase(unittest.TestCase):
             self.assertTrue(_is_scardec(filename))
         for filename in bad_files:
             self.assertFalse(_is_scardec(filename))
-
-
-def suite():
-    return unittest.makeSuite(ScardecTestCase, "test")
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")

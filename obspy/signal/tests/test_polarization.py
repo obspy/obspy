@@ -197,11 +197,3 @@ class PolarizationTestCase(unittest.TestCase):
                                         rtol=1e-4))
         self.assertTrue(np.allclose(out["timestamp"] - out["timestamp"][0],
                                     np.arange(0, 97.85, 0.05), rtol=1e-5))
-
-
-def suite():
-    return unittest.makeSuite(PolarizationTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
