@@ -51,6 +51,14 @@ class NRLTestCase(unittest.TestCase):
             datalogger_keys=self.local_dl_key,
             sensor_keys=self.local_sensor_key)
 
+        # Make sure that NRL.get_response() has overall instrument sensitivity
+        # correctly recalculated after combining sensor and datalogger
+        # information, see #3099.
+        # Before fixing this bug the result was 945089653.7285056 which is a
+        # relative deviation of 0.00104
+        assert resp.instrument_sensitivity.value == pytest.approx(
+            944098418.0614196, abs=0, rel=1e-4)
+
         # All of them should be Response objects.
         self.assertIsInstance(resp, Response)
         self.assertIsInstance(dl_resp, Response)
