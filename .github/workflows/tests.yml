@@ -193,7 +193,7 @@ jobs:
           obspy-runtests --cov obspy --cov-report='xml' --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
         with:
           flags: unittests
