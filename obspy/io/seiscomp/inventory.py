@@ -37,7 +37,8 @@ from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
+SCHEMA_VERSION = "0.11"
+READABLE_VERSIONS = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
 SCHEMA_NAMESPACE_BASE = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
 
 
@@ -92,7 +93,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
     root = etree.parse(path_or_file_object).getroot()
 
     # Code can be used for version 0.6 to 0.13 (Seiscomp 6.x)
-    for version in SCHEMA_VERSION:
+    for version in READABLE_VERSIONS:
         namespace = _get_schema_namespace(version)
         if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
             break
@@ -1022,3 +1023,82 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
     for key1, key2 in additional_mapping.items():
         setattr(obj, key1, key2)
     return obj
+
+
+def _write_scml(inventory, file_or_file_object, validate=False,
+                      nsmap=None, level="response", **kwargs):
+    """
+    Writes an inventory object to a buffer.
+
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+    :param inventory: The inventory instance to be written.
+    :param file_or_file_object: The file or file-like object to be written to.
+    :type validate: bool
+    :param validate: If True, the created document will be validated with the
+        Seiscomp XML schema before being written. Useful for debugging or if you
+        don't trust ObsPy. Defaults to False.
+    :type nsmap: dict
+    :param nsmap: Additional custom namespace abbreviation
+        mappings (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
+    """
+    if nsmap is None:
+        nsmap = {}
+    elif None in nsmap:
+        msg = ("Custom namespace mappings do not allow redefinition of "
+               "default Seiscomp XML namespace (key `None`). "
+               "Use other namespace abbreviations for custom namespace tags.")
+        raise ValueError(msg)
+
+    nsmap[None] = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/{}".format(SCHEMA_VERSION)
+    attrib = {"version": SCHEMA_VERSION}
+
+    root = etree.Element("seiscomp", attrib=attrib, nsmap=nsmap)
+
+    etree.SubElement(root, "Source").text = inventory.source
+    if inventory.sender:
+        etree.SubElement(root, "Sender").text = inventory.sender
+
+    # Undocumented flag that does not write the module flags. Useful for
+    # testing. It is undocumented because it should not be used publicly.
+    if kwargs.get("_suppress_module_tags", False):
+        pass
+    else:
+        etree.SubElement(root, "Module").text = inventory.module
+        etree.SubElement(root, "ModuleURI").text = inventory.module_uri
+
+    etree.SubElement(root, "Created").text = str(inventory.created)
+
+    if level not in ["network", "station", "channel", "response"]:
+        raise ValueError("Requested stationXML write level is unsupported.")
+
+    for network in inventory.networks:
+        _write_network(root, network, level)
+
+    # Add custom namespace tags to root element
+    _write_extra(root, inventory)
+
+    tree = root.getroottree()
+
+    # The validation has to be done after parsing once again so that the
+    # namespaces are correctly assembled.
+    if validate is True:
+        buf = io.BytesIO()
+        tree.write(buf)
+        buf.seek(0)
+        validates, errors = validate_stationxml(buf)
+        buf.close()
+        if validates is False:
+            msg = "The created file fails to validate.\n"
+            for err in errors:
+                msg += "\t%s\n" % err
+            raise Exception(msg)
+
+    # Register all namespaces with the tree. This allows for
+    # additional namespaces to be added to an inventory that
+    # was not created by reading a StationXML file.
+    for prefix, ns in nsmap.items():
+        if prefix and ns:
+            etree.register_namespace(prefix, ns)
+
+    tree.write(file_or_file_object, pretty_print=True, xml_declaration=True,
+               encoding="UTF-8")
