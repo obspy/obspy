@@ -1533,7 +1533,7 @@ class Stream(object):
                     endtime = tr.stats.endtime + delta * tr.stats.delta
             except TypeError:
                 msg = ('starttime and endtime must be UTCDateTime objects '
-                       'or None for this call to Stream.slice()')
+                       'or None for this call to Stream.trim()')
                 raise TypeError(msg)
         for trace in self.traces:
             trace.trim(starttime, endtime, pad=pad,
@@ -1671,7 +1671,7 @@ class Stream(object):
                     endtime = tr.stats.endtime + delta * tr.stats.delta
             except TypeError:
                 msg = ('starttime and endtime must be UTCDateTime objects '
-                       'or None for this call to Stream.trim()')
+                       'or None for this call to Stream.slice()')
                 raise TypeError(msg)
         tmp = copy.copy(self)
         tmp.traces = []
