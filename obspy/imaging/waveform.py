@@ -26,9 +26,9 @@ from datetime import datetime
 import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.patches as patches
-from matplotlib.cm import get_cmap
 from matplotlib.dates import date2num
 from matplotlib.path import Path
+from matplotlib.pyplot import get_cmap
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 

@@ -11,7 +11,7 @@ Keyhole Markup Language (KML) output support in ObsPy
 from math import log
 
 from lxml.etree import Element, SubElement, tostring
-from matplotlib.cm import get_cmap
+from matplotlib.pyplot import get_cmap
 
 from obspy import UTCDateTime
 from obspy.core.event import Catalog

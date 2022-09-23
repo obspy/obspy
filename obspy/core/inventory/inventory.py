@@ -977,9 +977,8 @@ class Inventory(ComparingObject):
         colors = []
 
         if color_per_network and not isinstance(color_per_network, dict):
-            from matplotlib.cm import get_cmap
             codes = set([n.code for n in inv])
-            cmap = get_cmap(name=colormap, lut=len(codes))
+            cmap = plt.get_cmap(name=colormap, lut=len(codes))
             color_per_network = dict([(code, cmap(i))
                                       for i, code in enumerate(sorted(codes))])
 
