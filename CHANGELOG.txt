@@ -7,6 +7,8 @@ Changes:
    * Trace.resample: Changed default for `window` to "hann" following a name
      change in scipy, "hanning" is not recognized anymore in newest scipy
      (see #3117)
+   * Fix different data length for trim/slice methods (see #2608)
+   * Add keep_empty_traces option to Stream.trim (see #2608)
    * Fix missing legend and plot artifacts in Inventory map plots at
      intersection of equator and prime meridian (see #3067)
    * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
