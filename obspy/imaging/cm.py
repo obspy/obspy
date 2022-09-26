@@ -206,9 +206,9 @@ from pathlib import Path
 from urllib.request import urlopen
 
 import numpy as np
-from matplotlib.cm import get_cmap
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import ListedColormap
+from matplotlib.pyplot import get_cmap
 
 
 def _get_cmap(file_name, lut=None, reverse=False):
