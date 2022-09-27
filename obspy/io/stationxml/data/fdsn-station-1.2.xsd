@@ -1,0 +1,1915 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	FDSN StationXML (www.fdsn.org/xml/station)
+
+	The purpose of this schema is to define a metadata standard for seismological and related data.
+
+ 	As a successor to the metadata headers of the SEED 2.4 standard (http://www.fdsn.org/publications.htm)
+	this format contains similar constructs and a superset of information.
+
+ 	Versioning for FDSN StationXML:
+
+	The 'version' attribute of the schema definition identifies the version of the schema.  This
+	version is not enforced when validating documents.
+
+	The required 'schemaVersion' attribute of the root element identifies the version of the schema
+	that the document is compatible with.  Validation only requires that a value is present but
+	not that it matches the schema used for validation.
+
+	The targetNamespace of the document identifies the major version of the schema and document,
+	version 1.x of the schema uses a target namespace of "http://www.fdsn.org/xml/station/1".
+	All minor versions of the schema will be backwards compatible with previous minor releases.  For
+	example, all 1.x schemas are backwards compatible with and will validate documents for 1.0.
+	Major changes to the schema that would break backwards compabibility will increment the major
+	version number, e.g. 2.0, and the namespace, e.g. "http://www.fdsn.org/xml/station/2".
+
+	This combination of attributes and targetNamespaces allows the schema and documents to be
+	versioned and allows the schema to be updated with backward compatible changes (e.g. 1.2)
+	and still validate documents created for previous major versions of the schema (e.g. 1.0).
+
+
+        Regarding embedded documentation keywords:
+        StationXML reference documentation details are auto-generated from <documentation> tags
+        in this this schema document.
+
+        To allow additional granularity and clarity in the generated documentation, special embedded
+        elements and attributes are parsed from the content of the <documentation> tags.  These embedded
+        items are as follows:
+
+        1. <example> - An XML element that contains an example of the relevent element
+           in the StationXML documentation. May have a LevelChoice attribute.
+
+        2. <warning> - Text appears included in an admonition wrapper.
+           It is typically used to indicate features that may be removed in the future.
+
+        3. <levelDesc> - An XML element that contains a description of the relevant element
+            in the StationXML documentation at a given level. Must have a  LevelChoice attribute.
+
+        4. LevelChoice="X" - Where X is one of "N" (network), "S" (station) or "C" (channel).
+           This attribute is used so that documentation can be specific to level X for shared XML elements.
+
+        5. ElementChoice="TAG_NAME" - Similar to LevelChoice, but allows elements built off a
+           common basetype to have specific documentation.
+           For example: <xs:documentation><example ElementChoice="WaterLevel">m</example></xs:documentation>
+           The text in the example will only be used for the WaterLevel element.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:fsx="http://www.fdsn.org/xml/station/1"
+	targetNamespace="http://www.fdsn.org/xml/station/1" elementFormDefault="qualified"
+	attributeFormDefault="unqualified" version="1.2">
+	<xs:annotation>
+		<xs:documentation>FDSN StationXML schema. A metadata
+		standard for seismological and related data.
+		</xs:documentation>
+	</xs:annotation>
+	<!-- Root element -->
+	<xs:element name="FDSNStationXML" type="fsx:RootType"/>
+	<!-- Type definitions -->
+	<xs:complexType name="RootType">
+		<xs:annotation>
+			<xs:documentation>Root-level for StationXML documents.
+			 </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Source" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Originator of the information contained in the document.
+            It is recommended that archives or services providing StationXML that are not
+            the original creator of the metadata set this to be
+            the empty element, especially because a StationXML document may
+            contain information from many unrelated networks.
+					</xs:documentation>
+          <xs:documentation><warning>This element is likely to be a choice with Sender.</warning></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Sender" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Name of the institution sending this document,
+            for example the institution hosting an FDSN Station web service.
+            It is recommended that authoritative StationXML
+            created by the originator of the metadata not use Sender and
+            use Source instead. For example metadata created by a network
+            operator for submission to other data archives would only use Source,
+            The data archive in response to a request would use Sender.
+					</xs:documentation>
+          <xs:documentation><warning>This element is likely to be a choice with Source.</warning></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Module" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Name of the software module that generated this document.
+					</xs:documentation>
+					<xs:documentation><example><Module>SeisComp3</Module></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ModuleURI" type="xs:anyURI" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Resource identifier of the query that generated the document,
+						or, if applicable, the resource identifier of the software that generated this document.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Created" type="xs:dateTime">
+				<xs:annotation>
+					<xs:documentation>Date that this document was generated.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Network" type="fsx:NetworkType" maxOccurs="unbounded"/>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="schemaVersion" type="xs:decimal" use="required">
+			<xs:annotation>
+				<xs:documentation>The StationXML schema version of this document.</xs:documentation>
+				<xs:documentation><example>1.2</example></xs:documentation>
+				<xs:documentation>
+          <warning>
+            This attribute may change to be a string to allow micro versions,
+            and potential dash, '-', separators starting in version 2. Users
+            should not assume 'xs:decimal'.
+          </warning>
+        </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="NetworkType">
+		<xs:annotation>
+		<xs:documentation>The Network container. All station metadata for this network is contained within this element.
+		A Description element may be included with the official network name and other descriptive information.
+		An Identifier element may be included to designate a persistent identifier (e.g. DOI) to use for citation.
+		A Comment element may be included for additional comments.
+    </xs:documentation>
+      <xs:documentation>
+        An active Network should not use the endDate attribute.
+        Unlike SEED, do not use an endDate in the distant future to mean active.
+      </xs:documentation>
+      <xs:documentation><example><Network code="XX" startDate="2016-01-27T13:00:00Z" /></example></xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="fsx:BaseNodeType">
+				<xs:sequence>
+					<xs:element name="Operator" type="fsx:OperatorType" minOccurs="0"
+						maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>Agency and contact persons who manage this network.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="TotalNumberStations" type="fsx:CounterType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The total number of stations in this
+								network, including inactive or terminated stations.
+							</xs:documentation>
+              <xs:documentation><example><TotalNumberStations>24</TotalNumberStations></example></xs:documentation>
+              <xs:documentation><warning>This element is likely to be removed.</warning></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="SelectedNumberStations" type="fsx:CounterType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The number of stations selected in the request that resulted
+								in this document.
+							</xs:documentation>
+              <xs:documentation><example><SelectedNumberStations>12</SelectedNumberStations></example></xs:documentation>
+              <xs:documentation><warning>This element is likely to be removed.</warning></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Station" type="fsx:StationType" minOccurs="0"
+						maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="StationType">
+		<xs:annotation>
+		<xs:documentation>The Station container. All channel metadata for this station is contained within this element.
+		A Description element may be included with the official station name and other descriptive information.
+		An Identifier element may be included to designate a persistent identifier (e.g. DOI) to use for citation or reference.
+		A Comment element may be included for additional comments.
+    </xs:documentation>
+      <xs:documentation>
+        An active Station should not use the endDate attribute.
+        Unlike SEED, do not use an endDate in the distant future to mean active.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="fsx:BaseNodeType">
+				<xs:sequence>
+					<xs:element name="Latitude" type="fsx:LatitudeType">
+						<xs:annotation>
+		<xs:documentation>Station latitude, in degrees. Where the bulk of the equipment is located (or another appropriate site location).
+      The unit is fixed to be degrees, and datum defaults to WGS84.
+    </xs:documentation>
+		<xs:documentation><example><Latitude>34.9459</Latitude></example></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Longitude" type="fsx:LongitudeType">
+						<xs:annotation>
+		<xs:documentation>Station longitude, in degrees. Where the bulk of the equipment is located (or another appropriate site location).
+      The unit is fixed to be degrees, and datum defaults to WGS84.
+    </xs:documentation>
+		<xs:documentation><example><Longitude>-106.4572</Longitude></example></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Elevation" type="fsx:DistanceType">
+						<xs:annotation>
+							<xs:documentation>Elevation of local ground surface level at station, in meters.</xs:documentation>
+							<xs:documentation><example><Elevation>1850.0</Elevation></example></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Site" type="fsx:SiteType">
+					</xs:element>
+					<xs:element name="WaterLevel" type="fsx:FloatType" minOccurs="0">
+						<xs:annotation>
+		<xs:documentation>Elevation of the water surface in meters for underwater sites, where 0 is mean sea level.
+      If you put an OBS on a lake bottom, where the lake surface is at elevation=1200 meters,
+      then you should set WaterLevel=1200. An OBS in the ocean would
+      have WaterLevel=0.
+		</xs:documentation>
+		<xs:documentation><example><WaterLevel>1200</WaterLevel></example></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Vault" type="xs:string" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Type of vault, e.g. World-Wide Standardized Seismograph Network (WWSSN), tunnel,
+								USArray Transportable Array Generation 2, etc.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Geology" type="xs:string" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Type of rock and/or geologic formation at the station.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Equipment" type="fsx:EquipmentType" minOccurs="0"
+						maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>Equipment used by all channels at a station,
+							Equipment that contributes to or affects the response of a channel should be documented on the channel.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Operator" type="fsx:OperatorType" minOccurs="0"
+						maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>Agency who manage this station.
+                Only use if this differs from the Operator of the Network.
+              </xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="CreationDate" type="xs:dateTime" minOccurs="0">
+						<xs:annotation>
+              <xs:documentation>Date and time (UTC) when the station was first installed.</xs:documentation>
+              <xs:documentation><warning>This element is likely to be removed.</warning></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="TerminationDate" type="xs:dateTime" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Date and time (UTC) when the station was terminated or
+								will be terminated. Do not include this element if a termination date is not available or is not relevant.
+							</xs:documentation>
+              <xs:documentation><warning>This element is likely to be removed.</warning></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="TotalNumberChannels" type="fsx:CounterType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Total number of channels recorded at this station.</xs:documentation>
+							<xs:documentation><warning>This element is likely to be removed.</warning></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="SelectedNumberChannels" type="fsx:CounterType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The number of channels selected in the request that resulted in this document.</xs:documentation>
+							<xs:documentation><warning>This element is likely to be removed.</warning></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="ExternalReference" type="fsx:ExternalReferenceType"
+						minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>URI of any type of external report</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Channel" type="fsx:ChannelType" minOccurs="0"
+						maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- End StationType-->
+	<xs:complexType name="ChannelType">
+		<xs:annotation>
+		<xs:documentation>The Channel container.
+		A Description element may be included with other information.
+		An Identifier element may be included to designate a persistent identifier (e.g. DOI) to use for citation or reference.
+		A Comment element may be included for arbitrary comments.
+    </xs:documentation>
+      <xs:documentation>
+        An active Channel should not use the endDate attribute.
+        Unlike SEED, do not use an endDate in the distant future to mean active.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="fsx:BaseNodeType">
+				<xs:sequence>
+					<xs:element name="ExternalReference" type="fsx:ExternalReferenceType"
+						minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>URI of any type of external report, such as data quality reports.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Latitude" type="fsx:LatitudeType">
+						<xs:annotation>
+							<xs:documentation>Latitude of this channel's sensor, in degrees.
+								Often the same as the station latitude, but
+								when different the channel latitude is the true location of the sensor.
+							</xs:documentation>
+							<xs:documentation><example><Latitude>34.9459</Latitude></example></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Longitude" type="fsx:LongitudeType">
+						<xs:annotation>
+							<xs:documentation>Longitude of this channel's sensor, in degrees.
+								Often the same as the station longitude, but
+								when different the channel longitude is the true location of the sensor.
+							</xs:documentation>
+							<xs:documentation><example><Longitude>-106.4572</Longitude></example></xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Elevation" type="fsx:DistanceType">
+						<xs:annotation>
+						  <xs:documentation>Elevation of the sensor, in meters.  To find the local ground surface level,
+                                                  add the Depth value to this elevation. </xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Depth" type="fsx:DistanceType">
+						<xs:annotation>
+							<xs:documentation>The depth of the sensor relative to the local ground surface level, in meters.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Azimuth" type="fsx:AzimuthType" minOccurs="0">
+					</xs:element>
+					<xs:element name="Dip" type="fsx:DipType" minOccurs="0">
+					</xs:element>
+					<xs:element name="WaterLevel" type="fsx:FloatType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Elevation of the water surface in meters for underwater sites, where 0 is mean sea level.
+								If you put an OBS on a lake bottom, where the lake surface is at elevation=1200 meters,
+								then you should set WaterLevel=1200. An OBS in the ocean would
+                have WaterLevel=0.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Type" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>Data type for this channel. One or more &lt;Type&gt; tags
+								can be used to specify the nature of the data this channel collects.
+                The value between the &lt;Type&gt; tags must be one of:
+								TRIGGERED, CONTINUOUS, HEALTH, GEOPHYSICAL, WEATHER, FLAG or SYNTHESIZED.
+							</xs:documentation>
+              <xs:documentation><example><Type>CONTINUOUS</Type></example></xs:documentation>
+  							<xs:documentation>
+                  This element existed primarily to hold the corresponding
+                  value from SEED, but should not be used for new StationXML.
+							</xs:documentation>
+              <xs:documentation><warning>This element is likely to be removed.</warning></xs:documentation>
+						</xs:annotation>
+						<xs:simpleType>
+							<xs:restriction base="xs:NMTOKEN">
+								<xs:enumeration value="TRIGGERED"/>
+								<xs:enumeration value="CONTINUOUS"/>
+								<xs:enumeration value="HEALTH"/>
+								<xs:enumeration value="GEOPHYSICAL"/>
+								<xs:enumeration value="WEATHER"/>
+								<xs:enumeration value="FLAG"/>
+								<xs:enumeration value="SYNTHESIZED"/>
+								<xs:enumeration value="INPUT"/>
+								<xs:enumeration value="EXPERIMENTAL"/>
+								<xs:enumeration value="MAINTENANCE"/>
+								<xs:enumeration value="BEAM"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+					<xs:group ref="fsx:SampleRateGroup" minOccurs="0"/>
+					<xs:element name="ClockDrift" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Tolerance value, measured in seconds per sample,
+								used as a threshold for time error detection in data from the channel.
+							</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:simpleContent>
+								<xs:restriction base="fsx:FloatType">
+									<xs:minInclusive value="0"/>
+									<xs:attribute name="unit" type="xs:string" use="optional" fixed="SECONDS/SAMPLE">
+											<xs:annotation>
+												<xs:documentation>The unit of drift value.
+                          This value is fixed to be SECONDS/SAMPLE, setting it is redundant.
+												</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+								</xs:restriction>
+							</xs:simpleContent>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="CalibrationUnits" type="fsx:UnitsType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Units of calibration (e.g., V (for Volts) or A (for amps))</xs:documentation>
+							<xs:documentation>Use *SI* units when possible</xs:documentation>
+              <xs:documentation>
+								<example>
+<CalibrationUnits>
+  <Name>V</Name>
+  <Description>Volts</Description>
+</CalibrationUnits>
+								</example>
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Sensor" type="fsx:EquipmentType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Details of the (typically analog) sensor attached to this channel.
+									If this was entered at the Station level, it is not necessary to do it for each Channel,
+									unless you have differences in equipment.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					<xs:element name="PreAmplifier" type="fsx:EquipmentType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Preamplifier (if any) used by this channel. If this was entered at the Station level,
+								it is not necessary to do it for each Channel, unless you have differences in equipment.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="DataLogger" type="fsx:EquipmentType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Datalogger that recorded this channel. If this was entered at the Station level,
+								it is not necessary to do it for each Channel, unless you have differences in equipment.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Equipment" type="fsx:EquipmentType" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>Any equipment that does not have type-specific fields.
+							Equipment such as sensor, data logger and preamplifier that has type-specific fields should be documented in those structures.
+							If the same Equipment is entered at the Station level, it is not necessary to include it for each Channel.
+							If using a preamplifier, sensor, or datalogger, use their appropriate fields instead.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Response" type="fsx:ResponseType" minOccurs="0"/>
+				</xs:sequence>
+				<xs:attribute name="locationCode" type="xs:string" use="required">
+					<xs:annotation>
+	<xs:documentation>
+		The locationCode is typically used to group channels from a common sensor.
+		For example, the channels of the primary sensor at global IDA-IRIS
+		stations have locationCode = \"00\": 00_BHZ, 00_BHE, 00_BHN, 00_LHZ, ..., etc.
+    Even though it is required, locationCode may be, and often is, an empty string,
+    however, it is recommended that the locationCode not be empty.
+	</xs:documentation>
+	<xs:documentation><example>30</example></xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- End ChannelType -->
+	<xs:complexType name="GainType">
+		<xs:annotation>
+			<xs:documentation>Type used for representing sensitivity at a given frequency. This complex type
+				can be used to represent both total sensitivities and individual stage gains.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Value" type="xs:double">
+				<xs:annotation>
+          <xs:documentation>
+            A scalar value representing the amount of amplification or diminution, if any,
+            the current stage applies to the input signal.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Frequency" type="xs:double">
+				<xs:annotation>
+					<xs:documentation>The frequency (in Hertz) at which the Value is valid.
+
+            While any frequency in the passband is acceptable, it is preferred that:
+
+            #. For low pass FIR filters, use gain at zero frequency (sum of coefficients)
+            #. If given, use manufacturer frequency/gain without recomputing
+            #. For anything else, frequency should be in the "good" part of the passband
+            #. All stage frequencies should be below the final Nyquist, as long as 2,3 are satisfied
+            #. All stages, except lowpass FIR filters, should use the same frequencies, as long as 2,3 are satisfied
+            #. Overall gain should also use the same frequency as 5, as long as it is below the final Nyquist and in the good part of the final passband
+
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:group name="FrequencyRangeGroup">
+		<xs:annotation>
+			<xs:documentation>Type for defining a pass band (in Hertz) from FrequencyStart to FrequencyEnd
+				in which a sensitivity value is valid within the number of decibels (dB) specified in FrequencyDBVariation.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FrequencyStart" type="xs:double">
+				<xs:annotation>
+          <xs:documentation>The lowest frequency for which the InstrumentSensitivity is valid.
+            &lt;FrequencyStart&gt;, &lt;FrequencyEnd&gt; and &lt;FrequencyDBVariation&gt; are not
+            required, however, if one of these is present, then all must be present.
+          </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FrequencyEnd" type="xs:double">
+				<xs:annotation>
+					<xs:documentation>The highest frequency for which the InstrumentSensitivity is valid.
+            &lt;FrequencyStart&gt;, &lt;FrequencyEnd&gt; and &lt;FrequencyDBVariation&gt; are not
+            required, however, if one of these is present, then all must be present.
+          </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FrequencyDBVariation" type="xs:double">
+				<xs:annotation>
+					<xs:documentation>Variation in decibels within the specified frequency range.
+            &lt;FrequencyStart&gt;, &lt;FrequencyEnd&gt; and &lt;FrequencyDBVariation&gt; are not
+            required, however, if one of these is present, then all must be present.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="SensitivityType">
+		<xs:annotation>
+			<xs:documentation>Type for sensitivity, input/output units and relevant frequency range.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="fsx:GainType">
+				<xs:sequence>
+					<xs:element name="InputUnits" type="fsx:UnitsType">
+						<xs:annotation>
+              <xs:documentation>
+                The units of the data as input to the sensor. For example
+                if stage 1 represented a seismometer, InputUnits would be 'm/s'
+                and OutputUnits would be 'V'.
+    					</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="OutputUnits" type="fsx:UnitsType">
+						<xs:annotation>
+							<xs:documentation> The units of the data as output from data
+                acquisition system. For most channels recorded by
+                systems that use an AtoD, the OutputUnits will be 'count'.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:group ref="fsx:FrequencyRangeGroup" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The frequency range for which the sensitivity value is
+								valid within the dB variation specified.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:group>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="EquipmentType">
+		<xs:annotation>
+			<xs:documentation>A type for equipment related to data acquisition or processing.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Type" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Type of equipment</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Description" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Description of equipment</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Manufacturer" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Manufacturer of equipment</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Vendor" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Vendor of equipment</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Model" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Model of equipment</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SerialNumber" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Serial number of equipment</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InstallationDate" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Date this equipment was installed</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RemovalDate" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Date this equipment was removed</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CalibrationDate" type="xs:dateTime" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Date this equipment was calibrated</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="resourceId" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation> An identifier that serves to uniquely identify this resource.
+					This identifier can be interpreted differently depending on the datacenter/software
+					that generated the document. Also, we recommend using a prefix, e.g., GENERATOR:Meaningful ID.
+					It should be expected that equipment with the same ID should indicate the same information or be
+					derived from the same base instruments.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="ResponseStageType">
+		<xs:annotation>
+			<xs:documentation>Type for channel response entry or stage.  A full response is
+				represented as an ordered sequence of these stages.
+			</xs:documentation>
+      <xs:documentation>
+				A filter, (PolesZeros, Coefficients, FIR, etc) is not required, but is
+        recommended to provide a place to store the input and output units
+        even in the case of "gain-only" stages.
+
+        For an analog gain-only stage, use a PolesZeros filter with no poles
+        or zeros, PzTransferFunctionType=LAPLACE (RADIANS/SECOND)",
+        NormalizationFactor=1 and NormalizationFrequency=0.
+
+        For a digital gain-only stage, use a FIR filter with one
+        numerator with value 1.0, and symmetry=NONE. While a digital Coefficients
+        filter can serve the same purpose and is common, the FIR filter is more concise.
+      </xs:documentation>
+      <xs:documentation>
+        <warning>
+          A filter, (PolesZeros, Coefficients, FIR, etc) may be required.
+        </warning>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:annotation>
+					<xs:documentation>A choice of polynomial versus all other response types,
+						to enforce one response per stage.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:sequence>
+					<xs:choice>
+						<xs:element name="PolesZeros" type="fsx:PolesZerosType" minOccurs="0">
+		          <xs:annotation>
+                <xs:documentation>
+                  Response stage described by the complex poles and zeros of the Laplace Transform (or z-transform)
+                  of the transfer function for this stage.
+                </xs:documentation>
+		          </xs:annotation>
+						</xs:element>
+
+						<xs:element name="Coefficients" type="fsx:CoefficientsType" minOccurs="0"/>
+						<xs:element name="ResponseList" type="fsx:ResponseListType" minOccurs="0"/>
+						<xs:element name="FIR" type="fsx:FIRType" minOccurs="0">
+						</xs:element>
+					</xs:choice>
+					<xs:element name="Decimation" type="fsx:DecimationType" minOccurs="0"/>
+					<xs:element name="StageGain" type="fsx:GainType">
+						<xs:annotation>
+							<xs:documentation>The gain at the stage of the encapsulating
+								response element at a specific frequency.
+								Total channel sensitivity should be specified in the InstrumentSensitivity
+								element.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+				<xs:element name="Polynomial" type="fsx:PolynomialType">
+					<xs:annotation>
+           					<xs:documentation>
+						When a response is given in terms of a polynomial expansion of
+						powers of the sensor output signal (e.g., Volts), a Polynomial stage is
+						required to specify the Maclaurin coefficients of the expansion.
+
+						In addition, an InstrumentPolynomial element must be present at Response level
+						to represent the whole acquisition process, which contains the same Maclaurin
+						coefficients, but scaled by powers of the overall gain for all stages.
+						</xs:documentation>
+            				</xs:annotation>
+        			</xs:element>
+			</xs:choice>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="number" type="fsx:CounterType" use="required">
+			<xs:annotation>
+				<xs:documentation>Stage sequence number. This is used in all the response
+					blockettes. Start from name='1' and iterate sequentially.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="resourceId" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>A resource identifier that serves to uniquely identify this response stage.
+					This identifier can be interpreted differently depending on the datacenter/software
+					that generated the document. Also, we recommend using a prefix, e.g., GENERATOR:Meaningful ID.
+					It should be expected that equipment with the same ID should indicate the same information.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="CommentType">
+		<xs:annotation>
+			<xs:documentation>Container for a comment or log entry.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Value" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Comment text.</xs:documentation>
+					<xs:documentation>
+	          <example  LevelChoice="N"><Value>Temporary network deployment</Value></example>
+	          <example  LevelChoice="S"><Value>GPS Clock is unlocked</Value></example>
+	          <example  LevelChoice="C"><Value>Large number of spikes</Value></example>
+					</xs:documentation>
+			  </xs:annotation>
+      			</xs:element>
+			<xs:element name="BeginEffectiveTime" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Start time for when comment applies.</xs:documentation>
+					<xs:documentation><example><BeginEffectiveTime>2008-09-15T00:00:00Z</BeginEffectiveTime></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EndEffectiveTime" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>End time for when comment applies.</xs:documentation>
+ 					<xs:documentation><example><EndEffectiveTime>2008-09-16T12:00:00Z</EndEffectiveTime></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Author" type="fsx:PersonType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Author of Comment.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="id" type="fsx:CounterType" use="optional">
+			<xs:annotation>
+				<xs:documentation>An ID for this comment</xs:documentation>
+				<xs:documentation><example>12345</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+
+		<xs:attribute name="subject" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation>A subject for this comment.  Multiple comments with the same
+					subject should be considered related.
+				</xs:documentation>
+				<xs:documentation><example>Scheduled maintenance</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="PolesZerosType">
+		<xs:complexContent>
+			<xs:extension base="fsx:BaseFilterType">
+				<xs:sequence>
+					<xs:element name="PzTransferFunctionType">
+						<xs:annotation>
+              <xs:documentation>
+                Allowable values are:"LAPLACE (RADIANS/SECOND)", "LAPLACE (HERTZ)", "DIGITAL (Z-TRANSFORM)".
+                For an analog stage this should be the units of the poles and zeros of
+                the Laplace Transform, either:
+                "LAPLACE (RADIANS/SECOND)" or "LAPLACE (HERTZ)".
+                For a digital z-transform (e.g., for an IIR filter), this should be
+                "DIGITAL (Z-TRANSFORM)"
+							</xs:documentation>
+              <xs:documentation><example><PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType></example>
+							</xs:documentation>
+						</xs:annotation>
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="LAPLACE (RADIANS/SECOND)"/>
+								<xs:enumeration value="LAPLACE (HERTZ)"/>
+								<xs:enumeration value="DIGITAL (Z-TRANSFORM)"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+					<xs:element name="NormalizationFactor" type="xs:double" default="1.0">
+						<xs:annotation>
+							<xs:documentation>Normalization scale factor</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="NormalizationFrequency" type="fsx:FrequencyType">
+						<xs:annotation>
+							<xs:documentation>Frequency at which the NormalizationFactor is valid.
+								This should be the same for all stages and within the passband, if any.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Zero" type="fsx:PoleZeroType" minOccurs="0" maxOccurs="unbounded">
+		        <xs:annotation>
+			        <xs:documentation>Complex zero of the polezero stage.</xs:documentation>
+		        </xs:annotation>
+					</xs:element>
+					<xs:element name="Pole" type="fsx:PoleZeroType" minOccurs="0" maxOccurs="unbounded">
+		        <xs:annotation>
+			        <xs:documentation>Complex pole of the polezero stage.</xs:documentation>
+		        </xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FIRType">
+		<xs:annotation>
+			<xs:documentation>Response type for FIR filter.  FIR filters
+				are also commonly documented using a digital Coefficients element with no
+        denominators, but it is preferred to use this type
+				allowing representation of symmetric FIR coefficients without repeating them.
+			</xs:documentation>
+      <xs:documentation>
+        <warning>The NumeratorCoefficient field is likely to be changed to require at least one numerator in future versions of StationXML.</warning>
+      </xs:documentation>
+      <xs:documentation>
+        <warning>The NumeratorCoefficient field is likely to be renamed to Numerator in future versions of StationXML.</warning>
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="fsx:BaseFilterType">
+				<xs:sequence>
+					<xs:element name="Symmetry">
+        		<xs:annotation>
+        			<xs:documentation>
+                The symmetry code. Designates how the factors will be specified.
+
+                * NONE: No Symmetry - all Coefficients are specified, corresponds to A in SEED.
+                * ODD: Odd number Coefficients with symmetry, B in SEED.
+                * EVEN: Even number Coefficients with symmetry, C in SEED.
+              </xs:documentation>
+        		</xs:annotation>
+						<xs:simpleType>
+							<xs:restriction base="xs:NMTOKEN">
+								<xs:enumeration value="NONE"/>
+								<xs:enumeration value="EVEN"/>
+								<xs:enumeration value="ODD"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+					<xs:element name="NumeratorCoefficient" minOccurs="0" maxOccurs="unbounded">
+        		<xs:annotation>
+              <xs:documentation>
+                The coefficients of the FIR filter. Should include at least one.
+              </xs:documentation>
+              <xs:documentation>
+                <warning>At least one Numerator may be required.</warning>
+                <warning>May be renamed to Numerator.</warning>
+              </xs:documentation>
+            </xs:annotation>
+						<xs:complexType>
+							<xs:simpleContent>
+								<xs:extension base="xs:double">
+									<xs:attribute name="i" type="xs:integer"/>
+								</xs:extension>
+							</xs:simpleContent>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="CoefficientsType">
+		<xs:annotation>
+			<xs:documentation>Response type for filter giving coefficients. Laplace transforms or analog
+				filters can both be expressed using this type as well but the PolesZeros should be used
+				instead. Digital filters with no denominator should use FIR instead.
+      </xs:documentation>
+      <xs:documentation>
+        <warning>The Numerator element is likely to be changed to require at least one numerator.</warning>
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="fsx:BaseFilterType">
+				<xs:sequence>
+					<xs:element name="CfTransferFunctionType">
+						<xs:annotation>
+							<xs:documentation> Almost always a digital response, but can be an
+								analog response in rad/sec or Hertz.
+							</xs:documentation>
+						</xs:annotation>
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="ANALOG (RADIANS/SECOND)"/>
+								<xs:enumeration value="ANALOG (HERTZ)"/>
+								<xs:enumeration value="DIGITAL"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+					<xs:element name="Numerator" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>Numerator for the coefficient. Should include at least one.
+							</xs:documentation>
+              <xs:documentation>
+                <warning>At least one Numerator may be required.</warning>
+              </xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:simpleContent>
+								<xs:extension base="fsx:FloatNoUnitType">
+									<xs:attribute name="number" type="fsx:CounterType"/>
+								</xs:extension>
+							</xs:simpleContent>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="Denominator" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>Denominator for the coefficient
+							</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:simpleContent>
+								<xs:extension base="fsx:FloatNoUnitType">
+									<xs:attribute name="number" type="fsx:CounterType"/>
+								</xs:extension>
+							</xs:simpleContent>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ResponseListElementType">
+		<xs:sequence>
+			<xs:element name="Frequency" type="fsx:FrequencyType"/>
+			<xs:element name="Amplitude" type="fsx:FloatType"/>
+			<xs:element name="Phase" type="fsx:AngleType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ResponseListType">
+		<xs:annotation>
+      <xs:documentation>Response type for a list of frequency, amplitude, and phase values.
+        Because it is less flexible, the other filter types, PolesZeros,
+        Coefficients, FIR, etc, are preferred.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="fsx:BaseFilterType">
+				<xs:sequence>
+					<xs:element name="ResponseListElement" type="fsx:ResponseListElementType"
+						minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PolynomialType">
+		<xs:annotation>
+			<xs:documentation>Response type for a response represented as a polynomial expansion,
+				which allows non-linear sensors to be described. Used at either a stage of
+				acquisition response or a complete system. </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="fsx:BaseFilterType">
+				<xs:sequence>
+					<xs:element name="ApproximationType" default="MACLAURIN">
+						<xs:annotation>
+							<xs:documentation>The series type for the polynomial approximation</xs:documentation>
+						</xs:annotation>
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="MACLAURIN"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+					<xs:element name="FrequencyLowerBound" type="fsx:FrequencyType">
+						<xs:annotation>
+							<xs:documentation>The lower bound of the frequency range.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="FrequencyUpperBound" type="fsx:FrequencyType">
+						<xs:annotation>
+							<xs:documentation>The upper bound of the frequency range.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="ApproximationLowerBound" type="xs:double">
+						<xs:annotation>
+							<xs:documentation>The lower bound of the approximation range.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="ApproximationUpperBound" type="xs:double">
+						<xs:annotation>
+							<xs:documentation>The upper bound of the approximation range.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="MaximumError" type="xs:double">
+						<xs:annotation>
+							<xs:documentation>The maximum error of the approximation.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Coefficient" maxOccurs="unbounded">
+						<xs:complexType>
+							<xs:simpleContent>
+								<xs:extension base="fsx:FloatNoUnitType">
+									<xs:attribute name="number" type="fsx:CounterType"/>
+								</xs:extension>
+							</xs:simpleContent>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DecimationType">
+		<xs:annotation>
+			<xs:documentation>Representation of decimation stage</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="InputSampleRate" type="fsx:FrequencyType"/>
+			<xs:element name="Factor" type="xs:integer">
+				<xs:annotation>
+					<xs:documentation> The factor of the input sample rate by which the rate is reduced.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Offset" type="xs:integer">
+				<xs:annotation>
+					<xs:documentation> Sample offset chosen for use. The value should be greater than or equal to zero,
+						but less than the decimation factor. If the first sample is used, set this field to zero.
+						If the second sample, set it to 1, and so forth.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Delay" type="fsx:FloatType">
+				<xs:annotation>
+					<xs:documentation>The estimated pure delay for the stage. This value will almost always be positive
+					to indicate a delayed signal. Due to the difficulty in estimating the pure delay
+					of a stage and because dispersion is neglected, this value should be
+					considered nominal.  Normally the delay would be corrected by the
+					recording system and the correction applied would be specified in &lt;Correction&gt; below.
+					See the Decimation Section in the StationXML documentation for a schematic description of delay sign convention.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Correction" type="fsx:FloatType">
+				<xs:annotation>
+					<xs:documentation>
+					The time shift, if any, applied to correct for the delay at this stage.
+					The sign convention used is opposite the &lt;Delay&gt; value; a positive sign here
+					indicates that the trace was corrected to an earlier time to cancel the
+					delay caused by the stage and indicated in the &lt;Delay&gt; element.
+					Commonly, the estimated delay and the applied correction are both positive to cancel
+					each other.  A value of zero indicates no correction was applied.
+					See the Decimation Section in the StationXML documentation for a schematic description of delay sign convention.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- The following elements represent numbers. -->
+	<xs:attributeGroup name="uncertaintyDouble">
+		<xs:annotation>
+			<xs:documentation>Attributes for expressing uncertainties or errors with positive and negative
+				components. Both values should be given as positive integers, but the minusError is
+				understood to be negative. </xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="plusError" type="xs:double" use="optional">
+			<xs:annotation>
+				<xs:documentation>plus uncertainty or error in measured value.</xs:documentation>
+				<xs:documentation><example>0.1</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="minusError" type="xs:double" use="optional">
+			<xs:annotation>
+				<xs:documentation>minus uncertainty or error in measured value.</xs:documentation>
+				<xs:documentation><example>0.1</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="measurementMethod" type="xs:string" use="optional"/>
+	</xs:attributeGroup>
+	<xs:complexType name="FloatNoUnitType">
+		<xs:annotation>
+			<xs:documentation>Representation of floating-point numbers without unit.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="FloatType">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="unit" type="xs:string" use="optional">
+				  <xs:annotation>
+            <xs:documentation>The unit of measurement. Use *SI* unit names and symbols whenever possible
+              (e.g., 'm' instead of 'METERS').</xs:documentation>
+            <xs:documentation><example>s</example></xs:documentation>
+            <xs:documentation><example ElementChoice="WaterLevel">m</example></xs:documentation>
+            <xs:documentation><example ElementChoice="Amplitude">m</example></xs:documentation>
+				  </xs:annotation>
+				</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<!-- Derived from FloatType. -->
+	<xs:complexType name="SecondType">
+		<xs:annotation>
+			<xs:documentation>A time duration value in seconds.</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:attribute name="unit" type="xs:string" fixed="SECONDS">
+						<xs:annotation>
+							<xs:documentation>The type of unit being used.
+                This value is fixed to be SECONDS, setting it is redundant.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="VoltageType">
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:attribute name="unit" type="xs:string" fixed="VOLTS">
+						<xs:annotation>
+							<xs:documentation>The type of unit being used.
+                This value is fixed to be VOLTS, setting it is redundant.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="AngleType">
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:minInclusive value="-360"/>
+				<xs:maxInclusive value="360"/>
+				<xs:attribute name="unit" type="xs:string" use="optional" fixed="DEGREES">
+					<xs:annotation>
+						<xs:documentation>The type of unit being used.
+              This value is fixed to be DEGREES, setting it is redundant.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="LatitudeBaseType">
+		<xs:annotation>
+			<xs:documentation>Base latitude type.</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:minInclusive value="-90"/>
+				<xs:maxExclusive value="90"/>
+				<xs:attribute name="unit" type="xs:string" use="optional" fixed="DEGREES">
+					<xs:annotation>
+						<xs:documentation>The type of unit being used.
+              This value is fixed to be DEGREES, setting it is redundant.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="LatitudeType">
+		<xs:annotation>
+			<xs:documentation>Latitude type extending the base type to add datum as an attribute with default.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="fsx:LatitudeBaseType">
+				<xs:attribute name="datum" type="xs:NMTOKEN" use="optional" default="WGS84"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="LongitudeBaseType">
+		<xs:annotation>
+			<xs:documentation>Base longitude type.</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:minInclusive value="-180"/>
+				<xs:maxInclusive value="180"/>
+				<xs:attribute name="unit" type="xs:string" use="optional" fixed="DEGREES">
+					<xs:annotation>
+						<xs:documentation>The type of unit being used.
+              This value is fixed to be DEGREES, setting it is redundant.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="LongitudeType">
+		<xs:annotation>
+			<xs:documentation>Longitude type extending the base type to add datum as an attribute with default.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="fsx:LongitudeBaseType">
+				<xs:attribute name="datum" type="xs:NMTOKEN" use="optional" default="WGS84"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="AzimuthType">
+		<xs:annotation>
+      <xs:documentation>Azimuth of the component in degrees clockwise from geographic (true) north.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:minInclusive value="0"/>
+				<xs:maxExclusive value="360"/>
+				<xs:attribute name="unit" type="xs:string" use="optional" fixed="DEGREES">
+					<xs:annotation>
+						<xs:documentation>The type of unit being used.
+              This value is fixed to be DEGREES, setting it is redundant.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="DipType">
+		<xs:annotation>
+      <xs:documentation>Dip of the component in degrees, positive is down from horizontal.
+        For horizontal dip=0, for vertical upwards
+        dip=-90 and for vertical downwards dip=+90.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:minInclusive value="-90"/>
+				<xs:maxInclusive value="90"/>
+				<xs:attribute name="unit" type="xs:string" use="optional" fixed="DEGREES">
+						<xs:annotation>
+							<xs:documentation>The type of unit being used.
+                This value is fixed to be DEGREES, setting it is redundant.
+							</xs:documentation>
+						</xs:annotation>
+				</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="DistanceType">
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:attribute name="unit" type="xs:string" use="optional" default="METERS">
+					<xs:annotation>
+						<xs:documentation>The type of unit being used.
+              This value is fixed to be METERS, setting it is redundant.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attributeGroup ref="fsx:uncertaintyDouble"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="FrequencyType">
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:attribute name="unit" type="xs:string" use="optional" fixed="HERTZ">
+					<xs:annotation>
+						<xs:documentation>The type of unit being used.
+              This value is fixed to be HERTZ, setting it is redundant.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:group name="SampleRateGroup">
+		<xs:annotation>
+			<xs:documentation>This is a group of elements that represent sample rate. If this group
+				is included, then SampleRate, which is the sample rate in samples per second, is
+				required. SampleRateRatio, which is expressed as a ratio of number of samples in a
+				number of seconds, is optional. If both are included, SampleRate should be
+				considered more definitive. </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="SampleRate" type="fsx:SampleRateType">
+		    <xs:annotation>
+          <xs:documentation>
+            Sample rate in samples per second.
+            SampleRate is optional unless SampleRateRatio is present, in which case
+            SampleRate is required.
+          </xs:documentation>
+          <xs:documentation>
+            <example><SampleRate>40.0</SampleRate></example>
+          </xs:documentation>
+		    </xs:annotation>
+      </xs:element>
+			<xs:element name="SampleRateRatio" type="fsx:SampleRateRatioType" minOccurs="0">
+		    <xs:annotation>
+          <xs:documentation>
+            Sample rate expressed as number of samples in a number of seconds.
+            If present, then &lt;SampleRate&gt; must also be present.
+            It can be useful for very slow data (e.g., less than a few samples per day),
+            since it allows for greater precision in the stored value.
+          </xs:documentation>
+          <xs:documentation>
+            <example>
+              <SampleRate>0.000023148</SampleRate>
+              <SampleRateRatio>
+                <NumberSamples>2</NumberSamples>
+                <NumberSeconds>86400</NumberSeconds>
+              </SampleRateRatio>
+						</example>
+          </xs:documentation>
+		    </xs:annotation>
+		  </xs:element>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="SampleRateType">
+		<xs:simpleContent>
+			<xs:restriction base="fsx:FloatType">
+				<xs:attribute name="unit" type="xs:string" use="optional" fixed="SAMPLES/S">
+					<xs:annotation>
+						<xs:documentation>The type of unit being used.
+              This value is fixed to be SAMPLES/S, setting it is redundant.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="SampleRateRatioType">
+		<xs:sequence>
+			<xs:element name="NumberSamples" type="xs:integer">
+					<xs:annotation>
+						<xs:documentation>
+              Integer number of samples that span a number of seconds.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			<xs:element name="NumberSeconds" type="xs:integer">
+					<xs:annotation>
+						<xs:documentation>
+              Integer number of seconds that span a number of samples.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PoleZeroType">
+		<xs:sequence>
+			<xs:element name="Real" type="fsx:FloatNoUnitType">
+				<xs:annotation>
+					<xs:documentation>Real part of the complex number.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Imaginary" type="fsx:FloatNoUnitType">
+				<xs:annotation>
+					<xs:documentation>Imaginary part of the complex number.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="number" type="xs:integer">
+				<xs:annotation>
+					<xs:documentation>The position index of the pole (or zero) in the array of poles[] (or zeros[])</xs:documentation>
+          <xs:documentation><example><Pole number="1" /></example></xs:documentation>
+				</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="CounterType">
+		<xs:annotation>
+			<xs:documentation>Integers greater than or equal to 0.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="OperatorType">
+		<xs:annotation>
+			<xs:documentation>
+        Since the Contact element is a generic type that represents any contact
+				person, it also has its own optional Agency element.
+				It is expected that typically the contact's optional Agency tag will match the Operator Agency.
+				Only contacts appropriate for the enclosing element should be included in the Operator tag.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Agency" type="xs:string">
+				<xs:annotation>
+			    		<xs:documentation>The operating agency.</xs:documentation>
+					<xs:documentation><example><Agency>USGS</Agency></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Contact" type="fsx:PersonType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="WebSite" type="xs:anyURI" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Website of operating agency</xs:documentation>
+					<xs:documentation><example><WebSite>http://usgs.gov</WebSite></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PersonType">
+		<xs:annotation>
+			<xs:documentation>Person's contact information. A person can belong
+				to multiple agencies and have multiple email addresses and phone numbers.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Name of contact or author</xs:documentation>
+					<xs:documentation><example><Name>Dr. Jane Doe</Name></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Agency" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Agency of contact or author</xs:documentation>
+					<xs:documentation><example><Agency>USGS</Agency></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Email" type="fsx:EmailType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Email of contact or author</xs:documentation>
+					<xs:documentation><example><Email>jane_doe@example.com</Email></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Phone" type="fsx:PhoneNumberType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Phone of contact or author</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SiteType">
+		<xs:annotation>
+			<xs:documentation> Description of a location using name and optional geopolitical boundaries (country, city, etc.).
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Name" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Name of the site</xs:documentation>
+					<xs:documentation><example><Name>Albuquerque, New Mexico</Name></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Description" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A longer description of the location of this station</xs:documentation>
+					<xs:documentation><example><Description>NW corner of Yellowstone National Park</Description></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Town" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The town or city closest to the station.</xs:documentation>
+					<xs:documentation><example><Town>Albuquerque</Town></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="County" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The county where the station is located</xs:documentation>
+					<xs:documentation><example><County>Bernalillo</County></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="Region" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The state, province, or region of this site.</xs:documentation>
+					<xs:documentation><example><Region>Southwest U.S.</Region></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Country" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The country of this site.</xs:documentation>
+					<xs:documentation><example><Country>U.S.A.</Country></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="ExternalReferenceType">
+		<xs:annotation>
+		  <xs:documentation>This type contains a Uniform Resource Identifier (URI) and description
+                  for external information that users may want to reference.
+		  </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="URI" type="xs:anyURI">
+				<xs:annotation>
+					<xs:documentation>URI of the external reference.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Description" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Description of the external reference.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- Simple types -->
+	<xs:simpleType name="NominalType">
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="NOMINAL"/>
+			<xs:enumeration value="CALCULATED"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="EmailType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[\w\.\-_]+@[\w\.\-_]+"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="PhoneNumberType">
+		<xs:sequence>
+			<xs:element name="CountryCode" type="xs:integer" minOccurs="0">
+				<xs:annotation>
+ 					<xs:documentation>Telephone country code</xs:documentation>
+					<xs:documentation><example><CountryCode>64</CountryCode></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AreaCode" type="xs:integer">
+				<xs:annotation>
+					<xs:documentation>Telephone area code</xs:documentation>
+					<xs:documentation><example><AreaCode>408</AreaCode></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PhoneNumber">
+				<xs:annotation>
+					<xs:documentation>Telephone number</xs:documentation>
+					<xs:documentation><example><PhoneNumber>5551212</PhoneNumber></example></xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:pattern value="[0-9]+-[0-9]+"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="description" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<xs:simpleType name="RestrictedStatusType">
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="open"/>
+			<xs:enumeration value="closed"/>
+			<xs:enumeration value="partial"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="UnitsType">
+		<xs:annotation>
+			<xs:documentation>A type to document units; use SI whenever possible.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Name" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Symbol or name of units, e.g. "m/s", "V", "Pa", "C".
+            Use SI whenever possible, along with singular lowercase
+            "count" for digital counts.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Description" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Description of units, e.g. "Velocity in meters per second",
+						"Volts", "Pascals", "Degrees Celsius".
+            Description is only needed when the unit name is not a well know
+            SI unit or there is need for clarification. Prefer not to use a
+            Description for common units like `m/s`, `m/s**2`, `count`, etc.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IdentifierType">
+		<xs:annotation>
+			<xs:documentation>A type to document persistent identifiers.
+				Identifier values should be specified without a URI scheme (prefix),
+				instead the identifier type is documented as an attribute.
+			</xs:documentation>
+      <xs:documentation>
+        <example><identifier type="DOI">10.1000/140</identifier></example>
+      </xs:documentation>
+      <xs:documentation><example LevelChoice="N"><identifier type="DOI">10.7914/SN/XX</identifier></example></xs:documentation>
+      <xs:documentation><example LevelChoice="S"><identifier type="DOI">10.5555/12345678</identifier>ABCD</example></xs:documentation>
+      <xs:documentation><example LevelChoice="C"><identifier type="DOI">10.5555/12345678</identifier>BHZ</example></xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="type" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Identifier type</xs:documentation>
+						<xs:documentation><example>DOI</example></xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="BaseFilterType">
+		<xs:annotation>
+			<xs:documentation> The BaseFilterType is derived by all filters. </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Description" type="xs:string" minOccurs="0">
+				<xs:annotation>
+                                  <xs:documentation> The description of the filter/stage/response</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InputUnits" type="fsx:UnitsType">
+				<xs:annotation>
+					<xs:documentation>
+            The units of the data as input from the previous stage. For example
+            if stage 1 represented a seismometer, InputUnits would be 'm/s'
+            and OutputUnits would be 'V'.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OutputUnits" type="fsx:UnitsType">
+				<xs:annotation>
+					<xs:documentation>
+            The units of the data as output to the following stage. For example
+            if stage 2 represented the AtoD stage of a data logger,
+            InputUnits would be 'V'
+            and OutputUnits would be 'count'.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="resourceId" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>A resource identifier that serves to unique identify this filter or response.
+					This identifier can be interpreted differently depending on the datacenter/software
+					that generated the document. Also, we recommend using a prefix, e.g., GENERATOR:Meaningful ID.
+					It should be expected that elements with the same resourceId should indicate the same information.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="name" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>A name given to this filter. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="ResponseType">
+		<xs:annotation>
+			<xs:documentation>The complete instrument response for this channel that expresses the effect of the
+				geophysical instrumentation used to record the input ground motion.
+				The information can be used to convert raw data to Earth unit measurement at a specified
+				frequency or within a range of frequencies.
+				It is strongly suggested that either InstrumentSensitivity or InstrumentPolynomial should be present.
+			</xs:documentation>
+      <xs:documentation>
+        In cases where the response is unknown, for example really old channels,
+        or where a response is not applicable, like textual log channels,
+        it is preferred that an empty
+        response element be used, &lt;response&gt;&lt;/response&gt;,
+        to positively indicate that no response exists.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Instrument sensitivities, or the complete system sensitivity,
+						can be expressed using either a sensitivity value or a polynomial. The
+						information can be used to convert raw data to Earth units at a specified
+						frequency or within a range of frequencies.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:element name="InstrumentSensitivity" type="fsx:SensitivityType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>The total sensitivity for a channel, representing the
+							complete acquisition system expressed as a scalar.
+							All instrument responses except polynomial response should have
+							an InstrumentSensitivity.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="InstrumentPolynomial" type="fsx:PolynomialType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>For non-linear sensors (e.g., :math:`N\ge 2`), such as some thermistors,
+						pressure transducers, extensometers, etc.), it is required to
+						express the sensor input (e.g., Temp) as a Maclaurin series expansion of powers of the
+						*output* units (e.g., Volts):
+
+						.. math::
+
+              Temp(V)=\sum_{k=0}^{N} a_k V^{k}
+
+						For such responses, two StationXML components are required to specify the response:
+						1. A Polynomial stage, which contains the values of the Maclaurin coefficients,
+						:math:`a_k`, and 2. An InstrumentPolynomial element that contains the
+						same coefficients, but scaled by powers of the overall gain representing the
+						combined effect of all the stages in the complete acquisition system.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="Stage" type="fsx:ResponseStageType" minOccurs="0"
+				maxOccurs="unbounded">
+			</xs:element>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="resourceId" type="xs:string">
+			<xs:annotation>
+				<xs:documentation> An identifier that serves to uniquely identify this resource.
+					This identifier can be interpreted differently depending on the datacenter/software
+					that generated the document. Also, we recommend using a prefix, e.g., GENERATOR:Meaningful ID.
+					It should be expected that elements with the same ID should indicate the same information.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="BaseNodeType">
+		<xs:annotation>
+			<xs:documentation>A base node type use in Network, Station, and Channel types.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Description" type="xs:string" minOccurs="0">
+				<xs:annotation>
+          <xs:documentation>Description of the Network, Station, or Channel</xs:documentation>
+          <xs:documentation><levelDesc LevelChoice="N">Description of the Network</levelDesc></xs:documentation>
+          <xs:documentation><levelDesc LevelChoice="S">Description of the Station</levelDesc></xs:documentation>
+          <xs:documentation><levelDesc LevelChoice="C">Description of the Channel</levelDesc></xs:documentation>
+					<xs:documentation><example><Description>This is a description</Description></example></xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Identifier" type="fsx:IdentifierType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Comment" type="fsx:CommentType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="DataAvailability" type="fsx:DataAvailabilityType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A description of time series data availability. This
+						information should be considered transient and is primarily useful as a
+						guide for generating time series data requests. The information for a
+						DataAvailability:Span may be specific to the time range used in a request
+						that resulted in the document or limited to the availability of data within
+						the request range. These details may or may not be retained when
+						synchronizing metadata between data centers.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="code" type="xs:string" use="required">
+			<xs:annotation>
+        <xs:documentation><levelDesc LevelChoice="N">Name of Network</levelDesc></xs:documentation>
+        <xs:documentation><levelDesc LevelChoice="S">Name of Station</levelDesc></xs:documentation>
+        <xs:documentation><levelDesc LevelChoice="C">Name of Channel</levelDesc></xs:documentation>
+        <xs:documentation><example LevelChoice="N">XX</example></xs:documentation>
+        <xs:documentation><example LevelChoice="S">ABCD</example></xs:documentation>
+        <xs:documentation><example LevelChoice="C">BHZ</example></xs:documentation>
+      </xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="startDate" type="xs:dateTime">
+			<xs:annotation>
+				<xs:documentation>Start date of network/station/channel epoch </xs:documentation>
+        <xs:documentation><levelDesc LevelChoice="N">Start date of network</levelDesc></xs:documentation>
+        <xs:documentation><levelDesc LevelChoice="S">Start date of station epoch</levelDesc></xs:documentation>
+        <xs:documentation><levelDesc LevelChoice="C">Start date of channel epoch</levelDesc></xs:documentation>
+        <xs:documentation><example>2016-07-01T00:00:00Z</example></xs:documentation>
+        <xs:documentation><warning>This attribute is likely to require timezone of Z.</warning></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="endDate" type="xs:dateTime">
+			<xs:annotation>
+        <xs:documentation>End date of network/station/channel epoch</xs:documentation>
+        <xs:documentation><levelDesc LevelChoice="N">End date of network. Do not use if still active, endDate should not be in the future.</levelDesc></xs:documentation>
+        <xs:documentation><levelDesc LevelChoice="S">End date of station epoch. Do not use if still active, endDate should not be in the future.</levelDesc></xs:documentation>
+        <xs:documentation><levelDesc LevelChoice="C">End date of channel epoch. Do not use if still active, endDate should not be in the future.</levelDesc></xs:documentation>
+        <xs:documentation><example>2018-01-27T00:00:00Z</example></xs:documentation>
+        <xs:documentation><warning>This attribute should not be used if it is in the future.</warning></xs:documentation>
+        <xs:documentation><warning>This attribute is likely to require timezone of Z.</warning></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="sourceID" type="xs:anyURI">
+			<xs:annotation>
+				<xs:documentation>
+          A data source identifier in URI form.
+          It is recommended that this follow the FDSN Source Identifiers
+          specification, http://docs.fdsn.org/projects/source-identifiers
+        </xs:documentation>
+        <xs:documentation>
+          <example LevelChoice="N">FDSN:XX</example>
+          <example LevelChoice="S">FDSN:XX_ABCD</example>
+          <example LevelChoice="C">FDSN:XX_ABCD_00_B_H_Z</example>
+        </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="restrictedStatus" type="fsx:RestrictedStatusType" use="optional">
+			<xs:annotation>
+				<xs:documentation>One of: \"open\", \"closed\", \"partial\"</xs:documentation>
+				<xs:documentation><example>open</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="alternateCode" type="xs:string" use="optional">
+			<xs:annotation>
+        <xs:documentation>A code used for display or association</xs:documentation>
+        <xs:documentation>
+          <example LevelChoice="N">GSN</example>
+          <example LevelChoice="S">ALQ</example>
+          <example LevelChoice="C">Z</example>
+        </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="historicalCode" type="xs:string" use="optional">
+			<xs:annotation>
+        <xs:documentation>A previously used code if different from the current code</xs:documentation>
+        <xs:documentation>
+          <example LevelChoice="N">XX</example>
+          <example LevelChoice="S">albq</example>
+          <example LevelChoice="C">bhz</example>
+        </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="DataAvailabilityExtentType">
+		<xs:annotation>
+			<xs:documentation>Data availability extents, the earliest and
+				latest data available. No information about the continuity of the data
+				is included or implied.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="start" type="xs:dateTime" use="required">
+			<xs:annotation>
+				<xs:documentation>start date of extent</xs:documentation>
+				<xs:documentation><example>1988-01-01T00:00:00Z</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="end" type="xs:dateTime" use="required">
+			<xs:annotation>
+				<xs:documentation>end date of extent</xs:documentation>
+				<xs:documentation><example>1988-12-31T00:00:00Z</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="DataAvailabilitySpanType">
+		<xs:annotation>
+			<xs:documentation> A type for describing data availability spans, with variable
+				continuity. The time range described may be based on the request parameters that
+				generated the document and not necessarily relate to continuity outside of the
+				range. It may also be a smaller time window than the request depending on the data
+				characteristics.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="start" type="xs:dateTime" use="required">
+			<xs:annotation>
+				<xs:documentation>start date of span</xs:documentation>
+				<xs:documentation><example>1988-01-01T00:00:00Z</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="end" type="xs:dateTime" use="required">
+			<xs:annotation>
+				<xs:documentation>end date of span</xs:documentation>
+				<xs:documentation><example>1988-12-31T00:00:00Z</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="numberSegments" type="xs:integer" use="required">
+			<xs:annotation>
+				<xs:documentation> The number of continuous time series segments contained in the
+					specified time range. A value of 1 indicates that the time series is continuous
+					from start to end.
+				</xs:documentation>
+			  <xs:documentation><example>2</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="maximumTimeTear" type="xs:decimal" use="optional">
+			<xs:annotation>
+				<xs:documentation> The maximum time tear (gap or overlap) in seconds between time
+					series segments in the specified range.
+				</xs:documentation>
+				<xs:documentation><example>0.01</example></xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<xs:complexType name="DataAvailabilityType">
+		<xs:annotation>
+			<xs:documentation>A type for describing data availability.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Extent" type="fsx:DataAvailabilityExtentType" minOccurs="0"/>
+			<xs:element name="Span" type="fsx:DataAvailabilitySpanType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+</xs:schema>
