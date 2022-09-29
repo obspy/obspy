@@ -30,11 +30,12 @@ using ObsPy's standard:func:`~obspy.core.stream.read` function. The format is
 detected automatically.
 
 >>> from obspy import read
->>> st = read("http://darts.isas.jaxa.jp/pub/apollo/pse/p15s/pse.a15.1.2")
->>> st #doctest: +ELLIPSIS
+>>> url = "http://darts.isas.jaxa.jp/pub/apollo/pse/p15s/pse.a15.1.2"
+>>> st = read(url)  # doctest: +SKIP
+>>> st  # doctest: +SKIP
 <obspy.core.stream.Stream object at 0x...>
->>> st_spz = st.select(id='XA.S15..SPZ')
->>> print(st_spz)  #doctest: +ELLIPSIS
+>>> st_spz = st.select(id='XA.S15..SPZ')  # doctest: +SKIP
+>>> print(st_spz)  # doctest: +SKIP
 13 Trace(s) in Stream:
 XA.S15..SPZ | 1971-08-01T18:52:00.515000Z - ... | 53.0 Hz, 903296 samples
 ...
