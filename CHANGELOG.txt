@@ -29,6 +29,8 @@ Changes:
    * bulletin reading: correctly add Mag2 and amplitudes even if Mag1 is not
      present (see #2420)
  - obspy.io.stationxml:
+   * fix a bug that resulted in losing decimation information of base type
+     response stages (see #3159)
    * enable reading StationXML 1.2 and write new files with schema version
      1.2 (see #3153)
  - obspy.io.wav:
