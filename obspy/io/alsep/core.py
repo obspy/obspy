@@ -2,21 +2,18 @@
 """
 Apollo Lunar Surface Experiments Package (ALSEP) seismometer reader for ObsPy
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from collections import deque
 
 import numpy as np
 
-from collections import deque
 from obspy import Stream, Trace
 from obspy.core import Stats
 
 from .assign import assign_alsep_words
-from .pse.tape import PseTape
-from .wt.tape import WtnTape, WthTape
-from .util import get_utc, check_date, check_sync_code
 from .define import channels, package_id_to_apollo_station, FORMAT_ALSEP_WTN
+from .pse.tape import PseTape
+from .util import get_utc, check_date, check_sync_code
+from .wt.tape import WtnTape, WthTape
 
 
 def _is_pse(filename):

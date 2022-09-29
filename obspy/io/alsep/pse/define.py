@@ -34,11 +34,6 @@
 # |    ...                    |    |    ...                    |
 # |---------------------------|    |---------------------------|
 #
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 SIZE_PSE_RECORD = 19456
 SIZE_RECORD_HEADER = 16
 SIZE_DATA_PART_OLD = 72

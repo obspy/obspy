@@ -2,12 +2,8 @@
 """
 Assign ALSEP words to each channel
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-from .util import interp
 from .define import FORMAT_ALSEP_PSE_OLD, FORMAT_ALSEP_WTN
+from .util import interp
 
 
 def assign_alsep_words(alsep_word, apollo_station, format_type, frame_count,

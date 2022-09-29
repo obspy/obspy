@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import unittest
 
@@ -128,11 +124,3 @@ class AlsepTestCase(unittest.TestCase):
         stream = _read_pse(testfile, year=1975)
         st_lpx = stream.select(id='XA.S12..LPX')
         self.assertEqual(1975, st_lpx[0].times("utcdatetime")[0].year)
-
-
-def suite():
-    return unittest.makeSuite(AlsepTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

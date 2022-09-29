@@ -40,9 +40,6 @@ XA.S15..SPZ | 1971-08-01T18:52:00.515000Z - ... | 53.0 Hz, 903296 samples
 ...
 XA.S15..SPZ | 1971-08-02T13:46:53.409000Z - ... | 53.0 Hz, 970304 samples
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':
