@@ -1329,11 +1329,11 @@ class StationXMLTestCase(unittest.TestCase):
         path = os.path.join(self.data_dir, 'F1_423_small.xml')
         inv = _read_stationxml(path)
         stage = inv[0][0][0].response.response_stages[0]
-        assert stage.decimation_correction == 1.3
-        assert stage.decimation_delay == 0.2
-        assert stage.decimation_factor == 1
-        assert stage.decimation_input_sample_rate == 512000.0
-        assert stage.decimation_offset == 0.1
+        assert stage.decimation_correction == 0.4
+        assert stage.decimation_delay == 0.5
+        assert stage.decimation_factor == 2
+        assert stage.decimation_input_sample_rate == 1024000.0
+        assert stage.decimation_offset == 1
 
 
 def suite():

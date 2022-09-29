@@ -53,11 +53,11 @@
      </InstrumentSensitivity>
      <Stage number="1">
       <Decimation>
-       <InputSampleRate>512000.0</InputSampleRate>
-       <Factor>1</Factor>
-       <Offset>0.1</Offset>
-       <Delay>0.2</Delay>
-       <Correction>1.3</Correction>
+       <InputSampleRate>1024000.0</InputSampleRate>
+       <Factor>2</Factor>
+       <Offset>1</Offset>
+       <Delay>0.5</Delay>
+       <Correction>0.4</Correction>
       </Decimation>
       <StageGain>
        <Value>0.4</Value>
