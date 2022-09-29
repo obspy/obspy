@@ -56,21 +56,33 @@ maintenance_1.3.x
 Changes:
  - obspy.core:
    * Fix exclusion of magnitude 0 events in Catalog.filter (see #3105)
-   * Trace.resample: Changed default for `window` to "hanning" following a name
-     change in scipy, "hann" is not recognized anymore in newest scipy (see
-     #3117)
+   * Trace.resample: Changed default for `window` to "hann" following a name
+     change in scipy, "hanning" is not recognized anymore in newest scipy
+     (see #3117)
+   * Fix different data length for trim/slice methods (see #2608)
+   * Add keep_empty_traces option to Stream.trim (see #2608)
    * Fix missing legend and plot artifacts in Inventory map plots at
      intersection of equator and prime meridian (see #3067)
+   * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
  - obspy.clients.fdsn:
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
+   * Fix issue where "https://" URLs were not matched by the IRIS federator
+     client, resulting in raspberry shake matches being excluded from results
+     (see #3127)
  - obspy.clients.nrl:
    * enable reading from a downloaded full copy of the NRLv2 at
      http://ds.iris.edu/ds/nrl/ (see #3058)
+   * Fix a bug in recaculation of overall instrument sensitivity after
+     assembling response from separate sensor and datalogger response parts
+     (see #3099)
  - obspy.imaging:
    * Scanner/obspy-scan: skip directories without read permission (see #3115)
  - obspy.io.gse2:
    * bulletin reading: correctly add Mag2 and amplitudes even if Mag1 is not
      present (see #2420)
+ - obspy.io.stationxml:
+   * enable reading StationXML 1.2 and write new files with schema version
+     1.2 (see #3153)
  - obspy.io.wav:
    * fix writing of wav files with rescale=True and default width=None
      (see #3029)

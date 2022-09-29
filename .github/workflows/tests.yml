@@ -178,7 +178,7 @@ jobs:
       - name: install obspy
         shell: bash -l {0}
         run: |
-          python -m pip install --no-deps -e .[tests]
+          python -m pip install --no-deps .
 
       - name: run tests
         id: tests
@@ -187,7 +187,7 @@ jobs:
           obspy-runtests --cov obspy --cov-report='xml' --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
         with:
           flags: unittests

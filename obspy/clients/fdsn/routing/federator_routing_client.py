@@ -164,7 +164,7 @@ class FederatorRoutingClient(BaseRoutingClient):
             line = line.strip()
             if not line:
                 continue
-            if "http://" in line:
+            if "http://" in line or "https://" in line:
                 if key not in line:
                     continue
                 current_key = line[len(key) + 1:line.rfind("/fdsnws")]

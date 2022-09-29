@@ -8,7 +8,7 @@ import warnings
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.cbook
-from matplotlib.cm import get_cmap
+from matplotlib.pyplot import get_cmap
 import matplotlib.text
 import numpy as np
 

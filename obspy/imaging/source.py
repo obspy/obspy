@@ -230,7 +230,6 @@ def _plot_radiation_pattern_sphere(
     :param type: 'P' or 'S' (P or S wave).
     """
     import matplotlib.pyplot as plt
-    from matplotlib.cm import get_cmap
     type = type.upper()
     if type not in ("P", "S"):
         msg = ("type must be 'P' or 'S'")
@@ -265,12 +264,12 @@ def _plot_radiation_pattern_sphere(
     if is_p_wave:
         disp = farfield(ned_mt, points, type="P")
         magn = np.sum(disp * points, axis=0)
-        cmap = get_cmap('bwr')
+        cmap = plt.get_cmap('bwr')
         norm = plt.Normalize(-1, 1)
     else:
         disp = farfield(ned_mt, points, type="S")
         magn = np.sqrt(np.sum(disp * disp, axis=0))
-        cmap = get_cmap('Greens')
+        cmap = plt.get_cmap('Greens')
         norm = plt.Normalize(0, 1)
     magn /= np.max(np.abs(magn))
 
@@ -312,7 +311,6 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
     :param type: 'P' or 'S' (P or S wave).
     """
     import matplotlib.pyplot as plt
-    from matplotlib.cm import get_cmap
 
     type = type.upper()
     if type not in ("P", "S"):
@@ -329,14 +327,14 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
         # normalized magnitude:
         magn = np.sum(disp * points, axis=0)
         magn /= np.max(np.abs(magn))
-        cmap = get_cmap('bwr')
+        cmap = plt.get_cmap('bwr')
     else:
         # get radiation pattern
         disp = farfield(ned_mt, points, type="S")
         # normalized magnitude (positive only):
         magn = np.sqrt(np.sum(disp * disp, axis=0))
         magn /= np.max(np.abs(magn))
-        cmap = get_cmap('Greens')
+        cmap = plt.get_cmap('Greens')
 
     # plot
     # there is a mlab3d bug that quiver vector colors and lengths
@@ -371,9 +369,8 @@ def _plot_beachball(ax2d, rtp_mt):
     :param rtp_mt: moment tensor in RTP convention
     """
     import matplotlib.pyplot as plt
-    from matplotlib.cm import get_cmap
     norm = plt.Normalize(-1., 1.)
-    cmap = get_cmap('bwr')
+    cmap = plt.get_cmap('bwr')
     bball = beach(rtp_mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
                   bgcolor=cmap(norm(-0.7)))
 

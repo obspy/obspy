@@ -486,10 +486,11 @@ class TestStream:
         """
         # It defaults to True.
         st = read()
+        utc1 = st[0].stats.starttime + 0.1
+        utc2 = st[0].stats.endtime - 0.1
         with mock.patch("obspy.core.trace.Trace.slice") as patch:
             patch.return_value = st[0]
-            st.slice(1, 2)
-
+            st.slice(utc1, utc2)
         assert patch.call_count == 3
         for arg in patch.call_args_list:
             assert arg[1]["nearest_sample"]
@@ -497,8 +498,7 @@ class TestStream:
         # Force True.
         with mock.patch("obspy.core.trace.Trace.slice") as patch:
             patch.return_value = st[0]
-            st.slice(1, 2, nearest_sample=True)
-
+            st.slice(utc1, utc2, nearest_sample=True)
         assert patch.call_count == 3
         for arg in patch.call_args_list:
             assert arg[1]["nearest_sample"]
@@ -507,7 +507,6 @@ class TestStream:
         with mock.patch("obspy.core.trace.Trace.slice") as patch:
             patch.return_value = st[0]
             st.slice(1, 2, nearest_sample=False)
-
         assert patch.call_count == 3
         for arg in patch.call_args_list:
             assert not arg[1]["nearest_sample"]
@@ -2820,3 +2819,16 @@ class TestStream:
         npts = np.sum(same_sign)
         assert np.sum(np.abs(st4[0].data[same_sign]) <=
                       np.abs(st2[0].data[same_sign])) == npts
+
+    def test_stream_trim_slice_same_length(self):
+        """
+        See issue #2608
+
+        End time 00:20:04.045 is in the middle of two samples
+        00:20:04.04 versus 00:20:04.05
+        """
+        st = read()
+        utc = st[0].stats.starttime + 1.045
+        n1 = len(st.slice(None, utc)[0])
+        n2 = len(st.trim(None, utc)[0])
+        assert n1 == n2

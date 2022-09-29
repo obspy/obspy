@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<FDSNStationXML schemaVersion="1.1" xmlns="http://www.fdsn.org/xml/station/1">
+<FDSNStationXML schemaVersion="1.2" xmlns="http://www.fdsn.org/xml/station/1">
   <Source>OBS</Source>
   <Created>2013-01-01T00:00:00.000000Z</Created>
   <Network code="PY"/>
