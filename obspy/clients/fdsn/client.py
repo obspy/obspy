@@ -1182,7 +1182,7 @@ class Client(object):
 
         arguments = OrderedDict(
             level=level,
-            includerestriced=includerestricted,
+            includerestricted=includerestricted,
             includeavailability=includeavailability
         )
         bulk = get_bulk_string(bulk, arguments)

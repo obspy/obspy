@@ -13,6 +13,8 @@ Changes:
      intersection of equator and prime meridian (see #3067)
    * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
  - obspy.clients.fdsn:
+   * Fix a bug in `get_stations_bulk` regarding parameter "includerestricted"
+     (see #3158)
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
    * Fix issue where "https://" URLs were not matched by the IRIS federator
      client, resulting in raspberry shake matches being excluded from results
