@@ -17,7 +17,7 @@ def get_utc(year, msec_of_year):
 
 def doy2utc(year, doy):
     """Calculate date and time in UTC from year and day of year"""
-    return UTCDateTime(year, month=1, day=1) + (doy - 1) * 86400.
+    return UTCDateTime(year, julday=doy)
 
 
 def check_date(apollo_station, utc):
