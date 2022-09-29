@@ -6,7 +6,11 @@ dependencies:
   # obspy
   - decorator
   - lxml
-  - matplotlib
+  # sphinx currently is failing trying to import "deprecated" from
+  # matplotlib.cbook, seems it was deprecated in mpl 3.4 and removed in 3.6,
+  # see
+  # https://github.com/matplotlib/matplotlib/blob/v3.5.0/lib/matplotlib/cbook/__init__.py#L37
+  - matplotlib < 3.6
   - numpy
   - scipy
   - requests  
