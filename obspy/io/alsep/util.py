@@ -12,7 +12,7 @@ def interp(x1, x2, x3, x4):
 
 def get_utc(year, msec_of_year):
     """Calculate date and time in UTC from year and millisecond of year"""
-    return UTCDateTime(year, month=1, day=1) + msec_of_year / 1000. - 86400.
+    return UTCDateTime(year, month=1, day=1) + msec_of_year / 1000.0
 
 
 def doy2utc(year, doy):
