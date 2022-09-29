@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:iris="http://www.fdsn.org/xml/station/1/iris">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.33</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?net=QI&amp;sta=VPASS&amp;cha=BDF&amp;starttime=2018-08-06T00:00:01&amp;level=response&amp;format=xml&amp;includecomments=true&amp;nodata=404</ModuleURI>
+ <Created>2018-08-06T20:17:16</Created>
+ <Network code="QI" startDate="2018-08-06T00:00:00" endDate="2500-12-31T23:59:59" restrictedStatus="open">
+  <Description>[IRIS DMC] Station XML Validator Passing Test File</Description>
+  <TotalNumberStations>1</TotalNumberStations>
+  <SelectedNumberStations>1</SelectedNumberStations>
+  <Station code="TPASS" startDate="2018-08-06T00:00:00" endDate="2500-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,.UNRESTRICTED">
+   <Latitude>47.66157</Latitude>
+   <Longitude>-122.31332</Longitude>
+   <Elevation>225.879999</Elevation>
+   <Site>
+    <Name>Synthetic Test File, IRIS DMC, USA, 218 2018, Tim Ronan</Name>
+   </Site>
+   <CreationDate>2018-08-06T00:00:00</CreationDate>
+   <TotalNumberChannels>1</TotalNumberChannels>
+   <SelectedNumberChannels>1</SelectedNumberChannels>
+   <Channel code="BDF" endDate="2500-12-31T23:59:59" locationCode="00" restrictedStatus="open" startDate="2018-08-06T00:00:00">
+    <Latitude>47.66157</Latitude>
+    <Longitude>-122.31332</Longitude>
+    <Elevation>225.879999</Elevation>
+    <Depth>0</Depth>
+    <Azimuth>359</Azimuth>
+    <Dip>0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>2E01</SampleRate>
+    <ClockDrift>0E00</ClockDrift>
+    <CalibrationUnits>
+     <Name>V</Name>
+     <Description>Volts</Description>
+    </CalibrationUnits>
+    <Sensor>
+     <Description>GEM (Infrasound), 0.2-50 Hz, 0.4 V/Pa-null</Description>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>2.44648E5</Value>
+      <Frequency>1E0</Frequency>
+      <InputUnits>
+       <Name>PA</Name>
+       <Description>No Abbreviation Referenced</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+     <Stage number="1">
+      <Decimation>
+       <InputSampleRate>1024000.0</InputSampleRate>
+       <Factor>2</Factor>
+       <Offset>1</Offset>
+       <Delay>0.5</Delay>
+       <Correction>0.4</Correction>
+      </Decimation>
+      <StageGain>
+       <Value>0.4</Value>
+       <Frequency>1.0</Frequency>
+      </StageGain>
+     </Stage>
+     <Stage number="2">
+      <StageGain>
+       <Value>1.0</Value>
+       <Frequency>1.0</Frequency>
+      </StageGain>
+     </Stage>
+     <Stage number="3">
+      <Coefficients>
+       <InputUnits>
+        <Name>V</Name>
+        <Description>Volts</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>COUNTS</Name>
+        <Description>Digital Counts</Description>
+       </OutputUnits>
+       <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+       <Numerator minusError="0.00000" plusError="0.00000">1.00000</Numerator>
+      </Coefficients>
+      <Decimation>
+       <InputSampleRate>512000.0</InputSampleRate>
+       <Factor>1</Factor>
+       <Offset>0</Offset>
+       <Delay>0.0</Delay>
+       <Correction>0.0</Correction>
+      </Decimation>
+      <StageGain>
+       <Value>611621.0</Value>
+       <Frequency>1.0</Frequency>
+      </StageGain>
+     </Stage>
+
+    </Response>
+   </Channel>
+  </Station>
+ </Network>
+</FDSNStationXML>

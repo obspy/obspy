@@ -1321,6 +1321,20 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(len(inv_stationxml_network), 1)
         self.assertEqual(len(inv_stationxml_network[0]), 0)
 
+    def test_read_basic_responsestage_with_decimation(self):
+        """
+        Make sure basic ResponseStage elements that have decimation information
+        do not lose that information.
+        """
+        path = os.path.join(self.data_dir, 'F1_423_small.xml')
+        inv = _read_stationxml(path)
+        stage = inv[0][0][0].response.response_stages[0]
+        assert stage.decimation_correction == 0.4
+        assert stage.decimation_delay == 0.5
+        assert stage.decimation_factor == 2
+        assert stage.decimation_input_sample_rate == 1024000.0
+        assert stage.decimation_offset == 1
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")
