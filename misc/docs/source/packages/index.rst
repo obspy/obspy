@@ -87,6 +87,7 @@ categories.*
     :nosignatures:
 
     obspy.io.ah
+    obspy.io.alsep
     obspy.io.ascii
     obspy.io.css
     obspy.io.dmx
