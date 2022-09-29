@@ -2749,6 +2749,35 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st.rotate(method="->ZNE", inventory=inv)  # doctest: +ELLIPSIS
         <obspy.core.stream.Stream object at 0x...>
         """
+        # check if we have a mix of multiple SEED ID groups that need to be
+        # handled separately
+        seed_id_groups = set()
+        for tr in self:
+            net, sta, loc, cha = tr.id.split(".")
+            if not len(cha):
+                msg = "Channel code must be at least one character long."
+                raise ValueError(msg)
+            comp = cha[-1]
+            cha_prefix = cha[:-1]
+            seed_id_groups.add((net, sta, loc, cha_prefix))
+        # recursively rotate each set of matching SEED IDs if needed
+        if len(seed_id_groups) > 1:
+            new_traces = []
+            for net, sta, loc, cha_prefix in seed_id_groups:
+                st = Stream()
+                for tr in self:
+                    if (tr.stats.network == net and tr.stats.station == sta and
+                            tr.stats.location == loc and
+                            tr.stats.channel[:-1] == cha_prefix):
+                        st += tr
+                st.rotate(method, back_azimuth=back_azimuth,
+                          inclination=inclination, inventory=inventory,
+                          **kwargs)
+                new_traces.extend(st.traces)
+            self.traces = new_traces
+            return self
+
+        # if working on a single SEED ID group just do the requested rotation
         if method == "->ZNE":
             if inventory is None:
                 msg = ("With method '->ZNE' station metadata has to be "
