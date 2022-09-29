@@ -644,6 +644,15 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
     Readings on two components can be used in magnitude estimation by providing
     lists for ``paz``, ``amplitude`` and ``timespan``.
 
+    .. note::
+        The input poles and zeros for the actual instrument in use need to
+        convert input data units to velocity in ``m/s``. Metadata from
+        accelerometers and other instruments might have to be adjusted
+        accordingly. It is strongly recommended to supply
+        :class:`~obspy.core.inventory.response.Response` objects instead of
+        poles and zeros dictionaries, as these adjustment are then done
+        automatically.
+
     :param paz: PAZ of the instrument [m/s] (as a dictionary) or response of
         the instrument (as :class:`~obspy.core.inventory.response.Response`) or
         list of the same
@@ -717,6 +726,14 @@ def estimate_wood_anderson_amplitude(paz, amplitude, timespan):
     Zeros information for use in :func:`estimate_magnitude`.
     Amplitude should be measured as full peak to peak amplitude, timespan as
     difference of the two readings.
+
+    .. note::
+        It is recommended to use
+        :func:`estimate_wood_anderson_amplitude_using_response` with a
+        :class:`~obspy.core.inventory.response.Response` object instead
+        whenever possible as this prevents user errors with potentially
+        misaligned in between units when using poles and zeros from e.g.
+        accelerometers.
 
     :param paz: PAZ of the instrument [m/s] or list of the same
     :param amplitude: Peak to peak amplitude [counts] or list of the same

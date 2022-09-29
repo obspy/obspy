@@ -68,6 +68,8 @@ Changes:
      intersection of equator and prime meridian (see #3067)
    * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
  - obspy.clients.fdsn:
+   * Fix a bug in `get_stations_bulk` regarding parameter "includerestricted"
+     (see #3158)
    * add URL mapping 'EIDA' for http://eida-federator.ethz.ch (see #3050)
    * Fix issue where "https://" URLs were not matched by the IRIS federator
      client, resulting in raspberry shake matches being excluded from results
@@ -84,6 +86,8 @@ Changes:
    * bulletin reading: correctly add Mag2 and amplitudes even if Mag1 is not
      present (see #2420)
  - obspy.io.stationxml:
+   * fix a bug that resulted in losing decimation information of base type
+     response stages (see #3159)
    * enable reading StationXML 1.2 and write new files with schema version
      1.2 (see #3153)
  - obspy.io.wav:

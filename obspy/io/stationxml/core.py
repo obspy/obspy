@@ -526,7 +526,12 @@ def _read_response_stage(stage_elem, _ns):
                 stage_sequence_number=stage_sequence_number,
                 stage_gain=stage_gain,
                 stage_gain_frequency=stage_gain_frequency,
-                resource_id=resource_id, input_units=None, output_units=None)
+                resource_id=resource_id, input_units=None, output_units=None,
+                decimation_input_sample_rate=decimation_input_sample_rate,
+                decimation_factor=decimation_factor,
+                decimation_offset=decimation_offset,
+                decimation_delay=decimation_delay,
+                decimation_correction=decimation_correction)
         # Raise if none of the previous ones has been found.
         msg = "Could not find a valid Response Stage Type."
         raise ValueError(msg)
