@@ -20,6 +20,7 @@ Changes:
  - obspy.signal:
    * coincidence trigger: improve speed of template matching and less memory
      usage (see #3104)
+   * added energy_ratio and modified_energy_ratio trigger methods (see #3161)
  - obspy.taup:
    * add option "indicate_wave_type" to distinguish S waves in ray paths
      plot by using wiggly lines for shear waves (see #3047)
