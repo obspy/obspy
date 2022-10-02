@@ -20,6 +20,15 @@ finding the right trigger parameters for STA/LTA type triggers can be found in
   (slow) seismic noise fluctuations. Typically, it's an order of magnitude
   larger than the STA duration.
 
+A nice explanation of STA and LTA parameters is given in [Han2009]_:
+
+.. figure:: /_images/STA_LTA-ratio.png
+
+    FIG. 1: Definition of the STA/LTA method. The length of the LTA energy
+    collection window is five to ten times the length of the STA energy
+    collection window, which needs to be on the order or two to three times
+    the dominant period of the seismic arrival.
+
 .. seealso::
     Please note the convenience method of ObsPy's
     :meth:`Stream.trigger <obspy.core.stream.Stream.trigger>` and
