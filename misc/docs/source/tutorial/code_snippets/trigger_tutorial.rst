@@ -185,6 +185,15 @@ Modified Energy Ratio
 
 An improvement of the energy ratio that accounts for the signal itself.
 
+The picture below is taken from [Han2009]_.
+
+.. figure:: /_images/MER.png
+
+    FIG. 2: Definition of the MER method. Preceding and following energy
+    collection windows with equal lengths are located at a test point. The
+    window lengths are two to three times the dominant periods of the seismic
+    arrival.
+
 .. plot:: tutorial/code_snippets/trigger_tutorial_modified_energy_ratio.py
 
 
