@@ -539,6 +539,31 @@ def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     return ptime.value, stime.value
 
 
+def plot_trace(trace, cft):
+    """
+    Plot characteristic function of trigger along with waveform data.
+
+    :type trace: :class:`~obspy.core.trace.Trace`
+    :param trace: waveform data
+    :type cft: :class:`numpy.ndarray`
+    :param cft: characteristic function as returned by a trigger in
+        :mod:`obspy.signal.trigger`
+    :rtype: tuple
+    :returns: Matplotlib figure instance and axes
+    """
+    import matplotlib.pyplot as plt
+    df = trace.stats.sampling_rate
+    npts = trace.stats.npts
+    t = np.arange(npts, dtype=np.float32) / df
+    fig, axes = plt.subplots(nrows=2, sharex=True)
+    axes[0].plot(t, trace.data, 'k')
+    axes[1].plot(t, cft, 'k')
+    axes[1].set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
+    fig.suptitle(trace.id)
+    fig.canvas.draw()
+    return fig, axes
+
+
 def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     """
     Plot characteristic function of trigger along with waveform data and
@@ -559,19 +584,14 @@ def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     """
     import matplotlib.pyplot as plt
     df = trace.stats.sampling_rate
-    npts = trace.stats.npts
-    t = np.arange(npts, dtype=np.float32) / df
-    fig = plt.figure()
-    ax1 = fig.add_subplot(211)
-    ax1.plot(t, trace.data, 'k')
-    ax2 = fig.add_subplot(212, sharex=ax1)
-    ax2.plot(t, cft, 'k')
+    fig, axes = plot_trace(trace, cft)
+    ax1, ax2 = axes
     on_off = np.array(trigger_onset(cft, thr_on, thr_off))
-    i, j = ax1.get_ylim()
+    ymin, ymax = ax1.get_ylim()
     try:
-        ax1.vlines(on_off[:, 0] / df, i, j, color='r', lw=2,
+        ax1.vlines(on_off[:, 0] / df, ymin, ymax, color='r', lw=2,
                    label="Trigger On")
-        ax1.vlines(on_off[:, 1] / df, i, j, color='b', lw=2,
+        ax1.vlines(on_off[:, 1] / df, ymin, ymax, color='b', lw=2,
                    label="Trigger Off")
         ax1.legend()
     except IndexError:
