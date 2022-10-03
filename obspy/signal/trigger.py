@@ -285,7 +285,7 @@ def z_detect(a, nsta):
 
 
 def energy_ratio(a, nsta):
-    """
+    r"""
     Energy ratio defined as
 
     .. math::
@@ -313,7 +313,7 @@ def energy_ratio(a, nsta):
 
 
 def modified_energy_ratio(a, nsta, power=3):
-    """
+    r"""
     Improvement of the :func:`energy_ratio` that accounts for the signal
     itself:
 
