@@ -24,6 +24,7 @@ import requests
 import obspy
 from obspy.core.compatibility import get_text_from_response
 from obspy.core.inventory.util import _textwrap
+from obspy.core.util.decorator import deprecated
 
 
 # Simple cache for remote NRL access. The total data amount will always be
@@ -38,6 +39,10 @@ class NRL(object):
     https://ds.iris.edu/NRL/
 
     Created with a URL for remote access or filesystem accessing a local copy.
+
+    .. warning::
+        Remote access to online NRL is deprecated as it will stop working in
+        Spring 2023 due to server side changes.
     """
     _index = 'index.txt'
 
@@ -331,9 +336,27 @@ class LocalNRL(NRL):
 
 class RemoteNRL(NRL):
     """
+    DEPRECATED
+
     Subclass of NRL for accessing remote copy of NRL.
+
+    Direct access to online NRL is deprecated as it will stop working when the
+    original NRLv1 gets taken offline (Spring 2023), please consider working
+    locally with a downloaded full copy of the old NRLv1 or new NRLv2 following
+    instructions on the
+    `NRL landing page <https://ds.iris.edu/ds/nrl/>`_.
     """
+    @deprecated()
     def __init__(self, root='https://ds.iris.edu/NRL'):
+        """
+        DEPRECATED
+
+        Direct access to online NRL is deprecated as it will stop working when
+        the original NRLv1 gets taken offline (Spring 2023), please consider
+        working locally with a downloaded full copy of the old NRLv1 or new
+        NRLv2 following instructions on the
+        `NRL landing page <https://ds.iris.edu/ds/nrl/>`_.
+        """
         self.root = root
         super(self.__class__, self).__init__()
 
