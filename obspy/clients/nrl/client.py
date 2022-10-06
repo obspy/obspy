@@ -39,6 +39,10 @@ class NRL(object):
     https://ds.iris.edu/NRL/
 
     Created with a URL for remote access or filesystem accessing a local copy.
+
+    .. warning::
+        Remote access to online NRL is deprecated as it will stop working in
+        Spring 2023 due to server side changes.
     """
     _index = 'index.txt'
 
