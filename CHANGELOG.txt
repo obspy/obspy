@@ -75,6 +75,8 @@ Changes:
      client, resulting in raspberry shake matches being excluded from results
      (see #3127)
  - obspy.clients.nrl:
+   * deprecate online NRL client as it will stop working in Spring 2023 when
+     old NRLv1 gets taken offline (see #3164)
    * enable reading from a downloaded full copy of the NRLv2 at
      http://ds.iris.edu/ds/nrl/ (see #3058)
    * Fix a bug in recaculation of overall instrument sensitivity after
@@ -85,6 +87,9 @@ Changes:
  - obspy.io.gse2:
    * bulletin reading: correctly add Mag2 and amplitudes even if Mag1 is not
      present (see #2420)
+ - obspy.io.mseed:
+   * fix a bug in endtime calculation when writing fixed flags block
+     information (see #3165)
  - obspy.io.stationxml:
    * fix a bug that resulted in losing decimation information of base type
      response stages (see #3159)
