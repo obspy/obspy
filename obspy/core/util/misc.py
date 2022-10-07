@@ -290,58 +290,6 @@ def CatchOutput():  # NOQA
         raise SystemExit(out.stderr)
 
 
-def _py36_windowsconsoleio_workaround():
-    """
-    This monkey patch prevents crashing Py3.6 under Windows while using
-    the SuppressOutput context manager.
-
-    Python 3.6 implemented unicode console handling for Windows. This works
-    by reading/writing to the raw console handle using
-    ``{Read,Write}ConsoleW``.
-    The problem is that we are going to ``dup2`` over the stdio file
-    descriptors when doing ``FDCapture`` and this will ``CloseHandle`` the
-    handles used by Python to write to the console. Though there is still some
-    weirdness and the console handle seems to only be closed randomly and not
-    on the first call to ``CloseHandle``, or maybe it gets reopened with the
-    same handle value when we suspend capturing.
-    The workaround in this case will reopen stdio with a different fd which
-    also means a different handle by replicating the logic in
-    "Py_lifecycle.c:initstdio/create_stdio".
-    See https://github.com/pytest-dev/py/issues/103
-
-    See http://bugs.python.org/issue30555
-    """
-    if not WIN32 or sys.version_info[:2] < (3, 6):
-        return
-    if not hasattr(sys.stdout, 'buffer'):
-        return
-    buffered = hasattr(sys.stdout.buffer, 'raw')
-    raw_stdout = sys.stdout.buffer.raw if buffered else sys.stdout.buffer
-
-    if not isinstance(raw_stdout, io._WindowsConsoleIO):
-        return
-
-    def _reopen_stdio(f, mode):
-        if not buffered and mode[0] == 'w':
-            buffering = 0
-        else:
-            buffering = -1
-
-        return io.TextIOWrapper(
-            open(os.dup(f.fileno()), mode, buffering),
-            f.encoding,
-            f.errors,
-            f.newlines,
-            f.line_buffering)
-
-    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
-    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
-    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')
-
-
-_py36_windowsconsoleio_workaround()
-
-
 @contextlib.contextmanager
 def SuppressOutput():  # noqa
     """
@@ -350,9 +298,6 @@ def SuppressOutput():  # noqa
     >>> with SuppressOutput():  # doctest: +SKIP
     ...    os.system('echo "mystdout"')
     ...    os.system('echo "mystderr" >&2')
-
-    Note: Does not work reliably for Windows Python 3.6 under Windows - see
-    function definition of _py36_windowsconsoleio_workaround().
     """
     with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
         with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
