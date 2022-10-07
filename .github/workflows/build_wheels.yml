@@ -29,10 +29,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        build: [cp39, cp310]
+        build: [cp38, cp39, cp310]
         exclude-flag:
           - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
         exclude:
+          - build: cp38
+            exclude-flag: true
           - build: cp39
             exclude-flag: true
     steps:

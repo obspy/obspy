@@ -82,9 +82,9 @@ EXTERNAL_LIBMSEED = False
 
 # Hard dependencies needed to install/run ObsPy.
 INSTALL_REQUIRES = [
-    'numpy>=1.15.0',
-    'scipy>=1.0.0',
-    'matplotlib>=3.2.0',
+    'numpy>=1.20',
+    'scipy>=1.7',
+    'matplotlib>=3.3',
     'lxml',
     'setuptools',
     'sqlalchemy',
@@ -768,6 +768,7 @@ def setupPackage():
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
             'Topic :: Scientific/Engineering',
