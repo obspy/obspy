@@ -116,7 +116,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         arguments["format"] = "post"
 
         bulk_str = get_bulk_string(new_bulk, arguments)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_waveforms(split, **kwargs)
@@ -171,7 +172,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         arguments["format"] = "post"
         arguments["alternative"] = "false"
         bulk_str = get_bulk_string(bulk, arguments)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_stations(split, **kwargs)
