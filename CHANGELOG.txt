@@ -19,6 +19,7 @@ Changes:
    * Fix issue where "https://" URLs were not matched by the IRIS federator
      client, resulting in raspberry shake matches being excluded from results
      (see #3127)
+   * Properly set HTTP Content-Type header in POST requests (see #3169)
  - obspy.clients.nrl:
    * deprecate online NRL client as it will stop working in Spring 2023 when
      old NRLv1 gets taken offline (see #3164)

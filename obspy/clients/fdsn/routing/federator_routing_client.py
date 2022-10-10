@@ -79,7 +79,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         params["format"] = "request"
 
         bulk_str = get_bulk_string(bulk, params)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content,
             service="dataselect")
@@ -135,7 +136,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         params["format"] = "request"
 
         bulk_str = get_bulk_string(bulk, params)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content,
             service="station")
