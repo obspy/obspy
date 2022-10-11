@@ -13,6 +13,9 @@ Changes:
      intersection of equator and prime meridian (see #3067)
    * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
    * Fix colored IPython output on Windows (see #3148, #3171)
+   * Add a warning in `Trace.remove_response()` docs, regarding using water
+     level mechanism with instrument response non-flat with the requested
+     output units (see #3172, #3136)
  - obspy.clients.fdsn:
    * Fix a bug in `get_stations_bulk` regarding parameter "includerestricted"
      (see #3158)

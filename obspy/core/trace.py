@@ -2692,6 +2692,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         (specifying the four corner frequencies of the frequency taper as a
         tuple in `pre_filt`).
 
+        .. warning::
+            The water level approach can lead to unexpected results that
+            strongly suppress valid/wanted parts of the spectrum if the
+            requested output unit is not the native quantity of the instrument,
+            i.e. the instrument response is not flat for that quantity (e.g.
+            requesting output ``"VEL"`` for an accelerometer). For details see
+            https://github.com/obspy/obspy/issues/3136.
+            In this case it might be better to set ``water_level=None`` and use
+            ``pre_filt`` option instead.
+
         .. note::
 
             Any additional kwargs will be passed on to
