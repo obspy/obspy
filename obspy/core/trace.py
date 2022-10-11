@@ -2705,7 +2705,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. note::
 
             Any additional kwargs will be passed on to
-            :meth:`obspy.core.inventory.response.Response.get_evalresp_response`,
+            :meth:`Response.get_evalresp_response()
+            <obspy.core.inventory.response.Response.get_evalresp_response>`,
             see documentation of that method for further customization (e.g.
             start/stop stage and hiding overall sensitivity mismatch warning).
 
@@ -2716,8 +2717,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             :meth:`~obspy.core.trace.Trace.simulate` with the identical
             response provided as
             a (dataless) SEED or RESP file and when using the same
-            `water_level` and `pre_filt` (and options `sacsim=True` and
-            `pitsasim=False` which influence very minor details in detrending
+            ``water_level`` and ``pre_filt`` (and options ``sacsim=True`` and
+            ``pitsasim=False`` which influence very minor details in detrending
             and tapering).
 
         .. rubric:: Example
