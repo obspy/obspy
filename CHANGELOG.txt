@@ -12,6 +12,7 @@ Changes:
    * Fix missing legend and plot artifacts in Inventory map plots at
      intersection of equator and prime meridian (see #3067)
    * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
+   * Fix colored IPython output on Windows (see #3148, #3171)
  - obspy.clients.fdsn:
    * Fix a bug in `get_stations_bulk` regarding parameter "includerestricted"
      (see #3158)
