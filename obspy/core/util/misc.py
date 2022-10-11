@@ -334,12 +334,9 @@ def _py36_windowsconsoleio_workaround():
             f.newlines,
             f.line_buffering)
 
-    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
-    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
-    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')
-
-
-_py36_windowsconsoleio_workaround()
+    sys.stdin = _reopen_stdio(sys.stdin, 'rb')
+    sys.stdout = _reopen_stdio(sys.stdout, 'wb')
+    sys.stderr = _reopen_stdio(sys.stderr, 'wb')
 
 
 @contextlib.contextmanager
@@ -354,6 +351,7 @@ def SuppressOutput():  # noqa
     Note: Does not work reliably for Windows Python 3.6 under Windows - see
     function definition of _py36_windowsconsoleio_workaround().
     """
+    _py36_windowsconsoleio_workaround()
     with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
         with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
             with open(os.devnull, 'wb') as to_file:
@@ -369,6 +367,7 @@ def SuppressOutput():  # noqa
                     os.dup2(tmp_stdout.fileno(), 1)
                     os.dup2(tmp_stderr.fileno(), 2)
     # reset to original stdout/stderr
+    sys.stdin = sys.__stdin__
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
 
