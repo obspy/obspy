@@ -2011,6 +2011,8 @@ class TestStream:
         st = read()
         st += st.copy()
         st[3:].normalize()
+        for tr in st[3:]:
+            tr.stats.location = '01'
         st2 = st.copy()
         # rotate to RT and back with 6 traces
         st.rotate(method='NE->RT', back_azimuth=30)
