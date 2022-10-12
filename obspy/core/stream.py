@@ -2775,6 +2775,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                           **kwargs)
                 new_traces.extend(st.traces)
             self.traces = new_traces
+            self.sort()
             return self
 
         # if working on a single SEED ID group just do the requested rotation
@@ -2783,7 +2784,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 msg = ("With method '->ZNE' station metadata has to be "
                        "provided as 'inventory' parameter.")
                 raise ValueError(msg)
-            return self._rotate_to_zne(inventory, **kwargs)
+            self._rotate_to_zne(inventory, **kwargs)
+            self.sort()
+            return self
         elif method == "NE->RT":
             func = "rotate_ne_rt"
         elif method == "RT->NE":
@@ -2872,6 +2875,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 for comp in (i_1, i_2, i_3):
                     comp.stats.back_azimuth = back_azimuth
                     comp.stats.inclination = inclination
+        # sort stream, so that order of traces will stay the same, even if
+        # internals of implementation change
+        self.sort()
         return self
 
     def copy(self):
