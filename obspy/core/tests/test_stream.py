@@ -2032,12 +2032,15 @@ class TestStream:
         # again, with angles given in stats and just 2 components
         st = st2.copy()
         st = st[1:3] + st[4:]
-        st[0].stats.back_azimuth = 190
-        st[2].stats.back_azimuth = 200
+        for tr in st[:2]:
+            tr.stats.back_azimuth = 190
+        for tr in st[2:]:
+            tr.stats.back_azimuth = 200
         st.rotate(method='NE->RT')
         st.rotate(method='RT->NE')
         assert np.allclose(st[0].data, st2[1].data)
         assert np.allclose(st[1].data, st2[2].data)
+        assert st[2].stats.back_azimuth == 200
         # rotate to LQT and back with 6 traces
         st = st2.copy()
         st.rotate(method='ZNE->LQT', back_azimuth=100, inclination=30)
@@ -2057,12 +2060,15 @@ class TestStream:
         with pytest.raises(ValueError):
             st.rotate(method='UNKNOWN')
         # rotating without back_azimuth raises TypeError
-        st = Stream()
+        st = read()
+        for tr in st:
+            del tr.stats.back_azimuth
+            del tr.stats.inclination
         with pytest.raises(TypeError):
-            st.rotate(method='RT->NE')
+            st[1:].rotate(method='NE->RT')
         # rotating without inclination raises TypeError for LQT-> or ZNE->
         with pytest.raises(TypeError):
-            st.rotate(method='LQT->ZNE', back_azimuth=30)
+            st.rotate(method='ZNE->LQT', back_azimuth=30)
         # having traces with different timespans or sampling rates will fail
         st = read()
         st[1].stats.sampling_rate = 2.0
