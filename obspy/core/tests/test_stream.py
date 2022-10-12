@@ -2013,18 +2013,20 @@ class TestStream:
         st[3:].normalize()
         for tr in st[3:]:
             tr.stats.location = '01'
+        # sort input, because after round trip output will be sorted too
+        st.sort()
         st2 = st.copy()
         # rotate to RT and back with 6 traces
         st.rotate(method='NE->RT', back_azimuth=30)
         assert (st[0].stats.channel[-1] + st[1].stats.channel[-1] +
-                st[2].stats.channel[-1]) == 'ZRT'
+                st[2].stats.channel[-1]) == 'RTZ'
         assert (st[3].stats.channel[-1] + st[4].stats.channel[-1] +
-                st[5].stats.channel[-1]) == 'ZRT'
+                st[5].stats.channel[-1]) == 'RTZ'
         st.rotate(method='RT->NE', back_azimuth=30)
         assert (st[0].stats.channel[-1] + st[1].stats.channel[-1] +
-                st[2].stats.channel[-1]) == 'ZNE'
+                st[2].stats.channel[-1]) == 'ENZ'
         assert (st[3].stats.channel[-1] + st[4].stats.channel[-1] +
-                st[5].stats.channel[-1]) == 'ZNE'
+                st[5].stats.channel[-1]) == 'ENZ'
         assert np.allclose(st[0].data, st2[0].data)
         assert np.allclose(st[1].data, st2[1].data)
         assert np.allclose(st[2].data, st2[2].data)
@@ -2050,7 +2052,7 @@ class TestStream:
                 st[2].stats.channel[-1]) == 'LQT'
         st.rotate(method='LQT->ZNE', back_azimuth=100, inclination=30)
         assert st[0].stats.channel[-1] + st[1].stats.channel[-1] + \
-               st[2].stats.channel[-1] == 'ZNE'
+               st[2].stats.channel[-1] == 'ENZ'
         assert np.allclose(st[0].data, st2[0].data)
         assert np.allclose(st[1].data, st2[1].data)
         assert np.allclose(st[2].data, st2[2].data)
@@ -2684,6 +2686,9 @@ class TestStream:
         st_expected = read('/path/to/ffbx_rotated.slist', format='SLIST')
         st_unrotated = read("/path/to/ffbx_unrotated_gaps.mseed",
                             format="MSEED")
+        # rotation now sorts the stream at the end, so adjust here to keep
+        # tests working that check traces on expected order in stream
+        st_expected.sort()
         for tr in st_expected:
             # ignore format specific keys and processing which also holds
             # version number
