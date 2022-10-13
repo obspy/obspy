@@ -3,7 +3,6 @@
 The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
 import os
-import platform
 import shutil
 import warnings
 from os.path import abspath, dirname, join, pardir
@@ -54,11 +53,6 @@ class TestScan:
 
             obspy_scan([os.curdir] + ['--output', str(image_path)])
 
-    @pytest.mark.xfail(
-        os.environ.get('RUNNER_OS') == "Windows" or
-        platform.system() == "Windows",
-        reason="changing directory permission to non-readable does not seem "
-               "to work")
     def test_scan_dir_no_permission(self, all_files):
         """
         Run obspy-scan on a directory without read permission.
