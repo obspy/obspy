@@ -18,6 +18,8 @@ Changes:
      output units (see #3172, #3136)
    * Fix reusing Catalog/Inventory map plots, i.e. doing multiple cartopy plots
      with these objects into the same axes (see #3018)
+   * Fix Stream.rotate with multiple-station or multiple-event Streams (see
+     #2623, 3155)
  - obspy.clients.fdsn:
    * Fix a bug in `get_stations_bulk` regarding parameter "includerestricted"
      (see #3158)
