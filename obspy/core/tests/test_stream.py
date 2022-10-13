@@ -2694,6 +2694,8 @@ class TestStream:
             # do some checks on results
             assert len(st) == 30
             # compare data
+            st.sort()
+            st_expected.sort()
             for tr_got, tr_expected in zip(st, st_expected):
                 np.testing.assert_allclose(tr_got.data, tr_expected.data,
                                            rtol=1e-7)
