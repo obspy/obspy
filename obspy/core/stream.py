@@ -2751,7 +2751,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         # check if we have a mix of multiple SEED ID groups that need to be
         # handled separately
-        seed_id_groups = set()
+        seed_id_groups = {}
         for tr in self:
             net, sta, loc, cha = tr.id.split(".")
             if not len(cha):
@@ -2759,7 +2759,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 raise ValueError(msg)
             comp = cha[-1]
             cha_prefix = cha[:-1]
-            seed_id_groups.add((net, sta, loc, cha_prefix))
+            seed_id_groups[(net, sta, loc, cha_prefix)] = None
         # recursively rotate each set of matching SEED IDs if needed
         if len(seed_id_groups) > 1:
             new_traces = []
