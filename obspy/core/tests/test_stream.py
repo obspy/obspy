@@ -2036,6 +2036,7 @@ class TestStream:
             tr.stats.back_azimuth = 190
         for tr in st[2:]:
             tr.stats.back_azimuth = 200
+            tr.stats.starttime = tr.stats.starttime + 1000
         st.rotate(method='NE->RT')
         st.rotate(method='RT->NE')
         assert np.allclose(st[0].data, st2[1].data)
@@ -2065,7 +2066,7 @@ class TestStream:
             del tr.stats.back_azimuth
             del tr.stats.inclination
         with pytest.raises(TypeError):
-            st[1:].rotate(method='NE->RT')
+            st.rotate(method='NE->RT')
         # rotating without inclination raises TypeError for LQT-> or ZNE->
         with pytest.raises(TypeError):
             st.rotate(method='ZNE->LQT', back_azimuth=30)
