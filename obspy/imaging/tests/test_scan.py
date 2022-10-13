@@ -53,10 +53,6 @@ class TestScan:
 
             obspy_scan([os.curdir] + ['--output', str(image_path)])
 
-    @pytest.mark.xfail(
-        os.environ.get('RUNNER_OS') == "Windows",
-        reason="changing directory permission to non-readable does not seem "
-               "to work")
     def test_scan_dir_no_permission(self, all_files):
         """
         Run obspy-scan on a directory without read permission.
@@ -71,6 +67,23 @@ class TestScan:
             shutil.copy(all_files[0], no_permission_dir)
             # take away read permissions
             no_permission_dir.chmod(0o000)
+            # still sometimes even on Linux CI runners it seems that stripping
+            # read permission does not work and the scanner is able to process
+            # it, thus ending up with a higher counter than if properly making
+            # the directory not readable
+            try:
+                os.listdir(no_permission_dir)
+            # this is what we want, not being able to read the directory, thus
+            # the scanner only processing one item
+            except PermissionError:
+                pass
+            # this is unexpected, we weren't able to strip read permissions,
+            # and then in consequence this test is meaningless and we mark it
+            # as a skipped test
+            else:
+                pytest.skip(
+                    "unable to remove read permission from a test file for "
+                    "testing purposes")
             scanner.parse(str(no_permission_dir))
             # should not have been able to read test file but also not raised
             # an error

@@ -323,7 +323,7 @@ class SEG2(object):
             try:
                 value = string[1]
             except IndexError:
-                value = ''
+                value = b''
             if key == 'NOTE':
                 value = [cleanup_and_decode_string(line)
                          for line in value.split(self.line_terminator)

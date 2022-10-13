@@ -2749,6 +2749,35 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st.rotate(method="->ZNE", inventory=inv)  # doctest: +ELLIPSIS
         <obspy.core.stream.Stream object at 0x...>
         """
+        # check if we have a mix of multiple SEED ID groups that need to be
+        # handled separately
+        seed_id_groups = {}
+        for tr in self:
+            net, sta, loc, cha = tr.id.split(".")
+            if not len(cha):
+                msg = "Channel code must be at least one character long."
+                raise ValueError(msg)
+            comp = cha[-1]
+            cha_prefix = cha[:-1]
+            seed_id_groups[(net, sta, loc, cha_prefix)] = None
+        # recursively rotate each set of matching SEED IDs if needed
+        if len(seed_id_groups) > 1:
+            new_traces = []
+            for net, sta, loc, cha_prefix in seed_id_groups:
+                st = Stream()
+                for tr in self:
+                    if (tr.stats.network == net and tr.stats.station == sta and
+                            tr.stats.location == loc and
+                            tr.stats.channel[:-1] == cha_prefix):
+                        st += tr
+                st.rotate(method, back_azimuth=back_azimuth,
+                          inclination=inclination, inventory=inventory,
+                          **kwargs)
+                new_traces.extend(st.traces)
+            self.traces = new_traces
+            return self
+
+        # if working on a single SEED ID group just do the requested rotation
         if method == "->ZNE":
             if inventory is None:
                 msg = ("With method '->ZNE' station metadata has to be "
@@ -2772,19 +2801,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # Split to get the components. No need for further checks for the
         # method as invalid methods will be caught by previous conditional.
         input_components, output_components = method.split("->")
-        # Figure out inclination and back-azimuth.
-        if back_azimuth is None:
-            try:
-                back_azimuth = self[0].stats.back_azimuth
-            except Exception:
-                msg = "No back-azimuth specified."
-                raise TypeError(msg)
-        if len(input_components) == 3 and inclination is None:
-            try:
-                inclination = self[0].stats.inclination
-            except Exception:
-                msg = "No inclination specified."
-                raise TypeError(msg)
         # Do one of the two-component rotations.
         if len(input_components) == 2:
             input_1 = self.select(component=input_components[0])
@@ -2798,7 +2814,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     msg = "All components need to have the same time span."
                     raise ValueError(msg)
             for i_1, i_2 in zip(input_1, input_2):
-                output_1, output_2 = func(i_1.data, i_2.data, back_azimuth)
+                # Figure out back-azimuth.
+                baz = back_azimuth
+                if baz is None:
+                    try:
+                        baz = i_1.stats.back_azimuth
+                    except Exception:
+                        msg = "No back-azimuth specified."
+                        raise TypeError(msg)
+                output_1, output_2 = func(i_1.data, i_2.data, baz)
                 i_1.data = output_1
                 i_2.data = output_2
                 # Rename the components.
@@ -2808,7 +2832,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     output_components[1]
                 # Add the azimuth and inclination to the stats object.
                 for comp in (i_1, i_2):
-                    comp.stats.back_azimuth = back_azimuth
+                    comp.stats.back_azimuth = baz
         # Do one of the three-component rotations.
         else:
             input_1 = self.select(component=input_components[0])
@@ -2827,8 +2851,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     msg = "All components need to have the same time span."
                     raise ValueError(msg)
             for i_1, i_2, i_3 in zip(input_1, input_2, input_3):
+                # Figure out inclination and back-azimuth.
+                baz = back_azimuth
+                inc = inclination
+                if baz is None:
+                    try:
+                        baz = i_1.stats.back_azimuth
+                    except Exception:
+                        msg = "No back-azimuth specified."
+                        raise TypeError(msg)
+                if inc is None:
+                    try:
+                        inc = i_1.stats.inclination
+                    except Exception:
+                        msg = "No inclination specified."
+                        raise TypeError(msg)
                 output_1, output_2, output_3 = func(
-                    i_1.data, i_2.data, i_3.data, back_azimuth, inclination)
+                    i_1.data, i_2.data, i_3.data, baz, inc)
                 i_1.data = output_1
                 i_2.data = output_2
                 i_3.data = output_3
@@ -2841,8 +2880,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     output_components[2]
                 # Add the azimuth and inclination to the stats object.
                 for comp in (i_1, i_2, i_3):
-                    comp.stats.back_azimuth = back_azimuth
-                    comp.stats.inclination = inclination
+                    comp.stats.back_azimuth = baz
+                    comp.stats.inclination = inc
         return self
 
     def copy(self):
