@@ -20,8 +20,8 @@ def _mock_coordinate_converter(x, y, z):
     encountered in the test. Mocks the following function::
 
         import pyproj
-        proj_wgs84 = pyproj.Proj(init="epsg:4326")
-        proj_gk4 = pyproj.Proj(init="epsg:31468")
+        proj_wgs84 = pyproj.Proj("epsg:4326")
+        proj_gk4 = pyproj.Proj("epsg:31468")
         def my_conversion(x, y, z):
             x, y = pyproj.transform(proj_gk4, proj_wgs84, x * 1e3, y * 1e3)
             return x, y, z

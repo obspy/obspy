@@ -399,7 +399,8 @@ class Client(object):
 
         # Already does the error checking with fdsnws semantics.
         response = self._download(url=url, data=token.encode(),
-                                  use_gzip=True, return_string=True)
+                                  use_gzip=True, return_string=True,
+                                  content_type='application/octet-stream')
 
         user, password = response.decode().split(':')
         if self.debug:
@@ -1042,8 +1043,8 @@ class Client(object):
 
         url = self._build_url("dataselect", "query")
 
-        data_stream = self._download(url,
-                                     data=bulk)
+        data_stream = self._download(
+            url, data=bulk, content_type='text/plain')
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1189,8 +1190,8 @@ class Client(object):
 
         url = self._build_url("station", "query")
 
-        data_stream = self._download(url,
-                                     data=bulk)
+        data_stream = self._download(
+            url, data=bulk, content_type='text/plain')
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1412,9 +1413,13 @@ class Client(object):
 
         print("\n".join(msg))
 
-    def _download(self, url, return_string=False, data=None, use_gzip=True):
+    def _download(self, url, return_string=False, data=None, use_gzip=True,
+                  content_type=None):
+        headers = self.request_headers.copy()
+        if content_type:
+            headers['Content-Type'] = content_type
         code, data = download_url(
-            url, opener=self._url_opener, headers=self.request_headers,
+            url, opener=self._url_opener, headers=headers,
             debug=self.debug, return_string=return_string, data=data,
             timeout=self.timeout, use_gzip=use_gzip)
         raise_on_error(code, data)

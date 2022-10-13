@@ -165,7 +165,8 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
         """
         pass
 
-    def _download(self, url, params=None, filename=None, data=None):
+    def _download(self, url, params=None, filename=None, data=None,
+                  content_type=None):
         """
         Download the URL with GET or POST and the chosen parameters.
 
@@ -187,6 +188,11 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
         :param data: If specified, a POST request will be sent with the data in
             the body of the request.
         :type data: dict, bytes, or file-like object
+        :param content_type: Should only be relevant when ``data`` is specified
+            and thus issuing a POST request. Can be used to set the
+            ``Content-Type`` HTTP header to let the server know what type the
+            body is, e.g. ``"text/plain"``.
+        :type content_type: str
         :return: The response object assuming ``filename`` is ``None``.
         :rtype: :class:`requests.Response`
         """

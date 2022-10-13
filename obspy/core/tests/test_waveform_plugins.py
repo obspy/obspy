@@ -5,11 +5,13 @@ import threading
 import time
 import warnings
 from copy import deepcopy
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
 import pytest
 
+import obspy
 from obspy import Trace, read
 from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
@@ -208,8 +210,13 @@ class TestWaveformPlugins:
         # Get all the test directories.
         paths = {}
         all_paths = []
+        # dont rely on f.dist.location to lookup install path, as this seems to
+        # recently not be able to follow a pip editable install correctly. this
+        # seems safe unless custom installed plugins come into play, but we can
+        # not test these here properly anyway
+        install_dir = Path(obspy.__file__).parent.parent
         for f in formats:
-            path = os.path.join(f.dist.location,
+            path = os.path.join(install_dir,
                                 *f.module_name.split('.')[:-1])
             path = os.path.join(path, 'tests', 'data')
             all_paths.append(path)

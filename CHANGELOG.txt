@@ -67,6 +67,12 @@ Changes:
    * Fix missing legend and plot artifacts in Inventory map plots at
      intersection of equator and prime meridian (see #3067)
    * Fix a bug in recaculation of overall instrument sensitivity (see #3099)
+   * Fix colored IPython output on Windows (see #3148, #3171)
+   * Add a warning in `Trace.remove_response()` docs, regarding using water
+     level mechanism with instrument response non-flat with the requested
+     output units (see #3172, #3136)
+   * Fix reusing Catalog/Inventory map plots, i.e. doing multiple cartopy plots
+     with these objects into the same axes (see #3018)
  - obspy.clients.fdsn:
    * Fix a bug in `get_stations_bulk` regarding parameter "includerestricted"
      (see #3158)
@@ -74,6 +80,7 @@ Changes:
    * Fix issue where "https://" URLs were not matched by the IRIS federator
      client, resulting in raspberry shake matches being excluded from results
      (see #3127)
+   * Properly set HTTP Content-Type header in POST requests (see #3169)
  - obspy.clients.nrl:
    * deprecate online NRL client as it will stop working in Spring 2023 when
      old NRLv1 gets taken offline (see #3164)
