@@ -280,14 +280,14 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
             raise e
 
 
-def kilometers2degrees(kilometer, radius=6371):
+def kilometers2degrees(kilometer, radius=6371.0):
     """
     Convenience function to convert kilometers to degrees assuming a perfectly
     spherical Earth.
 
     :type kilometer: float
     :param kilometer: Distance in kilometers
-    :type radius: int, optional
+    :type radius: float, optional
     :param radius: Radius of the Earth used for the calculation.
     :rtype: float
     :return: Distance in degrees as a floating point number.
@@ -304,14 +304,14 @@ def kilometers2degrees(kilometer, radius=6371):
 kilometer2degrees = kilometers2degrees
 
 
-def degrees2kilometers(degrees, radius=6371):
+def degrees2kilometers(degrees, radius=6371.0):
     """
     Convenience function to convert (great circle) degrees to kilometers
     assuming a perfectly spherical Earth.
 
     :type degrees: float
     :param degrees: Distance in (great circle) degrees
-    :type radius: int, optional
+    :type radius: float, optional
     :param radius: Radius of the Earth used for the calculation.
     :rtype: float
     :return: Distance in kilometers as a floating point number.
