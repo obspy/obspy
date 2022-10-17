@@ -273,11 +273,3 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st1[0].stats.endtime, st2[0].stats.endtime)
         self.assertEqual(st1[0].data[0], 24)
         self.assertAlmostEqual(st2[0].data[0], -2.8373747e-06)
-
-
-def suite():
-    return unittest.makeSuite(ClientTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

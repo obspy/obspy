@@ -819,11 +819,3 @@ class CoreTestCase(unittest.TestCase):
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

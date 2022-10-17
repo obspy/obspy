@@ -748,11 +748,3 @@ class BulletinTestCase(unittest.TestCase):
     def test_incomplete_file(self):
         filename = os.path.join(self.path, 'gse_2.0_incomplete.txt')
         self.assertRaises(GSE2BulletinSyntaxError, _read_gse2, filename)
-
-
-def suite():
-    return unittest.makeSuite(BulletinTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

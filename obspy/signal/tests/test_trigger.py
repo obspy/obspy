@@ -602,11 +602,3 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(c1, c2, rtol=1e-10))
         ref = np.array([0.38012302, 0.37704431, 0.47674533, 0.67992292])
         self.assertTrue(np.allclose(ref, c2[99:103]))
-
-
-def suite():
-    return unittest.makeSuite(TriggerTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

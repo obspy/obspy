@@ -312,11 +312,3 @@ class ZMAPTestCase(unittest.TestCase):
         full_zmap.update(zmap_dict)
         string = '\t'.join(full_zmap[f] for f in self.zmap_fields)
         return string
-
-
-def suite():
-    return unittest.makeSuite(ZMAPTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

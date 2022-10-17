@@ -61,11 +61,3 @@ class NLLOCTestCase(unittest.TestCase):
         expected = np.load(filename)
         for field in expected.dtype.fields:
             np.testing.assert_allclose(got[field], expected[field], rtol=1e-5)
-
-
-def suite():
-    return unittest.makeSuite(NLLOCTestCase, "test")
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")

@@ -176,11 +176,3 @@ class StreamTestCase(unittest.TestCase):
         for i, tr in enumerate(st):
             st_bkp[i].decimate(10, strict_length=False)
             self.assertEqual(tr, st_bkp[i])
-
-
-def suite():
-    return unittest.makeSuite(StreamTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -361,11 +361,3 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(str(tr.stats.starttime),
                          '1990-04-07T00:07:33.000000Z')
         self.assertEqual(tr.data[0:10].tolist(), testdata)
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

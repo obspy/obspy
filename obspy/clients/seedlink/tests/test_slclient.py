@@ -59,11 +59,3 @@ class SLClientTestCase(unittest.TestCase):
         sl_client.verbose = 2
         sl_client.initialize()
         sl_client.run()
-
-
-def suite():
-    return unittest.makeSuite(SLClientTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

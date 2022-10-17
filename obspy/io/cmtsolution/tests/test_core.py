@@ -239,11 +239,3 @@ class CmtsolutionTestCase(unittest.TestCase):
 
         self.assertEqual(cat[2].origins[1].latitude, -13.68)
         self.assertEqual(cat[2].origins[1].longitude, -111.93)
-
-
-def suite():
-    return unittest.makeSuite(CmtsolutionTestCase, "test")
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")

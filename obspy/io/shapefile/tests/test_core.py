@@ -426,11 +426,3 @@ class ShapefileTestCase(unittest.TestCase):
                     expected_records=expected_inventory_records)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
-
-
-def suite():
-    return unittest.makeSuite(ShapefileTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

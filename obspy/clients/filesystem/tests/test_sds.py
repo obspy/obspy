@@ -285,11 +285,3 @@ class SDSTestCase(unittest.TestCase):
             self.assertEqual([], got_nslc)
             got_nslc = client.get_all_nslc(datetime=t - 2 * 24 * 3600)
             self.assertEqual([], got_nslc)
-
-
-def suite():
-    return unittest.makeSuite(SDSTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -217,11 +217,3 @@ class FOCMECTestCase(unittest.TestCase):
             self.assertEqual(focmec.azimuthal_gap, 236.7)
             self.assertEqual(focmec.station_polarity_count, 23)
             self.assertEqual(focmec.misfit, 0.0)
-
-
-def suite():
-    return unittest.makeSuite(FOCMECTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -1197,11 +1197,3 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(extra, cat2.extra)
         self.assertIn(('custom1', custom1), cat2.extra.items())
         self.assertIn(('custom2', custom2), cat2.extra.items())
-
-
-def suite():
-    return unittest.makeSuite(QuakeMLTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

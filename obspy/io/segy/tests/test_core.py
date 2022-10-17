@@ -689,11 +689,3 @@ class SEGYCoreTestCase(unittest.TestCase):
             "Can not write traces with more than 32767 samples (trace at "
             "index 0):\n... | 1970-01-01T00:00:00.000000Z - "
             "1970-01-01T00:05:27.670000Z | 100.0 Hz, 32768 samples")
-
-
-def suite():
-    return unittest.makeSuite(SEGYCoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

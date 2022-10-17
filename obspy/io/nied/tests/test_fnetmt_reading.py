@@ -68,11 +68,3 @@ class FNETMTCatalogReadingTestCase(unittest.TestCase):
             filename = os.path.join(self.path, _i)
             is_fnetmt = _is_fnetmt_catalog(filename)
             self.assertFalse(is_fnetmt)
-
-
-def suite():
-    return unittest.makeSuite(FNETMTCatalogReadingTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

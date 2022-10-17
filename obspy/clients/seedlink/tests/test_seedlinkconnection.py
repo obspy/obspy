@@ -42,11 +42,3 @@ class SeedLinkConnectionTestCase(unittest.TestCase):
             msg = 'Calling add_stream with selectors_str=None raised ' + \
                   'AttributeError'
             self.fail(msg)
-
-
-def suite():
-    return unittest.makeSuite(SeedLinkConnectionTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

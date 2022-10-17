@@ -68,11 +68,3 @@ class CSSStationTestCase(unittest.TestCase):
         ]
 
         self._run_test(inv, fname)
-
-
-def suite():
-    return unittest.makeSuite(CSSStationTestCase, "test")
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

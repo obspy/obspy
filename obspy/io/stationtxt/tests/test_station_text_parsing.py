@@ -885,11 +885,3 @@ class StationTextTestCase(unittest.TestCase):
             written_content = b"".join(written_text_file.split(b" "))
             for line in written_content:
                 self.assertIn(line, expected_content)
-
-
-def suite():
-    return unittest.makeSuite(StationTextTestCase, "test")
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

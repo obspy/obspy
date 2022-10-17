@@ -559,14 +559,3 @@ class TestReadRG16Headers(unittest.TestCase):
         with open(HEADER_BLOCK_SAME_RU_CODE, 'rb') as fi:
             num_records = rc._cmp_nbr_records(fi)
         self.assertEqual(num_records, 2180 * 3)
-
-
-def suite():
-    test_suite = unittest.TestSuite()
-    test_suite.addTest(unittest.makeSuite(TestReadRG16, 'test'))
-    test_suite.addTest(unittest.makeSuite(TestReadRG16Headers, 'test'))
-    return test_suite
-
-
-if __name__ == '__main__':
-    unittest.main()

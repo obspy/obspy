@@ -878,11 +878,3 @@ class QualityControlTestCase(unittest.TestCase):
             md = MSEEDMetadata(files=[tf.name], add_flags=True)
             md.validate_qc_metrics(md.meta)
             md.get_json_meta(validate=True)
-
-
-def suite():
-    return unittest.makeSuite(QualityControlTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

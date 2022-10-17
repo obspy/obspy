@@ -1247,11 +1247,3 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             "Failed to decode location code as ASCII."))
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].id, '.GECKO.A.CNZ')
-
-
-def suite():
-    return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

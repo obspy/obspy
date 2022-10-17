@@ -162,11 +162,3 @@ class IASPEITestCase(unittest.TestCase):
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 self.assertFalse(_is_ims10_bulletin(buf))
-
-
-def suite():  # pragma: no cover
-    return unittest.makeSuite(IASPEITestCase, 'test')
-
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main(defaultTest='suite')

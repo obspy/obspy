@@ -108,11 +108,3 @@ class ClientTestCase(unittest.TestCase):
         for pattern in patterns:
             st2 = client.get_waveforms_nscl(pattern, t, duration)
             self.assertEqual(st, st2)
-
-
-def suite():
-    return unittest.makeSuite(ClientTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

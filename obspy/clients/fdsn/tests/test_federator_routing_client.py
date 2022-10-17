@@ -355,11 +355,3 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         # because times stamps and also order might change slightly.
         # But the get_contents() method should be safe enough.
         self.assertEqual(inv.get_contents(), inv2.get_contents())
-
-
-def suite():  # pragma: no cover
-    return unittest.makeSuite(FederatorRoutingClientTestCase, 'test')
-
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main(defaultTest='suite')

@@ -381,11 +381,3 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(data), 5750)
         self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
         self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

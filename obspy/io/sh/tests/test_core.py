@@ -318,11 +318,3 @@ class CoreTestCase(unittest.TestCase):
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         self.assertEqual(header2, header1)
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
