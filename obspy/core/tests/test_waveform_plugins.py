@@ -54,6 +54,7 @@ class TestWaveformPlugins:
         """
         Tests read and write methods for all waveform plug-ins.
         """
+        np.random.seed(1234)
         data = np.random.randint(-500, 500, 2000)
         formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
