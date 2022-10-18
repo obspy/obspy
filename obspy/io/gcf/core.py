@@ -217,9 +217,8 @@ def _is_gcf(filename):
 
 
 def _read_gcf(filename, headonly=False, network='', station='',
-              location='', bandcode="H", instrumentcode="H",
-              channel_prefix=None, blockmerge=True, cleanoverlap=True,
-              errorret=False, **kwargs):
+              location='', channel_prefix='HH', blockmerge=True,
+              cleanoverlap=True, errorret=False, **kwargs):
     """
     Reads a GCF file and returns a :class:`~obspy.core.stream.Stream`
 
@@ -243,15 +242,9 @@ def _read_gcf(filename, headonly=False, network='', station='',
        will be used (first 4 characters in stream_id)
     :type location: str, optional
     :param location: location code to use
-    :type bandcode: str, optional
-    :param bandcode: 1-character band code to use, ignored if channel_prefix
-        is input
-    :type instrumentcode: str, optional
-    :param instrumentcode: 1-character instrument code to use, ignored if
-        channel_prefix is input
     :type channel_prefix: str, optional
-    :param channel_prefix: 2-character channel prefix to use, if not input
-        channel_prefix = bandcode+instrumentcode
+    :param channel_prefix: 2-character channel prefix to use (e.g. ``"HH"`` for
+        a high-gain seismometer sampled at 200 Hz)
     :type blockmerge: bool, optional
     :param blockmerge: if True merge blocks if aligned
     :type cleanoverlap: bool, optional
@@ -401,8 +394,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
                         ) % (i+1)
                     break
                 chn = obj.seg[i].streamID.decode('utf-8')[-2]
-                channel = ((channel_prefix if channel_prefix else
-                           bandcode+instrumentcode) + chn).upper()
+                channel = channel_prefix + chn.upper()
                 if headonly or obj.seg[i].n_data <= 0:
                     data = None
                 else:
