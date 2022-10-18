@@ -217,7 +217,7 @@ def _is_gcf(filename):
 
 
 def _read_gcf(filename, headonly=False, network='', station='',
-              location='', channel_prefix='HH', blockmerge=True,
+              location='', channel_prefix='', blockmerge=True,
               cleanoverlap=True, errorret=False, **kwargs):
     """
     Reads a GCF file and returns a :class:`~obspy.core.stream.Stream`
