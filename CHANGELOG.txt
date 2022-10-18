@@ -221,11 +221,11 @@ Changes:
  - obspy.io.css:
    * open CSS waveforms even if gzip-compressed (see #2736)
  - obspy.io.gcf:
-   * Replaced code base with C-source code base updated to latest revision 
-     of GCF format at time of writing (apr. 2022)
-   * Added write functionality to module via _write_gcf function
+   * Replaced pure Python code base with C source code base updated to latest
+     revision of GCF format at time of writing (see #3055, April 2022)
+   * Added write support for GCF (see #3055)
    * Added utility functions to check if a sampling rate or start time are
-     comatible with format restrictions.
+     compatible with format restrictions (see #3055)
  - obspy.io.gse2:
    * When reading GSE2 bulletins, station magnitudes now include waveform IDs
      and have associated station magnitude contributions (see #2718)
