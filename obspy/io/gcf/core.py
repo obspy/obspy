@@ -217,7 +217,7 @@ def _is_gcf(filename):
 
 
 def _read_gcf(filename, headonly=False, network='', station='',
-              locationcode='', bandcode="H", instrumentcode="H",
+              location='', bandcode="H", instrumentcode="H",
               channel_prefix=None, blockmerge=True, cleanoverlap=True,
               errorret=False, **kwargs):
     """
@@ -241,8 +241,8 @@ def _read_gcf(filename, headonly=False, network='', station='',
     :type station: str, optional
     :param station: station code to use, if not specified unitID in gcf header
        will be used (first 4 characters in stream_id)
-    :type locationcode: str, optional
-    :param locationcode: location code to use
+    :type location: str, optional
+    :param location: location code to use
     :type bandcode: str, optional
     :param bandcode: 1-character band code to use, ignored if channel_prefix
         is input
