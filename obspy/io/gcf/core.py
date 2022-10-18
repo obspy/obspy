@@ -416,6 +416,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
                 stats = {
                     "network": network,
                     "station": station if station else def_stat,
+                    "location": location,
                     "channel": channel,
                     "sampling_rate": sps,
                     "starttime": UTCDateTime(start),
