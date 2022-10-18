@@ -20,6 +20,8 @@ Changes:
  - obspy.signal:
    * coincidence trigger: improve speed of template matching and less memory
      usage (see #3104)
+   * Baer picker: fix a bug that could cause crashes on certain versions of
+     libffi (see #3183)
  - obspy.taup:
    * add option "indicate_wave_type" to distinguish S waves in ray paths
      plot by using wiggly lines for shear waves (see #3047)
