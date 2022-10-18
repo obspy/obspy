@@ -225,7 +225,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
     Only GCF data records are supported. Function supports format as described
     by GCF Reference
     `SWA-RFC-GCFR Issue F, December 2021
-    <https://www.guralp.com/apps/ok?doc=GCF_format>`
+    <https://www.guralp.com/apps/ok?doc=GCF_format>`_
 
     .. warning::
             This function should NOT be called directly, it registers via the
@@ -253,83 +253,85 @@ def _read_gcf(filename, headonly=False, network='', station='',
         overlapping blocks will not be merged even if data in overlap is
         identical
     :type errorret: bool, optional
-    :param errorret: if True block and header issues will be set in
+    :param errorret: if ``True`` block and header issues will be set in
         trace.stats.gcf.stat for each :class:`~obspy.core.trace.Trace`
         object in returned :class:`~obspy.core.stream.Stream` object, else
-        function will raise raise an IOError with an appropriate
+        function will raise raise an ``IOError`` with an appropriate
         error message
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream object
 
-    ..rubric:: Exceptions
+    .. rubric:: Exceptions
 
-    Function will raise :class:IOError on problems to read file
+        Function will raise ``IOError`` on problems to read file
 
     .. rubric:: GCF header data
 
-    GCF specific meta data will be set for each
-        :class:`~obspy.core.trace.Trace` object in the returned
-        :class:`~obspy.core.stream.Stream` object under attribute
-        ``stats.gcf``, more precisely the following attributes will be set:
+        GCF specific meta data will be set for each
+            :class:`~obspy.core.trace.Trace` object in the returned
+            :class:`~obspy.core.stream.Stream` object under attribute
+            ``stats.gcf``, more precisely the following attributes will be set:
 
-        ``stats.gcf.system_id`` : str
-            system_id set in block header
-        ``stats.gcf.stream_id`` : str
-            6-character stream_id set in block, typically consists of:
-             (4-character unitID) + (1-character orientation code) + (int, tap)
-        ``stats.gcf.sys_type`` : int
-            system_id type:
-             ``0`` - regular
-             ``1`` - extended
-             ``2`` - double extended
-        ``stats.gcf.t_leap`` : bool
-            1 if block start at leap second, else 0
-        ``stats.gcf.gain`` : int
-            variable gain setting (if ``-1`` not used)
-        ``stats.gcf.digi`` : int
-            digitizer type, combine with ``stats.gcf.sys_type`` to find the
-            digitizer according to:
-            ==================  ==============  ===========================
-            stats.gcf.sys_type  stats.gcf.digi  digitizer
-            ==================  ==============  ===========================
-            0                   0               unknown (probably DM24 Mk2)
-            1                   0               DM24
-            1                   1               CD24
-            2                   0               Affinity
-            2                   1               Minimus
-            ==================  ==============  ===========================
-        ``stats.gcf.ttl`` : int
-            tap-table-lookup to retrieve sequence of decimation filters used
-            (see
-            `GCF reference<https://www.guralp.com/apps/ok?doc=GCF_format>`
-            for further info)
-        ``stats.gcf.blk`` : int
-            Lowest block number in gcf file of blocks included in trace (count
-            start at 0)
-        ``stats.gcf.FIC`` : int
-            Forward Integration Constant (i.e. first data value)
-        ``stats.gcf.RIC`` : int
-            Reverse Integration Constant (ideally last data value)
-        ``stats.gcf.stat`` : int
-            Status code, available codes are:
-            ==== ===========================================================
-            code description
-            ==== ===========================================================
-            -1   not a data block
-            0    no detected block issues
-            1    stream ID use extended system ID format
-            2    stream ID use double-extended system ID format
-            3    unknown compression
-            4    to few/many data samples indicated in block header
-            5    start of first data sample is negative
-            9    failure to decode header values
-            10   failure to decode data values (last data != RIC, may be due
-                  to bad RIC!!!)
-            11   first first difference != 0 (may not be critical!!!)
-            21   status codes 10 + 11
-            ==== ===========================================================
+            ``stats.gcf.system_id`` : str
+                system_id set in block header
+            ``stats.gcf.stream_id`` : str
+                6-character stream_id set in block, typically consists of:
+                 (4-character unitID) + (1-character orientation code) + (int,
+                 tap)
+            ``stats.gcf.sys_type`` : int
+                system_id type:
+                 ``0`` - regular
+                 ``1`` - extended
+                 ``2`` - double extended
+            ``stats.gcf.t_leap`` : bool
+                1 if block start at leap second, else 0
+            ``stats.gcf.gain`` : int
+                variable gain setting (if ``-1`` not used)
+            ``stats.gcf.digi`` : int
+                digitizer type, combine with ``stats.gcf.sys_type`` to find the
+                digitizer according to:
+                ==================  ==============  ===========================
+                stats.gcf.sys_type  stats.gcf.digi  digitizer
+                ==================  ==============  ===========================
+                0                   0               unknown (probably DM24 Mk2)
+                1                   0               DM24
+                1                   1               CD24
+                2                   0               Affinity
+                2                   1               Minimus
+                ==================  ==============  ===========================
+            ``stats.gcf.ttl`` : int
+                tap-table-lookup to retrieve sequence of decimation filters
+                used
+                (see
+                `GCF reference <https://www.guralp.com/apps/ok?doc=GCF_format>`_
+                for further info)
+            ``stats.gcf.blk`` : int
+                Lowest block number in gcf file of blocks included in trace
+                (count start at 0)
+            ``stats.gcf.FIC`` : int
+                Forward Integration Constant (i.e. first data value)
+            ``stats.gcf.RIC`` : int
+                Reverse Integration Constant (ideally last data value)
+            ``stats.gcf.stat`` : int
+                Status code, available codes are:
+                ==== ==========================================================
+                code description
+                ==== ==========================================================
+                -1   not a data block
+                0    no detected block issues
+                1    stream ID use extended system ID format
+                2    stream ID use double-extended system ID format
+                3    unknown compression
+                4    to few/many data samples indicated in block header
+                5    start of first data sample is negative
+                9    failure to decode header values
+                10   failure to decode data values (last data != RIC, may be
+                     due to bad RIC!!!)
+                11   first first difference != 0 (may not be critical!!!)
+                21   status codes 10 + 11
+                ==== ==========================================================
 
-    ..rubric:: Example
+    .. rubric:: Example
 
         >>> from obspy import read
         >>> st = read("/path/to/20160603_1955n.gcf", format="GCF")
