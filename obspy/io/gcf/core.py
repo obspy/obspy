@@ -342,107 +342,104 @@ def _read_gcf(filename, headonly=False, network='', station='',
 
     stream = None
     # Load shared library
-    try:
-        gcf_io = _load_cdll("gcf")
-    except Exception as e:
-        raise IOError(str(e))
+    gcf_io = _load_cdll("gcf")
+        
+    # declare function argument and return types
+    gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
+                                ctypes.POINTER(_GcfFile),
+                                ctypes.c_int]
+    gcf_io.read_gcf.restype = ctypes.c_int
+    gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
+    gcf_io.free_GcfFile.restype = None
+    # set reader mode
+    if headonly:
+        if not blockmerge:
+            mode = -2
+        else:
+            mode = -1
     else:
-        # declare function argument and return types
-        gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
-                                    ctypes.POINTER(_GcfFile),
-                                    ctypes.c_int]
-        gcf_io.read_gcf.restype = ctypes.c_int
-        gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
-        gcf_io.free_GcfFile.restype = None
-        # set reader mode
-        if headonly:
-            if not blockmerge:
-                mode = -2
-            else:
-                mode = -1
+        if not blockmerge:
+            mode = 2
+        elif not cleanoverlap:
+            mode = 1
         else:
-            if not blockmerge:
-                mode = 2
-            elif not cleanoverlap:
-                mode = 1
-            else:
-                mode = 0
+            mode = 0
 
-        # read file
-        obj = _GcfFile()
-        b_filename = filename.encode('utf-8')
-        ret = gcf_io.read_gcf(b_filename, obj, mode)
-        if ret == -1:
-            if os.path.isfile(filename):
-                raise IOError("cannot open file %s in read mode (missing "
-                              "read permissions for user?)" % (filename))
-            else:
-                raise IOError("%s is not a file" % (filename))
-        elif ret == 1:
-            raise IOError("file %s is not a GCF data file" % (filename))
-        elif ret:
-            raise IOError("failed to read file %s (unknown error code %d "
-                          "returned)" % (filename, ret))
+    # read file
+    obj = _GcfFile()
+    b_filename = filename.encode('utf-8')
+    ret = gcf_io.read_gcf(b_filename, obj, mode)
+    if ret == -1:
+        if os.path.isfile(filename):
+            raise IOError("cannot open file %s in read mode (missing "
+                            "read permissions for user?)" % (filename))
         else:
-            err_msg = ""
-            # So far so good, set up trace objects
-            traces = []
-            for i in range(int(obj.n_seg)):
-                if obj.seg[i].err and not errorret:
-                    err_msg = _ERRORMSG.get(
-                        obj.seg[i].err,
-                        "unknown error code (%d) set for data block %%d" %
-                        (obj.seg[i].err)
-                        ) % (i+1)
-                    break
-                chn = obj.seg[i].streamID.decode('utf-8')[-2]
-                channel = channel_prefix + chn.upper()
-                if headonly or obj.seg[i].n_data <= 0:
-                    data = None
-                else:
-                    data = np.array(obj.seg[i].data[:obj.seg[i].n_data],
-                                    dtype=np.int32)
-                sps = obj.seg[i].sps*1./obj.seg[i].sps_denom
-                dt = obj.seg[i].t_leap
-                start = obj.seg[i].start+obj.seg[i].t_numerator * \
-                    1./obj.seg[i].t_denominator-dt
-                def_stat = obj.seg[i].streamID[:4].decode('utf-8')
-                stats = {
-                    "network": network,
-                    "station": station if station else def_stat,
-                    "location": location,
-                    "channel": channel,
-                    "sampling_rate": sps,
-                    "starttime": UTCDateTime(start),
-                    "npts": obj.seg[i].n_data,
-                    "gcf": AttribDict({
-                        "system_id": obj.seg[i].systemID.decode('utf-8'),
-                        "stream_id": obj.seg[i].streamID.decode('utf-8'),
-                        "sys_type": obj.seg[i].sysType,
-                        "t_leap": True if obj.seg[i].t_leap else False,
-                        "gain": obj.seg[i].gain,
-                        "digi": obj.seg[i].digi,
-                        "ttl": obj.seg[i].ttl,
-                        "blk": obj.seg[i].blk,
-                        "FIC": obj.seg[i].FIC,
-                        "RIC": obj.seg[i].RIC,
-                        "stat": obj.seg[i].err
-                    })
-                }
-                if data is not None:
-                    traces.append(Trace(data=data, header=stats))
-                else:
-                    traces.append(Trace(header=stats))
+            raise IOError("%s is not a file" % (filename))
+    elif ret == 1:
+        raise IOError("file %s is not a GCF data file" % (filename))
+    elif ret:
+        raise IOError("failed to read file %s (unknown error code %d "
+                        "returned)" % (filename, ret))
+    else:
+        err_msg = ""
+        # So far so good, set up trace objects
+        traces = []
+        for i in range(int(obj.n_seg)):
+            if obj.seg[i].err and not errorret:
+                err_msg = _ERRORMSG.get(
+                    obj.seg[i].err,
+                    "unknown error code (%d) set for data block %%d" %
+                    (obj.seg[i].err)
+                    ) % (i+1)
+                break
+            chn = obj.seg[i].streamID.decode('utf-8')[-2]
+            channel = channel_prefix + chn.upper()
+            if headonly or obj.seg[i].n_data <= 0:
+                data = None
+            else:
+                data = np.array(obj.seg[i].data[:obj.seg[i].n_data],
+                                dtype=np.int32)
+            sps = obj.seg[i].sps*1./obj.seg[i].sps_denom
+            dt = obj.seg[i].t_leap
+            start = obj.seg[i].start+obj.seg[i].t_numerator * \
+                1./obj.seg[i].t_denominator-dt
+            def_stat = obj.seg[i].streamID[:4].decode('utf-8')
+            stats = {
+                "network": network,
+                "station": station if station else def_stat,
+                "location": location,
+                "channel": channel,
+                "sampling_rate": sps,
+                "starttime": UTCDateTime(start),
+                "npts": obj.seg[i].n_data,
+                "gcf": AttribDict({
+                    "system_id": obj.seg[i].systemID.decode('utf-8'),
+                    "stream_id": obj.seg[i].streamID.decode('utf-8'),
+                    "sys_type": obj.seg[i].sysType,
+                    "t_leap": True if obj.seg[i].t_leap else False,
+                    "gain": obj.seg[i].gain,
+                    "digi": obj.seg[i].digi,
+                    "ttl": obj.seg[i].ttl,
+                    "blk": obj.seg[i].blk,
+                    "FIC": obj.seg[i].FIC,
+                    "RIC": obj.seg[i].RIC,
+                    "stat": obj.seg[i].err
+                })
+            }
+            if data is not None:
+                traces.append(Trace(data=data, header=stats))
+            else:
+                traces.append(Trace(header=stats))
 
-            # Set up the stream object
-            if not err_msg:
-                stream = Stream(traces=traces)
+        # Set up the stream object
+        if not err_msg:
+            stream = Stream(traces=traces)
 
-            # Free memory allocated by the C-function
-            gcf_io.free_GcfFile(obj)
+        # Free memory allocated by the C-function
+        gcf_io.free_GcfFile(obj)
 
-            if err_msg:
-                raise IOError(err_msg)
+        if err_msg:
+            raise IOError(err_msg)
     return stream
 
 
