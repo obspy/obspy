@@ -2298,7 +2298,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         trace's :class:`~obspy.core.trace.Stats` object.
         """
         proc = self.stats.setdefault('processing', [])
-        proc.append(info)
+        if len(proc) == 99:
+            warnings.warn(
+                'List of processing information in Trace.stats.processing '
+                'reached maximal length of 100 entries.'
+                )
+        if len(proc) < 100:
+            proc.append(info)
 
     @_add_processing_info
     def split(self):

@@ -2721,3 +2721,14 @@ class TestTrace:
 
         assert tr.stats.sampling_rate == 30
         assert tr.data.shape[0] == 1
+
+    def test_long_processing_list(self):
+        """
+        issue 2882
+        """
+        tr = read()[0]
+        with pytest.warns(UserWarning, match='.*maximal length') as record:
+            for _ in range(110):
+                tr.trim(0.01)
+        assert len(tr.stats.processing) == 100
+        assert len(record) == 1
