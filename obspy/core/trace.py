@@ -326,6 +326,7 @@ class Trace(object):
         See also: :meth:`Trace.__str__`.
     """
     _always_contiguous = True
+    _max_processing_info = 100
 
     def __init__(self, data=np.array([]), header=None):
         # make sure Trace gets initialized with suitable ndarray as self.data
@@ -2298,7 +2299,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         trace's :class:`~obspy.core.trace.Stats` object.
         """
         proc = self.stats.setdefault('processing', [])
-        proc.append(info)
+        if len(proc) == self._max_processing_info-1:
+            msg = ('List of processing information in Trace.stats.processing '
+                   'reached maximal length of {} entries.')
+            warnings.warn(msg.format(self._max_processing_info))
+        if len(proc) < self._max_processing_info:
+            proc.append(info)
 
     @_add_processing_info
     def split(self):
