@@ -61,7 +61,7 @@ clibsignal.ppick.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
                            flags='C_CONTIGUOUS'),
     C.c_int, C.POINTER(C.c_int), C.c_char_p, C.c_float, C.c_int, C.c_int,
-    C.c_float, C.c_float, C.c_int, C.c_int]
+    C.c_float, C.c_float, C.c_int, C.c_int, C.POINTER(C.c_float)]
 clibsignal.ppick.restype = C.c_int
 
 clibsignal.ar_picker.argtypes = [
