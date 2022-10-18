@@ -66,7 +66,7 @@ Write data back to disc or a file like object using the
 Several key word arguments are available to set required GCF specific header
 information and allowed misalignment of supported starttime of first data
 sample: ``stream_id``, ``system_id``, ``is_leap``, ``gain``, ``ttl``, ``digi``,
-``sys_type``, ``missalign``
+``sys_type``, ``misalign``
 
 GCF specific header information can also be provided in ``stats.gcf`` on each
 :class:`~obspy.core.trace.Trace` object. If a specific piece of header

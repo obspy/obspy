@@ -453,7 +453,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
 
 
 def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
-               gain=None, ttl=None, digi=None, sys_type=None, missalign=0.1,
+               gain=None, ttl=None, digi=None, sys_type=None, misalign=0.1,
                **kwargs):
     """
     Writes a :class:`~obspy.core.stream.Stream` or a :class:`
@@ -522,9 +522,9 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
         :class:`~obspy.core.trace.Trace` object in the input
         :class:`~obspy.core.stream.Stream` object if present else the default
         value is ``0``
-    :type missalign: float
-    :param missalign: fraction of a sampling interval (permitted range is
-        0-0.5) of tolerated missalignment of starttime. If not specified
+    :type misalign: float
+    :param misalign: fraction of a sampling interval (permitted range is
+        0-0.5) of tolerated misalignment of starttime. If not specified
         default value is ``0.1``
 
     ..Note::
@@ -579,9 +579,9 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
         except Exception:
             raise IOError("failed to create output directorie(s) %s" % (d))
 
-    # check missalign parameter for supported range
-    if missalign < 0 or missalign > 0.5:
-        raise TypeError("argument missalign out of range (permitted range "
+    # check misalign parameter for supported range
+    if misalign < 0 or misalign > 0.5:
+        raise TypeError("argument misalign out of range (permitted range "
                         "0 - 0.5)")
 
     ret = 0
@@ -654,19 +654,19 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                 #  up 10% of the sampling interval
                 # hmm is this enough for sampling rates < 1 Hz
                 start = int(round(sec))
-                if abs(start-sec) > 1./sps*missalign:
+                if abs(start-sec) > 1./sps*misalign:
                     raise TypeError("fractional start time not supported for "
                                     "sampling rates <= 250 Hz (in trace %d)" %
                                     (i+1))
             else:
                 # fractional start time supported but restricted, allow for
-                # 10% missalignment
+                # 10% misalignment
                 start = int(math.floor(sec))
                 dt = sec-start
                 t_denom = _SPS_MAP[sps]
                 numerator = dt*t_denom
                 t_numerator = int(round(numerator))
-                if abs(numerator-t_numerator)/t_denom > missalign/sps:
+                if abs(numerator-t_numerator)/t_denom > misalign/sps:
                     raise TypeError("start time in trace %d not aligned with "
                                     "supported (fractional) start time" %
                                     (i+1))

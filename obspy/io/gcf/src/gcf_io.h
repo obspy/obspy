@@ -226,7 +226,7 @@ int cmpSegHead(GcfSeg *s1, GcfSeg *s2);
  * ARGUMENT
  *   s1       GcfSeg to check end of data
  *   s2       GcfSeg to check start of data
- *   tol      missalignment tolerance as fraction of a sample (<0.5)
+ *   tol      misalignment tolerance as fraction of a sample (<0.5)
  * 
  * RETURN
  *  if successfull function returns -1, 0, 1 if s1.end < s2.start (gap), s1.end == s2.start (aligned),

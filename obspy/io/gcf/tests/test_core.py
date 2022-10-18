@@ -247,7 +247,7 @@ class CoreTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             filename = tf.name
             try:
-                _write_gcf(out_stream, filename, missalign=0.15)
+                _write_gcf(out_stream, filename, misalign=0.15)
             except TypeError:
                 pass
             else:
@@ -265,7 +265,7 @@ class CoreTestCase(unittest.TestCase):
         # Try to write to temporary file, this should fail
         with NamedTemporaryFile() as tf:
             filename = tf.name
-            _write_gcf(out_stream, filename, missalign=0.15)
+            _write_gcf(out_stream, filename, misalign=0.15)
 
     def test_write_read(self):
         """
