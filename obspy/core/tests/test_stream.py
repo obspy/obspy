@@ -1948,6 +1948,7 @@ class TestStream:
                 read('/path/to/slist_float.ascii',
                      headonly=True, starttime=0, endtime=1)
 
+    @pytest.mark.network
     def test_read_url_via_network(self):
         """
         Testing read function with an URL fetching data via network connection
