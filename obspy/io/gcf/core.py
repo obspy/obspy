@@ -450,15 +450,16 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                gain=None, ttl=None, digi=None, sys_type=None, misalign=0.1,
                **kwargs):
     """
-    Writes a :class:`~obspy.core.stream.Stream` or a :class:`
-    ~obspy.core.trace.Trace` to a GCF file
+    Writes a :class:`~obspy.core.stream.Stream` or a
+    :class:`~obspy.core.trace.Trace` to a GCF file
 
     Only GCF data records are supported. Function supports format as described
     by GCF Reference
     `SWA-RFC-GCFR Issue F, December 2021
-      <https://www.guralp.com/apps/ok?doc=GCF_format>`
+      <https://www.guralp.com/apps/ok?doc=GCF_format>`_
 
     .. warning::
+
             This function should NOT be called directly, it registers via the
             ObsPy :func:`~obspy.core.stream.write` function, call this
             instead.
