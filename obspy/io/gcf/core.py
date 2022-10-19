@@ -608,7 +608,9 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                 data = np.require(data, dtype=np.int32,
                                   requirements=['C_CONTIGUOUS'])
                 if not np.all(data == trace.data):
-                    msg = 'data in trace %d fitted into signed 32-integers'
+                    msg = ('some samples were exceeding the data range that '
+                           'GCF format can store (signed 32-bit integer), so '
+                           'the data was clipped')
                     warnings.warn(msg)
                 trace.data = data
             else:
