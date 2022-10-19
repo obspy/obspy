@@ -459,9 +459,8 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
     :class:`~obspy.core.trace.Trace` to a GCF file
 
     Only GCF data records are supported. Function supports format as described
-    by GCF Reference
-    `SWA-RFC-GCFR Issue F, December 2021
-      <https://www.guralp.com/apps/ok?doc=GCF_format>`_
+    by `GCF Reference <https://www.guralp.com/apps/ok?doc=GCF_format>`_
+    SWA-RFC-GCFR Issue F, December 2021.
 
     .. warning::
 
