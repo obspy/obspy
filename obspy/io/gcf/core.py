@@ -584,259 +584,256 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
 
     ret = 0
     # Load shared library
-    try:
-        gcf_io = _load_cdll("gcf")
-    except Exception as e:
-        raise IOError(str(e))
-    else:
-        # declare function argument and return types
-        gcf_io.write_gcf.argtypes = [ctypes.c_char_p, ctypes.POINTER(_GcfFile)]
-        gcf_io.write_gcf.restype = ctypes.c_int
+    gcf_io = _load_cdll("gcf")
 
-        # prepare the GcfFile object
-        obj = _GcfFile()
-        obj.n_seg = len(stream)
-        obj.seg = (_GcfSeg * obj.n_seg)()
-        obj.n_alloc = obj.n_seg
-        ctypes.cast(obj.seg, ctypes.POINTER(_GcfSeg))
+    # declare function argument and return types
+    gcf_io.write_gcf.argtypes = [ctypes.c_char_p, ctypes.POINTER(_GcfFile)]
+    gcf_io.write_gcf.restype = ctypes.c_int
 
-        for i, trace in enumerate(stream):
-            gcf_stats = trace.stats.gcf if hasattr(trace.stats, 'gcf') \
-                else None
+    # prepare the GcfFile object
+    obj = _GcfFile()
+    obj.n_seg = len(stream)
+    obj.seg = (_GcfSeg * obj.n_seg)()
+    obj.n_alloc = obj.n_seg
+    ctypes.cast(obj.seg, ctypes.POINTER(_GcfSeg))
 
-            # Input checks, all of these are checked in the C-writer function
-            #  but still duplicated here for clarity and ease of formatting
-            #  proper exception messages
+    for i, trace in enumerate(stream):
+        gcf_stats = trace.stats.gcf if hasattr(trace.stats, 'gcf') \
+            else None
 
-            # Check data type
-            if not isinstance(trace.data[0], np.int32):
-                if np.any(trace.data > _GCF_MAX) or \
-                        np.any(trace.data < _GCF_MIN):
-                    msg = ('some samples were exceeding the data range that '
-                           'GCF format can store (signed 32-bit integer), so '
-                           'the data written to file will be clipped')
-                    warnings.warn(msg)
-                trace.data = trace.data.clip(_GCF_MIN, _GCF_MAX)
-                data = np.require(trace.data, dtype=np.int32,
-                                  requirements=['C_CONTIGUOUS'])
-                if not np.all(data == trace.data):
-                    msg = ('data was downcast to int32 and data was altered '
-                           'by this operation')
-                    warnings.warn(msg)
-                trace.data = data
-            else:
-                trace.data = np.ascontiguousarray(trace.data)
+        # Input checks, all of these are checked in the C-writer function
+        #  but still duplicated here for clarity and ease of formatting
+        #  proper exception messages
 
-            # Check sampling rate
-            sps_denom = 1
-            if not compatible_sps(trace.stats.sampling_rate):
-                sps = ".3f" % (trace.stats.sampling_rate) if \
-                               trace.stats.sampling_rate < 1 else \
-                               "%d" % (trace.stats.sampling_rate)
-                raise ValueError("trace sampling rate, %s, in trace %d not "
-                                 "supported in GCF format" % (sps, i+1))
-            else:
-                sps = trace.stats.sampling_rate
-                if sps < 1:
-                    if sps < 0.12:
-                        sps_denom = 10
-                    elif sps < 0.19:
-                        sps_denom = 8
-                    elif sps < 0.24:
-                        sps_denom = 5
-                    elif sps < 0.49:
-                        sps_denom = 4
-                    else:
-                        sps_denom = 2
-                    sps = 1
-                sps = int(sps)
-
-            # check start time
-            sec = trace.stats.starttime.timestamp
-            t_numerator = 0
-            if sps <= 250:
-                # fractional start time not supported, allow for rounding of
-                #  up 10% of the sampling interval
-                # hmm is this enough for sampling rates < 1 Hz
-                start = int(round(sec))
-                if abs(start-sec) > 1./sps*misalign:
-                    raise ValueError("fractional start time not supported for "
-                                     "sampling rates <= 250 Hz (in trace %d)" %
-                                     (i+1))
-            else:
-                # fractional start time supported but restricted, allow for
-                # 10% misalignment
-                start = int(math.floor(sec))
-                dt = sec-start
-                t_denom = _SPS_MAP[sps]
-                numerator = dt*t_denom
-                t_numerator = int(round(numerator))
-                if abs(numerator-t_numerator)/t_denom > misalign/sps:
-                    raise ValueError("start time in trace %d not aligned with "
-                                     "supported (fractional) start time" %
-                                     (i+1))
-
-            # Check if is_leap is set else set
-            use_is_leap = 0
-            if is_leap is not None:
-                use_is_leap = 1 if is_leap else 0
-            elif hasattr(gcf_stats, "is_leap"):
-                use_is_leap = 1 if gcf_stats.is_leap else 0
-
-            # Check if gain is set else set
-            use_gain = 0
-            gain_in_stats = False
-            if gain is not None:
-                use_gain = gain
-            elif hasattr(gcf_stats, "gain"):
-                gain_in_stats = True
-                use_gain = gcf_stats.gain
-            if use_gain not in _VALID_GAIN:
-                if gain is None:
-                    gains = ', '.join(["%d" % g for g in _VALID_GAIN])
-                    raise ValueError("bad value on stats.gcf.gain, %s, in "
-                                     "stats.gcf in trace %d (permitted values:"
-                                     " %s)" % (use_gain, i+1, gains))
-                else:
-                    gains = ', '.join(["%d" % g for g in _VALID_GAIN])
-                    raise ValueError("bad value on argument gain, %s "
-                                     "(permitted values: %s)" %
-                                     (use_gain, gains))
-
-            # Check if ttl is set else set
-            use_ttl = 0
-            if ttl is not None:
-                use_ttl = ttl
-            elif hasattr(gcf_stats, "ttl"):
-                use_ttl = gcf_stats.ttl
-
-            # Check if type is set else set
-            use_digi = 0
-            if digi is not None:
-                use_digi = digi
-            elif hasattr(gcf_stats, "digi"):
-                use_digi = gcf_stats.digi
-            if use_digi not in [0, 1]:
-                if digi is None:
-                    raise ValueError("bad value on stats.gcf.digi, %s, in "
-                                     "trace %d (permitted values: 0, 1)" %
-                                     (use_digi, i+1))
-                else:
-                    raise ValueError("bad value on argument digi, %s "
-                                     "(permitted values: 0, 1)" % (use_digi))
-
-            # Check if sys_type is set else set
-            use_sys_type = 0
-            st_in_stats = False
-            if sys_type is not None:
-                use_sys_type = sys_type
-            elif hasattr(gcf_stats, "sys_type"):
-                st_in_stats = True
-                use_sys_type = gcf_stats.sys_type
-            if use_sys_type not in [0, 1, 2]:
-                if digi is None:
-                    raise ValueError("bad value on stats.gcf.digi, %s, in "
-                                     "trace %d (permitted values: 0, 1, 2)"
-                                     % (use_sys_type, i+1))
-                else:
-                    raise ValueError("bad value on argument digi, %s, "
-                                     "in trace %d (permitted values: 0, 1, 2)"
-                                     % (use_sys_type, i+1))
-            elif use_sys_type != 0 and use_gain == -1:
-                if gain_in_stats and st_in_stats:
-                    raise ValueError(
-                        "value -1 on stats.gcf.gain may only be "
-                        "combined with value 0 on "
-                        "stats.gcf.sys_type (in trace %s)" % (i+1))
-                elif gain_in_stats:
-                    raise ValueError("value -1 on stats.gcf.gain may only be "
-                                     "combined with value 0 on argument "
-                                     "sys_type (in trace %s)" % (i+1))
-                elif st_in_stats:
-                    raise ValueError(
-                        "value -1 on argument gain may only be "
-                        "combined with value 0 on "
-                        "stats.gcf.sys_type (in trace %s)" % (i+1))
-                else:
-                    raise ValueError("value -1 on argument gain may only be "
-                                     "combined with value 0 on argument "
-                                     "sys_type")
-
-            # Check if stream_id is set else build
-            if stream_id is not None:
-                use_stream_id = stream_id
-            elif gcf_stats is not None and hasattr(gcf_stats, "stream_id"):
-                use_stream_id = gcf_stats.stream_id.upper()
-            else:
-                use_stream_id = (trace.stats.station.ljust(4, "X")[:4] +
-                                 (trace.stats.channel[-1]
-                                  if trace.stats.channel
-                                  else 'X')+'0').upper()
-            if len(use_stream_id) != 6:
-                if stream_id is None:
-                    raise ValueError("bad value on stats.gcf.stream_id, %s, "
-                                     "in trace %d (must be 6-character long)" %
-                                     (use_stream_id, i+1))
-                else:
-                    raise ValueError(
-                        "bad value on argument stream_id, %s (must"
-                        " be 6-character long)" % (use_stream_id))
-
-            # Check if system_id is set else set
-            len_system_id = 6 if use_sys_type == 0 \
-                else (5 if use_sys_type == 1 else 4)
-            use_system_id = use_stream_id[:len_system_id]
-            si_in_stats = False
-            if system_id is not None:
-                use_system_id = system_id.upper()
-            elif gcf_stats is not None and hasattr(gcf_stats, "system_id"):
-                si_in_stats = True
-                use_system_id = gcf_stats.system_id.upper()
-            if len(use_system_id) > len_system_id:
-                if st_in_stats and si_in_stats:
-                    raise ValueError("stats.gcf.system_id not compatible with "
-                                     "stats.gcf.sys_type in trace %d (max "
-                                     "length %d characters )" %
-                                     (i+1, len_system_id))
-                elif st_in_stats:
-                    raise ValueError("argument system_id not compatible with "
-                                     "stats.gcf.sys_type in trace %d (max "
-                                     "length %d characters )" %
-                                     (i+1, len_system_id))
-                elif si_in_stats:
-                    raise ValueError("stats.gcf.system_id not compatible with "
-                                     "argument sys_type in trace %d (max length"
-                                     " %d characters )" % (i+1, len_system_id))
-                else:
-                    raise ValueError("argument system_id not compatible with "
-                                     "argument sys_type (max length %d "
-                                     "characters )" % (len_system_id))
-
-            # Populate segment
-            tr = _GcfSeg()
-            tr.streamID = use_stream_id.encode('utf-8')
-            tr.systemID = use_system_id.encode('utf-8')
-            tr.start = start
-            tr.t_numerator = t_numerator
-            tr.t_leap = use_is_leap
-            tr.gain = use_gain
-            tr.sysType = use_sys_type
-            tr.digi = use_digi
-            tr.ttl = use_ttl
-            tr.sps = sps
-            tr.sps_denom = sps_denom
-            tr.n_data = trace.data.size
-            tr.n_alloc = trace.data.size
-            tr.data = trace.data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
-
-            # Add segment to file object
-            obj.seg[i] = tr
-
-        # Write to file
-        ret = gcf_io.write_gcf(filename.encode('utf-8'), obj)
-        if ret == 0:
-            pass
-        elif ret in _ERROR_WRITE:
-            raise _ERROR_WRITE['ret']
+        # Check data type
+        if not isinstance(trace.data[0], np.int32):
+            if np.any(trace.data > _GCF_MAX) or \
+                    np.any(trace.data < _GCF_MIN):
+                msg = ('some samples were exceeding the data range that '
+                       'GCF format can store (signed 32-bit integer), so '
+                       'the data written to file will be clipped')
+                warnings.warn(msg)
+            trace.data = trace.data.clip(_GCF_MIN, _GCF_MAX)
+            data = np.require(trace.data, dtype=np.int32,
+                              requirements=['C_CONTIGUOUS'])
+            if not np.all(data == trace.data):
+                msg = ('data was downcast to int32 and data was altered '
+                       'by this operation')
+                warnings.warn(msg)
+            trace.data = data
         else:
-            raise IOError("unknown error code %d" % (ret))
+            trace.data = np.ascontiguousarray(trace.data)
+
+        # Check sampling rate
+        sps_denom = 1
+        if not compatible_sps(trace.stats.sampling_rate):
+            sps = ".3f" % (trace.stats.sampling_rate) if \
+                           trace.stats.sampling_rate < 1 else \
+                           "%d" % (trace.stats.sampling_rate)
+            raise ValueError("trace sampling rate, %s, in trace %d not "
+                             "supported in GCF format" % (sps, i+1))
+        else:
+            sps = trace.stats.sampling_rate
+            if sps < 1:
+                if sps < 0.12:
+                    sps_denom = 10
+                elif sps < 0.19:
+                    sps_denom = 8
+                elif sps < 0.24:
+                    sps_denom = 5
+                elif sps < 0.49:
+                    sps_denom = 4
+                else:
+                    sps_denom = 2
+                sps = 1
+            sps = int(sps)
+
+        # check start time
+        sec = trace.stats.starttime.timestamp
+        t_numerator = 0
+        if sps <= 250:
+            # fractional start time not supported, allow for rounding of
+            #  up 10% of the sampling interval
+            # hmm is this enough for sampling rates < 1 Hz
+            start = int(round(sec))
+            if abs(start-sec) > 1./sps*misalign:
+                raise ValueError("fractional start time not supported for "
+                                 "sampling rates <= 250 Hz (in trace %d)" %
+                                 (i+1))
+        else:
+            # fractional start time supported but restricted, allow for
+            # 10% misalignment
+            start = int(math.floor(sec))
+            dt = sec-start
+            t_denom = _SPS_MAP[sps]
+            numerator = dt*t_denom
+            t_numerator = int(round(numerator))
+            if abs(numerator-t_numerator)/t_denom > misalign/sps:
+                raise ValueError("start time in trace %d not aligned with "
+                                 "supported (fractional) start time" %
+                                 (i+1))
+
+        # Check if is_leap is set else set
+        use_is_leap = 0
+        if is_leap is not None:
+            use_is_leap = 1 if is_leap else 0
+        elif hasattr(gcf_stats, "is_leap"):
+            use_is_leap = 1 if gcf_stats.is_leap else 0
+
+        # Check if gain is set else set
+        use_gain = 0
+        gain_in_stats = False
+        if gain is not None:
+            use_gain = gain
+        elif hasattr(gcf_stats, "gain"):
+            gain_in_stats = True
+            use_gain = gcf_stats.gain
+        if use_gain not in _VALID_GAIN:
+            if gain is None:
+                gains = ', '.join(["%d" % g for g in _VALID_GAIN])
+                raise ValueError("bad value on stats.gcf.gain, %s, in "
+                                 "stats.gcf in trace %d (permitted values:"
+                                 " %s)" % (use_gain, i+1, gains))
+            else:
+                gains = ', '.join(["%d" % g for g in _VALID_GAIN])
+                raise ValueError("bad value on argument gain, %s "
+                                 "(permitted values: %s)" %
+                                 (use_gain, gains))
+
+        # Check if ttl is set else set
+        use_ttl = 0
+        if ttl is not None:
+            use_ttl = ttl
+        elif hasattr(gcf_stats, "ttl"):
+            use_ttl = gcf_stats.ttl
+
+        # Check if type is set else set
+        use_digi = 0
+        if digi is not None:
+            use_digi = digi
+        elif hasattr(gcf_stats, "digi"):
+            use_digi = gcf_stats.digi
+        if use_digi not in [0, 1]:
+            if digi is None:
+                raise ValueError("bad value on stats.gcf.digi, %s, in "
+                                 "trace %d (permitted values: 0, 1)" %
+                                 (use_digi, i+1))
+            else:
+                raise ValueError("bad value on argument digi, %s "
+                                 "(permitted values: 0, 1)" % (use_digi))
+
+        # Check if sys_type is set else set
+        use_sys_type = 0
+        st_in_stats = False
+        if sys_type is not None:
+            use_sys_type = sys_type
+        elif hasattr(gcf_stats, "sys_type"):
+            st_in_stats = True
+            use_sys_type = gcf_stats.sys_type
+        if use_sys_type not in [0, 1, 2]:
+            if digi is None:
+                raise ValueError("bad value on stats.gcf.digi, %s, in "
+                                 "trace %d (permitted values: 0, 1, 2)"
+                                 % (use_sys_type, i+1))
+            else:
+                raise ValueError("bad value on argument digi, %s, "
+                                 "in trace %d (permitted values: 0, 1, 2)"
+                                 % (use_sys_type, i+1))
+        elif use_sys_type != 0 and use_gain == -1:
+            if gain_in_stats and st_in_stats:
+                raise ValueError(
+                    "value -1 on stats.gcf.gain may only be "
+                    "combined with value 0 on "
+                    "stats.gcf.sys_type (in trace %s)" % (i+1))
+            elif gain_in_stats:
+                raise ValueError("value -1 on stats.gcf.gain may only be "
+                                 "combined with value 0 on argument "
+                                 "sys_type (in trace %s)" % (i+1))
+            elif st_in_stats:
+                raise ValueError(
+                    "value -1 on argument gain may only be "
+                    "combined with value 0 on "
+                    "stats.gcf.sys_type (in trace %s)" % (i+1))
+            else:
+                raise ValueError("value -1 on argument gain may only be "
+                                 "combined with value 0 on argument "
+                                 "sys_type")
+
+        # Check if stream_id is set else build
+        if stream_id is not None:
+            use_stream_id = stream_id
+        elif gcf_stats is not None and hasattr(gcf_stats, "stream_id"):
+            use_stream_id = gcf_stats.stream_id.upper()
+        else:
+            use_stream_id = (trace.stats.station.ljust(4, "X")[:4] +
+                             (trace.stats.channel[-1]
+                              if trace.stats.channel
+                              else 'X')+'0').upper()
+        if len(use_stream_id) != 6:
+            if stream_id is None:
+                raise ValueError("bad value on stats.gcf.stream_id, %s, "
+                                 "in trace %d (must be 6-character long)" %
+                                 (use_stream_id, i+1))
+            else:
+                raise ValueError(
+                    "bad value on argument stream_id, %s (must"
+                    " be 6-character long)" % (use_stream_id))
+
+        # Check if system_id is set else set
+        len_system_id = 6 if use_sys_type == 0 \
+            else (5 if use_sys_type == 1 else 4)
+        use_system_id = use_stream_id[:len_system_id]
+        si_in_stats = False
+        if system_id is not None:
+            use_system_id = system_id.upper()
+        elif gcf_stats is not None and hasattr(gcf_stats, "system_id"):
+            si_in_stats = True
+            use_system_id = gcf_stats.system_id.upper()
+        if len(use_system_id) > len_system_id:
+            if st_in_stats and si_in_stats:
+                raise ValueError("stats.gcf.system_id not compatible with "
+                                 "stats.gcf.sys_type in trace %d (max "
+                                 "length %d characters )" %
+                                 (i+1, len_system_id))
+            elif st_in_stats:
+                raise ValueError("argument system_id not compatible with "
+                                 "stats.gcf.sys_type in trace %d (max "
+                                 "length %d characters )" %
+                                 (i+1, len_system_id))
+            elif si_in_stats:
+                raise ValueError("stats.gcf.system_id not compatible with "
+                                 "argument sys_type in trace %d (max length"
+                                 " %d characters )" % (i+1, len_system_id))
+            else:
+                raise ValueError("argument system_id not compatible with "
+                                 "argument sys_type (max length %d "
+                                 "characters )" % (len_system_id))
+
+        # Populate segment
+        tr = _GcfSeg()
+        tr.streamID = use_stream_id.encode('utf-8')
+        tr.systemID = use_system_id.encode('utf-8')
+        tr.start = start
+        tr.t_numerator = t_numerator
+        tr.t_leap = use_is_leap
+        tr.gain = use_gain
+        tr.sysType = use_sys_type
+        tr.digi = use_digi
+        tr.ttl = use_ttl
+        tr.sps = sps
+        tr.sps_denom = sps_denom
+        tr.n_data = trace.data.size
+        tr.n_alloc = trace.data.size
+        tr.data = trace.data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+
+        # Add segment to file object
+        obj.seg[i] = tr
+
+    # Write to file
+    ret = gcf_io.write_gcf(filename.encode('utf-8'), obj)
+    if ret == 0:
+        pass
+    elif ret in _ERROR_WRITE:
+        raise _ERROR_WRITE['ret']
+    else:
+        raise IOError("unknown error code %d" % (ret))
