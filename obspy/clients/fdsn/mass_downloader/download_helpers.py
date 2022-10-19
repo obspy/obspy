@@ -941,12 +941,16 @@ class ClientDownloadHelper(object):
         downloaded_bytes = 0
         discarded_bytes = 0
         highest_channel_priorities = {}
+        highest_location_priorities = {}
         for sta in self.stations.values():
             for cha in sta.channels:
                 for interval in cha.intervals:
                     sta_int_key = _sta_int_key(sta, interval)
                     current_cha_prio_high = \
                         highest_channel_priorities.setdefault(
+                            sta_int_key, np.inf)
+                    current_loc_prio_high = \
+                        highest_location_priorities.setdefault(
                             sta_int_key, np.inf)
                     # The status of the interval should not have changed if
                     # it did not require downloading in the first place.
@@ -1021,6 +1025,9 @@ class ClientDownloadHelper(object):
                     if cha.channel_priority < current_cha_prio_high:
                         highest_channel_priorities[sta_int_key] = \
                             cha.channel_priority
+                    if cha.location_priority < current_loc_prio_high:
+                        highest_location_priorities[sta_int_key] = \
+                            cha.location_priority
                     downloaded_bytes += size
                     interval.status = STATUS.DOWNLOADED
 
@@ -1033,10 +1040,12 @@ class ClientDownloadHelper(object):
                     # we only look at actually downloaded and approved data
                     if interval.status != STATUS.DOWNLOADED:
                         continue
-                    sta_int_key = _sta_int_key(sta, interval)
+                    key = _sta_int_key(sta, interval)
                     # greater than here actually means a lower priority
-                    priority = cha.channel_priority
-                    if priority > highest_channel_priorities[sta_int_key]:
+                    cha_prio = cha.channel_priority
+                    loc_prio = cha.location_priority
+                    if cha_prio > highest_channel_priorities[key] or \
+                            loc_prio > highest_location_priorities[key]:
                         self.logger.info(
                             f"File {interval.filename} is not needed since a "
                             f"higher priority channel was downloaded as well. "
