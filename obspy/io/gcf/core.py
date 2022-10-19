@@ -206,16 +206,20 @@ def _is_gcf(filename):
     gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
     gcf_io.free_GcfFile.restype = None
 
-    # Decode first block
-    obj = _GcfFile()
-    b_filename = filename.encode('utf-8')
-    ret = gcf_io.read_gcf(b_filename, obj, 3)
-    if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
-            or obj.n_errData:
+    try:
+        # Decode first block
+        obj = _GcfFile()
+        b_filename = filename.encode('utf-8')
+        ret = gcf_io.read_gcf(b_filename, obj, 3)
+        if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
+                or obj.n_errData:
+            return False
+    except Exception:
         return False
+    finally:
+        # release allocated memory
+        gcf_io.free_GcfFile(obj)
 
-    # release allocated memory
-    gcf_io.free_GcfFile(obj)
     return True
 
 
