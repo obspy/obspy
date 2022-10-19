@@ -554,6 +554,9 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
         0-0.5) of tolerated misalignment of starttime. If not specified
         default value is ``0.1``
     """
+    # avoid altering input object
+    stream = stream.copy()
+
     # Make sure we have a Stream or Trace object
     if not isinstance(stream, Stream):
         if not isinstance(stream, Trace):
