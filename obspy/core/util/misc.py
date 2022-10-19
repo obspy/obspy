@@ -386,7 +386,7 @@ def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
     old_dir = os.getcwd()
     os.chdir(tempdir)
     try:
-        yield
+        yield tempdir
     finally:
         os.chdir(old_dir)
         try:
