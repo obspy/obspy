@@ -3,11 +3,13 @@
 """
 GCF bindings to python
 """
-import os
+import ctypes
 import math
+import os
 import warnings
-import ctypes  # NOQA
+
 import numpy as np
+
 from obspy import UTCDateTime
 from obspy.core import Stream, Trace, AttribDict
 from obspy.core.util.libnames import _load_cdll
