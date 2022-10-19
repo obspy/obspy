@@ -114,16 +114,14 @@ def compatible_sps(sps):
     :rtype: bool
     :returns: True if sampling rate is compatible else False
     """
-    is_compat = True
     if not (isinstance(sps, int) or isinstance(sps, float)):
-        is_compat = False
-    else:
-        if sps >= 1 and sps <= 250:
-            if int(sps)-sps != 0 or sps in _SPS_RESERVED:
-                is_compat = False
-        elif sps not in _SPS_MAP:
-            is_compat = False
-    return is_compat
+        return False
+    if sps >= 1 and sps <= 250:
+        if int(sps)-sps != 0 or sps in _SPS_RESERVED:
+            return False
+    elif sps not in _SPS_MAP:
+        return False
+    return True
 
 
 def get_time_denominator(sps):
