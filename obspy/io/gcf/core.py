@@ -649,9 +649,9 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                 # hmm is this enough for sampling rates < 1 Hz
                 start = int(round(sec))
                 if abs(start-sec) > 1./sps*misalign:
-                    raise TypeError("fractional start time not supported for "
-                                    "sampling rates <= 250 Hz (in trace %d)" %
-                                    (i+1))
+                    raise ValueError("fractional start time not supported for "
+                                     "sampling rates <= 250 Hz (in trace %d)" %
+                                     (i+1))
             else:
                 # fractional start time supported but restricted, allow for
                 # 10% misalignment
@@ -661,9 +661,9 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                 numerator = dt*t_denom
                 t_numerator = int(round(numerator))
                 if abs(numerator-t_numerator)/t_denom > misalign/sps:
-                    raise TypeError("start time in trace %d not aligned with "
-                                    "supported (fractional) start time" %
-                                    (i+1))
+                    raise ValueError("start time in trace %d not aligned with "
+                                     "supported (fractional) start time" %
+                                     (i+1))
 
             # Check if is_leap is set else set
             use_is_leap = 0
@@ -683,14 +683,14 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
             if use_gain not in _VALID_GAIN:
                 if gain is None:
                     gains = ', '.join(["%d" % g for g in _VALID_GAIN])
-                    raise TypeError("bad value on stats.gcf.gain, %s, in "
-                                    "stats.gcf in trace %d (permitted values:"
-                                    " %s)" % (use_gain, i+1, gains))
+                    raise ValueError("bad value on stats.gcf.gain, %s, in "
+                                     "stats.gcf in trace %d (permitted values:"
+                                     " %s)" % (use_gain, i+1, gains))
                 else:
                     gains = ', '.join(["%d" % g for g in _VALID_GAIN])
-                    raise TypeError("bad value on argument gain, %s "
-                                    "(permitted values: %s)" %
-                                    (use_gain, gains))
+                    raise ValueError("bad value on argument gain, %s "
+                                     "(permitted values: %s)" %
+                                     (use_gain, gains))
 
             # Check if ttl is set else set
             use_ttl = 0
@@ -707,12 +707,12 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                 use_digi = gcf_stats.digi
             if use_digi not in [0, 1]:
                 if digi is None:
-                    raise TypeError("bad value on stats.gcf.digi, %s, in "
-                                    "trace %d (permitted values: 0, 1)" %
-                                    (use_digi, i+1))
+                    raise ValueError("bad value on stats.gcf.digi, %s, in "
+                                     "trace %d (permitted values: 0, 1)" %
+                                     (use_digi, i+1))
                 else:
-                    raise TypeError("bad value on argument digi, %s "
-                                    "(permitted values: 0, 1)" % (use_digi))
+                    raise ValueError("bad value on argument digi, %s "
+                                     "(permitted values: 0, 1)" % (use_digi))
 
             # Check if sys_type is set else set
             use_sys_type = 0
@@ -724,30 +724,30 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                 use_sys_type = gcf_stats.sys_type
             if use_sys_type not in [0, 1, 2]:
                 if digi is None:
-                    raise TypeError("bad value on stats.gcf.digi, %s, in "
-                                    "trace %d (permitted values: 0, 1, 2)"
-                                    % (use_sys_type, i+1))
+                    raise ValueError("bad value on stats.gcf.digi, %s, in "
+                                     "trace %d (permitted values: 0, 1, 2)"
+                                     % (use_sys_type, i+1))
                 else:
-                    raise TypeError("bad value on argument digi, %s, "
-                                    "in trace %d (permitted values: 0, 1, 2)"
-                                    % (use_sys_type, i+1))
+                    raise ValueError("bad value on argument digi, %s, "
+                                     "in trace %d (permitted values: 0, 1, 2)"
+                                     % (use_sys_type, i+1))
             elif use_sys_type != 0 and use_gain == -1:
                 if gain_in_stats and st_in_stats:
-                    raise TypeError("value -1 on stats.gcf.gain may only be "
-                                    "combined with value 0 on "
-                                    "stats.gcf.sys_type (in trace %s)" % (i+1))
+                    raise ValueError("value -1 on stats.gcf.gain may only be "
+                                     "combined with value 0 on "
+                                     "stats.gcf.sys_type (in trace %s)" % (i+1))
                 elif gain_in_stats:
-                    raise TypeError("value -1 on stats.gcf.gain may only be "
-                                    "combined with value 0 on argument "
-                                    "sys_type (in trace %s)" % (i+1))
+                    raise ValueError("value -1 on stats.gcf.gain may only be "
+                                     "combined with value 0 on argument "
+                                     "sys_type (in trace %s)" % (i+1))
                 elif st_in_stats:
-                    raise TypeError("value -1 on argument gain may only be "
-                                    "combined with value 0 on "
-                                    "stats.gcf.sys_type (in trace %s)" % (i+1))
+                    raise ValueError("value -1 on argument gain may only be "
+                                     "combined with value 0 on "
+                                     "stats.gcf.sys_type (in trace %s)" % (i+1))
                 else:
-                    raise TypeError("value -1 on argument gain may only be "
-                                    "combined with value 0 on argument "
-                                    "sys_type")
+                    raise ValueError("value -1 on argument gain may only be "
+                                     "combined with value 0 on argument "
+                                     "sys_type")
 
             # Check if stream_id is set else build
             if stream_id is not None:
@@ -761,12 +761,12 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                                   else 'X')+'0').upper()
             if len(use_stream_id) != 6:
                 if stream_id is None:
-                    raise TypeError("bad value on stats.gcf.stream_id, %s, in "
-                                    "trace %d (must be 6-character long)" %
-                                    (use_stream_id, i+1))
+                    raise ValueError("bad value on stats.gcf.stream_id, %s, in "
+                                     "trace %d (must be 6-character long)" %
+                                     (use_stream_id, i+1))
                 else:
-                    raise TypeError("bad value on argument stream_id, %s (must"
-                                    " be 6-character long)" % (use_stream_id))
+                    raise ValueError("bad value on argument stream_id, %s (must"
+                                     " be 6-character long)" % (use_stream_id))
 
             # Check if system_id is set else set
             len_system_id = 6 if use_sys_type == 0 \
@@ -780,23 +780,23 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                 use_system_id = gcf_stats.system_id.upper()
             if len(use_system_id) > len_system_id:
                 if st_in_stats and si_in_stats:
-                    raise TypeError("stats.gcf.system_id not compatible with "
-                                    "stats.gcf.sys_type in trace %d (max "
-                                    "length %d characters )" %
-                                    (i+1, len_system_id))
+                    raise ValueError("stats.gcf.system_id not compatible with "
+                                     "stats.gcf.sys_type in trace %d (max "
+                                     "length %d characters )" %
+                                     (i+1, len_system_id))
                 elif st_in_stats:
-                    raise TypeError("argument system_id not compatible with "
-                                    "stats.gcf.sys_type in trace %d (max "
-                                    "length %d characters )" %
-                                    (i+1, len_system_id))
+                    raise ValueError("argument system_id not compatible with "
+                                     "stats.gcf.sys_type in trace %d (max "
+                                     "length %d characters )" %
+                                     (i+1, len_system_id))
                 elif si_in_stats:
-                    raise TypeError("stats.gcf.system_id not compatible with "
-                                    "argument sys_type in trace %d (max length"
-                                    " %d characters )" % (i+1, len_system_id))
+                    raise ValueError("stats.gcf.system_id not compatible with "
+                                     "argument sys_type in trace %d (max length"
+                                     " %d characters )" % (i+1, len_system_id))
                 else:
-                    raise TypeError("argument system_id not compatible with "
-                                    "argument sys_type (max length %d "
-                                    "characters )" % (len_system_id))
+                    raise ValueError("argument system_id not compatible with "
+                                     "argument sys_type (max length %d "
+                                     "characters )" % (len_system_id))
 
             # Populate segment
             tr = _GcfSeg()
@@ -827,16 +827,16 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
         elif ret == -1:
             raise IOError("failed to open file to write to")
         elif ret == 1:
-            raise TypeError("no data or inconsistent headers")
+            raise ValueError("no data or inconsistent headers")
         elif ret == 2:
-            raise TypeError("unsupported sampling rate")
+            raise ValueError("unsupported sampling rate")
         elif ret == 3:
-            raise TypeError("bad fractional start time")
+            raise ValueError("bad fractional start time")
         elif ret == 4:
-            raise TypeError("unsupported gain")
+            raise ValueError("unsupported gain")
         elif ret == 5:
-            raise TypeError("unsupported instrument type")
+            raise ValueError("unsupported instrument type")
         elif ret == 6:
-            raise TypeError("to long system_id")
+            raise ValueError("too long system_id")
         else:
             raise IOError("unknown error code %d" % (ret))
