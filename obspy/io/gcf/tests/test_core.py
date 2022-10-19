@@ -7,6 +7,7 @@ import os
 import unittest
 
 import numpy as np
+import pytest
 
 from obspy import read
 from obspy.core import Stream, Trace, AttribDict
@@ -246,15 +247,10 @@ class CoreTestCase(unittest.TestCase):
         # Try to write to temporary file, this should fail
         with NamedTemporaryFile() as tf:
             filename = tf.name
-            try:
+            # should raise a ValueError, otherwise write_gcf erroneously passed
+            # a miss-aligned start time above set tolerance
+            with pytest.raises(ValueError):
                 _write_gcf(out_stream, filename, misalign=0.15)
-            except TypeError:
-                pass
-            else:
-                # Raise TypeError exception if this were successful
-                err = "write_gcf erroneously passed a miss-aligned " +  \
-                      "start time above set tolerance"
-                raise TypeError(err)
 
         # 2
         # adjust start time in stream object to be miss-aligned within
