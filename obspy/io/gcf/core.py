@@ -312,10 +312,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
                 ==================  ==============  ===========================
             ``stats.gcf.ttl`` : int
                 tap-table-lookup to retrieve sequence of decimation filters
-                used
-                (see
-                `GCF reference <https://www.guralp.com/apps/ok?doc=GCF_format>`_
-                for further info)
+                used (see GCF reference linked above for further info)
             ``stats.gcf.blk`` : int
                 Lowest block number in gcf file of blocks included in trace
                 (count start at 0)
@@ -354,7 +351,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
     stream = None
     # Load shared library
     gcf_io = _load_cdll("gcf")
-        
+
     # declare function argument and return types
     gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
                                 ctypes.POINTER(_GcfFile),
@@ -383,14 +380,14 @@ def _read_gcf(filename, headonly=False, network='', station='',
     if ret == -1:
         if os.path.isfile(filename):
             raise IOError("cannot open file %s in read mode (missing "
-                            "read permissions for user?)" % (filename))
+                          "read permissions for user?)" % (filename))
         else:
             raise IOError("%s is not a file" % (filename))
     elif ret == 1:
         raise IOError("file %s is not a GCF data file" % (filename))
     elif ret:
         raise IOError("failed to read file %s (unknown error code %d "
-                        "returned)" % (filename, ret))
+                      "returned)" % (filename, ret))
     else:
         err_msg = ""
         # So far so good, set up trace objects
@@ -749,17 +746,19 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                                      % (use_sys_type, i+1))
             elif use_sys_type != 0 and use_gain == -1:
                 if gain_in_stats and st_in_stats:
-                    raise ValueError("value -1 on stats.gcf.gain may only be "
-                                     "combined with value 0 on "
-                                     "stats.gcf.sys_type (in trace %s)" % (i+1))
+                    raise ValueError(
+                        "value -1 on stats.gcf.gain may only be "
+                        "combined with value 0 on "
+                        "stats.gcf.sys_type (in trace %s)" % (i+1))
                 elif gain_in_stats:
                     raise ValueError("value -1 on stats.gcf.gain may only be "
                                      "combined with value 0 on argument "
                                      "sys_type (in trace %s)" % (i+1))
                 elif st_in_stats:
-                    raise ValueError("value -1 on argument gain may only be "
-                                     "combined with value 0 on "
-                                     "stats.gcf.sys_type (in trace %s)" % (i+1))
+                    raise ValueError(
+                        "value -1 on argument gain may only be "
+                        "combined with value 0 on "
+                        "stats.gcf.sys_type (in trace %s)" % (i+1))
                 else:
                     raise ValueError("value -1 on argument gain may only be "
                                      "combined with value 0 on argument "
@@ -777,12 +776,13 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
                                   else 'X')+'0').upper()
             if len(use_stream_id) != 6:
                 if stream_id is None:
-                    raise ValueError("bad value on stats.gcf.stream_id, %s, in "
-                                     "trace %d (must be 6-character long)" %
+                    raise ValueError("bad value on stats.gcf.stream_id, %s, "
+                                     "in trace %d (must be 6-character long)" %
                                      (use_stream_id, i+1))
                 else:
-                    raise ValueError("bad value on argument stream_id, %s (must"
-                                     " be 6-character long)" % (use_stream_id))
+                    raise ValueError(
+                        "bad value on argument stream_id, %s (must"
+                        " be 6-character long)" % (use_stream_id))
 
             # Check if system_id is set else set
             len_system_id = 6 if use_sys_type == 0 \
