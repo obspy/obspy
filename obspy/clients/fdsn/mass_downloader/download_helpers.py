@@ -1018,7 +1018,6 @@ class ClientDownloadHelper(object):
                             interval.status = STATUS.DOWNLOAD_REJECTED
                             continue
 
-                    self.logger.info(f'{cha.channel} {cha.channel_priority}')
                     if cha.channel_priority < current_cha_prio_high:
                         highest_channel_priorities[sta_int_key] = \
                             cha.channel_priority
