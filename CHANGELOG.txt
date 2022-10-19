@@ -58,6 +58,10 @@ Changes:
      takeoff angle, see #3075)
    * add function to check whether phase is valid IASPEI phase in Seisan (#3075)
    * full support for writing high-accuracy origin line (see #3075)
+ - obspy.io.sac:
+   * expose a `keep_sac_header` flag to the `write` plugin, which allows users
+     to write a "fresh" SAC header, instead of attempting to merge information
+     from an old SAC header, if one exists. (see #2760)
 
 1.3.1 (doi: 10.5281/zenodo.7193374)
 ===================================
