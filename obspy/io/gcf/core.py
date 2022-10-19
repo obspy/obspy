@@ -615,13 +615,18 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
 
             # Check data type
             if not isinstance(trace.data[0], np.int32):
-                data = trace.data.clip(_GCF_MIN, _GCF_MAX)
-                data = np.require(data, dtype=np.int32,
-                                  requirements=['C_CONTIGUOUS'])
-                if not np.all(data == trace.data):
+                if np.any(trace.data > _GCF_MAX) or \
+                        np.any(trace.data < _GCF_MIN):
                     msg = ('some samples were exceeding the data range that '
                            'GCF format can store (signed 32-bit integer), so '
-                           'the data was clipped')
+                           'the data written to file will be clipped')
+                    warnings.warn(msg)
+                trace.data = trace.data.clip(_GCF_MIN, _GCF_MAX)
+                data = np.require(trace.data, dtype=np.int32,
+                                  requirements=['C_CONTIGUOUS'])
+                if not np.all(data == trace.data):
+                    msg = ('data was downcast to int32 and data was altered '
+                           'by this operation')
                     warnings.warn(msg)
                 trace.data = data
             else:
