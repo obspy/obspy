@@ -190,41 +190,40 @@ def _is_gcf(filename):
     :rtype: bool
     :return: True if a object pointed to by path is a GCF file.
     """
-    is_gcf = True
     if not os.path.isfile(filename) or os.path.getsize(filename) % 1024:
         # File either does not point at a file object or file is not of
         # proper size
-        is_gcf = False
-    else:
-        # Load shared library
-        gcf_io = _load_cdll("gcf")
+        return False
 
-        # declare function argument and return types
-        gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
-                                    ctypes.POINTER(_GcfFile),
-                                    ctypes.c_int]
-        gcf_io.read_gcf.restype = ctypes.c_int
-        gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
-        gcf_io.free_GcfFile.restype = None
+    # Load shared library
+    gcf_io = _load_cdll("gcf")
 
-        # Decode first block
-        obj = _GcfFile()
-        b_filename = filename.encode('utf-8')
-        ret = gcf_io.read_gcf(b_filename, obj, 3)
-        if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
-                or obj.n_errData:
-            is_gcf = False
-            if filename[-4:] == ".gcf":
-                print("file: %s" % (filename))
-                print("ret: %d" % (ret))
-                print("n-blocks: %d" % os.path.getsize(filename)/1024.)
-                print("obj.n_blk = %d" % (obj.n_blk))
-                print("obj.n_errHead = %d" % (obj.n_errHead))
-                print("obj.n_errData = %d" % (obj.n_errData))
+    # declare function argument and return types
+    gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
+                                ctypes.POINTER(_GcfFile),
+                                ctypes.c_int]
+    gcf_io.read_gcf.restype = ctypes.c_int
+    gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
+    gcf_io.free_GcfFile.restype = None
 
-        # release allocated memory
-        gcf_io.free_GcfFile(obj)
-    return is_gcf
+    # Decode first block
+    obj = _GcfFile()
+    b_filename = filename.encode('utf-8')
+    ret = gcf_io.read_gcf(b_filename, obj, 3)
+    if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
+            or obj.n_errData:
+        return False
+        if filename[-4:] == ".gcf":
+            print("file: %s" % (filename))
+            print("ret: %d" % (ret))
+            print("n-blocks: %d" % os.path.getsize(filename)/1024.)
+            print("obj.n_blk = %d" % (obj.n_blk))
+            print("obj.n_errHead = %d" % (obj.n_errHead))
+            print("obj.n_errData = %d" % (obj.n_errData))
+
+    # release allocated memory
+    gcf_io.free_GcfFile(obj)
+    return True
 
 
 def _read_gcf(filename, headonly=False, network='', station='',
