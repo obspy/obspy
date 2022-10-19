@@ -445,7 +445,8 @@ def _write_sac(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _internal_write_sac(trace, buf, byteorder="<", keep_sac_header=True):
+def _internal_write_sac(trace, buf, byteorder="<", keep_sac_header=True,
+                        **kwargs):
     """
     Writes a single trace to an open file or file-like object
 
@@ -463,7 +464,7 @@ def _internal_write_sac(trace, buf, byteorder="<", keep_sac_header=True):
         Defaults to little endian.
     :type byteorder: int or str
     :param keep_sac_header: Whether to merge the ``Stats`` header with an
-        existing ``Stats.sac`` SAC header, if one exists.
+        existing ``Stats.sac`` SAC header, if one exists. Defaults to ``True``.
         See :func:`~obspy.io.sac.util.obspy_to_sac_header` for more.
     :type keep_sac_header: bool
     """
