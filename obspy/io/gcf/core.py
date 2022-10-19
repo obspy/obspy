@@ -242,36 +242,6 @@ def _read_gcf(filename, headonly=False, network='', station='',
             This function should NOT be called directly, it registers via the
             ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
-    :param filename: path to GCF file to read
-    :type headonly: bool, optional
-    :param headonly: if True only read block headers
-    :type network: str, optional
-    :param network: network code to use
-    :type station: str, optional
-    :param station: station code to use, if not specified unitID in gcf header
-       will be used (first 4 characters in stream_id)
-    :type location: str, optional
-    :param location: location code to use
-    :type channel_prefix: str, optional
-    :param channel_prefix: 2-character channel prefix to use (e.g. ``"HH"`` for
-        a high-gain seismometer sampled at 200 Hz)
-    :type blockmerge: bool, optional
-    :param blockmerge: if True merge blocks if aligned
-    :type cleanoverlap: bool, optional
-    :param cleanoverlap: ignored if blockmerge is False, if True, remove
-        overlapping identical data prior to merging blocks, if False
-        overlapping blocks will not be merged even if data in overlap is
-        identical
-    :type errorret: bool, optional
-    :param errorret: if ``True`` block and header issues will be set in
-        trace.stats.gcf.stat for each :class:`~obspy.core.trace.Trace`
-        object in returned :class:`~obspy.core.stream.Stream` object, else
-        function will raise raise an ``IOError`` with an appropriate
-        error message
-    :rtype: :class:`~obspy.core.stream.Stream`
-    :returns: Stream object
-
     .. rubric:: Exceptions
 
         Function will raise ``IOError`` on problems to read file
@@ -343,6 +313,36 @@ def _read_gcf(filename, headonly=False, network='', station='',
 
         >>> from obspy import read
         >>> st = read("/path/to/20160603_1955n.gcf", format="GCF")
+
+    :type filename: str
+    :param filename: path to GCF file to read
+    :type headonly: bool, optional
+    :param headonly: if True only read block headers
+    :type network: str, optional
+    :param network: network code to use
+    :type station: str, optional
+    :param station: station code to use, if not specified unitID in gcf header
+       will be used (first 4 characters in stream_id)
+    :type location: str, optional
+    :param location: location code to use
+    :type channel_prefix: str, optional
+    :param channel_prefix: 2-character channel prefix to use (e.g. ``"HH"`` for
+        a high-gain seismometer sampled at 200 Hz)
+    :type blockmerge: bool, optional
+    :param blockmerge: if True merge blocks if aligned
+    :type cleanoverlap: bool, optional
+    :param cleanoverlap: ignored if blockmerge is False, if True, remove
+        overlapping identical data prior to merging blocks, if False
+        overlapping blocks will not be merged even if data in overlap is
+        identical
+    :type errorret: bool, optional
+    :param errorret: if ``True`` block and header issues will be set in
+        trace.stats.gcf.stat for each :class:`~obspy.core.trace.Trace`
+        object in returned :class:`~obspy.core.stream.Stream` object, else
+        function will raise raise an ``IOError`` with an appropriate
+        error message
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :returns: Stream object
     """
     if not os.path.exists(filename):
         raise IOError("file %s could not be located (erroneous path?)"
@@ -469,6 +469,40 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
             ObsPy :func:`~obspy.core.stream.write` function, call this
             instead.
 
+    .. note::
+
+        Sampling rate is restricted, most sampling rates between 1-250 samples
+        per second (minus a few exceptions)are supported, for greater or lower
+        sampling rates format support can be checked with function
+        :func:`compatible_sps`.
+
+        First data sample in each trace may only be sampled at non-integer
+        second if sampling rate > 250. For sampling rates > 250 first data
+        sample in each trace must start at an integer nominator of the
+        denominator associated with the ampling rate. e.g. for a sampling rate
+        of 1000 samples per second the associated denominator is 4 hence first
+        data sample must be sampled at either ss.00 (0/4), ss.25 (1/4), ss.50
+        (2/4), or ss.75 (3/4). Use function :func:`get_time_denominator` to get
+        the associated denominator.
+
+        The GCF format is only guaranteed to support 32-bit signed integer
+        values.  While data with values out of range may be properly stored in
+        the GCF format (if first and last data sample can be represented as a
+        32-bit signed integer as well as all first difference values of the
+        data vector) the current implementaion only permitts input data to be
+        representable as a 32-bit signed integer. If input waveforms cannot be
+        representable as 32-bit signed integers they will be clipped at
+        -2,147,483,648 and 2,147,483,647
+
+    .. rubric:: Exceptions
+
+        ``TypeError`` will be raised upon unsupported input, ``IOError`` will
+        be raised upon failure to output file
+
+    .. rubric:: Example
+
+        >>> st.write('GCF-filename.gcf', format='GCF')  # doctest: +SKIP
+
     :type stream: :class:`~obspy.core.stream.Stream` or
                   :class:`~obspy.core.trace.Trace`
     :param stream: waveform to write to file,
@@ -526,41 +560,6 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
     :param misalign: fraction of a sampling interval (permitted range is
         0-0.5) of tolerated misalignment of starttime. If not specified
         default value is ``0.1``
-
-    ..Note::
-
-    Sampling rate is restricted, most sampling rates between 1-250 samples
-    per second (minus a few exceptions)are supported, for greater or lower
-    sampling rates format support can be checked with function
-    :func:compatible_sps.
-
-    First data sample in each trace may only be sampled at non-integer second
-    if sampling rate > 250. For sampling rates > 250 first data sample in
-    each trace must start at an integer nominator of the denominator
-    associated with the ampling rate. e.g. for a sampling rate of 1000
-    samples per second the associated denominator is 4 hence first data sample
-    must be sampled at either ss.00 (0/4), ss.25 (1/4), ss.50 (2/4), or ss.75
-    (3/4). Use function :func:get_time_denominator to get the associated
-    denominator.
-
-    The GCF format is only guaranteed to support 32-bit signed integer values.
-    While data with values out of range may be properly stored in the GCF
-    format (if first and last data sample can be represented as a 32-bit
-    signed integer as well as all first difference values of the dat avector)
-    the current implementaion only permitts input data to be representable as
-    a 32-bit signed integer. If input waveforms cannot be representable as
-    32-bit signed integers they will be clipped at -2,147,483,648 and
-    2,147,483,647
-
-    ..rubric:: Exceptions
-
-    :class:TypeError will be raised upon unsupported input
-    :class:IOError will be raised upon failure to output file
-
-    ..rubric:: Example
-
-    >>> st.write('GCF-filename.gcf', format='GCF') #doctest: +SKIP
-
     """
     # Make sure we have a Stream or Trace object
     if not isinstance(stream, Stream):
