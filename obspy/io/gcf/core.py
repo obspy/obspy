@@ -213,13 +213,6 @@ def _is_gcf(filename):
     if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
             or obj.n_errData:
         return False
-        if filename[-4:] == ".gcf":
-            print("file: %s" % (filename))
-            print("ret: %d" % (ret))
-            print("n-blocks: %d" % os.path.getsize(filename)/1024.)
-            print("obj.n_blk = %d" % (obj.n_blk))
-            print("obj.n_errHead = %d" % (obj.n_errHead))
-            print("obj.n_errData = %d" % (obj.n_errData))
 
     # release allocated memory
     gcf_io.free_GcfFile(obj)
