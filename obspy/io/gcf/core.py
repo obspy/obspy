@@ -42,7 +42,7 @@ _GCF_MIN = -2147483648
 _GCF_MAX = 2147483647
 
 # Mapping between error codes set by reader and messages
-_ERRORMSG = {
+_ERRORMSG_READ = {
     -1: "data block %d is not a data block",
     1: "stream ID in header of data block %d use extended system ID format",
     2: "stream ID in header of data block %d use double-extended "
@@ -56,6 +56,16 @@ _ERRORMSG = {
     21: "failure to decode data block %d (last data != RIC, 1'st first "
         "difference != 0)"
 }
+_ERROR_WRITE = {
+    -2: IOError("failed to write to disc"),
+    -1: IOError("failed to open file to write to"),
+    1: ValueError("no data or inconsistent headers"),
+    2: ValueError("unsupported sampling rate"),
+    3: ValueError("bad fractional start time"),
+    4: ValueError("unsupported gain"),
+    5: ValueError("unsupported instrument type"),
+    6: ValueError("too long system_id"),
+    }
 
 
 class _GcfSeg(ctypes.Structure):
@@ -386,7 +396,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
         traces = []
         for i in range(int(obj.n_seg)):
             if obj.seg[i].err and not errorret:
-                err_msg = _ERRORMSG.get(
+                err_msg = _ERRORMSG_READ.get(
                     obj.seg[i].err,
                     "unknown error code (%d) set for data block %%d" %
                     (obj.seg[i].err)
@@ -822,21 +832,7 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
         ret = gcf_io.write_gcf(filename.encode('utf-8'), obj)
         if ret == 0:
             pass
-        elif ret == -2:
-            raise IOError("failed to write to disc")
-        elif ret == -1:
-            raise IOError("failed to open file to write to")
-        elif ret == 1:
-            raise ValueError("no data or inconsistent headers")
-        elif ret == 2:
-            raise ValueError("unsupported sampling rate")
-        elif ret == 3:
-            raise ValueError("bad fractional start time")
-        elif ret == 4:
-            raise ValueError("unsupported gain")
-        elif ret == 5:
-            raise ValueError("unsupported instrument type")
-        elif ret == 6:
-            raise ValueError("too long system_id")
+        elif ret in _ERROR_WRITE:
+            raise _ERROR_WRITE['ret']
         else:
             raise IOError("unknown error code %d" % (ret))
