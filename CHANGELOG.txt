@@ -62,6 +62,7 @@ Changes:
    * expose a `keep_sac_header` flag to the `write` plugin, which allows users
      to write a "fresh" SAC header, instead of attempting to merge information
      from an old SAC header, if one exists. (see #2760)
+   * fix writing SACPZ when a channel's sensor filed is unset (see #3187)
 
 1.3.1 (doi: 10.5281/zenodo.7193374)
 ===================================
