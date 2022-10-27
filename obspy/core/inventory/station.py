@@ -39,7 +39,8 @@ class Station(BaseNode):
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
                  historical_code=None, data_availability=None,
-                 identifiers=None, water_level=None, source_id=None):
+                 identifiers=None, water_level=None, source_id=None,
+                 public_id=None):
         """
         :type channels: list of :class:`~obspy.core.inventory.channel.Channel`
         :param channels: All channels belonging to this station.
@@ -111,6 +112,8 @@ class Station(BaseNode):
             (schema version >=1.1). URIs are in general composed of a 'scheme'
             and a 'path' (optionally with additional components), the two of
             which separated by a colon.
+        :type public_id: str, optional
+        :param public_id: A publicID in SCML form.
         """
         self.latitude = latitude
         self.longitude = longitude
@@ -133,7 +136,7 @@ class Station(BaseNode):
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
             data_availability=data_availability, identifiers=identifiers,
-            source_id=source_id)
+            source_id=source_id, public_id=public_id)
 
     @property
     def total_number_of_channels(self):

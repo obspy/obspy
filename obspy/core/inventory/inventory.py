@@ -540,7 +540,8 @@ class Inventory(ComparingObject):
                time=None, starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False, minlatitude=None, maxlatitude=None,
                minlongitude=None, maxlongitude=None, latitude=None,
-               longitude=None, minradius=None, maxradius=None):
+               longitude=None, minradius=None, maxradius=None,
+               public_id=None):
         r"""
         Return a copy of the inventory filtered on various parameters.
 
@@ -639,6 +640,8 @@ class Inventory(ComparingObject):
         :param maxradius: Only include stations/channels within the specified
             maximum number of degrees from the geographic point defined by the
             latitude and longitude parameters.
+        :type public_id: str, optional
+        :param public_id: Only include stations matching with public_id
         """
         networks = []
         for net in self.networks:
@@ -661,7 +664,7 @@ class Inventory(ComparingObject):
                 minlatitude=minlatitude, maxlatitude=maxlatitude,
                 minlongitude=minlongitude, maxlongitude=maxlongitude,
                 latitude=latitude, longitude=longitude,
-                minradius=minradius, maxradius=maxradius)
+                minradius=minradius, maxradius=maxradius, public_id=public_id)
 
             # If the network previously had stations but no longer has any
             # and keep_empty is False: Skip the network.

@@ -273,7 +273,7 @@ def _read_station(instrumentation_register, sta_element, _ns):
                                            latitude=latitude,
                                            longitude=longitude,
                                            elevation=elevation,
-                                           source_id=public_id)
+                                           public_id=public_id)
     station.site = _read_site(sta_element, _ns)
 
     # There is no relevant info in the base node
