@@ -116,7 +116,7 @@ def _unpack_string(data):
     string = data.unpack_string()
     try:
         string = string.split(b'\x00', 1)
-    except Exception:
+    except UnicodeDecodeError:
         string = string.split()
     string = string[0].strip().decode("utf-8")
     return string
