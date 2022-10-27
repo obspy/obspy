@@ -268,10 +268,12 @@ def _read_station(instrumentation_register, sta_element, _ns):
                                datum=True)
     elevation = _read_floattype(sta_element, _ns("elevation"), Distance,
                                 unit=True)
+    public_id = sta_element.get("publicID")
     station = obspy.core.inventory.Station(code=sta_element.get("code"),
                                            latitude=latitude,
                                            longitude=longitude,
-                                           elevation=elevation)
+                                           elevation=elevation,
+                                           source_id=public_id)
     station.site = _read_site(sta_element, _ns)
 
     # There is no relevant info in the base node
