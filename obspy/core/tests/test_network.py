@@ -182,7 +182,7 @@ class TestNetwork:
 
         # Only stations with public_id
         assert sum(len(i) for i in net.select(public_id="TEST")) == 0
-        
+
         # keep_empty does not do anything in these cases.
         sub = sum(len(i) for i in net.select(station="RR", keep_empty=True))
         assert sub == 0

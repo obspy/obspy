@@ -157,7 +157,7 @@ class TestStation:
 
     def test_public_id(self):
         sta = read_inventory()[0][0]
-        assert sta.public_id == None
+        assert sta.public_id is None
 
     def test_warn_identifier_invalid_uri_syntax(self):
         """

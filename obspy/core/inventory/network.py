@@ -468,7 +468,7 @@ class Network(BaseNode):
                 if not fnmatch.fnmatch(sta.code.upper(),
                                        station.upper()):
                     continue
-            
+
             if public_id is not None:
                 if not fnmatch.fnmatch(sta.public_id.upper(),
                                        public_id.upper()):
