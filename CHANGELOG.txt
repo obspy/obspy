@@ -2,7 +2,6 @@ master
 ======
 
 Changes:
-<<<<<<< HEAD
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
@@ -66,8 +65,6 @@ Changes:
    * fix naming of input args in function "rotate_rt_ne()" (see #3383)
    * add support for Chebyshev I/II, elliptic and Bessel filters alongside
      the default Butterworth filters (see #3294)
-=======
->>>>>>> ed9ec5a51 (added changelog)
 
 1.4.1 (doi: 10.5281/zenodo.11093256)
 ====================================
