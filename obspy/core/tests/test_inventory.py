@@ -439,7 +439,8 @@ class TestInventory:
             "latitude": None,
             "longitude": None,
             "minradius": None,
-            "maxradius": None}
+            "maxradius": None,
+            "public_id": None}
         with mock.patch("obspy.core.inventory.network.Network.select") as p:
             p.return_value = obspy.core.inventory.network.Network("BW")
             inv.select(**select_kwargs)
