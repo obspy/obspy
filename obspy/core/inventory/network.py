@@ -470,9 +470,13 @@ class Network(BaseNode):
                     continue
 
             if public_id is not None:
-                if not fnmatch.fnmatch(sta.public_id.upper(),
-                                       public_id.upper()):
+                if sta.public_id is not None:
+                    if not fnmatch.fnmatch(sta.public_id.upper(),
+                                        public_id.upper()):
+                        continue
+                else:
                     continue
+
             if any([t is not None for t in (time, starttime, endtime)]):
                 if not sta.is_active(time=time, starttime=starttime,
                                      endtime=endtime):
