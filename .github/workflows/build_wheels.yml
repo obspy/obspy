@@ -1,20 +1,21 @@
 name: wheels
 on:
+  pull_request:
   push:
     branches:
       - master
-      - 'test_wheels*'
     tags:
       - '*'
   release:
     types: [published]
 
 concurrency:
-  group: wheels-${{ github.event_name }}-${{ github.ref_name }}
+  group: wheels-${{ github.event_name }}-${{ github.ref_name }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   build_wheels:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test_wheels')
     name: build (${{ matrix.os }}, ${{ matrix.build }})
     runs-on: ${{ matrix.os }}
     env:
@@ -63,6 +64,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_sdist:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test_wheels')
     name: build sdist
     runs-on: ubuntu-latest
     steps:
