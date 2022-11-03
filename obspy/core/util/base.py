@@ -440,7 +440,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     in docstrings.
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
-    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS +SKIP
     ======... ===========... ========================================...
     Format    Used Module    _`Linked Function Call`
     ======... ===========... ========================================...
