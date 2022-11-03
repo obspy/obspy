@@ -487,6 +487,8 @@ class TestCatalog:
         event1 = Event(origins=[origin])
         bio = io.BytesIO()
         event1.write(bio, 'quakeml')
+        # rewind bytes stream
+        bio.seek(0)
         # read from disk
         event2 = read_events(bio)[0]
         # saved and loaded event should be equal
