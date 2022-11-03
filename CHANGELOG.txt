@@ -9,6 +9,8 @@ Changes:
    * Improved expanded channel information in string representation of Station,
      e.g. when displaying station in IPython shell (see #3024)
    * limit length of list which records processing info (see #2882)
+ - obspy.clients.fdsn:
+   * update URL for NCEDC to https (see #3203)
  - obspy.clients.seishub:
    * submodule removed completely, since it is outdated and not even test
      servers have been running for years (see #2994)
