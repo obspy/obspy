@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import imghdr
 import inspect
 import os
 import re
@@ -188,7 +187,9 @@ class SDSTestCase(unittest.TestCase):
             for file_ in [file_html, file_txt, file_png]:
                 self.assertTrue(os.path.isfile(file_))
             # check content of image file (just check it is a png file)
-            self.assertEqual(imghdr.what(file_png), "png")
+            # look for png static header
+            with open(file_png, 'rb') as fh:
+                assert fh.read(8) == b'\x89PNG\r\n\x1a\n'
             # check content of stream info / data quality file
             expected_lines = [
                 b"AB,XYZ,,BHE,831[0-9].[0-9]*?,0.007292,2",
