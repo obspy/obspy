@@ -738,6 +738,8 @@ def make_diverse_catalog_list(*args):  # NOQA
     cat1 = create_diverse_catalog()
     bytes_io = io.BytesIO()
     cat1.write(bytes_io, 'quakeml')
+    # rewind bytes stream
+    bytes_io.seek(0)
     # get a few copies from reading from bytes
     cat2 = read_events(bytes_io)
     cat3 = read_events(bytes_io)

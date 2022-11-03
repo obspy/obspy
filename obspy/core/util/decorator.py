@@ -136,7 +136,7 @@ def uncompress_file(func, filename, *args, **kwargs):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
-    if not kwargs.get('check_compression', True):
+    if not kwargs.pop('check_compression', True):
         return func(filename, *args, **kwargs)
     if not isinstance(filename, str):
         return func(filename, *args, **kwargs)
