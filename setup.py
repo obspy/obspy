@@ -784,6 +784,7 @@ def setupPackage():
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
