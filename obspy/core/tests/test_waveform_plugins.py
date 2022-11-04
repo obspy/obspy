@@ -63,10 +63,19 @@ class TestWaveformPlugins:
             # headers.
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
+<<<<<<< HEAD
             elif format in ['GCF']:
                 # XXX: GCF format does not support fractional start time for
                 # sampling rates <= 250 Hz, hence set to integer sec start
                 start = UTCDateTime(2009, 1, 13, 12, 1, 3)
+=======
+            # skip AH format if xdrlib module not present
+            # can be removed with minimal python version 3.13 :)
+            if format == 'AH':
+                from obspy.io.ah.core import xdrlib
+                if xdrlib is None:
+                    continue
+>>>>>>> 5b0fd4b2d (conditionally skip ah format in other tests)
             for native_byteorder in ['<', '>']:
                 for byteorder in (['<', '>', '='] if format in
                                   WAVEFORM_ACCEPT_BYTEORDER else [None]):
@@ -289,7 +298,12 @@ class TestWaveformPlugins:
                 # XXX: GCF format does not support fractional for sampling
                 # rates <= 250 Hz
                 start = UTCDateTime(2009, 1, 13, 12, 1, 3)
-
+            # skip AH format if xdrlib module not present
+            # can be removed with minimal python version 3.13 :)
+            if format == 'AH':
+                from obspy.io.ah.core import xdrlib
+                if xdrlib is None:
+                    continue
             dt = np.int_
             if format in ('MSEED', 'GSE2'):
                 dt = np.int32
@@ -371,6 +385,12 @@ class TestWaveformPlugins:
             # headers.
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
+            # skip AH format if xdrlib module not present
+            # can be removed with minimal python version 3.13 :)
+            if format == 'AH':
+                from obspy.io.ah.core import xdrlib
+                if xdrlib is None:
+                    continue
             with NamedTemporaryFile() as tf:
                 tempfile = tf.name
                 tr.write(tempfile, format)
@@ -471,6 +491,12 @@ class TestWaveformPlugins:
             # deepcopy
             if format in ('SAC', 'SACXY', 'SEG2', 'Q', 'WAV'):
                 continue
+            # skip AH format if xdrlib module not present
+            # can be removed with minimal python version 3.13 :)
+            if format == 'AH':
+                from obspy.io.ah.core import xdrlib
+                if xdrlib is None:
+                    continue
             stream = deepcopy(stream_orig)
             # set some data
             dt = np.float32
