@@ -27,6 +27,7 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
       Just add the "build_docs" tag to this PR.
       Docs will be served at [docs.obspy.org/pr/{branch_name}](https://docs.obspy.org/pr/) (do not use master branch).
       Please post a link to the relevant piece of documentation.
+- [ ] If building of wheels should be tested, add "test_wheels" label to the PR
 - [ ] If all tests including network modules (e.g. `clients.fdsn`) should be tested for the PR,
       just add the "test_network" tag to this PR.
 - [ ] All tests still pass.
