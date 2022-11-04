@@ -17,7 +17,7 @@ a number of values followed by the time series data.
 """
 try:
     import xdrlib
-except ImportError:
+except:
     xdrlib = None
 XDRLIB_ERROR_MSG = (
     'Module xdrlib is necessary for the AH bindings, '

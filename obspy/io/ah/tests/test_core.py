@@ -8,10 +8,11 @@ import numpy as np
 import pytest
 
 from obspy import UTCDateTime, read
-from obspy.io.ah.core import _is_ah, _read_ah, _write_ah1, _read_ah1
+from obspy.io.ah.core import _is_ah, _read_ah, _write_ah1, _read_ah1, xdrlib
 from obspy.core.util import NamedTemporaryFile
 
 
+@pytest.mark.skipif(xdrlib is None, reason='requires xdrlib')
 class CoreTestCase(unittest.TestCase):
     """
     AH (Ad Hoc) file test suite.
