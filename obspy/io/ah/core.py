@@ -19,7 +19,6 @@ try:
     import xdrlib
 except (ModuleNotFoundError, DeprecationWarning):
     xdrlib = None
-xdrlib = None
 XDRLIB_ERROR_MSG = (
     'Module xdrlib is necessary for the AH bindings, '
     'but the library  is slated for removal in Python 3.13. '
