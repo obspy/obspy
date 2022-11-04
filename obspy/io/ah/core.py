@@ -15,7 +15,15 @@ a number of values followed by the time series data.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import xdrlib
+try:
+    import xdrlib
+except ImportError:
+    xdrlib = None
+XDRLIB_ERROR_MSG = (
+    'Module xdrlib is necessary for the AH bindings, '
+    'but the library  is slated for removal in Python 3.13. '
+    'Please use an older Python version.'
+    )
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
@@ -37,7 +45,7 @@ def _is_ah(filename):
     :rtype: bool
     :return: ``True`` if a AH waveform file.
     """
-    if _get_ah_version(filename):
+    if xdrlib is not None and _get_ah_version(filename):
         return True
     return False
 
@@ -55,6 +63,8 @@ def _read_ah(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
+    if xdrlib is None:
+        raise ModuleNotFoundError(XDRLIB_ERROR_MSG)
     version = _get_ah_version(filename)
     if version == '2.0':
         return _read_ah2(filename)
@@ -239,6 +249,9 @@ def _write_ah1(stream, filename):
     :param filename: open file, or file-like object
 
     """
+    if xdrlib is None:
+        raise ModuleNotFoundError(XDRLIB_ERROR_MSG)
+
     packer = xdrlib.Packer()
 
     for tr in stream:
