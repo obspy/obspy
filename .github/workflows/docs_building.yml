@@ -14,9 +14,9 @@ env:
   condition: ${{ (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'build_docs')) || github.event.label.name == 'build_docs' }}
 
 # cancel previous runs, but only in PRs, do not cancel previous runs if this run will be skipped
- concurrency:
-    group: docs-${{ github.event.pull_request.number || github.run_id }}-${{ !env.condition || github.run_id }}
-    cancel-in-progress: true
+concurrency:
+  group: docs-${{ github.event.pull_request.number || github.run_id }}-${{ !env.condition || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build:
