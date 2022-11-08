@@ -678,7 +678,7 @@ class Unpacker(object):
 
     def unpack_fstring(self, count):
         pos = self.data.tell()
-        seekto = pos + (count + 3) // 4 * 4
+        seekto = pos + _next_multiple_of_4(count)
         data = self.read(count)
         self.data.seek(seekto)
         return data
