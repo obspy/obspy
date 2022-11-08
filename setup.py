@@ -283,6 +283,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.GCF': [
         'isFormat = obspy.io.gcf.core:_is_gcf',
         'readFormat = obspy.io.gcf.core:_read_gcf',
+        'writeFormat = obspy.io.gcf.core:_write_gcf',
         ],
     'obspy.plugin.waveform.REFTEK130': [
         'isFormat = obspy.io.reftek.core:_is_reftek130',
@@ -594,6 +595,18 @@ def get_extensions():
     """
     extensions = []
 
+    # GCF
+    path = os.path.join("obspy", "io", "gcf", "src")
+    files = [os.path.join(path, "gcf_io.c")]
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'gcf_io.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
+    extensions.append(Extension("gcf", files, **kwargs))
+
     # GSE2
     path = os.path.join("obspy", "io", "gse2", "src", "GSE_UTI")
     files = [os.path.join(path, "gse_functions.c")]
@@ -780,6 +793,7 @@ def setupPackage():
             'obspy.io.css': ['contrib/*'],
             # NOTE: If the libmseed test data wasn't used in our tests, we
             # could just ignore src/* everywhere.
+            'obspy.io.gcf':['src/*'],
             'obspy.io.gse2': ['src/*'],
             'obspy.io.mseed': [
                 # Only keep src/libmseed/test/* except for the C files.
