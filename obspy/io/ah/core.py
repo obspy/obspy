@@ -15,11 +15,11 @@ a number of values followed by the time series data.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import xdrlib
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
+from obspy.io.ah import xdrlib
 
 AH1_CODESIZE = 6
 AH1_CHANSIZE = 6

@@ -87,12 +87,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
         options: [default]
         include:
           # The mindep option indicates optional dependencies should not be installed.
           - os: ubuntu-latest
-            python-version: '3.10'
+            python-version: '3.11'
             options: default mindep
           # The mindepversion option indicates dependencies should be installed with minimal supported version.
           - os: ubuntu-latest
@@ -110,20 +110,20 @@ jobs:
             python-version: '3.8'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network mindepversion' || 'default' }}
           - os: ubuntu-latest
-            python-version: '3.10'
+            python-version: '3.11'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
           - os: macos-latest
-            python-version: '3.10'
+            python-version: '3.11'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
           - os: windows-latest
-            python-version: '3.10'
+            python-version: '3.11'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
           # With warnings option pytest will fail on warnings.
           - os: ubuntu-latest
-            python-version: '3.10'
+            python-version: '3.11'
             options: default warnings
           - os: ubuntu-latest
-            python-version: '3.10'
+            python-version: '3.11'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network warnings' || 'default' }}
     name: ${{ matrix.options }} (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}

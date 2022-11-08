@@ -289,7 +289,6 @@ class TestWaveformPlugins:
                 # XXX: GCF format does not support fractional for sampling
                 # rates <= 250 Hz
                 start = UTCDateTime(2009, 1, 13, 12, 1, 3)
-
             dt = np.int_
             if format in ('MSEED', 'GSE2'):
                 dt = np.int32
