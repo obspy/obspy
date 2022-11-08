@@ -14,8 +14,9 @@ grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,
 analyze, test, perform and/or display publicly, prepare derivative works,
 distribute, and otherwise use Python alone or in any derivative version,
 provided, however, that PSF's License Agreement and PSF's notice of copyright,
-i.e., "Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022 Python Software Foundation;
+i.e., "Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+2010,2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022
+Python Software Foundation;
 All Rights Reserved" are retained in Python alone or in any derivative version
 prepared by Licensee.
 
@@ -59,6 +60,8 @@ from functools import wraps
 __all__ = ["Error", "Packer", "Unpacker", "ConversionError"]
 
 # exceptions
+
+
 class Error(Exception):
     """Exception class for this module. Use:
     except xdrlib.Error as var:
@@ -66,16 +69,20 @@ class Error(Exception):
     Public ivars:
         msg -- contains the message
     """
+
     def __init__(self, msg):
         self.msg = msg
+
     def __repr__(self):
         return repr(self.msg)
+
     def __str__(self):
         return str(self.msg)
 
 
 class ConversionError(Error):
     pass
+
 
 def raise_conversion_error(function):
     """ Wrap any raised struct.errors in a ConversionError. """
@@ -114,12 +121,14 @@ class Packer:
     pack_enum = pack_int
 
     def pack_bool(self, x):
-        if x: self.__buf.write(b'\0\0\0\1')
-        else: self.__buf.write(b'\0\0\0\0')
+        if x:
+            self.__buf.write(b'\0\0\0\1')
+        else:
+            self.__buf.write(b'\0\0\0\0')
 
     def pack_uhyper(self, x):
         try:
-            self.pack_uint(x>>32 & 0xffffffff)
+            self.pack_uint(x >> 32 & 0xffffffff)
         except (TypeError, struct.error) as e:
             raise ConversionError(e.args[0]) from None
         try:
@@ -173,7 +182,6 @@ class Packer:
         self.pack_farray(n, list, pack_item)
 
 
-
 class Unpacker:
     """Unpacks various data representations from the given buffer."""
 
@@ -221,7 +229,7 @@ class Unpacker:
     def unpack_uhyper(self):
         hi = self.unpack_uint()
         lo = self.unpack_uint()
-        return int(hi)<<32 | lo
+        return int(hi) << 32 | lo
 
     def unpack_hyper(self):
         x = self.unpack_uhyper()
@@ -268,7 +276,8 @@ class Unpacker:
         list = []
         while 1:
             x = self.unpack_uint()
-            if x == 0: break
+            if x == 0:
+                break
             if x != 1:
                 raise ConversionError('0 or 1 expected, got %r' % (x,))
             item = unpack_item()
