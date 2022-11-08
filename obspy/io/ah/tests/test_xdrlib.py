@@ -1,4 +1,7 @@
 """
+Changes:
+    * Changed import line
+
 PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
 --------------------------------------------
 
@@ -50,7 +53,7 @@ Agreement.
 """
 import unittest
 
-import xdrlib
+from obspy.io.ah import xdrlib
 
 
 class XDRTest(unittest.TestCase):
