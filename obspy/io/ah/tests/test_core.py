@@ -5,7 +5,6 @@ import unittest
 import unittest.mock
 
 import numpy as np
-import pytest
 
 from obspy import UTCDateTime, read
 from obspy.io.ah.core import _is_ah, _read_ah, _write_ah1, _read_ah1
