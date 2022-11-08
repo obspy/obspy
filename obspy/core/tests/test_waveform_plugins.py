@@ -63,22 +63,10 @@ class TestWaveformPlugins:
             # headers.
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
-<<<<<<< HEAD
-<<<<<<< HEAD
             elif format in ['GCF']:
                 # XXX: GCF format does not support fractional start time for
                 # sampling rates <= 250 Hz, hence set to integer sec start
                 start = UTCDateTime(2009, 1, 13, 12, 1, 3)
-=======
-            # skip AH format if xdrlib module not present
-            # can be removed with minimal python version 3.13 :)
-            if format == 'AH':
-                from obspy.io.ah.core import xdrlib
-                if xdrlib is None:
-                    continue
->>>>>>> 5b0fd4b2d (conditionally skip ah format in other tests)
-=======
->>>>>>> abd3a9f0a (revert xdrlib workarounds, we do not rely on it anymore)
             for native_byteorder in ['<', '>']:
                 for byteorder in (['<', '>', '='] if format in
                                   WAVEFORM_ACCEPT_BYTEORDER else [None]):
