@@ -15,15 +15,9 @@ a number of values followed by the time series data.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-try:
-    import xdrlib
-except (ModuleNotFoundError, DeprecationWarning):
-    xdrlib = None
-XDRLIB_ERROR_MSG = (
-    'Module xdrlib is necessary for the AH bindings, '
-    'but the library  is slated for removal in Python 3.13. '
-    'Please use an older Python version.'
-    )
+import io
+import struct
+
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
@@ -84,7 +78,7 @@ def _get_ah_version(filename):
     with open(filename, "rb") as fh:
         # read first 8 bytes with XDR library
         try:
-            data = xdrlib.Unpacker(fh.read(8))
+            data = Unpacker(fh.read(8))
             # check for magic version number
             magic = data.unpack_int()
         except Exception:
@@ -104,16 +98,16 @@ def _get_ah_version(filename):
             # so we have to use some fixed values as indicators
             try:
                 fh.seek(12)
-                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 6:
+                if Unpacker(fh.read(4)).unpack_int() != 6:
                     return False
                 fh.seek(24)
-                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 8:
+                if Unpacker(fh.read(4)).unpack_int() != 8:
                     return False
                 fh.seek(700)
-                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 80:
+                if Unpacker(fh.read(4)).unpack_int() != 80:
                     return False
                 fh.seek(784)
-                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 202:
+                if Unpacker(fh.read(4)).unpack_int() != 202:
                     return False
             except Exception:
                 return False
@@ -204,15 +198,15 @@ def _read_ah1(filename):
         ah_stats.record.log = _unpack_string(data)
 
         # extras
-        ah_stats.extras = data.unpack_array(data.unpack_float)
+        ah_stats.extras = data.unpack_array('>f')
 
         # unpack data using dtype from record info
         if dtype == 1:
             # float
-            temp = data.unpack_farray(ndata, data.unpack_float)
+            temp = data.unpack_array('>f', ndata)
         elif dtype == 6:
             # double
-            temp = data.unpack_farray(ndata, data.unpack_double)
+            temp = data.unpack_array('>d', ndata)
         else:
             # e.g. 3 (vector), 2 (complex), 4 (tensor)
             msg = 'Unsupported AH v1 record type %d'
@@ -228,7 +222,7 @@ def _read_ah1(filename):
     st = Stream()
     with open(filename, "rb") as fh:
         # read with XDR library
-        data = xdrlib.Unpacker(fh.read())
+        data = Unpacker(fh.read())
         # loop as long we can read records
         while True:
             try:
@@ -249,10 +243,7 @@ def _write_ah1(stream, filename):
     :param filename: open file, or file-like object
 
     """
-    if xdrlib is None:
-        raise ModuleNotFoundError(XDRLIB_ERROR_MSG)
-
-    packer = xdrlib.Packer()
+    packer = Packer()
 
     for tr in stream:
         if hasattr(tr.stats, 'ah'):
@@ -273,12 +264,13 @@ def _pack_trace_with_ah_dict(tr, packer, codesize, chansize,
 
     # station info
     packer.pack_int(codesize)
-    packer.pack_fstring(codesize, tr.stats.station.encode('utf-8'))
+    packer.pack_fstring(tr.stats.station.encode('utf-8'), length=codesize)
     packer.pack_int(chansize)
-    packer.pack_fstring(chansize, tr.stats.channel.encode('utf-8'))
+    packer.pack_fstring(tr.stats.channel.encode('utf-8'), length=chansize)
 
     packer.pack_int(stypesize)
-    packer.pack_fstring(stypesize, tr.stats.ah.station.type.encode('utf-8'))
+    packer.pack_fstring(tr.stats.ah.station.type.encode('utf-8'),
+                        length=stypesize)
     packer.pack_float(tr.stats.ah.station.latitude)
     packer.pack_float(tr.stats.ah.station.longitude)
     packer.pack_float(tr.stats.ah.station.elevation)
@@ -329,7 +321,8 @@ def _pack_trace_with_ah_dict(tr, packer, codesize, chansize,
         packer.pack_float(0)
 
     packer.pack_int(comsize)
-    packer.pack_fstring(comsize, tr.stats.ah.event.comment.encode('utf-8'))
+    packer.pack_fstring(tr.stats.ah.event.comment.encode('utf-8'),
+                        length=comsize)
 
     # record info
     dtype = tr.stats.ah.record.type
@@ -346,20 +339,22 @@ def _pack_trace_with_ah_dict(tr, packer, codesize, chansize,
     packer.pack_float(tr.stats.ah.record.start_time.second)
     packer.pack_float(tr.stats.ah.record.abscissa_min)
     packer.pack_int(comsize)
-    packer.pack_fstring(comsize, tr.stats.ah.record.comment.encode('utf-8'))
+    packer.pack_fstring(tr.stats.ah.record.comment.encode('utf-8'),
+                        length=comsize)
     packer.pack_int(logsize)
-    packer.pack_fstring(logsize, tr.stats.ah.record.log.encode('utf-8'))
+    packer.pack_fstring(tr.stats.ah.record.log.encode('utf-8'),
+                        length=logsize)
 
     # # extras
-    packer.pack_array(tr.stats.ah.extras, packer.pack_float)
+    packer.pack_array('>f', tr.stats.ah.extras, pack_list_length=True)
 
     # pack data using dtype from record info
     if dtype == 1:
         # float
-        packer.pack_farray(ndata, tr.data, packer.pack_float)
+        packer.pack_array('>f', tr.data)
     elif dtype == 6:
         # double
-        packer.pack_farray(ndata, tr.data, packer.pack_double)
+        packer.pack_array('>d', tr.data)
     else:
         # e.g. 3 (vector), 2 (complex), 4 (tensor)
         msg = 'Unsupported AH v1 record type %d'
@@ -377,11 +372,11 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
     station info
     """
     packer.pack_int(codesize)
-    packer.pack_fstring(codesize, tr.stats.station.encode('utf-8'))
+    packer.pack_fstring(tr.stats.station.encode('utf-8'), length=codesize)
     packer.pack_int(chansize)
-    packer.pack_fstring(chansize, tr.stats.channel.encode('utf-8'))
+    packer.pack_fstring(tr.stats.channel.encode('utf-8'), length=chansize)
     packer.pack_int(stypesize)
-    packer.pack_fstring(stypesize, 'null'.encode('utf-8'))
+    packer.pack_fstring('null'.encode('utf-8'), length=stypesize)
     # There is no information about latitude, longitude, elevation,
     # gain and normalization in the basic stream object,  are set to 0
     packer.pack_float(0)
@@ -409,7 +404,7 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
     packer.pack_float(0)
 
     packer.pack_int(comsize)
-    packer.pack_fstring(comsize, 'null'.encode('utf-8'))
+    packer.pack_fstring('null'.encode('utf-8'), length=comsize)
 
     # record info
     dtype = type(tr.data[0])
@@ -436,20 +431,20 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
 
     packer.pack_float(0)
     packer.pack_int(comsize)
-    packer.pack_fstring(comsize, 'null'.encode('utf-8'))
+    packer.pack_fstring('null'.encode('utf-8'), length=comsize)
     packer.pack_int(logsize)
-    packer.pack_fstring(logsize, 'null'.encode('utf-8'))
+    packer.pack_fstring('null'.encode('utf-8'), length=logsize)
 
     # # extras
-    packer.pack_array(np.zeros(21).tolist(), packer.pack_float)
+    packer.pack_array('>f', np.zeros(21).tolist(), pack_list_length=True)
 
     # pack data using dtype from record info
     if dtype == 1:
         # float
-        packer.pack_farray(ndata, tr.data, packer.pack_float)
+        packer.pack_array('>f', tr.data)
     elif dtype == 6:
         # double
-        packer.pack_farray(ndata, tr.data, packer.pack_double)
+        packer.pack_array('>d', tr.data)
     else:
         # e.g. 3 (vector), 2 (complex), 4 (tensor)
         msg = 'Unsupported AH v1 record type %d'
@@ -559,10 +554,10 @@ def _read_ah2(filename):
         # unpack data using dtype from record info
         if dtype == 1:
             # float
-            temp = data.unpack_farray(ndata, data.unpack_float)
+            temp = data.unpack_array('>f', ndata)
         elif dtype == 6:
             # double
-            temp = data.unpack_farray(ndata, data.unpack_double)
+            temp = data.unpack_array('>d', ndata)
         else:
             # e.g. 3 (vector), 2 (complex), 4 (tensor)
             msg = 'Unsupported AH v2 record type %d'
@@ -582,7 +577,7 @@ def _read_ah2(filename):
         while True:
             try:
                 # read first 8 bytes with XDR library
-                data = xdrlib.Unpacker(fh.read(8))
+                data = Unpacker(fh.read(8))
                 # check magic version number
                 magic = data.unpack_int()
             except EOFError:
@@ -593,9 +588,101 @@ def _read_ah2(filename):
                 # get record length
                 length = data.unpack_uint()
                 # read rest of record into XDR unpacker
-                data = xdrlib.Unpacker(fh.read(length))
+                data = Unpacker(fh.read(length))
                 tr = _unpack_trace(data)
                 st.append(tr)
             except EOFError:
                 break
         return st
+
+
+def _next_multiple_of_4(x):
+    while x % 4:
+        x += 1
+    return x
+
+
+class Packer(object):
+    def __init__(self):
+        self.data = io.BytesIO()
+
+    def write(self, data):
+        with open("/tmp/new.ah", "at") as fh:
+            fh.write(repr((data)) + '\n')
+        self.data.write(data)
+
+    def get_buffer(self):
+        return self.data.getvalue()
+
+    def pack_int(self, x):
+        self.write(struct.pack('>l', x))
+
+    def pack_uint(self, x):
+        self.write(struct.pack('>L', x))
+
+    def pack_fstring(self, x, length=None):
+        if length is None:
+            length = len(x)
+        length = _next_multiple_of_4(length)
+        num_blanks = length - len(x)
+        x = x + (b'\0' * num_blanks)
+        self.write(x)
+
+    def pack_float(self, x):
+        self.write(struct.pack('>f', x))
+
+    def pack_array(self, format, x, pack_list_length=False):
+        if len(format) != 2 or format[0] != '>' or format[1] not in 'flLd':
+            raise NotImplementedError()
+        if pack_list_length:
+            self.pack_uint(len(x))
+        for item in x:
+            self.write(struct.pack(format, item))
+
+
+class Unpacker(object):
+    def __init__(self, data):
+        self.data = io.BytesIO(data)
+
+    def read(self, count):
+        data = self.data.read(count)
+        if len(data) < count:
+            raise EOFError
+        return data
+
+    def unpack_int(self):
+        data = self.read(4)
+        return struct.unpack('>l', data)[0]
+
+    def unpack_uint(self):
+        data = self.read(4)
+        return struct.unpack('>L', data)[0]
+
+    def unpack_float(self):
+        data = self.read(4)
+        return struct.unpack('>f', data)[0]
+
+    def unpack_double(self):
+        data = self.read(8)
+        return struct.unpack('>d', data)[0]
+
+    def unpack_array(self, format, count=None):
+        if len(format) != 2 or format[0] != '>' or format[1] not in 'flLd':
+            raise NotImplementedError()
+        if count is None:
+            count = self.unpack_uint()
+        itemsize = struct.calcsize(format)
+        data = self.read(itemsize * count)
+        format = format[0] + format[1] * count
+        return list(struct.unpack(format, data))
+
+    def unpack_string(self):
+        count = self.unpack_uint()
+        return self.unpack_fstring(count)
+
+    def unpack_fstring(self, count):
+        pos = self.data.tell()
+        seekto = pos + (count + 3) // 4 * 4
+        data = self.read(count)
+        self.data.seek(seekto)
+        return data
