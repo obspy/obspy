@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import os
 import unittest
-import unittest.mock
 
 import numpy as np
 
@@ -15,7 +14,6 @@ class CoreTestCase(unittest.TestCase):
     """
     AH (Ad Hoc) file test suite.
     """
-
     def setUp(self):
         # Directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
