@@ -1,0 +1,66 @@
+<<< Naming Rules >>>
+The names of the waveform files provided on our website obey the following rules:
+ [Organization_ID]_[Network_ID]_[yyyymmddHHMM]_[Data Length(min)].[extension].
+ 
+ Examples of Organizaiton_ID and Network_ID:
+    01_01: NIED Hi-net
+    01_03: NIED F-net
+    01_04: Sagami OBS Network by NIED
+    02_01: Hokkaido Univ.
+    02_02: Tohoku Univ.
+    02_03: Univ. of Tokyo
+    02_04: Kyoto Univ.
+    02_05: Kyushu Univ.
+    02_06: Hirosaki Univ.
+    02_07: Nagoya Univ.
+    02_08: Kochi Univ.
+    02_09: Kagoshima Univ.
+    03_01: JMA
+    04_01: JAMSTEC
+    04_02: JAMSTEC DONET1
+    05_01: AIST
+    06_01: GSI
+    07_01: Tokyo Metropolitan Government
+    07_02: Hot Springs Research Institute of Kanagawa Pref.
+    07_03: Aomori Pref.
+    07_05: Shizuoka Pref.
+    08_01: ADEP
+
+
+<<< Data Format >>>
+We adopt the WIN32 format for the seismic waveform data. The definition of WIN32 format is explained in detail at 
+http://www.hinet.bosai.go.jp/REGS/manual/win32.pdf (presently the manual is available only in Japanese).
+
+To convert WIN32 waveform data to SAC data, you can use "win2sac_32" routine, which is included in the "win32tools" software package. 
+For more details, please see the following webpage:
+http://www.hinet.bosai.go.jp/REGS/manual/win32tool/ (in Japanese).
+
+
+<<< Channels Table >>>
+To extract particular waveforms (e.g. the vertical component seismogram recorded at station N.IWTH) from WIN32 data, you need a file that contains basic information  about seismic stations and sensors (e.g., station name, motion component, station location, sensitivity). Such a file (i.e. the "channels table") is included together with the WIN32 data file in the compressed file that you have downloaded from our web page.
+We sometimes replace the sensor(s) to fix some troubles, so we attach a daily file (or files) that corresponds (correspond) to the date you need. You should use the suitable file.
+
+The following is an example of channel information within the channels table. All columns are divided by "space".
+
+#[1] [2][3]   [4]  [5]   [6] [7]    [8]    [9]     [10]  [11] [12]  [13]      [14]     [15]    [16][17][18] [19]
+7743  1  0  N.IWTH  U     6   27   165.90  m/s     0.80  0.70  0  1.023e-07  35.9290 139.7349 -3502  0  0  Iwatsuki
+
+  [1]: 16-bit channels ID (HEX)
+  [2]: Recording flag
+  [3]: Delay time on a circuit
+  [4]: Station code
+  [5]: Motion component code
+  [6]: Index for monitor waveform amplitude (power of 2)
+  [7]: Bit size of A/D converter
+  [8]: Sensor sensitivity
+  [9]: Unit of [8]
+  [10]: Natural period of the seismometer (s)
+  [11]: Dumping constant of the sensor
+  [12]: Preamplificacation
+  [13]: LSB value
+  [14]: Latitude of the sensor (Positive: Northern hemisphere / Negative: Southern hemisphere)
+  [15]: Longitude of the sensor (Positive: Eastern hemisphere / Negative: Western hemisphere)
+  [16]: Altitude of the sensor
+  [17]: Station correction for P-wave
+  [18]: Station correction for S-wave
+  [19]: Station name (Optional)

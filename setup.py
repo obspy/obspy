@@ -124,8 +124,8 @@ KEYWORDS = [
     'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
-    'XSEED']
+    'WaveServerV', 'WebDC', 'web service', 'WIN', 'WIN32', 'Winston',
+    'XML-SEED', 'XSEED']
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -149,6 +149,7 @@ ENTRY_POINTS = {
         'PICKLE = obspy.core.stream',
         'CSS = obspy.io.css.core',
         'WIN = obspy.io.win.core',
+        'WIN32 = obspy.io.win.core',
         'KINEMETRICS_EVT = obspy.io.kinemetrics.core',
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
@@ -201,6 +202,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.WIN': [
         'isFormat = obspy.io.win.core:_is_win',
         'readFormat = obspy.io.win.core:_read_win',
+        ],
+    'obspy.plugin.waveform.WIN32': [
+        'isFormat = obspy.io.win.core:_is_win32',
+        'readFormat = obspy.io.win.core:_read_win32',
         ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
         'isFormat = obspy.io.kinemetrics.core:is_evt',
