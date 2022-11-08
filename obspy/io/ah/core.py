@@ -39,7 +39,7 @@ def _is_ah(filename):
     :rtype: bool
     :return: ``True`` if a AH waveform file.
     """
-    if xdrlib is not None and _get_ah_version(filename):
+    if _get_ah_version(filename):
         return True
     return False
 
@@ -57,8 +57,6 @@ def _read_ah(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
-    if xdrlib is None:
-        raise ModuleNotFoundError(XDRLIB_ERROR_MSG)
     version = _get_ah_version(filename)
     if version == '2.0':
         return _read_ah2(filename)

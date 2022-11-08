@@ -8,11 +8,10 @@ import numpy as np
 import pytest
 
 from obspy import UTCDateTime, read
-from obspy.io.ah.core import _is_ah, _read_ah, _write_ah1, _read_ah1, xdrlib
+from obspy.io.ah.core import _is_ah, _read_ah, _write_ah1, _read_ah1
 from obspy.core.util import NamedTemporaryFile
 
 
-@pytest.mark.skipif(xdrlib is None, reason='requires xdrlib')
 class CoreTestCase(unittest.TestCase):
     """
     AH (Ad Hoc) file test suite.
@@ -321,11 +320,3 @@ class CoreTestCase(unittest.TestCase):
                 -236., -242., -252., -262.]))
             np.testing.assert_array_almost_equal(tr.data[-4:], np.array([
                 101., 106., 107., 104.]))
-
-    @unittest.mock.patch('obspy.io.ah.core.xdrlib', None)
-    def test_missing_xdrlib(self):
-        testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.DS.lE21.resp')
-        assert not _is_ah(testfile)
-        testfile = os.path.join(self.path, 'st.ah')
-        with pytest.raises(ModuleNotFoundError):
-            _read_ah(testfile)
