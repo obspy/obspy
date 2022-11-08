@@ -605,8 +605,6 @@ class Packer(object):
         self.data = io.BytesIO()
 
     def write(self, data):
-        with open("/tmp/new.ah", "at") as fh:
-            fh.write(repr((data)) + '\n')
         self.data.write(data)
 
     def get_buffer(self):
