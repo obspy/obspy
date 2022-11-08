@@ -39,7 +39,7 @@ jobs:
           - build: cp39
             exclude-flag: true
           - build: cp310
-            exclude-flag: true            
+            exclude-flag: true
     steps:
       - uses: actions/checkout@v3
         with:
