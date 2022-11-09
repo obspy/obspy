@@ -9,7 +9,8 @@
 #
 # Deliberately including folders without owners specified
 
-/obspy/core        @megies @trichter
+/obspy/.github     @trichter @d-chambers
+/obspy/core        @megies @trichter @d-chambers
 /obspy/geodetics
 /obspy/imaging
 /obspy/realtime
