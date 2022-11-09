@@ -38,4 +38,5 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 - [ ] If the changes affect any plotting functions you have checked that the plots
       from all the CI builds look correct. Add the "upload_plots" tag so that plotting 
       outputs are attached as artifacts. 
+- [ ] New modules, add the module to `CODEOWNERS` with your github handle
 - [ ] Add the `ready for review` tag when you are ready for the PR to be reviewed.
