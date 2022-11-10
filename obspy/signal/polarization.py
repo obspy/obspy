@@ -514,6 +514,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         tap = cosine_taper(nsamp, p=0.22)
         offset = 0
         while (newstart + (nsamp + nstep) / fs) < etime:
+            timestamp = newstart.timestamp + (float(nsamp) / 2 / fs)
             try:
                 for i, tr in enumerate(stream):
                     dat = tr.data[spoint[i] + offset:
@@ -537,15 +538,15 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
             if method.lower() == "pm":
                 azimuth, incidence, error_az, error_inc = \
                     particle_motion_odr(data, var_noise)
-                res.append(np.array([newstart.timestamp + float(nstep) / fs,
-                           azimuth, incidence, error_az, error_inc]))
+                res.append(np.array([
+                    timestamp, azimuth, incidence, error_az, error_inc]))
             if method.lower() == "flinn":
                 azimuth, incidence, reclin, plan = flinn(data, var_noise)
-                res.append(np.array([newstart.timestamp + float(nstep) / fs,
-                                    azimuth, incidence, reclin, plan]))
+                res.append(np.array([
+                    timestamp, azimuth, incidence, reclin, plan]))
 
             if verbose:
-                print(newstart, newstart + nsamp / fs, res[-1][1:])
+                print(newstart, newstart + float(nsamp) / fs, res[-1][1:])
             offset += nstep
 
             newstart += float(nstep) / fs
