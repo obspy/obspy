@@ -28,6 +28,8 @@ Changes:
      usage (see #3104)
    * Baer picker: fix a bug that could cause crashes on certain versions of
      libffi (see #3183)
+   * polarization analysis: fix calculation of timestamps of the resulting
+     values (see #3211)
  - obspy.taup:
    * add option "indicate_wave_type" to distinguish S waves in ray paths
      plot by using wiggly lines for shear waves (see #3047)
