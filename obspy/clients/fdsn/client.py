@@ -1062,12 +1062,12 @@ class Client(object):
             self._attach_dataselect_url_to_stream(st)
             return st
 
-    def get_stations_bulk(self, bulk, minlatitude=None, maxlatitude=None,
+    def get_stations_bulk(self, bulk, level=None, includerestricted=None,
+                          includeavailability=None, filename=None,
+                          minlatitude=None, maxlatitude=None,
                           minlongitude=None, maxlongitude=None, latitude=None,
                           longitude=None, minradius=None, maxradius=None,
-                          level=None, includerestricted=None,
-                          includeavailability=None, updatedafter=None,
-                          matchtimeseries=None, filename=None, format=None,
+                          updatedafter=None, matchtimeseries=None, format=None,
                           **kwargs):
         """
         Query the station service of the client. Bulk request.
