@@ -15,6 +15,8 @@ Changes:
      constraints (see #3140)
    * do not use autodiscovery of file format in get_stations, unless "format"
      is set to something we do not recognize (see #3138)
+   * fix a bug in routing client that made any request made error out when
+     "debug=True" was set (see #3214)
  - obspy.clients.seishub:
    * submodule removed completely, since it is outdated and not even test
      servers have been running for years (see #2994)
