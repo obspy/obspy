@@ -11,8 +11,10 @@ Changes:
    * limit length of list which records processing info (see #2882)
  - obspy.clients.fdsn:
    * update URL for NCEDC to https (see #3203)
-   * add all valid parameters to get_stations_bulk (see #3140)
-   * do not use autodiscovery of file format in get_stations (see #3138)
+   * add all valid parameters to get_stations_bulk, e.g. geographical
+     constraints (see #3140)
+   * do not use autodiscovery of file format in get_stations, unless "format"
+     is set to something we do not recognize (see #3138)
  - obspy.clients.seishub:
    * submodule removed completely, since it is outdated and not even test
      servers have been running for years (see #2994)
