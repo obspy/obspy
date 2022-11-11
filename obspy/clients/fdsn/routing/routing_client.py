@@ -72,6 +72,13 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
 
 
 @decorator.decorator
+def _assert_format_not_in_kwargs(f, *args, **kwargs):
+    if "format" in kwargs:
+        raise ValueError("The `format` argument is not supported")
+    return f(*args, **kwargs)
+
+
+@decorator.decorator
 def _assert_filename_not_in_kwargs(f, *args, **kwargs):
     if "filename" in kwargs:
         raise ValueError("The `filename` argument is not supported")
