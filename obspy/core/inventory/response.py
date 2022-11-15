@@ -1195,12 +1195,15 @@ class Response(ComparingObject):
                 "MBAR": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
                 if key is not None:
-                    msg = ("The unit '%s' is not known to ObsPy. It will be "
-                           "assumed to be displacement for the calculations. "
-                           "This mostly does the right thing but please "
-                           "proceed with caution.") % key
+                    msg = (f"The unit '{key}' is not known to ObsPy. It will "
+                           f"be passed in to evalresp as 'undefined'. This "
+                           f"should result in evalresp using the response as "
+                           f"is, without adding any integration or "
+                           f"differentiation and the 'output' parameter "
+                           f"(here: '{output}') not having any effect. Please "
+                           f"double check output data.")
                     warnings.warn(msg)
-                value = ew.ENUM_UNITS["DIS"]
+                value = ew.ENUM_UNITS["UNDEF_UNITS"]
             else:
                 value = units_mapping[key]
 
