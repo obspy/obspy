@@ -33,7 +33,7 @@ available providers are:
 
 >>> from obspy.clients.fdsn.header import URL_MAPPINGS
 >>> for key in sorted(URL_MAPPINGS.keys()):
-...     print("{0:<11} {1}".format(key,  URL_MAPPINGS[key]))
+...     print("{0:<11} {1}".format(key,  URL_MAPPINGS[key]))  # doctest: +SKIP
 AUSPASS     http://auspass.edu.au
 BGR         http://eida.bgr.de
 EIDA        http://eida-federator.ethz.ch
