@@ -269,12 +269,13 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
 
     if ax is None:
         fig, map_ax, cm_ax, show_colorbar = _basic_setup(
-            lons=lons, lats=lats, size=size, color=color, labels=None,
-            projection='global', resolution='110m', continent_fill_color='0.8',
-            water_fill_color='1.0', colormap=None, colorbar=None, marker="o",
-            title=None, colorbar_ticklabel_format=None,
-            proj_kwargs=None)
-
+            lons=lons, lats=lats, size=size, color=color, labels=labels,
+            projection=projection, resolution=resolution,
+            continent_fill_color=continent_fill_color,
+            water_fill_color=water_fill_color, colormap=colormap,
+            colorbar=colorbar, marker=marker, title=title,
+            colorbar_ticklabel_format=colorbar_ticklabel_format,
+            proj_kwargs=proj_kwargs)
     else:
         if isinstance(ax, matplotlib.figure.Figure):
             fig = ax

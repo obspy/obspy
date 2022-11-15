@@ -9,6 +9,8 @@ Changes:
    * Improved expanded channel information in string representation of Station,
      e.g. when displaying station in IPython shell (see #3024)
    * limit length of list which records processing info (see #2882)
+   * map plots: fix initial map setup, properly pass through user specified
+     options, like "projection" etc (see #3191)
  - obspy.clients.fdsn:
    * update URL for NCEDC to https (see #3203)
    * add all valid parameters to get_stations_bulk, e.g. geographical
@@ -29,6 +31,8 @@ Changes:
      than 100 Hz (see #3093)
    * spectrogram: better exception type and messages when input signal is too
      short (see #3093)
+   * map plots: fix initial map setup, properly pass through user specified
+     options, like "projection" etc (see #3191)
  - obspy.signal:
    * coincidence trigger: improve speed of template matching and less memory
      usage (see #3104)
