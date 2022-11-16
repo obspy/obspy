@@ -755,7 +755,7 @@ class Client(object):
             if format is None or format == 'xml':
                 inventory = read_inventory(data_stream, format='STATIONXML')
             elif format == 'text':
-                inventory = read_inventory(data_stream, format='STATIONTEXT')
+                inventory = read_inventory(data_stream, format='STATIONTXT')
             else:
                 inventory = read_inventory(data_stream)
             data_stream.close()
@@ -1258,7 +1258,7 @@ class Client(object):
             if format is None or format == 'xml':
                 inv = read_inventory(data_stream, format='STATIONXML')
             elif format == 'text':
-                inv = read_inventory(data_stream, format='STATIONTEXT')
+                inv = read_inventory(data_stream, format='STATIONTXT')
             else:
                 inv = read_inventory(data_stream)
             data_stream.close()
