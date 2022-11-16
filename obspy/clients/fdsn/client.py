@@ -1834,7 +1834,7 @@ def raise_on_error(code, data):
         raise NotImplementedError(msg)
     elif code == 429:
         msg = ("Sent too many requests in a given amount of time ('rate "
-               "limiting'). Wait before making a new request.", server_info)
+               "limiting'). Wait before making a new request.")
         raise FDSNTooManyRequestsException(msg, server_info)
     elif code == 500:
         raise FDSNInternalServerException("Service responds: Internal server "
