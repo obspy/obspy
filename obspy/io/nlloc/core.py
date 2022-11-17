@@ -138,6 +138,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     Given a list of lines (starting with a 'NLLOC' line and ending with a
     'END_NLLOC' line), parse them into an Event.
     """
+    nlloc_file_format_version = None
     try:
         # some paranoid checks..
         assert lines[0].startswith("NLLOC ")
@@ -154,6 +155,18 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     for i, line in enumerate(lines):
         if line.startswith("PHASE "):
             indices_phases[0] = i
+            # determine whether it's old format or new one which has one
+            # additional item in middle. use position of magic character to
+            # find out.
+            separator_position = line.split().index('>')
+            if separator_position == 15:
+                nlloc_file_format_version = 1
+            elif separator_position == 16:
+                nlloc_file_format_version = 2
+            else:
+                msg = ("This should not happen, please open a ticket on "
+                       "github and supply your nonlinloc file for debugging")
+                raise NotImplementedError(msg)
         elif line.startswith("END_PHASE"):
             indices_phases[1] = i
 
@@ -319,11 +332,22 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         channel = line[2]
         phase = line[4]
         arrival.phase = phase
-        arrival.distance = kilometer2degrees(float(line[21]))
-        arrival.azimuth = float(line[23])
-        arrival.takeoff_angle = float(line[24])
-        arrival.time_residual = float(line[16])
-        arrival.time_weight = float(line[17])
+        if nlloc_file_format_version == 1:
+            arrival.distance = kilometer2degrees(float(line[21]))
+            arrival.azimuth = float(line[23])
+            arrival.takeoff_angle = float(line[24])
+            arrival.time_residual = float(line[16])
+            arrival.time_weight = float(line[17])
+        elif nlloc_file_format_version == 2:
+            arrival.distance = kilometer2degrees(float(line[22]))
+            arrival.azimuth = float(line[24])
+            arrival.takeoff_angle = float(line[25])
+            arrival.time_residual = float(line[17])
+            arrival.time_weight = float(line[18])
+        else:
+            msg = ("This should not happen, please open a ticket on "
+                   "github and supply your nonlinloc file for debugging")
+            raise NotImplementedError(msg)
         pick = Pick()
         # have to split this into ints for overflow to work correctly
         date, hourmin, sec = map(str, line[6:9])
