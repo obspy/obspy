@@ -6,6 +6,7 @@ import os
 import re
 import unittest
 import warnings
+from pathlib import Path
 
 from obspy import UTCDateTime, read_events
 from obspy.core.inventory import Inventory, Network, Station, Channel
@@ -37,9 +38,9 @@ class NLLOCTestCase(unittest.TestCase):
     Test suite for obspy.io.nlloc
     """
     def setUp(self):
-        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        self.datapath = os.path.join(self.path, "data")
+        self.path = Path(os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe()))))
+        self.datapath = self.path / "data"
 
     def test_write_nlloc_obs(self):
         """
@@ -337,3 +338,13 @@ class NLLOCTestCase(unittest.TestCase):
         pick1, pick2 = cat[0].picks[-1], cat[0].picks[-2]
         self.assertEqual(pick1.time.hour, 0)
         self.assertEqual(pick2.time.second, 0)
+
+    def test_reading_nlloc_v7_hyp_file(self):
+        """
+        Tests that we are getting the positioning of items in phase lines
+        right. Values for arrivals are shifted by one index to the right in hyp
+        files written by newer nonlinloc versions, see #3223
+        """
+        path = str(self.datapath / 'nlloc_v7.hyp')
+        cat = read_nlloc_hyp(path)
+        assert cat[0].origins[0].arrivals[0].azimuth == 40

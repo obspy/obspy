@@ -69,6 +69,12 @@ Changes:
  - obspy.io.alsep:
    * new module for reading data from the Apollo missions stored in ALSEP
      format (see #3156)
+ - obspy.io.nlloc:
+   * avoid mangling channel/component code when writing nonlinloc phase file,
+     just write full channel code unchanged into nonlinloc's "component" field
+     (see #3223)
+   * fix reading nonlinloc hypocenter files written by newer nonlinloc
+     versions, data parsed into Arrivals was wrong (see #3223)
  - obspy.io.nordic:
    * add support for writing multiple amplitudes for one pick (only new format)
      and writes some amplitude lines more compact (see #3075, also #2814)
