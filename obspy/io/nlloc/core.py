@@ -425,9 +425,7 @@ def write_nlloc_obs(catalog, filename, **kwargs):
     for pick in catalog[0].picks:
         wid = pick.waveform_id
         station = wid.station_code or "?"
-        component = wid.channel_code and wid.channel_code[-1].upper() or "?"
-        if component not in "ZNEH":
-            component = "?"
+        component = wid.channel_code or "?"
         onset = ONSETS_REVERSE.get(pick.onset, "?")
         phase_type = pick.phase_hint or "?"
         polarity = POLARITIES_REVERSE.get(pick.polarity, "?")
