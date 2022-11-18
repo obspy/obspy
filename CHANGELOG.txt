@@ -83,6 +83,8 @@ Changes:
    * ignore ray takeoff dip if the stated quality for it is "0 - unreliable".
      our example data show that values can be blatantly wrong when quality is
      reported as "0" (see #3224)
+   * write timing error as "0.0" if it is not set on a pick, as recommended by
+     nonlinloc's author (see #2371, #3224)
  - obspy.io.nordic:
    * add support for writing multiple amplitudes for one pick (only new format)
      and writes some amplitude lines more compact (see #3075, also #2814)
