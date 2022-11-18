@@ -347,4 +347,4 @@ class NLLOCTestCase(unittest.TestCase):
         """
         path = str(self.datapath / 'nlloc_v7.hyp')
         cat = read_nlloc_hyp(path)
-        assert cat[0].origins[0].arrivals[0].azimuth == 40
+        assert cat[0].origins[0].arrivals[0].azimuth == 107.42

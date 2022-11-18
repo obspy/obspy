@@ -75,6 +75,11 @@ Changes:
      (see #3223)
    * fix reading nonlinloc hypocenter files written by newer nonlinloc
      versions, data parsed into Arrivals was wrong (see #3223)
+   * read geometrical station azimuth instead of ray takeoff azimuth from
+     hypocenter. This is more robust (ray takeoff values sometimes not accurate
+     at all) and also follows more the QuakeML documentation that states
+     "Azimuth of station as seen from the epicenter" which implies a simple
+     geometrical calculation (see #3224)
  - obspy.io.nordic:
    * add support for writing multiple amplitudes for one pick (only new format)
      and writes some amplitude lines more compact (see #3075, also #2814)
