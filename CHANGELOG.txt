@@ -1,4 +1,4 @@
-1.4.0rc2
+1.4.0rc3
 ========
 
 Changes:
@@ -40,32 +40,6 @@ Changes:
      short (see #3093)
    * map plots: fix initial map setup, properly pass through user specified
      options, like "projection" etc (see #3191)
- - obspy.signal:
-   * coincidence trigger: improve speed of template matching and less memory
-     usage (see #3104)
-   * Baer picker: fix a bug that could cause crashes on certain versions of
-     libffi (see #3183)
-   * polarization analysis: fix calculation of timestamps of the resulting
-     values (see #3211)
- - obspy.taup:
-   * add option "indicate_wave_type" to distinguish S waves in ray paths
-     plot by using wiggly lines for shear waves (see #3047)
-   * improved accuracy of ray paths by change of root-finding algorithm
-     in SeismicPhase.refine_arrival (see #3064, #3096)
-   * improved accuracy of travel time estimates by using theta function
-     (see #3068)
-   * add support for models without a core or inner core
-     (see #1200, #1423, #2086, #2192, #2390, #3070)
-   * add support for a wider range of diffracted phases, like SedPdiffKP
-     (see #3085) and PKdiffP (see #3095)
-   * allow rapid travel time plotting in plot_travel_times by using
-     precalculated travel times (see #3092)
-   * return pierce points for any depth (see #1742, #3072)
-   * bug fix for rays which cannot turn due to low velocity at bottom
-     of layer (see #3080)
-   * add some checks for bad phases, so "ScScS" is not allowed
-     (see #2774, #3082)
-   * bug fix for sources within high slowness regions (see #2976, #3100)
  - obspy.io.alsep:
    * new module for reading data from the Apollo missions stored in ALSEP
      format (see #3156)
@@ -100,6 +74,32 @@ Changes:
      to write a "fresh" SAC header, instead of attempting to merge information
      from an old SAC header, if one exists. (see #2760)
    * fix writing SACPZ when a channel's sensor filed is unset (see #3187)
+ - obspy.signal:
+   * coincidence trigger: improve speed of template matching and less memory
+     usage (see #3104)
+   * Baer picker: fix a bug that could cause crashes on certain versions of
+     libffi (see #3183)
+   * polarization analysis: fix calculation of timestamps of the resulting
+     values (see #3211)
+ - obspy.taup:
+   * add option "indicate_wave_type" to distinguish S waves in ray paths
+     plot by using wiggly lines for shear waves (see #3047)
+   * improved accuracy of ray paths by change of root-finding algorithm
+     in SeismicPhase.refine_arrival (see #3064, #3096)
+   * improved accuracy of travel time estimates by using theta function
+     (see #3068)
+   * add support for models without a core or inner core
+     (see #1200, #1423, #2086, #2192, #2390, #3070)
+   * add support for a wider range of diffracted phases, like SedPdiffKP
+     (see #3085) and PKdiffP (see #3095)
+   * allow rapid travel time plotting in plot_travel_times by using
+     precalculated travel times (see #3092)
+   * return pierce points for any depth (see #1742, #3072)
+   * bug fix for rays which cannot turn due to low velocity at bottom
+     of layer (see #3080)
+   * add some checks for bad phases, so "ScScS" is not allowed
+     (see #2774, #3082)
+   * bug fix for sources within high slowness regions (see #2976, #3100)
 
 1.3.1 (doi: 10.5281/zenodo.7193374)
 ===================================
