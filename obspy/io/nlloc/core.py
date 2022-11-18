@@ -335,13 +335,19 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         if nlloc_file_format_version == 1:
             arrival.distance = kilometer2degrees(float(line[21]))
             arrival.azimuth = float(line[22])
-            arrival.takeoff_angle = float(line[24])
+            # do not read in take off angle, if the ray takeoff quality is
+            # given as "0" for "unreliable", see #3224
+            if int(line[25]) != 0:
+                arrival.takeoff_angle = float(line[24])
             arrival.time_residual = float(line[16])
             arrival.time_weight = float(line[17])
         elif nlloc_file_format_version == 2:
             arrival.distance = kilometer2degrees(float(line[22]))
             arrival.azimuth = float(line[23])
-            arrival.takeoff_angle = float(line[25])
+            # do not read in take off angle, if the ray takeoff quality is
+            # given as "0" for "unreliable", see #3224
+            if int(line[26]) != 0:
+                arrival.takeoff_angle = float(line[25])
             arrival.time_residual = float(line[17])
             arrival.time_weight = float(line[18])
         else:

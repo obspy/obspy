@@ -63,9 +63,6 @@ STATISTICS ExpectX -1.32658 Y -0.0487098 Z 3.12781  CovXX 1.21008 XY 0.238028 XZ
           <phase>P</phase>
           <azimuth>109.48</azimuth>
           <distance>0.00329961097212</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>-0.0076</timeResidual>
           <timeWeight>0.9958</timeWeight>
         </arrival>
@@ -74,9 +71,6 @@ STATISTICS ExpectX -1.32658 Y -0.0487098 Z 3.12781  CovXX 1.21008 XY 0.238028 XZ
           <phase>P</phase>
           <azimuth>13.71</azimuth>
           <distance>0.00340932820804</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>0.0025</timeResidual>
           <timeWeight>1.0009</timeWeight>
         </arrival>
@@ -85,9 +79,6 @@ STATISTICS ExpectX -1.32658 Y -0.0487098 Z 3.12781  CovXX 1.21008 XY 0.238028 XZ
           <phase>P</phase>
           <azimuth>71.75</azimuth>
           <distance>0.00396331031728</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>-0.0009</timeResidual>
           <timeWeight>1.0016</timeWeight>
         </arrival>
@@ -96,9 +87,6 @@ STATISTICS ExpectX -1.32658 Y -0.0487098 Z 3.12781  CovXX 1.21008 XY 0.238028 XZ
           <phase>P</phase>
           <azimuth>204.61</azimuth>
           <distance>0.00499483219927</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>0.0065</timeResidual>
           <timeWeight>0.997</timeWeight>
         </arrival>
@@ -107,9 +95,6 @@ STATISTICS ExpectX -1.32658 Y -0.0487098 Z 3.12781  CovXX 1.21008 XY 0.238028 XZ
           <phase>P</phase>
           <azimuth>104.59</azimuth>
           <distance>0.00563874646911</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>-0.0005</timeResidual>
           <timeWeight>1.0016</timeWeight>
         </arrival>

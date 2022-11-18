@@ -197,8 +197,8 @@ class NLLOCTestCase(unittest.TestCase):
             self.assertEqual(arriv.phase, arriv_expected.phase)
             self.assertAlmostEqual(arriv.azimuth, arriv_expected.azimuth)
             self.assertAlmostEqual(arriv.distance, arriv_expected.distance)
-            self.assertAlmostEqual(arriv.takeoff_angle,
-                                   arriv_expected.takeoff_angle)
+            assert arriv.takeoff_angle is None
+            assert arriv_expected.takeoff_angle is None
             self.assertAlmostEqual(arriv.time_residual,
                                    arriv_expected.time_residual)
             self.assertAlmostEqual(arriv.time_weight,

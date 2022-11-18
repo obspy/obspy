@@ -80,6 +80,9 @@ Changes:
      at all) and also follows more the QuakeML documentation that states
      "Azimuth of station as seen from the epicenter" which implies a simple
      geometrical calculation (see #3224)
+   * ignore ray takeoff dip if the stated quality for it is "0 - unreliable".
+     our example data show that values can be blatantly wrong when quality is
+     reported as "0" (see #3224)
  - obspy.io.nordic:
    * add support for writing multiple amplitudes for one pick (only new format)
      and writes some amplitude lines more compact (see #3075, also #2814)
