@@ -143,7 +143,7 @@ class EventTestCase(unittest.TestCase):
 
             if validate:
                 self.assertTrue(validate_sc3ml(tf.name, target_version))
-            filepath_cmp = os.path.join(self.path, sc3ml_file)
+            filepath_cmp = os.path.join(self.path, sc3ml_file)         
             self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
 
     def test_sc3ml_versions(self):
