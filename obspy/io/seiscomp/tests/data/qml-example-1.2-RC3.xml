@@ -8,7 +8,7 @@
           <value>1.0e-08</value>
         </genericAmplitude>
         <timeWindow>
-          <reference>2007-10-10T14:40:39.055</reference>
+          <reference>2007-10-10T14:40:39.055Z</reference>
           <begin>0</begin>
           <end>0.51424</end>
         </timeWindow>
@@ -34,7 +34,7 @@
       </magnitude>
       <origin publicID="smi:nz.org.geonet/event/2806038g/origin/1">
         <time>
-          <value>2007-10-10T14:40:39.055</value>
+          <value>2007-10-10T14:40:39.055Z</value>
           <uncertainty>0.51424</uncertainty>
           <confidenceLevel>68.0</confidenceLevel>
         </time>
