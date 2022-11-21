@@ -75,9 +75,8 @@ Changes:
      from an old SAC header, if one exists. (see #2760)
    * fix writing SACPZ when a channel's sensor filed is unset (see #3187)
  - obspy.io.seiscomp:
-   * update seiscomp 0.11 and 0.12 schema to potentially speed up sc3ml to qml
-     event catalog conversions (see https://github.com/SeisComP/common/pull/74)
-   * add Z suffix to xz:dataTime elements in 0.11 for SC < 5 compatiblity 
+   * update SeisComP 0.11 and 0.12 schema to potentially speed up sc3ml to qml
+     event catalog conversions (see #3216 and SeisComP/common#74)
  - obspy.signal:
    * coincidence trigger: improve speed of template matching and less memory
      usage (see #3104)
