@@ -1,5 +1,5 @@
-master
-======
+1.4.0rc4
+========
 
 Changes:
  - obspy.core:
@@ -40,6 +40,43 @@ Changes:
      short (see #3093)
    * map plots: fix initial map setup, properly pass through user specified
      options, like "projection" etc (see #3191)
+ - obspy.io.alsep:
+   * new module for reading data from the Apollo missions stored in ALSEP
+     format (see #3156)
+ - obspy.io.nlloc:
+   * avoid mangling channel/component code when writing nonlinloc phase file,
+     just write full channel code unchanged into nonlinloc's "component" field
+     (see #3223)
+   * fix reading nonlinloc hypocenter files written by newer nonlinloc
+     versions, data parsed into Arrivals was wrong (see #3223)
+   * read geometrical station azimuth instead of ray takeoff azimuth from
+     hypocenter. This is more robust (ray takeoff values sometimes not accurate
+     at all) and also follows more the QuakeML documentation that states
+     "Azimuth of station as seen from the epicenter" which implies a simple
+     geometrical calculation (see #3224)
+   * ignore ray takeoff dip if the stated quality for it is "0 - unreliable".
+     our example data show that values can be blatantly wrong when quality is
+     reported as "0" (see #3224)
+   * write timing error as "0.0" if it is not set on a pick, as recommended by
+     nonlinloc's author (see #2371, #3224)
+ - obspy.io.nordic:
+   * add support for writing multiple amplitudes for one pick (only new format)
+     and writes some amplitude lines more compact (see #3075, also #2814)
+   * add full support for reading and writing apparent velocity and backazimuth
+     with new nordic format (see #3075)
+   * fix comments on angle of incidence vs. takeoff angle (What is called
+     angle of incidence in Seisan is the same as what is usually referred to as
+     takeoff angle, see #3075)
+   * add function to check whether phase is valid IASPEI phase in Seisan (#3075)
+   * full support for writing high-accuracy origin line (see #3075)
+ - obspy.io.sac:
+   * expose a `keep_sac_header` flag to the `write` plugin, which allows users
+     to write a "fresh" SAC header, instead of attempting to merge information
+     from an old SAC header, if one exists. (see #2760)
+   * fix writing SACPZ when a channel's sensor filed is unset (see #3187)
+ - obspy.io.seiscomp:
+   * update SeisComP 0.11 and 0.12 schema to potentially speed up sc3ml to qml
+     event catalog conversions (see #3216 and SeisComP/common#74)
  - obspy.signal:
    * coincidence trigger: improve speed of template matching and less memory
      usage (see #3104)
@@ -66,30 +103,6 @@ Changes:
    * add some checks for bad phases, so "ScScS" is not allowed
      (see #2774, #3082)
    * bug fix for sources within high slowness regions (see #2976, #3100)
- - obspy.io.alsep:
-   * new module for reading data from the Apollo missions stored in ALSEP
-     format (see #3156)
- - obspy.io.nlloc:
-   * avoid mangling channel/component code when writing nonlinloc phase file,
-     just write full channel code unchanged into nonlinloc's "component" field
-     (see #3223)
-   * fix reading nonlinloc hypocenter files written by newer nonlinloc
-     versions, data parsed into Arrivals was wrong (see #3223)
- - obspy.io.nordic:
-   * add support for writing multiple amplitudes for one pick (only new format)
-     and writes some amplitude lines more compact (see #3075, also #2814)
-   * add full support for reading and writing apparent velocity and backazimuth
-     with new nordic format (see #3075)
-   * fix comments on angle of incidence vs. takeoff angle (What is called
-     angle of incidence in Seisan is the same as what is usually referred to as
-     takeoff angle, see #3075)
-   * add function to check whether phase is valid IASPEI phase in Seisan (#3075)
-   * full support for writing high-accuracy origin line (see #3075)
- - obspy.io.sac:
-   * expose a `keep_sac_header` flag to the `write` plugin, which allows users
-     to write a "fresh" SAC header, instead of attempting to merge information
-     from an old SAC header, if one exists. (see #2760)
-   * fix writing SACPZ when a channel's sensor filed is unset (see #3187)
 
 1.3.1 (doi: 10.5281/zenodo.7193374)
 ===================================

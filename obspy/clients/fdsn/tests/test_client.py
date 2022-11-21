@@ -412,8 +412,9 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests the parsing of the available event catalogs.
         """
-        self.assertEqual(set(self.client.services["available_event_catalogs"]),
-                         set(("GCMT", "ISC", "NEIC PDE")))
+        stripped_set = {c.strip() for c in
+                        self.client.services['available_event_catalogs']}
+        assert stripped_set == set(("GCMT", "ISC", "NEIC PDE"))
 
     def test_iris_event_contributors_availability(self):
         """
@@ -861,13 +862,13 @@ class ClientTestCase(unittest.TestCase):
             # allow for changes in version number..
             got = normalize_version_number(got)
             expected = normalize_version_number(expected)
-            # catalogs/contributors are checked in separate tests
-            self.assertTrue(got[-2].startswith('Available catalogs:'))
-            self.assertTrue(got[-1].startswith('Available contributors:'))
-            got = got[:-2]
+            # convert newlines to ' '
+            got = ' '.join(got)
+            assert 'Available catalogs:' in got
+            assert 'Available contributors:' in got
             expected = expected[:-2]
-            for line_got, line_expected in zip(got, expected):
-                self.assertEqual(line_got, line_expected)
+            expected = ' '.join(expected)
+            assert got.startswith(expected)
 
             # Reset. Creating a new one is faster then clearing the old one.
             tmp = io.StringIO()

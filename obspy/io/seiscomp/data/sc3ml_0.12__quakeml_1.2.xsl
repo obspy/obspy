@@ -178,9 +178,24 @@
  *
  *  * 10.12.2018: Put the non-QuakeML nodes in a custom namespace
  *
- *  * 17.06.2021: Version bump. The SC3 datamodel was updated an now includes
+ *  * 17.06.2021: Version bump. The SC datamodel was updated an now includes
  *                the confidenceLevel parameter in the OriginUncertainty
  *                element.
+ *
+ *  * 04.04.2022:
+ *    - Map additional SC event types 'calving', 'frost quake', 'tremor pulse'
+ *      and 'submarine landslide' to QuakeML 'other event'.
+ *    - Skip eventTypeCertainty if value is set to 'damaging' or 'felt'
+ *      both unsupported by QuakeML.
+ *    - Skip originUncertaintyDescription if value is set to
+ *      'probability density function' not supported by QuakeML.
+ *
+ *  * 08.06.2022:
+ *    - Map new SeisComP event types 'rocket impact', 'artillery strike',
+ *      'bomb detonation', 'moving aircraft' and 'atmospheric meteor explosion'
+ *      to QuakeML 'other event'.
+ *
+ *  * 31.10.2022: Improve performance when processing origins with many arrivals.
  *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
@@ -257,14 +272,10 @@
                     </xsl:for-each>
 
                     <!-- picks, referenced by arrivals -->
-                    <xsl:for-each select="scs:arrival">
-                        <!--xsl:value-of select="scs:pickID"/-->
-                        <!-- Don't copy picks already referenced in amplitudes -->
-                        <xsl:for-each select="
-                                ../../scs:pick[
-                                    @publicID=current()/scs:pickID
-                                    and not(@publicID=../scs:amplitude[
-                                        @publicID=$origin/scs:stationMagnitude/scs:amplitudeID]/scs:pickID)]">
+                    <!-- we exclude picks already referenced in amplitudes: -->
+                    <xsl:variable name="amplitudes" select="../scs:amplitude[@publicID=$origin/scs:stationMagnitude/scs:amplitudeID]" />
+                    <xsl:for-each select="scs:arrival[not(./scs:pickID=$amplitudes/scs:pickID)]">
+                        <xsl:for-each select="../../scs:pick[@publicID=current()/scs:pickID]">
                             <xsl:call-template name="genericNode"/>
                         </xsl:for-each>
                     </xsl:for-each>
@@ -340,9 +351,30 @@
                 <xsl:when test="$v='outside of network interest'">other event</xsl:when>
                 <xsl:when test="$v='duplicate'">other event</xsl:when>
                 <xsl:when test="$v='other'">other event</xsl:when>
+                <xsl:when test="$v='calving'">other event</xsl:when>
+                <xsl:when test="$v='frost quake'">other event</xsl:when>
+                <xsl:when test="$v='tremor pulse'">other event</xsl:when>
+                <xsl:when test="$v='submarine landslide'">other event</xsl:when>
+                <xsl:when test="$v='rocket'">other event</xsl:when>
+                <xsl:when test="$v='rocket impact'">other event</xsl:when>
+                <xsl:when test="$v='artillery strike'">other event</xsl:when>
+                <xsl:when test="$v='bomb detonation'">other event</xsl:when>
+                <xsl:when test="$v='moving aircraft'">other event</xsl:when>
+                <xsl:when test="$v='atmospheric meteor explosion'">other event</xsl:when>
                 <xsl:otherwise><xsl:value-of select="$v"/></xsl:otherwise>
             </xsl:choose>
         </xsl:element>
+    </xsl:template>
+
+    <!-- event type certainty, enumeration of QML only includes
+         'known' and 'suspected' but not 'damaging' nor 'felt' -->
+    <xsl:template match="scs:eventTypeCertainty">
+        <xsl:variable name="v" select="current()"/>
+        <xsl:if test="$v='known' or $v='suspected'">
+            <xsl:element name="{local-name()}">
+                <xsl:value-of select="$v"/>
+            </xsl:element>
+        </xsl:if>
     </xsl:template>
 
     <!-- origin depth, SC3ML uses kilometer, QML meter -->
@@ -511,6 +543,17 @@
         <xsl:call-template name="genericNode">
             <xsl:with-param name="name" select="'originUncertainty'"/>
         </xsl:call-template>
+    </xsl:template>
+
+    <!-- originUncertaintyDescription, enumeration of QML does not
+         include 'probability density function' -->
+    <xsl:template match="scs:originUncertaintyDescription">
+        <xsl:variable name="v" select="current()"/>
+        <xsl:if test="$v!='probability density function'">
+            <xsl:element name="{local-name()}">
+                <xsl:value-of select="$v"/>
+            </xsl:element>
+        </xsl:if>
     </xsl:template>
 
     <!-- waveformID: SCS uses a child element 'resourceURI', QML

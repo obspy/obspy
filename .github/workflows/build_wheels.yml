@@ -40,6 +40,9 @@ jobs:
             exclude-flag: true
           - build: cp310
             exclude-flag: true
+          # lxml wheel not yet present so build fails
+          - build: cp311
+            os: windows-latest
     steps:
       - uses: actions/checkout@v3
         with:

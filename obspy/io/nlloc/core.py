@@ -334,14 +334,20 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         arrival.phase = phase
         if nlloc_file_format_version == 1:
             arrival.distance = kilometer2degrees(float(line[21]))
-            arrival.azimuth = float(line[23])
-            arrival.takeoff_angle = float(line[24])
+            arrival.azimuth = float(line[22])
+            # do not read in take off angle, if the ray takeoff quality is
+            # given as "0" for "unreliable", see #3224
+            if int(line[25]) != 0:
+                arrival.takeoff_angle = float(line[24])
             arrival.time_residual = float(line[16])
             arrival.time_weight = float(line[17])
         elif nlloc_file_format_version == 2:
             arrival.distance = kilometer2degrees(float(line[22]))
-            arrival.azimuth = float(line[24])
-            arrival.takeoff_angle = float(line[25])
+            arrival.azimuth = float(line[23])
+            # do not read in take off angle, if the ray takeoff quality is
+            # given as "0" for "unreliable", see #3224
+            if int(line[26]) != 0:
+                arrival.takeoff_angle = float(line[25])
             arrival.time_residual = float(line[17])
             arrival.time_weight = float(line[18])
         else:
@@ -432,13 +438,18 @@ def write_nlloc_obs(catalog, filename, **kwargs):
         date = pick.time.strftime("%Y%m%d")
         hourminute = pick.time.strftime("%H%M")
         seconds = pick.time.second + pick.time.microsecond * 1e-6
-        time_error = pick.time_errors.uncertainty or -1
-        if time_error == -1:
-            try:
-                time_error = (pick.time_errors.upper_uncertainty +
-                              pick.time_errors.lower_uncertainty) / 2.0
-            except Exception:
-                pass
+        if pick.time_errors.upper_uncertainty is not None and \
+                pick.time_errors.lower_uncertainty is not None:
+            time_error = (pick.time_errors.upper_uncertainty +
+                          pick.time_errors.lower_uncertainty) / 2.0
+        elif pick.time_errors.uncertainty is not None:
+            time_error = pick.time_errors.uncertainty
+        else:
+            # see discussion in #2371
+            msg = ("Writing pick without time uncertainty. Time uncertainty "
+                   "will be written as '0.0'")
+            warnings.warn(msg)
+            time_error = 0.0
         info_ = fmt % (station.ljust(6), "?".ljust(4), component.ljust(4),
                        onset.ljust(1), phase_type.ljust(6), polarity.ljust(1),
                        date, hourminute, seconds, time_error, -1, -1, -1)

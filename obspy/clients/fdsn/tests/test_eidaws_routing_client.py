@@ -226,8 +226,7 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
                           str(obspy.UTCDateTime(2017, 1, 2))[:-1]])
         # Everything should be passed on.
         self.assertEqual(p3.call_args[1], {
-            "format": "text", "level": "channel", "longestonly": True,
-            "minimumlength": 2})
+            "level": "channel", "longestonly": True, "minimumlength": 2})
 
     def test_get_stations(self):
         # Some mock routing response.
