@@ -478,7 +478,8 @@ class Network(BaseNode):
                             continue
                     else:
                         continue
-
+                else:
+                    continue
             if any([t is not None for t in (time, starttime, endtime)]):
                 if not sta.is_active(time=time, starttime=starttime,
                                      endtime=endtime):
