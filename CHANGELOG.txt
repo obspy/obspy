@@ -55,7 +55,7 @@ Changes:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
    * add seiscomp scxml 0.13 support (see #3345)
-   * Added publicID to station, based on SCML (see #3194)
+   * Added publicID to station.extra, based on SCML (see #3194)
  - obspy.io.xseed:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)

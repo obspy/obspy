@@ -22,6 +22,7 @@ import numpy as np
 from scipy.signal import tf2zpk
 
 import obspy
+from obspy.core.util import AttribDict
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
@@ -272,8 +273,8 @@ def _read_station(instrumentation_register, sta_element, _ns):
     station = obspy.core.inventory.Station(code=sta_element.get("code"),
                                            latitude=latitude,
                                            longitude=longitude,
-                                           elevation=elevation,
-                                           public_id=public_id)
+                                           elevation=elevation)
+    station.extra = AttribDict({'public_id': public_id})
     station.site = _read_site(sta_element, _ns)
 
     # There is no relevant info in the base node

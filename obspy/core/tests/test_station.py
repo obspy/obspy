@@ -155,10 +155,6 @@ class TestStation:
             latitude=47.95, longitude=12.95,
             minradius=0.08, maxradius=0.1)) == 0
 
-    def test_public_id(self):
-        sta = read_inventory()[0][0]
-        assert sta.public_id is None
-
     def test_warn_identifier_invalid_uri_syntax(self):
         """
         Tests the warning on Identifiers getting set with an invalid URI (not

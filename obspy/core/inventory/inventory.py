@@ -641,7 +641,7 @@ class Inventory(ComparingObject):
             maximum number of degrees from the geographic point defined by the
             latitude and longitude parameters.
         :type public_id: str, optional
-        :param public_id: Only include stations matching with public_id
+        :param public_id: Only include stations matching with extra.public_id
         """
         networks = []
         for net in self.networks:

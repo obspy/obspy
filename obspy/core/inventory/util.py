@@ -33,7 +33,7 @@ class BaseNode(ComparingObject):
     def __init__(self, code, description=None, comments=None, start_date=None,
                  end_date=None, restricted_status=None, alternate_code=None,
                  historical_code=None, data_availability=None,
-                 identifiers=None, source_id=None, public_id=None):
+                 identifiers=None, source_id=None):
         """
         :type code: str
         :param code: The SEED network, station, or channel code
@@ -68,8 +68,6 @@ class BaseNode(ComparingObject):
             (schema version >=1.1). URIs are in general composed of a 'scheme'
             and a 'path' (optionally with additional components), the two of
             which separated by a colon.
-        :type public_id: str, optional
-        :param public_id: A publicID in SCML form.
         """
         self.code = code
         self.comments = comments or []
@@ -82,7 +80,6 @@ class BaseNode(ComparingObject):
         self.data_availability = data_availability
         self.identifiers = identifiers or []
         self.source_id = source_id
-        self.public_id = public_id
 
     @property
     def code(self):
