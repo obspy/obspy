@@ -472,8 +472,9 @@ class Network(BaseNode):
             if public_id is not None:
                 if hasattr(sta, 'extra'):
                     if hasattr(sta.extra, 'public_id'):
-                        if not fnmatch.fnmatch(sta.extra.public_id.upper(),
-                                            public_id.upper()):
+                        if not fnmatch.fnmatch(
+                            sta.extra.public_id.upper(), public_id.upper()
+                        ):
                             continue
                     else:
                         continue
