@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<FDSNStationXML xmlns:ns="seiscompml" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.2">
+<FDSNStationXML xmlns:my_ns="seiscompml" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.2">
   <Source>scxml import</Source>
   <Sender>ObsPy Inventory</Sender>
   <Module/>
   <ModuleURI/>
-  <Created>2022-11-22T10:08:33.754705Z</Created>
+  <Created>2022-11-22T10:29:22.462618Z</Created>
   <Network code="EB" startDate="1980-01-01T00:00:00.000000Z" restrictedStatus="open">
     <Description>SINGLE STATION</Description>
     <Station code="EBR" startDate="2002-04-01T00:00:00.000000Z" restrictedStatus="open">
-      <ns:public_id>Station/EB/EBR/2002-04-01T00:00:00.0000Z</ns:public_id>
+      <my_ns:public_id>Station/EB/EBR/2002-04-01T00:00:00.0000Z</my_ns:public_id>
       <Latitude unit="DEGREES">40.820599</Latitude>
       <Longitude unit="DEGREES">0.4933</Longitude>
       <Elevation>40.0</Elevation>
