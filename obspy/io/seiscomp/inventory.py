@@ -270,11 +270,19 @@ def _read_station(instrumentation_register, sta_element, _ns):
     elevation = _read_floattype(sta_element, _ns("elevation"), Distance,
                                 unit=True)
     public_id = sta_element.get("publicID")
+    ns = "seiscompml"
+    extra_tag = {
+        "public_id": {
+            'value': public_id,
+            'namespace': ns
+        }
+    }
+
     station = obspy.core.inventory.Station(code=sta_element.get("code"),
                                            latitude=latitude,
                                            longitude=longitude,
                                            elevation=elevation)
-    station.extra = AttribDict({'public_id': public_id})
+    station.extra = extra_tag
     station.site = _read_site(sta_element, _ns)
 
     # There is no relevant info in the base node
