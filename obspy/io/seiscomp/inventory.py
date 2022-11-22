@@ -271,12 +271,12 @@ def _read_station(instrumentation_register, sta_element, _ns):
                                 unit=True)
     public_id = sta_element.get("publicID")
     ns = "seiscompml"
-    extra_tag = {
-        "public_id": {
+    extra_tag = AttribDict({})
+    extra_tag.public_id = AttribDict({
             'value': public_id,
             'namespace': ns
         }
-    }
+    )
 
     station = obspy.core.inventory.Station(code=sta_element.get("code"),
                                            latitude=latitude,
