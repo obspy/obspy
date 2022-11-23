@@ -11,6 +11,7 @@ Classes related to instrument responses.
 """
 import copy
 import ctypes as C  # NOQA
+import collections.abc
 from collections import defaultdict
 from copy import deepcopy
 import itertools
@@ -19,7 +20,6 @@ import warnings
 
 import numpy as np
 
-from .. import compatibility
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
@@ -400,7 +400,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._numerator = []
             return
         value = list(value) if isinstance(
-            value, compatibility.collections_abc.Iterable) else [value]
+            value, collections.abc.Iterable) else [value]
         if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
@@ -419,7 +419,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._denominator = []
             return
         value = list(value) if isinstance(
-            value, compatibility.collections_abc.Iterable) else [value]
+            value, collections.abc.Iterable) else [value]
         if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)

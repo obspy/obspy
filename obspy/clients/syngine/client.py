@@ -8,6 +8,7 @@ ObsPy client for the IRIS Syngine service.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import collections.abc
 import io
 import zipfile
 
@@ -565,7 +566,7 @@ class Client(WaveformClient, HTTPClient):
             # Write the bulk content.
             for item in bulk:
                 # Dictionary like items.
-                if isinstance(item, compatibility.collections_abc.Mapping):
+                if isinstance(item, collections.abc.Mapping):
                     if "latitude" in item or "longitude" in item:
                         if not ("latitude" in item and "longitude" in item):
                             raise ValueError(
@@ -584,7 +585,7 @@ class Client(WaveformClient, HTTPClient):
                         raise ValueError("Item '%s' in bulk is malformed." %
                                          str(item))
                 # Iterable items.
-                elif isinstance(item, compatibility.collections_abc.Container):
+                elif isinstance(item, collections.abc.Container):
                     if len(item) != 2:
                         raise ValueError("Item '%s' in bulk must have two "
                                          "entries." % str(item))

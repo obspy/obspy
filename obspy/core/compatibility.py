@@ -5,21 +5,9 @@ ObsPy's compatibility layer.
 Includes things to easy dealing with Python version differences as well as
 making it work with various versions of our dependencies.
 """
-import collections
-import importlib
 import json
 
 import numpy as np
-
-
-# Importing the ABCs from collections will no longer work with Python 3.8.
-try:
-    collections_abc = collections.abc  # NOQA
-except AttributeError:
-    # Python 3.4 compat, see https://bugs.python.org/msg212284
-    # some older Linux distribution (like Debian jessie) are still in LTS,
-    # so be nice, this doesn't hurt and can be removed again later on
-    collections_abc = importlib.import_module("collections.abc")  # NOQA
 
 
 # NumPy does not offer the from_buffer method under Python 3 and instead
