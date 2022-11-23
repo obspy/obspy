@@ -8,7 +8,7 @@ Utility functions required for the download helpers.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import collections.abc
+import collections
 import fnmatch
 import itertools
 import os
