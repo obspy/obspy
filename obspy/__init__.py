@@ -28,7 +28,6 @@ for seismology.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import sys
-import warnings
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
