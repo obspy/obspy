@@ -17,7 +17,7 @@ instructions.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import collections
+import collections.abc
 import io
 import json
 from operator import attrgetter
