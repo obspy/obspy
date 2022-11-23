@@ -34,6 +34,7 @@ except ImportError:
 WGS84_A = 6378137.0
 WGS84_F = 1 / 298.257223563
 
+
 def _check_latitude(latitude, variable_name='latitude'):
     """
     Check whether latitude is in the -90 to +90 range.
