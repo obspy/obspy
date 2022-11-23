@@ -26,10 +26,9 @@ def compare_xml_strings(doc1, doc2):
     """
     Simple helper function to compare two XML strings.
 
-    :type doc1: str
-    :type doc2: str
+    :type doc1: bytes or str
+    :type doc2: bytes or str
     """
-    # Compat py2k and py3k
     try:
         doc1 = doc1.encode()
         doc2 = doc2.encode()

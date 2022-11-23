@@ -87,9 +87,6 @@ class QuantityError(AttribDict):
             return True
         return super(QuantityError, self).__eq__(other)
 
-    # Python 2 compatibility
-    __nonzero__ = __bool__
-
 
 def _bool(value):
     """
@@ -316,12 +313,6 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
         def __repr__(self):
             return self.__str__(force_one_line=True)
-
-        # called for bool on PY2
-        # may not be needed after PY2 sunset but keep it for backwards
-        # compatibility
-        def __nonzero__(self):
-            return self.__bool__()
 
         def __bool__(self):
             # We use custom _bool() for testing getattr() since we want

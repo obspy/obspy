@@ -32,24 +32,6 @@ HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
-
-# XXX: Do we still support Python 2.4 ????
-# Figure out Py_ssize_t (PEP 353).
-#
-# Py_ssize_t is only defined for Python 2.5 and above, so it defaults to
-# ctypes.c_int for earlier versions.
-#
-# https://svn.python.org/projects/ctypes/trunk/
-#           ctypeslib/ctypeslib/contrib/pythonhdr.py
-if hasattr(C.pythonapi, 'Py_InitModule4'):
-    Py_ssize_t = C.c_int
-elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
-    Py_ssize_t = C.c_int64
-else:
-    # XXX: just hard code it for now
-    Py_ssize_t = C.c_int64
-    # raise TypeError("Cannot determine type of Py_ssize_t")
-
 # Valid control headers in ASCII numbers.
 SEED_CONTROL_HEADERS = [ord('V'), ord('A'), ord('S'), ord('T')]
 MINI_SEED_CONTROL_HEADERS = [ord('D'), ord('R'), ord('Q'), ord('M')]
@@ -468,7 +450,7 @@ class MsfileparamS(C.Structure):
 
 
 MsfileparamS._fields_ = [
-    ('fp', C.POINTER(Py_ssize_t)),
+    ('fp', C.POINTER(C.c_ssize_t)),
     ('filename', C.c_char * 512),
     ('rawrec', C.c_char_p),
     ('readlen', C.c_int),
