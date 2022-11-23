@@ -5,8 +5,6 @@ ObsPy's compatibility layer.
 Includes things to easy dealing with Python version differences as well as
 making it work with various versions of our dependencies.
 """
-import json
-
 import numpy as np
 
 
@@ -54,61 +52,3 @@ def round_away(number):
         return int(int(number) + int(np.sign(number)))
     else:
         return int(np.round(number))
-
-
-def get_json_from_response(r):
-    """
-    Get a JSON response in a way that also works for very old request
-    versions.
-
-    :type r: :class:`requests.Response
-    :param r: The server's response.
-    """
-    if hasattr(r, "json"):
-        if isinstance(r.json, dict):
-            return r.json
-        return r.json()
-
-    c = r.content
-    try:
-        c = c.decode()
-    except Exception:
-        pass
-    return json.loads(c)
-
-
-def get_text_from_response(r):
-    """
-    Get a text response in a way that also works for very old request versions.
-
-    :type r: :class:`requests.Response
-    :param r: The server's response.
-    """
-    if hasattr(r, "text"):
-        return r.text
-
-    c = r.content
-    try:
-        c = c.decode()
-    except Exception:
-        pass
-    return c
-
-
-def get_reason_from_response(r):
-    """
-    Get the status text.
-
-    :type r: :class:`requests.Response
-    :param r: The server's response.
-    """
-    # Very old requests version might not have the reason attribute.
-    if hasattr(r, "reason"):
-        c = r.reason
-    else:  # pragma: no cover
-        c = r.raw.reason
-
-    if hasattr(c, "encode"):
-        c = c.encode()
-
-    return c
