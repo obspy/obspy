@@ -93,9 +93,9 @@ class TestTrace:
         with pytest.raises(TypeError):
             tr.__mul__('1234')
 
-    def test_div(self):
+    def test_truediv(self):
         """
-        Tests the __div__ method of the Trace class.
+        Tests the __truediv__ method of the Trace class.
         """
         tr = Trace(data=np.arange(1000))
         st = tr / 5
@@ -103,9 +103,9 @@ class TestTrace:
         assert len(st[0]) == 200
         # you may only multiply using an integer
         with pytest.raises(TypeError):
-            tr.__div__(2.5)
+            tr.__truediv__(2.5)
         with pytest.raises(TypeError):
-            tr.__div__('1234')
+            tr.__truediv__('1234')
 
     def test_ltrim(self):
         """

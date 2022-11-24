@@ -518,7 +518,7 @@ class Trace(object):
             st += self.copy()
         return st
 
-    def __div__(self, num):
+    def __truediv__(self, num):
         """
         Split Trace into new Stream containing num Traces of the same size.
 
@@ -561,9 +561,6 @@ class Trace(object):
             tstart = tend + self.stats.delta
             tend = tstart + (self.stats.delta * packet_length)
         return st
-
-    # Py3k: '/' does not map to __truediv__ anymore in Python 3
-    __truediv__ = __div__
 
     def __mod__(self, num):
         """
