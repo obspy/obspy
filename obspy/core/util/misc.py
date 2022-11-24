@@ -290,9 +290,9 @@ def CatchOutput():  # NOQA
         raise SystemExit(out.stderr)
 
 
-def _py36_windowsconsoleio_workaround():
+def _py3_windowsconsoleio_workaround():
     """
-    This monkey patch prevents crashing Py3.6 under Windows while using
+    This monkey patch prevents crashing Py >=3.6 under Windows while using
     the SuppressOutput context manager.
 
     Python 3.6 implemented unicode console handling for Windows. This works
@@ -349,10 +349,10 @@ def SuppressOutput():  # noqa
     ...    os.system('echo "mystdout"')
     ...    os.system('echo "mystderr" >&2')
 
-    Note: Does not work reliably for Python 3.6 and above under Windows - see
-    function definition of _py36_windowsconsoleio_workaround().
+    Note: Does not work reliably for Python 3 under Windows - see
+    function definition of _py3_windowsconsoleio_workaround().
     """
-    _py36_windowsconsoleio_workaround()
+    _py3_windowsconsoleio_workaround()
     with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
         with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
             with open(os.devnull, 'wb') as to_file:
