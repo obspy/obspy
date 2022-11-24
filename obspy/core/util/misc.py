@@ -294,6 +294,7 @@ def _py36_windowsconsoleio_workaround():
     """
     This monkey patch prevents crashing Py3.6 under Windows while using
     the SuppressOutput context manager.
+
     Python 3.6 implemented unicode console handling for Windows. This works
     by reading/writing to the raw console handle using
     ``{Read,Write}ConsoleW``.
@@ -306,6 +307,7 @@ def _py36_windowsconsoleio_workaround():
     The workaround in this case will reopen stdio with a different fd which
     also means a different handle by replicating the logic in
     "Py_lifecycle.c:initstdio/create_stdio".
+
     See https://github.com/pytest-dev/py/issues/103
     See http://bugs.python.org/issue30555
     See https://github.com/obspy/obspy/issues/3148#issuecomment-1274254892
@@ -346,7 +348,6 @@ def SuppressOutput():  # noqa
     >>> with SuppressOutput():  # doctest: +SKIP
     ...    os.system('echo "mystdout"')
     ...    os.system('echo "mystderr" >&2')
-
 
     Note: Does not work reliably for Python 3.6 and above under Windows - see
     function definition of _py36_windowsconsoleio_workaround().
