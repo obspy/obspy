@@ -1157,7 +1157,7 @@ def set_flags_in_fixed_headers(filename, flags):
                         # if everything is unset or 0 set sample rate to 1
                         samp_rate = 1
 
-                # date of the last sample is recstart+samp_rate*(nb_samples-1)
+                # date of the last sample is recstart+(nb_samples-1)/samp_rate
                 # We assume here that a record with samples [0, 1, ..., n]
                 # has a period [ date_0, date_n+1 [  AND NOT [ date_0, date_n ]
                 realendtime = recstart + nb_samples / samp_rate
