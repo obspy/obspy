@@ -22,7 +22,6 @@ from urllib.parse import urlparse
 import requests
 
 import obspy
-from obspy.core.compatibility import get_text_from_response
 from obspy.core.inventory.util import _textwrap
 from obspy.core.util.decorator import deprecated
 
@@ -366,7 +365,7 @@ class RemoteNRL(NRL):
         """
         if url not in _remote_nrl_cache:
             r = requests.get(url)
-            _remote_nrl_cache[url] = get_text_from_response(r)
+            _remote_nrl_cache[url] = r.text
         return _remote_nrl_cache[url]
 
     def _join(self, *paths):

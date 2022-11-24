@@ -17,6 +17,7 @@ instructions.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import collections.abc
 import io
 import json
 from operator import attrgetter
@@ -26,7 +27,6 @@ from uuid import uuid4
 import numpy as np
 
 from obspy import Stream, UTCDateTime, read, __version__
-from obspy.core.compatibility import collections_abc
 from obspy.core.util.base import get_dependency_version
 from obspy.io.mseed.util import get_flags
 
@@ -609,7 +609,7 @@ class MSEEDMetadata(object):
 
         # If passed as a dictionary, serialize and derialize to get the
         # mapping from Python object to JSON type.
-        if isinstance(qc_metrics, collections_abc.Mapping):
+        if isinstance(qc_metrics, collections.abc.Mapping):
             qc_metrics = json.loads(self.get_json_meta(validate=False))
         elif hasattr(qc_metrics, "read"):
             qc_metrics = json.load(qc_metrics)

@@ -117,7 +117,7 @@ class NLLOCTestCase(unittest.TestCase):
         quakeml_expected = re.sub(re_pattern, '', quakeml_expected, 1)
         quakeml_got = re.sub(re_pattern, '', quakeml_got, 1)
 
-        compare_xml_strings(quakeml_expected, quakeml_got)
+        compare_xml_strings(quakeml_expected.encode(), quakeml_got.encode())
 
     def test_read_nlloc_hyp_with_builtin_projection(self):
         """

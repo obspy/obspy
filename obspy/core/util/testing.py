@@ -24,17 +24,11 @@ MODULE_TEST_SKIP_CHECKS = {}
 
 def compare_xml_strings(doc1, doc2):
     """
-    Simple helper function to compare two XML strings.
+    Simple helper function to compare two XML byte strings.
 
-    :type doc1: str
-    :type doc2: str
+    :type doc1: bytes
+    :type doc2: bytes
     """
-    # Compat py2k and py3k
-    try:
-        doc1 = doc1.encode()
-        doc2 = doc2.encode()
-    except Exception:
-        pass
     obj1 = etree.fromstring(doc1).getroottree()
     obj2 = etree.fromstring(doc2).getroottree()
 

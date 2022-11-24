@@ -46,10 +46,8 @@ class StationXMLTestCase(unittest.TestCase):
         Helper function comparing two BytesIO buffers contain Station XML
         files.
         """
-        # utf-8 only needed PY2
         new_lines = [_i.decode('utf-8').strip().replace("'", '"')
                      for _i in xml_file_buffer.read().splitlines()]
-        # utf-8 only needed PY2
         org_lines = [_i.decode('utf-8').strip().replace("'", '"')
                      for _i in expected_xml_file_buffer.read().splitlines()]
 
