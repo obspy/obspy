@@ -121,8 +121,7 @@ class AttribDict(collections.abc.MutableMapping):
         if key in self._types and not isinstance(value, self._types[key]):
             value = self._cast_type(key, value)
 
-        mapping_instance = isinstance(value,
-                                      collections.abc.Mapping)
+        mapping_instance = isinstance(value, collections.abc.Mapping)
         attr_dict_instance = isinstance(value, AttribDict)
         if mapping_instance and not attr_dict_instance:
             self.__dict__[key] = AttribDict(value)
