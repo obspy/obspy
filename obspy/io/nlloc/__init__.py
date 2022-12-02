@@ -115,6 +115,17 @@ Origin
     ---------
           comments: 2 Elements
           arrivals: 8 Elements
+
+If NonLinLoc reports the location run as "ABORTED", "IGNORED" or "REJECTED",
+the evaluation status of the origin will be set to "rejected" (which otherwise
+is unset, i.e. ``None``). Further information might be found in the "NLLOC"
+info header line of the hyp file that gets stored in event and origin comments:
+
+>>> cat = read_events("/path/to/nlloc_rejected.hyp", format="NLLOC_HYP")
+>>> print(cat[0].origins[0].evaluation_status)
+rejected
+>>> print(cat[0].comments[1].text)  # doctest: +ELLIPSIS
+NLLOC ... "REJECTED" ... max prob location on grid boundary 10, rejecting ...
 """
 if __name__ == '__main__':
     import doctest
