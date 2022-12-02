@@ -35,7 +35,7 @@ Event:	2006-07-15T17:21:20.195670Z | +51.658,   +7.737
                                    version='NLLoc:v6.02.07')
  preferred_origin_id: ResourceIdentifier(id="smi:local/...")
                 ---------
-            comments: 1 Elements
+            comments: 2 Elements
                picks: 5 Elements
              origins: 1 Elements
 
@@ -54,7 +54,7 @@ Origin
                                    creation_time=UTCDateTime(2013, 6, 21, ...),
                                    version='NLLoc:v6.02.07')
                 ---------
-            comments: 1 Elements
+            comments: 2 Elements
             arrivals: 5 Elements
 
 
@@ -113,7 +113,7 @@ Origin
      creation_info: CreationInfo(creation_time=UTCDateTime(2014, 10, 17,
 16, 30, 8), version='NLLoc:v6.00.0')
     ---------
-          comments: 1 Elements
+          comments: 2 Elements
           arrivals: 8 Elements
 """
 if __name__ == '__main__':
