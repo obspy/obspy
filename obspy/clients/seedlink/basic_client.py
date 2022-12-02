@@ -130,7 +130,7 @@ class Client(object):
         """
         # need to do an info request?
         if any('*' in x for x in (network, station, location, channel)) \
-                or ('?' in x for x in (network, station)):
+                or any('?' in x for x in (network, station)):
             # need to do an info request on channel level?
             if any('*' in x for x in (location, channel)):
                 info = self.get_info(network=network, station=station,
