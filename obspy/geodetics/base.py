@@ -91,12 +91,10 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
 
         Algorithm from Geocentric Datum of Australia Technical Manual.
 
-        * http://www.icsm.gov.au/gda/
-        * http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf, pp. 15
+        * https://www.icsm.gov.au/publications
+        * https://www.icsm.gov.au/publications/gda2020-technical-manual-v16
 
         It states::
-
-            Computations on the Ellipsoid
 
             There are a number of formulae that are available to calculate
             accurate geodetic positions, azimuths and distances on the
