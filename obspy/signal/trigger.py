@@ -303,12 +303,16 @@ def energy_ratio(a, nsta):
 
     .. seealso:: [Han2009]_
     """
+    if nsta > len(a) // 2 or nsta == 0:
+        # Half forward, half backward -> empty medium
+        # If nsta is zero, the sum is undefined -> return zero
+        return np.zeros(len(a), dtype=np.float64)
     sig_power = np.r_[0, np.cumsum(a ** 2, dtype=np.float64)]
-    energy_diff = sig_power[nsta:] - sig_power[:-nsta]
+    energy_diff = sig_power[nsta:] - sig_power[:len(sig_power) - nsta]
     er = np.zeros(len(a), dtype=np.float64)
-    np.divide(energy_diff[nsta:], energy_diff[:-nsta],
-              where=energy_diff[:-nsta] != 0,
-              out=er[nsta:-nsta + 1])
+    np.divide(energy_diff[nsta:], energy_diff[:len(energy_diff) - nsta],
+              where=energy_diff[:len(energy_diff) - nsta] != 0,
+              out=er[nsta:len(er) - nsta + 1])
     return er
 
 
