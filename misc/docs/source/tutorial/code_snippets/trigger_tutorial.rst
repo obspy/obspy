@@ -103,6 +103,8 @@ trigger routines defined in :mod:`obspy.signal.trigger`:
     ~obspy.signal.trigger.z_detect
     ~obspy.signal.trigger.pk_baer
     ~obspy.signal.trigger.ar_pick
+    ~obspy.signal.trigger.energy_ratio
+    ~obspy.signal.trigger.modified_energy_ratio
 
 Help for each function is available HTML formatted or in the usual Python manner:
 
