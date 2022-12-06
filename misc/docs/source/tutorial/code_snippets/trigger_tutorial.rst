@@ -178,6 +178,7 @@ Energy Ratio
 ============
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_energy_ratio.py
+   :include-source:
 
 
 Modified Energy Ratio
@@ -195,6 +196,7 @@ The picture below is taken from [Han2009]_.
     arrival.
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_modified_energy_ratio.py
+   :include-source:
 
 
 .. _trigger-tutorial-coincidence:
