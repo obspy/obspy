@@ -54,11 +54,3 @@ class PDASTestCase(unittest.TestCase):
         Tests the _read_pdas function.
         """
         self.assertTrue(_is_pdas(self.testfile))
-
-
-def suite():
-    return unittest.makeSuite(PDASTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

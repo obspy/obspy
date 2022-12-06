@@ -1333,11 +1333,3 @@ class MSEEDUtilTestCase(unittest.TestCase):
             _read_mseed(buf)
         self.assertEqual(
             str(e.exception), "No MiniSEED data record found in file.")
-
-
-def suite():
-    return unittest.makeSuite(MSEEDUtilTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

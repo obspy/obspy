@@ -2809,20 +2809,3 @@ class DownloadHelperTestCase(unittest.TestCase):
             d = MassDownloader()
             d.download(domain=dom, restrictions=restrictions,
                        mseed_storage="mseed", stationxml_storage="stationxml")
-
-
-def suite():
-    testsuite = unittest.TestSuite()
-    testsuite.addTest(unittest.makeSuite(DomainTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(DownloadHelpersUtilTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(TimeIntervalTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(ChannelTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(StationTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(DownloadHelperTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(ClientDownloadHelperTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(RestrictionsTestCase, 'test'))
-    return testsuite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

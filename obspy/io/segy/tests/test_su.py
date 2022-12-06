@@ -134,11 +134,3 @@ class SUTestCase(unittest.TestCase):
         del ist[0].stats.su.data_encoding
 
         self.assertEqual(st.traces, ist)
-
-
-def suite():
-    return unittest.makeSuite(SUTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

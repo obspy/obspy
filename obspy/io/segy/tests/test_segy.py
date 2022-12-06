@@ -795,11 +795,3 @@ def rms(x, y):
     https://github.com/krischer/mtspec
     """
     return np.sqrt(((x - y) ** 2).mean() / (x ** 2).mean())
-
-
-def suite():
-    return unittest.makeSuite(SEGYTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

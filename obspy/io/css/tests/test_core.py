@@ -145,11 +145,3 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         self.assertRaises(FileNotFoundError, _read_css, self.filename_css_3)
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

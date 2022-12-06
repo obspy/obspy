@@ -177,11 +177,3 @@ class FieldsTestCase(unittest.TestCase):
             orig = b'ABC' + character.encode("utf-8") + b'DEF~'
             result = field.read(io.BytesIO(orig))
             self.assertEqual(result, 'ABC' + character + 'DEF')
-
-
-def suite():
-    return unittest.makeSuite(FieldsTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -6,6 +6,7 @@ import os
 import re
 import unittest
 import warnings
+from pathlib import Path
 
 from obspy import UTCDateTime, read_events
 from obspy.core.inventory import Inventory, Network, Station, Channel
@@ -20,8 +21,8 @@ def _mock_coordinate_converter(x, y, z):
     encountered in the test. Mocks the following function::
 
         import pyproj
-        proj_wgs84 = pyproj.Proj(init="epsg:4326")
-        proj_gk4 = pyproj.Proj(init="epsg:31468")
+        proj_wgs84 = pyproj.Proj("epsg:4326")
+        proj_gk4 = pyproj.Proj("epsg:31468")
         def my_conversion(x, y, z):
             x, y = pyproj.transform(proj_gk4, proj_wgs84, x * 1e3, y * 1e3)
             return x, y, z
@@ -37,9 +38,9 @@ class NLLOCTestCase(unittest.TestCase):
     Test suite for obspy.io.nlloc
     """
     def setUp(self):
-        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        self.datapath = os.path.join(self.path, "data")
+        self.path = Path(os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe()))))
+        self.datapath = self.path / "data"
 
     def test_write_nlloc_obs(self):
         """
@@ -116,7 +117,7 @@ class NLLOCTestCase(unittest.TestCase):
         quakeml_expected = re.sub(re_pattern, '', quakeml_expected, 1)
         quakeml_got = re.sub(re_pattern, '', quakeml_got, 1)
 
-        compare_xml_strings(quakeml_expected, quakeml_got)
+        compare_xml_strings(quakeml_expected.encode(), quakeml_got.encode())
 
     def test_read_nlloc_hyp_with_builtin_projection(self):
         """
@@ -196,8 +197,8 @@ class NLLOCTestCase(unittest.TestCase):
             self.assertEqual(arriv.phase, arriv_expected.phase)
             self.assertAlmostEqual(arriv.azimuth, arriv_expected.azimuth)
             self.assertAlmostEqual(arriv.distance, arriv_expected.distance)
-            self.assertAlmostEqual(arriv.takeoff_angle,
-                                   arriv_expected.takeoff_angle)
+            assert arriv.takeoff_angle is None
+            assert arriv_expected.takeoff_angle is None
             self.assertAlmostEqual(arriv.time_residual,
                                    arriv_expected.time_residual)
             self.assertAlmostEqual(arriv.time_weight,
@@ -338,10 +339,12 @@ class NLLOCTestCase(unittest.TestCase):
         self.assertEqual(pick1.time.hour, 0)
         self.assertEqual(pick2.time.second, 0)
 
-
-def suite():
-    return unittest.makeSuite(NLLOCTestCase, "test")
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")
+    def test_reading_nlloc_v7_hyp_file(self):
+        """
+        Tests that we are getting the positioning of items in phase lines
+        right. Values for arrivals are shifted by one index to the right in hyp
+        files written by newer nonlinloc versions, see #3223
+        """
+        path = str(self.datapath / 'nlloc_v7.hyp')
+        cat = read_nlloc_hyp(path)
+        assert cat[0].origins[0].arrivals[0].azimuth == 107.42

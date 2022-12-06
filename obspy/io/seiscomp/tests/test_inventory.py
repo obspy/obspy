@@ -304,11 +304,3 @@ class SC3MLTestCase(unittest.TestCase):
         poles = response.response_stages[1].poles
         self.assertEqual(zeros, [])
         self.assertEqual(poles, [])
-
-
-def suite():
-    return unittest.makeSuite(SC3MLTestCase, "test")
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

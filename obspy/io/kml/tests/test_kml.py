@@ -48,11 +48,3 @@ class KMLTestCase(unittest.TestCase):
             expected = fh.read()
         # compare the two
         compare_xml_strings(expected, got)
-
-
-def suite():
-    return unittest.makeSuite(KMLTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

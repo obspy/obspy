@@ -119,11 +119,3 @@ class CoreTestCase(unittest.TestCase):
             np.testing.assert_array_equal(tr31.data[:13], testdata // 2)
             os.remove(testfile0)
             os.remove(testfile1)
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -254,11 +254,3 @@ class LibGSE2TestCase(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 got = compile_sta2(header)
             self.assertEqual(got.decode(), line2)
-
-
-def suite():
-    return unittest.makeSuite(LibGSE2TestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

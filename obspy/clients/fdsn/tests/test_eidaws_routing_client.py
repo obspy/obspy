@@ -226,8 +226,7 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
                           str(obspy.UTCDateTime(2017, 1, 2))[:-1]])
         # Everything should be passed on.
         self.assertEqual(p3.call_args[1], {
-            "format": "text", "level": "channel", "longestonly": True,
-            "minimumlength": 2})
+            "level": "channel", "longestonly": True, "minimumlength": 2})
 
     def test_get_stations(self):
         # Some mock routing response.
@@ -257,6 +256,7 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
                          "http://www.orfeus-eu.org/eidaws/routing/1/query")
         # Only a few arguments should be part of the URL.
         self.assertEqual(p1.call_args[1], {
+            'content_type': 'text/plain',
             'data': b'service=station\nformat=post\nalternative=false\n'
                     b'AA * * DD 2017-01-01T00:00:00.000000 *'})
 
@@ -375,11 +375,3 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
                 network='OE', station='UNNA', channel='HHZ', location='*',
                 starttime=t1, endtime=t2)
         self.assertIn('No data', e.exception.args[0])
-
-
-def suite():  # pragma: no cover
-    return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')
-
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main(defaultTest='suite')

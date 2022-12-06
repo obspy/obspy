@@ -88,11 +88,3 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[1].data.sum(), 3003120.0)
         np.testing.assert_array_equal(
             st[1].data[:5], [537., 721., 844., 924., 977.])
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

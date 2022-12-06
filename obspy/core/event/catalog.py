@@ -742,7 +742,7 @@ class Catalog(object):
             fig = ax.figure
             _plot_cartopy_into_axes(
                 ax=ax, lons=lons, lats=lats, size=size_plot,
-                color=colors, bmap=None, labels=labels,
+                color=colors, labels=labels,
                 projection=projection, resolution=resolution,
                 continent_fill_color=continent_fill_color,
                 water_fill_color=water_fill_color,

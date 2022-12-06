@@ -12,6 +12,7 @@ import datetime
 import warnings
 
 import numpy as np
+import matplotlib
 from matplotlib.colorbar import Colorbar
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
 from matplotlib import patheffects
@@ -20,9 +21,11 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
 
 from obspy import UTCDateTime
 from obspy.core.util import CARTOPY_VERSION
+from obspy.core.util.decorator import deprecated_keywords
 from obspy.geodetics.base import mean_longitude
 
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
+    import cartopy
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
     HAS_CARTOPY = True
@@ -33,17 +36,6 @@ if not HAS_CARTOPY:
     msg = ("Cartopy not installed, map plots will not work.")
     warnings.warn(msg)
 
-
-_BASEMAP_RESOLUTIONS = {
-    '110m': 'l',
-    '50m': 'i',
-    '10m': 'f',
-    'c': 'c',
-    'l': 'l',
-    'i': 'i',
-    'h': 'h',
-    'f': 'f',
-}
 
 _CARTOPY_RESOLUTIONS = {
     'c': '110m',
@@ -62,36 +54,36 @@ if HAS_CARTOPY:
     }
 
 
+@deprecated_keywords({'bmap': None})
 def _plot_cartopy_into_axes(
         ax, lons, lats, size, color, bmap=None, labels=None,
         projection='global', resolution='l', continent_fill_color='0.8',
         water_fill_color='1.0', colormap=None, marker="o", title=None,
         adjust_aspect_to_colorbar=False, **kwargs):  # @UnusedVariable
+
     """
     Creates a (or adds to existing) cartopy plot with a data point scatter
     plot in given axes.
 
     See :func:`plot_cartopy` for details on most args/kwargs.
 
-    :type ax: :class:`matplotlib.axes.Axes`
+
+    :type ax: :class:`matplotlib.axes.Axes` or
+        :class:`cartopy.mpl.geoaxes.GeoAxes`
     :param ax: Existing matplotlib axes instance, optionally with previous
-        cartopy plot (see `bmap` kwarg).
+        cartopy plot. If a cartopy GeoAxes is provided, most setup steps will
+        be skipped.
     :type bmap: :class:`matplotlib.axes.Axes`
-    :param bmap: Axes instance in provided matplotlib Axes `ax` to reuse. If
-        specified, any kwargs regarding the cartopy plot setup will be ignored
-        (i.e.  `projection`, `resolution`, `continent_fill_color`,
-        `water_fill_color`).
+    :param bmap: Deprecated and unused. Whether `ax` is a plain matplotlib Axes
+        or a cartopy GeoAxes will determine if cartopy related setup on the
+        axis is skipped (setting up projection etc.).
     :rtype: :class:`matplotlib.collections.PathCollection`
     :returns: Matplotlib path collection (e.g. to reuse for colorbars).
     """
 
-    fig = ax.figure
-    if bmap is None:
-
+    if not isinstance(ax, cartopy.mpl.geoaxes.GeoAxes):
         if projection in ['global', 'ortho']:
-            bmap = ax
-        elif projection == 'ortho':
-            bmap = ax
+            pass
         elif projection == 'local':
             if min(lons) < -150 and max(lons) > 150:
                 max_lons = max(np.array(lons) % 360)
@@ -101,13 +93,12 @@ def _plot_cartopy_into_axes(
                 min_lons = min(lons)
 
             ax.set_extent([min_lons, max_lons, min(lats), max(lats)])
-            bmap = ax
 
         else:
             msg = "Projection '%s' not supported." % projection
             raise ValueError(msg)
-        bmap.gridlines()
-        bmap.coastlines()
+        # ax.gridlines()
+        # ax.coastlines()
         # draw coast lines, country boundaries, fill continents.
         # ax.set_facecolor(water_fill_color)
         # newer matplotlib errors out if called with empty coastline data (no
@@ -122,10 +113,9 @@ def _plot_cartopy_into_axes(
         # draw lat/lon grid lines every 30 degrees.
         # bmap.drawmeridians(np.arange(-180, 180, 30))
         # bmap.drawparallels(np.arange(-90, 90, 30))
-    fig.bmap = bmap
-    ax.stock_img()
-    ax.gridlines()
-    ax.coastlines()
+        ax.stock_img()
+        ax.gridlines()
+        ax.coastlines()
 
     # compute the native bmap projection coordinates for events.
     # x, y = bmap(lons, lats)
@@ -165,12 +155,12 @@ def _plot_cartopy_into_axes(
             x_ = np.array(x)[nan_points]
             y_ = np.array(y)[nan_points]
             size_ = np.array(size)[nan_points]
-            bmap.scatter(x_, y_, marker=marker, s=size_, c="0.3",
-                         zorder=10, cmap=None, transform=ccrs.Geodetic())
+            ax.scatter(x_, y_, marker=marker, s=size_, c="0.3",
+                       zorder=10, cmap=None, transform=ccrs.Geodetic())
     # Had to change transform to ccrs.PlateCarree, see:
     # https://stackoverflow.com/a/13657749/3645626
-    scatter = bmap.scatter(x, y, marker=marker, s=size, c=color, zorder=10,
-                           cmap=colormap, transform=ccrs.PlateCarree(),)
+    scatter = ax.scatter(x, y, marker=marker, s=size, c=color, zorder=10,
+                         cmap=colormap, transform=ccrs.PlateCarree(),)
 
     if title:
         ax.set_title(title)
@@ -182,7 +172,8 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                  resolution='110m', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
                  marker="o", title=None, colorbar_ticklabel_format=None,
-                 show=True, proj_kwargs=None, **kwargs):  # @UnusedVariable
+                 show=True, proj_kwargs=None, ax=None,
+                 **kwargs):  # @UnusedVariable
     """
     Creates a Cartopy plot with a data point scatter plot.
 
@@ -258,6 +249,11 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         this function calculate the latitude or longitude as it would for other
         projections. Some arguments may be ignored if you choose one of the
         built-in ``projection`` choices.
+    :type ax: :class:`matplotlib.axes.Axes` or
+        :class:`cartopy.mpl.geoaxes.GeoAxes`
+    :param ax: Existing matplotlib axes instance, optionally with previous
+        cartopy plot. If a cartopy GeoAxes is provided, most setup steps will
+        be skipped.
     """
     import matplotlib.pyplot as plt
 
@@ -266,6 +262,86 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         color = [date2num(getattr(t, 'datetime', t)) for t in color]
     else:
         datetimeplot = False
+
+    # If ax wasn't specified, look for fig in kwargs
+    if ax is None and kwargs.get("fig"):
+        ax = kwargs['fig'].axes[0]
+
+    if ax is None:
+        fig, map_ax, cm_ax, show_colorbar = _basic_setup(
+            lons=lons, lats=lats, size=size, color=color, labels=labels,
+            projection=projection, resolution=resolution,
+            continent_fill_color=continent_fill_color,
+            water_fill_color=water_fill_color, colormap=colormap,
+            colorbar=colorbar, marker=marker, title=title,
+            colorbar_ticklabel_format=colorbar_ticklabel_format,
+            proj_kwargs=proj_kwargs)
+    else:
+        if isinstance(ax, matplotlib.figure.Figure):
+            fig = ax
+            map_ax = fig.axes[0]
+        else:
+            fig = ax.figure
+            map_ax = ax
+        cm_ax = None
+        show_colorbar = False
+
+    # Plot labels
+    if labels and len(lons) > 0:
+        with map_ax.hold_limits():
+            for name, xpt, ypt, _colorpt in zip(labels, lons, lats, color):
+                map_ax.text(xpt, ypt, name, weight="heavy", color="k",
+                            zorder=100, transform=ccrs.PlateCarree(),
+                            path_effects=[
+                                patheffects.withStroke(linewidth=3,
+                                                       foreground="white")])
+
+    scatter = map_ax.scatter(lons, lats, marker=marker, s=size, c=color,
+                             zorder=10, cmap=colormap,
+                             transform=ccrs.PlateCarree())
+
+    if title:
+        fig.suptitle(title)
+
+    # Only show the colorbar for more than one event.
+    if show_colorbar:
+        if colorbar_ticklabel_format is not None:
+            if isinstance(colorbar_ticklabel_format, str):
+                formatter = FormatStrFormatter(colorbar_ticklabel_format)
+            elif hasattr(colorbar_ticklabel_format, '__call__'):
+                formatter = FuncFormatter(colorbar_ticklabel_format)
+            elif isinstance(colorbar_ticklabel_format, Formatter):
+                formatter = colorbar_ticklabel_format
+            locator = MaxNLocator(5)
+        else:
+            if datetimeplot:
+                locator = AutoDateLocator()
+                formatter = AutoDateFormatter(locator)
+                # Compat with old matplotlib versions.
+                if hasattr(formatter, "scaled"):
+                    formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
+            else:
+                locator = None
+                formatter = None
+        cb = Colorbar(cm_ax, scatter,
+                      orientation='horizontal',
+                      ticks=locator,
+                      format=formatter)
+        # Compat with old matplotlib versions.
+        if hasattr(cb, "update_ticks"):
+            cb.update_ticks()
+
+    if show:
+        plt.show()
+
+    return fig
+
+
+def _basic_setup(
+        lons, lats, size, color, labels, projection, resolution,
+        continent_fill_color, water_fill_color, colormap, colorbar, marker,
+        title, colorbar_ticklabel_format, proj_kwargs):
+    import matplotlib.pyplot as plt
 
     fig = plt.figure()
 
@@ -365,6 +441,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
             ax_height -= 0.05
         map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height],
                               projection=proj)
+        cm_ax = None
 
     if projection == 'local':
         x0, y0 = proj.transform_point(lon_0, lat_0, proj.as_geodetic())
@@ -378,18 +455,15 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     try:
         borders, land, ocean = _CARTOPY_FEATURES[resolution]
     except KeyError:
-        borders = cfeature.NaturalEarthFeature(cfeature.BORDERS.category,
-                                               cfeature.BORDERS.name,
-                                               resolution,
-                                               edgecolor='none',
-                                               facecolor='none')
-        land = cfeature.NaturalEarthFeature(cfeature.LAND.category,
-                                            cfeature.LAND.name, resolution,
-                                            edgecolor='face', facecolor='none')
-        ocean = cfeature.NaturalEarthFeature(cfeature.OCEAN.category,
-                                             cfeature.OCEAN.name, resolution,
-                                             edgecolor='face',
-                                             facecolor='none')
+        borders = cfeature.NaturalEarthFeature(
+            cfeature.BORDERS.category, cfeature.BORDERS.name, resolution,
+            edgecolor='none', facecolor='none')
+        land = cfeature.NaturalEarthFeature(
+            cfeature.LAND.category, cfeature.LAND.name, resolution,
+            edgecolor='face', facecolor='none')
+        ocean = cfeature.NaturalEarthFeature(
+            cfeature.OCEAN.category, cfeature.OCEAN.name, resolution,
+            edgecolor='face', facecolor='none')
         _CARTOPY_FEATURES[resolution] = (borders, land, ocean)
 
     # Draw coast lines, country boundaries, fill continents.
@@ -406,55 +480,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         # Draw lat/lon grid lines every 30 degrees.
         map_ax.gridlines(xlocs=range(-180, 181, 30), ylocs=range(-90, 91, 30))
 
-    # Plot labels
-    if labels and len(lons) > 0:
-        with map_ax.hold_limits():
-            for name, xpt, ypt, _colorpt in zip(labels, lons, lats, color):
-                map_ax.text(xpt, ypt, name, weight="heavy", color="k",
-                            zorder=100, transform=ccrs.PlateCarree(),
-                            path_effects=[
-                                patheffects.withStroke(linewidth=3,
-                                                       foreground="white")])
-
-    scatter = map_ax.scatter(lons, lats, marker=marker, s=size, c=color,
-                             zorder=10, cmap=colormap,
-                             transform=ccrs.PlateCarree())
-
-    if title:
-        plt.suptitle(title)
-
-    # Only show the colorbar for more than one event.
-    if show_colorbar:
-        if colorbar_ticklabel_format is not None:
-            if isinstance(colorbar_ticklabel_format, str):
-                formatter = FormatStrFormatter(colorbar_ticklabel_format)
-            elif hasattr(colorbar_ticklabel_format, '__call__'):
-                formatter = FuncFormatter(colorbar_ticklabel_format)
-            elif isinstance(colorbar_ticklabel_format, Formatter):
-                formatter = colorbar_ticklabel_format
-            locator = MaxNLocator(5)
-        else:
-            if datetimeplot:
-                locator = AutoDateLocator()
-                formatter = AutoDateFormatter(locator)
-                # Compat with old matplotlib versions.
-                if hasattr(formatter, "scaled"):
-                    formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
-            else:
-                locator = None
-                formatter = None
-        cb = Colorbar(cm_ax, scatter,
-                      orientation='horizontal',
-                      ticks=locator,
-                      format=formatter)
-        # Compat with old matplotlib versions.
-        if hasattr(cb, "update_ticks"):
-            cb.update_ticks()
-
-    if show:
-        plt.show()
-
-    return fig
+    return fig, map_ax, cm_ax, show_colorbar
 
 
 def plot_map(method, *args, **kwargs):

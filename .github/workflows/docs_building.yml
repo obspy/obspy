@@ -10,15 +10,15 @@ on:
   release:
     types: [published]
 
-
-# Cancel previous runs, but only in PRs
+# cancel previous runs, but only in PRs, do not cancel previous runs if this run will be skipped
 concurrency:
-  group: docs-${{ github.event.pull_request.number || github.run_id }}
+  group: docs-${{ github.event.pull_request.number || github.run_id }}-${{ !((github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'build_docs')) || github.event.label.name == 'build_docs') || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   build:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'build_docs')
+    # only run if on master branch OR if PR is updated and build_docs label present OR if build_docs_label is added
+    if: github.event_name != 'pull_request' || ((github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'build_docs')) || github.event.label.name == 'build_docs')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

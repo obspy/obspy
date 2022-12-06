@@ -475,11 +475,3 @@ class ClientTestCase(unittest.TestCase):
                 model="ak135f_5s", bulk=[], data=b"1234\n5678")
 
         self.assertEqual(payload[0], b"1234\n5678")
-
-
-def suite():
-    return unittest.makeSuite(ClientTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -58,11 +58,3 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st[0]), 6000)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
         self.assertEqual(st[0].stats.channel, 'a100')
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -60,11 +60,3 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.channel, 'E')
         self.assertEqual(tr.stats.location, 'SP')
         self.assertEqual(tr.stats.network, '')
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

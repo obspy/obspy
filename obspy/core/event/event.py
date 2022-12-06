@@ -259,6 +259,9 @@ class Event(__Event):
                                                   **kwargs)
         for ax, kind__ in zip(axes, kind_):
             if kind__ in ("ortho", "global", "local"):
+                ax.stock_img()
+                ax.gridlines()
+                ax.coastlines()
                 cat_.plot(projection=kind__, fig=ax, show=False,
                           **kwargs)
                 # shrink plot a bit to avoid it looking oversized compared to

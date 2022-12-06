@@ -8,14 +8,13 @@ import os
 import re
 import requests
 import tempfile
-import unittest
 import uuid
 from unittest import mock, TestCase
 
+from obspy import read, UTCDateTime
+from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler
-from obspy import read
-from obspy import UTCDateTime
 
 
 def get_test_data_filepath():
@@ -643,42 +642,42 @@ class IndexerTestCase(TestCase):
                                filename_pattern="*.mseed")
 
     def test_download_leap_seconds_file(self):
-        filepath = get_test_data_filepath()
-        database = os.path.join(filepath, 'timeseries.sqlite')
-        indexer = Indexer(filepath,
-                          database=database)
-        # mock actually downloading the file since this requires a internet
-        # connection
-        indexer._download = mock.MagicMock(return_value=requests.Response())
-        # create a empty leap-seconds.list file
-        test_file = os.path.join(
-                            os.path.dirname(database), "leap-seconds.list")
-        file_path = indexer.download_leap_seconds_file(test_file)
-        # assert that the file was put in the same location as the
-        # sqlite db
-        self.assertTrue(os.path.isfile(file_path))
-        self.assertEqual(file_path, test_file)
-        os.remove(test_file)
+        with TemporaryWorkingDirectory() as tempdir:
+            database = os.path.join(tempdir, 'timeseries.sqlite')
+            indexer = Indexer(tempdir,
+                              database=database)
+            # mock actually downloading the file since this requires a internet
+            # connection
+            indexer._download = mock.MagicMock(
+                return_value=requests.Response())
+            # create a empty leap-seconds.list file
+            test_file = os.path.join(
+                                os.path.dirname(database), "leap-seconds.list")
+            file_path = indexer.download_leap_seconds_file(test_file)
+            # assert that the file was put in the same location as the
+            # sqlite db
+            self.assertTrue(os.path.isfile(file_path))
+            self.assertEqual(file_path, test_file)
 
     def test_download_leap_seconds_file_no_path_given(self):
-        filepath = get_test_data_filepath()
-        database = os.path.join(filepath, 'timeseries.sqlite')
-        indexer = Indexer(filepath,
-                          database=database)
-        # mock actually downloading the file since this requires a internet
-        # connection
-        indexer._download = mock.MagicMock(return_value=requests.Response())
-        file_path = indexer.download_leap_seconds_file()
+        with TemporaryWorkingDirectory() as tempdir:
+            database = os.path.join(tempdir, 'timeseries.sqlite')
+            indexer = Indexer(tempdir,
+                              database=database)
+            # mock actually downloading the file since this requires a internet
+            # connection
+            indexer._download = mock.MagicMock(
+                return_value=requests.Response())
+            file_path = indexer.download_leap_seconds_file()
 
-        self.assertEqual(
-            os.path.normpath(file_path),
-            os.path.normpath(os.path.join(os.path.dirname(database),
-                                          "leap-seconds.list")))
+            self.assertEqual(
+                os.path.normpath(file_path),
+                os.path.normpath(os.path.join(os.path.dirname(database),
+                                              "leap-seconds.list")))
 
-        # assert that the file was put in the same location as the
-        # sqlite db
-        self.assertTrue(os.path.isfile(file_path))
-        os.remove(file_path)
+            # assert that the file was put in the same location as the
+            # sqlite db
+            self.assertTrue(os.path.isfile(file_path))
 
     def test__get_leap_seconds_file(self):
         filepath = get_test_data_filepath()
@@ -700,12 +699,16 @@ class IndexerTestCase(TestCase):
 
         # test search
         # create a empty leap-seconds.list file
-        test_file = os.path.normpath(os.path.join(
-                            os.path.dirname(database), "leap-seconds.list"))
-        open(test_file, 'a').close()
-        file_path = os.path.normpath(indexer._get_leap_seconds_file("SEARCH"))
-        self.assertEqual(file_path, test_file)
-        os.remove(test_file)
+        with TemporaryWorkingDirectory() as tempdir:
+            database = os.path.join(tempdir, 'timeseries.sqlite')
+            indexer = Indexer(tempdir,
+                              database=database)
+            test_file = os.path.normpath(os.path.join(
+                os.path.dirname(database), "leap-seconds.list"))
+            open(test_file, 'a').close()
+            file_path = os.path.normpath(
+                indexer._get_leap_seconds_file("SEARCH"))
+            self.assertEqual(file_path, test_file)
 
     def test_build_file_list(self):
         filepath = get_test_data_filepath()
@@ -962,16 +965,3 @@ class TSIndexDatabaseHandlerTestCase(TestCase):
         for idx, r in enumerate(query_results):
             result = r[:6]  # ignore updt date
             self.assertEqual(result, expected_ts_summary_data[idx])
-
-
-def suite():
-    testsuite = unittest.TestSuite()
-    testsuite.addTest(unittest.makeSuite(ClientTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(IndexerTestCase, 'test'))
-    testsuite.addTest(unittest.makeSuite(TSIndexDatabaseHandlerTestCase,
-                                         'test'))
-    return testsuite
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

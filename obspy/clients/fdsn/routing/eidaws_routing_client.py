@@ -14,7 +14,7 @@ from ..client import get_bulk_string
 from ..header import FDSNNoDataException
 from .routing_client import (
     BaseRoutingClient, _assert_attach_response_not_in_kwargs,
-    _assert_filename_not_in_kwargs)
+    _assert_filename_not_in_kwargs, _assert_format_not_in_kwargs)
 
 
 class EIDAWSRoutingClient(BaseRoutingClient):
@@ -96,8 +96,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         new_bulk = []
         for t, _b in bulk_per_time_interval.items():
             # channel level and text to keep it fast.
-            inv = self.get_stations_bulk(_b, format="text",
-                                         level="channel", **kwargs)
+            inv = self.get_stations_bulk(_b, level="channel", **kwargs)
             for c in sorted(set(inv.get_contents()["channels"])):
                 new_bulk.append(c.split("."))
                 new_bulk[-1].extend(t)
@@ -116,7 +115,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         arguments["format"] = "post"
 
         bulk_str = get_bulk_string(new_bulk, arguments)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_waveforms(split, **kwargs)
@@ -147,6 +147,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         """
         return super(EIDAWSRoutingClient, self).get_stations(**kwargs)
 
+    @_assert_format_not_in_kwargs
     @_assert_filename_not_in_kwargs
     def get_stations_bulk(self, bulk, **kwargs):
         """
@@ -158,8 +159,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         station service if the service supports them (otherwise they are
         silently ignored for that particular fdsnws endpoint).
 
-        The ``filename`` parameter of the single provider FDSN client is not
-        supported for practical reasons.
+        The ``filename`` and ``format`` parameters of the single provider FDSN
+        client are not supported for practical reasons.
 
         This can route on a number of different parameters, please see the
         web site of the `EIDAWS Routing Service
@@ -171,7 +172,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         arguments["format"] = "post"
         arguments["alternative"] = "false"
         bulk_str = get_bulk_string(bulk, arguments)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_stations(split, **kwargs)

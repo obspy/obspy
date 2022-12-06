@@ -50,11 +50,3 @@ class TestRG16Util(unittest.TestCase):
         ieee = b'\x40\x48\xf5\xc3'
         out = _read(BytesIO(ieee), 0, 4, 'IEEE')
         self.assertAlmostEqual(out, 3.14, delta=1e-6)
-
-
-def suite():
-    return unittest.makeSuite(TestRG16Util, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -61,55 +61,40 @@ STATISTICS ExpectX -1.32658 Y -0.0487098 Z 3.12781  CovXX 1.21008 XY 0.238028 XZ
         <arrival publicID="smi:local/4822394a-8dba-4b4d-b8d6-47c75d94a600">
           <pickID>smi:local/80f620bf-5550-4fc5-b1a6-5d4394795878</pickID>
           <phase>P</phase>
-          <azimuth>359.0</azimuth>
+          <azimuth>109.48</azimuth>
           <distance>0.00329961097212</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>-0.0076</timeResidual>
           <timeWeight>0.9958</timeWeight>
         </arrival>
         <arrival publicID="smi:local/0217b7ba-a9f7-46c8-b9c9-1c3de497a965">
           <pickID>smi:local/804b43a8-fe67-4041-af14-be0a2ea3e493</pickID>
           <phase>P</phase>
-          <azimuth>359.0</azimuth>
+          <azimuth>13.71</azimuth>
           <distance>0.00340932820804</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>0.0025</timeResidual>
           <timeWeight>1.0009</timeWeight>
         </arrival>
         <arrival publicID="smi:local/c0778a50-dd6e-4080-9761-2aae8bbbcdab">
           <pickID>smi:local/9254790e-4e24-415f-b7a2-a60e504f3549</pickID>
           <phase>P</phase>
-          <azimuth>359.0</azimuth>
+          <azimuth>71.75</azimuth>
           <distance>0.00396331031728</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>-0.0009</timeResidual>
           <timeWeight>1.0016</timeWeight>
         </arrival>
         <arrival publicID="smi:local/963aa4e6-2b6e-4978-8fcc-de9a9ec4891a">
           <pickID>smi:local/f744786a-bc96-4476-8c5c-6f2a9a5fef54</pickID>
           <phase>P</phase>
-          <azimuth>359.0</azimuth>
+          <azimuth>204.61</azimuth>
           <distance>0.00499483219927</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>0.0065</timeResidual>
           <timeWeight>0.997</timeWeight>
         </arrival>
         <arrival publicID="smi:local/898783bb-82eb-45e6-84d1-86ca16c536bd">
           <pickID>smi:local/a040ecfb-0d12-4c91-9e37-463f075a2ec6</pickID>
           <phase>P</phase>
-          <azimuth>359.0</azimuth>
+          <azimuth>104.59</azimuth>
           <distance>0.00563874646911</distance>
-          <takeoffAngle>
-            <value>-1.0</value>
-          </takeoffAngle>
           <timeResidual>-0.0005</timeResidual>
           <timeWeight>1.0016</timeWeight>
         </arrival>

@@ -20,7 +20,6 @@ import traceback
 import warnings
 from urllib.parse import urlparse
 
-from obspy.core.compatibility import get_reason_from_response
 import obspy
 
 from ...base import HTTPClient
@@ -69,6 +68,13 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
         raise NotImplementedError(
             "Routing type '%s' is not implemented. Available types: "
             "`iris-federator`, `eida-routing`" % routing_type)
+
+
+@decorator.decorator
+def _assert_format_not_in_kwargs(f, *args, **kwargs):
+    if "format" in kwargs:
+        raise ValueError("The `format` argument is not supported")
+    return f(*args, **kwargs)
 
 
 @decorator.decorator
@@ -291,14 +297,9 @@ class BaseRoutingClient(HTTPClient):
 
         Please overwrite this method in a child class if necessary.
         """
-        reason = get_reason_from_response(r)
+        reason = r.reason.encode()
         if hasattr(r, "content"):
-            c = r.content
-            try:
-                c = c.encode()
-            except Exception:
-                pass
-            reason += b" -- " + c
+            reason += b" -- " + r.content
         with io.BytesIO(reason) as buf:
             raise_on_error(r.status_code, buf)
 

@@ -1609,11 +1609,3 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         del tr2.stats["_format"]
         del tr2.stats["mseed"]
         self.assertEqual(tr, tr2)
-
-
-def suite():
-    return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

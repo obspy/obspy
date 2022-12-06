@@ -70,8 +70,8 @@ already in kilometers downwards and can be left as is. For the conversion we
 use `pyproj`.
 
 >>> import pyproj  # doctest: +SKIP
->>> proj_wgs84 = pyproj.Proj(init="epsg:4326")  # doctest: +SKIP
->>> proj_gk4 = pyproj.Proj(init="epsg:31468")  # doctest: +SKIP
+>>> proj_wgs84 = pyproj.Proj("epsg:4326")  # doctest: +SKIP
+>>> proj_gk4 = pyproj.Proj("epsg:31468")  # doctest: +SKIP
 >>> def my_conversion(x, y, z):
 ...     x *= 1e3
 ...     y *= 1e3

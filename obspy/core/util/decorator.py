@@ -136,7 +136,7 @@ def uncompress_file(func, filename, *args, **kwargs):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
-    if not kwargs.get('check_compression', True):
+    if not kwargs.pop('check_compression', True):
         return func(filename, *args, **kwargs)
     if not isinstance(filename, str):
         return func(filename, *args, **kwargs)
@@ -164,8 +164,14 @@ def uncompress_file(func, filename, *args, **kwargs):
             pass
     elif zipfile.is_zipfile(filename):
         try:
-            zip = zipfile.ZipFile(filename)
-            obj_list = [zip.read(name) for name in zip.namelist()]
+            with zipfile.ZipFile(filename) as zip:
+                if b'obspy_no_uncompress' in zip.comment:
+                    # be nice to plugins based on zip format
+                    # do not uncompress the file if tag is present
+                    # see issue #3192
+                    obj_list = None
+                else:
+                    obj_list = [zip.read(name) for name in zip.namelist()]
         except Exception:
             pass
     elif filename.endswith('.bz2'):

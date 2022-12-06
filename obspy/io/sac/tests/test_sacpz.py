@@ -3,30 +3,42 @@
 The sac.sacpz test suite.
 """
 import os
-import unittest
 import io
 import warnings
 
 import numpy as np
+import pytest
 
 from obspy import read_inventory, Trace
+from obspy.core.inventory.util import Equipment
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.sac import attach_paz, attach_resp
 
 
-class SACPZTestCase(unittest.TestCase):
+class TestSACPZ:
     """
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.dirname(__file__)
-        # these files were checked against data given by IRIS SACPZ web service
-        # http://service.iris.edu/irisws/sacpz/1/
-        #                                query?net=IU&loc=*&cha=BH?&sta=ANMO
-        # DIP seems to be systematically different in SACPZ output compared to
-        # StationXML served by IRIS...
-        self.file1 = os.path.join(self.path, 'data', 'IU_ANMO_00_BHZ.sacpz')
-        self.file2 = os.path.join(self.path, 'data', 'IU_ANMO_BH.sacpz')
+    # directory where the test files are located
+    path = os.path.dirname(__file__)
+    # these files were checked against data given by IRIS SACPZ web service
+    # http://service.iris.edu/irisws/sacpz/1/
+    #                                query?net=IU&loc=*&cha=BH?&sta=ANMO
+    # DIP seems to be systematically different in SACPZ output compared to
+    # StationXML served by IRIS...
+    file1 = os.path.join(path, 'data', 'IU_ANMO_00_BHZ.sacpz')
+    file2 = os.path.join(path, 'data', 'IU_ANMO_BH.sacpz')
+
+    @pytest.fixture(scope="class")
+    def sacpz_with_no_sensors(self):
+        expected = []
+        with open(self.file1) as fh:
+            for line in fh:
+                if "INSTTYPE" in line:
+                    line = "* INSTTYPE    : "
+                if "CREATED" not in line:
+                    expected.append(line.rstrip("\n"))
+
+        return expected
 
     def test_write_sacpz_single_channel(self):
         """
@@ -43,7 +55,7 @@ class SACPZTestCase(unittest.TestCase):
         got = [line for line in got.split("\n") if "CREATED" not in line]
         expected = [line for line in expected.split("\n")
                     if "CREATED" not in line]
-        self.assertEqual(got, expected)
+        assert got == expected
 
     def test_write_sacpz_multiple_channels(self):
         """
@@ -60,7 +72,7 @@ class SACPZTestCase(unittest.TestCase):
         got = [line for line in got.split("\n") if "CREATED" not in line]
         expected = [line for line in expected.split("\n")
                     if "CREATED" not in line]
-        self.assertEqual(got, expected)
+        assert got == expected
 
     def test_write_sacpz_soh(self):
         path = os.path.join(self.path, '..', '..', 'stationxml', 'tests',
@@ -71,13 +83,28 @@ class SACPZTestCase(unittest.TestCase):
             warnings.simplefilter('always')
             inv.write(f, format='SACPZ')
         # Testxml has 2 channels: 1 no paz, 2 unrecognized units.
-        self.assertEqual(len(w), 2)
+        assert len(w) == 2
         # Assert warning messages contain correct warnings
-        self.assertTrue(any('has no paz' in str(x.message) for x in w))
-        self.assertTrue(any('has unrecognized input units'
-                            in str(x.message) for x in w))
+        assert any('has no paz' in str(x.message) for x in w)
+        assert any('has unrecognized input units' in str(x.message) for x in w)
         # Only 2 newlines are written.
-        self.assertEqual(2, f.tell())
+        assert 2 == f.tell()
+
+    @pytest.mark.parametrize("sensor", [None, Equipment(type=None)])
+    def test_write_sacpz_no_sensor(self, sensor, sacpz_with_no_sensors):
+        """
+        Test sacpz writer when no sensor or sensor type are specified
+        """
+        inv = read_inventory("/path/to/IU_ANMO_00_BHZ.xml")
+        inv.networks[0].stations[0].channels[0].sensor = sensor
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            inv.write(tempfile, format='SACPZ')
+            with open(tempfile) as fh:
+                got = [line.rstrip("\n") for line in fh
+                       if "CREATED" not in line]
+
+        assert got == sacpz_with_no_sensors
 
     def test_attach_paz(self):
         fvelhz = io.StringIO("""ZEROS 3
@@ -94,7 +121,7 @@ class SACPZTestCase(unittest.TestCase):
         attach_paz(tr, fvelhz, torad=True, todisp=True)
         np.testing.assert_array_almost_equal(tr.stats.paz['zeros'][0],
                                              - 31.616988, decimal=6)
-        self.assertEqual(len(tr.stats.paz['zeros']), 4)
+        assert len(tr.stats.paz['zeros']) == 4
 
     def test_attach_paz_diff_order(self):
         pazfile = os.path.join(os.path.dirname(__file__),
@@ -103,8 +130,8 @@ class SACPZTestCase(unittest.TestCase):
         attach_paz(tr, pazfile)
         np.testing.assert_array_almost_equal(tr.stats.paz['gain'],
                                              7.4592e-2, decimal=6)
-        self.assertEqual(len(tr.stats.paz['zeros']), 5)
-        self.assertEqual(len(tr.stats.paz['poles']), 4)
+        assert len(tr.stats.paz['zeros']) == 5
+        assert len(tr.stats.paz['poles']) == 4
 
     def test_sacpaz_from_dataless(self):
         # The following dictionary is extracted from a datalessSEED
@@ -127,7 +154,7 @@ class SACPZTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(tr.stats.paz['gain'] / 1e17,
                                        sacconstant / 1e17, decimal=6)
         # pole-zero files according to the SAC convention are in displacement
-        self.assertEqual(len(tr.stats.paz['zeros']), 3)
+        assert len(tr.stats.paz['zeros']) == 3
 
     def test_sacpaz_from_resp(self):
         # The following two files were both extracted from a dataless
@@ -176,8 +203,8 @@ class SACPZTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(phase1, phase2, decimal=4)
         rms = np.sqrt(np.sum((amp1 - amp2) ** 2) /
                       np.sum(amp2 ** 2))
-        self.assertTrue(rms < 2.02e-06)
-        self.assertTrue(tr1.stats.paz.t_shift, 0.4022344)
+        assert rms < 2.02e-06
+        assert tr1.stats.paz.t_shift == 0.4022344
         # The following plots the comparison between the
         # two frequency response functions.
         # import pylab as plt
@@ -188,11 +215,3 @@ class SACPZTestCase(unittest.TestCase):
         # plt.semilogx(f,phase1)
         # plt.semilogx(f,phase2,'k--')
         # plt.show()
-
-
-def suite():
-    return unittest.makeSuite(SACPZTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

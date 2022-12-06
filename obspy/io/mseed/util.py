@@ -14,7 +14,7 @@ from struct import pack, unpack
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.compatibility import from_buffer, collections_abc
+from obspy.core.compatibility import from_buffer
 from obspy.core.util.decorator import ObsPyDeprecationWarning
 from . import InternalMSEEDParseTimeError
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
@@ -1157,10 +1157,10 @@ def set_flags_in_fixed_headers(filename, flags):
                         # if everything is unset or 0 set sample rate to 1
                         samp_rate = 1
 
-                # date of the last sample is recstart+samp_rate*(nb_samples-1)
+                # date of the last sample is recstart+(nb_samples-1)/samp_rate
                 # We assume here that a record with samples [0, 1, ..., n]
                 # has a period [ date_0, date_n+1 [  AND NOT [ date_0, date_n ]
-                realendtime = recstart + samp_rate * (nb_samples)
+                realendtime = recstart + nb_samples / samp_rate
 
                 # Convert flags to bytes : activity
                 if 'activity_flags' in flags_value:
@@ -1260,7 +1260,7 @@ def _check_flag_value(flag_value):
         utc_val = UTCDateTime(flag_value)
         corrected_flag = [(utc_val, utc_val)]
 
-    elif isinstance(flag_value, collections_abc.Mapping):
+    elif isinstance(flag_value, collections.abc.Mapping):
         # dict allowed if it has the right format
         corrected_flag = []
         for flag_key in flag_value:
@@ -1272,7 +1272,7 @@ def _check_flag_value(flag_value):
                     # Single value : ensure it's UTCDateTime and store it
                     utc_val = UTCDateTime(inst_values)
                     corrected_flag.append((utc_val, utc_val))
-                elif isinstance(inst_values, collections_abc.Sequence):
+                elif isinstance(inst_values, collections.abc.Sequence):
                     # Several instant values : check their types
                     # and add each of them
                     for value in inst_values:
@@ -1292,7 +1292,7 @@ def _check_flag_value(flag_value):
                 # Expecting either a list of tuples (start, end) or
                 # a list of (start1, end1, start1, end1)
                 dur_values = flag_value[flag_key]
-                if isinstance(dur_values, collections_abc.Sequence):
+                if isinstance(dur_values, collections.abc.Sequence):
                     if len(dur_values) != 0:
                         # Check first item
                         if isinstance(dur_values[0], datetime) or \
@@ -1336,11 +1336,11 @@ def _check_flag_value(flag_value):
                                 next(duration_iter)
 
                         elif isinstance(dur_values[0],
-                                        collections_abc.Sequence):
+                                        collections.abc.Sequence):
                             # List of tuples (start, end)
                             for value in dur_values:
                                 if not isinstance(value,
-                                                  collections_abc.Sequence):
+                                                  collections.abc.Sequence):
                                     msg = "Incorrect type %s for flag duration"
                                     raise ValueError(msg % str(type(value)))
                                 elif len(value) != 2:
@@ -1499,7 +1499,7 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
             if isinstance(user_flags[key], bool) and user_flags[key]:
                 # Boolean value, we accept it for all records
                 use_in_this_record = True
-            elif isinstance(user_flags[key], collections_abc.Sequence):
+            elif isinstance(user_flags[key], collections.abc.Sequence):
                 # List of tuples (start, end)
                 use_in_this_record = False
                 for tuple_value in user_flags[key]:

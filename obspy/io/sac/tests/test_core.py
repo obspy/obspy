@@ -926,10 +926,88 @@ class CoreTestCase(unittest.TestCase):
         tr0 = read(self.file_encode, encoding='cp1252')[0]
         self.assertEqual(tr0.stats.get('channel'), 'ÇÏÿÿÇÏÿÿ')
 
+    def test_write_keep_sac_header_false(self):
+        """
+        We expect a Trace that came from a SAC file and trimmed to write a SAC
+        file with iztype 'ib' and 'b = 0'.
 
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
+        https://github.com/obspy/obspy/issues/2760#issuecomment-735555420
 
+        "If you observe the stats.starttime is not the same that the
+        stats.sac information. The stats.sac information is the same that the
+        original file. If you write this SAC file and open with sac iris, the
+        information of the file is the stats.sac ."
 
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        1. build the SAC file, and write it to file
+        2. read it and trim it in ObsPy
+        3. compare the trimmed header
+
+        """
+        hdr = {
+            "delta": 0.1,
+            "depmin": -55782.0,
+            "depmax": 54891.0,
+            "scale": 1.0,
+            "b": 0.0,
+            "e": 87004.1,
+            "stla": -22.85915,
+            "stlo": -69.80658,
+            "stel": 1407.0,
+            "stdp": 0.0,
+            "depmen": 140.41512,
+            "cmpaz": 90.0,
+            "cmpinc": 0.0,
+            "nzyear": 2007,
+            "nzjday": 365,
+            "nzhour": 23,
+            "nzmin": 49,
+            "nzsec": 55,
+            "nzmsec": 900,
+            "nvhdr": 6,
+            "npts": 870041,
+            "iftype": 'itime',
+            "iztype": 'ib',
+            "leven": 1,
+            "lpspol": 1,
+            "lovrok": 1,
+            "lcalda": 0,
+            "kstnm": "ALG",
+            "kcmpnm": "HHE",
+            "knetwk": "Y9",
+        }
+        data = np.zeros(hdr['npts'], dtype=np.float32)
+        data[-1] = hdr['depmin']
+        data[-2] = hdr['depmax']
+        sac = SACTrace(data=data, **hdr)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            sac.write(tempfile)
+            tr0 = read(tempfile, format='SAC')[0]
+
+        tr_trimmed = tr0.trim(
+            starttime=UTCDateTime(2008, 1, 1, 0, 0),
+            endtime=UTCDateTime(2008, 1, 1, 23, 59, 59, 800000),
+            fill_value=None,
+            nearest_sample=True,
+            pad=False,
+            )
+
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr_trimmed.write(tempfile, format='SAC', keep_sac_header=False)
+            tr_trimmed_read = read(tempfile, format='SAC')[0]
+
+        # the SAC iztype was 'ib', so the reference time of the written/read
+        # SAC file should be the first sample time of the trimmed trace.
+        self.assertEqual(tr_trimmed_read.stats.sac['nzyear'],
+                         tr_trimmed.stats.starttime.year)
+        self.assertEqual(tr_trimmed_read.stats.sac['nzjday'],
+                         tr_trimmed.stats.starttime.julday)
+        self.assertEqual(tr_trimmed_read.stats.sac['nzhour'],
+                         tr_trimmed.stats.starttime.hour)
+        self.assertEqual(tr_trimmed_read.stats.sac['nzmin'],
+                         tr_trimmed.stats.starttime.minute)
+        self.assertEqual(tr_trimmed_read.stats.sac['nzsec'],
+                         tr_trimmed.stats.starttime.second)
+        self.assertEqual(tr_trimmed_read.stats.sac['nzmsec'],
+                         tr_trimmed.stats.starttime.microsecond * 1000)

@@ -10,13 +10,15 @@
 [![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
 
 [![PyPI Version](https://img.shields.io/pypi/v/obspy.svg)](https://pypi.python.org/pypi/obspy)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.6327346.svg)](http://dx.doi.org/10.5281/zenodo.6327346)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6645832.svg)](https://doi.org/10.5281/zenodo.6645832)
 [![Conda](https://img.shields.io/conda/dn/conda-forge/obspy?label=conda%20downloads)](https://anaconda.org/conda-forge/obspy)
 
 [![Discourse status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.obspy.org)](https://discourse.obspy.org)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Announcements Mailing List](https://img.shields.io/badge/mailing%20list-announcements-blue)](https://mail.python.org/mailman3/lists/obspy.python.org/)
+
 [![Twitter Follow](https://img.shields.io/twitter/follow/obspy?style=social)](https://twitter.com/obspy/)
+<a rel="me" href="https://fosstodon.org/@obspy"><img src="https://img.shields.io/mastodon/follow/109309284431089274?domain=https%3A%2F%2Ffosstodon.org&style=social" alt="Mastodon Follow" /></a>
 
 ObsPy is an open-source project dedicated to provide a **Python framework for processing seismological** data. It provides parsers for common file formats, clients to access data centers and seismological signal processing routines which allow the manipulation of seismological time series (see [Beyreuther et al. 2010](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), [Megies et al. 2011](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838), [Krischer et al. 2015](http://iopscience.iop.org/article/10.1088/1749-4699/8/1/014003)).
 

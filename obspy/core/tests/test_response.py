@@ -13,6 +13,7 @@ import inspect
 import os
 import warnings
 from math import pi
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -35,8 +36,8 @@ class TestResponse:
     """
     Tests the for :class:`~obspy.core.inventory.response.Response` class.
     """
-    data_dir = os.path.join(os.path.dirname(os.path.abspath(
-               inspect.getfile(inspect.currentframe()))), "data")
+    data_dir = Path(os.path.join(os.path.dirname(os.path.abspath(
+                    inspect.getfile(inspect.currentframe()))), "data"))
 
     def test_evalresp_with_output_from_seed(self):
         """
@@ -519,3 +520,31 @@ class TestResponse:
                "accordingly.")
         with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
             resp.get_evalresp_response(0.005, 2**3)
+
+    def test_unknown_units_no_integration(self):
+        """
+        Makes sure that when a unit in the list of response stages is not known
+        to evalresp, no tampering (integration/differentiation) is done and
+        response is just calculated as is specified.
+        It used to be that unkown units where reported to evalresp as
+        displacement ("DIS") which led to a differentiation being added
+        internally with the default "output='VEL'".
+        Example is a rotational sensor with input units RAD/S and a flat
+        response and since evalresp does not know RAD or RAD/S the only thing
+        that makes sense is have evalresp not do anything else than use the
+        response as is and ignore "output" option.
+        """
+        inv = read_inventory(self.data_dir / 'response_radian_per_second.xml',
+                             format="STATIONXML")
+        resp = inv[0][0][0].response
+        freqs = [0.01, 0.1, 1, 10, 100]
+        overall_sensitivity = 1.00000000e+09
+        msg = (r"The unit 'RAD/S' is not known to ObsPy. It will be passed in "
+               r"to evalresp as 'undefined'. This should result in evalresp "
+               r"using the response as is, without adding any integration or "
+               r"differentiation and the 'output' parameter \(here: 'VEL'\) "
+               r"not having any effect. Please double check output data.")
+        with pytest.warns(UserWarning, match=msg):
+            data = resp.get_evalresp_response_for_frequencies(freqs)
+        assert resp.instrument_sensitivity.value == overall_sensitivity
+        assert np.abs(data).tolist() == [overall_sensitivity] * len(freqs)

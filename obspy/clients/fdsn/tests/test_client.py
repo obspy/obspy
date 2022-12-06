@@ -94,9 +94,6 @@ def failmsg(got, expected, ignore_lines=[]):
 def normalize_version_number(string):
     """
     Returns imput string with version numbers normalized for testing purposes.
-
-    Due to Py3k arbitrary dictionary ordering it also sorts word wise the
-    input string, independent of commas and newlines.
     """
     match = r'v[0-9]+\.[0-9]+\.[0-9]+'
     repl = re.sub(match, "vX.X.X", string).replace(",", "")
@@ -1725,11 +1722,3 @@ class ClientTestCase(unittest.TestCase):
             client = Client(
                 'GFZ', eida_token=os.path.join(self.datapath,
                                                'event_helpstring.txt'))
-
-
-def suite():
-    return unittest.makeSuite(ClientTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -5,11 +5,13 @@ import threading
 import time
 import warnings
 from copy import deepcopy
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
 import pytest
 
+import obspy
 from obspy import Trace, read
 from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
@@ -52,14 +54,19 @@ class TestWaveformPlugins:
         """
         Tests read and write methods for all waveform plug-ins.
         """
-        data = np.arange(0, 2000)
-        start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
+        np.random.seed(1234)
+        data = np.random.randint(-500, 500, 2000)
         formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
+            start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
+            elif format in ['GCF']:
+                # XXX: GCF format does not support fractional start time for
+                # sampling rates <= 250 Hz, hence set to integer sec start
+                start = UTCDateTime(2009, 1, 13, 12, 1, 3)
             for native_byteorder in ['<', '>']:
                 for byteorder in (['<', '>', '='] if format in
                                   WAVEFORM_ACCEPT_BYTEORDER else [None]):
@@ -150,7 +157,8 @@ class TestWaveformPlugins:
                         assert st[0].data.dtype.byteorder == '='
                     # check meta data
                     # some formats do not contain a calibration factor
-                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST', 'AH']:
+                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST', 'AH',
+                                      'GCF']:
                         assert round(abs(st[0].stats.calib-0.199999), 5) == 0
                     else:
                         assert st[0].stats.calib == 1.0
@@ -161,7 +169,15 @@ class TestWaveformPlugins:
                         assert st[0].stats.sampling_rate == 4.0
 
                     # network/station/location/channel codes
-                    if format in ['Q', 'SH_ASC', 'AH']:
+                    if format in ['GCF']:
+                        # no network, station or location code in GCF, however
+                        #  first 4 characters in station code will be set in
+                        #  current implementation if stream_id is not set.
+                        #  Further no bandcode or instrumentcode, if not set
+                        #  by argument in call to read function both default
+                        #  to H
+                        assert st[0].id == ".MANZ..HHE"
+                    elif format in ['Q', 'SH_ASC', 'AH']:
                         # no network or location code in Q, SH_ASC
                         assert st[0].id == ".MANZ1..EHE"
                     elif format == "GSE2":
@@ -208,8 +224,13 @@ class TestWaveformPlugins:
         # Get all the test directories.
         paths = {}
         all_paths = []
+        # dont rely on f.dist.location to lookup install path, as this seems to
+        # recently not be able to follow a pip editable install correctly. this
+        # seems safe unless custom installed plugins come into play, but we can
+        # not test these here properly anyway
+        install_dir = Path(obspy.__file__).parent.parent
         for f in formats:
-            path = os.path.join(f.dist.location,
+            path = os.path.join(install_dir,
                                 *f.module_name.split('.')[:-1])
             path = os.path.join(path, 'tests', 'data')
             all_paths.append(path)
@@ -256,14 +277,18 @@ class TestWaveformPlugins:
         be all the same.
         """
         data = np.arange(0, 500)
-        start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
         formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
+            start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
             # XXX: skip SEGY and SU formats for now as they need some special
-            # headers.
+            # headers. Also skip GCF as format does not permitt fractional
+            # start time for sampling rates < 250
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
-
+            elif format in ['GCF']:
+                # XXX: GCF format does not support fractional for sampling
+                # rates <= 250 Hz
+                start = UTCDateTime(2009, 1, 13, 12, 1, 3)
             dt = np.int_
             if format in ('MSEED', 'GSE2'):
                 dt = np.int32

@@ -40,11 +40,3 @@ class LibGSE1TestCase(unittest.TestCase):
         libgse1.read(fh, verify_chksum=True)  # correct
         self.assertRaises(ChksumError, libgse1.read, fh, verify_chksum=True)
         fh.close()
-
-
-def suite():
-    return unittest.makeSuite(LibGSE1TestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

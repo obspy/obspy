@@ -16,6 +16,15 @@ To cite use of the NRL, please see [Templeton2017]_.
 Basic Usage
 -----------
 
+.. warning::
+    Connecting to NRL hosted online is deprecated. The new NRLv2 will stop
+    providing navigational information in machine readable form in favor of the
+    html navigation, so the existing client for online use will stop working
+    when the original NRLv1 is taken offline (announced for Spring 2023).
+    Please consider using a full downloaded copy of the NRL (v1 or v2,
+    `instructions on NRL homepage <https://ds.iris.edu/ds/nrl/>`_) providing a
+    local path, e.g. ``nrl = NRL('./downloads/NRL')``.
+
 The first step is to initialize a NRL client object. A client object can be
 initialized either with the base URL of a NRL hosted on a web server or with a
 local directory path to a downloaded and unpacked NRL zip file. The default is

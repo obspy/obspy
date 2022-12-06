@@ -11,6 +11,7 @@ Classes related to instrument responses.
 """
 import copy
 import ctypes as C  # NOQA
+import collections.abc
 from collections import defaultdict
 from copy import deepcopy
 import itertools
@@ -19,7 +20,6 @@ import warnings
 
 import numpy as np
 
-from .. import compatibility
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
@@ -400,7 +400,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._numerator = []
             return
         value = list(value) if isinstance(
-            value, compatibility.collections_abc.Iterable) else [value]
+            value, collections.abc.Iterable) else [value]
         if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
@@ -419,7 +419,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._denominator = []
             return
         value = list(value) if isinstance(
-            value, compatibility.collections_abc.Iterable) else [value]
+            value, collections.abc.Iterable) else [value]
         if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
@@ -1195,12 +1195,15 @@ class Response(ComparingObject):
                 "MBAR": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
                 if key is not None:
-                    msg = ("The unit '%s' is not known to ObsPy. It will be "
-                           "assumed to be displacement for the calculations. "
-                           "This mostly does the right thing but please "
-                           "proceed with caution.") % key
+                    msg = (f"The unit '{key}' is not known to ObsPy. It will "
+                           f"be passed in to evalresp as 'undefined'. This "
+                           f"should result in evalresp using the response as "
+                           f"is, without adding any integration or "
+                           f"differentiation and the 'output' parameter "
+                           f"(here: '{output}') not having any effect. Please "
+                           f"double check output data.")
                     warnings.warn(msg)
-                value = ew.ENUM_UNITS["DIS"]
+                value = ew.ENUM_UNITS["UNDEF_UNITS"]
             else:
                 value = units_mapping[key]
 

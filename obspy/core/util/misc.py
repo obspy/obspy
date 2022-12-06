@@ -290,9 +290,9 @@ def CatchOutput():  # NOQA
         raise SystemExit(out.stderr)
 
 
-def _py36_windowsconsoleio_workaround():
+def _py3_windowsconsoleio_workaround():
     """
-    This monkey patch prevents crashing Py3.6 under Windows while using
+    This monkey patch prevents crashing Py >=3.6 under Windows while using
     the SuppressOutput context manager.
 
     Python 3.6 implemented unicode console handling for Windows. This works
@@ -307,9 +307,10 @@ def _py36_windowsconsoleio_workaround():
     The workaround in this case will reopen stdio with a different fd which
     also means a different handle by replicating the logic in
     "Py_lifecycle.c:initstdio/create_stdio".
-    See https://github.com/pytest-dev/py/issues/103
 
+    See https://github.com/pytest-dev/py/issues/103
     See http://bugs.python.org/issue30555
+    See https://github.com/obspy/obspy/issues/3148#issuecomment-1274254892
     """
     if not WIN32 or sys.version_info[:2] < (3, 6):
         return
@@ -334,12 +335,9 @@ def _py36_windowsconsoleio_workaround():
             f.newlines,
             f.line_buffering)
 
-    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
-    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
-    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')
-
-
-_py36_windowsconsoleio_workaround()
+    sys.stdin = _reopen_stdio(sys.stdin, 'rb')
+    sys.stdout = _reopen_stdio(sys.stdout, 'wb')
+    sys.stderr = _reopen_stdio(sys.stderr, 'wb')
 
 
 @contextlib.contextmanager
@@ -351,9 +349,10 @@ def SuppressOutput():  # noqa
     ...    os.system('echo "mystdout"')
     ...    os.system('echo "mystderr" >&2')
 
-    Note: Does not work reliably for Windows Python 3.6 under Windows - see
-    function definition of _py36_windowsconsoleio_workaround().
+    Note: Does not work reliably for Python 3 under Windows - see
+    function definition of _py3_windowsconsoleio_workaround().
     """
+    _py3_windowsconsoleio_workaround()
     with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
         with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
             with open(os.devnull, 'wb') as to_file:
@@ -369,6 +368,7 @@ def SuppressOutput():  # noqa
                     os.dup2(tmp_stdout.fileno(), 1)
                     os.dup2(tmp_stderr.fileno(), 2)
     # reset to original stdout/stderr
+    sys.stdin = sys.__stdin__
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
 
@@ -387,7 +387,7 @@ def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
     old_dir = os.getcwd()
     os.chdir(tempdir)
     try:
-        yield
+        yield tempdir
     finally:
         os.chdir(old_dir)
         try:

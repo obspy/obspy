@@ -15,11 +15,13 @@ a number of values followed by the time series data.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import xdrlib
+import warnings
+
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
+from obspy.io.ah import xdrlib
 
 AH1_CODESIZE = 6
 AH1_CHANSIZE = 6
@@ -113,7 +115,14 @@ def _get_ah_version(filename):
 
 
 def _unpack_string(data):
-    return data.unpack_string().split(b'\x00', 1)[0].strip().decode("utf-8")
+    data = data.unpack_string().split(b'\x00', 1)[0].strip()
+    try:
+        data = data.decode("utf-8")
+    except UnicodeDecodeError:
+        msg = f'can not decode {data} as UTF-8, decoding with replacing errors'
+        warnings.warn(msg)
+        data = data.decode("utf-8", errors="replace")
+    return data
 
 
 def _read_ah1(filename):

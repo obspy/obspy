@@ -317,11 +317,3 @@ class CoreTestCase(unittest.TestCase):
                 -236., -242., -252., -262.]))
             np.testing.assert_array_almost_equal(tr.data[-4:], np.array([
                 101., 106., 107., 104.]))
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

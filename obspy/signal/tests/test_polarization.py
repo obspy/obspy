@@ -123,15 +123,18 @@ class PolarizationTestCase(unittest.TestCase):
         st = _create_test_data()
         t = st[0].stats.starttime
         e = st[0].stats.endtime
+        wlen = 10.0
+        wfrac = 0.1
 
         out = polarization.polarization_analysis(
-            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            st, win_len=wlen, win_frac=wfrac, frqlow=1.0, frqhigh=5.0,
             verbose=False, stime=t, etime=e, method="pm",
             var_noise=0.0)
 
         # all values should be equal for the test data, so check first value
         # and make sure all values are almost equal
-        self.assertEqual(out["timestamp"][0], 1393632001.0)
+        self.assertEqual(out["timestamp"][0], 1393632005.0)
+        self.assertEqual(out["timestamp"][0], t + wlen / 2.0)
         self.assertAlmostEqual(out["azimuth"][0], 26.56505117707799)
         self.assertAlmostEqual(out["incidence"][0], 65.905157447889309)
         self.assertAlmostEqual(out["azimuth_error"][0], 0.000000)
@@ -152,15 +155,18 @@ class PolarizationTestCase(unittest.TestCase):
         st = _create_test_data()
         t = st[0].stats.starttime
         e = st[0].stats.endtime
+        wlen = 10.0
+        wfrac = 0.1
 
         out = polarization.polarization_analysis(
-            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            st, win_len=wlen, win_frac=wfrac, frqlow=1.0, frqhigh=5.0,
             verbose=False, stime=t, etime=e,
             method="flinn", var_noise=0.0)
 
         # all values should be equal for the test data, so check first value
         # and make sure all values are almost equal
-        self.assertEqual(out["timestamp"][0], 1393632001.0)
+        self.assertEqual(out["timestamp"][0], 1393632005.0)
+        self.assertEqual(out["timestamp"][0], t + wlen / 2.0)
         self.assertAlmostEqual(out["azimuth"][0], 26.56505117707799)
         self.assertAlmostEqual(out["incidence"][0], 65.905157447889309)
         self.assertAlmostEqual(out["rectilinearity"][0], 1.000000)
@@ -197,11 +203,3 @@ class PolarizationTestCase(unittest.TestCase):
                                         rtol=1e-4))
         self.assertTrue(np.allclose(out["timestamp"] - out["timestamp"][0],
                                     np.arange(0, 97.85, 0.05), rtol=1e-5))
-
-
-def suite():
-    return unittest.makeSuite(PolarizationTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

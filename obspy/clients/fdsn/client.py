@@ -9,6 +9,7 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import collections.abc
 import copy
 import gzip
 import io
@@ -26,7 +27,6 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
-from obspy.core.compatibility import collections_abc
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
                      URL_DEFAULT_SUBPATH, URL_MAPPINGS, URL_MAPPING_SUBPATHS,
@@ -399,7 +399,8 @@ class Client(object):
 
         # Already does the error checking with fdsnws semantics.
         response = self._download(url=url, data=token.encode(),
-                                  use_gzip=True, return_string=True)
+                                  use_gzip=True, return_string=True,
+                                  content_type='application/octet-stream')
 
         user, password = response.decode().split(':')
         if self.debug:
@@ -751,7 +752,12 @@ class Client(object):
             data_stream.close()
         else:
             # This works with XML and StationXML data.
-            inventory = read_inventory(data_stream)
+            if format is None or format == 'xml':
+                inventory = read_inventory(data_stream, format='STATIONXML')
+            elif format == 'text':
+                inventory = read_inventory(data_stream, format='STATIONTXT')
+            else:
+                inventory = read_inventory(data_stream)
             data_stream.close()
             return inventory
 
@@ -1042,8 +1048,8 @@ class Client(object):
 
         url = self._build_url("dataselect", "query")
 
-        data_stream = self._download(url,
-                                     data=bulk)
+        data_stream = self._download(
+            url, data=bulk, content_type='text/plain')
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1057,8 +1063,13 @@ class Client(object):
             return st
 
     def get_stations_bulk(self, bulk, level=None, includerestricted=None,
-                          includeavailability=None, filename=None, **kwargs):
-        r"""
+                          includeavailability=None, filename=None,
+                          minlatitude=None, maxlatitude=None,
+                          minlongitude=None, maxlongitude=None, latitude=None,
+                          longitude=None, minradius=None, maxradius=None,
+                          updatedafter=None, matchtimeseries=None, format=None,
+                          **kwargs):
+        """
         Query the station service of the client. Bulk request.
 
         Send a bulk request for stations to the server. `bulk` can either be
@@ -1155,6 +1166,31 @@ class Client(object):
         :type bulk: str, file or list[list]
         :param bulk: Information about the requested data. See above for
             details.
+        :type minlatitude: float
+        :param minlatitude: Limit to stations with a latitude larger than the
+            specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Limit to stations with a latitude smaller than the
+            specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Limit to stations with a longitude larger than the
+            specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Limit to stations with a longitude smaller than
+            the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius search.
+        :type longitude: float
+        :param longitude: Specify the longitude to be used for a radius
+            search.
+        :type minradius: float
+        :param minradius: Limit results to stations within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Limit results to stations within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
         :type level: str
         :param level: Specify the level of detail for the results ("network",
             "station", "channel", "response"), e.g. specify "response" to get
@@ -1165,10 +1201,20 @@ class Client(object):
         :type includeavailability: bool
         :param includeavailability: Specify if results should include
             information about time series data availability.
+        :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param updatedafter: Limit to metadata updated after specified date;
+            updates are data center specific.
+        :type matchtimeseries: bool
+        :param matchtimeseries: Only include data for which matching time
+            series data is available.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parsed to an ObsPy object. Thus it will contain
             the raw data from the webservices.
+        :type format: str
+        :param format: The format in which to request station information.
+            ``"xml"`` (StationXML) or ``"text"`` (FDSN station text format).
+            XML has more information but text is much faster.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -1181,16 +1227,27 @@ class Client(object):
             raise ValueError(msg)
 
         arguments = OrderedDict(
+            minlatitude=minlatitude,
+            maxlatitude=maxlatitude,
+            minlongitude=minlongitude,
+            maxlongitude=maxlongitude,
+            latitude=latitude,
+            longitude=longitude,
+            minradius=minradius,
+            maxradius=maxradius,
             level=level,
             includerestricted=includerestricted,
-            includeavailability=includeavailability
+            includeavailability=includeavailability,
+            updatedafter=updatedafter,
+            matchtimeseries=matchtimeseries,
+            format=format
         )
         bulk = get_bulk_string(bulk, arguments)
 
         url = self._build_url("station", "query")
 
-        data_stream = self._download(url,
-                                     data=bulk)
+        data_stream = self._download(
+            url, data=bulk, content_type='text/plain')
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1198,7 +1255,12 @@ class Client(object):
             return
         else:
             # Works with text and StationXML data.
-            inv = obspy.read_inventory(data_stream)
+            if format is None or format == 'xml':
+                inv = read_inventory(data_stream, format='STATIONXML')
+            elif format == 'text':
+                inv = read_inventory(data_stream, format='STATIONTXT')
+            else:
+                inv = read_inventory(data_stream)
             data_stream.close()
             return inv
 
@@ -1412,9 +1474,13 @@ class Client(object):
 
         print("\n".join(msg))
 
-    def _download(self, url, return_string=False, data=None, use_gzip=True):
+    def _download(self, url, return_string=False, data=None, use_gzip=True,
+                  content_type=None):
+        headers = self.request_headers.copy()
+        if content_type:
+            headers['Content-Type'] = content_type
         code, data = download_url(
-            url, opener=self._url_opener, headers=self.request_headers,
+            url, opener=self._url_opener, headers=headers,
             debug=self.debug, return_string=return_string, data=data,
             timeout=self.timeout, use_gzip=use_gzip)
         raise_on_error(code, data)
@@ -1768,7 +1834,7 @@ def raise_on_error(code, data):
         raise NotImplementedError(msg)
     elif code == 429:
         msg = ("Sent too many requests in a given amount of time ('rate "
-               "limiting'). Wait before making a new request.", server_info)
+               "limiting'). Wait before making a new request.")
         raise FDSNTooManyRequestsException(msg, server_info)
     elif code == 500:
         raise FDSNInternalServerException("Service responds: Internal server "
@@ -1930,7 +1996,7 @@ def get_bulk_string(bulk, arguments):
         raise FDSNInvalidRequestException(msg)
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
-    if isinstance(bulk, collections_abc.Iterable) \
+    if isinstance(bulk, collections.abc.Iterable) \
             and not hasattr(bulk, "read") \
             and not isinstance(bulk, str):
         tmp = ["%s=%s" % (key, convert_to_string(value))

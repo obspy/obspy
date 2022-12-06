@@ -404,11 +404,3 @@ CALCULATED VALUES
 
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noq
-
-
-def suite():
-    return unittest.makeSuite(RecordAnalyserTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

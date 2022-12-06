@@ -698,11 +698,3 @@ class ASCIITestCase(unittest.TestCase):
 
         for actual, expected in zip(actual_lines, expected_lines):
             self.assertEqual(actual.strip(), expected.strip())
-
-
-def suite():
-    return unittest.makeSuite(ASCIITestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

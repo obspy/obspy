@@ -500,11 +500,3 @@ class WADLParserTestCase(unittest.TestCase):
                     'starttime', 'station']
         self.assertEqual(sorted(params.keys()), expected)
         self.assertEqual(len(w), 0)
-
-
-def suite():
-    return unittest.makeSuite(WADLParserTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

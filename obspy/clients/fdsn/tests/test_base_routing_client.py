@@ -228,11 +228,3 @@ class BaseRoutingClientTestCase(unittest.TestCase):
             "Failed to download data of type 'station' from "
             "'https://example.com' due to:"))
         self.assertIn("ValueError: random", msg)
-
-
-def suite():  # pragma: no cover
-    return unittest.makeSuite(BaseRoutingClientTestCase, 'test')
-
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main(defaultTest='suite')

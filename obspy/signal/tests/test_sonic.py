@@ -231,11 +231,3 @@ class SonicTestCase(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(transff, transffth, decimal=6)
         np.testing.assert_array_almost_equal(transffll, transffth, decimal=6)
-
-
-def suite():
-    return unittest.makeSuite(SonicTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

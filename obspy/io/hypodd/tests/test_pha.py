@@ -148,11 +148,3 @@ class PHATestCase(unittest.TestCase):
             cat2 = read_events(tempfile)
         self.assertEqual(len(cat2), 1)
         self.assertEqual(len(cat2[0].picks), 1)
-
-
-def suite():
-    return unittest.makeSuite(PHATestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

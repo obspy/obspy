@@ -135,11 +135,3 @@ class CalibrationTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(freq, freq2, decimal=4)
         np.testing.assert_array_almost_equal(amp, amp2, decimal=4)
         np.testing.assert_array_almost_equal(phase, phase2, decimal=4)
-
-
-def suite():
-    return unittest.makeSuite(CalibrationTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

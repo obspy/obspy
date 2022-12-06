@@ -42,7 +42,7 @@ from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
-MIN_PYTHON_VERSION = (3, 7)
+MIN_PYTHON_VERSION = (3, 8)
 
 # Fail fast if the user is on an unsupported version of python.
 if sys.version_info < MIN_PYTHON_VERSION:
@@ -82,9 +82,9 @@ EXTERNAL_LIBMSEED = False
 
 # Hard dependencies needed to install/run ObsPy.
 INSTALL_REQUIRES = [
-    'numpy>=1.15.0',
-    'scipy>=1.0.0',
-    'matplotlib>=3.2.0',
+    'numpy>=1.20',
+    'scipy>=1.7',
+    'matplotlib>=3.3',
     'lxml',
     'setuptools',
     'sqlalchemy',
@@ -132,7 +132,7 @@ ENTRY_POINTS = {
         'obspy-flinn-engdahl = obspy.scripts.flinnengdahl:main',
         'obspy-runtests = obspy.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.scripts.reftekrescue:main',
-        'obspy-print = obspy.scripts._print:main',
+        'obspy-print = obspy.scripts.print:main',
         'obspy-sds-report = obspy.scripts.sds_html_report:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',
@@ -283,6 +283,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.GCF': [
         'isFormat = obspy.io.gcf.core:_is_gcf',
         'readFormat = obspy.io.gcf.core:_read_gcf',
+        'writeFormat = obspy.io.gcf.core:_write_gcf',
         ],
     'obspy.plugin.waveform.REFTEK130': [
         'isFormat = obspy.io.reftek.core:_is_reftek130',
@@ -594,6 +595,18 @@ def get_extensions():
     """
     extensions = []
 
+    # GCF
+    path = os.path.join("obspy", "io", "gcf", "src")
+    files = [os.path.join(path, "gcf_io.c")]
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'gcf_io.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
+    extensions.append(Extension("gcf", files, **kwargs))
+
     # GSE2
     path = os.path.join("obspy", "io", "gse2", "src", "GSE_UTI")
     files = [os.path.join(path, "gse_functions.c")]
@@ -768,8 +781,10 @@ def setupPackage():
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
@@ -779,6 +794,7 @@ def setupPackage():
             'obspy.io.css': ['contrib/*'],
             # NOTE: If the libmseed test data wasn't used in our tests, we
             # could just ignore src/* everywhere.
+            'obspy.io.gcf':['src/*'],
             'obspy.io.gse2': ['src/*'],
             'obspy.io.mseed': [
                 # Only keep src/libmseed/test/* except for the C files.

@@ -4,7 +4,7 @@
     <event publicID="smi:www.iris.edu/ws/event/query?eventId=3279407">
       <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
         <time>
-          <value>2011-03-11T05:46:24.1200</value>
+          <value>2011-03-11T05:46:24.1200Z</value>
         </time>
         <latitude>
           <value>38.297</value>
@@ -30,7 +30,7 @@
     <event publicID="smi:www.iris.edu/ws/event/query?eventId=2318174">
       <origin publicID="smi:www.iris.edu/ws/event/query?originId=3881858">
         <time>
-          <value>2006-09-10T04:26:33.6100</value>
+          <value>2006-09-10T04:26:33.6100Z</value>
         </time>
         <latitude>
           <value>9.614</value>

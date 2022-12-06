@@ -1,0 +1,73 @@
+# The main points for setting up code owners here are..
+#   - to automatically ping people when pull requests are opened that touch
+#     parts of the code base that certain people have been involved with and..
+#   - to make it faster to see for core developers who to reach out to for
+#     getting feedback on pull requests
+#
+# If anybody wants to be removed here to not get github notifications anymore,
+# just open an issue on github and let us know
+#
+# Deliberately including folders without owners specified
+
+/obspy/.github     @trichter @d-chambers
+/obspy/core        @megies @trichter @d-chambers
+/obspy/geodetics
+/obspy/imaging
+/obspy/realtime
+/obspy/scripts
+/obspy/signal
+/obspy/taup        @johnrudge @crotwell
+
+/obspy/clients/earthworm
+/obspy/clients/fdsn
+/obspy/clients/filesystem/*.py      @nick-falco @chad-iris
+/obspy/clients/filesystem/sds.py    @megies
+/obspy/clients/iris                 @chad-iris
+/obspy/clients/neic                 @ketchum-usgs
+/obspy/clients/nrl                  @megies
+/obspy/clients/seedlink/basic*.py   @megies
+/obspy/clients/seedlink
+/obspy/clients/syngine
+
+/obspy/io/ah             @s-schneider
+/obspy/io/alsep          @yamamo-to @isas-yamamoto
+/obspy/io/arclink        @Jollyfant
+/obspy/io/ascii
+/obspy/io/cmtsolution
+/obspy/io/cnv
+/obspy/io/css
+/obspy/io/dmx            @ThomasLecocq
+/obspy/io/focmec         @megies
+/obspy/io/gcf            @paitor
+/obspy/io/gse2
+/obspy/io/hypodd         @megies
+/obspy/io/iaspei
+/obspy/io/json
+/obspy/io/kinemetrics
+/obspy/io/kml            @megies
+/obspy/io/mseed
+/obspy/io/mseed/src      @chad-iris
+/obspy/io/ndk
+/obspy/io/nied
+/obspy/io/nlloc          @megies
+/obspy/io/nordic         @flixha
+/obspy/io/pdas
+/obspy/io/pde
+/obspy/io/quakeml
+/obspy/io/reftek         @megies
+/obspy/io/rg16           @thefroid
+/obspy/io/sac            @jkmacc-LANL
+/obspy/io/scardec
+/obspy/io/seg2
+/obspy/io/segy
+/obspy/io/seisan
+/obspy/io/seiscomp
+/obspy/io/sh             @trichter
+/obspy/io/shapefile      @megies
+/obspy/io/stationtxt
+/obspy/io/stationxml
+/obspy/io/wav
+/obspy/io/win            @ThomasLecocq
+/obspy/io/xseed
+/obspy/io/y
+/obspy/io/zmap

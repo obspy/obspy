@@ -19,7 +19,7 @@ This stylesheet converts a QuakeML to a SC3ML document. It may be invoked using
 xalan or xsltproc:
 
     xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.11.xsl -out sc3ml.xml
-    xsltproc quakeml_1.2__sc3ml_0.11.xsl quakeml.xml -o sc3ml.xml
+    xsltproc quakeml_1.2__sc3ml_0.11.xsl quakeml.xml > sc3ml.xml
 
 Transformation
 ==============
@@ -49,7 +49,7 @@ In SC3ML all information is grouped under the EventParameters element.
         </origin>
         <focalMechanism/>                   <focalMechanism/>
         <event/>                        </event>
-    </EventParameters>              </eventParameters
+    </EventParameters>              </eventParameters>
 
 Since origins and focalMechanism aren't in an event anymore, OriginReferences
 and FocalMechanismReferences need to be created.
@@ -117,7 +117,13 @@ Nodes order
 Unlike SC3ML, QuakeML nodes can appear in any order. They must be reordered for
 SC3ML. Unnecessary attributes must also be removed.
 
-    ***************************************************************************
+Change log
+==========
+
+* 16.06.2021: Add ID_PREFIX parameter allowing to strip QuakeML ID prefix from
+  publicIDs and references thereof
+* 22.06.2021: Add Z suffix to xs:dateTime values
+
 -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -129,6 +135,10 @@ SC3ML. Unnecessary attributes must also be removed.
         exclude-result-prefixes="xsl xs ext q qml">
     <xsl:output method="xml" encoding="UTF-8" indent="yes"/>
     <xsl:strip-space elements="*"/>
+
+    <!-- Define parameters-->
+    <xsl:param name="ID_PREFIX" select="'smi:org.gfz-potsdam.de/geofon/'"/>
+    <xsl:param name="ID_PREFIX_NA" select="concat($ID_PREFIX, 'NA')"/>
 
     <!-- Define some global variables -->
     <xsl:variable name="version" select="'0.11'"/>
@@ -424,7 +434,29 @@ SC3ML. Unnecessary attributes must also be removed.
             <xsl:value-of select="current() div 1000"/>
         </xsl:element>
     </xsl:template>
+<!--
+    ***************************************************************************
+    Time conversion
+    ***************************************************************************
+-->
 
+    <!-- SeisComP < 5 requires date time values to end on Z -->
+    <xsl:template match="qml:time/qml:value
+                        | qml:scalingTime/qml:value
+                        | qml:timeWindow/qml:reference
+                        | qml:creationTime">
+        <xsl:element name="{local-name()}">
+            <xsl:variable name="v" select="current()"/>
+            <xsl:choose>
+                <xsl:when test="substring($v, string-length($v))='Z'">
+                    <xsl:value-of select="$v"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="concat($v, 'Z')"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:element>
+    </xsl:template>
 <!--
     ***************************************************************************
     Delete moved/unmapped nodes

@@ -143,7 +143,7 @@ class QuakeMLTestCase(unittest.TestCase):
             UTCDateTime("2012-04-04T16:40:50+00:00"))
         self.assertEqual(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -246,7 +246,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c.semi_major_axis_length, 0.123)
         self.assertEqual(c.major_axis_azimuth, 4.123)
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -292,7 +292,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(mag.creation_info.creation_time, None)
         self.assertEqual(mag.creation_info.version, None)
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -327,7 +327,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(stat_contrib.residual, 0.)
 
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -366,7 +366,7 @@ class QuakeMLTestCase(unittest.TestCase):
                              resource_uri="smi:ch.ethz.sed/waveform/201754"))
         self.assertEqual(mag.creation_info, None)
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -409,7 +409,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(du[2].shortest_period, 125.0)
 
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -446,7 +446,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(ar.comments), 1)
         self.assertEqual(ar.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -485,7 +485,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(pick.comments), 2)
         self.assertEqual(pick.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        with open(filename, "rt") as fp:
+        with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
@@ -1197,11 +1197,3 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(extra, cat2.extra)
         self.assertIn(('custom1', custom1), cat2.extra.items())
         self.assertIn(('custom2', custom2), cat2.extra.items())
-
-
-def suite():
-    return unittest.makeSuite(QuakeMLTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

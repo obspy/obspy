@@ -26,11 +26,3 @@ class SLNetStationTestCase(unittest.TestCase):
         self.assertNotEqual(id(station1.selectors), id(station2.selectors))
         self.assertEqual(station1.get_selectors(), ['FOO'])
         self.assertEqual(station2.get_selectors(), [])
-
-
-def suite():
-    return unittest.makeSuite(SLNetStationTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

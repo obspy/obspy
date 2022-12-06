@@ -100,11 +100,3 @@ class EvtTestCase(unittest.TestCase):
         self.assertIn('BLA.WET.11.DHZ', waveform_ids)
         self.assertIn('BLB.UBR.00.BHZ', waveform_ids)
         self.assertIn('BLA.WERD.11.DHZ', waveform_ids)
-
-
-def suite():
-    return unittest.makeSuite(EvtTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

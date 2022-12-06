@@ -155,11 +155,3 @@ class ArclinkInventoryTestCase(unittest.TestCase):
                             self.assertAlmostEqual(arc_cs[1], sta_cs[1])
                         else:
                             self.assertEqual(arc_cs, sta_cs)
-
-
-def suite():
-    return unittest.makeSuite(ArclinkInventoryTestCase, "test")
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

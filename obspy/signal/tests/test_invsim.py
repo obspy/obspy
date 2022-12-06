@@ -524,11 +524,3 @@ class InvSimTestCase(unittest.TestCase):
         yi_ref = [0.94899576, 0.97572004, 0.9927136, 0.99978309, 0.99686554,
                   0.98398301, 0.96128491]
         self.assertTrue(np.allclose(yi, yi_ref, rtol=1e-7, atol=0))
-
-
-def suite():
-    return unittest.makeSuite(InvSimTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

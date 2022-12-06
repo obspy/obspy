@@ -76,11 +76,3 @@ class UtilsTestCase(unittest.TestCase):
             self.assertEqual(
                 got, expected,
                 "_is_resp() returns %s for file %s" % (got, filename))
-
-
-def suite():
-    return unittest.makeSuite(UtilsTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -268,9 +268,7 @@ class BlocketteTestCase(unittest.TestCase):
             "0363210102003,211,11:18:00.0000~2004,146,08:52:00.0000~NFR"
         # reading should work but without issues
         blockette = Blockette050()
-        # utf-8 only needed for PY2
         blockette.parse_seed(b050_orig.encode('utf-8'))
-        # utf-8 only needed for PY2
         self.assertEqual(len(blockette.site_name.encode('utf-8')), 72)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
@@ -284,11 +282,9 @@ class BlocketteTestCase(unittest.TestCase):
             # reading it again should have cut length
             blockette = Blockette050()
             blockette.parse_seed(out)
-            # utf-8 only needed for PY2
             self.assertEqual(len(blockette.site_name.encode('utf-8')), 60)
         # writing with strict=True will raise
         blockette = Blockette050(strict=True)
-        # utf-8 only needed for PY2
         blockette.parse_seed(b050_orig.encode('utf-8'))
         self.assertRaises(SEEDTypeException, blockette.get_seed)
 
@@ -320,11 +316,3 @@ class BlocketteTestCase(unittest.TestCase):
         self.assertFalse(a != b)
         self.assertFalse(a == c)
         self.assertFalse(a == d)
-
-
-def suite():
-    return unittest.makeSuite(BlocketteTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

@@ -32,11 +32,3 @@ XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
 '''  # noqa
         self.assertEqual(expected, out.stdout)
-
-
-def suite():
-    return unittest.makeSuite(PrintTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

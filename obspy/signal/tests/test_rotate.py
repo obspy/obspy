@@ -495,11 +495,3 @@ class RotateTestCase(unittest.TestCase):
 
         self.assertEqual(success_count, 12)
         self.assertEqual(failure_count, 12)
-
-
-def suite():
-    return unittest.makeSuite(RotateTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

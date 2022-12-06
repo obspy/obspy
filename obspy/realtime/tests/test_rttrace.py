@@ -198,11 +198,3 @@ class RtTraceTestCase(unittest.TestCase):
         rt_trace = RtTrace()
         rt_trace.register_rt_process('tauc', width=20, notexistingoption=True)
         self.assertRaises(TypeError, rt_trace.append, trace)
-
-
-def suite():
-    return unittest.makeSuite(RtTraceTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

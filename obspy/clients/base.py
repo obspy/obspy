@@ -165,7 +165,8 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
         """
         pass
 
-    def _download(self, url, params=None, filename=None, data=None):
+    def _download(self, url, params=None, filename=None, data=None,
+                  content_type=None):
         """
         Download the URL with GET or POST and the chosen parameters.
 
@@ -187,6 +188,11 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
         :param data: If specified, a POST request will be sent with the data in
             the body of the request.
         :type data: dict, bytes, or file-like object
+        :param content_type: Should only be relevant when ``data`` is specified
+            and thus issuing a POST request. Can be used to set the
+            ``Content-Type`` HTTP header to let the server know what type the
+            body is, e.g. ``"text/plain"``.
+        :type content_type: str
         :return: The response object assuming ``filename`` is ``None``.
         :rtype: :class:`requests.Response`
         """
@@ -206,7 +212,12 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
             # Construct the same URL requests would construct.
             from requests import PreparedRequest  # noqa
             p = PreparedRequest()
-            p.prepare(method="GET", **_request_args)
+            # request doesnt use timeout parameter, it's used when actually
+            # sending the request, but the request is never sent in this debug
+            # block anyway, it's just for printing info on what would be sent
+            p.prepare(
+                method="GET",
+                **{k: v for k, v in _request_args.items() if k != "timeout"})
             print("Downloading %s ..." % p.url)
             if data is not None:
                 print("Sending along the following payload:")

@@ -115,11 +115,3 @@ class HoctavbandsTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((hob[:, 7] - self.res[:, 27]) ** 2) /
                       np.sum(self.res[:, 27] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
-
-
-def suite():
-    return unittest.makeSuite(HoctavbandsTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

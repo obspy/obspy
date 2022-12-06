@@ -48,11 +48,3 @@ class SLPacketTestCase(unittest.TestCase):
         xml = b'<?xml version="1.0" encoding="utf-8"?>'
         self.assertTrue(payload.startswith(xml))
         self.assertEqual(len(payload), 456)
-
-
-def suite():
-    return unittest.makeSuite(SLPacketTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

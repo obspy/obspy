@@ -172,11 +172,3 @@ class FreqTraceTestCase(unittest.TestCase):
         self.assertEqual(m_dis, 1.0)
         self.assertAlmostEqual(m_vel, 0.0174524064373, 6)
         self.assertAlmostEqual(m_acc, 0.00872487417563, 6)
-
-
-def suite():
-    return unittest.makeSuite(FreqTraceTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
