@@ -16,7 +16,8 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from obspy import Stream, UTCDateTime, read
 from obspy.signal.trigger import (
     ar_pick, classic_sta_lta, classic_sta_lta_py, coincidence_trigger, pk_baer,
-    recursive_sta_lta, recursive_sta_lta_py, trigger_onset, aic_simple)
+    recursive_sta_lta, recursive_sta_lta_py, trigger_onset, aic_simple,
+    energy_ratio, modified_energy_ratio)
 from obspy.signal.util import clibsignal
 
 
@@ -602,6 +603,77 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(c1, c2, rtol=1e-10))
         ref = np.array([0.38012302, 0.37704431, 0.47674533, 0.67992292])
         self.assertTrue(np.allclose(ref, c2[99:103]))
+
+
+class EnergyRatioTestCase(unittest.TestCase):
+
+    def test_all_zero(self):
+        a = np.zeros(100)
+        for nsta in range(len(a)):
+            with self.subTest(nsta=nsta):
+                er = energy_ratio(a, nsta=nsta)
+                assert_array_equal(er, 0)
+
+    def test_arange(self):
+        a = np.arange(10)
+        er = energy_ratio(a, nsta=3)
+        # Taken as the function output to keep track of regression bugs
+        er_expected = [0., 0., 0., 10., 5.5, 3.793103, 2.98, 2.519481, 0., 0.]
+        assert_array_almost_equal(er, er_expected)
+
+    def test_large_nsta(self):
+        a = np.arange(100)
+        for nsta in range(len(a) // 2 + 1, len(a)):
+            with self.subTest(nsta=nsta):
+                er = energy_ratio(a, nsta=nsta)
+                assert_array_equal(er, 0)
+
+    def test_all_ones(self):
+        a = np.ones(100, dtype=np.float32)
+        # Forward and backward entries are symmetric -> expecting output '1'
+        # Fill nsta on both sides with zero to return same length
+        for nsta in range(1, len(a) // 2 + 1):
+            with self.subTest(nsta=nsta):
+                er = energy_ratio(a, nsta=nsta)
+                er_exp = np.zeros_like(a)
+                er_exp[nsta: len(a) - nsta + 1] = 1
+                assert_array_equal(er, er_exp)
+
+
+class ModifiedEnergyRatioTestCase(unittest.TestCase):
+
+    def test_all_zero(self):
+        a = np.zeros(100)
+        for nsta in range(len(a)):
+            with self.subTest(nsta=nsta):
+                er = modified_energy_ratio(a, nsta=nsta)
+                assert_array_equal(er, 0)
+
+    def test_arange(self):
+        a = np.arange(10)
+        er = modified_energy_ratio(a, nsta=3)
+        # Taken as the function output to keep track of regression bugs
+        er_expected = [0., 0., 0., 27000., 10648., 6821.722908, 5716.135872,
+                       5485.637866, 0., 0.]
+        assert_array_almost_equal(er, er_expected)
+
+    def test_large_nsta(self):
+        a = np.arange(100)
+        for nsta in range(len(a) // 2 + 1, len(a)):
+            with self.subTest(nsta=nsta):
+                er = modified_energy_ratio(a, nsta=nsta)
+                assert_array_equal(er, 0)
+
+    def test_all_ones(self):
+        a = np.ones(100, dtype=np.float32)
+        # Forward and backward entries are symmetric -> expecting output '1'
+        # Fill nsta on both sides with zero to return same length
+        for nsta in range(1, len(a) // 2 + 1):
+            with self.subTest(nsta=nsta):
+                er = modified_energy_ratio(a, nsta=nsta)
+                er_exp = np.zeros_like(a)
+                er_exp[nsta: len(a) - nsta + 1] = 1
+                assert_array_equal(er, er_exp)
 
 
 def suite():
