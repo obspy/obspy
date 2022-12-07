@@ -2,6 +2,8 @@ master
 ======
 
 Changes:
+ - obspy.io.seiscomp:
+   * Added publicID to station.extra, based on SCML (see #3194)
 
 maintenance_1.4.x
 =================

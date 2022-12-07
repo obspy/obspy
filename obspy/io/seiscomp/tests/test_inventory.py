@@ -75,13 +75,19 @@ class SC3MLTestCase(unittest.TestCase):
         to stationXML format and compare line by line
         """
         sc3ml_bytes = io.BytesIO()
-        self.sc3ml_inventory.write(sc3ml_bytes, "STATIONXML")
+        self.sc3ml_inventory.write(
+            sc3ml_bytes, "STATIONXML",
+            nsmap={'my_ns': 'seiscompml'}
+        )
         sc3ml_bytes.seek(0, 0)
         sc3ml_lines = sc3ml_bytes.read().decode().splitlines()
         sc3ml_arr = [_i.strip() for _i in sc3ml_lines if _i.strip()]
 
         stationxml_bytes = io.BytesIO()
-        self.stationxml_inventory.write(stationxml_bytes, "STATIONXML")
+        self.stationxml_inventory.write(
+            stationxml_bytes, "STATIONXML",
+            nsmap={'my_ns': 'seiscompml'}
+        )
         stationxml_bytes.seek(0, 0)
         stationxml_lines = stationxml_bytes.read().decode().splitlines()
         stationxml_arr = [_i.strip() for _i in stationxml_lines if _i.strip()]
