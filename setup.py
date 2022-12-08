@@ -535,6 +535,8 @@ ENTRY_POINTS = {
         'zdetect = obspy.signal.trigger:z_detect',
         'recstaltapy = obspy.signal.trigger:recursive_sta_lta_py',
         'classicstaltapy = obspy.signal.trigger:classic_sta_lta_py',
+        'energyratio = obspy.signal.trigger:energy_ratio',
+        'modifiedenergyratio = obspy.signal.trigger:modified_energy_ratio',
         ],
     }
 
@@ -794,7 +796,7 @@ def setupPackage():
             'obspy.io.css': ['contrib/*'],
             # NOTE: If the libmseed test data wasn't used in our tests, we
             # could just ignore src/* everywhere.
-            'obspy.io.gcf':['src/*'],
+            'obspy.io.gcf': ['src/*'],
             'obspy.io.gse2': ['src/*'],
             'obspy.io.mseed': [
                 # Only keep src/libmseed/test/* except for the C files.
