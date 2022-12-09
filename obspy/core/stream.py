@@ -2288,6 +2288,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             Computes the carl_sta_trig characteristic function (uses
             :func:`obspy.signal.trigger.carl_sta_trig`).
 
+        ``'energyratio'``
+            Computes the energy ratio characteristic function (uses
+            :func:`obspy.signal.trigger.energy_ratio`).
+
+        ``'modifiedenergyratio'``
+            Computes the modified energy ratio characteristic function (uses
+            :func:`obspy.signal.trigger.modified_energy_ratio`).
+
         ``'zdetect'``
             Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
 

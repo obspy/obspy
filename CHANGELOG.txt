@@ -93,6 +93,7 @@ Changes:
  - obspy.signal:
    * coincidence trigger: improve speed of template matching and less memory
      usage (see #3104)
+   * added energy_ratio and modified_energy_ratio trigger methods (see #3161)
    * Baer picker: fix a bug that could cause crashes on certain versions of
      libffi (see #3183)
    * polarization analysis: fix calculation of timestamps of the resulting
