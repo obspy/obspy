@@ -3,7 +3,7 @@ master
 
 Changes:
  - obspy.core:
-   * response: allow recalculating overall sensitivity even if when unit is not
+   * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
 
 maintenance_1.4.x
