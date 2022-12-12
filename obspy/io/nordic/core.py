@@ -467,11 +467,24 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
                 f = str(select_file)
     else:
         f = select_file
+
+    # Check if this is a compact catalog file: only hypocenters, no picks:
+    is_compact_select_file = False
+    tagged_lines = _get_line_tags(f=f)
+    if len(tagged_lines) == 1 and '1' in tagged_lines.keys():
+        is_compact_select_file = True
+    f.seek(0)
+
     wav_names = []
     event_str = []
     catalog = Catalog()
     for line in f:
-        if len(line.rstrip()) > 0:
+        if len(event_str) > 0 and is_compact_select_file:
+            catalog, wav_names = _extract_event(
+                event_str=event_str, catalog=catalog, wav_names=wav_names,
+                **kwargs)
+            event_str = []
+        elif len(line.rstrip()) > 0:
             event_str.append(line)
         elif len(event_str) > 0:
             catalog, wav_names = _extract_event(
@@ -480,6 +493,7 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
                 **kwargs)
             event_str = []
     f.close()
+
     if len(event_str) > 0:
         # May occur if the last line of the file is not blank as it should be
         catalog, wav_names = _extract_event(
@@ -854,7 +868,10 @@ def _read_picks(tagged_lines, new_event, nordic_format='UKN', **kwargs):
                     tagged_lines[tag], key=lambda tup: tup[1])])
         except KeyError:
             pass
-    header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
+    try:
+        header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
+    except IndexError:  # Compact catalog file without picks?!
+        pass
 
     if nordic_format == 'UKN':
         nordic_format, phase_ok = check_nordic_format_version(pickline)
