@@ -14,6 +14,9 @@ maintenance_1.4.x
 =================
 
 Changes:
+ - obspy.clients.seedlink:
+   * avoid unnecessary calls to "get_info()" on waveform requests without
+     wildcards (see #3232)
 
 1.4.0 (doi: 10.5281/zenodo.6645832)
 ===================================
