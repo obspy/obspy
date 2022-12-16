@@ -600,7 +600,7 @@ class TriggerTestCase(unittest.TestCase):
 class EnergyRatioTestCase(unittest.TestCase):
 
     def test_all_zero(self):
-        a = np.zeros(100)
+        a = np.zeros(10)
         for nsta in range(1, len(a) // 2):
             with self.subTest(nsta=nsta):
                 er = energy_ratio(a, nsta=nsta)
@@ -614,7 +614,7 @@ class EnergyRatioTestCase(unittest.TestCase):
         assert_array_almost_equal(er, er_expected)
 
     def test_all_ones(self):
-        a = np.ones(100, dtype=np.float32)
+        a = np.ones(10, dtype=np.float32)
         # Forward and backward entries are symmetric -> expecting output '1'
         # Fill nsta on both sides with zero to return same length
         for nsta in range(1, len(a) // 2 + 1):
@@ -647,7 +647,7 @@ class EnergyRatioTestCase(unittest.TestCase):
 class ModifiedEnergyRatioTestCase(unittest.TestCase):
 
     def test_all_zero(self):
-        a = np.zeros(100)
+        a = np.zeros(10)
         for nsta in range(1, len(a) // 2):
             with self.subTest(nsta=nsta):
                 er = modified_energy_ratio(a, nsta=nsta)
@@ -662,7 +662,7 @@ class ModifiedEnergyRatioTestCase(unittest.TestCase):
         assert_array_almost_equal(er, er_expected)
 
     def test_all_ones(self):
-        a = np.ones(100, dtype=np.float32)
+        a = np.ones(10, dtype=np.float32)
         # Forward and backward entries are symmetric -> expecting output '1'
         # Fill nsta on both sides with zero to return same length
         for nsta in range(1, len(a) // 2 + 1):
