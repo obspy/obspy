@@ -305,10 +305,16 @@ def energy_ratio(a, nsta):
 
     .. seealso:: [Han2009]_
     """
-    if nsta > len(a) // 2 or nsta == 0:
+    if nsta > len(a) // 2:
         # Half forward, half backward -> empty medium
-        # If nsta is zero, the sum is undefined -> return zero
-        return np.zeros(len(a), dtype=np.float64)
+        msg = (
+            f'nsta ({nsta}) must not be larger than half the length of the '
+            f'data ({len(a)} samples).')
+        raise ValueError(msg)
+    if nsta <= 0:
+        # If nsta is zero, the sum is undefined
+        msg = f'nsta ({nsta}) must not be equal to or less than zero.'
+        raise ValueError(msg)
     sig_power = np.r_[0, np.cumsum(a ** 2, dtype=np.float64)]
     energy_diff = sig_power[nsta:] - sig_power[:len(sig_power) - nsta]
     er = np.zeros(len(a), dtype=np.float64)

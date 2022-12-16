@@ -4,11 +4,13 @@ The obspy.signal.trigger test suite.
 """
 import gzip
 import os
+import re
 import unittest
 import warnings
 from ctypes import ArgumentError
 
 import numpy as np
+import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from obspy import Stream, UTCDateTime, read
@@ -599,7 +601,7 @@ class EnergyRatioTestCase(unittest.TestCase):
 
     def test_all_zero(self):
         a = np.zeros(100)
-        for nsta in range(len(a)):
+        for nsta in range(1, len(a) // 2):
             with self.subTest(nsta=nsta):
                 er = energy_ratio(a, nsta=nsta)
                 assert_array_equal(er, 0)
@@ -610,13 +612,6 @@ class EnergyRatioTestCase(unittest.TestCase):
         # Taken as the function output to keep track of regression bugs
         er_expected = [0., 0., 0., 10., 5.5, 3.793103, 2.98, 2.519481, 0., 0.]
         assert_array_almost_equal(er, er_expected)
-
-    def test_large_nsta(self):
-        a = np.arange(100)
-        for nsta in range(len(a) // 2 + 1, len(a)):
-            with self.subTest(nsta=nsta):
-                er = energy_ratio(a, nsta=nsta)
-                assert_array_equal(er, 0)
 
     def test_all_ones(self):
         a = np.ones(100, dtype=np.float32)
@@ -629,12 +624,31 @@ class EnergyRatioTestCase(unittest.TestCase):
                 er_exp[nsta: len(a) - nsta + 1] = 1
                 assert_array_equal(er, er_exp)
 
+    def test_nsta_too_large(self):
+        a = np.empty(10)
+        nsta = 6
+        for nsta in (6, 10, 20):
+            expected_msg = re.escape(
+                f'nsta ({nsta}) must not be larger than half the length of '
+                f'the data (10 samples).')
+            with pytest.raises(ValueError, match=expected_msg):
+                energy_ratio(a, nsta)
+
+    def test_nsta_zero_or_less(self):
+        a = np.empty(10)
+        nsta = 6
+        for nsta in (0, -1, -10):
+            expected_msg = re.escape(
+                f'nsta ({nsta}) must not be equal to or less than zero.')
+            with pytest.raises(ValueError, match=expected_msg):
+                energy_ratio(a, nsta)
+
 
 class ModifiedEnergyRatioTestCase(unittest.TestCase):
 
     def test_all_zero(self):
         a = np.zeros(100)
-        for nsta in range(len(a)):
+        for nsta in range(1, len(a) // 2):
             with self.subTest(nsta=nsta):
                 er = modified_energy_ratio(a, nsta=nsta)
                 assert_array_equal(er, 0)
@@ -647,13 +661,6 @@ class ModifiedEnergyRatioTestCase(unittest.TestCase):
                        5485.637866, 0., 0.]
         assert_array_almost_equal(er, er_expected)
 
-    def test_large_nsta(self):
-        a = np.arange(100)
-        for nsta in range(len(a) // 2 + 1, len(a)):
-            with self.subTest(nsta=nsta):
-                er = modified_energy_ratio(a, nsta=nsta)
-                assert_array_equal(er, 0)
-
     def test_all_ones(self):
         a = np.ones(100, dtype=np.float32)
         # Forward and backward entries are symmetric -> expecting output '1'
@@ -664,6 +671,25 @@ class ModifiedEnergyRatioTestCase(unittest.TestCase):
                 er_exp = np.zeros_like(a)
                 er_exp[nsta: len(a) - nsta + 1] = 1
                 assert_array_equal(er, er_exp)
+
+    def test_nsta_too_large(self):
+        a = np.empty(10)
+        nsta = 6
+        for nsta in (6, 10, 20):
+            expected_msg = re.escape(
+                f'nsta ({nsta}) must not be larger than half the length of '
+                f'the data (10 samples).')
+            with pytest.raises(ValueError, match=expected_msg):
+                energy_ratio(a, nsta)
+
+    def test_nsta_zero_or_less(self):
+        a = np.empty(10)
+        nsta = 6
+        for nsta in (0, -1, -10):
+            expected_msg = re.escape(
+                f'nsta ({nsta}) must not be equal to or less than zero.')
+            with pytest.raises(ValueError, match=expected_msg):
+                energy_ratio(a, nsta)
 
 
 def suite():
