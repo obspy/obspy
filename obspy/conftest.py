@@ -65,6 +65,9 @@ def image_path(request, save_image_directory):
 
     These will be saved to obspy_test_images if --keep-images is selected.
     Using this fixture will also mark a test with "image".
+    Default filetype will be "png". Custom filetype for a test can be set by
+    marking the test with "image_path_suffix" marker and providing the filetype
+    (e.g. "pdf") as first argument of the marker.
     """
     parent_obj = getattr(request.node.parent, 'obj', None)
     node_name = request.node.name
@@ -74,7 +77,15 @@ def image_path(request, save_image_directory):
         else:
             parent_name = str(parent_obj.__class__.__name__)
         node_name = parent_name + '_' + node_name
-    new_path = save_image_directory / (node_name + '.png')
+    # determine what suffix to use for plot
+    # https://docs.pytest.org/en/7.1.x/how-to/
+    #     fixtures.html#using-markers-to-pass-data-to-fixtures
+    suffix_marker = request.node.get_closest_marker("image_path_suffix")
+    if suffix_marker is None:
+        suffix = 'png'
+    else:
+        suffix = suffix_marker.args[0]
+    new_path = save_image_directory / (node_name + f'.{suffix}')
     yield new_path
     # finally close all figs created by this test
     from matplotlib.pyplot import close
