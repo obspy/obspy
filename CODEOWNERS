@@ -9,7 +9,10 @@
 #
 # Deliberately including folders without owners specified
 
-/obspy/.github     @trichter @d-chambers
+/obspy/.github      @trichter @d-chambers @megies
+/obspy/pytest.ini   @trichter @d-chambers @megies
+/obspy/conftest.py  @trichter @d-chambers @megies
+
 /obspy/core        @megies @trichter @d-chambers
 /obspy/geodetics
 /obspy/imaging
