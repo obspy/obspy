@@ -348,3 +348,22 @@ class NLLOCTestCase(unittest.TestCase):
         path = str(self.datapath / 'nlloc_v7.hyp')
         cat = read_nlloc_hyp(path)
         assert cat[0].origins[0].arrivals[0].azimuth == 107.42
+        # compare test_rejected_origin test case
+        assert cat[0].origins[0].evaluation_status is None
+
+    def test_rejected_origin(self):
+        """
+        Tests that we are marking rejected event/origin as such.
+        Also tests that NLLOC header line is written into comment.
+        (testing that evaluation status is left empty on "LOCATED" reported by
+        nonlinloc is tested in other test case.
+        """
+        path = str(self.datapath / 'nlloc_rejected.hyp')
+        cat = read_nlloc_hyp(path)
+        expected_comment = (
+            'NLLOC "./locs/20211214_2020-12-09_manual_loc/20211214_2020-12-09_'
+            'manual.20201209.163708.grid0" "REJECTED" "WARNING: max prob '
+            'location on grid boundary 10, rejecting location."')
+        assert cat[0].origins[0].evaluation_status == "rejected"
+        assert cat[0].origins[0].comments[1].text == expected_comment
+        assert cat[0].comments[1].text == expected_comment
