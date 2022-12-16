@@ -10,6 +10,10 @@ Changes:
  - obspy.clients.seedlink:
    * avoid unnecessary calls to "get_info()" on waveform requests without
      wildcards (see #3232)
+ - obspy.imaging:
+   * fix a bug that raised an error when plotting beachball patches with
+     routine "beach" with providing an existing axes instance (for proper
+     scaling) and saving to vector graphics as pdf/eps (see #2887)
 
 1.4.0 (doi: 10.5281/zenodo.6645832)
 ===================================
