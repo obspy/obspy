@@ -3,6 +3,7 @@
 The obspy.clients.seedlink.basic_client test suite.
 """
 import unittest
+from unittest import mock
 
 import pytest
 
@@ -10,9 +11,7 @@ from obspy import UTCDateTime
 from obspy.clients.seedlink.basic_client import Client
 
 
-pytestmark = pytest.mark.network
-
-
+@pytest.mark.network
 class ClientTestCase(unittest.TestCase):
     def setUp(self):
         self.client = Client("rtserver.ipgp.fr")
@@ -108,3 +107,25 @@ class ClientTestCase(unittest.TestCase):
                 break
         else:
             raise
+
+
+@mock.patch("obspy.clients.seedlink.basic_client.Client._multiselect_request")
+def test_get_waveform_calls_to_get_info(multiselect_mock):
+    """
+    Make sure get_waveforms() without wildcards does not call get_info()
+    Test works without network since connection is only made when
+    multiselect request goes out.
+    """
+    client = Client("abcde")
+    t = UTCDateTime(2000, 1, 1)
+    with mock.patch(
+            "obspy.clients.seedlink.basic_client.Client.get_info") as p:
+        client.get_waveforms("GR", "FUR", "", "HHZ", t, t+1)
+        assert p.call_count == 0
+        # get_info should only be called when wildcards are in SEED ID
+        client.get_waveforms("GR", "?UR", "", "HHZ", t, t+1)
+        assert p.call_count == 1
+        client.get_waveforms("*R", "FUR", "", "HHZ", t, t+1)
+        assert p.call_count == 2
+        client.get_waveforms("GR", "FUR", "", "HH*", t, t+1)
+        assert p.call_count == 3
