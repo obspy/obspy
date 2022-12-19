@@ -17,6 +17,9 @@ Changes:
  - obspy.io.gcf:
    * Fixed an issue in algorithm to split and encode last few data into GCF 
      blocks (see #3252)
+ - obspy.taup:
+   * bugfix to allow calculations for a model with no discontinuities
+     (see #3070)
 
 1.4.0 (doi: 10.5281/zenodo.6645832)
 ===================================

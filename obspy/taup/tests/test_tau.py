@@ -1034,14 +1034,12 @@ class TestTauPyModel:
     def test_regional_models(self, testdata):
         """
         Tests small regional models as this used to not work.
-
-        Note: It looks like too much work to get a 1-layer model working.
-        The problem is first in finding the moho, and second in coarsely-
-        sampling slowness. Also, why bother.
         """
-        model_names = ["2_layer_model", "5_layer_model",
+        model_names = ["1_layer_model", "2_layer_model", "5_layer_model",
                        "2_layer_no_discontinuity_model"]
         expected_results = [
+            [("p", 18.143), ("sP", 22.054), ("s", 31.509), ("PP", 4107.380),
+             ("SP", 5619.257), ("PS", 5621.396), ("SS", 7133.265)],
             [("p", 18.143), ("P", 19.202), ("Pn", 19.202), ("P", 19.884),
              ("sP", 22.054), ("pP", 23.023), ("pP", 23.038), ("sP", 25.656),
              ("sP", 25.759), ("s", 31.509), ("S", 33.395), ("Sn", 33.395),
