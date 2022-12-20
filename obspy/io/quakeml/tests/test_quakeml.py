@@ -4,6 +4,7 @@ import math
 import os
 import warnings
 
+import pytest
 from lxml import etree
 
 from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,

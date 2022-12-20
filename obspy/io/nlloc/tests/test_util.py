@@ -4,6 +4,7 @@ import inspect
 import os
 
 import numpy as np
+import pytest
 try:
     import pyproj
     HAS_PYPROJ = True
