@@ -42,10 +42,8 @@ class ClientTestCase(TestCase):
         Checks that an error is raised when an invalid path is provided to
         a SQLite database
         """
-        self.assertRaisesRegex(OSError,
-                               "^Database path.*does not exist.$",
-                               Client,
-                               "/some/bad/path/timeseries.sqlite")
+        with pytest.raises(OSError, match="^Database path.*does not exist.$"):
+            Client("/some/bad/path/timeseries.sqlite")
 
     def test_get_waveforms(self):
         filepath = get_test_data_filepath()
@@ -66,7 +64,7 @@ class ClientTestCase(TestCase):
         expected_stream.sort()
 
         for t1, t2 in zip(returned_stream, expected_stream):
-            self.assertListEqual(list(t1.data), list(t2.data))
+            assert list(t1.data) == list(t2.data)
 
         # wildcard request spanning multiple files
         expected_stream1 = \
@@ -99,16 +97,16 @@ class ClientTestCase(TestCase):
         returned_stream.sort()
         expected_stream.sort()
 
-        self.assertEqual(len(returned_stream), len(expected_stream))
+        assert len(returned_stream) == len(expected_stream)
         for t1, t2 in zip(returned_stream, expected_stream):
-            self.assertListEqual(list(t1.data), list(t2.data))
+            assert list(t1.data) == list(t2.data)
 
         # request resulting in no data
         returned_stream = client.get_waveforms(
                                   "XX", "XXX", "XX", "XXX",
                                   starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                                   endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
-        self.assertListEqual(returned_stream.traces, [])
+        assert returned_stream.traces == []
 
     def test_get_waveforms_bulk(self):
         filepath = get_test_data_filepath()
@@ -141,9 +139,9 @@ class ClientTestCase(TestCase):
         returned_stream = client.get_waveforms_bulk(bulk_request)
         returned_stream.sort()
 
-        self.assertEqual(len(returned_stream), len(expected_stream))
+        assert len(returned_stream) == len(expected_stream)
         for t1, t2 in zip(returned_stream, expected_stream):
-            self.assertListEqual(list(t1.data), list(t2.data))
+            assert list(t1.data) == list(t2.data)
 
         # assert not equal with a non-equivalent request
         bulk_request = [
@@ -153,18 +151,17 @@ class ClientTestCase(TestCase):
                         ]
         returned_stream = client.get_waveforms_bulk(bulk_request)
         returned_stream.sort()
-        self.assertNotEqual(len(returned_stream), len(expected_stream))
+        assert len(returned_stream) != len(expected_stream)
         for t1, t2 in zip(returned_stream, expected_stream):
-            self.assertRaises(AssertionError,
-                              self.assertListEqual,
-                              list(t1.data), list(t2.data))
+            with pytest.raises(AssertionError):
+                self.assertListEqual(list(t1.data), list(t2.data))
 
         # request resulting in no data
         returned_stream = client.get_waveforms(
                                   "XX", "XXX", "XX", "XXX",
                                   starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                                   endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
-        self.assertListEqual(returned_stream.traces, [])
+        assert returned_stream.traces == []
 
     def test_get_nslc(self):
         client = get_test_client()
@@ -177,10 +174,10 @@ class ClientTestCase(TestCase):
                                       "BHZ",
                                       "2018-01-01T00:00:00.000000",
                                       "2018-01-01T00:00:00.019499")
-        self.assertListEqual(actual_nslc, expected_nslc)
+        assert actual_nslc == expected_nslc
         actual_nslc = client.get_nslc("CU",
                                       "ANMO,COL?,T*")
-        self.assertListEqual(actual_nslc, expected_nslc)
+        assert actual_nslc == expected_nslc
 
         # test using mocked client._get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
@@ -214,13 +211,13 @@ class ClientTestCase(TestCase):
                          ("N4", "H43A", "", "VM3"),
                          ("XX", "ANM", "", "VM5")]
 
-        self.assertEqual(client.get_nslc("AK,N4,XX",
+        assert client.get_nslc("AK,N4,XX",
                                          "ANM,H43A",
                                          "",
                                          "VM2,VM3,VM4,VM5",
                                          "2018-08-10T21:09:39.000000",
-                                         "2018-08-10T22:09:28.890415"),
-                         expected_nslc)
+                                         "2018-08-10T22:09:28.890415") == \
+                         expected_nslc
 
     def test_get_availability_extent(self):
         client = get_test_client()
@@ -239,10 +236,10 @@ class ClientTestCase(TestCase):
                                                 "BHZ",
                                                 "2018-01-01T00:00:00.000000",
                                                 "2018-12-31T00:00:00.000000")
-        self.assertListEqual(actual_avail_extents, expected_nslc)
+        assert actual_avail_extents == expected_nslc
 
         actual_avail_extents = client.get_availability_extent("I*")
-        self.assertListEqual(actual_avail_extents, expected_nslc)
+        assert actual_avail_extents == expected_nslc
 
         # test using mocked client._get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
@@ -289,13 +286,13 @@ class ClientTestCase(TestCase):
               UTCDateTime("2018-08-10T21:52:50.000000"),
               UTCDateTime("2018-08-10T22:12:39.999991"))]
 
-        self.assertListEqual(client.get_availability_extent(
+        assert client.get_availability_extent(
                                             "AK,N4",
                                             "ANM,H43A", "",
                                             "VM2,VM3,VM4,VM5",
                                             "2018-08-10T21:09:39.000000",
-                                            "2018-08-10T22:09:28.890415"),
-                             expected_avail_extents)
+                                            "2018-08-10T22:09:28.890415") == \
+                             expected_avail_extents
 
     def test__are_timespans_adjacent(self):
         client = get_test_client()
@@ -311,7 +308,7 @@ class ClientTestCase(TestCase):
         ts2 = \
             client._create_timespan(UTCDateTime(2018, 8, 10, 22, 0, 0, 50000),
                                     UTCDateTime(2018, 8, 10, 22, 0, 0, 75000))
-        self.assertTrue(client._are_timespans_adjacent(ts1, ts2, sample_rate))
+        assert client._are_timespans_adjacent(ts1, ts2, sample_rate)
 
         # 1ms after nearest tolerance boundary (next sample - 12500ms)
         ts1 = \
@@ -320,7 +317,7 @@ class ClientTestCase(TestCase):
         ts2 = \
             client._create_timespan(UTCDateTime(2018, 8, 10, 22, 0, 0, 37501),
                                     UTCDateTime(2018, 8, 10, 22, 0, 0, 75000))
-        self.assertTrue(client._are_timespans_adjacent(ts1, ts2, sample_rate))
+        assert client._are_timespans_adjacent(ts1, ts2, sample_rate)
 
         # exactly on nearest tolerance boundary (next sample - 12500ms)
         ts1 = \
@@ -329,7 +326,7 @@ class ClientTestCase(TestCase):
         ts2 = \
             client._create_timespan(UTCDateTime(2018, 8, 10, 22, 0, 0, 37500),
                                     UTCDateTime(2018, 8, 10, 22, 0, 0, 75000))
-        self.assertFalse(client._are_timespans_adjacent(ts1, ts2, sample_rate))
+        assert not client._are_timespans_adjacent(ts1, ts2, sample_rate)
 
         # 1ms before nearest tolerance boundary (next sample - 12500ms)
         ts1 = \
@@ -338,7 +335,7 @@ class ClientTestCase(TestCase):
         ts2 = \
             client._create_timespan(UTCDateTime(2018, 8, 10, 22, 0, 0, 37499),
                                     UTCDateTime(2018, 8, 10, 22, 0, 0, 75000))
-        self.assertFalse(client._are_timespans_adjacent(ts1, ts2, sample_rate))
+        assert not client._are_timespans_adjacent(ts1, ts2, sample_rate)
 
         # 1ms after farthest tolerance boundary (next sample + 12500ms)
         ts1 = \
@@ -347,7 +344,7 @@ class ClientTestCase(TestCase):
         ts2 = \
             client._create_timespan(UTCDateTime(2018, 8, 10, 22, 0, 0, 62501),
                                     UTCDateTime(2018, 8, 10, 22, 0, 0, 100000))
-        self.assertFalse(client._are_timespans_adjacent(ts1, ts2, sample_rate))
+        assert not client._are_timespans_adjacent(ts1, ts2, sample_rate)
 
         # on farthest tolerance boundary (next sample + 12500ms)
         ts1 = \
@@ -356,7 +353,7 @@ class ClientTestCase(TestCase):
         ts2 = \
             client._create_timespan(UTCDateTime(2018, 8, 10, 22, 0, 0, 62500),
                                     UTCDateTime(2018, 8, 10, 22, 0, 0, 100000))
-        self.assertFalse(client._are_timespans_adjacent(ts1, ts2, sample_rate))
+        assert not client._are_timespans_adjacent(ts1, ts2, sample_rate)
 
         # 1ms before farthest tolerance boundary (next sample + 12500ms)
         ts1 = \
@@ -365,7 +362,7 @@ class ClientTestCase(TestCase):
         ts2 = \
             client._create_timespan(UTCDateTime(2018, 8, 10, 22, 0, 0, 62499),
                                     UTCDateTime(2018, 8, 10, 22, 0, 0, 100000))
-        self.assertTrue(client._are_timespans_adjacent(ts1, ts2, sample_rate))
+        assert client._are_timespans_adjacent(ts1, ts2, sample_rate)
 
     def test_get_availability(self):
         client = get_test_client()
@@ -384,11 +381,11 @@ class ClientTestCase(TestCase):
                                                 "BHZ",
                                                 "2018-01-01",
                                                 "2018-12-31")
-        self.assertListEqual(actual_avail, expected_avail)
+        assert actual_avail == expected_avail
 
         actual_avail = client.get_availability("IU",
                                                "ANMO,COLA")
-        self.assertListEqual(actual_avail, expected_avail)
+        assert actual_avail == expected_avail
 
         # test using mocked client._get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
@@ -446,25 +443,25 @@ class ClientTestCase(TestCase):
                                     UTCDateTime(2018, 9, 11, 0, 0, 0))]
 
         # test default options
-        self.assertListEqual(client.get_availability(
+        assert client.get_availability(
                             "AK",
                             "BAGL",
                             "",
                             "LCC",
                             UTCDateTime(2018, 8, 10, 22, 0, 54),
-                            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)),
-                         expected_unmerged_avail)
+                            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)) == \
+                         expected_unmerged_avail
 
         # test merge overlap false
-        self.assertListEqual(client.get_availability(
+        assert client.get_availability(
                             "AK",
                             "BAGL",
                             "--",
                             "LCC",
                             UTCDateTime(2018, 8, 10, 22, 0, 54),
                             UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                            merge_overlap=False),
-                         expected_unmerged_avail)
+                            merge_overlap=False) == \
+                         expected_unmerged_avail
 
         # test merge overlap true
         expected_merged_avail = [("AK", "BAGL", "", "LCC",
@@ -474,16 +471,15 @@ class ClientTestCase(TestCase):
                                   UTCDateTime(2018, 8, 12, 23, 20, 53),
                                   UTCDateTime(2018, 9, 11, 0, 0, 0))]
 
-        self.assertListEqual(
-                client.get_availability(
+        assert client.get_availability(
                     "AK",
                     "BAGL",
                     "--",
                     "LCC",
                     UTCDateTime(2018, 8, 10, 22, 0, 54),
                     UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                    merge_overlap=True),
-                expected_merged_avail)
+                    merge_overlap=True) == \
+                expected_merged_avail
 
         # test include_sample_rate true
         expected_incl_sr_avail = \
@@ -497,8 +493,7 @@ class ClientTestCase(TestCase):
               UTCDateTime(2018, 8, 27, 0, 0),
               UTCDateTime(2018, 9, 11, 0, 0, 0), 10.0)]
 
-        self.assertListEqual(
-                client.get_availability(
+        assert client.get_availability(
                     "AK",
                     "BAGL",
                     "--",
@@ -506,8 +501,8 @@ class ClientTestCase(TestCase):
                     UTCDateTime(2018, 8, 10, 22, 0, 54),
                     UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
                     merge_overlap=True,
-                    include_sample_rate=True),
-                expected_incl_sr_avail)
+                    include_sample_rate=True) == \
+                expected_incl_sr_avail
 
     def test_get_availability_percentage(self):
         client = get_test_client()
@@ -528,11 +523,10 @@ class ClientTestCase(TestCase):
                                     UTCDateTime(2018, 8, 10, 22, 0, 54),
                                     UTCDateTime(2018, 9, 11, 0, 0, 0))
         expected_avail_percentage = (0.998659490472, 1)
-        self.assertAlmostEqual(avail_percentage[0],
-                               expected_avail_percentage[0])
-        self.assertEqual(avail_percentage[1],
-                         expected_avail_percentage[1])
-        self.assertIsInstance(avail_percentage, tuple)
+        assert round(abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
+        assert avail_percentage[1] == \
+                         expected_avail_percentage[1]
+        assert isinstance(avail_percentage, tuple)
 
         mock_availability_output = [("AK", "BAGL", "", "LCC",
                                      UTCDateTime(2018, 1, 1),
@@ -554,11 +548,10 @@ class ClientTestCase(TestCase):
                                                 UTCDateTime(2018, 1, 1),
                                                 UTCDateTime(2018, 1, 6))
         expected_avail_percentage = (0.6, 2)
-        self.assertAlmostEqual(avail_percentage[0],
-                               expected_avail_percentage[0])
-        self.assertEqual(avail_percentage[1],
-                         expected_avail_percentage[1])
-        self.assertIsInstance(avail_percentage, tuple)
+        assert round(abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
+        assert avail_percentage[1] == \
+                         expected_avail_percentage[1]
+        assert isinstance(avail_percentage, tuple)
 
         # Test for over extending time span
         avail_percentage = client.get_availability_percentage(
@@ -569,19 +562,18 @@ class ClientTestCase(TestCase):
                                                 UTCDateTime(2017, 12, 31),
                                                 UTCDateTime(2018, 1, 7))
         expected_avail_percentage = (0.4285714, 4)
-        self.assertAlmostEqual(avail_percentage[0],
-                               expected_avail_percentage[0])
-        self.assertEqual(avail_percentage[1],
-                         expected_avail_percentage[1])
-        self.assertIsInstance(avail_percentage, tuple)
+        assert round(abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
+        assert avail_percentage[1] == \
+                         expected_avail_percentage[1]
+        assert isinstance(avail_percentage, tuple)
 
     def test_has_data(self):
         client = get_test_client()
-        self.assertTrue(client.has_data())
-        self.assertTrue(client.has_data(starttime=UTCDateTime(2017, 12, 31),
-                                        endtime=UTCDateTime(2018, 1, 7)))
-        self.assertFalse(client.has_data(starttime=UTCDateTime(1970, 12, 31),
-                                         endtime=UTCDateTime(2013, 1, 7)))
+        assert client.has_data()
+        assert client.has_data(starttime=UTCDateTime(2017, 12, 31),
+                                        endtime=UTCDateTime(2018, 1, 7))
+        assert not client.has_data(starttime=UTCDateTime(1970, 12, 31),
+                                         endtime=UTCDateTime(2013, 1, 7))
 
 
 def purge(dir, pattern):
