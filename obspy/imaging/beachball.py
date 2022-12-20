@@ -171,7 +171,11 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # 2. Then use the offset property of the collection to position the
         #    patches
         col.set_offsets(xy)
-        col._transOffset = axes.transData
+        try:
+            col.set_offset_transform(axes.transData)
+        except AttributeError:
+            # compatibility for matplotlib 3.3 (and maybe 3.4 too?)
+            col._transOffset = axes.transData
 
     col.set_edgecolor(edgecolor)
     col.set_alpha(alpha)
