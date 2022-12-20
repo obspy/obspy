@@ -22,6 +22,7 @@ from obspy.io.segy.segy import (SEGYBinaryFileHeader, SEGYFile,
 from obspy.io.segy.tests.header import DTYPES, FILES
 
 from . import _patch_header
+import pytest
 
 
 class SEGYTestCase(unittest.TestCase):
@@ -55,7 +56,7 @@ class SEGYTestCase(unittest.TestCase):
                 data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[data_format](
                     f, count, endian)
             # Check the dtype of the data.
-            self.assertEqual(data.dtype, self.dtypes[data_format])
+            assert data.dtype == self.dtypes[data_format]
             # Proven data values, read with Madagascar.
             correct_data = np.load(file + '.npy').ravel()
             # Compare both.
@@ -92,16 +93,16 @@ class SEGYTestCase(unittest.TestCase):
             f.seek(0, 0)
             new_packed_data = f.read()
             # Check the length.
-            self.assertEqual(len(packed_data), len(new_packed_data))
+            assert len(packed_data) == len(new_packed_data)
             if len(non_normalized_samples) == 0:
                 # The packed data should be totally identical.
-                self.assertEqual(packed_data, new_packed_data)
+                assert packed_data == new_packed_data
             else:
                 # Some test files contain non normalized IBM floating point
                 # data. These cannot be reproduced exactly.
                 # Just a sanity check to be sure it is only IBM floating point
                 # data that does not work completely.
-                self.assertEqual(data_format, 1)
+                assert data_format == 1
 
                 # Read the data as uint8 to be able to directly access the
                 # different bytes.
@@ -206,7 +207,7 @@ class SEGYTestCase(unittest.TestCase):
                 f.close()
                 # A relative tolerance of 1E-6 is considered good enough.
                 rms1 = rms(data, new_data)
-                self.assertEqual(True, rms1 < 1E-6)
+                assert True == (rms1 < 1E-6)
 
     def test_pack_and_unpack_very_small_ibm_floats(self):
         """
@@ -236,7 +237,7 @@ class SEGYTestCase(unittest.TestCase):
                 f.close()
                 # A relative tolerance of 1E-6 is considered good enough.
                 rms1 = rms(data, new_data)
-                self.assertEqual(True, rms1 < 1E-6)
+                assert True == (rms1 < 1E-6)
 
     def test_pack_and_unpack_ibm_special_cases(self):
         """
@@ -284,9 +285,9 @@ class SEGYTestCase(unittest.TestCase):
             new_header.seek(0, 0)
             new_header = new_header.read()
             # Assert the correct length.
-            self.assertEqual(len(new_header), 400)
+            assert len(new_header) == 400
             # Assert the actual header.
-            self.assertEqual(org_header, new_header)
+            assert org_header == new_header
 
     def test_read_and_write_textual_file_header(self):
         """
@@ -308,7 +309,7 @@ class SEGYTestCase(unittest.TestCase):
                 # Read the textual header.
                 segy._read_textual_header()
                 # Assert the encoding and compare with known values.
-                self.assertEqual(segy.textual_header_encoding, header_enc)
+                assert segy.textual_header_encoding == header_enc
             # The header writes to a file like object.
             new_header = io.BytesIO()
             with WarningsCapture():
@@ -316,13 +317,13 @@ class SEGYTestCase(unittest.TestCase):
             new_header.seek(0, 0)
             new_header = new_header.read()
             # Assert the correct length.
-            self.assertEqual(len(new_header), 3200)
+            assert len(new_header) == 3200
             # Patch both headers to not worry about the automatically set
             # values.
             org_header = _patch_header(org_header)
             new_header = _patch_header(new_header)
             # Assert the actual header.
-            self.assertEqual(org_header, new_header)
+            assert org_header == new_header
 
     def test_read_and_write_trace_header(self):
         """
@@ -342,9 +343,9 @@ class SEGYTestCase(unittest.TestCase):
             new_header.seek(0, 0)
             new_header = new_header.read()
             # Assert the correct length.
-            self.assertEqual(len(new_header), 240)
+            assert len(new_header) == 240
             # Assert the actual header.
-            self.assertEqual(org_header, new_header)
+            assert org_header == new_header
 
     def test_read_and_write_segy(self, headonly=False):
         """
@@ -365,7 +366,7 @@ class SEGYTestCase(unittest.TestCase):
                 with open(out_file, 'rb') as f:
                     new_data = f.read()
             # The two files should have the same length.
-            self.assertEqual(len(org_data), len(new_data))
+            assert len(org_data) == len(new_data)
             # Replace the not normalized samples. The not normalized
             # samples are already tested in test_packSEGYData and therefore not
             # tested again here.
@@ -386,8 +387,8 @@ class SEGYTestCase(unittest.TestCase):
             # Always write the SEGY File revision number!
             # org_data[3500:3502] = new_data[3500:3502]
             # Test the identity without the SEGY revision number
-            self.assertEqual(org_data[:3500], new_data[:3500])
-            self.assertEqual(org_data[3502:], new_data[3502:])
+            assert org_data[:3500] == new_data[:3500]
+            assert org_data[3502:] == new_data[3502:]
 
     def test_read_and_write_segy_headonly(self):
         """
@@ -404,41 +405,38 @@ class SEGYTestCase(unittest.TestCase):
         segy = _read_segy(file)
         header = segy.binary_file_header
         # Compare the values.
-        self.assertEqual(header.job_identification_number, 0)
-        self.assertEqual(header.line_number, 0)
-        self.assertEqual(header.reel_number, 0)
-        self.assertEqual(header.number_of_data_traces_per_ensemble, 24)
-        self.assertEqual(header.number_of_auxiliary_traces_per_ensemble, 0)
-        self.assertEqual(header.sample_interval_in_microseconds, 250)
-        self.assertEqual(
-            header.sample_interval_in_microseconds_of_original_field_recording,
-            250)
-        self.assertEqual(header.number_of_samples_per_data_trace, 8000)
-        self.assertEqual(
-            header.
-            number_of_samples_per_data_trace_for_original_field_recording,
-            8000)
-        self.assertEqual(header.data_sample_format_code, 2)
-        self.assertEqual(header.ensemble_fold, 0)
-        self.assertEqual(header.trace_sorting_code, 1)
-        self.assertEqual(header.vertical_sum_code, 0)
-        self.assertEqual(header.sweep_frequency_at_start, 0)
-        self.assertEqual(header.sweep_frequency_at_end, 0)
-        self.assertEqual(header.sweep_length, 0)
-        self.assertEqual(header.sweep_type_code, 0)
-        self.assertEqual(header.trace_number_of_sweep_channel, 0)
-        self.assertEqual(header.sweep_trace_taper_length_in_ms_at_start, 0)
-        self.assertEqual(header.sweep_trace_taper_length_in_ms_at_end, 0)
-        self.assertEqual(header.taper_type, 0)
-        self.assertEqual(header.correlated_data_traces, 0)
-        self.assertEqual(header.binary_gain_recovered, 0)
-        self.assertEqual(header.amplitude_recovery_method, 0)
-        self.assertEqual(header.measurement_system, 0)
-        self.assertEqual(header.impulse_signal_polarity, 0)
-        self.assertEqual(header.vibratory_polarity_code, 0)
-        self.assertEqual(
-            header.number_of_3200_byte_ext_file_header_records_following,
-            0)
+        assert header.job_identification_number == 0
+        assert header.line_number == 0
+        assert header.reel_number == 0
+        assert header.number_of_data_traces_per_ensemble == 24
+        assert header.number_of_auxiliary_traces_per_ensemble == 0
+        assert header.sample_interval_in_microseconds == 250
+        assert header.sample_interval_in_microseconds_of_original_field_recording == \
+            250
+        assert header.number_of_samples_per_data_trace == 8000
+        assert header. \
+            number_of_samples_per_data_trace_for_original_field_recording == \
+            8000
+        assert header.data_sample_format_code == 2
+        assert header.ensemble_fold == 0
+        assert header.trace_sorting_code == 1
+        assert header.vertical_sum_code == 0
+        assert header.sweep_frequency_at_start == 0
+        assert header.sweep_frequency_at_end == 0
+        assert header.sweep_length == 0
+        assert header.sweep_type_code == 0
+        assert header.trace_number_of_sweep_channel == 0
+        assert header.sweep_trace_taper_length_in_ms_at_start == 0
+        assert header.sweep_trace_taper_length_in_ms_at_end == 0
+        assert header.taper_type == 0
+        assert header.correlated_data_traces == 0
+        assert header.binary_gain_recovered == 0
+        assert header.amplitude_recovery_method == 0
+        assert header.measurement_system == 0
+        assert header.impulse_signal_polarity == 0
+        assert header.vibratory_polarity_code == 0
+        assert header.number_of_3200_byte_ext_file_header_records_following == \
+            0
 
     def test_unpack_trace_header(self):
         """
@@ -449,110 +447,101 @@ class SEGYTestCase(unittest.TestCase):
         segy = _read_segy(file)
         header = segy.traces[0].header
         # Compare the values.
-        self.assertEqual(header.trace_sequence_number_within_line, 0)
-        self.assertEqual(header.trace_sequence_number_within_segy_file, 0)
-        self.assertEqual(header.original_field_record_number, 1)
-        self.assertEqual(header.trace_number_within_the_original_field_record,
-                         1)
-        self.assertEqual(header.energy_source_point_number, 0)
-        self.assertEqual(header.ensemble_number, 0)
-        self.assertEqual(header.trace_number_within_the_ensemble, 0)
-        self.assertEqual(header.trace_identification_code, 1)
-        self.assertEqual(
-            header.number_of_vertically_summed_traces_yielding_this_trace,
-            5)
-        self.assertEqual(
-            header.number_of_horizontally_stacked_traces_yielding_this_trace,
-            0)
-        self.assertEqual(header.data_use, 0)
-        self.assertEqual(getattr(
+        assert header.trace_sequence_number_within_line == 0
+        assert header.trace_sequence_number_within_segy_file == 0
+        assert header.original_field_record_number == 1
+        assert header.trace_number_within_the_original_field_record == \
+                         1
+        assert header.energy_source_point_number == 0
+        assert header.ensemble_number == 0
+        assert header.trace_number_within_the_ensemble == 0
+        assert header.trace_identification_code == 1
+        assert header.number_of_vertically_summed_traces_yielding_this_trace == \
+            5
+        assert header.number_of_horizontally_stacked_traces_yielding_this_trace == \
+            0
+        assert header.data_use == 0
+        assert getattr(
             header, 'distance_from_center_of_the_' +
-            'source_point_to_the_center_of_the_receiver_group'), 0)
-        self.assertEqual(header.receiver_group_elevation, 0)
-        self.assertEqual(header.surface_elevation_at_source, 0)
-        self.assertEqual(header.source_depth_below_surface, 0)
-        self.assertEqual(header.datum_elevation_at_receiver_group, 0)
-        self.assertEqual(header.datum_elevation_at_source, 0)
-        self.assertEqual(header.water_depth_at_source, 0)
-        self.assertEqual(header.water_depth_at_group, 0)
-        self.assertEqual(
-            header.scalar_to_be_applied_to_all_elevations_and_depths, -100)
-        self.assertEqual(header.scalar_to_be_applied_to_all_coordinates, -100)
-        self.assertEqual(header.source_coordinate_x, 0)
-        self.assertEqual(header.source_coordinate_y, 0)
-        self.assertEqual(header.group_coordinate_x, 300)
-        self.assertEqual(header.group_coordinate_y, 0)
-        self.assertEqual(header.coordinate_units, 0)
-        self.assertEqual(header.weathering_velocity, 0)
-        self.assertEqual(header.subweathering_velocity, 0)
-        self.assertEqual(header.uphole_time_at_source_in_ms, 0)
-        self.assertEqual(header.uphole_time_at_group_in_ms, 0)
-        self.assertEqual(header.source_static_correction_in_ms, 0)
-        self.assertEqual(header.group_static_correction_in_ms, 0)
-        self.assertEqual(header.total_static_applied_in_ms, 0)
-        self.assertEqual(header.lag_time_A, 0)
-        self.assertEqual(header.lag_time_B, 0)
-        self.assertEqual(header.delay_recording_time, -100)
-        self.assertEqual(header.mute_time_start_time_in_ms, 0)
-        self.assertEqual(header.mute_time_end_time_in_ms, 0)
-        self.assertEqual(header.number_of_samples_in_this_trace, 8000)
-        self.assertEqual(header.sample_interval_in_ms_for_this_trace, 250)
-        self.assertEqual(header.gain_type_of_field_instruments, 0)
-        self.assertEqual(header.instrument_gain_constant, 24)
-        self.assertEqual(header.instrument_early_or_initial_gain, 0)
-        self.assertEqual(header.correlated, 0)
-        self.assertEqual(header.sweep_frequency_at_start, 0)
-        self.assertEqual(header.sweep_frequency_at_end, 0)
-        self.assertEqual(header.sweep_length_in_ms, 0)
-        self.assertEqual(header.sweep_type, 0)
-        self.assertEqual(header.sweep_trace_taper_length_at_start_in_ms, 0)
-        self.assertEqual(header.sweep_trace_taper_length_at_end_in_ms, 0)
-        self.assertEqual(header.taper_type, 0)
-        self.assertEqual(header.alias_filter_frequency, 1666)
-        self.assertEqual(header.alias_filter_slope, 0)
-        self.assertEqual(header.notch_filter_frequency, 0)
-        self.assertEqual(header.notch_filter_slope, 0)
-        self.assertEqual(header.low_cut_frequency, 0)
-        self.assertEqual(header.high_cut_frequency, 0)
-        self.assertEqual(header.low_cut_slope, 0)
-        self.assertEqual(header.high_cut_slope, 0)
-        self.assertEqual(header.year_data_recorded, 2005)
-        self.assertEqual(header.day_of_year, 353)
-        self.assertEqual(header.hour_of_day, 15)
-        self.assertEqual(header.minute_of_hour, 7)
-        self.assertEqual(header.second_of_minute, 54)
-        self.assertEqual(header.time_basis_code, 0)
-        self.assertEqual(header.trace_weighting_factor, 0)
-        self.assertEqual(
-            header.geophone_group_number_of_roll_switch_position_one, 2)
-        self.assertEqual(header.geophone_group_number_of_trace_number_one, 2)
-        self.assertEqual(header.geophone_group_number_of_last_trace, 0)
-        self.assertEqual(header.gap_size, 0)
-        self.assertEqual(header.over_travel_associated_with_taper, 0)
-        self.assertEqual(
-            header.x_coordinate_of_ensemble_position_of_this_trace, 0)
-        self.assertEqual(
-            header.y_coordinate_of_ensemble_position_of_this_trace, 0)
-        self.assertEqual(
-            header.for_3d_poststack_data_this_field_is_for_in_line_number, 0)
-        self.assertEqual(
-            header.for_3d_poststack_data_this_field_is_for_cross_line_number,
-            0)
-        self.assertEqual(header.shotpoint_number, 0)
-        self.assertEqual(
-            header.scalar_to_be_applied_to_the_shotpoint_number, 0)
-        self.assertEqual(header.trace_value_measurement_unit, 0)
-        self.assertEqual(header.transduction_constant_mantissa, 0)
-        self.assertEqual(header.transduction_constant_exponent, 0)
-        self.assertEqual(header.transduction_units, 0)
-        self.assertEqual(header.device_trace_identifier, 0)
-        self.assertEqual(header.scalar_to_be_applied_to_times, 0)
-        self.assertEqual(header.source_type_orientation, 0)
-        self.assertEqual(header.source_energy_direction_mantissa, 0)
-        self.assertEqual(header.source_energy_direction_exponent, 0)
-        self.assertEqual(header.source_measurement_mantissa, 0)
-        self.assertEqual(header.source_measurement_exponent, 0)
-        self.assertEqual(header.source_measurement_unit, 0)
+            'source_point_to_the_center_of_the_receiver_group') == 0
+        assert header.receiver_group_elevation == 0
+        assert header.surface_elevation_at_source == 0
+        assert header.source_depth_below_surface == 0
+        assert header.datum_elevation_at_receiver_group == 0
+        assert header.datum_elevation_at_source == 0
+        assert header.water_depth_at_source == 0
+        assert header.water_depth_at_group == 0
+        assert header.scalar_to_be_applied_to_all_elevations_and_depths == -100
+        assert header.scalar_to_be_applied_to_all_coordinates == -100
+        assert header.source_coordinate_x == 0
+        assert header.source_coordinate_y == 0
+        assert header.group_coordinate_x == 300
+        assert header.group_coordinate_y == 0
+        assert header.coordinate_units == 0
+        assert header.weathering_velocity == 0
+        assert header.subweathering_velocity == 0
+        assert header.uphole_time_at_source_in_ms == 0
+        assert header.uphole_time_at_group_in_ms == 0
+        assert header.source_static_correction_in_ms == 0
+        assert header.group_static_correction_in_ms == 0
+        assert header.total_static_applied_in_ms == 0
+        assert header.lag_time_A == 0
+        assert header.lag_time_B == 0
+        assert header.delay_recording_time == -100
+        assert header.mute_time_start_time_in_ms == 0
+        assert header.mute_time_end_time_in_ms == 0
+        assert header.number_of_samples_in_this_trace == 8000
+        assert header.sample_interval_in_ms_for_this_trace == 250
+        assert header.gain_type_of_field_instruments == 0
+        assert header.instrument_gain_constant == 24
+        assert header.instrument_early_or_initial_gain == 0
+        assert header.correlated == 0
+        assert header.sweep_frequency_at_start == 0
+        assert header.sweep_frequency_at_end == 0
+        assert header.sweep_length_in_ms == 0
+        assert header.sweep_type == 0
+        assert header.sweep_trace_taper_length_at_start_in_ms == 0
+        assert header.sweep_trace_taper_length_at_end_in_ms == 0
+        assert header.taper_type == 0
+        assert header.alias_filter_frequency == 1666
+        assert header.alias_filter_slope == 0
+        assert header.notch_filter_frequency == 0
+        assert header.notch_filter_slope == 0
+        assert header.low_cut_frequency == 0
+        assert header.high_cut_frequency == 0
+        assert header.low_cut_slope == 0
+        assert header.high_cut_slope == 0
+        assert header.year_data_recorded == 2005
+        assert header.day_of_year == 353
+        assert header.hour_of_day == 15
+        assert header.minute_of_hour == 7
+        assert header.second_of_minute == 54
+        assert header.time_basis_code == 0
+        assert header.trace_weighting_factor == 0
+        assert header.geophone_group_number_of_roll_switch_position_one == 2
+        assert header.geophone_group_number_of_trace_number_one == 2
+        assert header.geophone_group_number_of_last_trace == 0
+        assert header.gap_size == 0
+        assert header.over_travel_associated_with_taper == 0
+        assert header.x_coordinate_of_ensemble_position_of_this_trace == 0
+        assert header.y_coordinate_of_ensemble_position_of_this_trace == 0
+        assert header.for_3d_poststack_data_this_field_is_for_in_line_number == 0
+        assert header.for_3d_poststack_data_this_field_is_for_cross_line_number == \
+            0
+        assert header.shotpoint_number == 0
+        assert header.scalar_to_be_applied_to_the_shotpoint_number == 0
+        assert header.trace_value_measurement_unit == 0
+        assert header.transduction_constant_mantissa == 0
+        assert header.transduction_constant_exponent == 0
+        assert header.transduction_units == 0
+        assert header.device_trace_identifier == 0
+        assert header.scalar_to_be_applied_to_times == 0
+        assert header.source_type_orientation == 0
+        assert header.source_energy_direction_mantissa == 0
+        assert header.source_energy_direction_exponent == 0
+        assert header.source_measurement_mantissa == 0
+        assert header.source_measurement_exponent == 0
+        assert header.source_measurement_unit == 0
 
     def test_read_bytes_io(self):
         """
@@ -563,31 +552,31 @@ class SEGYTestCase(unittest.TestCase):
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
-        self.assertEqual(len(st.traces[0].data), 500)
+        assert len(st.traces[0].data) == 500
         # 2
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
-        self.assertEqual(len(st.traces[0].data), 2050)
+        assert len(st.traces[0].data) == 2050
         # 3
         file = os.path.join(self.path, '1.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
-        self.assertEqual(len(st.traces[0].data), 8000)
+        assert len(st.traces[0].data) == 8000
         # 4
         file = os.path.join(self.path, '00001034.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
-        self.assertEqual(len(st.traces[0].data), 2001)
+        assert len(st.traces[0].data) == 2001
         # 5
         file = os.path.join(self.path, 'planes.segy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
-        self.assertEqual(len(st.traces[0].data), 512)
+        assert len(st.traces[0].data) == 512
 
     def test_iterative_reading(self):
         """
@@ -606,7 +595,7 @@ class SEGYTestCase(unittest.TestCase):
         del ist[0].stats.segy.data_encoding
         del ist[0].stats.segy.endian
 
-        self.assertEqual(st.traces, ist)
+        assert st.traces == ist
 
     def test_revision_number_in_binary_file_header(self):
         """
@@ -626,9 +615,9 @@ class SEGYTestCase(unittest.TestCase):
                 data = buf.read()
             # Result differs depending on byte order.
             if endian == "<":
-                self.assertEqual(data[3200:3600][-100:-98], b"\x00\x01")
+                assert data[3200:3600][-100:-98] == b"\x00\x01"
             else:
-                self.assertEqual(data[3200:3600][-100:-98], b"\x01\x00")
+                assert data[3200:3600][-100:-98] == b"\x01\x00"
 
     def test_textual_header_has_the_right_fields_at_the_end(self):
         """
@@ -642,17 +631,16 @@ class SEGYTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 tr.write(buf, format="segy")
-            self.assertEqual(
-                len([_i for _i in w
-                     if _i.category is SEGYInvalidTextualHeaderWarning]), 0)
+            assert len([_i for _i in w
+                     if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
             buf.seek(0, 0)
             data = buf.read()
 
         # Make sure the textual header has the required fields.
         revision_number = data[:3200][-160:-146].decode()
         end_header_mark = data[:3200][-80:-58].decode()
-        self.assertEqual(revision_number, "C39 SEG Y REV1")
-        self.assertEqual(end_header_mark, "C40 END TEXTUAL HEADER")
+        assert revision_number == "C39 SEG Y REV1"
+        assert end_header_mark == "C40 END TEXTUAL HEADER"
 
         # An alternate end marker is accepted - no warning will be raised in
         # this case.
@@ -666,17 +654,16 @@ class SEGYTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 st.write(buf, format="segy", textual_header_encoding="EBCDIC")
-            self.assertEqual(
-                len([_i for _i in w
-                     if _i.category is SEGYInvalidTextualHeaderWarning]), 0)
+            assert len([_i for _i in w
+                     if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
             buf.seek(0, 0)
             data = buf.read()
 
         # Make sure the textual header has the required fields.
         revision_number = data[:3200][-160:-146].decode("EBCDIC-CP-BE")
         end_header_mark = data[:3200][-80:-58].decode("EBCDIC-CP-BE")
-        self.assertEqual(revision_number, "C39 SEG Y REV1")
-        self.assertEqual(end_header_mark, "C40 END EBCDIC        ")
+        assert revision_number == "C39 SEG Y REV1"
+        assert end_header_mark == "C40 END EBCDIC        "
 
         # Putting the correct values will raise no warning and leave the
         # values.
@@ -690,17 +677,16 @@ class SEGYTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 st.write(buf, format="segy")
-            self.assertEqual(
-                len([_i for _i in w
-                     if _i.category is SEGYInvalidTextualHeaderWarning]), 0)
+            assert len([_i for _i in w
+                     if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
             buf.seek(0, 0)
             data = buf.read()
 
         # Make sure the textual header has the required fields.
         revision_number = data[:3200][-160:-146].decode()
         end_header_mark = data[:3200][-80:-58].decode()
-        self.assertEqual(revision_number, "C39 SEG Y REV1")
-        self.assertEqual(end_header_mark, "C40 END TEXTUAL HEADER")
+        assert revision_number == "C39 SEG Y REV1"
+        assert end_header_mark == "C40 END TEXTUAL HEADER"
 
         # Putting a wrong revision number will raise a warning, but it will
         # still be written.
@@ -715,21 +701,20 @@ class SEGYTestCase(unittest.TestCase):
                 st.write(buf, format="segy")
             w = [_i for _i in w
                  if _i.category is SEGYInvalidTextualHeaderWarning]
-            self.assertEqual(len(w), 1)
-            self.assertEqual(
-                w[0].message.args[0],
-                "The revision number in the textual header should be set as "
-                "'C39 SEG Y REV1' for a fully valid SEG-Y file. It is set to "
-                "'ABCDEFGHIJKLMN' which will be written to the file. Please "
-                "change it if you want a fully valid file.")
+            assert len(w) == 1
+            assert w[0].message.args[0] == \
+                "The revision number in the textual header should be set as " \
+                "'C39 SEG Y REV1' for a fully valid SEG-Y file. It is set to " \
+                "'ABCDEFGHIJKLMN' which will be written to the file. Please " \
+                "change it if you want a fully valid file."
             buf.seek(0, 0)
             data = buf.read()
 
         revision_number = data[:3200][-160:-146].decode()
         end_header_mark = data[:3200][-80:-58].decode()
         # The field is still written.
-        self.assertEqual(revision_number, "ABCDEFGHIJKLMN")
-        self.assertEqual(end_header_mark, "C40 END TEXTUAL HEADER")
+        assert revision_number == "ABCDEFGHIJKLMN"
+        assert end_header_mark == "C40 END TEXTUAL HEADER"
 
         # Same with the end header mark.
         st = obspy.Stream(traces=[tr.copy()])
@@ -743,22 +728,21 @@ class SEGYTestCase(unittest.TestCase):
                 st.write(buf, format="segy")
             w = [_i for _i in w
                  if _i.category is SEGYInvalidTextualHeaderWarning]
-            self.assertEqual(len(w), 1)
-            self.assertEqual(
-                w[0].message.args[0],
-                "The end header mark in the textual header should be set as "
-                "'C40 END TEXTUAL HEADER' or as 'C40 END EBCDIC        ' for "
-                "a fully valid SEG-Y file. It is "
-                "set to 'ABCDEFGHIJKLMNOPQRSTUV' which will be written to the "
-                "file. Please change it if you want a fully valid file.")
+            assert len(w) == 1
+            assert w[0].message.args[0] == \
+                "The end header mark in the textual header should be set as " \
+                "'C40 END TEXTUAL HEADER' or as 'C40 END EBCDIC        ' for " \
+                "a fully valid SEG-Y file. It is " \
+                "set to 'ABCDEFGHIJKLMNOPQRSTUV' which will be written to the " \
+                "file. Please change it if you want a fully valid file."
             buf.seek(0, 0)
             data = buf.read()
 
         revision_number = data[:3200][-160:-146].decode()
         end_header_mark = data[:3200][-80:-58].decode()
         # The field is still written.
-        self.assertEqual(revision_number, "C39 SEG Y REV1")
-        self.assertEqual(end_header_mark, "ABCDEFGHIJKLMNOPQRSTUV")
+        assert revision_number == "C39 SEG Y REV1"
+        assert end_header_mark == "ABCDEFGHIJKLMNOPQRSTUV"
 
     def test_packing_raises_nice_error_messages(self):
         """
@@ -776,15 +760,14 @@ class SEGYTestCase(unittest.TestCase):
                 create=True, new_callable=mock.PropertyMock,
                 return_value=100000):
             with io.BytesIO() as buf:
-                with self.assertRaises(ValueError) as err:
+                with pytest.raises(ValueError) as err:
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
                         tr.write(buf, format="segy")
-        self.assertEqual(
-            err.exception.args[0],
-            "Failed to pack header value `number_of_data_traces_per_ensemble` "
-            "(100000) with format `>h` due to: `'h' format requires -32768 <="
-            " number <= 32767`")
+        assert err.exception.args[0] == \
+            "Failed to pack header value `number_of_data_traces_per_ensemble` " \
+            "(100000) with format `>h` due to: `'h' format requires -32768 <=" \
+            " number <= 32767`"
 
 
 def rms(x, y):

@@ -15,40 +15,40 @@ class EvtTestCase(unittest.TestCase):
     def test_is_evt_file(self):
         path = os.path.join(self.path, 'data', '*.evt')
         for fname in glob.glob(path):
-            self.assertEqual(_is_evt(fname), True)
+            assert _is_evt(fname) == True
 
     def test_local_event1(self):
         fname = os.path.join(self.path, 'data', 'local1.evt')
         cat = read_events(fname)
-        self.assertEqual(len(cat), 2)
+        assert len(cat) == 2
 
     def test_local_event2(self):
         fname = os.path.join(self.path, 'data', 'local2.evt')
         cat = read_events(fname)
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         ev = cat[0]
         mag = ev.preferred_magnitude()
         origin = ev.preferred_origin()
         oc = origin.origin_uncertainty
-        self.assertEqual(mag.mag, 0.6)
-        self.assertEqual(mag.magnitude_type, 'ML')
-        self.assertEqual(round(origin.longitude_errors.uncertainty, 3), 0.013)
-        self.assertEqual(round(origin.latitude_errors.uncertainty, 3), 0.013)
-        self.assertEqual(oc.min_horizontal_uncertainty, 20)
-        self.assertEqual(oc.max_horizontal_uncertainty, 20)
-        self.assertEqual(oc.azimuth_max_horizontal_uncertainty, 75.70)
-        self.assertEqual(origin.arrivals[0].time_weight, 4.0)
+        assert mag.mag == 0.6
+        assert mag.magnitude_type == 'ML'
+        assert round(origin.longitude_errors.uncertainty, 3) == 0.013
+        assert round(origin.latitude_errors.uncertainty, 3) == 0.013
+        assert oc.min_horizontal_uncertainty == 20
+        assert oc.max_horizontal_uncertainty == 20
+        assert oc.azimuth_max_horizontal_uncertainty == 75.70
+        assert origin.arrivals[0].time_weight == 4.0
 
     def test_tele_event1(self):
         fname = os.path.join(self.path, 'data', 'tele1.evt')
         cat = read_events(fname)
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
 
     def test_tele_event2(self):
         # untested field: sign
         fname = os.path.join(self.path, 'data', 'tele2.evt')
         cat = read_events(fname)
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         ev = cat[0]
         origin = ev.preferred_origin()
         mag = ev.preferred_magnitude()
@@ -56,35 +56,35 @@ class EvtTestCase(unittest.TestCase):
         pick = ev.picks[66]
         arrival = origin.arrivals[66]
         arrival = origin.arrivals[191]
-        self.assertEqual(len(ev.picks), 195)
-        self.assertEqual(len(ev.station_magnitudes), 38)
-        self.assertEqual(len(origin.arrivals), 195)
+        assert len(ev.picks) == 195
+        assert len(ev.station_magnitudes) == 38
+        assert len(origin.arrivals) == 195
 
-        self.assertEqual(str(pick.time), '2015-08-10T10:14:32.918000Z')
-        self.assertEqual(pick.phase_hint, 'T')
-        self.assertEqual(pick.onset, 'emergent')
-        self.assertEqual(pick.evaluation_mode, 'manual')
-        self.assertEqual(str(pick.filter_id), 'G_WWSSN_SP')
-        self.assertEqual(pick.waveform_id.get_seed_string(), '.GRA1..Z')
-        self.assertEqual(origin.arrivals[66].pick_id, pick.resource_id)
-        self.assertEqual(arrival.phase, 'sS')
-        self.assertEqual(arrival.azimuth, 307.6)
-        self.assertEqual(arrival.distance, 48.132)
-        self.assertEqual(str(origin.time), '2015-08-10T10:05:25.808000Z')
-        self.assertEqual(origin.latitude, 36.23)
-        self.assertEqual(origin.longitude, 71.38)
+        assert str(pick.time) == '2015-08-10T10:14:32.918000Z'
+        assert pick.phase_hint == 'T'
+        assert pick.onset == 'emergent'
+        assert pick.evaluation_mode == 'manual'
+        assert str(pick.filter_id) == 'G_WWSSN_SP'
+        assert pick.waveform_id.get_seed_string() == '.GRA1..Z'
+        assert origin.arrivals[66].pick_id == pick.resource_id
+        assert arrival.phase == 'sS'
+        assert arrival.azimuth == 307.6
+        assert arrival.distance == 48.132
+        assert str(origin.time) == '2015-08-10T10:05:25.808000Z'
+        assert origin.latitude == 36.23
+        assert origin.longitude == 71.38
 
-        self.assertEqual(origin.depth, 238200.0)
-        self.assertEqual(origin.depth_errors.uncertainty, 7180.0)
-        self.assertEqual(origin.quality.used_station_count, 30)
-        self.assertEqual(origin.region, 'Afghanistan-Tajikistan border region')
-        self.assertEqual(ev.event_type, 'earthquake')
+        assert origin.depth == 238200.0
+        assert origin.depth_errors.uncertainty == 7180.0
+        assert origin.quality.used_station_count == 30
+        assert origin.region == 'Afghanistan-Tajikistan border region'
+        assert ev.event_type == 'earthquake'
 
-        self.assertEqual(mag.mag, 6.1)
-        self.assertEqual(mag.magnitude_type, 'Mb')
-        self.assertEqual(sta_mag.mag, 6.2)
-        self.assertEqual(sta_mag.station_magnitude_type, 'Mb')
-        self.assertEqual(sta_mag.waveform_id.get_seed_string(), '.AHRW..Z')
+        assert mag.mag == 6.1
+        assert mag.magnitude_type == 'Mb'
+        assert sta_mag.mag == 6.2
+        assert sta_mag.station_magnitude_type == 'Mb'
+        assert sta_mag.waveform_id.get_seed_string() == '.AHRW..Z'
 
     def test_populate_waveform_id(self):
         fname = os.path.join(self.path, 'data', 'tele2.evt')
@@ -96,7 +96,7 @@ class EvtTestCase(unittest.TestCase):
                           seedid_map={'UBR': 'BLB.{}.00.BH{}'}, warn=False)
         picks = cat[0].picks
         waveform_ids = [p.waveform_id.get_seed_string() for p in picks]
-        self.assertIn('GR.FUR..HHZ', waveform_ids)
-        self.assertIn('BLA.WET.11.DHZ', waveform_ids)
-        self.assertIn('BLB.UBR.00.BHZ', waveform_ids)
-        self.assertIn('BLA.WERD.11.DHZ', waveform_ids)
+        assert 'GR.FUR..HHZ' in waveform_ids
+        assert 'BLA.WET.11.DHZ' in waveform_ids
+        assert 'BLB.UBR.00.BHZ' in waveform_ids
+        assert 'BLA.WERD.11.DHZ' in waveform_ids

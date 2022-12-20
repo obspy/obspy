@@ -14,6 +14,7 @@ from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.css.core import (_is_css, _read_css, _is_nnsa_kb_core,
                                _read_nnsa_kb_core)
+import pytest
 
 
 class CoreTestCase(unittest.TestCase):
@@ -94,7 +95,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         st = read(self.filename_css)
-        self.assertEqual(st, self.st_result_css)
+        assert st == self.st_result_css
 
     def test_css_read_via_module(self):
         """
@@ -105,7 +106,7 @@ class CoreTestCase(unittest.TestCase):
         # _format entry is not present when using low-level function
         for tr in self.st_result_css:
             tr.stats.pop('_format')
-        self.assertEqual(st, self.st_result_css)
+        assert st == self.st_result_css
 
     def test_nnsa_kb_core_read_via_obspy(self):
         """
@@ -113,7 +114,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         st = read(self.filename_nnsa)
-        self.assertEqual(st, self.st_result_nnsa)
+        assert st == self.st_result_nnsa
 
     def test_nnsa_kb_core_read_via_module(self):
         """
@@ -124,7 +125,7 @@ class CoreTestCase(unittest.TestCase):
         # _format entry is not present when using low-level function
         for tr in self.st_result_nnsa:
             tr.stats.pop('_format')
-        self.assertEqual(st, self.st_result_nnsa)
+        assert st == self.st_result_nnsa
 
     def test_css_2_read_via_module(self):
         """
@@ -136,7 +137,7 @@ class CoreTestCase(unittest.TestCase):
         # _format entry is not present when using low-level function
         for tr in self.st_result_css:
             tr.stats.pop('_format')
-        self.assertEqual(st, self.st_result_css)
+        assert st == self.st_result_css
 
     def test_css_3_read_via_module(self):
         """
@@ -144,4 +145,5 @@ class CoreTestCase(unittest.TestCase):
         Exception if waveform file is missing.
         """
         # 1
-        self.assertRaises(FileNotFoundError, _read_css, self.filename_css_3)
+        with pytest.raises(FileNotFoundError):
+            _read_css(self.filename_css_3)

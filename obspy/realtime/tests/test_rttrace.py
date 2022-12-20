@@ -12,6 +12,7 @@ from obspy.core.stream import read
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory
 import obspy.signal.filter
+import pytest
 
 
 class RtTraceTestCase(unittest.TestCase):
@@ -24,10 +25,10 @@ class RtTraceTestCase(unittest.TestCase):
         tr2 = RtTrace()
         tr3 = RtTrace()
         # RtTrace should never be equal with Trace objects
-        self.assertFalse(tr2 == tr)
-        self.assertFalse(tr2.__eq__(tr))
-        self.assertEqual(tr2, tr3)
-        self.assertTrue(tr2.__eq__(tr3))
+        assert not (tr2 == tr)
+        assert not tr2.__eq__(tr)
+        assert tr2 == tr3
+        assert tr2.__eq__(tr3)
 
     def test_ne(self):
         """
@@ -37,10 +38,10 @@ class RtTraceTestCase(unittest.TestCase):
         tr2 = RtTrace()
         tr3 = RtTrace()
         # RtTrace should never be equal with Trace objects
-        self.assertNotEqual(tr2, tr)
-        self.assertTrue(tr2.__ne__(tr))
-        self.assertFalse(tr2 != tr3)
-        self.assertFalse(tr2.__ne__(tr3))
+        assert tr2 != tr
+        assert tr2.__ne__(tr)
+        assert not (tr2 != tr3)
+        assert not tr2.__ne__(tr3)
 
     def test_register_rt_process(self):
         """
@@ -49,35 +50,37 @@ class RtTraceTestCase(unittest.TestCase):
         tr = RtTrace()
         # 1 - function call
         tr.register_rt_process(np.abs)
-        self.assertEqual(tr.processing, [(np.abs, {}, None)])
+        assert tr.processing == [(np.abs, {}, None)]
         # 2 - predefined RT processing algorithm
         tr.register_rt_process('integrate', test=1, muh='maeh')
-        self.assertEqual(tr.processing[1][0], 'integrate')
-        self.assertEqual(tr.processing[1][1], {'test': 1, 'muh': 'maeh'})
-        self.assertTrue(isinstance(tr.processing[1][2][0], RtMemory))
+        assert tr.processing[1][0] == 'integrate'
+        assert tr.processing[1][1] == {'test': 1, 'muh': 'maeh'}
+        assert isinstance(tr.processing[1][2][0], RtMemory)
         # 3 - contained name of predefined RT processing algorithm
         tr.register_rt_process('in')
-        self.assertEqual(tr.processing[2][0], 'integrate')
+        assert tr.processing[2][0] == 'integrate'
         tr.register_rt_process('integ')
-        self.assertEqual(tr.processing[3][0], 'integrate')
+        assert tr.processing[3][0] == 'integrate'
         tr.register_rt_process('integr')
-        self.assertEqual(tr.processing[4][0], 'integrate')
+        assert tr.processing[4][0] == 'integrate'
         # 4 - unknown functions
-        self.assertRaises(NotImplementedError,
-                          tr.register_rt_process, 'integrate2')
-        self.assertRaises(NotImplementedError, tr.register_rt_process, 'xyz')
+        with pytest.raises(NotImplementedError):
+            tr.register_rt_process('integrate2')
+        with pytest.raises(NotImplementedError):
+            tr.register_rt_process('xyz')
         # 5 - module instead of function
-        self.assertRaises(NotImplementedError, tr.register_rt_process, np)
+        with pytest.raises(NotImplementedError):
+            tr.register_rt_process(np)
         # check number off all processing steps within RtTrace
-        self.assertEqual(len(tr.processing), 5)
+        assert len(tr.processing) == 5
         # check tr.stats.processing
-        self.assertEqual(len(tr.stats.processing), 5)
-        self.assertTrue(tr.stats.processing[0].startswith("realtime_process"))
-        self.assertIn('absolute', tr.stats.processing[0])
+        assert len(tr.stats.processing) == 5
+        assert tr.stats.processing[0].startswith("realtime_process")
+        assert 'absolute' in tr.stats.processing[0]
         for i in range(1, 5):
-            self.assertIn('integrate', tr.stats.processing[i])
+            assert 'integrate' in tr.stats.processing[i]
         # check kwargs
-        self.assertIn("maeh", tr.stats.processing[1])
+        assert "maeh" in tr.stats.processing[1]
 
     def test_append_sanity_checks(self):
         """
@@ -89,27 +92,37 @@ class RtTraceTestCase(unittest.TestCase):
         rtr.append(ftr)
         # 1 - differing ID
         tr = Trace(header={'network': 'xyz'})
-        self.assertRaises(TypeError, rtr.append, tr)
+        with pytest.raises(TypeError):
+            rtr.append(tr)
         tr = Trace(header={'station': 'xyz'})
-        self.assertRaises(TypeError, rtr.append, tr)
+        with pytest.raises(TypeError):
+            rtr.append(tr)
         tr = Trace(header={'location': 'xy'})
-        self.assertRaises(TypeError, rtr.append, tr)
+        with pytest.raises(TypeError):
+            rtr.append(tr)
         tr = Trace(header={'channel': 'xyz'})
-        self.assertRaises(TypeError, rtr.append, tr)
+        with pytest.raises(TypeError):
+            rtr.append(tr)
         # 2 - sample rate
         tr = Trace(header={'sampling_rate': 100.0})
-        self.assertRaises(TypeError, rtr.append, tr)
+        with pytest.raises(TypeError):
+            rtr.append(tr)
         tr = Trace(header={'delta': 0.25})
-        self.assertRaises(TypeError, rtr.append, tr)
+        with pytest.raises(TypeError):
+            rtr.append(tr)
         # 3 - calibration factor
         tr = Trace(header={'calib': 100.0})
-        self.assertRaises(TypeError, rtr.append, tr)
+        with pytest.raises(TypeError):
+            rtr.append(tr)
         # 4 - data type
         tr = Trace(data=np.array([0.0, 1.1]))
-        self.assertRaises(TypeError, rtr.append, tr)
+        with pytest.raises(TypeError):
+            rtr.append(tr)
         # 5 - only Trace objects are allowed
-        self.assertRaises(TypeError, rtr.append, 1)
-        self.assertRaises(TypeError, rtr.append, "2323")
+        with pytest.raises(TypeError):
+            rtr.append(1)
+        with pytest.raises(TypeError):
+            rtr.append("2323")
 
     def test_append_overlap(self):
         """
@@ -121,9 +134,11 @@ class RtTraceTestCase(unittest.TestCase):
         # this raises UserWarning
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
-            self.assertRaises(UserWarning, rtr.append, tr)
+            with pytest.raises(UserWarning):
+                rtr.append(tr)
         # append with gap_overlap_check=True will raise a TypeError
-        self.assertRaises(TypeError, rtr.append, tr, gap_overlap_check=True)
+        with pytest.raises(TypeError):
+            rtr.append(tr, gap_overlap_check=True)
 
     def test_append_gap(self):
         """
@@ -137,9 +152,11 @@ class RtTraceTestCase(unittest.TestCase):
         # this raises UserWarning
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
-            self.assertRaises(UserWarning, rtr.append, tr2)
+            with pytest.raises(UserWarning):
+                rtr.append(tr2)
         # append with gap_overlap_check=True will raise a TypeError
-        self.assertRaises(TypeError, rtr.append, tr2, gap_overlap_check=True)
+        with pytest.raises(TypeError):
+            rtr.append(tr2, gap_overlap_check=True)
 
     def test_copy(self):
         """
@@ -181,7 +198,8 @@ class RtTraceTestCase(unittest.TestCase):
         # adding arbitrary arguments should fail
         rt_trace = RtTrace()
         rt_trace.register_rt_process('scale', muh='maeh')
-        self.assertRaises(TypeError, rt_trace.append, trace)
+        with pytest.raises(TypeError):
+            rt_trace.append(trace)
         # 2- function tauc has one required argument
         rt_trace = RtTrace()
         rt_trace.register_rt_process('tauc', width=10)
@@ -189,12 +207,15 @@ class RtTraceTestCase(unittest.TestCase):
         # wrong argument should fail
         rt_trace = RtTrace()
         rt_trace.register_rt_process('tauc', xyz='xyz')
-        self.assertRaises(TypeError, rt_trace.append, trace)
+        with pytest.raises(TypeError):
+            rt_trace.append(trace)
         # missing argument width should raise an exception
         rt_trace = RtTrace()
         rt_trace.register_rt_process('tauc')
-        self.assertRaises(TypeError, rt_trace.append, trace)
+        with pytest.raises(TypeError):
+            rt_trace.append(trace)
         # adding arbitrary arguments should fail
         rt_trace = RtTrace()
         rt_trace.register_rt_process('tauc', width=20, notexistingoption=True)
-        self.assertRaises(TypeError, rt_trace.append, trace)
+        with pytest.raises(TypeError):
+            rt_trace.append(trace)

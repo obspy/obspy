@@ -106,32 +106,32 @@ class SDSTestCase(unittest.TestCase):
                 # normal test reading across the day break
                 client = Client(temp_sds.tempdir)
                 st = client.get_waveforms(net, sta, loc, cha, t - 20, t + 20)
-                self.assertEqual(len(st), 1)
-                self.assertEqual(st[0].stats.starttime, t - 20)
-                self.assertEqual(st[0].stats.endtime, t + 20)
-                self.assertEqual(len(st[0]), 5)
+                assert len(st) == 1
+                assert st[0].stats.starttime == t - 20
+                assert st[0].stats.endtime == t + 20
+                assert len(st[0]) == 5
                 # test merge option
                 st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200,
                                           merge=False)
-                self.assertEqual(len(st), 2)
+                assert len(st) == 2
                 st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200,
                                           merge=None)
-                self.assertEqual(len(st), 2)
+                assert len(st) == 2
                 st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200,
                                           merge=0)
-                self.assertEqual(len(st), 1)
+                assert len(st) == 1
                 # test reading data from a single day file
                 # (data is in the file where it's expected)
                 st = client.get_waveforms(net, sta, loc, cha, t - 80, t - 30)
-                self.assertEqual(len(st), 1)
+                assert len(st) == 1
                 # test reading data from a single day file
                 # (data is in the dayfile of the previous day)
                 st = client.get_waveforms(net, sta, loc, cha, t + 20, t + 40)
-                self.assertEqual(len(st), 1)
+                assert len(st) == 1
                 # test that format autodetection with `format=None` works
                 client = Client(temp_sds.tempdir, format=None)
                 st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200)
-                self.assertEqual(len(st), 1)
+                assert len(st) == 1
 
     def test_read_from_sds_with_wildcarded_seed_ids(self):
         """
@@ -148,12 +148,12 @@ class SDSTestCase(unittest.TestCase):
                     (3, 3, 4, 8, 48)):
                 net, sta, loc, cha = wildcarded_seed_id.split(".")
                 st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200)
-                self.assertEqual(len(st), num_matching_ids)
+                assert len(st) == num_matching_ids
             # test with SDS type wildcards
             for type_wildcard in ("*", "?"):
                 net, sta, loc, cha = wildcarded_seed_id.split(".")
                 st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200)
-                self.assertEqual(len(st), num_matching_ids)
+                assert len(st) == num_matching_ids
 
     def test_sds_report(self):
         """
@@ -185,7 +185,7 @@ class SDSTestCase(unittest.TestCase):
             file_png = output_basename_abspath + ".png"
             # check that output files exist
             for file_ in [file_html, file_txt, file_png]:
-                self.assertTrue(os.path.isfile(file_))
+                assert os.path.isfile(file_)
             # check content of image file (just check it is a png file)
             # look for png static header
             with open(file_png, 'rb') as fh:
@@ -204,7 +204,7 @@ class SDSTestCase(unittest.TestCase):
             with open(file_txt, "rb") as fh:
                 got_lines = fh.readlines()
             for expected_line, got_line in zip(expected_lines, got_lines):
-                self.assertIsNotNone(re.match(expected_line, got_line))
+                assert re.match(expected_line, got_line) is not None
             # check content of html report
             with open(file_html, "rb") as fh:
                 got_lines = fh.readlines()
@@ -215,7 +215,7 @@ class SDSTestCase(unittest.TestCase):
             for got, pattern in zip(got_lines, regex_patterns):
                 match = re.match(pattern.strip(), got.strip())
                 try:
-                    self.assertIsNotNone(match)
+                    assert match is not None
                 except AssertionError:
                     failed = True
                     print(pattern.strip())
@@ -243,19 +243,19 @@ class SDSTestCase(unittest.TestCase):
             st = client.get_waveforms_bulk(chunks)
             for _i in range(6):
                 if _i <= 2:
-                    self.assertEqual(st[_i].stats.network, "AB")
-                    self.assertEqual(st[_i].stats.station, "XYZ")
-                    self.assertEqual(st[_i].stats.location, "")
+                    assert st[_i].stats.network == "AB"
+                    assert st[_i].stats.station == "XYZ"
+                    assert st[_i].stats.location == ""
                 elif _i >= 2:
-                    self.assertEqual(st[_i].stats.network, "CD")
-                    self.assertEqual(st[_i].stats.station, "ZZZ3")
-                    self.assertEqual(st[_i].stats.location, "00")
-            self.assertEqual(st[0].stats.channel, "HHZ")
-            self.assertEqual(st[1].stats.channel, "HHN")
-            self.assertEqual(st[2].stats.channel, "HHE")
-            self.assertEqual(st[3].stats.channel, "BHZ")
-            self.assertEqual(st[4].stats.channel, "BHN")
-            self.assertEqual(st[5].stats.channel, "BHE")
+                    assert st[_i].stats.network == "CD"
+                    assert st[_i].stats.station == "ZZZ3"
+                    assert st[_i].stats.location == "00"
+            assert st[0].stats.channel == "HHZ"
+            assert st[1].stats.channel == "HHN"
+            assert st[2].stats.channel == "HHE"
+            assert st[3].stats.channel == "BHZ"
+            assert st[4].stats.channel == "BHN"
+            assert st[5].stats.channel == "BHE"
 
     def test_get_all_stations_and_nslc(self):
         """
@@ -270,7 +270,7 @@ class SDSTestCase(unittest.TestCase):
                 for net in temp_sds.networks
                 for sta in temp_sds.stations])
             got_netsta = client.get_all_stations()
-            self.assertEqual(expected_netsta, got_netsta)
+            assert expected_netsta == got_netsta
             expected_nslc = sorted([
                 (net, sta, loc, cha)
                 for net in temp_sds.networks
@@ -278,11 +278,11 @@ class SDSTestCase(unittest.TestCase):
                 for loc in temp_sds.locations
                 for cha in temp_sds.channels])
             got_nslc = client.get_all_nslc()
-            self.assertEqual(expected_nslc, got_nslc)
+            assert expected_nslc == got_nslc
             got_nslc = client.get_all_nslc(datetime=t)
-            self.assertEqual(expected_nslc, got_nslc)
+            assert expected_nslc == got_nslc
             # other dates that have no data should return empty list
             got_nslc = client.get_all_nslc(datetime=t + 2 * 24 * 3600)
-            self.assertEqual([], got_nslc)
+            assert [] == got_nslc
             got_nslc = client.get_all_nslc(datetime=t - 2 * 24 * 3600)
-            self.assertEqual([], got_nslc)
+            assert [] == got_nslc

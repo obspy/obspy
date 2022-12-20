@@ -75,13 +75,13 @@ class FOCMECTestCase(unittest.TestCase):
             self.lst_file_header = ''.join(header).rstrip()
 
     def _assert_cat_common_parts(self, cat):
-        self.assertTrue(isinstance(cat, Catalog))
-        self.assertEqual(len(cat), 1)
+        assert isinstance(cat, Catalog)
+        assert len(cat) == 1
         event = cat[0]
-        self.assertTrue(isinstance(event, Event))
-        self.assertEqual(event.creation_info.creation_time,
-                         UTCDateTime(2017, 9, 8, 14, 54, 58))
-        self.assertEqual(len(event.focal_mechanisms), 4)
+        assert isinstance(event, Event)
+        assert event.creation_info.creation_time == \
+                         UTCDateTime(2017, 9, 8, 14, 54, 58)
+        assert len(event.focal_mechanisms) == 4
         expected_dip_strike_rake = (
             (76.43, 59.08, -64.23),
             (77.05, 54.08, -59.13),
@@ -90,45 +90,45 @@ class FOCMECTestCase(unittest.TestCase):
         for focmec, (dip, strike, rake) in zip(
                 event.focal_mechanisms, expected_dip_strike_rake):
             plane1 = focmec.nodal_planes.nodal_plane_1
-            self.assertEqual(plane1.strike, strike)
-            self.assertEqual(plane1.dip, dip)
-            self.assertEqual(plane1.rake, rake)
-            self.assertEqual(focmec.nodal_planes.preferred_plane, 1)
+            assert plane1.strike == strike
+            assert plane1.dip == dip
+            assert plane1.rake == rake
+            assert focmec.nodal_planes.preferred_plane == 1
         for focmec in cat[0].focal_mechanisms:
-            self.assertEqual(focmec.station_polarity_count, 23)
+            assert focmec.station_polarity_count == 23
             # check creation time
-            self.assertEqual(focmec.creation_info.creation_time, creation_time)
+            assert focmec.creation_info.creation_time == creation_time
             # check creation info version
-            self.assertEqual(focmec.creation_info.version, 'FOCMEC')
+            assert focmec.creation_info.version == 'FOCMEC'
 
     def _assert_cat_out(self, cat):
         self._assert_cat_common_parts(cat)
-        self.assertEqual(cat[0].comments[0].text, self.out_file_header)
-        self.assertEqual(cat[0].focal_mechanisms[0].comments[0].text,
-                         out_file_first_comment)
+        assert cat[0].comments[0].text == self.out_file_header
+        assert cat[0].focal_mechanisms[0].comments[0].text == \
+                         out_file_first_comment
         for focmec in cat[0].focal_mechanisms:
             # misfit should be None, because the file specifies that polarity
             # errors are weighted and in the out file format we can't know how
             # many individual errors there are
-            self.assertEqual(focmec.misfit, None)
+            assert focmec.misfit == None
             # we can't tell the gap from the out format
-            self.assertEqual(focmec.azimuthal_gap, None)
+            assert focmec.azimuthal_gap == None
 
     def _assert_cat_lst(self, cat):
         self._assert_cat_common_parts(cat)
-        self.assertEqual(cat[0].comments[0].text, self.lst_file_header)
-        self.assertEqual(cat[0].focal_mechanisms[0].comments[0].text,
-                         lst_file_first_comment)
+        assert cat[0].comments[0].text == self.lst_file_header
+        assert cat[0].focal_mechanisms[0].comments[0].text == \
+                         lst_file_first_comment
         for focmec in cat[0].focal_mechanisms:
             # misfit should be 0.0, because in the lst file we can count the
             # number of individual errors (and there's no polarity errors)
-            self.assertEqual(focmec.misfit, 0.0)
+            assert focmec.misfit == 0.0
             # we can't tell the gap from the out format
-            self.assertEqual(focmec.azimuthal_gap, 236.7)
+            assert focmec.azimuthal_gap == 236.7
 
     def test_is_focmec(self):
         for file_ in (self.lst_file, self.out_file):
-            self.assertTrue(_is_focmec(file_))
+            assert _is_focmec(file_)
 
     def test_read_focmec_out(self):
         cat = _read_focmec(self.out_file)
@@ -170,50 +170,50 @@ class FOCMECTestCase(unittest.TestCase):
         """
         # 1: focmec_qedUWne.lst
         cat = read_events(os.path.join(self.datapath, 'focmec_qedUWne.lst'))
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         focmecs = cat[0].focal_mechanisms
-        self.assertEqual(len(focmecs), 5)
+        assert len(focmecs) == 5
         focmec = focmecs[0]
         plane = focmec.nodal_planes.nodal_plane_1
-        self.assertEqual(plane.strike, 308.43)
-        self.assertEqual(plane.dip, 58.68)
-        self.assertEqual(plane.rake, 16.48)
+        assert plane.strike == 308.43
+        assert plane.dip == 58.68
+        assert plane.rake == 16.48
         for focmec in focmecs:
-            self.assertEqual(focmec.azimuthal_gap, 79.5)
+            assert focmec.azimuthal_gap == 79.5
         for focmec in focmecs[:-1]:
-            self.assertEqual(focmec.station_polarity_count, 190)
-            self.assertEqual(focmec.misfit, 21.0 / 190)
+            assert focmec.station_polarity_count == 190
+            assert focmec.misfit == 21.0 / 190
         # last solution has one less polarity error
-        self.assertEqual(focmecs[-1].station_polarity_count, 190)
-        self.assertEqual(focmecs[-1].misfit, 20.0 / 190)
+        assert focmecs[-1].station_polarity_count == 190
+        assert focmecs[-1].misfit == 20.0 / 190
 
         # 2: focmec_all.lst
         cat = read_events(os.path.join(self.datapath, 'focmec_all.lst'))
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         focmecs = cat[0].focal_mechanisms
-        self.assertEqual(len(focmecs), 3)
+        assert len(focmecs) == 3
         focmec = focmecs[0]
         plane = focmec.nodal_planes.nodal_plane_1
-        self.assertEqual(plane.strike, 66.98)
-        self.assertEqual(plane.dip, 80.61)
-        self.assertEqual(plane.rake, -69.72)
+        assert plane.strike == 66.98
+        assert plane.dip == 80.61
+        assert plane.rake == -69.72
         for focmec, errors in zip(focmecs, (25, 29, 26)):
-            self.assertEqual(focmec.azimuthal_gap, 44.7)
-            self.assertEqual(focmec.station_polarity_count, 212)
-            self.assertEqual(focmec.misfit, float(errors) / 212)
+            assert focmec.azimuthal_gap == 44.7
+            assert focmec.station_polarity_count == 212
+            assert focmec.misfit == float(errors) / 212
 
         # 3: focmec_8sta-noratios.lst
         cat = read_events(os.path.join(self.datapath,
                                        'focmec_8sta-noratios.lst'))
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         focmecs = cat[0].focal_mechanisms
-        self.assertEqual(len(focmecs), 184)
+        assert len(focmecs) == 184
         focmec = focmecs[2]
         plane = focmec.nodal_planes.nodal_plane_1
-        self.assertEqual(plane.strike, 255.00)
-        self.assertEqual(plane.dip, 10.0)
-        self.assertEqual(plane.rake, -90.00)
+        assert plane.strike == 255.00
+        assert plane.dip == 10.0
+        assert plane.rake == -90.00
         for focmec in focmecs:
-            self.assertEqual(focmec.azimuthal_gap, 236.7)
-            self.assertEqual(focmec.station_polarity_count, 23)
-            self.assertEqual(focmec.misfit, 0.0)
+            assert focmec.azimuthal_gap == 236.7
+            assert focmec.station_polarity_count == 23
+            assert focmec.misfit == 0.0

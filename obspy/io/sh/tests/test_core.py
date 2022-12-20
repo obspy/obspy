@@ -28,27 +28,27 @@ class CoreTestCase(unittest.TestCase):
         # read
         stream = _read_q(testfile)
         stream.verify()
-        self.assertEqual(len(stream), 101)
+        assert len(stream) == 101
 
     def test_is_asc_file(self):
         """
         Testing ASC file format.
         """
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
-        self.assertEqual(_is_asc(testfile), True)
+        assert _is_asc(testfile) == True
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
-        self.assertEqual(_is_asc(testfile), False)
+        assert _is_asc(testfile) == False
 
     def test_is_q_file(self):
         """
         Testing Q header file format.
         """
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
-        self.assertEqual(_is_q(testfile), True)
+        assert _is_q(testfile) == True
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QBN')
-        self.assertEqual(_is_q(testfile), False)
+        assert _is_q(testfile) == False
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
-        self.assertEqual(_is_q(testfile), False)
+        assert _is_q(testfile) == False
 
     def test_read_single_channel_asc_file(self):
         """
@@ -58,13 +58,13 @@ class CoreTestCase(unittest.TestCase):
         # read
         stream = _read_asc(testfile)
         stream.verify()
-        self.assertEqual(stream[0].stats.delta, 5.000000e-02)
-        self.assertEqual(stream[0].stats.npts, 1000)
-        self.assertEqual(stream[0].stats.starttime,
-                         UTCDateTime(2009, 1, 1, 1, 1, 1))
-        self.assertEqual(stream[0].stats.channel, 'BHZ')
-        self.assertEqual(stream[0].stats.station, 'TEST')
-        self.assertEqual(stream[0].stats.calib, 1.0e-00)
+        assert stream[0].stats.delta == 5.000000e-02
+        assert stream[0].stats.npts == 1000
+        assert stream[0].stats.starttime == \
+                         UTCDateTime(2009, 1, 1, 1, 1, 1)
+        assert stream[0].stats.channel == 'BHZ'
+        assert stream[0].stats.station == 'TEST'
+        assert stream[0].stats.calib == 1.0e-00
         # check last 4 samples
         data = [2.176000e+01, 2.195485e+01, 2.213356e+01, 2.229618e+01]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
@@ -74,40 +74,40 @@ class CoreTestCase(unittest.TestCase):
         Helper function to verify stream from file 'data/QFILE-TEST*'.
         """
         # channel 1
-        self.assertEqual(stream[0].stats.delta, 5.000000e-02)
-        self.assertEqual(stream[0].stats.npts, 801)
-        self.assertEqual(stream[0].stats.sh.COMMENT,
-                         'TEST TRACE IN QFILE #1')
-        self.assertEqual(stream[0].stats.starttime,
-                         UTCDateTime(2009, 10, 1, 12, 46, 1))
-        self.assertEqual(stream[0].stats.channel, 'BHN')
-        self.assertEqual(stream[0].stats.station, 'TEST')
-        self.assertEqual(stream[0].stats.calib, 1.500000e+00)
+        assert stream[0].stats.delta == 5.000000e-02
+        assert stream[0].stats.npts == 801
+        assert stream[0].stats.sh.COMMENT == \
+                         'TEST TRACE IN QFILE #1'
+        assert stream[0].stats.starttime == \
+                         UTCDateTime(2009, 10, 1, 12, 46, 1)
+        assert stream[0].stats.channel == 'BHN'
+        assert stream[0].stats.station == 'TEST'
+        assert stream[0].stats.calib == 1.500000e+00
         # check last 4 samples
         data = [-4.070354e+01, -4.033876e+01, -3.995153e+01, -3.954230e+01]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data, 5)
         # channel 2
-        self.assertEqual(stream[1].stats.delta, 5.000000e-02)
-        self.assertEqual(stream[1].stats.npts, 801)
-        self.assertEqual(stream[1].stats.sh.COMMENT,
-                         'TEST TRACE IN QFILE #2')
-        self.assertEqual(stream[1].stats.starttime,
-                         UTCDateTime(2009, 10, 1, 12, 46, 1))
-        self.assertEqual(stream[1].stats.channel, 'BHE')
-        self.assertEqual(stream[1].stats.station, 'TEST')
-        self.assertEqual(stream[1].stats.calib, 1.500000e+00)
+        assert stream[1].stats.delta == 5.000000e-02
+        assert stream[1].stats.npts == 801
+        assert stream[1].stats.sh.COMMENT == \
+                         'TEST TRACE IN QFILE #2'
+        assert stream[1].stats.starttime == \
+                         UTCDateTime(2009, 10, 1, 12, 46, 1)
+        assert stream[1].stats.channel == 'BHE'
+        assert stream[1].stats.station == 'TEST'
+        assert stream[1].stats.calib == 1.500000e+00
         # check first 4 samples
         data = [-3.995153e+01, -4.033876e+01, -4.070354e+01, -4.104543e+01]
         np.testing.assert_array_almost_equal(stream[1].data[0:4], data, 5)
         # channel 3
-        self.assertEqual(stream[2].stats.delta, 1.000000e-02)
-        self.assertEqual(stream[2].stats.npts, 4001)
-        self.assertEqual(stream[2].stats.sh.COMMENT, '******')
-        self.assertEqual(stream[2].stats.starttime,
-                         UTCDateTime(2010, 1, 1, 1, 1, 5, 999000))
-        self.assertEqual(stream[2].stats.channel, 'HHZ')
-        self.assertEqual(stream[2].stats.station, 'WET')
-        self.assertEqual(stream[2].stats.calib, 1.059300e+00)
+        assert stream[2].stats.delta == 1.000000e-02
+        assert stream[2].stats.npts == 4001
+        assert stream[2].stats.sh.COMMENT == '******'
+        assert stream[2].stats.starttime == \
+                         UTCDateTime(2010, 1, 1, 1, 1, 5, 999000)
+        assert stream[2].stats.channel == 'HHZ'
+        assert stream[2].stats.station == 'WET'
+        assert stream[2].stats.calib == 1.059300e+00
         # check first 4 samples
         data = [4.449060e+02, 4.279572e+02, 4.120677e+02, 4.237200e+02]
         np.testing.assert_array_almost_equal(stream[2].data[0:4], data, 4)
@@ -130,7 +130,7 @@ class CoreTestCase(unittest.TestCase):
                 text1 = f.readlines()
             with open(tempfile, 'rt') as f:
                 text2 = f.readlines()
-            self.assertEqual(text1, text2)
+            assert text1 == text2
             # read again
             stream2 = _read_asc(tempfile)
             stream2.verify()
@@ -235,14 +235,14 @@ class CoreTestCase(unittest.TestCase):
         stream = _read_asc(testfile, skip=100, delta=0.1, length=2)
         stream.verify()
         # skip force one trace only
-        self.assertEqual(len(stream), 1)
+        assert len(stream) == 1
         # headers
-        self.assertEqual(stream[0].stats.delta, 1.000000e-01)
-        self.assertEqual(stream[0].stats.npts, 2)
+        assert stream[0].stats.delta == 1.000000e-01
+        assert stream[0].stats.npts == 2
         # check samples
-        self.assertEqual(len(stream[0].data), 2)
-        self.assertAlmostEqual(stream[0].data[0], 111.7009, 4)
-        self.assertAlmostEqual(stream[0].data[1], 119.5831, 4)
+        assert len(stream[0].data) == 2
+        assert round(abs(stream[0].data[0]-111.7009), 4) == 0
+        assert round(abs(stream[0].data[1]-119.5831), 4) == 0
 
     def test_write_small_trace(self):
         """
@@ -260,8 +260,8 @@ class CoreTestCase(unittest.TestCase):
                     with warnings.catch_warnings() as _:  # NOQA
                         warnings.simplefilter("ignore")
                         st = read(tempfile, format=format)
-                    self.assertEqual(len(st), 1)
-                    self.assertEqual(len(st[0]), num)
+                    assert len(st) == 1
+                    assert len(st[0]) == num
                     # Q files consist of two files - deleting additional file
                     if format == 'Q':
                         os.remove(tempfile[:-4] + '.QBN')
@@ -280,7 +280,7 @@ class CoreTestCase(unittest.TestCase):
             tr2 = read(tempfile)[0]
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        self.assertEqual(tr.stats.sh.COMMENT, tr2.stats.sh.COMMENT)
+        assert tr.stats.sh.COMMENT == tr2.stats.sh.COMMENT
 
     def test_header_whitespaces(self):
         """
@@ -294,8 +294,8 @@ class CoreTestCase(unittest.TestCase):
             tr2 = read(tempfile)[0]
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        self.assertEqual(len(tr.stats.sh.COMMENT), len(tr2.stats.sh.COMMENT))
-        self.assertEqual(tr.stats.sh.COMMENT, tr2.stats.sh.COMMENT)
+        assert len(tr.stats.sh.COMMENT) == len(tr2.stats.sh.COMMENT)
+        assert tr.stats.sh.COMMENT == tr2.stats.sh.COMMENT
 
     def test_append_traces(self):
         """
@@ -317,4 +317,4 @@ class CoreTestCase(unittest.TestCase):
                 header2 = f.read()
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        self.assertEqual(header2, header1)
+        assert header2 == header1

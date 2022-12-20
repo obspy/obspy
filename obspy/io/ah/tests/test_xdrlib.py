@@ -55,6 +55,7 @@ Agreement.
 import unittest
 
 from obspy.io.ah import xdrlib
+import pytest
 
 
 class XDRTest(unittest.TestCase):
@@ -81,29 +82,30 @@ class XDRTest(unittest.TestCase):
         data = p.get_buffer()
         up = xdrlib.Unpacker(data)
 
-        self.assertEqual(up.get_position(), 0)
+        assert up.get_position() == 0
 
-        self.assertEqual(up.unpack_int(), 42)
-        self.assertEqual(up.unpack_int(), -17)
-        self.assertEqual(up.unpack_uint(), 9)
-        self.assertTrue(up.unpack_bool() is True)
+        assert up.unpack_int() == 42
+        assert up.unpack_int() == -17
+        assert up.unpack_uint() == 9
+        assert up.unpack_bool() is True
 
         # remember position
         pos = up.get_position()
-        self.assertTrue(up.unpack_bool() is False)
+        assert up.unpack_bool() is False
 
         # rewind and unpack again
         up.set_position(pos)
-        self.assertTrue(up.unpack_bool() is False)
+        assert up.unpack_bool() is False
 
-        self.assertEqual(up.unpack_uhyper(), 45)
-        self.assertAlmostEqual(up.unpack_float(), 1.9)
-        self.assertAlmostEqual(up.unpack_double(), 1.9)
-        self.assertEqual(up.unpack_string(), s)
-        self.assertEqual(up.unpack_list(up.unpack_uint), list(range(5)))
-        self.assertEqual(up.unpack_array(up.unpack_string), a)
+        assert up.unpack_uhyper() == 45
+        assert round(abs(up.unpack_float()-1.9), 7) == 0
+        assert round(abs(up.unpack_double()-1.9), 7) == 0
+        assert up.unpack_string() == s
+        assert up.unpack_list(up.unpack_uint) == list(range(5))
+        assert up.unpack_array(up.unpack_string) == a
         up.done()
-        self.assertRaises(EOFError, up.unpack_uint)
+        with pytest.raises(EOFError):
+            up.unpack_uint()
 
 
 class ConversionErrorTest(unittest.TestCase):
@@ -112,7 +114,8 @@ class ConversionErrorTest(unittest.TestCase):
         self.packer = xdrlib.Packer()
 
     def assertRaisesConversion(self, *args):
-        self.assertRaises(xdrlib.ConversionError, *args)
+        with pytest.raises(xdrlib.ConversionError):
+            *args()
 
     def test_pack_int(self):
         self.assertRaisesConversion(self.packer.pack_int, 'string')

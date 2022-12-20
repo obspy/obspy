@@ -38,7 +38,7 @@ class CNVTestCase(unittest.TestCase):
             tf.seek(0)
             got = tf.read().decode()
 
-        self.assertEqual(expected.splitlines(), got.splitlines())
+        assert expected.splitlines() == got.splitlines()
 
         # write manually
         with NamedTemporaryFile() as tf:
@@ -46,7 +46,7 @@ class CNVTestCase(unittest.TestCase):
             tf.seek(0)
             got = tf.read().decode()
 
-        self.assertEqual(expected.splitlines(), got.splitlines())
+        assert expected.splitlines() == got.splitlines()
 
         # write via plugin and with phase_mapping
         with NamedTemporaryFile() as tf:
@@ -54,7 +54,7 @@ class CNVTestCase(unittest.TestCase):
             tf.seek(0)
             got = tf.read().decode()
 
-        self.assertEqual(expected.splitlines(), got.splitlines())
+        assert expected.splitlines() == got.splitlines()
 
         # write via plugin and with phase_mapping with only P
         # read expected OBS file output
@@ -70,7 +70,7 @@ class CNVTestCase(unittest.TestCase):
                 tf.seek(0)
                 got = tf.read().decode()
                 # There should be 4 S warnings for the 4 S phases:
-                self.assertEqual(len(w), 4)
+                assert len(w) == 4
                 assert "with unmapped phase hint: S" in str(w[-1].message)
 
-        self.assertEqual(expected.splitlines(), got.splitlines())
+        assert expected.splitlines() == got.splitlines()

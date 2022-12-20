@@ -28,6 +28,7 @@ from obspy.core.inventory import (Inventory, Network, ResponseStage)
 from obspy.core.inventory.util import DataAvailability
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.stationxml.core import _read_stationxml
+import pytest
 
 
 class StationXMLTestCase(unittest.TestCase):
@@ -65,12 +66,12 @@ class StationXMLTestCase(unittest.TestCase):
             # resort attributes alphabetically
             org_line = re.sub(regex, callback, org_line, count=1)
             new_line = re.sub(regex, callback, new_line, count=1)
-            self.assertEqual(org_line, new_line)
+            assert org_line == new_line
 
         # Assert the line length at the end to find trailing non-equal lines.
         # If it is done before the line comparison it is oftentimes not very
         # helpful as you do not know which line is missing.
-        self.assertEqual(len(new_lines), len(org_lines))
+        assert len(new_lines) == len(org_lines)
 
     def test_is_stationxml(self):
         """
@@ -79,7 +80,7 @@ class StationXMLTestCase(unittest.TestCase):
         # Check positives.
         stationxmls = [os.path.join(self.data_dir, "minimal_station.xml")]
         for stat in stationxmls:
-            self.assertTrue(obspy.io.stationxml.core._is_stationxml(stat))
+            assert obspy.io.stationxml.core._is_stationxml(stat)
 
         # Check some negatives.
         not_stationxmls = [
@@ -89,8 +90,8 @@ class StationXMLTestCase(unittest.TestCase):
             os.path.join(self.data_dir, os.path.pardir,
                          os.path.pardir, "data", _i) for _i in not_stationxmls]
         for stat in not_stationxmls:
-            self.assertFalse(obspy.io.stationxml.core._is_stationxml(
-                stat))
+            assert not obspy.io.stationxml.core._is_stationxml(
+                stat)
 
     def test_different_write_levels(self):
         """
@@ -106,10 +107,10 @@ class StationXMLTestCase(unittest.TestCase):
 
         network_inv = obspy.read_inventory(file_buffer)
 
-        self.assertTrue(len(network_inv.networks) == len(inv.networks))
+        assert len(network_inv.networks) == len(inv.networks)
 
         for net in network_inv.networks:
-            self.assertTrue(len(net.stations) == 0)
+            assert len(net.stations) == 0
 
         # Write to station level
         file_buffer = io.BytesIO()
@@ -119,9 +120,9 @@ class StationXMLTestCase(unittest.TestCase):
         station_inv = obspy.read_inventory(file_buffer)
 
         for net in station_inv.networks:
-            self.assertTrue(len(net.stations) == len(inv[0].stations))
+            assert len(net.stations) == len(inv[0].stations)
             for sta in net.stations:
-                self.assertTrue(len(sta.channels) == 0)
+                assert len(sta.channels) == 0
 
         # Write to channel level
         file_buffer = io.BytesIO()
@@ -131,11 +132,11 @@ class StationXMLTestCase(unittest.TestCase):
         channel_inv = obspy.read_inventory(file_buffer)
 
         for net in channel_inv.networks:
-            self.assertTrue(len(net.stations) == len(inv[0].stations))
+            assert len(net.stations) == len(inv[0].stations)
             for sta in net.stations:
-                self.assertTrue(len(sta.channels) == len(inv[0][0].channels))
+                assert len(sta.channels) == len(inv[0][0].channels)
                 for cha in sta.channels:
-                    self.assertTrue(cha.response is None)
+                    assert cha.response is None
 
     def test_read_and_write_minimal_file(self):
         """
@@ -145,10 +146,10 @@ class StationXMLTestCase(unittest.TestCase):
         inv = obspy.read_inventory(filename)
 
         # Assert the few values that are set directly.
-        self.assertEqual(inv.source, "OBS")
-        self.assertEqual(inv.created, obspy.UTCDateTime(2013, 1, 1))
-        self.assertEqual(len(inv.networks), 1)
-        self.assertEqual(inv.networks[0].code, "PY")
+        assert inv.source == "OBS"
+        assert inv.created == obspy.UTCDateTime(2013, 1, 1)
+        assert len(inv.networks) == 1
+        assert inv.networks[0].code == "PY"
 
         # Write it again. Also validate it to get more confidence. Suppress the
         # writing of the ObsPy related tags to ease testing.
@@ -216,30 +217,30 @@ class StationXMLTestCase(unittest.TestCase):
         net = inv[0]
         sta = net[0]
         cha = sta[0]
-        self.assertEqual(len(net.identifiers), 2)
-        self.assertEqual(net.identifiers[0], "abc:def")
-        self.assertEqual(net.identifiers[1], "uvw:xyz")
-        self.assertEqual(len(net.operators), 2)
-        self.assertEqual(net.operators[0].agency, 'ABC0.oszQNsC4l66ieQFM')
+        assert len(net.identifiers) == 2
+        assert net.identifiers[0] == "abc:def"
+        assert net.identifiers[1] == "uvw:xyz"
+        assert len(net.operators) == 2
+        assert net.operators[0].agency == 'ABC0.oszQNsC4l66ieQFM'
         # accessing "agencies" this should raise a DeprecationWarning but its
         # tested in another test case already
         with CatchAndAssertWarnings():
-            self.assertEqual(net.operators[0].agencies,
-                             ['ABC0.oszQNsC4l66ieQFM'])
-        self.assertEqual(net.operators[0].contacts[0].names[0], 'A')
+            assert net.operators[0].agencies == \
+                             ['ABC0.oszQNsC4l66ieQFM']
+        assert net.operators[0].contacts[0].names[0] == 'A'
         # check WaterLevel tag
-        self.assertEqual(sta.water_level, 250.4)
-        self.assertEqual(sta.water_level.lower_uncertainty, 2.3)
-        self.assertEqual(sta.water_level.upper_uncertainty, 4.2)
-        self.assertEqual(sta.water_level.unit, 'METERS')
-        self.assertEqual(cha.water_level, 631.2)
-        self.assertEqual(cha.water_level.lower_uncertainty, 5.3)
-        self.assertEqual(cha.water_level.upper_uncertainty, 3.2)
-        self.assertEqual(cha.water_level.unit, 'METERS')
+        assert sta.water_level == 250.4
+        assert sta.water_level.lower_uncertainty == 2.3
+        assert sta.water_level.upper_uncertainty == 4.2
+        assert sta.water_level.unit == 'METERS'
+        assert cha.water_level == 631.2
+        assert cha.water_level.lower_uncertainty == 5.3
+        assert cha.water_level.upper_uncertainty == 3.2
+        assert cha.water_level.unit == 'METERS'
         # multiple equipments allowed now on channel, deprecation for old
         # single equipment attribute
-        self.assertEqual(len(cha.equipments), 2)
-        self.assertEqual(cha.equipments[1].type, "some type")
+        assert len(cha.equipments) == 2
+        assert cha.equipments[1].type == "some type"
         msg = (r"Attribute 'equipment' \(holding a single Equipment\) is "
                r"deprecated in favor of 'equipments' which now holds a list "
                r"of Equipment objects \(following changes in StationXML 1.1\) "
@@ -248,38 +249,36 @@ class StationXMLTestCase(unittest.TestCase):
         with CatchAndAssertWarnings(
                 clear=['obspy.core.inventory.channel'],
                 expected=[(ObsPyDeprecationWarning, msg)]):
-            self.assertEqual(cha.equipment.type, cha.equipments[0].type)
+            assert cha.equipment.type == cha.equipments[0].type
         # check new measurementMethod attributes
-        self.assertEqual(sta.latitude.measurement_method, "GPS")
-        self.assertEqual(sta.longitude.measurement_method, "GPS")
-        self.assertEqual(sta.elevation.measurement_method,
-                         "digital elevation model")
-        self.assertEqual(cha.azimuth.measurement_method,
-                         "fibre optic gyro compass")
+        assert sta.latitude.measurement_method == "GPS"
+        assert sta.longitude.measurement_method == "GPS"
+        assert sta.elevation.measurement_method == \
+                         "digital elevation model"
+        assert cha.azimuth.measurement_method == \
+                         "fibre optic gyro compass"
         # check data availability tags
-        self.assertEqual(
-            net.data_availability.start, UTCDateTime(2011, 2, 3, 4, 5, 6))
-        self.assertEqual(
-            net.data_availability.end, UTCDateTime(2011, 3, 4, 5, 6, 7))
-        self.assertEqual(len(net.data_availability.spans), 2)
+        assert net.data_availability.start == UTCDateTime(2011, 2, 3, 4, 5, 6)
+        assert net.data_availability.end == UTCDateTime(2011, 3, 4, 5, 6, 7)
+        assert len(net.data_availability.spans) == 2
         span1 = net.data_availability.spans[0]
         span2 = net.data_availability.spans[1]
-        self.assertEqual(span1.start, UTCDateTime(2012, 2, 3, 4, 5, 6))
-        self.assertEqual(span1.end, UTCDateTime(2012, 3, 4, 5, 6, 7))
-        self.assertEqual(span1.number_of_segments, 5)
-        self.assertEqual(span1.maximum_time_tear, 7.8)
-        self.assertEqual(span2.start, UTCDateTime(2013, 2, 3, 4, 5, 6))
-        self.assertEqual(span2.end, UTCDateTime(2013, 3, 4, 5, 6, 7))
-        self.assertEqual(span2.number_of_segments, 8)
-        self.assertEqual(span2.maximum_time_tear, 2.4)
+        assert span1.start == UTCDateTime(2012, 2, 3, 4, 5, 6)
+        assert span1.end == UTCDateTime(2012, 3, 4, 5, 6, 7)
+        assert span1.number_of_segments == 5
+        assert span1.maximum_time_tear == 7.8
+        assert span2.start == UTCDateTime(2013, 2, 3, 4, 5, 6)
+        assert span2.end == UTCDateTime(2013, 3, 4, 5, 6, 7)
+        assert span2.number_of_segments == 8
+        assert span2.maximum_time_tear == 2.4
         # test sourceID
-        self.assertEqual(net.source_id, "http://www.example.com")
-        self.assertEqual(sta.source_id, "http://www.example2.com")
-        self.assertEqual(cha.source_id, "http://www.example3.com")
+        assert net.source_id == "http://www.example.com"
+        assert sta.source_id == "http://www.example2.com"
+        assert cha.source_id == "http://www.example3.com"
         # Comment topic
-        self.assertEqual(net.comments[0].subject, "my topic")
+        assert net.comments[0].subject == "my topic"
         # Comment id optional now
-        self.assertEqual(net.comments[0].id, None)
+        assert net.comments[0].id == None
         # storage_format was deprecated since it was removed in StationXML 1.1
         msg = (r"Attribute 'storage_format' was removed in accordance with "
                r"StationXML 1\.1, ignoring\.")
@@ -292,14 +291,14 @@ class StationXMLTestCase(unittest.TestCase):
         with CatchAndAssertWarnings(
                 clear=['obspy.core.inventory.channel'],
                 expected=[(ObsPyDeprecationWarning, msg)]):
-            self.assertEqual(cha.storage_format, None)
+            assert cha.storage_format == None
         # check new number attributes on Numerator/Denominator
         resp = cha.response
         stage = resp.response_stages[1]
-        self.assertEqual(stage.numerator[0].number, 1)
-        self.assertEqual(stage.numerator[1].number, 2)
-        self.assertEqual(stage.denominator[0].number, 3)
-        self.assertEqual(stage.denominator[1].number, 4)
+        assert stage.numerator[0].number == 1
+        assert stage.numerator[1].number == 2
+        assert stage.denominator[0].number == 3
+        assert stage.denominator[1].number == 4
 
     def test_writing_module_tags(self):
         """
@@ -314,12 +313,12 @@ class StationXMLTestCase(unittest.TestCase):
         lines = file_buffer.read().decode().splitlines()
         module_line = [_i.strip() for _i in lines if _i.strip().startswith(
             "<Module>")][0]
-        self.assertTrue(fnmatch.fnmatch(module_line,
-                                        "<Module>ObsPy *</Module>"))
+        assert fnmatch.fnmatch(module_line,
+                                        "<Module>ObsPy *</Module>")
         module_uri_line = [_i.strip() for _i in lines if _i.strip().startswith(
             "<ModuleURI>")][0]
-        self.assertEqual(module_uri_line,
-                         "<ModuleURI>https://www.obspy.org</ModuleURI>")
+        assert module_uri_line == \
+                         "<ModuleURI>https://www.obspy.org</ModuleURI>"
 
     def test_reading_other_module_tags(self):
         """
@@ -330,8 +329,8 @@ class StationXMLTestCase(unittest.TestCase):
             self.data_dir,
             "minimal_with_non_obspy_module_and_sender_tags_station.xml")
         inv = obspy.read_inventory(filename)
-        self.assertEqual(inv.module, "Some Random Module")
-        self.assertEqual(inv.module_uri, "http://www.some-random.site")
+        assert inv.module == "Some Random Module"
+        assert inv.module_uri == "http://www.some-random.site"
 
     def test_reading_and_writing_full_root_tag(self):
         """
@@ -341,13 +340,13 @@ class StationXMLTestCase(unittest.TestCase):
             self.data_dir,
             "minimal_with_non_obspy_module_and_sender_tags_station.xml")
         inv = obspy.read_inventory(filename)
-        self.assertEqual(inv.source, "OBS")
-        self.assertEqual(inv.created, obspy.UTCDateTime(2013, 1, 1))
-        self.assertEqual(len(inv.networks), 1)
-        self.assertEqual(inv.networks[0].code, "PY")
-        self.assertEqual(inv.module, "Some Random Module")
-        self.assertEqual(inv.module_uri, "http://www.some-random.site")
-        self.assertEqual(inv.sender, "The ObsPy Team")
+        assert inv.source == "OBS"
+        assert inv.created == obspy.UTCDateTime(2013, 1, 1)
+        assert len(inv.networks) == 1
+        assert inv.networks[0].code == "PY"
+        assert inv.module == "Some Random Module"
+        assert inv.module_uri == "http://www.some-random.site"
+        assert inv.sender == "The ObsPy Team"
 
         # Write it again. Do not write the module tags.
         file_buffer = io.BytesIO()
@@ -372,66 +371,66 @@ class StationXMLTestCase(unittest.TestCase):
         inv = obspy.read_inventory(filename)
 
         # Assert all the values...
-        self.assertEqual(len(inv.networks), 1)
+        assert len(inv.networks) == 1
         net = inv.networks[0]
-        self.assertEqual(net.code, "PY")
-        self.assertEqual(net.start_date, obspy.UTCDateTime(2011, 1, 1))
-        self.assertEqual(net.end_date, obspy.UTCDateTime(2012, 1, 1))
-        self.assertEqual(net.restricted_status, "open")
-        self.assertEqual(net.alternate_code, "PYY")
-        self.assertEqual(net.historical_code, "YYP")
-        self.assertEqual(net.description, "Some Description...")
-        self.assertEqual(len(net.comments), 2)
+        assert net.code == "PY"
+        assert net.start_date == obspy.UTCDateTime(2011, 1, 1)
+        assert net.end_date == obspy.UTCDateTime(2012, 1, 1)
+        assert net.restricted_status == "open"
+        assert net.alternate_code == "PYY"
+        assert net.historical_code == "YYP"
+        assert net.description == "Some Description..."
+        assert len(net.comments) == 2
 
         comment_1 = net.comments[0]
-        self.assertEqual(comment_1.value, "Comment number 1")
-        self.assertEqual(comment_1.begin_effective_time,
-                         obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(comment_1.end_effective_time,
-                         obspy.UTCDateTime(2008, 2, 3))
-        self.assertEqual(len(comment_1.authors), 1)
+        assert comment_1.value == "Comment number 1"
+        assert comment_1.begin_effective_time == \
+                         obspy.UTCDateTime(1990, 5, 5)
+        assert comment_1.end_effective_time == \
+                         obspy.UTCDateTime(2008, 2, 3)
+        assert len(comment_1.authors) == 1
         authors = comment_1.authors[0]
-        self.assertEqual(len(authors.names), 2)
-        self.assertEqual(authors.names[0], "This person")
-        self.assertEqual(authors.names[1], "has multiple names!")
-        self.assertEqual(len(authors.agencies), 3)
-        self.assertEqual(authors.agencies[0], "And also")
-        self.assertEqual(authors.agencies[1], "many")
-        self.assertEqual(authors.agencies[2], "many Agencies")
-        self.assertEqual(len(authors.emails), 4)
-        self.assertEqual(authors.emails[0], "email1@mail.com")
-        self.assertEqual(authors.emails[1], "email2@mail.com")
-        self.assertEqual(authors.emails[2], "email3@mail.com")
-        self.assertEqual(authors.emails[3], "email4@mail.com")
-        self.assertEqual(len(authors.phones), 2)
-        self.assertEqual(authors.phones[0].description, "phone number 1")
-        self.assertEqual(authors.phones[0].country_code, 49)
-        self.assertEqual(authors.phones[0].area_code, 123)
-        self.assertEqual(authors.phones[0].phone_number, "456-7890")
-        self.assertEqual(authors.phones[1].description, "phone number 2")
-        self.assertEqual(authors.phones[1].country_code, 34)
-        self.assertEqual(authors.phones[1].area_code, 321)
-        self.assertEqual(authors.phones[1].phone_number, "129-7890")
+        assert len(authors.names) == 2
+        assert authors.names[0] == "This person"
+        assert authors.names[1] == "has multiple names!"
+        assert len(authors.agencies) == 3
+        assert authors.agencies[0] == "And also"
+        assert authors.agencies[1] == "many"
+        assert authors.agencies[2] == "many Agencies"
+        assert len(authors.emails) == 4
+        assert authors.emails[0] == "email1@mail.com"
+        assert authors.emails[1] == "email2@mail.com"
+        assert authors.emails[2] == "email3@mail.com"
+        assert authors.emails[3] == "email4@mail.com"
+        assert len(authors.phones) == 2
+        assert authors.phones[0].description == "phone number 1"
+        assert authors.phones[0].country_code == 49
+        assert authors.phones[0].area_code == 123
+        assert authors.phones[0].phone_number == "456-7890"
+        assert authors.phones[1].description == "phone number 2"
+        assert authors.phones[1].country_code == 34
+        assert authors.phones[1].area_code == 321
+        assert authors.phones[1].phone_number == "129-7890"
 
         comment_2 = net.comments[1]
-        self.assertEqual(comment_2.value, "Comment number 2")
-        self.assertEqual(comment_2.begin_effective_time,
-                         obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(comment_1.end_effective_time,
-                         obspy.UTCDateTime(2008, 2, 3))
-        self.assertEqual(len(comment_2.authors), 3)
+        assert comment_2.value == "Comment number 2"
+        assert comment_2.begin_effective_time == \
+                         obspy.UTCDateTime(1990, 5, 5)
+        assert comment_1.end_effective_time == \
+                         obspy.UTCDateTime(2008, 2, 3)
+        assert len(comment_2.authors) == 3
         for _i, author in enumerate(comment_2.authors):
-            self.assertEqual(len(author.names), 1)
-            self.assertEqual(author.names[0], "Person %i" % (_i + 1))
-            self.assertEqual(len(author.agencies), 1)
-            self.assertEqual(author.agencies[0], "Some agency")
-            self.assertEqual(len(author.emails), 1)
-            self.assertEqual(author.emails[0], "email@mail.com")
-            self.assertEqual(len(author.phones), 1)
-            self.assertEqual(author.phones[0].description, None)
-            self.assertEqual(author.phones[0].country_code, 49)
-            self.assertEqual(author.phones[0].area_code, 123)
-            self.assertEqual(author.phones[0].phone_number, "456-7890")
+            assert len(author.names) == 1
+            assert author.names[0] == "Person %i" % (_i + 1)
+            assert len(author.agencies) == 1
+            assert author.agencies[0] == "Some agency"
+            assert len(author.emails) == 1
+            assert author.emails[0] == "email@mail.com"
+            assert len(author.phones) == 1
+            assert author.phones[0].description == None
+            assert author.phones[0].country_code == 49
+            assert author.phones[0].area_code == 123
+            assert author.phones[0].phone_number == "456-7890"
 
         # Now write it again and compare to the original file.
         file_buffer = io.BytesIO()
@@ -457,126 +456,126 @@ class StationXMLTestCase(unittest.TestCase):
         inv = obspy.read_inventory(filename)
 
         # Assert all the values...
-        self.assertEqual(len(inv.networks), 1)
-        self.assertEqual(inv.source, "OBS")
-        self.assertEqual(inv.module, "Some Random Module")
-        self.assertEqual(inv.module_uri, "http://www.some-random.site")
-        self.assertEqual(inv.sender, "The ObsPy Team")
-        self.assertEqual(inv.created, obspy.UTCDateTime(2013, 1, 1))
-        self.assertEqual(len(inv.networks), 1)
+        assert len(inv.networks) == 1
+        assert inv.source == "OBS"
+        assert inv.module == "Some Random Module"
+        assert inv.module_uri == "http://www.some-random.site"
+        assert inv.sender == "The ObsPy Team"
+        assert inv.created == obspy.UTCDateTime(2013, 1, 1)
+        assert len(inv.networks) == 1
         network = inv.networks[0]
-        self.assertEqual(network.code, "PY")
+        assert network.code == "PY"
 
         # Now assert the station specific values.
-        self.assertEqual(len(network.stations), 1)
+        assert len(network.stations) == 1
         station = network.stations[0]
-        self.assertEqual(station.code, "PY")
-        self.assertEqual(station.start_date, obspy.UTCDateTime(2011, 1, 1))
-        self.assertEqual(station.end_date, obspy.UTCDateTime(2012, 1, 1))
-        self.assertEqual(station.restricted_status, "open")
-        self.assertEqual(station.alternate_code, "PYY")
-        self.assertEqual(station.historical_code, "YYP")
-        self.assertEqual(station.description, "Some Description...")
-        self.assertEqual(len(station.comments), 2)
+        assert station.code == "PY"
+        assert station.start_date == obspy.UTCDateTime(2011, 1, 1)
+        assert station.end_date == obspy.UTCDateTime(2012, 1, 1)
+        assert station.restricted_status == "open"
+        assert station.alternate_code == "PYY"
+        assert station.historical_code == "YYP"
+        assert station.description == "Some Description..."
+        assert len(station.comments) == 2
         comment_1 = station.comments[0]
-        self.assertEqual(comment_1.value, "Comment number 1")
-        self.assertEqual(comment_1.begin_effective_time,
-                         obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(comment_1.end_effective_time,
-                         obspy.UTCDateTime(2008, 2, 3))
-        self.assertEqual(len(comment_1.authors), 1)
+        assert comment_1.value == "Comment number 1"
+        assert comment_1.begin_effective_time == \
+                         obspy.UTCDateTime(1990, 5, 5)
+        assert comment_1.end_effective_time == \
+                         obspy.UTCDateTime(2008, 2, 3)
+        assert len(comment_1.authors) == 1
         authors = comment_1.authors[0]
-        self.assertEqual(len(authors.names), 2)
-        self.assertEqual(authors.names[0], "This person")
-        self.assertEqual(authors.names[1], "has multiple names!")
-        self.assertEqual(len(authors.agencies), 3)
-        self.assertEqual(authors.agencies[0], "And also")
-        self.assertEqual(authors.agencies[1], "many")
-        self.assertEqual(authors.agencies[2], "many Agencies")
-        self.assertEqual(len(authors.emails), 4)
-        self.assertEqual(authors.emails[0], "email1@mail.com")
-        self.assertEqual(authors.emails[1], "email2@mail.com")
-        self.assertEqual(authors.emails[2], "email3@mail.com")
-        self.assertEqual(authors.emails[3], "email4@mail.com")
-        self.assertEqual(len(authors.phones), 2)
-        self.assertEqual(authors.phones[0].description, "phone number 1")
-        self.assertEqual(authors.phones[0].country_code, 49)
-        self.assertEqual(authors.phones[0].area_code, 123)
-        self.assertEqual(authors.phones[0].phone_number, "456-7890")
-        self.assertEqual(authors.phones[1].description, "phone number 2")
-        self.assertEqual(authors.phones[1].country_code, 34)
-        self.assertEqual(authors.phones[1].area_code, 321)
-        self.assertEqual(authors.phones[1].phone_number, "129-7890")
+        assert len(authors.names) == 2
+        assert authors.names[0] == "This person"
+        assert authors.names[1] == "has multiple names!"
+        assert len(authors.agencies) == 3
+        assert authors.agencies[0] == "And also"
+        assert authors.agencies[1] == "many"
+        assert authors.agencies[2] == "many Agencies"
+        assert len(authors.emails) == 4
+        assert authors.emails[0] == "email1@mail.com"
+        assert authors.emails[1] == "email2@mail.com"
+        assert authors.emails[2] == "email3@mail.com"
+        assert authors.emails[3] == "email4@mail.com"
+        assert len(authors.phones) == 2
+        assert authors.phones[0].description == "phone number 1"
+        assert authors.phones[0].country_code == 49
+        assert authors.phones[0].area_code == 123
+        assert authors.phones[0].phone_number == "456-7890"
+        assert authors.phones[1].description == "phone number 2"
+        assert authors.phones[1].country_code == 34
+        assert authors.phones[1].area_code == 321
+        assert authors.phones[1].phone_number == "129-7890"
         comment_2 = station.comments[1]
-        self.assertEqual(comment_2.value, "Comment number 2")
-        self.assertEqual(comment_2.begin_effective_time,
-                         obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(comment_1.end_effective_time,
-                         obspy.UTCDateTime(2008, 2, 3))
-        self.assertEqual(len(comment_2.authors), 3)
+        assert comment_2.value == "Comment number 2"
+        assert comment_2.begin_effective_time == \
+                         obspy.UTCDateTime(1990, 5, 5)
+        assert comment_1.end_effective_time == \
+                         obspy.UTCDateTime(2008, 2, 3)
+        assert len(comment_2.authors) == 3
         for _i, author in enumerate(comment_2.authors):
-            self.assertEqual(len(author.names), 1)
-            self.assertEqual(author.names[0], "Person %i" % (_i + 1))
-            self.assertEqual(len(author.agencies), 1)
-            self.assertEqual(author.agencies[0], "Some agency")
-            self.assertEqual(len(author.emails), 1)
-            self.assertEqual(author.emails[0], "email@mail.com")
-            self.assertEqual(len(author.phones), 1)
-            self.assertEqual(author.phones[0].description, None)
-            self.assertEqual(author.phones[0].country_code, 49)
-            self.assertEqual(author.phones[0].area_code, 123)
-            self.assertEqual(author.phones[0].phone_number, "456-7890")
+            assert len(author.names) == 1
+            assert author.names[0] == "Person %i" % (_i + 1)
+            assert len(author.agencies) == 1
+            assert author.agencies[0] == "Some agency"
+            assert len(author.emails) == 1
+            assert author.emails[0] == "email@mail.com"
+            assert len(author.phones) == 1
+            assert author.phones[0].description == None
+            assert author.phones[0].country_code == 49
+            assert author.phones[0].area_code == 123
+            assert author.phones[0].phone_number == "456-7890"
 
-        self.assertEqual(station.latitude, 10.0)
-        self.assertEqual(station.longitude, 20.0)
-        self.assertEqual(station.elevation, 100.0)
+        assert station.latitude == 10.0
+        assert station.longitude == 20.0
+        assert station.elevation == 100.0
 
-        self.assertEqual(station.site.name, "Some site")
-        self.assertEqual(station.site.description, "Some description")
-        self.assertEqual(station.site.town, "Some town")
-        self.assertEqual(station.site.county, "Some county")
-        self.assertEqual(station.site.region, "Some region")
-        self.assertEqual(station.site.country, "Some country")
+        assert station.site.name == "Some site"
+        assert station.site.description == "Some description"
+        assert station.site.town == "Some town"
+        assert station.site.county == "Some county"
+        assert station.site.region == "Some region"
+        assert station.site.country == "Some country"
 
-        self.assertEqual(station.vault, "Some vault")
-        self.assertEqual(station.geology, "Some geology")
+        assert station.vault == "Some vault"
+        assert station.geology == "Some geology"
 
-        self.assertEqual(len(station.equipments), 2)
-        self.assertEqual(station.equipments[0].resource_id, "some_id")
-        self.assertEqual(station.equipments[0].type, "Some type")
-        self.assertEqual(station.equipments[0].description, "Some description")
-        self.assertEqual(station.equipments[0].manufacturer,
-                         "Some manufacturer")
-        self.assertEqual(station.equipments[0].vendor, "Some vendor")
-        self.assertEqual(station.equipments[0].model, "Some model")
-        self.assertEqual(station.equipments[0].serial_number, "12345-ABC")
-        self.assertEqual(station.equipments[0].installation_date,
-                         obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(station.equipments[0].removal_date,
-                         obspy.UTCDateTime(1999, 5, 5))
-        self.assertEqual(station.equipments[0].calibration_dates[0],
-                         obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(station.equipments[0].calibration_dates[1],
-                         obspy.UTCDateTime(1992, 5, 5))
-        self.assertEqual(station.equipments[1].resource_id, "something_new")
-        self.assertEqual(station.equipments[1].type, "Some type")
-        self.assertEqual(station.equipments[1].description, "Some description")
-        self.assertEqual(station.equipments[1].manufacturer,
-                         "Some manufacturer")
-        self.assertEqual(station.equipments[1].vendor, "Some vendor")
-        self.assertEqual(station.equipments[1].model, "Some model")
-        self.assertEqual(station.equipments[1].serial_number, "12345-ABC")
-        self.assertEqual(station.equipments[1].installation_date,
-                         obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(station.equipments[1].removal_date,
-                         obspy.UTCDateTime(1999, 5, 5))
-        self.assertEqual(station.equipments[1].calibration_dates[0],
-                         obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(station.equipments[1].calibration_dates[1],
-                         obspy.UTCDateTime(1992, 5, 5))
+        assert len(station.equipments) == 2
+        assert station.equipments[0].resource_id == "some_id"
+        assert station.equipments[0].type == "Some type"
+        assert station.equipments[0].description == "Some description"
+        assert station.equipments[0].manufacturer == \
+                         "Some manufacturer"
+        assert station.equipments[0].vendor == "Some vendor"
+        assert station.equipments[0].model == "Some model"
+        assert station.equipments[0].serial_number == "12345-ABC"
+        assert station.equipments[0].installation_date == \
+                         obspy.UTCDateTime(1990, 5, 5)
+        assert station.equipments[0].removal_date == \
+                         obspy.UTCDateTime(1999, 5, 5)
+        assert station.equipments[0].calibration_dates[0] == \
+                         obspy.UTCDateTime(1990, 5, 5)
+        assert station.equipments[0].calibration_dates[1] == \
+                         obspy.UTCDateTime(1992, 5, 5)
+        assert station.equipments[1].resource_id == "something_new"
+        assert station.equipments[1].type == "Some type"
+        assert station.equipments[1].description == "Some description"
+        assert station.equipments[1].manufacturer == \
+                         "Some manufacturer"
+        assert station.equipments[1].vendor == "Some vendor"
+        assert station.equipments[1].model == "Some model"
+        assert station.equipments[1].serial_number == "12345-ABC"
+        assert station.equipments[1].installation_date == \
+                         obspy.UTCDateTime(1990, 5, 5)
+        assert station.equipments[1].removal_date == \
+                         obspy.UTCDateTime(1999, 5, 5)
+        assert station.equipments[1].calibration_dates[0] == \
+                         obspy.UTCDateTime(1990, 5, 5)
+        assert station.equipments[1].calibration_dates[1] == \
+                         obspy.UTCDateTime(1992, 5, 5)
 
-        self.assertEqual(len(station.operators), 2)
-        self.assertEqual(station.operators[0].agency, "Agency 1")
+        assert len(station.operators) == 2
+        assert station.operators[0].agency == "Agency 1"
         # legacy, "agencies" was a thing for StationXML 1.0
         regex = (
             r"Attribute 'agencies' \(holding a list of strings as Agencies\) "
@@ -587,97 +586,83 @@ class StationXMLTestCase(unittest.TestCase):
         with CatchAndAssertWarnings(
                 clear=['obspy.io.stationxml.core'],
                 expected=[(ObsPyDeprecationWarning, regex)]):
-            self.assertEqual(station.operators[0].agencies[0], "Agency 1")
-        self.assertEqual(station.operators[0].contacts[0].names[0],
-                         "This person")
-        self.assertEqual(station.operators[0].contacts[0].names[1],
-                         "has multiple names!")
-        self.assertEqual(len(station.operators[0].contacts[0].agencies), 3)
-        self.assertEqual(station.operators[0].contacts[0].agencies[0],
-                         "And also")
-        self.assertEqual(station.operators[0].contacts[0].agencies[1], "many")
-        self.assertEqual(station.operators[0].contacts[0].agencies[2],
-                         "many Agencies")
-        self.assertEqual(len(station.operators[0].contacts[0].emails), 4)
-        self.assertEqual(station.operators[0].contacts[0].emails[0],
-                         "email1@mail.com")
-        self.assertEqual(station.operators[0].contacts[0].emails[1],
-                         "email2@mail.com")
-        self.assertEqual(station.operators[0].contacts[0].emails[2],
-                         "email3@mail.com")
-        self.assertEqual(station.operators[0].contacts[0].emails[3],
-                         "email4@mail.com")
-        self.assertEqual(len(station.operators[0].contacts[0].phones), 2)
-        self.assertEqual(
-            station.operators[0].contacts[0].phones[0].description,
-            "phone number 1")
-        self.assertEqual(
-            station.operators[0].contacts[0].phones[0].country_code, 49)
-        self.assertEqual(
-            station.operators[0].contacts[0].phones[0].area_code, 123)
-        self.assertEqual(
-            station.operators[0].contacts[0].phones[0].phone_number,
-            "456-7890")
-        self.assertEqual(
-            station.operators[0].contacts[0].phones[1].description,
-            "phone number 2")
-        self.assertEqual(
-            station.operators[0].contacts[0].phones[1].country_code, 34)
-        self.assertEqual(station.operators[0].contacts[0].phones[1].area_code,
-                         321)
-        self.assertEqual(
-            station.operators[0].contacts[0].phones[1].phone_number,
-            "129-7890")
-        self.assertEqual(station.operators[0].contacts[1].names[0], "Name")
-        self.assertEqual(station.operators[0].contacts[1].agencies[0],
-                         "Agency")
-        self.assertEqual(station.operators[0].contacts[1].emails[0],
-                         "email@mail.com")
-        self.assertEqual(
-            station.operators[0].contacts[1].phones[0].description,
-            "phone number 1")
-        self.assertEqual(
-            station.operators[0].contacts[1].phones[0].country_code, 49)
-        self.assertEqual(
-            station.operators[0].contacts[1].phones[0].area_code, 123)
-        self.assertEqual(
-            station.operators[0].contacts[1].phones[0].phone_number,
-            "456-7890")
-        self.assertEqual(station.operators[0].website, "http://www.web.site")
+            assert station.operators[0].agencies[0] == "Agency 1"
+        assert station.operators[0].contacts[0].names[0] == \
+                         "This person"
+        assert station.operators[0].contacts[0].names[1] == \
+                         "has multiple names!"
+        assert len(station.operators[0].contacts[0].agencies) == 3
+        assert station.operators[0].contacts[0].agencies[0] == \
+                         "And also"
+        assert station.operators[0].contacts[0].agencies[1] == "many"
+        assert station.operators[0].contacts[0].agencies[2] == \
+                         "many Agencies"
+        assert len(station.operators[0].contacts[0].emails) == 4
+        assert station.operators[0].contacts[0].emails[0] == \
+                         "email1@mail.com"
+        assert station.operators[0].contacts[0].emails[1] == \
+                         "email2@mail.com"
+        assert station.operators[0].contacts[0].emails[2] == \
+                         "email3@mail.com"
+        assert station.operators[0].contacts[0].emails[3] == \
+                         "email4@mail.com"
+        assert len(station.operators[0].contacts[0].phones) == 2
+        assert station.operators[0].contacts[0].phones[0].description == \
+            "phone number 1"
+        assert station.operators[0].contacts[0].phones[0].country_code == 49
+        assert station.operators[0].contacts[0].phones[0].area_code == 123
+        assert station.operators[0].contacts[0].phones[0].phone_number == \
+            "456-7890"
+        assert station.operators[0].contacts[0].phones[1].description == \
+            "phone number 2"
+        assert station.operators[0].contacts[0].phones[1].country_code == 34
+        assert station.operators[0].contacts[0].phones[1].area_code == \
+                         321
+        assert station.operators[0].contacts[0].phones[1].phone_number == \
+            "129-7890"
+        assert station.operators[0].contacts[1].names[0] == "Name"
+        assert station.operators[0].contacts[1].agencies[0] == \
+                         "Agency"
+        assert station.operators[0].contacts[1].emails[0] == \
+                         "email@mail.com"
+        assert station.operators[0].contacts[1].phones[0].description == \
+            "phone number 1"
+        assert station.operators[0].contacts[1].phones[0].country_code == 49
+        assert station.operators[0].contacts[1].phones[0].area_code == 123
+        assert station.operators[0].contacts[1].phones[0].phone_number == \
+            "456-7890"
+        assert station.operators[0].website == "http://www.web.site"
 
-        self.assertEqual(station.operators[1].agency, "Agency")
-        self.assertEqual(station.operators[1].contacts[0].names[0], "New Name")
-        self.assertEqual(station.operators[1].contacts[0].agencies[0],
-                         "Agency")
-        self.assertEqual(station.operators[1].contacts[0].emails[0],
-                         "email@mail.com")
-        self.assertEqual(
-            station.operators[1].contacts[0].phones[0].description,
-            "phone number 1")
-        self.assertEqual(
-            station.operators[1].contacts[0].phones[0].country_code, 49)
-        self.assertEqual(station.operators[1].contacts[0].phones[0].area_code,
-                         123)
-        self.assertEqual(
-            station.operators[1].contacts[0].phones[0].phone_number,
-            "456-7890")
-        self.assertEqual(station.operators[1].website, "http://www.web.site")
+        assert station.operators[1].agency == "Agency"
+        assert station.operators[1].contacts[0].names[0] == "New Name"
+        assert station.operators[1].contacts[0].agencies[0] == \
+                         "Agency"
+        assert station.operators[1].contacts[0].emails[0] == \
+                         "email@mail.com"
+        assert station.operators[1].contacts[0].phones[0].description == \
+            "phone number 1"
+        assert station.operators[1].contacts[0].phones[0].country_code == 49
+        assert station.operators[1].contacts[0].phones[0].area_code == \
+                         123
+        assert station.operators[1].contacts[0].phones[0].phone_number == \
+            "456-7890"
+        assert station.operators[1].website == "http://www.web.site"
 
-        self.assertEqual(station.creation_date, obspy.UTCDateTime(1990, 5, 5))
-        self.assertEqual(station.termination_date,
-                         obspy.UTCDateTime(2009, 5, 5))
-        self.assertEqual(station.total_number_of_channels, 100)
-        self.assertEqual(station.selected_number_of_channels, 1)
+        assert station.creation_date == obspy.UTCDateTime(1990, 5, 5)
+        assert station.termination_date == \
+                         obspy.UTCDateTime(2009, 5, 5)
+        assert station.total_number_of_channels == 100
+        assert station.selected_number_of_channels == 1
 
-        self.assertEqual(len(station.external_references), 2)
-        self.assertEqual(station.external_references[0].uri,
-                         "http://path.to/something")
-        self.assertEqual(station.external_references[0].description,
-                         "Some description")
-        self.assertEqual(station.external_references[1].uri,
-                         "http://path.to/something/else")
-        self.assertEqual(station.external_references[1].description,
-                         "Some other description")
+        assert len(station.external_references) == 2
+        assert station.external_references[0].uri == \
+                         "http://path.to/something"
+        assert station.external_references[0].description == \
+                         "Some description"
+        assert station.external_references[1].uri == \
+                         "http://path.to/something/else"
+        assert station.external_references[1].description == \
+                         "Some other description"
 
         # Now write it again and compare to the original file.
         file_buffer = io.BytesIO()
@@ -700,64 +685,64 @@ class StationXMLTestCase(unittest.TestCase):
         filename = os.path.join(self.data_dir,
                                 "IRIS_single_channel_with_response.xml")
         inv = obspy.read_inventory(filename)
-        self.assertEqual(inv.source, "IRIS-DMC")
-        self.assertEqual(inv.sender, "IRIS-DMC")
-        self.assertEqual(inv.created, obspy.UTCDateTime("2013-04-16T06:15:28"))
+        assert inv.source == "IRIS-DMC"
+        assert inv.sender == "IRIS-DMC"
+        assert inv.created == obspy.UTCDateTime("2013-04-16T06:15:28")
         # Assert that precisely one channel object has been created.
-        self.assertEqual(len(inv.networks), 1)
-        self.assertEqual(len(inv.networks[0].stations), 1)
-        self.assertEqual(len(inv.networks[0].stations[0].channels), 1)
+        assert len(inv.networks) == 1
+        assert len(inv.networks[0].stations) == 1
+        assert len(inv.networks[0].stations[0].channels) == 1
         network = inv.networks[0]
         station = network.stations[0]
         channel = station.channels[0]
         # Assert some fields of the network. This is extensively tested
         # elsewhere.
-        self.assertEqual(network.code, "IU")
-        self.assertEqual(network.start_date,
-                         obspy.UTCDateTime("1988-01-01T00:00:00"))
-        self.assertEqual(network.end_date,
-                         obspy.UTCDateTime("2500-12-12T23:59:59"))
-        self.assertEqual(network.description,
-                         "Global Seismograph Network (GSN - IRIS/USGS)")
+        assert network.code == "IU"
+        assert network.start_date == \
+                         obspy.UTCDateTime("1988-01-01T00:00:00")
+        assert network.end_date == \
+                         obspy.UTCDateTime("2500-12-12T23:59:59")
+        assert network.description == \
+                         "Global Seismograph Network (GSN - IRIS/USGS)"
         # Assert a few fields of the station. This is extensively tested
         # elsewhere.
-        self.assertEqual(station.code, "ANMO")
-        self.assertEqual(station.latitude, 34.94591)
-        self.assertEqual(station.longitude, -106.4572)
-        self.assertEqual(station.elevation, 1820.0)
-        self.assertEqual(station.site.name, "Albuquerque, New Mexico, USA")
+        assert station.code == "ANMO"
+        assert station.latitude == 34.94591
+        assert station.longitude == -106.4572
+        assert station.elevation == 1820.0
+        assert station.site.name == "Albuquerque, New Mexico, USA"
         # Start to assert the channel reading.
-        self.assertEqual(channel.code, "BHZ")
-        self.assertEqual(channel.location_code, "10")
-        self.assertEqual(channel.start_date,
-                         obspy.UTCDateTime("2012-03-13T08:10:00"))
-        self.assertEqual(channel.end_date,
-                         obspy.UTCDateTime("2599-12-31T23:59:59"))
-        self.assertEqual(channel.restricted_status, "open")
-        self.assertEqual(channel.latitude, 34.945913)
-        self.assertEqual(channel.longitude, -106.457122)
-        self.assertEqual(channel.elevation, 1759.0)
-        self.assertEqual(channel.depth, 57.0)
-        self.assertEqual(channel.azimuth, 0.0)
-        self.assertEqual(channel.dip, -90.0)
-        self.assertEqual(channel.types, ["CONTINUOUS", "GEOPHYSICAL"])
-        self.assertEqual(channel.sample_rate, 40.0)
-        self.assertEqual(channel.clock_drift_in_seconds_per_sample, 0.0)
-        self.assertEqual(channel.sensor.type,
-                         "Guralp CMG3-T Seismometer (borehole)")
+        assert channel.code == "BHZ"
+        assert channel.location_code == "10"
+        assert channel.start_date == \
+                         obspy.UTCDateTime("2012-03-13T08:10:00")
+        assert channel.end_date == \
+                         obspy.UTCDateTime("2599-12-31T23:59:59")
+        assert channel.restricted_status == "open"
+        assert channel.latitude == 34.945913
+        assert channel.longitude == -106.457122
+        assert channel.elevation == 1759.0
+        assert channel.depth == 57.0
+        assert channel.azimuth == 0.0
+        assert channel.dip == -90.0
+        assert channel.types == ["CONTINUOUS", "GEOPHYSICAL"]
+        assert channel.sample_rate == 40.0
+        assert channel.clock_drift_in_seconds_per_sample == 0.0
+        assert channel.sensor.type == \
+                         "Guralp CMG3-T Seismometer (borehole)"
         # Check the response.
         response = channel.response
         sensitivity = response.instrument_sensitivity
-        self.assertEqual(sensitivity.value, 3.31283E10)
-        self.assertEqual(sensitivity.frequency, 0.02)
-        self.assertEqual(sensitivity.input_units, "M/S")
-        self.assertEqual(sensitivity.input_units_description,
-                         "Velocity in Meters Per Second")
-        self.assertEqual(sensitivity.output_units, "COUNTS")
-        self.assertEqual(sensitivity.output_units_description,
-                         "Digital Counts")
+        assert sensitivity.value == 3.31283E10
+        assert sensitivity.frequency == 0.02
+        assert sensitivity.input_units == "M/S"
+        assert sensitivity.input_units_description == \
+                         "Velocity in Meters Per Second"
+        assert sensitivity.output_units == "COUNTS"
+        assert sensitivity.output_units_description == \
+                         "Digital Counts"
         # Assert that there are three stages.
-        self.assertEqual(len(response.response_stages), 3)
+        assert len(response.response_stages) == 3
 
     def test_stationxml_with_availability(self):
         """
@@ -768,10 +753,10 @@ class StationXMLTestCase(unittest.TestCase):
                                 "stationxml_with_availability.xml")
         inv = obspy.read_inventory(filename, format="stationxml")
         channel = inv[0][0][0]
-        self.assertEqual(channel.data_availability.start,
-                         obspy.UTCDateTime("1998-10-26T20:35:58"))
-        self.assertEqual(channel.data_availability.end,
-                         obspy.UTCDateTime("2014-07-21T12:00:00"))
+        assert channel.data_availability.start == \
+                         obspy.UTCDateTime("1998-10-26T20:35:58")
+        assert channel.data_availability.end == \
+                         obspy.UTCDateTime("2014-07-21T12:00:00")
 
         # Now write it again and compare to the original file.
         file_buffer = io.BytesIO()
@@ -795,8 +780,8 @@ class StationXMLTestCase(unittest.TestCase):
         filename = os.path.join(self.data_dir, "no_default_namespace.xml")
         inv = obspy.read_inventory(filename)
         # Very small file with almost no content.
-        self.assertEqual(len(inv.networks), 1)
-        self.assertEqual(inv[0].code, "XX")
+        assert len(inv.networks) == 1
+        assert inv[0].code == "XX"
 
     def test_parse_file_with_schema_2(self):
         """
@@ -807,12 +792,12 @@ class StationXMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always', UserWarning)
             inv = obspy.read_inventory(filename)
-        self.assertEqual(len(w), 1)
-        self.assertTrue('StationXML file has version 2.0' in str(w[0].message))
+        assert len(w) == 1
+        assert 'StationXML file has version 2.0' in str(w[0].message)
 
         # Very small file with almost no content.
-        self.assertEqual(len(inv.networks), 1)
-        self.assertEqual(inv[0].code, "XX")
+        assert len(inv.networks) == 1
+        assert inv[0].code == "XX"
 
     def test_numbers_are_written_to_poles_and_zeros(self):
         """
@@ -839,18 +824,14 @@ class StationXMLTestCase(unittest.TestCase):
         # lines are part of the written output.
         data = re.sub(r'\s+', ' ', data)
 
-        self.assertIn(
-            '<Zero number="0"> <Real>0.0</Real> '
-            '<Imaginary>1.0</Imaginary> </Zero>', data)
-        self.assertIn(
-            '<Zero number="1"> <Real>2.0</Real> '
-            '<Imaginary>3.0</Imaginary> </Zero>', data)
-        self.assertIn(
-            '<Pole number="0"> <Real>0.0</Real> '
-            '<Imaginary>1.0</Imaginary> </Pole>', data)
-        self.assertIn(
-            '<Pole number="1"> <Real>2.0</Real> '
-            '<Imaginary>3.0</Imaginary> </Pole>', data)
+        assert '<Zero number="0"> <Real>0.0</Real> ' \
+            '<Imaginary>1.0</Imaginary> </Zero>' in data
+        assert '<Zero number="1"> <Real>2.0</Real> ' \
+            '<Imaginary>3.0</Imaginary> </Zero>' in data
+        assert '<Pole number="0"> <Real>0.0</Real> ' \
+            '<Imaginary>1.0</Imaginary> </Pole>' in data
+        assert '<Pole number="1"> <Real>2.0</Real> ' \
+            '<Imaginary>3.0</Imaginary> </Pole>' in data
 
     def test_write_with_extra_tags_namespace_redef(self):
         """
@@ -866,8 +847,8 @@ class StationXMLTestCase(unittest.TestCase):
             tmpfile = tf.name
             # assert that namespace prefix of None raises ValueError
             mynsmap = {None: 'http://bad.custom.ns/'}
-            self.assertRaises(
-                ValueError, inv.write, path_or_file_object=tmpfile,
+            with pytest.raises(ValueError):
+                inv.write(path_or_file_object=tmpfile,
                 format="STATIONXML", nsmap=mynsmap)
 
     def test_write_with_extra_tags_without_read_extra(self):
@@ -945,7 +926,7 @@ class StationXMLTestCase(unittest.TestCase):
                 b'xmlns="http://www.fdsn.org/xml/station/1"',
                 b'xmlns:myns="http://test.myns.ns/"']
             for line in expected:
-                self.assertIn(line, content)
+                assert line in content
             # check additional tags
             expected = [
                 b'<myns:mynsNetworkTag>' +
@@ -971,7 +952,7 @@ class StationXMLTestCase(unittest.TestCase):
                 b'</myns:nested>'
             ]
             for line in expected:
-                self.assertIn(line, content)
+                assert line in content
 
     def test_write_with_extra_tags_and_read(self):
         """
@@ -986,7 +967,7 @@ class StationXMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             inv = obspy.read_inventory(filename)
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write file
@@ -1004,7 +985,7 @@ class StationXMLTestCase(unittest.TestCase):
                         b'xmlns:test="http://just.a.test/xmlns/1"'
                         ]
             for line in expected:
-                self.assertIn(line, content)
+                assert line in content
             # check custom tags, nested custom tags, and attributes
             # at every level of the StationXML hierarchy
             expected = [
@@ -1144,7 +1125,7 @@ class StationXMLTestCase(unittest.TestCase):
                 b'</test:CustomNestedSensitivityTag>'
             ]
             for line in expected:
-                self.assertIn(line, content)
+                assert line in content
             # now, read again to test if it's parsed correctly..
             inv = obspy.read_inventory(tmpfile)
 
@@ -1155,10 +1136,9 @@ class StationXMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_dir, "empty_channel.xml")
         inv = obspy.read_inventory(filename)
-        self.assertEqual(
-            inv.get_contents(),
+        assert inv.get_contents() == \
             {'networks': ['IV'], 'stations': ['IV.LATE (Latera)'],
-             'channels': []})
+             'channels': []}
 
     def test_reading_channel_without_coordinates(self):
         """
@@ -1173,18 +1153,16 @@ class StationXMLTestCase(unittest.TestCase):
 
         # Should raise a warning that it could not read the channel without
         # coordinates.
-        self.assertEqual(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            "Channel 00.BHZ of station LATE does not have a complete set of "
-            "coordinates (latitude, longitude), elevation and depth and thus "
-            "it cannot be read. It will not be part of "
-            "the final inventory object.")
+        assert len(w) == 1
+        assert w[0].message.args[0] == \
+            "Channel 00.BHZ of station LATE does not have a complete set of " \
+            "coordinates (latitude, longitude), elevation and depth and thus " \
+            "it cannot be read. It will not be part of " \
+            "the final inventory object."
 
-        self.assertEqual(
-            inv.get_contents(),
+        assert inv.get_contents() == \
             {'networks': ['IV'], 'stations': ['IV.LATE (Latera)'],
-             'channels': []})
+             'channels': []}
 
     def test_units_during_identity_stage(self):
         """
@@ -1213,19 +1191,15 @@ class StationXMLTestCase(unittest.TestCase):
 
         response_2 = inv_2.get_response("BW.RJOB..EHZ", t)
 
-        self.assertEqual(response, response_2)
-        self.assertEqual(response_2.response_stages[1].input_units, "V")
-        self.assertEqual(response_2.response_stages[1].output_units, "V")
-        self.assertEqual(
-            response_2.response_stages[1].input_units_description, "Volts")
-        self.assertEqual(
-            response_2.response_stages[1].output_units_description, "Volts")
-        self.assertEqual(response_2.response_stages[2].input_units, "V")
-        self.assertEqual(response_2.response_stages[2].output_units, "V")
-        self.assertEqual(
-            response_2.response_stages[2].input_units_description, "Volts")
-        self.assertEqual(
-            response_2.response_stages[2].output_units_description, "Volts")
+        assert response == response_2
+        assert response_2.response_stages[1].input_units == "V"
+        assert response_2.response_stages[1].output_units == "V"
+        assert response_2.response_stages[1].input_units_description == "Volts"
+        assert response_2.response_stages[1].output_units_description == "Volts"
+        assert response_2.response_stages[2].input_units == "V"
+        assert response_2.response_stages[2].output_units == "V"
+        assert response_2.response_stages[2].input_units_description == "Volts"
+        assert response_2.response_stages[2].output_units_description == "Volts"
 
         # Also try from the other side.
         inv = obspy.read_inventory().select(station="RJOB", channel="EHZ",
@@ -1257,19 +1231,15 @@ class StationXMLTestCase(unittest.TestCase):
         response_2.response_stages[0].input_units = None
         response_2.response_stages[0].input_units_description = None
 
-        self.assertEqual(response, response_2)
-        self.assertEqual(response_2.response_stages[1].input_units, "V")
-        self.assertEqual(response_2.response_stages[1].output_units, "V")
-        self.assertEqual(
-            response_2.response_stages[1].input_units_description, "Volts")
-        self.assertEqual(
-            response_2.response_stages[1].output_units_description, "Volts")
-        self.assertEqual(response_2.response_stages[2].input_units, "V")
-        self.assertEqual(response_2.response_stages[2].output_units, "V")
-        self.assertEqual(
-            response_2.response_stages[2].input_units_description, "Volts")
-        self.assertEqual(
-            response_2.response_stages[2].output_units_description, "Volts")
+        assert response == response_2
+        assert response_2.response_stages[1].input_units == "V"
+        assert response_2.response_stages[1].output_units == "V"
+        assert response_2.response_stages[1].input_units_description == "Volts"
+        assert response_2.response_stages[1].output_units_description == "Volts"
+        assert response_2.response_stages[2].input_units == "V"
+        assert response_2.response_stages[2].output_units == "V"
+        assert response_2.response_stages[2].input_units_description == "Volts"
+        assert response_2.response_stages[2].output_units_description == "Volts"
 
     def test_reading_full_stationxml_1_0_file(self):
         """
@@ -1281,8 +1251,7 @@ class StationXMLTestCase(unittest.TestCase):
         lats = [cha.latitude for net in inv for sta in net for cha in sta]
         # for now just check that all expected channels are there.. test could
         # be much improved
-        self.assertEqual(
-            lats, [-53.12, 44.77, 63.39, 12.46, -13.16, -84.44, 43.9, -88.41])
+        assert lats == [-53.12, 44.77, 63.39, 12.46, -13.16, -84.44, 43.9, -88.41]
 
     def test_read_with_level(self):
         """
@@ -1295,29 +1264,28 @@ class StationXMLTestCase(unittest.TestCase):
         inv_stationxml_station = _read_stationxml(path, level='station')
         inv_stationxml_network = _read_stationxml(path, level='network')
         # test reading through plugin
-        self.assertEqual(
-            obspy.read_inventory(path, format='STATIONXML', level='station'),
-            inv_stationxml_station)
+        assert obspy.read_inventory(path, format='STATIONXML', level='station') == \
+            inv_stationxml_station
         # test reading default which should be equivalent to reading response
         # level
-        self.assertEqual(inv_stationxml_no_level, inv_stationxml_response)
+        assert inv_stationxml_no_level == inv_stationxml_response
         # test reading response level
-        self.assertEqual(len(inv_stationxml_response), 1)
-        self.assertEqual(len(inv_stationxml_response[0]), 1)
-        self.assertEqual(len(inv_stationxml_response[0][0]), 1)
-        self.assertIsNotNone(inv_stationxml_response[0][0][0].response)
+        assert len(inv_stationxml_response) == 1
+        assert len(inv_stationxml_response[0]) == 1
+        assert len(inv_stationxml_response[0][0]) == 1
+        assert inv_stationxml_response[0][0][0].response is not None
         # test reading channel level
-        self.assertEqual(len(inv_stationxml_channel), 1)
-        self.assertEqual(len(inv_stationxml_channel[0]), 1)
-        self.assertEqual(len(inv_stationxml_channel[0][0]), 1)
-        self.assertIsNone(inv_stationxml_channel[0][0][0].response)
+        assert len(inv_stationxml_channel) == 1
+        assert len(inv_stationxml_channel[0]) == 1
+        assert len(inv_stationxml_channel[0][0]) == 1
+        assert inv_stationxml_channel[0][0][0].response is None
         # test reading station level
-        self.assertEqual(len(inv_stationxml_station), 1)
-        self.assertEqual(len(inv_stationxml_station[0]), 1)
-        self.assertEqual(len(inv_stationxml_station[0][0]), 0)
+        assert len(inv_stationxml_station) == 1
+        assert len(inv_stationxml_station[0]) == 1
+        assert len(inv_stationxml_station[0][0]) == 0
         # test reading station level
-        self.assertEqual(len(inv_stationxml_network), 1)
-        self.assertEqual(len(inv_stationxml_network[0]), 0)
+        assert len(inv_stationxml_network) == 1
+        assert len(inv_stationxml_network[0]) == 0
 
     def test_read_basic_responsestage_with_decimation(self):
         """

@@ -21,6 +21,7 @@ from obspy.io.mseed.headers import (FIXED_HEADER_ACTIVITY_FLAGS,
                                     FIXED_HEADER_DATA_QUAL_FLAGS,
                                     FIXED_HEADER_IO_CLOCK_FLAGS)
 from obspy.io.mseed.util import set_flags_in_fixed_headers
+import pytest
 
 
 def _create_mseed_file(filename, record_count, sampling_rate=1.0,
@@ -115,20 +116,18 @@ class MSEEDUtilTestCase(unittest.TestCase):
         }
         # Loop over timesdict.
         for ts, dt in timesdict.items():
-            self.assertEqual(
-                dt, util._convert_mstime_to_datetime(ts * 1000000))
-            self.assertEqual(
-                ts * 1000000, util._convert_datetime_to_mstime(dt))
+            assert dt == util._convert_mstime_to_datetime(ts * 1000000)
+            assert ts * 1000000 == util._convert_datetime_to_mstime(dt)
         # Additional sanity tests.
         # Random date that previously failed.
         dt = UTCDateTime(2017, 3, 6, 4, 12, 16, 260696)
-        self.assertEqual(dt, util._convert_mstime_to_datetime(
-            util._convert_datetime_to_mstime(dt)))
+        assert dt == util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt))
         # Some random date.
         random.seed(815)  # make test reproducible
         timestring = random.randint(0, 2000000) * 1e6
-        self.assertEqual(timestring, util._convert_datetime_to_mstime(
-            util._convert_mstime_to_datetime(timestring)))
+        assert timestring == util._convert_datetime_to_mstime(
+            util._convert_mstime_to_datetime(timestring))
 
     def test_convert_datetime2(self):
         """
@@ -136,25 +135,25 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         # 1
         dt = UTCDateTime(ns=1487021451935737333)
-        self.assertEqual(str(dt), "2017-02-13T21:30:51.935737Z")
-        self.assertEqual(util._convert_datetime_to_mstime(dt),
-                         1487021451935737)
-        self.assertEqual(dt, util._convert_mstime_to_datetime(
-            util._convert_datetime_to_mstime(dt)))
+        assert str(dt) == "2017-02-13T21:30:51.935737Z"
+        assert util._convert_datetime_to_mstime(dt) == \
+                         1487021451935737
+        assert dt == util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt))
         # 2
         dt = UTCDateTime(ns=1487021451935736449)
-        self.assertEqual(str(dt), "2017-02-13T21:30:51.935736Z")
-        self.assertEqual(util._convert_datetime_to_mstime(dt),
-                         1487021451935736)
-        self.assertEqual(dt, util._convert_mstime_to_datetime(
-            util._convert_datetime_to_mstime(dt)))
+        assert str(dt) == "2017-02-13T21:30:51.935736Z"
+        assert util._convert_datetime_to_mstime(dt) == \
+                         1487021451935736
+        assert dt == util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt))
         # 3
         dt = UTCDateTime(ns=1487021451935736501)
-        self.assertEqual(str(dt), "2017-02-13T21:30:51.935737Z")
-        self.assertEqual(util._convert_datetime_to_mstime(dt),
-                         1487021451935737)
-        self.assertEqual(dt, util._convert_mstime_to_datetime(
-            util._convert_datetime_to_mstime(dt)))
+        assert str(dt) == "2017-02-13T21:30:51.935737Z"
+        assert util._convert_datetime_to_mstime(dt) == \
+                         1487021451935737
+        assert dt == util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt))
 
     def test_get_record_information(self):
         """
@@ -164,38 +163,38 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         # Simply reading the file.
         info = util.get_record_information(filename)
-        self.assertEqual(info['filesize'], 5120)
-        self.assertEqual(info['record_length'], 512)
-        self.assertEqual(info['number_of_records'], 10)
-        self.assertEqual(info['excess_bytes'], 0)
+        assert info['filesize'] == 5120
+        assert info['record_length'] == 512
+        assert info['number_of_records'] == 10
+        assert info['excess_bytes'] == 0
         # Now with an open file. This should work regardless of the current
         # value of the file pointer and it should also not change the file
         # pointer.
         with open(filename, 'rb') as open_file:
             open_file.seek(1234)
             info = util.get_record_information(open_file)
-            self.assertEqual(info['filesize'], 5120 - 1234)
-            self.assertEqual(info['record_length'], 512)
-            self.assertEqual(info['number_of_records'], 7)
-            self.assertEqual(info['excess_bytes'], 302)
-            self.assertEqual(open_file.tell(), 1234)
+            assert info['filesize'] == 5120 - 1234
+            assert info['record_length'] == 512
+            assert info['number_of_records'] == 7
+            assert info['excess_bytes'] == 302
+            assert open_file.tell() == 1234
         # Now test with a BytesIO with the first ten percent.
         with open(filename, 'rb') as open_file:
             open_file_string = io.BytesIO(open_file.read())
         open_file_string.seek(111)
         info = util.get_record_information(open_file_string)
-        self.assertEqual(info['filesize'], 5120 - 111)
-        self.assertEqual(info['record_length'], 512)
-        self.assertEqual(info['number_of_records'], 9)
-        self.assertEqual(info['excess_bytes'], 401)
-        self.assertEqual(open_file_string.tell(), 111)
+        assert info['filesize'] == 5120 - 111
+        assert info['record_length'] == 512
+        assert info['number_of_records'] == 9
+        assert info['excess_bytes'] == 401
+        assert open_file_string.tell() == 111
         # One more file containing two records.
         filename = os.path.join(self.path, 'data', 'test.mseed')
         info = util.get_record_information(filename)
-        self.assertEqual(info['filesize'], 8192)
-        self.assertEqual(info['record_length'], 4096)
-        self.assertEqual(info['number_of_records'], 2)
-        self.assertEqual(info['excess_bytes'], 0)
+        assert info['filesize'] == 8192
+        assert info['record_length'] == 4096
+        assert info['number_of_records'] == 2
+        assert info['excess_bytes'] == 0
 
     def test_get_record_information_negative_sr_rate_and_mult(self):
         """
@@ -204,7 +203,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         filename = os.path.join(
             self.path, 'data', 'single_record_negative_sr_fact_and_mult.mseed')
         info = util.get_record_information(filename)
-        self.assertEqual(info, {
+        assert info == {
             'activity_flags': 0,
             'byteorder': '>',
             'channel': 'VHZ',
@@ -223,7 +222,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             'starttime': UTCDateTime(1991, 2, 21, 23, 50, 0, 430000),
             'station': 'TNV',
             'time_correction': 0
-        })
+        }
 
     def test_issue2069(self):
         """
@@ -248,12 +247,12 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 buf.write(data)
                 buf.seek(0, 0)
                 info = util.get_record_information(buf)
-                self.assertEqual(info['samp_rate'], 0)
+                assert info['samp_rate'] == 0
 
         # Test with an actual sr = 0 file
         filename = os.path.join(self.path, 'data', 'rt130_sr0_cropped.mseed')
         info = util.get_record_information(filename)
-        self.assertEqual(info['samp_rate'], 0)
+        assert info['samp_rate'] == 0
 
     def test_get_data_quality(self):
         """
@@ -275,7 +274,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # the 9th record is set. The last nine records have 0 to 8 set bits,
         # starting with 0 bits, bit 0 is set, bits 0 and 1 are set...
         # Altogether the file contains 44 set bits.
-        self.assertEqual(result['data_quality_flags_counts'], {
+        assert result['data_quality_flags_counts'] == {
             "amplifier_saturation": 9,
             "digitizer_clipping": 8,
             "spikes": 7,
@@ -283,14 +282,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
             "missing_padded_data": 5,
             "telemetry_sync_error": 4,
             "digital_filter_charging": 3,
-            "suspect_time_tag": 2})
+            "suspect_time_tag": 2}
 
         # No set quality flags should result in a list of zeros.
         filename = os.path.join(self.path, 'data', 'test.mseed')
         result = util.get_flags(filename, timing_quality=False,
                                 io_flags=False, activity_flags=False,
                                 data_quality_flags=True)
-        self.assertEqual(result['data_quality_flags_counts'], {
+        assert result['data_quality_flags_counts'] == {
             "amplifier_saturation": 0,
             "digitizer_clipping": 0,
             "spikes": 0,
@@ -298,7 +297,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             "missing_padded_data": 0,
             "telemetry_sync_error": 0,
             "digital_filter_charging": 0,
-            "suspect_time_tag": 0})
+            "suspect_time_tag": 0}
 
     def test_get_flags(self):
         """
@@ -336,9 +335,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
             result = util.get_flags(tf.name, timing_quality=False)
 
-            self.assertEqual(result["record_count"], 112)
+            assert result["record_count"] == 112
 
-            self.assertEqual(result['data_quality_flags_counts'], {
+            assert result['data_quality_flags_counts'] == {
                 "amplifier_saturation": 55,
                 "digitizer_clipping": 72,
                 "spikes": 55,
@@ -346,31 +345,31 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "missing_padded_data": 55,
                 "telemetry_sync_error": 63,
                 "digital_filter_charging": 4,
-                "suspect_time_tag": 8})
+                "suspect_time_tag": 8}
 
-            self.assertEqual(result['activity_flags_counts'], {
+            assert result['activity_flags_counts'] == {
                 "calibration_signal": 1,
                 "time_correction_applied": 2,
                 "event_begin": 3,
                 "event_end": 53,
                 "positive_leap": 4,
                 "negative_leap": 11,
-                "event_in_progress": 5})
+                "event_in_progress": 5}
 
-            self.assertEqual(result['io_and_clock_flags_counts'], {
+            assert result['io_and_clock_flags_counts'] == {
                 "station_volume": 1,
                 "long_record_read": 33,
                 "short_record_read": 2,
                 "start_time_series": 3,
                 "end_time_series": 4,
-                "clock_locked": 32})
+                "clock_locked": 32}
 
             # Test time settings. Everything is still present.
             starttime = '2015-10-16T00:00:00'
             result = util.get_flags(tf.name, starttime=starttime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
-            self.assertEqual(result['data_quality_flags_counts'], {
+            assert result['data_quality_flags_counts'] == {
                 "amplifier_saturation": 55,
                 "digitizer_clipping": 72,
                 "spikes": 55,
@@ -378,14 +377,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "missing_padded_data": 55,
                 "telemetry_sync_error": 63,
                 "digital_filter_charging": 4,
-                "suspect_time_tag": 8})
+                "suspect_time_tag": 8}
 
             # Nothing is present.
             starttime = '2015-10-17T00:00:00'
             result = util.get_flags(tf.name, starttime=starttime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
-            self.assertEqual(result['data_quality_flags_counts'], {
+            assert result['data_quality_flags_counts'] == {
                 "amplifier_saturation": 0,
                 "digitizer_clipping": 0,
                 "spikes": 0,
@@ -393,7 +392,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "missing_padded_data": 0,
                 "telemetry_sync_error": 0,
                 "digital_filter_charging": 0,
-                "suspect_time_tag": 0})
+                "suspect_time_tag": 0}
 
             # There are exactly 10 records at the front which have nothing.
             # Thus reading until that point should yield nothing.
@@ -401,7 +400,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             result = util.get_flags(tf.name, endtime=endtime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
-            self.assertEqual(result['data_quality_flags_counts'], {
+            assert result['data_quality_flags_counts'] == {
                 "amplifier_saturation": 0,
                 "digitizer_clipping": 0,
                 "spikes": 0,
@@ -409,13 +408,13 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "missing_padded_data": 0,
                 "telemetry_sync_error": 0,
                 "digital_filter_charging": 0,
-                "suspect_time_tag": 0})
+                "suspect_time_tag": 0}
 
             # Reading after that point should yield everything.
             result = util.get_flags(tf.name, starttime=endtime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
-            self.assertEqual(result['data_quality_flags_counts'], {
+            assert result['data_quality_flags_counts'] == {
                 "amplifier_saturation": 55,
                 "digitizer_clipping": 72,
                 "spikes": 55,
@@ -423,7 +422,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "missing_padded_data": 55,
                 "telemetry_sync_error": 63,
                 "digital_filter_charging": 4,
-                "suspect_time_tag": 8})
+                "suspect_time_tag": 8}
 
     def test_get_flags_from_files_and_file_like_objects(self):
         """
@@ -463,9 +462,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
             # Directly from the file.
             result = util.get_flags(tf, timing_quality=False)
 
-            self.assertEqual(result["record_count"], 112)
+            assert result["record_count"] == 112
 
-            self.assertEqual(result['data_quality_flags_counts'], {
+            assert result['data_quality_flags_counts'] == {
                 "amplifier_saturation": 55,
                 "digitizer_clipping": 72,
                 "spikes": 55,
@@ -473,33 +472,33 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "missing_padded_data": 55,
                 "telemetry_sync_error": 63,
                 "digital_filter_charging": 4,
-                "suspect_time_tag": 8})
+                "suspect_time_tag": 8}
 
-            self.assertEqual(result['activity_flags_counts'], {
+            assert result['activity_flags_counts'] == {
                 "calibration_signal": 1,
                 "time_correction_applied": 2,
                 "event_begin": 3,
                 "event_end": 53,
                 "positive_leap": 4,
                 "negative_leap": 11,
-                "event_in_progress": 5})
+                "event_in_progress": 5}
 
-            self.assertEqual(result['io_and_clock_flags_counts'], {
+            assert result['io_and_clock_flags_counts'] == {
                 "station_volume": 1,
                 "long_record_read": 33,
                 "short_record_read": 2,
                 "start_time_series": 3,
                 "end_time_series": 4,
-                "clock_locked": 32})
+                "clock_locked": 32}
 
             # From a BytesIO objects.
             tf.seek(0, 0)
             with io.BytesIO(tf.read()) as buf:
                 result = util.get_flags(buf, timing_quality=False)
 
-                self.assertEqual(result["record_count"], 112)
+                assert result["record_count"] == 112
 
-                self.assertEqual(result['data_quality_flags_counts'], {
+                assert result['data_quality_flags_counts'] == {
                     "amplifier_saturation": 55,
                     "digitizer_clipping": 72,
                     "spikes": 55,
@@ -507,24 +506,24 @@ class MSEEDUtilTestCase(unittest.TestCase):
                     "missing_padded_data": 55,
                     "telemetry_sync_error": 63,
                     "digital_filter_charging": 4,
-                    "suspect_time_tag": 8})
+                    "suspect_time_tag": 8}
 
-                self.assertEqual(result['activity_flags_counts'], {
+                assert result['activity_flags_counts'] == {
                     "calibration_signal": 1,
                     "time_correction_applied": 2,
                     "event_begin": 3,
                     "event_end": 53,
                     "positive_leap": 4,
                     "negative_leap": 11,
-                    "event_in_progress": 5})
+                    "event_in_progress": 5}
 
-                self.assertEqual(result['io_and_clock_flags_counts'], {
+                assert result['io_and_clock_flags_counts'] == {
                     "station_volume": 1,
                     "long_record_read": 33,
                     "short_record_read": 2,
                     "start_time_series": 3,
                     "end_time_series": 4,
-                    "clock_locked": 32})
+                    "clock_locked": 32}
 
     def test_get_start_and_end_time(self):
         """
@@ -540,8 +539,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
             (start, end) = util.get_start_and_end_time(filename)
             # Parse the whole file.
             stream = _read_mseed(filename)
-            self.assertEqual(start, stream[0].stats.starttime)
-            self.assertEqual(end, stream[0].stats.endtime)
+            assert start == stream[0].stats.starttime
+            assert end == stream[0].stats.endtime
 
     def test_get_timing_quality(self):
         """
@@ -572,13 +571,13 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
         del result["timing_quality"]["all_values"]
 
-        self.assertEqual(result["timing_quality"], {
+        assert result["timing_quality"] == {
             'upper_quartile': 75.0,
             'min': 0.0,
             'lower_quartile': 25.0,
             'mean': 50.0,
             'median': 50.0,
-            'max': 100.0})
+            'max': 100.0}
 
         # No timing quality set should result in an empty dictionary.
         filename = os.path.join(self.path, 'data',
@@ -586,7 +585,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         result = util.get_flags(filename, timing_quality=True,
                                 io_flags=False, activity_flags=False,
                                 data_quality_flags=False)
-        self.assertEqual(result["timing_quality"], {})
+        assert result["timing_quality"] == {}
 
     def test_unpack_steim_1(self):
         """
@@ -630,19 +629,19 @@ class MSEEDUtilTestCase(unittest.TestCase):
             st_before = _read_mseed(filename)
             st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime += 1
-            self.assertEqual(st_before, st_after)
+            assert st_before == st_after
             # Shift by 22 seconds in the other direction.
             util.shift_time_of_file(filename, output_filename, -220000)
             st_before = _read_mseed(filename)
             st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime -= 22
-            self.assertEqual(st_before, st_after)
+            assert st_before == st_after
             # Shift by 11.33 seconds.
             util.shift_time_of_file(filename, output_filename, 113300)
             st_before = _read_mseed(filename)
             st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime += 11.33
-            self.assertEqual(st_before, st_after)
+            assert st_before == st_after
 
             # Test a special case with the time correction applied flag set but
             # no actual time correction in the field.
@@ -654,13 +653,13 @@ class MSEEDUtilTestCase(unittest.TestCase):
             st_before = _read_mseed(filename)
             st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime += 2.2
-            self.assertEqual(st_before, st_after)
+            assert st_before == st_after
             # Negative shift.
             util.shift_time_of_file(filename, output_filename, -333000)
             st_before = _read_mseed(filename)
             st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime -= 33.3
-            self.assertEqual(st_before, st_after)
+            assert st_before == st_after
 
     def test_time_shifting_special_case(self):
         """
@@ -676,8 +675,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "one_record_already_applied_time_correction.mseed")
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('error', UserWarning)
-                self.assertRaises(UserWarning, util.shift_time_of_file,
-                                  input_file=filename,
+                with pytest.raises(UserWarning):
+                    util.shift_time_of_file(input_file=filename,
                                   output_file=output_filename,
                                   timeshift=123400)
                 # Now ignore the warnings and test the default values.
@@ -688,7 +687,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             st_before = _read_mseed(filename)
             st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime += 12.34
-            self.assertEqual(st_before, st_after)
+            assert st_before == st_after
 
             # Test negative shifts.
             with warnings.catch_warnings(record=True):
@@ -699,7 +698,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             st_before = _read_mseed(filename)
             st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime -= 2.2222
-            self.assertEqual(st_before, st_after)
+            assert st_before == st_after
 
     def test_check_flag_value(self):
         """
@@ -707,63 +706,63 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         # Valid value for a boolean flag
         corrected_flag = util._check_flag_value(True)
-        self.assertTrue(isinstance(corrected_flag, bool))
-        self.assertTrue(corrected_flag)
+        assert isinstance(corrected_flag, bool)
+        assert corrected_flag
         corrected_flag = util._check_flag_value(False)
-        self.assertTrue(isinstance(corrected_flag, bool))
-        self.assertFalse(corrected_flag)
+        assert isinstance(corrected_flag, bool)
+        assert not corrected_flag
 
         # Valid value for an instant flag #1
         flag_value = {"INSTANT": UTCDateTime("2009-12-23T06:00:00.0")}
         corrected_flag = util._check_flag_value(flag_value)
-        self.assertTrue(isinstance(corrected_flag, list))
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-23T06:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-23T06:00:00.0"))
+        assert isinstance(corrected_flag, list)
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-23T06:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-23T06:00:00.0")
 
         # Valid value for an instant flag #2
         flag_value = {"INSTANT": [UTCDateTime("2009-12-24T06:00:00.0")]}
         corrected_flag = util._check_flag_value(flag_value)
-        self.assertTrue(isinstance(corrected_flag, list))
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-24T06:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-24T06:00:00.0"))
+        assert isinstance(corrected_flag, list)
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-24T06:00:00.0")
 
         # Valid value for several instant flags
         flag_value = {"INSTANT": [UTCDateTime("2009-12-24T06:00:00.0"),
                                   UTCDateTime("2009-12-24T06:01:00.0")]}
         corrected_flag = util._check_flag_value(flag_value)
-        self.assertTrue(isinstance(corrected_flag, list))
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-24T06:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-24T06:00:00.0"))
-        self.assertEqual(corrected_flag[1][0],
-                         UTCDateTime("2009-12-24T06:01:00.0"))
-        self.assertEqual(corrected_flag[1][1],
-                         UTCDateTime("2009-12-24T06:01:00.0"))
+        assert isinstance(corrected_flag, list)
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[1][0] == \
+                         UTCDateTime("2009-12-24T06:01:00.0")
+        assert corrected_flag[1][1] == \
+                         UTCDateTime("2009-12-24T06:01:00.0")
 
         # Valid value for a duration #1
         flag_value = {"DURATION": [UTCDateTime("2009-12-25T06:00:00.0"),
                                    UTCDateTime("2009-12-25T06:10:00.0")]}
         corrected_flag = util._check_flag_value(flag_value)
-        self.assertTrue(isinstance(corrected_flag, list))
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-25T06:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-25T06:10:00.0"))
+        assert isinstance(corrected_flag, list)
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-25T06:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-25T06:10:00.0")
 
         # Valid value for a duration #2
         flag_value = {"DURATION": [(UTCDateTime("2009-12-25T16:00:00.0"),
                                     UTCDateTime("2009-12-25T16:10:00.0"))]}
         corrected_flag = util._check_flag_value(flag_value)
-        self.assertTrue(isinstance(corrected_flag, list))
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-25T16:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-25T16:10:00.0"))
+        assert isinstance(corrected_flag, list)
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-25T16:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-25T16:10:00.0")
 
         # Valid value for several durations #1
         flag_value = {"DURATION": [UTCDateTime("2009-12-24T06:00:00.0"),
@@ -771,15 +770,15 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                    UTCDateTime("2009-12-24T07:00:00.0"),
                                    UTCDateTime("2009-12-24T07:10:00.0")]}
         corrected_flag = util._check_flag_value(flag_value)
-        self.assertTrue(isinstance(corrected_flag, list))
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-24T06:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-24T06:10:00.0"))
-        self.assertEqual(corrected_flag[1][0],
-                         UTCDateTime("2009-12-24T07:00:00.0"))
-        self.assertEqual(corrected_flag[1][1],
-                         UTCDateTime("2009-12-24T07:10:00.0"))
+        assert isinstance(corrected_flag, list)
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-24T06:10:00.0")
+        assert corrected_flag[1][0] == \
+                         UTCDateTime("2009-12-24T07:00:00.0")
+        assert corrected_flag[1][1] == \
+                         UTCDateTime("2009-12-24T07:10:00.0")
 
         # Valid value for several durations #2
         flag_value = {"DURATION": [(UTCDateTime("2009-12-25T06:00:00.0"),
@@ -787,15 +786,15 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                    (UTCDateTime("2009-12-25T07:00:00.0"),
                                     UTCDateTime("2009-12-25T07:10:00.0"))]}
         corrected_flag = util._check_flag_value(flag_value)
-        self.assertTrue(isinstance(corrected_flag, list))
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-25T06:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-25T06:10:00.0"))
-        self.assertEqual(corrected_flag[1][0],
-                         UTCDateTime("2009-12-25T07:00:00.0"))
-        self.assertEqual(corrected_flag[1][1],
-                         UTCDateTime("2009-12-25T07:10:00.0"))
+        assert isinstance(corrected_flag, list)
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-25T06:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-25T06:10:00.0")
+        assert corrected_flag[1][0] == \
+                         UTCDateTime("2009-12-25T07:00:00.0")
+        assert corrected_flag[1][1] == \
+                         UTCDateTime("2009-12-25T07:10:00.0")
 
         # Test of the (valid) example 1 written in set_flags_in_fixed_headers's
         # docstring
@@ -808,86 +807,93 @@ class MSEEDUtilTestCase(unittest.TestCase):
         flag_value = {"INSTANT": [date5, date6],
                       "DURATION": [(date1, date2), (date3, date4)]}
         corrected_flag = util._check_flag_value(flag_value)
-        self.assertTrue(isinstance(corrected_flag, list))
-        self.assertEqual(len(corrected_flag), 4)
+        assert isinstance(corrected_flag, list)
+        assert len(corrected_flag) == 4
         # Sort by start date to ensure uniqueness of the list
         corrected_flag.sort(key=lambda val: val[0])
-        self.assertEqual(len(corrected_flag), 4)
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-23T06:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-23T06:30:00.0"))
-        self.assertEqual(corrected_flag[1][0],
-                         UTCDateTime("2009-12-24T10:00:00.0"))
-        self.assertEqual(corrected_flag[1][1],
-                         UTCDateTime("2009-12-24T10:30:00.0"))
-        self.assertEqual(corrected_flag[2][0],
-                         UTCDateTime("2009-12-26T18:00:00.0"))
-        self.assertEqual(corrected_flag[2][1],
-                         UTCDateTime("2009-12-26T18:00:00.0"))
-        self.assertEqual(corrected_flag[3][0],
-                         UTCDateTime("2009-12-26T18:04:00.0"))
-        self.assertEqual(corrected_flag[3][1],
-                         UTCDateTime("2009-12-26T18:04:00.0"))
+        assert len(corrected_flag) == 4
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-23T06:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-23T06:30:00.0")
+        assert corrected_flag[1][0] == \
+                         UTCDateTime("2009-12-24T10:00:00.0")
+        assert corrected_flag[1][1] == \
+                         UTCDateTime("2009-12-24T10:30:00.0")
+        assert corrected_flag[2][0] == \
+                         UTCDateTime("2009-12-26T18:00:00.0")
+        assert corrected_flag[2][1] == \
+                         UTCDateTime("2009-12-26T18:00:00.0")
+        assert corrected_flag[3][0] == \
+                         UTCDateTime("2009-12-26T18:04:00.0")
+        assert corrected_flag[3][1] == \
+                         UTCDateTime("2009-12-26T18:04:00.0")
 
         # Test of the (valid) example 2 written in set_flags_in_fixed_headers's
         # docstring
         flag_value = {"INSTANT": [date5, date6],
                       "DURATION": [date1, date2, date3, date4]}
-        self.assertEqual(len(corrected_flag), 4)
+        assert len(corrected_flag) == 4
         # Sort by start date to ensure uniqueness of the list
         corrected_flag.sort(key=lambda val: val[0])
-        self.assertEqual(len(corrected_flag), 4)
-        self.assertEqual(corrected_flag[0][0],
-                         UTCDateTime("2009-12-23T06:00:00.0"))
-        self.assertEqual(corrected_flag[0][1],
-                         UTCDateTime("2009-12-23T06:30:00.0"))
-        self.assertEqual(corrected_flag[1][0],
-                         UTCDateTime("2009-12-24T10:00:00.0"))
-        self.assertEqual(corrected_flag[1][1],
-                         UTCDateTime("2009-12-24T10:30:00.0"))
-        self.assertEqual(corrected_flag[2][0],
-                         UTCDateTime("2009-12-26T18:00:00.0"))
-        self.assertEqual(corrected_flag[2][1],
-                         UTCDateTime("2009-12-26T18:00:00.0"))
-        self.assertEqual(corrected_flag[3][0],
-                         UTCDateTime("2009-12-26T18:04:00.0"))
-        self.assertEqual(corrected_flag[3][1],
-                         UTCDateTime("2009-12-26T18:04:00.0"))
+        assert len(corrected_flag) == 4
+        assert corrected_flag[0][0] == \
+                         UTCDateTime("2009-12-23T06:00:00.0")
+        assert corrected_flag[0][1] == \
+                         UTCDateTime("2009-12-23T06:30:00.0")
+        assert corrected_flag[1][0] == \
+                         UTCDateTime("2009-12-24T10:00:00.0")
+        assert corrected_flag[1][1] == \
+                         UTCDateTime("2009-12-24T10:30:00.0")
+        assert corrected_flag[2][0] == \
+                         UTCDateTime("2009-12-26T18:00:00.0")
+        assert corrected_flag[2][1] == \
+                         UTCDateTime("2009-12-26T18:00:00.0")
+        assert corrected_flag[3][0] == \
+                         UTCDateTime("2009-12-26T18:04:00.0")
+        assert corrected_flag[3][1] == \
+                         UTCDateTime("2009-12-26T18:04:00.0")
 
         # Invalid type for datation flag
         flag_value = "invalid because str"
-        self.assertRaises(ValueError, util._check_flag_value, flag_value)
+        with pytest.raises(ValueError):
+            util._check_flag_value(flag_value)
 
         # Invalid key (neither "INSTANT" nor "DURATION") for datation dict
         flag_value = {"INVALID_KEY": [UTCDateTime("2009-12-25T07:10:00.0")]}
-        self.assertRaises(ValueError, util._check_flag_value, flag_value)
+        with pytest.raises(ValueError):
+            util._check_flag_value(flag_value)
 
         # Invalid value type for key "INSTANT"
         flag_value = {"INSTANT": "invalid because str"}
-        self.assertRaises(ValueError, util._check_flag_value, flag_value)
+        with pytest.raises(ValueError):
+            util._check_flag_value(flag_value)
 
         # Invalid value type for key "DURATION"
         flag_value = {"DURATION": "invalid because str"}
-        self.assertRaises(ValueError, util._check_flag_value, flag_value)
+        with pytest.raises(ValueError):
+            util._check_flag_value(flag_value)
 
         # Invalid len for key DURATION #1
         flag_value = {"DURATION": [UTCDateTime("2009-12-25T06:00:00.0"),
                                    UTCDateTime("2009-12-25T06:10:00.0"),
                                    UTCDateTime("2009-12-25T06:20:00.0")]}
-        self.assertRaises(ValueError, util._check_flag_value, flag_value)
+        with pytest.raises(ValueError):
+            util._check_flag_value(flag_value)
 
         # Invalid type in DURATION
         flag_value = {"DURATION": [UTCDateTime("2009-12-25T06:00:00.0"),
                                    UTCDateTime("2009-12-25T06:10:00.0"),
                                    UTCDateTime("2009-12-25T06:20:00.0"),
                                    "invalid because str"]}
-        self.assertRaises(ValueError, util._check_flag_value, flag_value)
+        with pytest.raises(ValueError):
+            util._check_flag_value(flag_value)
 
         # Start after end in DURATION
         flag_value = {"DURATION": [UTCDateTime("2010-12-27T19:50:59.0"),
                                    UTCDateTime("2009-12-25T06:00:00.0")]}
-        self.assertRaises(ValueError, util._check_flag_value, flag_value)
+        with pytest.raises(ValueError):
+            util._check_flag_value(flag_value)
 
     def test_search_flag_in_blockette(self):
         """
@@ -916,37 +922,37 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 # Test from file start
                 read_bytes = util._search_flag_in_blockette(
                     file_desc, 48, 1001, 4, 1)
-                self.assertFalse(read_bytes is None)
-                self.assertEqual(unpack(">B", read_bytes)[0], 63)
+                assert not (read_bytes is None)
+                assert unpack(">B", read_bytes)[0] == 63
 
                 # Test from middle of a record header
                 file_desc.seek(14, os.SEEK_CUR)
                 file_pos = file_desc.tell()
                 read_bytes = util._search_flag_in_blockette(
                     file_desc, 34, 1000, 6, 1)
-                self.assertFalse(read_bytes is None)
-                self.assertEqual(unpack(">B", read_bytes)[0], 9)
+                assert not (read_bytes is None)
+                assert unpack(">B", read_bytes)[0] == 9
                 # Check that file_desc position has not changed
-                self.assertEqual(file_desc.tell(), file_pos)
+                assert file_desc.tell() == file_pos
 
                 # Test from middle of a record data
                 file_desc.seek(60, os.SEEK_CUR)
                 read_bytes = util._search_flag_in_blockette(
                     file_desc, -26, 1001, 5, 1)
-                self.assertFalse(read_bytes is None)
-                self.assertEqual(unpack(">B", read_bytes)[0], 42)
+                assert not (read_bytes is None)
+                assert unpack(">B", read_bytes)[0] == 42
 
                 # Test another record. There is at least 3 records in a
                 # mseed with 2000 data points and 512 bytes record length
                 file_desc.seek(1040, os.SEEK_SET)
                 read_bytes = util._search_flag_in_blockette(file_desc,
                                                             32, 1001, 4, 1)
-                self.assertEqual(unpack(">B", read_bytes)[0], 63)
+                assert unpack(">B", read_bytes)[0] == 63
 
                 # Test missing blockette
                 read_bytes = util._search_flag_in_blockette(file_desc,
                                                             32, 201, 4, 4)
-                self.assertIs(read_bytes, None)
+                assert read_bytes is None
 
     def test_convert_flags_to_raw_bytes(self):
         """
@@ -976,7 +982,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
         act_flags = util._convert_flags_to_raw_byte(
             FIXED_HEADER_ACTIVITY_FLAGS, user_flags, recstart, recend)
-        self.assertEqual(act_flags, 13)
+        assert act_flags == 13
 
         user_flags = {
             # duration value (across record start)
@@ -998,7 +1004,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                       UTCDateTime("2010-12-27T00:00:00.0"))]}
         io_clock = util._convert_flags_to_raw_byte(
             FIXED_HEADER_IO_CLOCK_FLAGS, user_flags, recstart, recend)
-        self.assertEqual(io_clock, 15)
+        assert io_clock == 15
 
         # Quick check of data quality flags
         user_flags = {'amplifier_sat_detected': True,
@@ -1011,7 +1017,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                       'time_tag_questionable': False}
         data_qual = util._convert_flags_to_raw_byte(
             FIXED_HEADER_DATA_QUAL_FLAGS, user_flags, recstart, recend)
-        self.assertEqual(data_qual, 85)
+        assert data_qual == 85
 
     def test_set_flags_in_fixed_header(self):
         """
@@ -1125,8 +1131,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
             wrong_flag['...']['activity_flags']['inexistent'] = True
             wrong_flag['...']['wrong_flag_group'] = {}
             wrong_flag['...']['wrong_flag_group']['inexistent_too'] = True
-            self.assertRaises(ValueError, set_flags_in_fixed_headers,
-                              file_name, wrong_flag)
+            with pytest.raises(ValueError):
+                set_flags_in_fixed_headers(file_name, wrong_flag)
 
             # Put back previous values
             set_flags_in_fixed_headers(file_name, all_traces)
@@ -1163,8 +1169,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
             # Incorrect trace identification
             wrong_trace = {'not_three_points': copy.deepcopy(classic_flags)}
-            self.assertRaises(ValueError, set_flags_in_fixed_headers,
-                              file_name, wrong_trace)
+            with pytest.raises(ValueError):
+                set_flags_in_fixed_headers(file_name, wrong_trace)
 
     def test_set_flags_in_fixed_header_with_blockette_100(self):
         """
@@ -1177,7 +1183,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                         tf.name)
             # No data quality flags set.
             flags = util.get_flags(tf.name)['data_quality_flags_counts']
-            self.assertEqual(max(flags.values()), 0)
+            assert max(flags.values()) == 0
             # Set  data quality flags.
             util.set_flags_in_fixed_headers(tf.name, {
                 "NL.HGN.00.BHZ": {"data_qual_flags": {
@@ -1186,9 +1192,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
             # Flags are set now.
             flags = util.get_flags(tf.name)['data_quality_flags_counts']
             # 2 because file contains two records.
-            self.assertEqual(sum(flags.values()), 4)
-            self.assertEqual(flags['glitches'], 2)
-            self.assertEqual(flags['suspect_time_tag'], 2)
+            assert sum(flags.values()) == 4
+            assert flags['glitches'] == 2
+            assert flags['suspect_time_tag'] == 2
 
     def test_regression_segfault_when_hooking_up_libmseeds_logging(self):
         filename = os.path.join(self.path, 'data',
@@ -1197,11 +1203,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             _read_mseed(filename)
-        self.assertTrue(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            "SK_MODS__HHZ_D: Warning: Number of blockettes in fixed header "
-            "(2) does not match the number parsed (1)")
+        assert len(w), 1
+        assert w[0].message.args[0] == \
+            "SK_MODS__HHZ_D: Warning: Number of blockettes in fixed header " \
+            "(2) does not match the number parsed (1)"
         # The hooks used to still be set up in libmseed but the
         # corresponding Python function have been garbage collected which
         # caused a segfault.
@@ -1210,11 +1215,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             util.get_flags(filename)
-        self.assertTrue(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            "SK_MODS__HHZ_D: Warning: Number of blockettes in fixed header "
-            "(2) does not match the number parsed (1)")
+        assert len(w), 1
+        assert w[0].message.args[0] == \
+            "SK_MODS__HHZ_D: Warning: Number of blockettes in fixed header " \
+            "(2) does not match the number parsed (1)"
 
     def _check_values(self, file_bfr, trace_id, record_numbers, expected_bytes,
                       reclen):
@@ -1272,8 +1276,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 if len(record_numbers) == 0 or record_count in record_numbers:
                     file_bfr.seek(16, os.SEEK_CUR)
                     readbytes = file_bfr.read(3)
-                    self.assertEqual(readbytes, expected_bytes,
-                                     "Expected bytes")
+                    assert readbytes == expected_bytes, \
+                                     "Expected bytes"
                 else:
                     file_bfr.seek(19, os.SEEK_CUR)
                 record_count += 1
@@ -1294,12 +1298,11 @@ class MSEEDUtilTestCase(unittest.TestCase):
             warnings.simplefilter("always")
             info = util.get_record_information(filename)
 
-        self.assertEqual(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            'Invalid word order "95" in blockette 1000 for record with '
-            'ID IU.COR..LHZ at offset 0.')
-        self.assertEqual(info, {
+        assert len(w) == 1
+        assert w[0].message.args[0] == \
+            'Invalid word order "95" in blockette 1000 for record with ' \
+            'ID IU.COR..LHZ at offset 0.'
+        assert info == {
             'filesize': 4096,
             'station': 'COR',
             'location': '',
@@ -1317,7 +1320,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             'endtime': UTCDateTime(1995, 6, 24, 0, 21, 6, 265000),
             'byteorder': '>',
             'number_of_records': 1,
-            'excess_bytes': 0})
+            'excess_bytes': 0}
 
     def test_read_fullseed_no_data_record(self):
         # see 2534
@@ -1329,7 +1332,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
             data = fh.read()
         buf = io.BytesIO(data[:512])  # only first record
         buf.seek(0)
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError) as e:
             _read_mseed(buf)
-        self.assertEqual(
-            str(e.exception), "No MiniSEED data record found in file.")
+        assert str(e.exception) == "No MiniSEED data record found in file."

@@ -18,10 +18,10 @@ class FNETMTCatalogReadingTestCase(unittest.TestCase):
     def test_read_fnetmt_catalog(self):
         testfile = os.path.join(self.path, 'data', 'FNETMTCATALOG')
         cat = read_events(testfile, 'FNETMT')
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         ev = cat[0]
-        self.assertEqual(len(ev.origins), 2)
-        self.assertEqual(len(ev.magnitudes), 2)
+        assert len(ev.origins) == 2
+        assert len(ev.magnitudes) == 2
 
     def test_read_fnetmt_catalog_from_open_files(self):
         """
@@ -62,9 +62,9 @@ class FNETMTCatalogReadingTestCase(unittest.TestCase):
         for _i in fnetmt_filenames:
             filename = os.path.join(self.path, 'data', _i)
             is_fnetmt = _is_fnetmt_catalog(filename)
-            self.assertTrue(is_fnetmt)
+            assert is_fnetmt
         # Loop over non F-net files
         for _i in non_fnetmt_filenames:
             filename = os.path.join(self.path, _i)
             is_fnetmt = _is_fnetmt_catalog(filename)
-            self.assertFalse(is_fnetmt)
+            assert not is_fnetmt

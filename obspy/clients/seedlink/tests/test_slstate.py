@@ -21,5 +21,5 @@ class SLStateTestCase(unittest.TestCase):
         slstate1 = SLState()
         slstate2 = SLState()
 
-        self.assertNotEqual(id(slstate1.databuf), id(slstate2.databuf))
-        self.assertNotEqual(id(slstate1.packed_buf), id(slstate2.packed_buf))
+        assert id(slstate1.databuf) != id(slstate2.databuf)
+        assert id(slstate1.packed_buf) != id(slstate2.packed_buf)

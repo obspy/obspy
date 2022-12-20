@@ -19,9 +19,9 @@ class CoreTestCase(unittest.TestCase):
         Testing Y file format.
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
-        self.assertEqual(_is_y(testfile), True)
-        self.assertEqual(_is_y("/path/to/slist.ascii"), False)
-        self.assertEqual(_is_y("/path/to/tspair.ascii"), False)
+        assert _is_y(testfile) == True
+        assert _is_y("/path/to/slist.ascii") == False
+        assert _is_y("/path/to/tspair.ascii") == False
 
     def test_read_y_file(self):
         """
@@ -29,18 +29,18 @@ class CoreTestCase(unittest.TestCase):
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
         st = _read_y(testfile)
-        self.assertEqual(len(st), 1)
+        assert len(st) == 1
         tr = st[0]
-        self.assertEqual(len(tr), 18000)
-        self.assertEqual(tr.stats.sampling_rate, 100.0)
-        self.assertEqual(tr.stats.station, 'AYT')
-        self.assertEqual(tr.stats.channel, 'BHZ')
-        self.assertEqual(tr.stats.location, '')
-        self.assertEqual(tr.stats.network, '')
-        self.assertEqual(max(tr.data),
-                         tr.stats.y.tag_series_info.max_amplitude)
-        self.assertEqual(min(tr.data),
-                         tr.stats.y.tag_series_info.min_amplitude)
+        assert len(tr) == 18000
+        assert tr.stats.sampling_rate == 100.0
+        assert tr.stats.station == 'AYT'
+        assert tr.stats.channel == 'BHZ'
+        assert tr.stats.location == ''
+        assert tr.stats.network == ''
+        assert max(tr.data) == \
+                         tr.stats.y.tag_series_info.max_amplitude
+        assert min(tr.data) == \
+                         tr.stats.y.tag_series_info.min_amplitude
 
     def test_ignore_non_ascii_tag_station_info(self):
         """
@@ -50,13 +50,13 @@ class CoreTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             st = _read_y(testfile)
-        self.assertEqual(len(w), 1)
-        self.assertIn('Invalid', str(w[0]))
-        self.assertEqual(len(st), 1)
+        assert len(w) == 1
+        assert 'Invalid' in str(w[0])
+        assert len(st) == 1
         tr = st[0]
-        self.assertEqual(len(tr), 16976)
-        self.assertEqual(tr.stats.sampling_rate, 50.0)
-        self.assertEqual(tr.stats.station, 'AZR')
-        self.assertEqual(tr.stats.channel, 'E')
-        self.assertEqual(tr.stats.location, 'SP')
-        self.assertEqual(tr.stats.network, '')
+        assert len(tr) == 16976
+        assert tr.stats.sampling_rate == 50.0
+        assert tr.stats.station == 'AZR'
+        assert tr.stats.channel == 'E'
+        assert tr.stats.location == 'SP'
+        assert tr.stats.network == ''

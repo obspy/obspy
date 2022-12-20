@@ -49,11 +49,11 @@ class ScardecTestCase(unittest.TestCase):
 
                 cat.write(temp_filename, format="SCARDEC")
 
-                self.assertEqual(len(w), 2)
-                self.assertEqual(w[0].category, UserWarning)
-                self.assertIn('No moment wave magnitude found', str(w[0]))
-                self.assertEqual(w[1].category, UserWarning)
-                self.assertIn('No derived origin attached', str(w[1]))
+                assert len(w) == 2
+                assert w[0].category == UserWarning
+                assert 'No moment wave magnitude found' in str(w[0])
+                assert w[1].category == UserWarning
+                assert 'No derived origin attached' in str(w[1])
 
             with open(temp_filename, "rb") as fh:
                 new_data = fh.read()
@@ -64,17 +64,17 @@ class ScardecTestCase(unittest.TestCase):
                 pass
 
         # Test file header
-        self.assertEqual(data.decode().splitlines()[0:2],
-                         new_data.decode().splitlines()[0:2])
+        assert data.decode().splitlines()[0:2] == \
+                         new_data.decode().splitlines()[0:2]
 
         for line_data, line_new in zip(data.decode().splitlines()[2:],
                                        new_data.decode().splitlines()[2:]):
             # Compare time stamps
-            self.assertTrue(np.allclose(float(line_data.split()[0]),
-                                        float(line_new.split()[0])))
+            assert np.allclose(float(line_data.split()[0]),
+                                        float(line_new.split()[0]))
             # Compare moment rate values
-            self.assertTrue(np.allclose(float(line_data.split()[1]),
-                                        float(line_new.split()[1])))
+            assert np.allclose(float(line_data.split()[1]),
+                                        float(line_new.split()[1]))
 
     def test_read_and_write_scardec_from_open_files(self):
         """
@@ -98,24 +98,24 @@ class ScardecTestCase(unittest.TestCase):
                 tf.seek(0, 0)
                 new_data = tf.read()
 
-                self.assertEqual(len(w), 2)
-                self.assertEqual(w[0].category, UserWarning)
-                self.assertIn('No moment wave magnitude found', str(w[0]))
-                self.assertEqual(w[1].category, UserWarning)
-                self.assertIn('No derived origin attached', str(w[1]))
+                assert len(w) == 2
+                assert w[0].category == UserWarning
+                assert 'No moment wave magnitude found' in str(w[0])
+                assert w[1].category == UserWarning
+                assert 'No derived origin attached' in str(w[1])
 
         # Test file header
-        self.assertEqual(data.decode().splitlines()[0:2],
-                         new_data.decode().splitlines()[0:2])
+        assert data.decode().splitlines()[0:2] == \
+                         new_data.decode().splitlines()[0:2]
 
         for line_data, line_new in zip(data.decode().splitlines()[2:],
                                        new_data.decode().splitlines()[2:]):
             # Compare time stamps
-            self.assertTrue(np.allclose(float(line_data.split()[0]),
-                                        float(line_new.split()[0])))
+            assert np.allclose(float(line_data.split()[0]),
+                                        float(line_new.split()[0]))
             # Compare moment rate values
-            self.assertTrue(np.allclose(float(line_data.split()[1]),
-                                        float(line_new.split()[1])))
+            assert np.allclose(float(line_data.split()[1]),
+                                        float(line_new.split()[1]))
 
     def test_read_and_write_scardec_from_bytes_io(self):
         """
@@ -144,24 +144,24 @@ class ScardecTestCase(unittest.TestCase):
                         buf2.seek(0, 0)
                         new_data = buf2.read()
 
-                self.assertEqual(len(w), 2)
-                self.assertEqual(w[0].category, UserWarning)
-                self.assertIn('No moment wave magnitude found', str(w[0]))
-                self.assertEqual(w[1].category, UserWarning)
-                self.assertIn('No derived origin attached', str(w[1]))
+                assert len(w) == 2
+                assert w[0].category == UserWarning
+                assert 'No moment wave magnitude found' in str(w[0])
+                assert w[1].category == UserWarning
+                assert 'No derived origin attached' in str(w[1])
 
         # Test file header
-        self.assertEqual(data.decode().splitlines()[0:2],
-                         new_data.decode().splitlines()[0:2])
+        assert data.decode().splitlines()[0:2] == \
+                         new_data.decode().splitlines()[0:2]
 
         for line_data, line_new in zip(data.decode().splitlines()[2:],
                                        new_data.decode().splitlines()[2:]):
             # Compare time stamps
-            self.assertTrue(np.allclose(float(line_data.split()[0]),
-                                        float(line_new.split()[0])))
+            assert np.allclose(float(line_data.split()[0]),
+                                        float(line_new.split()[0]))
             # Compare moment rate values
-            self.assertTrue(np.allclose(float(line_data.split()[1]),
-                                        float(line_new.split()[1])))
+            assert np.allclose(float(line_data.split()[1]),
+                                        float(line_new.split()[1]))
 
     def test_is_scardec(self):
         """
@@ -175,6 +175,6 @@ class ScardecTestCase(unittest.TestCase):
             os.path.join(self.datapath, os.path.pardir, "__init__.py")]
 
         for filename in good_files:
-            self.assertTrue(_is_scardec(filename))
+            assert _is_scardec(filename)
         for filename in bad_files:
-            self.assertFalse(_is_scardec(filename))
+            assert not _is_scardec(filename)

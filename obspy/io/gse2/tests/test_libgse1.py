@@ -8,6 +8,7 @@ import unittest
 
 from obspy.io.gse2 import libgse1
 from obspy.io.gse2.libgse2 import ChksumError
+import pytest
 
 
 class LibGSE1TestCase(unittest.TestCase):
@@ -38,5 +39,6 @@ class LibGSE1TestCase(unittest.TestCase):
         fh = open(os.path.join(self.path, 'GRF_031102_0225.GSE.wrong_chksum'),
                   'rb')
         libgse1.read(fh, verify_chksum=True)  # correct
-        self.assertRaises(ChksumError, libgse1.read, fh, verify_chksum=True)
+        with pytest.raises(ChksumError):
+            libgse1.read(fh, verify_chksum=True)
         fh.close()

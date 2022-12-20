@@ -34,12 +34,12 @@ class CalibrationTestCase(unittest.TestCase):
         with TemporaryWorkingDirectory():
             freq, amp, phase = rel_calib_stack(st1, st2, calfile, 20,
                                                smooth=10, save_data=True)
-            self.assertTrue(os.path.isfile("0438.EHZ.20.resp"))
-            self.assertTrue(os.path.isfile("STS2.refResp"))
+            assert os.path.isfile("0438.EHZ.20.resp")
+            assert os.path.isfile("STS2.refResp")
             freq_, amp_, phase_ = np.loadtxt("0438.EHZ.20.resp", unpack=True)
-            self.assertTrue(np.allclose(freq, freq_, rtol=1e-8, atol=1e-8))
-            self.assertTrue(np.allclose(amp, amp_, rtol=1e-8, atol=1e-8))
-            self.assertTrue(np.allclose(phase, phase_, rtol=1e-8, atol=1e-8))
+            assert np.allclose(freq, freq_, rtol=1e-8, atol=1e-8)
+            assert np.allclose(amp, amp_, rtol=1e-8, atol=1e-8)
+            assert np.allclose(phase, phase_, rtol=1e-8, atol=1e-8)
 
         # read in the reference responses
         un_resp = np.loadtxt(os.path.join(self.path, 'unknown.resp'))
@@ -112,7 +112,7 @@ class CalibrationTestCase(unittest.TestCase):
             percentual_difference = abs(
                 (amp_expected - amp_got) / amp_expected)
             # make sure results are close for any overlap choice
-            self.assertTrue(percentual_difference < 0.01)
+            assert percentual_difference < 0.01
 
     def test_relcal_using_dict(self):
         """

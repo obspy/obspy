@@ -17,6 +17,7 @@ from obspy.io.sac import SacError, SACTrace, SacIOError
 from obspy.io.sac.core import (_is_sac, _is_sac_xy, _read_sac, _read_sac_xy,
                                _write_sac, _write_sac_xy)
 from obspy.io.sac.util import utcdatetime_to_sac_nztimes
+import pytest
 
 
 class CoreTestCase(unittest.TestCase):
@@ -44,13 +45,13 @@ class CoreTestCase(unittest.TestCase):
         Read files via L{obspy.Stream}
         """
         tr = read(self.file, format='SAC')[0]
-        self.assertEqual(tr.stats['station'], 'STA')
-        self.assertEqual(tr.stats.npts, 100)
-        self.assertEqual(tr.stats['sampling_rate'], 1.0)
-        self.assertEqual(tr.stats.get('channel'), 'Q')
-        self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
-        self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
-        self.assertEqual(tr.stats.sac.b, 10.0)
+        assert tr.stats['station'] == 'STA'
+        assert tr.stats.npts == 100
+        assert tr.stats['sampling_rate'] == 1.0
+        assert tr.stats.get('channel') == 'Q'
+        assert tr.stats.starttime.timestamp == 269596810.0
+        assert tr.stats.sac.get('nvhdr') == 6
+        assert tr.stats.sac.b == 10.0
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
@@ -70,7 +71,7 @@ class CoreTestCase(unittest.TestCase):
         # is therefore just a fix until we have come to a conclusive
         # solution how to handle the two different approaches
         tr1.stats.sac['depmen'] = tr.stats.sac['depmen']
-        self.assertEqual(tr, tr1)
+        assert tr == tr1
 
     def test_read_xy_write_xy_via_obspy(self):
         """
@@ -85,7 +86,7 @@ class CoreTestCase(unittest.TestCase):
         tr.stats.pop('sac', None)
         tr1.stats.pop('sac', None)
 
-        self.assertEqual(tr, tr1)
+        assert tr == tr1
 
     def test_read_write_xy_via_obspy(self):
         """
@@ -96,13 +97,13 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             tr.write(tempfile, format='SACXY')
             tr1 = read(tempfile)[0]
-        self.assertEqual(tr1.stats['station'], 'STA')
-        self.assertEqual(tr1.stats.npts, 100)
-        self.assertEqual(tr1.stats['sampling_rate'], 1.0)
-        self.assertEqual(tr1.stats.get('channel'), 'Q')
-        self.assertEqual(tr1.stats.starttime.timestamp, 269596810.0)
-        self.assertEqual(tr1.stats.sac.get('nvhdr'), 6)
-        self.assertEqual(tr1.stats.sac.b, 10.0)
+        assert tr1.stats['station'] == 'STA'
+        assert tr1.stats.npts == 100
+        assert tr1.stats['sampling_rate'] == 1.0
+        assert tr1.stats.get('channel') == 'Q'
+        assert tr1.stats.starttime.timestamp == 269596810.0
+        assert tr1.stats.sac.get('nvhdr') == 6
+        assert tr1.stats.sac.b == 10.0
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr1.data[0:10])
 
@@ -111,13 +112,13 @@ class CoreTestCase(unittest.TestCase):
         Read files via L{obspy.Stream}
         """
         tr = read(self.filebe, format='SAC')[0]
-        self.assertEqual(tr.stats['station'], 'STA')
-        self.assertEqual(tr.stats.npts, 100)
-        self.assertEqual(tr.stats['sampling_rate'], 1.0)
-        self.assertEqual(tr.stats.get('channel'), 'Q')
-        self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
-        self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
-        self.assertEqual(tr.stats.sac.b, 10.0)
+        assert tr.stats['station'] == 'STA'
+        assert tr.stats.npts == 100
+        assert tr.stats['sampling_rate'] == 1.0
+        assert tr.stats.get('channel') == 'Q'
+        assert tr.stats.starttime.timestamp == 269596810.0
+        assert tr.stats.sac.get('nvhdr') == 6
+        assert tr.stats.sac.b == 10.0
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
@@ -128,10 +129,10 @@ class CoreTestCase(unittest.TestCase):
             trbe.write(tempfile, format='SAC', byteorder='<')
             tr = read(tempfile, format='SAC')[0]
             trle = read(self.file, format='SAC')[0]
-            self.assertEqual(tr.stats.station, trle.stats.station)
-            self.assertEqual(tr.stats.npts, trle.stats.npts)
-            self.assertEqual(tr.stats.delta, trle.stats.delta)
-            self.assertEqual(tr.stats.sac.b, trle.stats.sac.b)
+            assert tr.stats.station == trle.stats.station
+            assert tr.stats.npts == trle.stats.npts
+            assert tr.stats.delta == trle.stats.delta
+            assert tr.stats.sac.b == trle.stats.sac.b
             np.testing.assert_array_almost_equal(tr.data[0:10],
                                                  trle.data[0:10])
         with NamedTemporaryFile() as tf:
@@ -140,10 +141,10 @@ class CoreTestCase(unittest.TestCase):
             trle.write(tempfile, format='SAC', byteorder='>')
             tr = read(tempfile, format='SAC')[0]
             trbe = read(self.filebe, format='SAC')[0]
-            self.assertEqual(tr.stats.station, trbe.stats.station)
-            self.assertEqual(tr.stats.npts, trbe.stats.npts)
-            self.assertEqual(tr.stats.delta, trbe.stats.delta)
-            self.assertEqual(tr.stats.sac.b, trbe.stats.sac.b)
+            assert tr.stats.station == trbe.stats.station
+            assert tr.stats.npts == trbe.stats.npts
+            assert tr.stats.delta == trbe.stats.delta
+            assert tr.stats.sac.b == trbe.stats.sac.b
             np.testing.assert_array_almost_equal(tr.data[0:10],
                                                  trbe.data[0:10])
 
@@ -152,14 +153,14 @@ class CoreTestCase(unittest.TestCase):
         Read files via L{obspy.Stream}
         """
         tr = read(self.file, format='SAC', headonly=True)[0]
-        self.assertEqual(tr.stats['station'], 'STA')
-        self.assertEqual(tr.stats.npts, 100)
-        self.assertEqual(tr.stats['sampling_rate'], 1.0)
-        self.assertEqual(tr.stats.get('channel'), 'Q')
-        self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
-        self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
-        self.assertEqual(tr.stats.sac.b, 10.0)
-        self.assertEqual(str(tr.data), '[]')
+        assert tr.stats['station'] == 'STA'
+        assert tr.stats.npts == 100
+        assert tr.stats['sampling_rate'] == 1.0
+        assert tr.stats.get('channel') == 'Q'
+        assert tr.stats.starttime.timestamp == 269596810.0
+        assert tr.stats.sac.get('nvhdr') == 6
+        assert tr.stats.sac.b == 10.0
+        assert str(tr.data) == '[]'
 
     def test_write_via_obspy(self):
         """
@@ -182,7 +183,7 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             st.write(tempfile, format="SAC")
             st2 = read(tempfile, format="SAC")
-        self.assertEqual(st2[0].stats['sac'].nvhdr, 6)
+        assert st2[0].stats['sac'].nvhdr == 6
 
     def test_read_and_write_via_obspy(self):
         """
@@ -202,12 +203,12 @@ class CoreTestCase(unittest.TestCase):
             # read comparison trace
             tr3 = read(tempfile)[0]
         # check if equal
-        self.assertEqual(tr3.stats['station'], tr.stats['station'])
-        self.assertEqual(tr3.stats.npts, tr.stats.npts)
-        self.assertEqual(tr.stats['sampling_rate'], tr.stats['sampling_rate'])
-        self.assertEqual(tr.stats.get('channel'), tr.stats.get('channel'))
-        self.assertEqual(tr.stats.get('starttime'), tr.stats.get('starttime'))
-        self.assertEqual(tr.stats.sac.get('nvhdr'), tr.stats.sac.get('nvhdr'))
+        assert tr3.stats['station'] == tr.stats['station']
+        assert tr3.stats.npts == tr.stats.npts
+        assert tr.stats['sampling_rate'] == tr.stats['sampling_rate']
+        assert tr.stats.get('channel') == tr.stats.get('channel')
+        assert tr.stats.get('starttime') == tr.stats.get('starttime')
+        assert tr.stats.sac.get('nvhdr') == tr.stats.sac.get('nvhdr')
         np.testing.assert_equal(tr.data, tr3.data)
 
     def test_convert_to_sac(self):
@@ -232,17 +233,17 @@ class CoreTestCase(unittest.TestCase):
             st.write(tmpfile, format="SAC")
             st2 = read(tmpfile, format="SAC")
         # check all the required entries (see url in docstring)
-        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
-        self.assertEqual(st2[0].stats.npts, st[0].stats.npts)
-        self.assertEqual(st2[0].stats.sac.nvhdr, 6)
-        self.assertAlmostEqual(st2[0].stats.sac.b, 0.000400)
+        assert st2[0].stats.starttime == st[0].stats.starttime
+        assert st2[0].stats.npts == st[0].stats.npts
+        assert st2[0].stats.sac.nvhdr == 6
+        assert round(abs(st2[0].stats.sac.b-0.000400), 7) == 0
         # compare with correct digit size (nachkommastellen)
-        self.assertAlmostEqual((0.0004 + (st[0].stats.npts - 1) *
-                               st[0].stats.delta) / st2[0].stats.sac.e, 1.0)
-        self.assertEqual(st2[0].stats.sac.iftype, 1)
-        self.assertEqual(st2[0].stats.sac.leven, 1)
-        self.assertAlmostEqual(st2[0].stats.sampling_rate /
-                               st[0].stats.sampling_rate, 1.0)
+        assert round(abs((0.0004 + (st[0].stats.npts - 1) *
+                               st[0].stats.delta) / st2[0].stats.sac.e-1.0), 7) == 0
+        assert st2[0].stats.sac.iftype == 1
+        assert st2[0].stats.sac.leven == 1
+        assert round(abs(st2[0].stats.sampling_rate /
+                               st[0].stats.sampling_rate-1.0), 7) == 0
 
     def test_iztype11(self):
         # test that iztype 11 is read correctly
@@ -252,22 +253,22 @@ class CoreTestCase(unittest.TestCase):
             sac = SACTrace.read(fh)
         t1 = tr.stats.starttime - float(tr.stats.sac.b)
         t2 = sac.reftime
-        self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
+        assert round(abs(t1.timestamp-t2.timestamp), 5) == 0
         # see that iztype is written correctly
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             tr.write(tempfile, format="SAC")
             with open(tempfile, "rb") as fh:
                 sac2 = SACTrace.read(fh)
-        self.assertEqual(sac2._header['iztype'], 11)
-        self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
-        self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
+        assert sac2._header['iztype'] == 11
+        assert round(abs(tr.stats.sac.b-sac2.b), 7) == 0
+        assert round(abs(t2.timestamp-sac2.reftime.timestamp), 5) == 0
 
     def test_default_values(self):
         tr = read(self.file)[0]
-        self.assertEqual(tr.stats.calib, 1.0)
-        self.assertEqual(tr.stats.location, '')
-        self.assertEqual(tr.stats.network, '')
+        assert tr.stats.calib == 1.0
+        assert tr.stats.location == ''
+        assert tr.stats.network == ''
 
     def test_reference_time(self):
         """
@@ -278,24 +279,24 @@ class CoreTestCase(unittest.TestCase):
         """
         tr = read(self.fileseis)[0]
         # see that starttime is set correctly (#107)
-        self.assertAlmostEqual(tr.stats.sac.iztype, 9)
-        self.assertAlmostEqual(tr.stats.sac.b, 9.4599991)
-        self.assertEqual(tr.stats.starttime,
-                         UTCDateTime("1981-03-29 10:38:23.459999"))
+        assert round(abs(tr.stats.sac.iztype-9), 7) == 0
+        assert round(abs(tr.stats.sac.b-9.4599991), 7) == 0
+        assert tr.stats.starttime == \
+                         UTCDateTime("1981-03-29 10:38:23.459999")
         # check that if we rewrite the file, nothing changed
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             tr.write(tmpfile, format="SAC")
             tr2 = read(tmpfile)[0]
-            self.assertEqual(tr.stats.station, tr2.stats.station)
-            self.assertEqual(tr.stats.npts, tr2.stats.npts)
-            self.assertEqual(tr.stats.delta, tr2.stats.delta)
-            self.assertEqual(tr.stats.starttime, tr2.stats.starttime)
-            self.assertEqual(tr.stats.sac.b, tr2.stats.sac.b)
+            assert tr.stats.station == tr2.stats.station
+            assert tr.stats.npts == tr2.stats.npts
+            assert tr.stats.delta == tr2.stats.delta
+            assert tr.stats.starttime == tr2.stats.starttime
+            assert tr.stats.sac.b == tr2.stats.sac.b
             np.testing.assert_array_equal(tr.data, tr2.data)
         # test some more entries, I can see from the plot
-        self.assertEqual(tr.stats.station, "CDV")
-        self.assertEqual(tr.stats.channel, "Q")
+        assert tr.stats.station == "CDV"
+        assert tr.stats.channel == "Q"
 
     def test_undefined_b(self):
         """
@@ -305,11 +306,11 @@ class CoreTestCase(unittest.TestCase):
         # read in the test file an see that sac reference time and
         # starttime of seismogram are correct
         tr = read(self.file)[0]
-        self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
-        self.assertEqual(tr.stats.sac.b, 10.0)
+        assert tr.stats.starttime.timestamp == 269596810.0
+        assert tr.stats.sac.b == 10.0
         with open(self.file, 'rb') as fh:
             sac_ref_time = SACTrace.read(fh).reftime
-        self.assertEqual(sac_ref_time.timestamp, 269596800.0)
+        assert sac_ref_time.timestamp == 269596800.0
         # change b to undefined and write (same case as if b == 0.0)
         # now sac reference time and reftime of seismogram must be the
         # same
@@ -318,11 +319,11 @@ class CoreTestCase(unittest.TestCase):
             tmpfile = tf.name
             tr.write(tmpfile, format="SAC")
             tr2 = read(tmpfile)[0]
-            self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
-            self.assertEqual(tr2.stats.sac.b, 10.0)
+            assert tr2.stats.starttime.timestamp == 269596810.0
+            assert tr2.stats.sac.b == 10.0
             with open(tmpfile, "rb") as fh:
                 sac_ref_time2 = SACTrace.read(fh).reftime
-        self.assertEqual(sac_ref_time2.timestamp, 269596800.0)
+        assert sac_ref_time2.timestamp == 269596800.0
 
     def test_issue_156(self):
         """
@@ -336,8 +337,8 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SAC')
             st = read(sac_file)
-        self.assertEqual(st[0].stats.delta, 0.01)
-        self.assertEqual(st[0].stats.sampling_rate, 100.0)
+        assert st[0].stats.delta == 0.01
+        assert st[0].stats.sampling_rate == 100.0
         # 2
         tr = Trace()
         tr.stats.delta = 0.005
@@ -346,8 +347,8 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SAC')
             st = read(sac_file)
-        self.assertEqual(st[0].stats.delta, 0.005)
-        self.assertEqual(st[0].stats.sampling_rate, 200.0)
+        assert st[0].stats.delta == 0.005
+        assert st[0].stats.sampling_rate == 200.0
 
     def test_write_sac_xy_with_minimum_stats(self):
         """
@@ -360,8 +361,8 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SACXY')
             st = read(sac_file)
-        self.assertEqual(st[0].stats.delta, 0.01)
-        self.assertEqual(st[0].stats.sampling_rate, 100.0)
+        assert st[0].stats.delta == 0.01
+        assert st[0].stats.sampling_rate == 100.0
 
     def test_not_used_but_given_headers(self):
         """
@@ -378,7 +379,7 @@ class CoreTestCase(unittest.TestCase):
             tr1.write(sac_file, 'SAC')
             tr2 = read(sac_file)[0]
         for i, header_value in enumerate(not_used):
-            self.assertEqual(int(tr2.stats.sac[header_value]), i)
+            assert int(tr2.stats.sac[header_value]) == i
 
     def test_writing_micro_seconds(self):
         """
@@ -397,8 +398,8 @@ class CoreTestCase(unittest.TestCase):
             st.write(tmpfile, format="SAC")
             st2 = read(tmpfile, format="SAC")
         # check all the required entries (see url in docstring)
-        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
-        self.assertAlmostEqual(st2[0].stats.sac.b, 0.000999)
+        assert st2[0].stats.starttime == st[0].stats.starttime
+        assert round(abs(st2[0].stats.sac.b-0.000999), 7) == 0
 
     def test_null_terminated_strings(self):
         """
@@ -407,9 +408,9 @@ class CoreTestCase(unittest.TestCase):
         """
         null_file = os.path.join(self.path, 'data', 'null_terminated.sac')
         tr = read(null_file)[0]
-        self.assertEqual(tr.stats.station, 'PIN1')
-        self.assertEqual(tr.stats.network, 'GD')
-        self.assertEqual(tr.stats.channel, 'LYE')
+        assert tr.stats.station == 'PIN1'
+        assert tr.stats.network == 'GD'
+        assert tr.stats.channel == 'LYE'
 
     def test_write_small_trace(self):
         """
@@ -423,7 +424,7 @@ class CoreTestCase(unittest.TestCase):
                     tr.write(tempfile, format=format)
                     # test results
                     st = read(tempfile, format=format)
-                self.assertEqual(len(st), 1)
+                assert len(st) == 1
                 np.testing.assert_array_equal(tr.data, st[0].data)
 
     def test_issue390(self):
@@ -432,32 +433,32 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1 - binary SAC
         tr = read(self.file, headonly=True, debug_headers=True)[0]
-        self.assertEqual(tr.stats.sac.nzyear, 1978)
-        self.assertEqual(tr.stats.sac.nzjday, 199)
-        self.assertEqual(tr.stats.sac.nzhour, 8)
-        self.assertEqual(tr.stats.sac.nzmin, 0)
-        self.assertEqual(tr.stats.sac.nzsec, 0)
-        self.assertEqual(tr.stats.sac.nzmsec, 0)
-        self.assertEqual(tr.stats.sac.delta, 1.0)
-        self.assertEqual(tr.stats.sac.scale, -12345.0)
-        self.assertEqual(tr.stats.sac.npts, 100)
-        self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
-        self.assertEqual(tr.stats.sac.kstnm, 'STA     ')
-        self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+        assert tr.stats.sac.nzyear == 1978
+        assert tr.stats.sac.nzjday == 199
+        assert tr.stats.sac.nzhour == 8
+        assert tr.stats.sac.nzmin == 0
+        assert tr.stats.sac.nzsec == 0
+        assert tr.stats.sac.nzmsec == 0
+        assert tr.stats.sac.delta == 1.0
+        assert tr.stats.sac.scale == -12345.0
+        assert tr.stats.sac.npts == 100
+        assert tr.stats.sac.knetwk == '-12345  '
+        assert tr.stats.sac.kstnm == 'STA     '
+        assert tr.stats.sac.kcmpnm == 'Q       '
         # 2 - ASCII SAC
         tr = read(self.filexy, headonly=True, debug_headers=True)[0]
-        self.assertEqual(tr.stats.sac.nzyear, -12345)
-        self.assertEqual(tr.stats.sac.nzjday, -12345)
-        self.assertEqual(tr.stats.sac.nzhour, -12345)
-        self.assertEqual(tr.stats.sac.nzmin, -12345)
-        self.assertEqual(tr.stats.sac.nzsec, -12345)
-        self.assertEqual(tr.stats.sac.nzmsec, -12345)
-        self.assertEqual(tr.stats.sac.delta, 1.0)
-        self.assertEqual(tr.stats.sac.scale, -12345.0)
-        self.assertEqual(tr.stats.sac.npts, 100)
-        self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
-        self.assertEqual(tr.stats.sac.kstnm, 'sta     ')
-        self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+        assert tr.stats.sac.nzyear == -12345
+        assert tr.stats.sac.nzjday == -12345
+        assert tr.stats.sac.nzhour == -12345
+        assert tr.stats.sac.nzmin == -12345
+        assert tr.stats.sac.nzsec == -12345
+        assert tr.stats.sac.nzmsec == -12345
+        assert tr.stats.sac.delta == 1.0
+        assert tr.stats.sac.scale == -12345.0
+        assert tr.stats.sac.npts == 100
+        assert tr.stats.sac.knetwk == '-12345  '
+        assert tr.stats.sac.kstnm == 'sta     '
+        assert tr.stats.sac.kcmpnm == 'Q       '
 
     def test_read_with_fsize(self):
         """
@@ -467,30 +468,35 @@ class CoreTestCase(unittest.TestCase):
         longer_file = os.path.join(self.path, 'data', 'seism-longer.sac')
         shorter_file = os.path.join(self.path, 'data', 'seism-shorter.sac')
         # default
-        self.assertRaises(SacError, read, longer_file)
-        self.assertRaises(SacError, read, shorter_file)
+        with pytest.raises(SacError):
+            read(longer_file)
+        with pytest.raises(SacError):
+            read(shorter_file)
         # fsize=True
-        self.assertRaises(SacError, read, longer_file, fsize=True)
-        self.assertRaises(SacError, read, shorter_file, fsize=True)
+        with pytest.raises(SacError):
+            read(longer_file, fsize=True)
+        with pytest.raises(SacError):
+            read(shorter_file, fsize=True)
         # using fsize=False should not work for shorter file
         # (this is not supported by SAC) ...
-        self.assertRaises(SacIOError, read, shorter_file, fsize=False)
+        with pytest.raises(SacIOError):
+            read(shorter_file, fsize=False)
         # ...but it should work for longer file
         tr = read(longer_file, fsize=False, debug_headers=True)[0]
         # checking trace
-        self.assertEqual(tr.stats.sac.nzyear, 1981)
-        self.assertEqual(tr.stats.sac.nzjday, 88)
-        self.assertEqual(tr.stats.sac.nzhour, 10)
-        self.assertEqual(tr.stats.sac.nzmin, 38)
-        self.assertEqual(tr.stats.sac.nzsec, 14)
-        self.assertEqual(tr.stats.sac.nzmsec, 0)
+        assert tr.stats.sac.nzyear == 1981
+        assert tr.stats.sac.nzjday == 88
+        assert tr.stats.sac.nzhour == 10
+        assert tr.stats.sac.nzmin == 38
+        assert tr.stats.sac.nzsec == 14
+        assert tr.stats.sac.nzmsec == 0
         # we should never test equality for float values:
-        self.assertLessEqual(abs(tr.stats.sac.delta - 0.01), 1e-9)
-        self.assertEqual(tr.stats.sac.scale, -12345.0)
-        self.assertEqual(tr.stats.sac.npts, 998)
-        self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
-        self.assertEqual(tr.stats.sac.kstnm, 'CDV     ')
-        self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+        assert abs(tr.stats.sac.delta - 0.01) <= 1e-9
+        assert tr.stats.sac.scale == -12345.0
+        assert tr.stats.sac.npts == 998
+        assert tr.stats.sac.knetwk == '-12345  '
+        assert tr.stats.sac.kstnm == 'CDV     '
+        assert tr.stats.sac.kcmpnm == 'Q       '
 
     def test_read_sac_from_bytes_io(self):
         """
@@ -508,7 +514,7 @@ class CoreTestCase(unittest.TestCase):
         # Open file normally and make sure the results are identical.
         tr2 = _read_sac(self.file)[0]
         np.testing.assert_array_equal(tr.data, tr2.data)
-        self.assertEqual(tr, tr2)
+        assert tr == tr2
 
     def test_read_sac_from_open_file(self):
         """
@@ -521,7 +527,7 @@ class CoreTestCase(unittest.TestCase):
         # Open file normally and make sure the results are identical.
         tr2 = _read_sac(self.file)[0]
         np.testing.assert_array_equal(tr.data, tr2.data)
-        self.assertEqual(tr, tr2)
+        assert tr == tr2
 
     def test_read_write_bytes_io(self):
         """
@@ -540,7 +546,7 @@ class CoreTestCase(unittest.TestCase):
         del tr.stats.sac.depmen
         del tr2.stats.sac.depmen
         np.testing.assert_array_equal(tr.data, tr2.data)
-        self.assertEqual(tr, tr2)
+        assert tr == tr2
 
     def test_read_write_open_file(self):
         st = _read_sac(self.file)
@@ -556,7 +562,7 @@ class CoreTestCase(unittest.TestCase):
         del tr.stats.sac.depmen
         del tr2.stats.sac.depmen
         np.testing.assert_array_equal(tr.data, tr2.data)
-        self.assertEqual(tr, tr2)
+        assert tr == tr2
 
     def test_writing_to_obj_with_multiple_traces_fails(self):
         """
@@ -565,7 +571,8 @@ class CoreTestCase(unittest.TestCase):
         """
         st = read()
         with io.BytesIO() as fh:
-            self.assertRaises(ValueError, st.write, fh, format="sac")
+            with pytest.raises(ValueError):
+                st.write(fh, format="sac")
 
     def test_writing_to_io_string_io_fails(self):
         """
@@ -573,7 +580,8 @@ class CoreTestCase(unittest.TestCase):
         """
         st = read()[:1]
         with io.StringIO() as fh:
-            self.assertRaises(ValueError, st.write, fh, format="sac")
+            with pytest.raises(ValueError):
+                st.write(fh, format="sac")
 
     def test_read_via_obspy_from_bytes_io(self):
         """
@@ -591,7 +599,7 @@ class CoreTestCase(unittest.TestCase):
         # Open file normally and make sure the results are identical.
         tr2 = read(self.file)[0]
         np.testing.assert_array_equal(tr.data, tr2.data)
-        self.assertEqual(tr, tr2)
+        assert tr == tr2
 
     def test_write_via_obspy_to_bytes_io(self):
         """
@@ -608,7 +616,7 @@ class CoreTestCase(unittest.TestCase):
         del tr.stats.sac.depmen
         del tr2.stats.sac.depmen
         np.testing.assert_array_equal(tr.data, tr2.data)
-        self.assertEqual(tr, tr2)
+        assert tr == tr2
 
     def test_read_xy_write_xy_from_bytes_io(self):
         """
@@ -626,7 +634,7 @@ class CoreTestCase(unittest.TestCase):
         st[0].stats.pop('sac', None)
         st2[0].stats.pop('sac', None)
 
-        self.assertEqual(st, st2)
+        assert st == st2
 
     def test_read_xy_write_xy_from_open_file_binary_mode(self):
         """
@@ -643,7 +651,7 @@ class CoreTestCase(unittest.TestCase):
         st[0].stats.pop('sac', None)
         st2[0].stats.pop('sac', None)
 
-        self.assertEqual(st, st2)
+        assert st == st2
 
     def test_is_sac_bytes_io(self):
         """
@@ -654,7 +662,7 @@ class CoreTestCase(unittest.TestCase):
             with open(self.file, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertTrue(_is_sac(buf))
+            assert _is_sac(buf)
 
         # Should naturally fail for an XY file.
         with io.BytesIO() as buf:
@@ -662,7 +670,7 @@ class CoreTestCase(unittest.TestCase):
             with open(self.filexy, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertFalse(_is_sac(buf))
+            assert not _is_sac(buf)
 
     def test_is_sac_string_io_raises(self):
         """
@@ -671,14 +679,15 @@ class CoreTestCase(unittest.TestCase):
         with io.StringIO() as buf:
             buf.write("abcdefghijklmnopqrstuvwxyz")
             buf.seek(0, 0)
-            self.assertRaises(ValueError, _is_sac, buf)
+            with pytest.raises(ValueError):
+                _is_sac(buf)
 
     def test_is_sac_open_file(self):
         """
         Tests the _is_sac function for open files.
         """
         with open(self.file, "rb") as fh:
-            self.assertTrue(_is_sac(fh))
+            assert _is_sac(fh)
 
     def test_is_sacxy_bytes_io(self):
         """
@@ -689,7 +698,7 @@ class CoreTestCase(unittest.TestCase):
             with open(self.filexy, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertTrue(_is_sac_xy(buf))
+            assert _is_sac_xy(buf)
 
         # Should naturally fail for a normal sac file.
         with io.BytesIO() as buf:
@@ -697,7 +706,7 @@ class CoreTestCase(unittest.TestCase):
             with open(self.file, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertFalse(_is_sac_xy(buf))
+            assert not _is_sac_xy(buf)
 
     def test_is_sacxy_string_io_raises(self):
         """
@@ -709,24 +718,26 @@ class CoreTestCase(unittest.TestCase):
             with open(self.filexy, "rt") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertRaises(ValueError, _is_sac_xy, buf)
+            with pytest.raises(ValueError):
+                _is_sac_xy(buf)
 
     def test_is_sacxy_open_file_binary_mode(self):
         """
         Tests the _is_sac_xy function for open files in binary mode.
         """
         with open(self.filexy, "rb") as fh:
-            self.assertTrue(_is_sac_xy(fh))
+            assert _is_sac_xy(fh)
 
         with open(__file__, "rb") as fh:
-            self.assertFalse(_is_sac_xy(fh))
+            assert not _is_sac_xy(fh)
 
     def test_is_sacxy_open_file_text_mode_fails(self):
         """
         Tests that the _is_sac_xy function for open files in text mode fails.
         """
         with open(self.filexy, "rt") as fh:
-            self.assertRaises(ValueError, _is_sac_xy, fh)
+            with pytest.raises(ValueError):
+                _is_sac_xy(fh)
 
     def test_writing_to_file_like_objects_with_obspy(self):
         """
@@ -743,12 +754,14 @@ class CoreTestCase(unittest.TestCase):
 
         # Will fail if the stream contains more than one trace.
         st = read()
-        self.assertGreater(len(st), 1)
+        assert len(st) > 1
         with io.BytesIO() as fh:
-            self.assertRaises(ValueError, st.write, fh, format="sac")
+            with pytest.raises(ValueError):
+                st.write(fh, format="sac")
 
         with io.BytesIO() as fh:
-            self.assertRaises(ValueError, st.write, fh, format="sacxy")
+            with pytest.raises(ValueError):
+                st.write(fh, format="sacxy")
 
     def test_valid_sac_from_minimal_existing_sac_header(self):
         """
@@ -779,23 +792,23 @@ class CoreTestCase(unittest.TestCase):
 
         # starttime made its way to SAC file
         nztimes, microsecond = utcdatetime_to_sac_nztimes(t)
-        self.assertEqual(tr1.stats.sac.nzyear, nztimes['nzyear'])
-        self.assertEqual(tr1.stats.sac.nzjday, nztimes['nzjday'])
-        self.assertEqual(tr1.stats.sac.nzhour, nztimes['nzhour'])
-        self.assertEqual(tr1.stats.sac.nzmin, nztimes['nzmin'])
-        self.assertEqual(tr1.stats.sac.nzsec, nztimes['nzsec'])
-        self.assertEqual(tr1.stats.sac.nzmsec, nztimes['nzmsec'])
-        self.assertEqual(tr1.stats.sac.kstnm, 'AAA')
-        self.assertEqual(tr1.stats.sac.knetwk, 'XX')
-        self.assertEqual(tr1.stats.sac.kcmpnm, 'BHZ')
-        self.assertEqual(tr1.stats.sac.khole, '00')
-        self.assertEqual(tr1.stats.sac.iztype, 9)
-        self.assertEqual(tr1.stats.sac.nvhdr, 6)
-        self.assertEqual(tr1.stats.sac.leven, 1)
-        self.assertEqual(tr1.stats.sac.lovrok, 1)
-        self.assertEqual(tr1.stats.sac.iftype, 1)
-        self.assertEqual(tr1.stats.sac.stla, 1.0)
-        self.assertEqual(tr1.stats.sac.stlo, 2.0)
+        assert tr1.stats.sac.nzyear == nztimes['nzyear']
+        assert tr1.stats.sac.nzjday == nztimes['nzjday']
+        assert tr1.stats.sac.nzhour == nztimes['nzhour']
+        assert tr1.stats.sac.nzmin == nztimes['nzmin']
+        assert tr1.stats.sac.nzsec == nztimes['nzsec']
+        assert tr1.stats.sac.nzmsec == nztimes['nzmsec']
+        assert tr1.stats.sac.kstnm == 'AAA'
+        assert tr1.stats.sac.knetwk == 'XX'
+        assert tr1.stats.sac.kcmpnm == 'BHZ'
+        assert tr1.stats.sac.khole == '00'
+        assert tr1.stats.sac.iztype == 9
+        assert tr1.stats.sac.nvhdr == 6
+        assert tr1.stats.sac.leven == 1
+        assert tr1.stats.sac.lovrok == 1
+        assert tr1.stats.sac.iftype == 1
+        assert tr1.stats.sac.stla == 1.0
+        assert tr1.stats.sac.stlo == 2.0
 
     def test_merge_sac_obspy_headers(self):
         """
@@ -812,8 +825,8 @@ class CoreTestCase(unittest.TestCase):
             tr.write(tempfile, format='SAC')
             tr1 = read(tempfile)[0]
 
-        self.assertEqual(tr1.stats.starttime, tr.stats.starttime)
-        self.assertEqual(tr1.stats.sac.o, o)
+        assert tr1.stats.starttime == tr.stats.starttime
+        assert tr1.stats.sac.o == o
 
     def test_decimate_resample(self):
         """
@@ -826,8 +839,8 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             tr.write(tempfile, format='SAC')
             tr1 = read(tempfile)[0]
-        self.assertEqual(tr1.stats.sac.npts, tr.stats.sac.npts / 2)
-        self.assertEqual(tr1.stats.sac.delta, tr.stats.sac.delta * 2)
+        assert tr1.stats.sac.npts == tr.stats.sac.npts / 2
+        assert tr1.stats.sac.delta == tr.stats.sac.delta * 2
 
     def test_invalid_header_field(self):
         """
@@ -847,10 +860,10 @@ class CoreTestCase(unittest.TestCase):
                 warnings.simplefilter('always')
                 with io.BytesIO() as buf1:
                     tr.write(buf1, format='SAC')
-                    self.assertIn('Ignored', str(w[-1].message))
+                    assert 'Ignored' in str(w[-1].message)
                     buf1.seek(0, 0)
 
-                    self.assertEqual(buf.read(), buf1.read())
+                    assert buf.read() == buf1.read()
 
     def test_not_ascii(self):
         """
@@ -858,9 +871,9 @@ class CoreTestCase(unittest.TestCase):
         See ObsPy issue #1432
         """
         tr = read(self.file_notascii, format='SAC')[0]
-        self.assertEqual(tr.stats.station, 'ALS')
-        self.assertEqual(tr.stats.channel, 'HHE')
-        self.assertEqual(tr.stats.network, '')
+        assert tr.stats.station == 'ALS'
+        assert tr.stats.channel == 'HHE'
+        assert tr.stats.network == ''
 
     def test_sac_booleans_from_trace(self):
         """
@@ -869,8 +882,8 @@ class CoreTestCase(unittest.TestCase):
         """
         tr = Trace()
         sac = SACTrace.from_obspy_trace(tr)
-        self.assertFalse(sac.lcalda)
-        self.assertTrue(sac.lpspol)
+        assert not sac.lcalda
+        assert sac.lpspol
 
     def test_sac_file_from_new_header(self):
         """
@@ -885,9 +898,9 @@ class CoreTestCase(unittest.TestCase):
             tr.write(tf, format='SAC')
             tf.seek(0)
             tr1 = read(tf)[0]
-        self.assertAlmostEqual(tr1.stats.sac.stla, 10., places=4)
-        self.assertAlmostEqual(tr1.stats.sac.stlo, -5., places=4)
-        self.assertAlmostEqual(tr1.stats.sac.a, 12.34, places=5)
+        assert round(abs(tr1.stats.sac.stla-10.), 4) == 0
+        assert round(abs(tr1.stats.sac.stlo--5.), 4) == 0
+        assert round(abs(tr1.stats.sac.a-12.34), 5) == 0
 
     def test_always_sac_reftime(self):
         """
@@ -908,23 +921,23 @@ class CoreTestCase(unittest.TestCase):
             tr.write(tf, format='SAC')
             tf.seek(0)
             tr1 = read(tf)[0]
-        self.assertEqual(tr1.stats.starttime, reftime)
-        self.assertAlmostEqual(tr1.stats.sac.a, a, places=5)
-        self.assertEqual(tr1.stats.sac.b, b)
+        assert tr1.stats.starttime == reftime
+        assert round(abs(tr1.stats.sac.a-a), 5) == 0
+        assert tr1.stats.sac.b == b
 
     def test_wrong_encoding(self):
         """
         Read SAC file with wrong encoding
         """
         tr0 = read(self.file_encode)[0]
-        self.assertEqual(tr0.stats.get('channel'), '????????')
+        assert tr0.stats.get('channel') == '????????'
 
     def test_encoding_flag(self):
         """
         Test passing encoding flag through obspy.read
         """
         tr0 = read(self.file_encode, encoding='cp1252')[0]
-        self.assertEqual(tr0.stats.get('channel'), 'ÇÏÿÿÇÏÿÿ')
+        assert tr0.stats.get('channel') == 'ÇÏÿÿÇÏÿÿ'
 
     def test_write_keep_sac_header_false(self):
         """
@@ -999,15 +1012,15 @@ class CoreTestCase(unittest.TestCase):
 
         # the SAC iztype was 'ib', so the reference time of the written/read
         # SAC file should be the first sample time of the trimmed trace.
-        self.assertEqual(tr_trimmed_read.stats.sac['nzyear'],
-                         tr_trimmed.stats.starttime.year)
-        self.assertEqual(tr_trimmed_read.stats.sac['nzjday'],
-                         tr_trimmed.stats.starttime.julday)
-        self.assertEqual(tr_trimmed_read.stats.sac['nzhour'],
-                         tr_trimmed.stats.starttime.hour)
-        self.assertEqual(tr_trimmed_read.stats.sac['nzmin'],
-                         tr_trimmed.stats.starttime.minute)
-        self.assertEqual(tr_trimmed_read.stats.sac['nzsec'],
-                         tr_trimmed.stats.starttime.second)
-        self.assertEqual(tr_trimmed_read.stats.sac['nzmsec'],
-                         tr_trimmed.stats.starttime.microsecond * 1000)
+        assert tr_trimmed_read.stats.sac['nzyear'] == \
+                         tr_trimmed.stats.starttime.year
+        assert tr_trimmed_read.stats.sac['nzjday'] == \
+                         tr_trimmed.stats.starttime.julday
+        assert tr_trimmed_read.stats.sac['nzhour'] == \
+                         tr_trimmed.stats.starttime.hour
+        assert tr_trimmed_read.stats.sac['nzmin'] == \
+                         tr_trimmed.stats.starttime.minute
+        assert tr_trimmed_read.stats.sac['nzsec'] == \
+                         tr_trimmed.stats.starttime.second
+        assert tr_trimmed_read.stats.sac['nzmsec'] == \
+                         tr_trimmed.stats.starttime.microsecond * 1000

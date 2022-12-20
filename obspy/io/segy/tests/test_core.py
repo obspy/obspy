@@ -45,13 +45,13 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Test all files in the test directory.
         for file in self.files.keys():
             file = os.path.join(self.path, file)
-            self.assertEqual(_is_segy(file), True)
+            assert _is_segy(file) == True
         # Also check all the other files in the test directory and they should
         # not work. Just check certain files to ensure reproducibility.
         files = ['test_core.py', 'test_segy.py', '__init__.py']
         for file in files:
             file = os.path.join(self.dir, file)
-            self.assertEqual(_is_segy(file), False)
+            assert _is_segy(file) == False
 
     def test_is_su_file(self):
         """
@@ -60,16 +60,16 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Test all SEG Y files in the test directory.
         for file in self.files.keys():
             file = os.path.join(self.path, file)
-            self.assertEqual(_is_su(file), False)
+            assert _is_su(file) == False
         # Also check all the other files in the test directory and they should
         # not work. Just check certain files to ensure reproducibility.
         files = ['test_core.py', 'test_segy.py', '__init__.py']
         for file in files:
             file = os.path.join(self.dir, file)
-            self.assertEqual(_is_su(file), False)
+            assert _is_su(file) == False
         # Check an actual Seismic Unix file.
         file = os.path.join(self.path, '1.su_first_trace')
-        self.assertEqual(_is_su(file), True)
+        assert _is_su(file) == True
 
     def test_read_head_only(self):
         """
@@ -78,13 +78,13 @@ class SEGYCoreTestCase(unittest.TestCase):
         # _read_segy
         file = os.path.join(self.path, '1.sgy_first_trace')
         st = _read_segy(file, headonly=True)
-        self.assertEqual(st[0].stats.npts, 8000)
-        self.assertEqual(len(st[0].data), 0)
+        assert st[0].stats.npts == 8000
+        assert len(st[0].data) == 0
         # _read_su
         file = os.path.join(self.path, '1.su_first_trace')
         st = _read_su(file, headonly=True)
-        self.assertEqual(st[0].stats.npts, 8000)
-        self.assertEqual(len(st[0].data), 0)
+        assert st[0].stats.npts == 8000
+        assert len(st[0].data) == 0
 
     def test_enforcing_textual_header_encoding_while_reading(self):
         """
@@ -95,23 +95,23 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = _read_segy(file, textual_header_encoding='EBCDIC')
-        self.assertEqual(st1.stats.textual_file_header[3:21],
-                         b'CLIENT: LITHOPROBE')
+        assert st1.stats.textual_file_header[3:21] == \
+                         b'CLIENT: LITHOPROBE'
         # This should also be written the stats dictionary.
-        self.assertEqual(st1.stats.textual_file_header_encoding,
-                         'EBCDIC')
+        assert st1.stats.textual_file_header_encoding == \
+                         'EBCDIC'
         # Reading again with ASCII should yield bad results. Lowercase keyword
         # argument should also work.
         st2 = _read_segy(file, textual_header_encoding='ascii')
-        self.assertFalse(st2.stats.textual_file_header[3:21] ==
+        assert not (st2.stats.textual_file_header[3:21] ==
                          b'CLIENT: LITHOPROBE')
-        self.assertEqual(st2.stats.textual_file_header_encoding,
-                         'ASCII')
+        assert st2.stats.textual_file_header_encoding == \
+                         'ASCII'
         # Autodetection should also write the textual file header encoding to
         # the stats dictionary.
         st3 = _read_segy(file)
-        self.assertEqual(st3.stats.textual_file_header_encoding,
-                         'EBCDIC')
+        assert st3.stats.textual_file_header_encoding == \
+                         'EBCDIC'
 
     def test_enforcing_endianness_while_writing(self):
         """
@@ -126,15 +126,15 @@ class SEGYCoreTestCase(unittest.TestCase):
             out_file = tf.name
             _write_segy(st1, out_file)
             st2 = _read_segy(out_file)
-            self.assertEqual(st2.stats.endian, '>')
+            assert st2.stats.endian == '>'
             # Do once again to enforce big endian.
             _write_segy(st1, out_file, byteorder='>')
             st3 = _read_segy(out_file)
-            self.assertEqual(st3.stats.endian, '>')
+            assert st3.stats.endian == '>'
             # Enforce little endian.
             _write_segy(st1, out_file, byteorder='<')
             st4 = _read_segy(out_file)
-            self.assertEqual(st4.stats.endian, '<')
+            assert st4.stats.endian == '<'
 
     def test_setting_data_encoding_works(self):
         """
@@ -155,12 +155,12 @@ class SEGYCoreTestCase(unittest.TestCase):
             _write_segy(st, out_file, data_encoding=1)
             with open(out_file, 'rb') as f:
                 data2 = f.read()
-            self.assertEqual(data1, data2)
+            assert data1 == data2
             # Writing IEEE floats which should not require any dtype changes.
             _write_segy(st, out_file, data_encoding=5)
             with open(out_file, 'rb') as f:
                 data3 = f.read()
-            self.assertFalse(data1 == data3)
+            assert not (data1 == data3)
 
     def test_reading_and_writing_different_data_encodings(self):
         """
@@ -206,7 +206,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             out_file = tf.name
             # Loop over all encodings.
             for data_encoding in encodings:
-                self.assertRaises(SEGYCoreWritingError, _write_segy, st,
+                with pytest.raises(SEGYCoreWritingError):
+                    _write_segy(st,
                                   out_file, data_encoding=data_encoding)
 
     def test_invalid_data_encoding_raises(self):
@@ -217,9 +218,11 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = _read_segy(file)
         with NamedTemporaryFile() as tf:
             out_file = tf.name
-            self.assertRaises(SEGYCoreWritingError, _write_segy, st, out_file,
+            with pytest.raises(SEGYCoreWritingError):
+                _write_segy(st, out_file,
                               data_encoding=0)
-            self.assertRaises(SEGYCoreWritingError, _write_segy, st, out_file,
+            with pytest.raises(SEGYCoreWritingError):
+                _write_segy(st, out_file,
                               data_encoding='')
 
     def test_enforcing_textual_header_encoding_while_writing(self):
@@ -247,31 +250,30 @@ class SEGYCoreTestCase(unittest.TestCase):
             with open(out_file, 'rb') as f:
                 new_header = f.read(3200)
         # re-encode both to ASCII to easily compare them.
-        self.assertEqual(
-            header.decode("EBCDIC-CP-BE").encode("ASCII"),
-            new_header.decode("EBCDIC-CP-BE").encode("ASCII"))
-        self.assertEqual(st2.stats.textual_file_header_encoding,
-                         'EBCDIC')
+        assert header.decode("EBCDIC-CP-BE").encode("ASCII") == \
+            new_header.decode("EBCDIC-CP-BE").encode("ASCII")
+        assert st2.stats.textual_file_header_encoding == \
+                         'EBCDIC'
         # Do once again to enforce EBCDIC.
         _write_segy(st1, out_file, textual_header_encoding='EBCDIC')
         st3 = _read_segy(out_file)
         # Compare header.
         with open(out_file, 'rb') as f:
             new_header = f.read(3200)
-        self.assertEqual(header, new_header)
+        assert header == new_header
         os.remove(out_file)
-        self.assertEqual(st3.stats.textual_file_header_encoding,
-                         'EBCDIC')
+        assert st3.stats.textual_file_header_encoding == \
+                         'EBCDIC'
         # Enforce ASCII
         _write_segy(st1, out_file, textual_header_encoding='ASCII')
         st4 = _read_segy(out_file)
         # Compare header. Should not be equal this time.
         with open(out_file, 'rb') as f:
             new_header = f.read(3200)
-        self.assertFalse(header == new_header)
+        assert not (header == new_header)
         os.remove(out_file)
-        self.assertEqual(st4.stats.textual_file_header_encoding,
-                         'ASCII')
+        assert st4.stats.textual_file_header_encoding == \
+                         'ASCII'
 
     def test_enforcing_endianness_while_reading(self):
         """
@@ -285,13 +287,14 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # This should work and write big endian to the stats dictionary.
         st1 = _read_segy(file)
-        self.assertEqual(st1.stats.endian, '>')
+        assert st1.stats.endian == '>'
         # Doing the same with the right endianness should still work.
         st2 = _read_segy(file, byteorder='>')
-        self.assertEqual(st2.stats.endian, '>')
+        assert st2.stats.endian == '>'
         # The wrong endianness should yield an key error because the routine to
         # unpack the wrong data format code cannot be found.
-        self.assertRaises(KeyError, _read_segy, file, byteorder='<')
+        with pytest.raises(KeyError):
+            _read_segy(file, byteorder='<')
 
     def test_reading_using_core(self):
         """
@@ -309,29 +312,29 @@ class SEGYCoreTestCase(unittest.TestCase):
             st = _read_segy(file)
             # They all should have length one because all additional traces
             # have been removed.
-            self.assertEqual(len(st), 1)
+            assert len(st) == 1
             # Assert the data is the same.
             np.testing.assert_array_equal(segy_file.traces[0].data, st[0].data)
             # Textual header.
-            self.assertEqual(segy_file.textual_file_header,
-                             st.stats.textual_file_header)
+            assert segy_file.textual_file_header == \
+                             st.stats.textual_file_header
             # Textual_header_encoding.
-            self.assertEqual(segy_file.textual_header_encoding,
-                             st.stats.textual_file_header_encoding)
+            assert segy_file.textual_header_encoding == \
+                             st.stats.textual_file_header_encoding
             # Endianness.
-            self.assertEqual(segy_file.endian, st.stats.endian)
+            assert segy_file.endian == st.stats.endian
             # Data encoding.
-            self.assertEqual(segy_file.data_encoding,
-                             st.stats.data_encoding)
+            assert segy_file.data_encoding == \
+                             st.stats.data_encoding
             # Test the file and trace binary headers.
             for key, value in \
                     segy_file.binary_file_header.__dict__.items():
-                self.assertEqual(getattr(st.stats.binary_file_header,
-                                 key), value)
+                assert getattr(st.stats.binary_file_header,
+                                 key) == value
             for key, value in \
                     segy_file.traces[0].header.__dict__.items():
-                self.assertEqual(getattr(st[0].stats.segy.trace_header, key),
-                                 value)
+                assert getattr(st[0].stats.segy.trace_header, key) == \
+                                 value
 
     def test_writing_using_core(self):
         """
@@ -362,14 +365,15 @@ class SEGYCoreTestCase(unittest.TestCase):
                     with open(out_file2, 'rb') as f2:
                         data2 = f2.read()
             # Test if they are equal.
-            self.assertEqual(data1[3200:3600], data2[3200:3600])
+            assert data1[3200:3600] == data2[3200:3600]
 
     def test_invalid_values_for_textual_header_encoding(self):
         """
         Invalid keyword arguments should be caught gracefully.
         """
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
-        self.assertRaises(SEGYError, _read_segy, file,
+        with pytest.raises(SEGYError):
+            _read_segy(file,
                           textual_header_encoding='BLUB')
 
     def test_setting_delta_and_sampling_rate_in_stats(self):
@@ -381,11 +385,11 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, '1.sgy_first_trace')
         segy = _read_segy(file)
-        self.assertEqual(segy[0].stats.delta, 250E-6)
+        assert segy[0].stats.delta == 250E-6
         # The same with the Seismic Unix file.
         file = os.path.join(self.path, '1.su_first_trace')
         su = _read_su(file)
-        self.assertEqual(su[0].stats.delta, 250E-6)
+        assert su[0].stats.delta == 250E-6
 
     def test_writing_new_sampling_rate(self):
         """
@@ -400,7 +404,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             outfile = tf.name
             _write_segy(segy, outfile)
             new_segy = _read_segy(outfile)
-        self.assertEqual(new_segy[0].stats.sampling_rate, 20)
+        assert new_segy[0].stats.sampling_rate == 20
         # The same with the Seismic Unix file.
         file = os.path.join(self.path, '1.su_first_trace')
         _read_su(file)
@@ -414,11 +418,11 @@ class SEGYCoreTestCase(unittest.TestCase):
         date = UTCDateTime(year=2005, julday=353, hour=15, minute=7, second=54)
         file = os.path.join(self.path, '1.sgy_first_trace')
         segy = _read_segy(file)
-        self.assertEqual(date, segy[0].stats.starttime)
+        assert date == segy[0].stats.starttime
         # The same with the Seismic Unix file.
         file = os.path.join(self.path, '1.su_first_trace')
         su = _read_su(file)
-        self.assertEqual(date, su[0].stats.starttime)
+        assert date == su[0].stats.starttime
 
     def test_large_sample_rate_interval_raises(self):
         """
@@ -439,7 +443,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             _write_segy(segy, outfile)
             # Slightly larger should raise.
             segy[0].stats.delta = 0.065536
-            self.assertRaises(SEGYSampleIntervalError, _write_segy, segy,
+            with pytest.raises(SEGYSampleIntervalError):
+                _write_segy(segy,
                               outfile)
             # Same for SU.
             file = os.path.join(self.path, '1.su_first_trace')
@@ -449,7 +454,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             _write_su(su, outfile)
         # Slightly larger should raise.
         su[0].stats.delta = 0.065536
-        self.assertRaises(SEGYSampleIntervalError, _write_su, su, outfile)
+        with pytest.raises(SEGYSampleIntervalError):
+            _write_su(su, outfile)
 
     def test_writing_su_file_with_no_header(self):
         """
@@ -469,10 +475,10 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Compare new and old stream objects. All the other header
             # attributes will not be set.
             np.testing.assert_array_equal(st[0].data, st2[0].data)
-            self.assertEqual(st[0].stats.starttime, st2[0].stats.starttime)
-            self.assertEqual(st[0].stats.endtime, st2[0].stats.endtime)
-            self.assertEqual(st[0].stats.sampling_rate,
-                             st2[0].stats.sampling_rate)
+            assert st[0].stats.starttime == st2[0].stats.starttime
+            assert st[0].stats.endtime == st2[0].stats.endtime
+            assert st[0].stats.sampling_rate == \
+                             st2[0].stats.sampling_rate
             # Writing and reading this new stream object should not change
             # anything.
             st2.write(outfile, format='SU')
@@ -482,7 +488,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         # header attributes.
         del st2[0].stats.su
         del st3[0].stats.su
-        self.assertEqual(st2[0].stats, st3[0].stats)
+        assert st2[0].stats == st3[0].stats
 
     def test_writing_modified_date(self):
         """
@@ -499,14 +505,14 @@ class SEGYCoreTestCase(unittest.TestCase):
             segy[0].stats.starttime = new_date
             _write_segy(segy, outfile)
             segy_new = _read_segy(outfile)
-            self.assertEqual(new_date, segy_new[0].stats.starttime)
+            assert new_date == segy_new[0].stats.starttime
             # Test for SU.
             file = os.path.join(self.path, '1.su_first_trace')
             su = _read_su(file)
             su[0].stats.starttime = new_date
             _write_su(su, outfile)
             su_new = _read_su(outfile)
-        self.assertEqual(new_date, su_new[0].stats.starttime)
+        assert new_date == su_new[0].stats.starttime
 
     def test_writing_starttime_timestamp_0(self):
         """
@@ -519,8 +525,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             f.seek(3600 + 156, 0)
             date_time = f.read(10)
         year, julday, hour, minute, second = unpack(b'>5h', date_time)
-        self.assertEqual([year == 2005, julday == 353, hour == 15, minute == 7,
-                          second == 54], 5 * [True])
+        assert [year == 2005, julday == 353, hour == 15, minute == 7,
+                          second == 54] == 5 * [True]
         # Read and set zero time.
         segy = _read_segy(file)
         segy.stats.textual_file_header = \
@@ -534,8 +540,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                 f.seek(3600 + 156, 0)
                 date_time = f.read(10)
         year, julday, hour, minute, second = unpack(b'>5h', date_time)
-        self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
-                          second == 0], 5 * [True])
+        assert [year == 0, julday == 0, hour == 0, minute == 0,
+                          second == 0] == 5 * [True]
         # The same for SU.
         file = os.path.join(self.path, '1.su_first_trace')
         # This file has a set date!
@@ -543,8 +549,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             f.seek(156, 0)
             date_time = f.read(10)
         year, julday, hour, minute, second = unpack(b'<5h', date_time)
-        self.assertEqual([year == 2005, julday == 353, hour == 15, minute == 7,
-                          second == 54], 5 * [True])
+        assert [year == 2005, julday == 353, hour == 15, minute == 7,
+                          second == 54] == 5 * [True]
         # Read and set zero time.
         su = _read_su(file)
         su[0].stats.starttime = UTCDateTime(0)
@@ -556,8 +562,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                 f.seek(156, 0)
                 date_time = f.read(10)
         year, julday, hour, minute, second = unpack(b'<5h', date_time)
-        self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
-                          second == 0], 5 * [True])
+        assert [year == 0, julday == 0, hour == 0, minute == 0,
+                          second == 0] == 5 * [True]
 
     def test_two_digit_years_segy(self):
         """
@@ -570,10 +576,10 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Read two artificial test files and check the years.
         filename = os.path.join(self.path, 'one_trace_year_11.sgy')
         st = _read_segy(filename)
-        self.assertEqual(2011, st[0].stats.starttime.year)
+        assert 2011 == st[0].stats.starttime.year
         filename = os.path.join(self.path, 'one_trace_year_99.sgy')
         st = _read_segy(filename)
-        self.assertEqual(1999, st[0].stats.starttime.year)
+        assert 1999 == st[0].stats.starttime.year
 
     def test_two_digit_years_su(self):
         """
@@ -582,10 +588,10 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Read two artificial test files and check the years.
         filename = os.path.join(self.path, 'one_trace_year_11.su')
         st = _read_su(filename)
-        self.assertEqual(2011, st[0].stats.starttime.year)
+        assert 2011 == st[0].stats.starttime.year
         filename = os.path.join(self.path, 'one_trace_year_99.su')
         st = _read_su(filename)
-        self.assertEqual(1999, st[0].stats.starttime.year)
+        assert 1999 == st[0].stats.starttime.year
 
     def test_issue_377(self):
         """
@@ -612,7 +618,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         # The exception was
         header_a = read(file)[0].stats.segy.trace_header
         header_b = read(file)[0].stats.segy.trace_header
-        self.assertEqual(header_a, header_b)
+        assert header_a == header_b
 
     def test_reading_and_writing_with_unset_dates(self):
         f = SEGYFile()
@@ -630,12 +636,11 @@ class SEGYCoreTestCase(unittest.TestCase):
                 warnings.simplefilter("always")
                 st = read(buf, format="segy")
         # Should result in the correct year.
-        self.assertEqual(st[0].stats.starttime, UTCDateTime(2015, 1, 1))
-        self.assertEqual(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            "Trace starttime does not store a proper date (day of year is "
-            "zero). Using January 1st 00:00 as trace start time.")
+        assert st[0].stats.starttime == UTCDateTime(2015, 1, 1)
+        assert len(w) == 1
+        assert w[0].message.args[0] == \
+            "Trace starttime does not store a proper date (day of year is " \
+            "zero). Using January 1st 00:00 as trace start time."
 
         # No date set at all.
         s.header.year_data_recorded = 0
@@ -644,7 +649,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             buf.seek(0, 0)
             st = read(buf, format="segy")
         # Results in 1970, 1, 1
-        self.assertEqual(st[0].stats.starttime, UTCDateTime(0))
+        assert st[0].stats.starttime == UTCDateTime(0)
 
     def test_writing_text_and_binary_textual_file_headers(self):
         """
@@ -667,10 +672,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                     buf.seek(0, 0)
                     # Read with SEG-Y to preserve the textual file header.
                     st2 = _read_segy(buf)
-                self.assertEqual(
-                    # Ignore the auto-generated parts of the header.
-                    st2.stats.textual_file_header.decode().split()[0],
-                    "12345")
+                assert st2.stats.textual_file_header.decode().split()[0] == \
+                    "12345"
 
     def test_writing_too_long_trace(self):
         """
@@ -682,10 +685,9 @@ class SEGYCoreTestCase(unittest.TestCase):
         tr.stats.sampling_rate = 100
         st = Stream([tr])
         bio = io.BytesIO()
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError) as e:
             _write_segy(st, bio, data_encoding=2)
-        self.assertEqual(
-            str(e.exception),
-            "Can not write traces with more than 32767 samples (trace at "
-            "index 0):\n... | 1970-01-01T00:00:00.000000Z - "
-            "1970-01-01T00:05:27.670000Z | 100.0 Hz, 32768 samples")
+        assert str(e.exception) == \
+            "Can not write traces with more than 32767 samples (trace at " \
+            "index 0):\n... | 1970-01-01T00:00:00.000000Z - " \
+            "1970-01-01T00:05:27.670000Z | 100.0 Hz, 32768 samples"

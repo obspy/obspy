@@ -93,25 +93,25 @@ class HoctavbandsTestCase(unittest.TestCase):
                                    self.nofb, self.no_win)
         rms = np.sqrt(np.sum((hob[:, 0] - self.res[:, 20]) ** 2) /
                       np.sum(self.res[:, 20] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((hob[:, 1] - self.res[:, 21]) ** 2) /
                       np.sum(self.res[:, 21] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((hob[:, 2] - self.res[:, 22]) ** 2) /
                       np.sum(self.res[:, 22] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((hob[:, 3] - self.res[:, 23]) ** 2) /
                       np.sum(self.res[:, 23] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((hob[:, 4] - self.res[:, 24]) ** 2) /
                       np.sum(self.res[:, 24] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((hob[:, 5] - self.res[:, 25]) ** 2) /
                       np.sum(self.res[:, 25] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((hob[:, 6] - self.res[:, 26]) ** 2) /
                       np.sum(self.res[:, 26] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((hob[:, 7] - self.res[:, 27]) ** 2) /
                       np.sum(self.res[:, 27] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True

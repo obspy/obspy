@@ -98,7 +98,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self._run_rt_process(process_list)
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
-        self.assertAlmostEqual(peak, 566974.214, 3)
+        assert round(abs(peak-566974.214), 3) == 0
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
@@ -115,7 +115,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self._run_rt_process(process_list)
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
-        self.assertEqual(peak, 1045237000.0)
+        assert peak == 1045237000.0
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
@@ -132,7 +132,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self._run_rt_process(process_list)
         # check results
         diff = self.rt_trace.data - self.orig_trace.data
-        self.assertEqual(np.mean(diff), 500)
+        assert np.mean(diff) == 500
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
@@ -163,7 +163,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self._run_rt_process(process_list)
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
-        self.assertEqual(peak, 1045237)
+        assert peak == 1045237
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
@@ -180,7 +180,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self._run_rt_process(process_list)
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
-        self.assertAlmostEqual(peak, 114.302, 3)
+        assert round(abs(peak-114.302), 3) == 0
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
@@ -222,7 +222,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         mwp = signal.calculate_mwp_mag(peak, epicentral_distance)
-        self.assertAlmostEqual(mwp, 8.78902911791, 5)
+        assert round(abs(mwp-8.78902911791), 5) == 0
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 

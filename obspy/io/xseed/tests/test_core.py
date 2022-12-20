@@ -15,6 +15,7 @@ from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
     _read_seed, _read_xseed
 import obspy.io.xseed.parser
 from obspy.signal.invsim import evalresp_for_frequencies
+import pytest
 
 
 class CoreTestCase(unittest.TestCase):
@@ -80,42 +81,42 @@ class CoreTestCase(unittest.TestCase):
 
     def test_is_seed(self):
         for filename in self.seed_files:
-            self.assertTrue(_is_seed(filename), filename)
+            assert _is_seed(filename), filename
 
         for filename in self.xseed_files:
-            self.assertFalse(_is_seed(filename), filename)
+            assert not _is_seed(filename), filename
 
         for filename in self.resp_files:
-            self.assertFalse(_is_seed(filename), filename)
+            assert not _is_seed(filename), filename
 
         for filename in self.other_files:
-            self.assertFalse(_is_seed(filename), filename)
+            assert not _is_seed(filename), filename
 
     def test_is_xseed(self):
         for filename in self.seed_files:
-            self.assertFalse(_is_xseed(filename), filename)
+            assert not _is_xseed(filename), filename
 
         for filename in self.xseed_files:
-            self.assertTrue(_is_xseed(filename), filename)
+            assert _is_xseed(filename), filename
 
         for filename in self.resp_files:
-            self.assertFalse(_is_xseed(filename), filename)
+            assert not _is_xseed(filename), filename
 
         for filename in self.other_files:
-            self.assertFalse(_is_xseed(filename), filename)
+            assert not _is_xseed(filename), filename
 
     def test_is_resp(self):
         for filename in self.seed_files:
-            self.assertFalse(_is_resp(filename), filename)
+            assert not _is_resp(filename), filename
 
         for filename in self.xseed_files:
-            self.assertFalse(_is_resp(filename), filename)
+            assert not _is_resp(filename), filename
 
         for filename in self.resp_files:
-            self.assertTrue(_is_resp(filename), filename)
+            assert _is_resp(filename), filename
 
         for filename in self.other_files:
-            self.assertFalse(_is_resp(filename), filename)
+            assert not _is_resp(filename), filename
 
     def test_simple_read_resp(self):
         """
@@ -153,89 +154,89 @@ class CoreTestCase(unittest.TestCase):
         filename_a = os.path.join(self.data_path,
                                   "RESP.BW.FURT..EHZ")
         inv = obspy.read_inventory(filename_a)
-        self.assertEqual(len(inv), 1)
-        self.assertEqual(len(inv[0]), 1)
-        self.assertEqual(len(inv[0][0]), 1)
+        assert len(inv) == 1
+        assert len(inv[0]) == 1
+        assert len(inv[0][0]) == 1
 
         network = inv[0]
         station = inv[0][0]
         channel = inv[0][0][0]
         resp = inv[0][0][0].response
 
-        self.assertEqual(network.code, "BW")
-        self.assertEqual(station.code, "FURT")
-        self.assertEqual(station.start_date, None)
-        self.assertEqual(station.end_date, None)
-        self.assertEqual(channel.location_code, "")
-        self.assertEqual(channel.code, "EHZ")
-        self.assertEqual(channel.start_date, obspy.UTCDateTime(2001, 1, 1))
-        self.assertEqual(channel.end_date, None)
+        assert network.code == "BW"
+        assert station.code == "FURT"
+        assert station.start_date == None
+        assert station.end_date == None
+        assert channel.location_code == ""
+        assert channel.code == "EHZ"
+        assert channel.start_date == obspy.UTCDateTime(2001, 1, 1)
+        assert channel.end_date == None
         # Also check the input and output units.
-        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
-        self.assertEqual(resp.instrument_sensitivity.input_units_description,
-                         "Velocity in Meters per Second")
-        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
-        self.assertEqual(resp.instrument_sensitivity.output_units_description,
-                         "Digital Counts")
+        assert resp.instrument_sensitivity.input_units == "M/S"
+        assert resp.instrument_sensitivity.input_units_description == \
+                         "Velocity in Meters per Second"
+        assert resp.instrument_sensitivity.output_units == "COUNTS"
+        assert resp.instrument_sensitivity.output_units_description == \
+                         "Digital Counts"
 
         # File B
         filename_b = os.path.join(self.data_path,
                                   "RESP.XX.NR008..HHZ.130.1.100")
         inv = obspy.read_inventory(filename_b)
-        self.assertEqual(len(inv), 1)
-        self.assertEqual(len(inv[0]), 1)
-        self.assertEqual(len(inv[0][0]), 1)
+        assert len(inv) == 1
+        assert len(inv[0]) == 1
+        assert len(inv[0][0]) == 1
 
         network = inv[0]
         station = inv[0][0]
         channel = inv[0][0][0]
         resp = inv[0][0][0].response
 
-        self.assertEqual(network.code, "XX")
-        self.assertEqual(station.code, "NR008")
-        self.assertEqual(station.start_date, None)
-        self.assertEqual(station.end_date, None)
-        self.assertEqual(channel.location_code, "")
-        self.assertEqual(channel.code, "HHZ")
-        self.assertEqual(channel.start_date, obspy.UTCDateTime(2006, 1, 1))
-        self.assertEqual(channel.end_date,
-                         obspy.UTCDateTime(3000, 1, 1) - 1)
+        assert network.code == "XX"
+        assert station.code == "NR008"
+        assert station.start_date == None
+        assert station.end_date == None
+        assert channel.location_code == ""
+        assert channel.code == "HHZ"
+        assert channel.start_date == obspy.UTCDateTime(2006, 1, 1)
+        assert channel.end_date == \
+                         obspy.UTCDateTime(3000, 1, 1) - 1
         # Also check the input and output units.
-        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
-        self.assertEqual(resp.instrument_sensitivity.input_units_description,
-                         "Velocity in Meters per Second")
-        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
-        self.assertEqual(resp.instrument_sensitivity.output_units_description,
-                         "Digital Counts")
+        assert resp.instrument_sensitivity.input_units == "M/S"
+        assert resp.instrument_sensitivity.input_units_description == \
+                         "Velocity in Meters per Second"
+        assert resp.instrument_sensitivity.output_units == "COUNTS"
+        assert resp.instrument_sensitivity.output_units_description == \
+                         "Digital Counts"
 
         # File C
         filename_c = os.path.join(self.data_path,
                                   "RESP.XX.NS085..BHZ.STS2_gen3.120.1500")
         inv = obspy.read_inventory(filename_c)
-        self.assertEqual(len(inv), 1)
-        self.assertEqual(len(inv[0]), 1)
-        self.assertEqual(len(inv[0][0]), 1)
+        assert len(inv) == 1
+        assert len(inv[0]) == 1
+        assert len(inv[0][0]) == 1
 
         network = inv[0]
         station = inv[0][0]
         channel = inv[0][0][0]
         resp = inv[0][0][0].response
 
-        self.assertEqual(network.code, "XX")
-        self.assertEqual(station.code, "NS085")
-        self.assertEqual(station.start_date, None)
-        self.assertEqual(station.end_date, None)
-        self.assertEqual(channel.location_code, "")
-        self.assertEqual(channel.code, "BHZ")
-        self.assertEqual(channel.start_date, obspy.UTCDateTime(2006, 1, 1))
-        self.assertEqual(channel.end_date, None)
+        assert network.code == "XX"
+        assert station.code == "NS085"
+        assert station.start_date == None
+        assert station.end_date == None
+        assert channel.location_code == ""
+        assert channel.code == "BHZ"
+        assert channel.start_date == obspy.UTCDateTime(2006, 1, 1)
+        assert channel.end_date == None
         # Also check the input and output units.
-        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
-        self.assertEqual(resp.instrument_sensitivity.input_units_description,
-                         "Velocity in Meters per Second")
-        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
-        self.assertEqual(resp.instrument_sensitivity.output_units_description,
-                         "Digital Counts")
+        assert resp.instrument_sensitivity.input_units == "M/S"
+        assert resp.instrument_sensitivity.input_units_description == \
+                         "Velocity in Meters per Second"
+        assert resp.instrument_sensitivity.output_units == "COUNTS"
+        assert resp.instrument_sensitivity.output_units_description == \
+                         "Digital Counts"
 
         # Merge A + B to get a multi-response file.
         with NamedTemporaryFile() as tf:
@@ -246,54 +247,54 @@ class CoreTestCase(unittest.TestCase):
                 tf.write(fh.read())
             tf.seek(0, 0)
             inv = obspy.read_inventory(tf.name)
-        self.assertEqual(len(inv), 2)
-        self.assertEqual(len(inv[0]), 1)
-        self.assertEqual(len(inv[0][0]), 1)
-        self.assertEqual(len(inv[1]), 1)
-        self.assertEqual(len(inv[1][0]), 1)
+        assert len(inv) == 2
+        assert len(inv[0]) == 1
+        assert len(inv[0][0]) == 1
+        assert len(inv[1]) == 1
+        assert len(inv[1][0]) == 1
 
         network = inv[0]
         station = inv[0][0]
         channel = inv[0][0][0]
         resp = inv[0][0][0].response
 
-        self.assertEqual(network.code, "BW")
-        self.assertEqual(station.code, "FURT")
-        self.assertEqual(station.start_date, None)
-        self.assertEqual(station.end_date, None)
-        self.assertEqual(channel.location_code, "")
-        self.assertEqual(channel.code, "EHZ")
-        self.assertEqual(channel.start_date, obspy.UTCDateTime(2001, 1, 1))
-        self.assertEqual(channel.end_date, None)
+        assert network.code == "BW"
+        assert station.code == "FURT"
+        assert station.start_date == None
+        assert station.end_date == None
+        assert channel.location_code == ""
+        assert channel.code == "EHZ"
+        assert channel.start_date == obspy.UTCDateTime(2001, 1, 1)
+        assert channel.end_date == None
         # Also check the input and output units.
-        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
-        self.assertEqual(resp.instrument_sensitivity.input_units_description,
-                         "Velocity in Meters per Second")
-        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
-        self.assertEqual(resp.instrument_sensitivity.output_units_description,
-                         "Digital Counts")
+        assert resp.instrument_sensitivity.input_units == "M/S"
+        assert resp.instrument_sensitivity.input_units_description == \
+                         "Velocity in Meters per Second"
+        assert resp.instrument_sensitivity.output_units == "COUNTS"
+        assert resp.instrument_sensitivity.output_units_description == \
+                         "Digital Counts"
 
         network = inv[1]
         station = inv[1][0]
         channel = inv[1][0][0]
         resp = inv[1][0][0].response
 
-        self.assertEqual(network.code, "XX")
-        self.assertEqual(station.code, "NR008")
-        self.assertEqual(station.start_date, None)
-        self.assertEqual(station.end_date, None)
-        self.assertEqual(channel.location_code, "")
-        self.assertEqual(channel.code, "HHZ")
-        self.assertEqual(channel.start_date, obspy.UTCDateTime(2006, 1, 1))
-        self.assertEqual(channel.end_date,
-                         obspy.UTCDateTime(3000, 1, 1) - 1)
+        assert network.code == "XX"
+        assert station.code == "NR008"
+        assert station.start_date == None
+        assert station.end_date == None
+        assert channel.location_code == ""
+        assert channel.code == "HHZ"
+        assert channel.start_date == obspy.UTCDateTime(2006, 1, 1)
+        assert channel.end_date == \
+                         obspy.UTCDateTime(3000, 1, 1) - 1
         # Also check the input and output units.
-        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
-        self.assertEqual(resp.instrument_sensitivity.input_units_description,
-                         "Velocity in Meters per Second")
-        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
-        self.assertEqual(resp.instrument_sensitivity.output_units_description,
-                         "Digital Counts")
+        assert resp.instrument_sensitivity.input_units == "M/S"
+        assert resp.instrument_sensitivity.input_units_description == \
+                         "Velocity in Meters per Second"
+        assert resp.instrument_sensitivity.output_units == "COUNTS"
+        assert resp.instrument_sensitivity.output_units_description == \
+                         "Digital Counts"
 
     def test_read_seed_metainformation(self):
         """
@@ -303,95 +304,95 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.data_path, "dataless.seed.BW_ROTZ")
         inv = obspy.read_inventory(filename)
 
-        self.assertEqual(len(inv), 1)
-        self.assertEqual(len(inv[0]), 1)
-        self.assertEqual(len(inv[0][0]), 3)
+        assert len(inv) == 1
+        assert len(inv[0]) == 1
+        assert len(inv[0][0]) == 3
 
         network = inv[0]
-        self.assertEqual(network.code, "BW")
-        self.assertEqual(network.description, "BayernNetz")
+        assert network.code == "BW"
+        assert network.description == "BayernNetz"
 
         station = inv[0][0]
-        self.assertEqual(station.code, "ROTZ")
-        self.assertAlmostEqual(station.latitude, 49.766899)
-        self.assertAlmostEqual(station.longitude, 12.207)
-        self.assertAlmostEqual(station.elevation, 430.0)
-        self.assertEqual(station.site.name, "Rotzenmuhle,Bavaria, BW-Net")
-        self.assertEqual(station.start_date,
-                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
-        self.assertEqual(station.end_date, None)
+        assert station.code == "ROTZ"
+        assert round(abs(station.latitude-49.766899), 7) == 0
+        assert round(abs(station.longitude-12.207), 7) == 0
+        assert round(abs(station.elevation-430.0), 7) == 0
+        assert station.site.name == "Rotzenmuhle,Bavaria, BW-Net"
+        assert station.start_date == \
+                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
+        assert station.end_date == None
 
         # First channel.
         channel = inv[0][0][0]
-        self.assertEqual(channel.code, "EHZ")
-        self.assertEqual(channel.location_code, "")
-        self.assertAlmostEqual(channel.latitude, 49.766899)
-        self.assertAlmostEqual(channel.longitude, 12.207)
-        self.assertAlmostEqual(channel.elevation, 430.0)
-        self.assertAlmostEqual(channel.depth, 0.0)
-        self.assertEqual(channel.azimuth, 0.0)
-        self.assertEqual(channel.dip, -90.0)
-        self.assertEqual(channel.start_date,
-                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
-        self.assertEqual(channel.end_date, None)
-        self.assertEqual(channel.sample_rate, 200.0)
-        self.assertEqual(channel.sensor.type,
-                         "Streckeisen STS-2/N seismometer")
+        assert channel.code == "EHZ"
+        assert channel.location_code == ""
+        assert round(abs(channel.latitude-49.766899), 7) == 0
+        assert round(abs(channel.longitude-12.207), 7) == 0
+        assert round(abs(channel.elevation-430.0), 7) == 0
+        assert round(abs(channel.depth-0.0), 7) == 0
+        assert channel.azimuth == 0.0
+        assert channel.dip == -90.0
+        assert channel.start_date == \
+                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
+        assert channel.end_date == None
+        assert channel.sample_rate == 200.0
+        assert channel.sensor.type == \
+                         "Streckeisen STS-2/N seismometer"
         resp = channel.response
-        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
-        self.assertEqual(resp.instrument_sensitivity.input_units_description,
-                         "Velocity in Meters per Second")
-        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
-        self.assertEqual(resp.instrument_sensitivity.output_units_description,
-                         "Digital Counts")
+        assert resp.instrument_sensitivity.input_units == "M/S"
+        assert resp.instrument_sensitivity.input_units_description == \
+                         "Velocity in Meters per Second"
+        assert resp.instrument_sensitivity.output_units == "COUNTS"
+        assert resp.instrument_sensitivity.output_units_description == \
+                         "Digital Counts"
 
         # Second channel.
         channel = inv[0][0][1]
-        self.assertEqual(channel.code, "EHN")
-        self.assertEqual(channel.location_code, "")
-        self.assertAlmostEqual(channel.latitude, 49.766899)
-        self.assertAlmostEqual(channel.longitude, 12.207)
-        self.assertAlmostEqual(channel.elevation, 430.0)
-        self.assertAlmostEqual(channel.depth, 0.0)
-        self.assertEqual(channel.azimuth, 0.0)
-        self.assertEqual(channel.dip, 0.0)
-        self.assertEqual(channel.start_date,
-                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
-        self.assertEqual(channel.end_date, None)
-        self.assertEqual(channel.sample_rate, 200.0)
-        self.assertEqual(channel.sensor.type,
-                         "Streckeisen STS-2/N seismometer")
+        assert channel.code == "EHN"
+        assert channel.location_code == ""
+        assert round(abs(channel.latitude-49.766899), 7) == 0
+        assert round(abs(channel.longitude-12.207), 7) == 0
+        assert round(abs(channel.elevation-430.0), 7) == 0
+        assert round(abs(channel.depth-0.0), 7) == 0
+        assert channel.azimuth == 0.0
+        assert channel.dip == 0.0
+        assert channel.start_date == \
+                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
+        assert channel.end_date == None
+        assert channel.sample_rate == 200.0
+        assert channel.sensor.type == \
+                         "Streckeisen STS-2/N seismometer"
         resp = channel.response
-        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
-        self.assertEqual(resp.instrument_sensitivity.input_units_description,
-                         "Velocity in Meters per Second")
-        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
-        self.assertEqual(resp.instrument_sensitivity.output_units_description,
-                         "Digital Counts")
+        assert resp.instrument_sensitivity.input_units == "M/S"
+        assert resp.instrument_sensitivity.input_units_description == \
+                         "Velocity in Meters per Second"
+        assert resp.instrument_sensitivity.output_units == "COUNTS"
+        assert resp.instrument_sensitivity.output_units_description == \
+                         "Digital Counts"
 
         # Third channel.
         channel = inv[0][0][2]
-        self.assertEqual(channel.code, "EHE")
-        self.assertEqual(channel.location_code, "")
-        self.assertAlmostEqual(channel.latitude, 49.766899)
-        self.assertAlmostEqual(channel.longitude, 12.207)
-        self.assertAlmostEqual(channel.elevation, 430.0)
-        self.assertAlmostEqual(channel.depth, 0.0)
-        self.assertEqual(channel.azimuth, 90.0)
-        self.assertEqual(channel.dip, 0.0)
-        self.assertEqual(channel.start_date,
-                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
-        self.assertEqual(channel.end_date, None)
-        self.assertEqual(channel.sample_rate, 200.0)
-        self.assertEqual(channel.sensor.type,
-                         "Streckeisen STS-2/N seismometer")
+        assert channel.code == "EHE"
+        assert channel.location_code == ""
+        assert round(abs(channel.latitude-49.766899), 7) == 0
+        assert round(abs(channel.longitude-12.207), 7) == 0
+        assert round(abs(channel.elevation-430.0), 7) == 0
+        assert round(abs(channel.depth-0.0), 7) == 0
+        assert channel.azimuth == 90.0
+        assert channel.dip == 0.0
+        assert channel.start_date == \
+                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
+        assert channel.end_date == None
+        assert channel.sample_rate == 200.0
+        assert channel.sensor.type == \
+                         "Streckeisen STS-2/N seismometer"
         resp = channel.response
-        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
-        self.assertEqual(resp.instrument_sensitivity.input_units_description,
-                         "Velocity in Meters per Second")
-        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
-        self.assertEqual(resp.instrument_sensitivity.output_units_description,
-                         "Digital Counts")
+        assert resp.instrument_sensitivity.input_units == "M/S"
+        assert resp.instrument_sensitivity.input_units_description == \
+                         "Velocity in Meters per Second"
+        assert resp.instrument_sensitivity.output_units == "COUNTS"
+        assert resp.instrument_sensitivity.output_units_description == \
+                         "Digital Counts"
 
     def test_response_calculation_from_resp_files(self):
         """
@@ -476,8 +477,8 @@ class CoreTestCase(unittest.TestCase):
                                             location=l, channel=c,
                                             starttime=t - 1, endtime=t + 1)
                         # Should now only be a single channel.
-                        self.assertEqual(_inv_t.get_contents()["channels"],
-                                         [channel])
+                        assert _inv_t.get_contents()["channels"] == \
+                                         [channel]
                         inv_r = _inv_t[0][0][0].response
 
                         for unit in ("DISP", "VEL", "ACC"):
@@ -522,12 +523,11 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.data_path, "RESP.SG.ST..LDO")
         # Fail if responses are explicitly not skipped.
         with CatchAndAssertWarnings():
-            with self.assertRaises(InvalidResponseError) as e:
+            with pytest.raises(InvalidResponseError) as e:
                 obspy.read_inventory(filename, skip_invalid_responses=False)
-        self.assertEqual(
-            e.exception.args[0],
-            "Stage 2: Invalid response specification. A blockette 54 "
-            "must always be followed by a blockette 57 which is missing.")
+        assert e.exception.args[0] == \
+            "Stage 2: Invalid response specification. A blockette 54 " \
+            "must always be followed by a blockette 57 which is missing."
 
         # Delete warning registry to reliably trigger the warning.
         if hasattr(obspy.io.xseed.parser, "__warningregistry__"):
@@ -556,12 +556,11 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.data_path, "RESP.decimation_without_gain")
         # Fail if responses are explicitly not skipped.
         with CatchAndAssertWarnings():
-            with self.assertRaises(InvalidResponseError) as e:
+            with pytest.raises(InvalidResponseError) as e:
                 obspy.read_inventory(filename, skip_invalid_responses=False)
-        self.assertEqual(
-            e.exception.args[0],
-            "Stage 1: A decimation stage with blockette 57 must be followed "
-            "by a blockette 58 which is missing here.")
+        assert e.exception.args[0] == \
+            "Stage 1: A decimation stage with blockette 57 must be followed " \
+            "by a blockette 58 which is missing here."
         # Otherwise continue, but raise a warning.
         msg = ("Failed to calculate response for XX.ABC..BHX with epoch "
                "1999-12-16T02:14:00.000000Z - 1999-12-21T19:10:59.000000Z "
@@ -600,11 +599,10 @@ class CoreTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_path,
                                 "RESP.blkt53_and_54_in_one_stage")
-        with self.assertRaises(InvalidResponseError) as e:
+        with pytest.raises(InvalidResponseError) as e:
             obspy.read_inventory(filename, skip_invalid_responses=False)
-        self.assertEqual(
-            e.exception.args[0],
-            "Stage 1 has both, blockette 53 and 54. This is not valid.")
+        assert e.exception.args[0] == \
+            "Stage 1 has both, blockette 53 and 54. This is not valid."
         # If invalid responses are skipped, check the warning.
         msg = (
             r"Failed to calculate response for BN.WR0..SHZ with epoch "
@@ -613,7 +611,7 @@ class CoreTestCase(unittest.TestCase):
             r"This is not valid.")
         with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             inv = obspy.read_inventory(filename)
-        self.assertIsNone(inv[0][0][0].response)
+        assert inv[0][0][0].response is None
 
     def test_reconstructing_stage_0_from_other_blockettes(self):
         # This file has no stage 0 but a bunch of other blockettes 58 from
@@ -627,9 +625,9 @@ class CoreTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             inv = obspy.read_inventory(filename)
-        self.assertEqual(len(w), 0)
+        assert len(w) == 0
 
-        self.assertEqual(inv.get_contents()["channels"], ["JM.NMIA0.00.HNN"])
+        assert inv.get_contents()["channels"] == ["JM.NMIA0.00.HNN"]
 
         # Also check the responses via the inventory objects and by directly
         # calling evalresp.
@@ -644,11 +642,11 @@ class CoreTestCase(unittest.TestCase):
     def test_parsing_blockette_62(self):
         filename = os.path.join(self.data_path, "RESP.blockette_62")
         inv = obspy.read_inventory(filename)
-        self.assertEqual(inv.get_contents()["channels"], ["XH.DR01.30.LDO"])
+        assert inv.get_contents()["channels"] == ["XH.DR01.30.LDO"]
         r = inv[0][0][0].response
-        self.assertIsInstance(r.response_stages[0], PolynomialResponseStage)
+        assert isinstance(r.response_stages[0], PolynomialResponseStage)
         p = r.response_stages[0]
-        self.assertEqual(p, PolynomialResponseStage(
+        assert p == PolynomialResponseStage(
             stage_sequence_number=1,
             stage_gain=1.0,
             stage_gain_frequency=0.002,
@@ -661,7 +659,7 @@ class CoreTestCase(unittest.TestCase):
             approximation_upper_bound=1100,
             maximum_error=0.0,
             coefficients=[8e2, 1.5e-4]
-        ))
+        )
 
     def test_parsing_blockette_62_as_stage_0(self):
         filename = os.path.join(self.data_path, "RESP.blockette_62_as_stage_0")
@@ -669,13 +667,13 @@ class CoreTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             inv = obspy.read_inventory(filename)
-        self.assertEqual(len(w), 0)
-        self.assertEqual(inv.get_contents()["channels"], ["UO.BEER.EP.BDO"])
+        assert len(w) == 0
+        assert inv.get_contents()["channels"] == ["UO.BEER.EP.BDO"]
         r = inv[0][0][0].response
         # Should have no sensitivity.
-        self.assertIsNone(r.instrument_sensitivity)
+        assert r.instrument_sensitivity is None
         # For now just test that it is actually read.
-        self.assertIsInstance(r.response_stages[0], PolynomialResponseStage)
+        assert isinstance(r.response_stages[0], PolynomialResponseStage)
 
     def test_warning_with_no_blockettes_58(self):
         filename = os.path.join(self.data_path, "RESP.repeated_stage_0")

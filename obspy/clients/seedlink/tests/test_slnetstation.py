@@ -23,6 +23,6 @@ class SLNetStationTestCase(unittest.TestCase):
 
         station1.append_selectors('FOO')
 
-        self.assertNotEqual(id(station1.selectors), id(station2.selectors))
-        self.assertEqual(station1.get_selectors(), ['FOO'])
-        self.assertEqual(station2.get_selectors(), [])
+        assert id(station1.selectors) != id(station2.selectors)
+        assert station1.get_selectors() == ['FOO']
+        assert station2.get_selectors() == []

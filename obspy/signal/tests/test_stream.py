@@ -7,6 +7,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.signal.filter import bandpass, bandstop, highpass, lowpass
+import pytest
 
 
 class StreamTestCase(unittest.TestCase):
@@ -80,23 +81,23 @@ class StreamTestCase(unittest.TestCase):
                         st_bkp[i].data,
                         df=st_bkp[i].stats.sampling_rate, **filt_ops)
                     np.testing.assert_array_equal(tr.data, data_filt)
-                    self.assertIn('processing', tr.stats)
-                    self.assertEqual(len(tr.stats.processing), 1)
-                    self.assertIn("filter", tr.stats.processing[0])
-                    self.assertIn(filt_type, tr.stats.processing[0])
+                    assert 'processing' in tr.stats
+                    assert len(tr.stats.processing) == 1
+                    assert "filter" in tr.stats.processing[0]
+                    assert filt_type in tr.stats.processing[0]
                     for key, value in filt_ops.items():
-                        self.assertTrue("'%s': %s" % (key, value)
-                                        in tr.stats.processing[0])
+                        assert "'%s': %s" % (key, value) \
+                                        in tr.stats.processing[0]
                 st.filter(filt_type, **filt_ops)
                 for i, tr in enumerate(st):
-                    self.assertIn('processing', tr.stats)
-                    self.assertEqual(len(tr.stats.processing), 2)
+                    assert 'processing' in tr.stats
+                    assert len(tr.stats.processing) == 2
                     for proc_info in tr.stats.processing:
-                        self.assertIn("filter", proc_info)
-                        self.assertIn(filt_type, proc_info)
+                        assert "filter" in proc_info
+                        assert filt_type in proc_info
                         for key, value in filt_ops.items():
-                            self.assertTrue("'%s': %s" % (key, value)
-                                            in proc_info)
+                            assert "'%s': %s" % (key, value) \
+                                            in proc_info
 
         # some tests that should raise an Exception
         st = streams[0]
@@ -108,7 +109,8 @@ class StreamTestCase(unittest.TestCase):
             ['bandstop', 3],
             ['bandstop', 'XXX']]
         for filt_type, filt_ops in bad_filters:
-            self.assertRaises(TypeError, st.filter, filt_type, filt_ops)
+            with pytest.raises(TypeError):
+                st.filter(filt_type, filt_ops)
         bad_filters = [
             ['bandpass', {'freqmin': 1., 'XXX': 20.}],
             ['bandstop', {'freqmin': 5, 'freqmax': "XXX", 'corners': 6}],
@@ -116,14 +118,16 @@ class StreamTestCase(unittest.TestCase):
             ['bandpass', {'freqmin': 5, 'corners': 6}],
             ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
         for filt_type, filt_ops in bad_filters:
-            self.assertRaises(TypeError, st.filter, filt_type, **filt_ops)
+            with pytest.raises(TypeError):
+                st.filter(filt_type, **filt_ops)
         bad_filters = [['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}]]
         for filt_type, filt_ops in bad_filters:
-            self.assertRaises(ValueError, st.filter, filt_type, **filt_ops)
+            with pytest.raises(ValueError):
+                st.filter(filt_type, **filt_ops)
         # test if stream is unchanged after all these bad tests
         for i, tr in enumerate(st):
             np.testing.assert_array_equal(tr.data, st_bkp[i].data)
-            self.assertEqual(tr.stats, st_bkp[i].stats)
+            assert tr.stats == st_bkp[i].stats
 
     def test_simulate(self):
         """
@@ -152,16 +156,16 @@ class StreamTestCase(unittest.TestCase):
         # for full equality.
         if platform.system() == "Windows":  # pragma: no cover
             for tr1, tr2 in zip(st1, st2):
-                self.assertEqual(tr1.stats, tr2.stats)
+                assert tr1.stats == tr2.stats
                 np.testing.assert_allclose(tr1.data, tr2.data, rtol=1E-6,
                                            atol=1E-6 * tr1.data.ptp())
         else:
             # Added (up to ###) to debug appveyor fails
             for tr1, tr2 in zip(st1.sort(), st2.sort()):
-                self.assertEqual(tr1.stats, tr2.stats)
+                assert tr1.stats == tr2.stats
                 np.testing.assert_allclose(tr1.data, tr2.data)
             ###
-            self.assertEqual(st1, st2)
+            assert st1 == st2
 
     def test_decimate(self):
         """
@@ -175,4 +179,4 @@ class StreamTestCase(unittest.TestCase):
         st.decimate(10, strict_length=False)
         for i, tr in enumerate(st):
             st_bkp[i].decimate(10, strict_length=False)
-            self.assertEqual(tr, st_bkp[i])
+            assert tr == st_bkp[i]

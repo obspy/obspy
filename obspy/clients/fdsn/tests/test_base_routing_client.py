@@ -49,42 +49,39 @@ class BaseRoutingClientTestCase(unittest.TestCase):
 
     def test_router_intialization_helper_function(self):
         c = RoutingClient("eida-routing")
-        self.assertIsInstance(c, EIDAWSRoutingClient)
+        assert isinstance(c, EIDAWSRoutingClient)
 
         c = RoutingClient("iris-federator")
-        self.assertIsInstance(c, FederatorRoutingClient)
+        assert isinstance(c, FederatorRoutingClient)
 
-        with self.assertRaises(NotImplementedError) as e:
+        with pytest.raises(NotImplementedError) as e:
             RoutingClient("random")
-        self.assertEqual(
-            e.exception.args[0],
-            "Routing type 'random' is not implemented. Available types: "
-            "`iris-federator`, `eida-routing`")
+        assert e.exception.args[0] == \
+            "Routing type 'random' is not implemented. Available types: " \
+            "`iris-federator`, `eida-routing`"
 
     def test_expansion_of_include_and_exclude_providers(self):
         c = self._cls_object(
             include_providers=["IRIS", "http://example.com"],
             exclude_providers=["BGR", "http://example2.com"])
-        self.assertEqual(
-            c.include_providers, ["service.iris.edu", "example.com"])
-        self.assertEqual(
-            c.exclude_providers, ["eida.bgr.de", "example2.com"])
+        assert c.include_providers == ["service.iris.edu", "example.com"]
+        assert c.exclude_providers == ["eida.bgr.de", "example2.com"]
 
         # None are set.
         c = self._cls_object()
-        self.assertEqual(c.include_providers, [])
-        self.assertEqual(c.exclude_providers, [])
+        assert c.include_providers == []
+        assert c.exclude_providers == []
 
         # Single strings.
         c = self._cls_object(include_providers="IRIS",
                              exclude_providers="BGR")
-        self.assertEqual(c.include_providers, ["service.iris.edu"])
-        self.assertEqual(c.exclude_providers, ["eida.bgr.de"])
+        assert c.include_providers == ["service.iris.edu"]
+        assert c.exclude_providers == ["eida.bgr.de"]
 
         c = self._cls_object(include_providers="http://example.com/path",
                              exclude_providers="http://example2.com")
-        self.assertEqual(c.include_providers, ["example.com/path"])
-        self.assertEqual(c.exclude_providers, ["example2.com"])
+        assert c.include_providers == ["example.com/path"]
+        assert c.exclude_providers == ["example2.com"]
 
     def test_request_filtering(self):
         split = {
@@ -96,22 +93,22 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         }
 
         c = self._cls_object(include_providers=["IRIS", "http://example.com"])
-        self.assertEqual(c._filter_requests(split), {
+        assert c._filter_requests(split) == {
             "https://example.com": "1234",
             "http://service.iris.edu": "1234"
-        })
+        }
 
         c = self._cls_object(exclude_providers=["IRIS", "http://example.com"])
-        self.assertEqual(c._filter_requests(split), {
+        assert c._filter_requests(split) == {
             "http://example2.com": "1234",
             "http://example3.com": "1234"
-        })
+        }
 
         # Both filters are always applied - it might result in zero
         # remaining providers.
         c = self._cls_object(include_providers=["IRIS", "http://example.com"],
                              exclude_providers=["IRIS", "http://example.com"])
-        self.assertEqual(c._filter_requests(split), {})
+        assert c._filter_requests(split) == {}
 
     def test_downloading_waveforms(self):
         split = {
@@ -129,23 +126,23 @@ class BaseRoutingClientTestCase(unittest.TestCase):
             # test2 should not be passed on.
             st = c._download_waveforms(split=split, test1="a", test2="b")
 
-        self.assertEqual(len(st), 12)
+        assert len(st) == 12
         # Test initialization.
-        self.assertEqual(p.call_count, 4)
-        self.assertEqual(set(_i[0][0] for _i in p.call_args_list),
-                         set(split.keys()))
-        self.assertEqual(set(_i[1]["debug"] for _i in p.call_args_list),
-                         set([False]))
-        self.assertEqual(set(_i[1]["timeout"] for _i in p.call_args_list),
-                         set([240]))
+        assert p.call_count == 4
+        assert set(_i[0][0] for _i in p.call_args_list) == \
+                         set(split.keys())
+        assert set(_i[1]["debug"] for _i in p.call_args_list) == \
+                         set([False])
+        assert set(_i[1]["timeout"] for _i in p.call_args_list) == \
+                         set([240])
 
         # Waveform download.
         wf_bulk = mock_instance.get_waveforms_bulk
-        self.assertEqual(wf_bulk.call_count, 4)
-        self.assertEqual(set(_i[0][0] for _i in wf_bulk.call_args_list),
-                         set(["test1=a\n1234"]))
+        assert wf_bulk.call_count == 4
+        assert set(_i[0][0] for _i in wf_bulk.call_args_list) == \
+                         set(["test1=a\n1234"])
         for _i in wf_bulk.call_args_list:
-            self.assertEqual(_i[1], {})
+            assert _i[1] == {}
 
         # Once again, but raising exceptions this time.
         with mock.patch("obspy.clients.fdsn.client.Client") as p:
@@ -158,16 +155,15 @@ class BaseRoutingClientTestCase(unittest.TestCase):
             # test2 should not be passed on.
             st = c._download_waveforms(split=split, test1="a", test2="b")
 
-        self.assertEqual(len(st), 0)
+        assert len(st) == 0
 
         # Provider filtering might result in no data left.
         c.include_providers = "http://random.com"
-        with self.assertRaises(FDSNNoDataException) as e:
+        with pytest.raises(FDSNNoDataException) as e:
             c._download_waveforms(split=split, test1="a", test2="b")
-        self.assertEqual(
-            e.exception.args[0],
-            "Nothing remains to download after the provider "
-            "inclusion/exclusion filters have been applied.")
+        assert e.exception.args[0] == \
+            "Nothing remains to download after the provider " \
+            "inclusion/exclusion filters have been applied."
 
     def test_downloading_stations(self):
         split = {
@@ -187,21 +183,21 @@ class BaseRoutingClientTestCase(unittest.TestCase):
             c._download_stations(split=split, test1="a", test2="b")
 
         # Test initialization.
-        self.assertEqual(p.call_count, 4)
-        self.assertEqual(set(_i[0][0] for _i in p.call_args_list),
-                         set(split.keys()))
-        self.assertEqual(set(_i[1]["debug"] for _i in p.call_args_list),
-                         set([False]))
-        self.assertEqual(set(_i[1]["timeout"] for _i in p.call_args_list),
-                         set([240]))
+        assert p.call_count == 4
+        assert set(_i[0][0] for _i in p.call_args_list) == \
+                         set(split.keys())
+        assert set(_i[1]["debug"] for _i in p.call_args_list) == \
+                         set([False])
+        assert set(_i[1]["timeout"] for _i in p.call_args_list) == \
+                         set([240])
 
         # Station download.
         wf_bulk = mock_instance.get_stations_bulk
-        self.assertEqual(wf_bulk.call_count, 4)
-        self.assertEqual(set(_i[0][0] for _i in wf_bulk.call_args_list),
-                         set(["test1=a\n1234"]))
+        assert wf_bulk.call_count == 4
+        assert set(_i[0][0] for _i in wf_bulk.call_args_list) == \
+                         set(["test1=a\n1234"])
         for _i in wf_bulk.call_args_list:
-            self.assertEqual(_i[1], {})
+            assert _i[1] == {}
 
     def test_unexpected_exception_handling(self):
         split = {
@@ -218,13 +214,13 @@ class BaseRoutingClientTestCase(unittest.TestCase):
                 inv = c._download_stations(split=split)
 
         # Returns an empty inventory.
-        self.assertIsInstance(inv, obspy.core.inventory.Inventory)
-        self.assertEqual(len(inv), 0)
+        assert isinstance(inv, obspy.core.inventory.Inventory)
+        assert len(inv) == 0
 
         # Raises a nice warning.
-        self.assertEqual(len(w), 1)
+        assert len(w) == 1
         msg = w[0].message.args[0]
-        self.assertTrue(msg.startswith(
+        assert msg.startswith(
             "Failed to download data of type 'station' from "
-            "'https://example.com' due to:"))
-        self.assertIn("ValueError: random", msg)
+            "'https://example.com' due to:")
+        assert "ValueError: random" in msg

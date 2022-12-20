@@ -11,6 +11,7 @@ import numpy as np
 import obspy
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.segy.segy import SEGYTraceReadingError, _read_su, iread_su
+import pytest
 
 
 class SUTestCase(unittest.TestCase):
@@ -43,7 +44,7 @@ class SUTestCase(unittest.TestCase):
             with open(outfile, 'rb') as f:
                 new_data = f.read()
         # Should be identical!
-        self.assertEqual(org_data, new_data)
+        assert org_data == new_data
 
     def test_enforcing_byteorders_while_reading(self):
         """
@@ -55,13 +56,14 @@ class SUTestCase(unittest.TestCase):
         file = os.path.join(self.path, '1.su_first_trace')
         # The following should both work.
         su = _read_su(file)
-        self.assertEqual(su.endian, '<')
+        assert su.endian == '<'
         su = _read_su(file, endian='<')
-        self.assertEqual(su.endian, '<')
+        assert su.endian == '<'
         # The following not because it will unpack the header and try to unpack
         # the number of data samples specified there which will of course not
         # correct.
-        self.assertRaises(SEGYTraceReadingError, _read_su, file, endian='>')
+        with pytest.raises(SEGYTraceReadingError):
+            _read_su(file, endian='>')
 
     def test_reading_and_writing_different_byteorders(self):
         """
@@ -77,22 +79,22 @@ class SUTestCase(unittest.TestCase):
             # Also read the original file.
             with open(file, 'rb') as f:
                 org_data = f.read()
-            self.assertEqual(su.endian, '<')
+            assert su.endian == '<'
             # Write it little endian.
             su.write(outfile, endian='<')
             with open(outfile, 'rb') as f:
                 new_data = f.read()
-            self.assertEqual(org_data, new_data)
+            assert org_data == new_data
             su2 = _read_su(outfile)
-            self.assertEqual(su2.endian, '<')
+            assert su2.endian == '<'
             np.testing.assert_array_equal(data, su2.traces[0].data)
             # Write it big endian.
             su.write(outfile, endian='>')
             with open(outfile, 'rb') as f:
                 new_data = f.read()
-            self.assertFalse(org_data == new_data)
+            assert not (org_data == new_data)
             su3 = _read_su(outfile)
-        self.assertEqual(su3.endian, '>')
+        assert su3.endian == '>'
         np.testing.assert_array_equal(data, su3.traces[0].data)
 
     def test_unpacking_su_data(self):
@@ -118,7 +120,7 @@ class SUTestCase(unittest.TestCase):
         with open(filename, 'rb') as fp:
             data = fp.read()
         st = _read_su(io.BytesIO(data))
-        self.assertEqual(len(st.traces[0].data), 8000)
+        assert len(st.traces[0].data) == 8000
 
     def test_iterative_reading(self):
         """
@@ -133,4 +135,4 @@ class SUTestCase(unittest.TestCase):
 
         del ist[0].stats.su.data_encoding
 
-        self.assertEqual(st.traces, ist)
+        assert st.traces == ist

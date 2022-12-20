@@ -97,8 +97,8 @@ class SEG2TestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             st = read(basename + ".seg2.gz")
-        self.assertEqual(len(w), 1)
-        self.assertIn('custom', str(w[0]))
+        assert len(w) == 1
+        assert 'custom' in str(w[0])
         # read reference ASCII data (in micrometer/s)
         with gzip.open(basename + ".DAT.gz", 'rb') as f:
             results = np.loadtxt(f).T
@@ -106,11 +106,11 @@ class SEG2TestCase(unittest.TestCase):
         for tr, result in zip(st, results):
             # convert raw data to micrometer/s (descaling goes to mm/s)
             scaled_data = tr.data * float(tr.stats.seg2.DESCALING_FACTOR) * 1e3
-            self.assertTrue(np.allclose(scaled_data, result, rtol=1e-7,
-                                        atol=1e-7))
+            assert np.allclose(scaled_data, result, rtol=1e-7,
+                                        atol=1e-7)
         # test seg2 specific header values
         # (trace headers include SEG2 file header)
-        self.assertEqual(st[0].stats.seg2, TRACE2_HEADER)
+        assert st[0].stats.seg2 == TRACE2_HEADER
 
     def test_read_data_format_3(self):
         """
@@ -122,8 +122,8 @@ class SEG2TestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             st = read(basename + ".seg2")
-        self.assertEqual(len(w), 2)
-        self.assertIn('custom', str(w[1]))
+        assert len(w) == 2
+        assert 'custom' in str(w[1])
         # read reference ASCII data
         with gzip.open(basename + '.DAT.gz', 'rb') as f:
             results = np.loadtxt(f, ndmin=2).T
@@ -134,4 +134,4 @@ class SEG2TestCase(unittest.TestCase):
                                        rtol=1e-7, atol=1e-7)
         # test seg2 specific header values
         # (trace headers include SEG2 file header)
-        self.assertEqual(st[0].stats.seg2, TRACE3_HEADER)
+        assert st[0].stats.seg2 == TRACE3_HEADER

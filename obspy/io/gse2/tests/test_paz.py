@@ -27,12 +27,12 @@ class PAZTestCase(unittest.TestCase):
         0.0 0.0
         0.4""")
         p, z, k = paz.read_paz(f)
-        self.assertAlmostEqual(-4.39823, p[0].real)
-        self.assertAlmostEqual(4.48709, p[0].imag)
-        self.assertAlmostEqual(-4.39823, p[1].real)
-        self.assertAlmostEqual(-4.48709, p[1].imag)
-        self.assertEqual([0j, 0j, 0j], z)
-        self.assertAlmostEqual(0.4, k)
+        assert round(abs(-4.39823-p[0].real), 7) == 0
+        assert round(abs(4.48709-p[0].imag), 7) == 0
+        assert round(abs(-4.39823-p[1].real), 7) == 0
+        assert round(abs(-4.48709-p[1].imag), 7) == 0
+        assert [0j, 0j, 0j] == z
+        assert round(abs(0.4-k), 7) == 0
         f.close()
 
     def test_read_without_spaces(self):
@@ -51,15 +51,15 @@ class PAZTestCase(unittest.TestCase):
 -1.0982330.08709
 0.5""")
         p, z, k = paz.read_paz(f)
-        self.assertAlmostEqual(-4.39823, p[0].real)
-        self.assertAlmostEqual(40.48709, p[0].imag)
-        self.assertAlmostEqual(-4.39823, p[1].real)
-        self.assertAlmostEqual(-4.48709, p[1].imag)
-        self.assertAlmostEqual(1.2, z[0].real)
-        self.assertAlmostEqual(4.0, z[0].imag)
-        self.assertAlmostEqual(-1.09823, z[1].real)
-        self.assertAlmostEqual(-3.08709, z[1].imag)
-        self.assertAlmostEqual(-1.09823, z[2].real)
-        self.assertAlmostEqual(30.08709, z[2].imag)
-        self.assertAlmostEqual(0.5, k)
+        assert round(abs(-4.39823-p[0].real), 7) == 0
+        assert round(abs(40.48709-p[0].imag), 7) == 0
+        assert round(abs(-4.39823-p[1].real), 7) == 0
+        assert round(abs(-4.48709-p[1].imag), 7) == 0
+        assert round(abs(1.2-z[0].real), 7) == 0
+        assert round(abs(4.0-z[0].imag), 7) == 0
+        assert round(abs(-1.09823-z[1].real), 7) == 0
+        assert round(abs(-3.08709-z[1].imag), 7) == 0
+        assert round(abs(-1.09823-z[2].real), 7) == 0
+        assert round(abs(30.08709-z[2].imag), 7) == 0
+        assert round(abs(0.5-k), 7) == 0
         f.close()

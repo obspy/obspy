@@ -37,7 +37,7 @@ class CSSStationTestCase(unittest.TestCase):
             expected_files = sorted(name for name in os.listdir(self.data_dir)
                                     if fnmatch.fnmatch(name, fname + '.*'))
             actual_files = sorted(os.listdir(tempdir))
-            self.assertEqual(expected_files, actual_files)
+            assert expected_files == actual_files
 
             for expected, actual in zip(expected_files, actual_files):
                 with open(os.path.join(self.data_dir, expected), 'rt') as f:
@@ -45,7 +45,7 @@ class CSSStationTestCase(unittest.TestCase):
                 with open(os.path.join(tempdir, actual), 'rt') as f:
                     actual_text = f.readlines()
 
-                self.assertEqual(expected_text, actual_text)
+                assert expected_text == actual_text
 
         finally:
             shutil.rmtree(tempdir)

@@ -34,12 +34,12 @@ class CoreTestCase(unittest.TestCase):
             if filename.endswith(".py"):
                 invalid_files.append(
                     os.path.abspath(os.path.join(py_dir, filename)))
-        self.assertGreater(len(invalid_files), 0)
+        assert len(invalid_files) > 0
 
         for filename in valid_files:
-            self.assertTrue(is_evt(filename))
+            assert is_evt(filename)
         for filename in invalid_files:
-            self.assertFalse(is_evt(filename))
+            assert not is_evt(filename)
 
     def test_is_evt_from_bytesio(self):
         """
@@ -58,16 +58,16 @@ class CoreTestCase(unittest.TestCase):
             with open(filename, "rb") as fh:
                 buf = io.BytesIO(fh.read())
             buf.seek(0, 0)
-            self.assertTrue(is_evt(buf))
+            assert is_evt(buf)
             # The is_evt() method should not change the file pointer.
-            self.assertEqual(buf.tell(), 0)
+            assert buf.tell() == 0
         for filename in invalid_files:
             with open(filename, "rb") as fh:
                 buf = io.BytesIO(fh.read())
             buf.seek(0, 0)
-            self.assertFalse(is_evt(buf))
+            assert not is_evt(buf)
             # The is_evt() method should not change the file pointer.
-            self.assertEqual(buf.tell(), 0)
+            assert buf.tell() == 0
 
     def test_read_via_obspy(self):
         """
@@ -77,17 +77,17 @@ class CoreTestCase(unittest.TestCase):
         # 1
         st = read(filename, apply_calib=True)
         st.verify()
-        self.assertEqual(len(st), 3)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MEMA')
+        assert len(st) == 3
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert len(st[0]) == 230 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MEMA'
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -97,23 +97,23 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         st = read(filename, apply_calib=True)
         st.verify()
-        self.assertEqual(len(st), 6)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[3].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[4].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[5].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(len(st[0]), 390 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MOLA')
+        assert len(st) == 6
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[3].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[4].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[5].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert len(st[0]) == 390 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MOLA'
 
     def test_reading_via_obspy_and_bytesio(self):
         """
@@ -126,17 +126,17 @@ class CoreTestCase(unittest.TestCase):
         buf.seek(0, 0)
         st = read(buf, apply_calib=True)
         st.verify()
-        self.assertEqual(len(st), 3)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MEMA')
+        assert len(st) == 3
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert len(st[0]) == 230 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MEMA'
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -149,23 +149,23 @@ class CoreTestCase(unittest.TestCase):
         buf.seek(0, 0)
         st = read(buf, apply_calib=True)
         st.verify()
-        self.assertEqual(len(st), 6)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[3].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[4].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[5].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(len(st[0]), 390 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MOLA')
+        assert len(st) == 6
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[3].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[4].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[5].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert len(st[0]) == 390 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MOLA'
 
     def test_read_via_module(self):
         """
@@ -175,17 +175,17 @@ class CoreTestCase(unittest.TestCase):
         # 1
         st = read_evt(filename, apply_calib=True)
         st.verify()
-        self.assertEqual(len(st), 3)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MEMA')
+        assert len(st) == 3
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert len(st[0]) == 230 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MEMA'
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -195,23 +195,23 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         st = read_evt(filename, apply_calib=True)
         st.verify()
-        self.assertEqual(len(st), 6)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[3].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[4].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[5].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(len(st[0]), 390 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MOLA')
+        assert len(st) == 6
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[3].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[4].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[5].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert len(st[0]) == 390 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MOLA'
 
     def test_read_via_module_and_bytesio(self):
         """
@@ -225,17 +225,17 @@ class CoreTestCase(unittest.TestCase):
         buf.seek(0, 0)
         st = read_evt(buf, apply_calib=True)
         st.verify()
-        self.assertEqual(len(st), 3)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MEMA')
+        assert len(st) == 3
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert len(st[0]) == 230 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MEMA'
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -248,23 +248,23 @@ class CoreTestCase(unittest.TestCase):
         buf.seek(0, 0)
         st = read_evt(buf, apply_calib=True)
         st.verify()
-        self.assertEqual(len(st), 6)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[3].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[4].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(st[5].stats.starttime,
-                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(len(st[0]), 390 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MOLA')
+        assert len(st) == 6
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[3].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[4].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert st[5].stats.starttime == \
+                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+        assert len(st[0]) == 390 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MOLA'
 
     def verify_stats_evt(self, evt_stats):
         dico = {'chan_fullscale': 2.5, 'chan_sensorgain': 1,
@@ -275,10 +275,10 @@ class CoreTestCase(unittest.TestCase):
         # Values from Kinemetrics QLWin program for BI008_MEMA-04823.evt
 
         for key in dico:
-            self.assertAlmostEqual(dico[key], evt_stats[key], 6)
+            assert round(abs(dico[key]-evt_stats[key]), 6) == 0
 
-        self.assertEqual(UTCDateTime(2013, 8, 15, 9, 20, 28),
-                         evt_stats['starttime'])
+        assert UTCDateTime(2013, 8, 15, 9, 20, 28) == \
+                         evt_stats['starttime']
 
     def verify_data_evt0(self, data):
         valuesdeb = np.array([-2.4464752525e-002, -2.4534918368e-002,
@@ -296,9 +296,9 @@ class CoreTestCase(unittest.TestCase):
                               -2.4424990639e-002])
         # Data values from Tsoft Program
 
-        self.assertEqual(len(data), 5750)
-        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
-        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
+        assert len(data) == 5750
+        assert np.allclose(valuesdeb, data[:len(valuesdeb)])
+        assert np.allclose(valuesend, data[-len(valuesend):])
 
     def verify_data_evt2(self, data):
         valuesdeb = np.array([-4.4351171702e-002, -4.4479820877e-002,
@@ -318,9 +318,9 @@ class CoreTestCase(unittest.TestCase):
         # Data values from Tsoft Program
         # length is 5750
 
-        self.assertEqual(len(data), 5750)
-        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
-        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
+        assert len(data) == 5750
+        assert np.allclose(valuesdeb, data[:len(valuesdeb)])
+        assert np.allclose(valuesend, data[-len(valuesend):])
 
     def test_read_via_module_raw(self):
         """
@@ -330,17 +330,17 @@ class CoreTestCase(unittest.TestCase):
         # 1
         st = read_evt(filename, apply_calib=False)
         st.verify()
-        self.assertEqual(len(st), 3)
-        self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[1].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(st[2].stats.starttime,
-                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230 * 25)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
-        self.assertEqual(st[0].stats.channel, '0')
-        self.assertEqual(st[0].stats.station, 'MEMA')
+        assert len(st) == 3
+        assert st[0].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[1].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert st[2].stats.starttime == \
+                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+        assert len(st[0]) == 230 * 25
+        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
+        assert st[0].stats.channel == '0'
+        assert st[0].stats.station == 'MEMA'
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0_raw(st[0].data)
@@ -359,9 +359,9 @@ class CoreTestCase(unittest.TestCase):
                               -20976., -20972., -20956., -20886.])
         # Data values from Tsoft Program
 
-        self.assertEqual(len(data), 5750)
-        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
-        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
+        assert len(data) == 5750
+        assert np.allclose(valuesdeb, data[:len(valuesdeb)])
+        assert np.allclose(valuesend, data[-len(valuesend):])
 
     def verify_data_evt2_raw(self, data):
         valuesdeb = np.array([-37922., -38032., -38004., -37936.,
@@ -378,6 +378,6 @@ class CoreTestCase(unittest.TestCase):
         # Data values from Tsoft Program
         # length is 5750
 
-        self.assertEqual(len(data), 5750)
-        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
-        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
+        assert len(data) == 5750
+        assert np.allclose(valuesdeb, data[:len(valuesdeb)])
+        assert np.allclose(valuesend, data[-len(valuesend):])

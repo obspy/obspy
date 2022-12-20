@@ -46,8 +46,8 @@ class CmtsolutionTestCase(unittest.TestCase):
             except Exception:
                 pass
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        assert data.decode().splitlines() == \
+                         new_data.decode().splitlines()
 
     def test_write_no_preferred_focal_mechanism(self):
         """
@@ -74,8 +74,8 @@ class CmtsolutionTestCase(unittest.TestCase):
             except Exception:
                 pass
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        assert data.decode().splitlines() == \
+                         new_data.decode().splitlines()
 
     def test_read_and_write_cmtsolution_from_open_files(self):
         """
@@ -95,8 +95,8 @@ class CmtsolutionTestCase(unittest.TestCase):
             tf.seek(0, 0)
             new_data = tf.read()
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        assert data.decode().splitlines() == \
+                         new_data.decode().splitlines()
 
     def test_read_and_write_cmtsolution_from_bytes_io(self):
         """
@@ -120,8 +120,8 @@ class CmtsolutionTestCase(unittest.TestCase):
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        assert data.decode().splitlines() == \
+                         new_data.decode().splitlines()
 
     def test_read_and_write_cmtsolution_explosion(self):
         """
@@ -145,8 +145,8 @@ class CmtsolutionTestCase(unittest.TestCase):
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        assert data.decode().splitlines() == \
+                         new_data.decode().splitlines()
 
     def test_is_cmtsolution(self):
         """
@@ -160,9 +160,9 @@ class CmtsolutionTestCase(unittest.TestCase):
             os.path.join(self.datapath, os.path.pardir, "__init__.py")]
 
         for filename in good_files:
-            self.assertTrue(_is_cmtsolution(filename))
+            assert _is_cmtsolution(filename)
         for filename in bad_files:
-            self.assertFalse(_is_cmtsolution(filename))
+            assert not _is_cmtsolution(filename)
 
     def test_read_and_write_multiple_cmtsolution_from_files(self):
         """
@@ -175,7 +175,7 @@ class CmtsolutionTestCase(unittest.TestCase):
 
         cat = obspy.read_events(filename)
 
-        self.assertEqual(len(cat), 4)
+        assert len(cat) == 4
 
         with NamedTemporaryFile() as tf:
             temp_filename = tf.name
@@ -190,8 +190,8 @@ class CmtsolutionTestCase(unittest.TestCase):
             except Exception:
                 pass
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        assert data.decode().splitlines() == \
+                         new_data.decode().splitlines()
 
     def test_read_and_write_multiple_events_from_bytes_io(self):
         """
@@ -210,15 +210,15 @@ class CmtsolutionTestCase(unittest.TestCase):
             buf.seek(0, 0)
             cat = obspy.read_events(buf)
 
-            self.assertEqual(len(cat), 4)
+            assert len(cat) == 4
 
             with io.BytesIO() as buf2:
                 cat.write(buf2, format="CMTSOLUTION")
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        assert data.decode().splitlines() == \
+                         new_data.decode().splitlines()
 
     def test_reading_newer_cmtsolution_files(self):
         """
@@ -227,15 +227,15 @@ class CmtsolutionTestCase(unittest.TestCase):
         filename = os.path.join(self.datapath, "CMTSOLUTION_NEW")
         cat = obspy.read_events(filename)
 
-        self.assertEqual(len(cat), 3)
+        assert len(cat) == 3
 
         # Test the hypocentral origins as the "change" to the format only
         # affected the first line.
-        self.assertEqual(cat[0].origins[1].latitude, 55.29)
-        self.assertEqual(cat[0].origins[1].longitude, 163.06)
+        assert cat[0].origins[1].latitude == 55.29
+        assert cat[0].origins[1].longitude == 163.06
 
-        self.assertEqual(cat[1].origins[1].latitude, -13.75)
-        self.assertEqual(cat[1].origins[1].longitude, -111.75)
+        assert cat[1].origins[1].latitude == -13.75
+        assert cat[1].origins[1].longitude == -111.75
 
-        self.assertEqual(cat[2].origins[1].latitude, -13.68)
-        self.assertEqual(cat[2].origins[1].longitude, -111.93)
+        assert cat[2].origins[1].latitude == -13.68
+        assert cat[2].origins[1].longitude == -111.93

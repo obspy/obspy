@@ -54,7 +54,7 @@ CALCULATED VALUES
     Corrected Starttime: 2007-12-31T23:59:59.765000Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+        assert expected == out.stdout.replace("\t", "    ")  # noqa
 
     def test_second_record(self):
         with CatchOutput() as out:
@@ -96,7 +96,7 @@ CALCULATED VALUES
     Corrected Starttime: 2008-01-01T00:00:01.825000Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+        assert expected == out.stdout.replace("\t", "    ")  # noqa
 
     def test_record_with_data_offset_zero(self):
         """
@@ -143,7 +143,7 @@ CALCULATED VALUES
     Corrected Starttime: 2016-08-21T01:43:37.000000Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+        assert expected == out.stdout.replace("\t", "    ")  # noqa
 
         with CatchOutput() as out:
             obspy_recordanalyzer(['-n', '2', filename])
@@ -184,7 +184,7 @@ CALCULATED VALUES
     Corrected Starttime: 2016-08-21T01:45:31.000000Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+        assert expected == out.stdout.replace("\t", "    ")  # noqa
 
     def test_record_with_negative_sr_fact_and_mult(self):
         """
@@ -231,7 +231,7 @@ CALCULATED VALUES
     Corrected Starttime: 1991-02-21T23:50:00.430000Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+        assert expected == out.stdout.replace("\t", "    ")  # noqa
 
     def test_step_cal_blockette(self):
         """
@@ -289,7 +289,7 @@ CALCULATED VALUES
     Corrected Starttime: 2018-02-13T22:43:59.019538Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+        assert expected == out.stdout.replace("\t", "    ")  # noqa
 
     def test_sine_cal_blockette(self):
         """
@@ -346,7 +346,7 @@ CALCULATED VALUES
     Corrected Starttime: 2018-02-13T20:01:45.069538Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noq
+        assert expected == out.stdout.replace("\t", "    ")  # noq
 
     def test_random_cal_blockette(self):
         """
@@ -403,4 +403,4 @@ CALCULATED VALUES
     Corrected Starttime: 2018-02-13T23:26:57.069538Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noq
+        assert expected == out.stdout.replace("\t", "    ")  # noq

@@ -37,8 +37,8 @@ class SLPacketTestCase(unittest.TestCase):
         payload = packet.get_string_payload()
 
         xml = b'<?xml version="1.0"?>'
-        self.assertTrue(payload.startswith(xml))
-        self.assertEqual(len(payload), 368)
+        assert payload.startswith(xml)
+        assert len(payload) == 368
 
         # Check the INFO CAPABILITIES response from IRIS Ringserver
         packet = self._read_data_file('info_packet_iris.slink')
@@ -46,5 +46,5 @@ class SLPacketTestCase(unittest.TestCase):
         payload = packet.get_string_payload()
 
         xml = b'<?xml version="1.0" encoding="utf-8"?>'
-        self.assertTrue(payload.startswith(xml))
-        self.assertEqual(len(payload), 456)
+        assert payload.startswith(xml)
+        assert len(payload) == 456

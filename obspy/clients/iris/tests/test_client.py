@@ -40,16 +40,16 @@ class ClientTestCase(unittest.TestCase):
             expected = fp.read().splitlines()
         result.pop(5)
         expected.pop(5)
-        self.assertEqual(result, expected)
+        assert result == expected
         # 2 - empty location code
         dt = UTCDateTime("2002-11-01")
         result = client.sacpz('UW', 'LON', '', 'BHZ', dt)
-        self.assertIn(b"* STATION    (KSTNM): LON", result)
-        self.assertIn(b"* LOCATION   (KHOLE):", result)
+        assert b"* STATION    (KSTNM): LON" in result
+        assert b"* LOCATION   (KHOLE):" in result
         # 3 - empty location code via '--'
         result = client.sacpz('UW', 'LON', '--', 'BHZ', dt)
-        self.assertIn(b"* STATION    (KSTNM): LON", result)
-        self.assertIn(b"* LOCATION   (KHOLE):", result)
+        assert b"* STATION    (KSTNM): LON" in result
+        assert b"* LOCATION   (KHOLE):" in result
 
     def test_distaz(self):
         """
@@ -58,28 +58,32 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # normal request
         result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2, evtlon=1.4)
-        self.assertAlmostEqual(result['distance'], 2.10256)
-        self.assertAlmostEqual(result['distancemeters'], 233272.79028)
-        self.assertAlmostEqual(result['backazimuth'], 5.46944)
-        self.assertAlmostEqual(result['azimuth'], 185.47695)
-        self.assertEqual(result['ellipsoidname'], 'WGS84')
-        self.assertTrue(isinstance(result['distance'], float))
-        self.assertTrue(isinstance(result['distancemeters'], float))
-        self.assertTrue(isinstance(result['backazimuth'], float))
-        self.assertTrue(isinstance(result['azimuth'], float))
-        self.assertTrue(isinstance(result['ellipsoidname'], str))
+        assert round(abs(result['distance']-2.10256), 7) == 0
+        assert round(abs(result['distancemeters']-233272.79028), 7) == 0
+        assert round(abs(result['backazimuth']-5.46944), 7) == 0
+        assert round(abs(result['azimuth']-185.47695), 7) == 0
+        assert result['ellipsoidname'] == 'WGS84'
+        assert isinstance(result['distance'], float)
+        assert isinstance(result['distancemeters'], float)
+        assert isinstance(result['backazimuth'], float)
+        assert isinstance(result['azimuth'], float)
+        assert isinstance(result['ellipsoidname'], str)
         # w/o kwargs
         result = client.distaz(1.1, 1.2, 3.2, 1.4)
-        self.assertAlmostEqual(result['distance'], 2.10256)
-        self.assertAlmostEqual(result['distancemeters'], 233272.79028)
-        self.assertAlmostEqual(result['backazimuth'], 5.46944)
-        self.assertAlmostEqual(result['azimuth'], 185.47695)
-        self.assertEqual(result['ellipsoidname'], 'WGS84')
+        assert round(abs(result['distance']-2.10256), 7) == 0
+        assert round(abs(result['distancemeters']-233272.79028), 7) == 0
+        assert round(abs(result['backazimuth']-5.46944), 7) == 0
+        assert round(abs(result['azimuth']-185.47695), 7) == 0
+        assert result['ellipsoidname'] == 'WGS84'
         # missing parameters
-        self.assertRaises(Exception, client.distaz, stalat=1.1)
-        self.assertRaises(Exception, client.distaz, 1.1)
-        self.assertRaises(Exception, client.distaz, stalat=1.1, stalon=1.2)
-        self.assertRaises(Exception, client.distaz, 1.1, 1.2)
+        with pytest.raises(Exception):
+            client.distaz(stalat=1.1)
+        with pytest.raises(Exception):
+            client.distaz(1.1)
+        with pytest.raises(Exception):
+            client.distaz(stalat=1.1, stalon=1.2)
+        with pytest.raises(Exception):
+            client.distaz(1.1, 1.2)
 
     def test_flinnengdahl(self):
         """
@@ -88,35 +92,39 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # code
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
-        self.assertEqual(result, 683)
-        self.assertTrue(isinstance(result, int))
+        assert result == 683
+        assert isinstance(result, int)
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "code")
-        self.assertEqual(result, 683)
+        assert result == 683
         # region
         result = client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
-        self.assertEqual(result, 'OREGON')
-        self.assertTrue(isinstance(result, str))
+        assert result == 'OREGON'
+        assert isinstance(result, str)
         # w/o kwargs
         result = client.flinnengdahl(42, -122.24, "region")
-        self.assertEqual(result, 'OREGON')
+        assert result == 'OREGON'
         # both
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="both")
-        self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
-        self.assertTrue(isinstance(result[0], int))
-        self.assertTrue(isinstance(result[1], str))
+        assert result == (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
+        assert isinstance(result[0], int)
+        assert isinstance(result[1], str)
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "both")
-        self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
+        assert result == (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
         # default rtype
         result = client.flinnengdahl(lat=42, lon=-122.24)
-        self.assertEqual(result, (32, 'OREGON'))
+        assert result == (32, 'OREGON')
         # w/o kwargs
         # outside boundaries
-        self.assertRaises(Exception, client.flinnengdahl, lat=-90.1, lon=0)
-        self.assertRaises(Exception, client.flinnengdahl, lat=90.1, lon=0)
-        self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=-180.1)
-        self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=180.1)
+        with pytest.raises(Exception):
+            client.flinnengdahl(lat=-90.1, lon=0)
+        with pytest.raises(Exception):
+            client.flinnengdahl(lat=90.1, lon=0)
+        with pytest.raises(Exception):
+            client.flinnengdahl(lat=0, lon=-180.1)
+        with pytest.raises(Exception):
+            client.flinnengdahl(lat=0, lon=180.1)
 
     def test_traveltime(self):
         """
@@ -126,7 +134,7 @@ class ClientTestCase(unittest.TestCase):
         result = client.traveltime(
             evloc=(-36.122, -72.898), evdepth=22.9,
             staloc=[(-33.45, -70.67), (47.61, -122.33), (35.69, 139.69)])
-        self.assertTrue(result.startswith(b'Model: iasp91'))
+        assert result.startswith(b'Model: iasp91')
 
     def test_evalresp(self):
         """
@@ -141,7 +149,7 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='plot',
                             filename=tempfile)
             with open(tempfile, 'rb') as fp:
-                self.assertEqual(fp.read(4)[1:4], b'PNG')
+                assert fp.read(4)[1:4] == b'PNG'
         # plot-amp as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -149,7 +157,7 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='plot-amp',
                             filename=tempfile)
             with open(tempfile, 'rb') as fp:
-                self.assertEqual(fp.read(4)[1:4], b'PNG')
+                assert fp.read(4)[1:4] == b'PNG'
         # plot-phase as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -157,7 +165,7 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='plot-phase',
                             filename=tempfile)
             with open(tempfile, 'rb') as fp:
-                self.assertEqual(fp.read(4)[1:4], b'PNG')
+                assert fp.read(4)[1:4] == b'PNG'
         # fap as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -165,8 +173,8 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='fap',
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
-                self.assertEqual(fp.readline(),
-                                 '1.000000E-05 1.055934E+04 1.792007E+02\n')
+                assert fp.readline() == \
+                                 '1.000000E-05 1.055934E+04 1.792007E+02\n'
         # cs as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -174,8 +182,8 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='cs',
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
-                self.assertEqual(fp.readline(),
-                                 '1.000000E-05  -1.055831E+04  1.472963E+02\n')
+                assert fp.readline() == \
+                                 '1.000000E-05  -1.055831E+04  1.472963E+02\n'
         # fap & def as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -183,8 +191,8 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='fap', units='def',
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
-                self.assertEqual(fp.readline(),
-                                 '1.000000E-05 1.055934E+04 1.792007E+02\n')
+                assert fp.readline() == \
+                                 '1.000000E-05 1.055934E+04 1.792007E+02\n'
         # fap & dis as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -192,8 +200,8 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='fap', units='dis',
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
-                self.assertEqual(fp.readline(),
-                                 '1.000000E-05 6.634627E-01 2.692007E+02\n')
+                assert fp.readline() == \
+                                 '1.000000E-05 6.634627E-01 2.692007E+02\n'
         # fap & vel as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -201,8 +209,8 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='fap', units='vel',
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
-                self.assertEqual(fp.readline(),
-                                 '1.000000E-05 1.055934E+04 1.792007E+02\n')
+                assert fp.readline() == \
+                                 '1.000000E-05 1.055934E+04 1.792007E+02\n'
         # fap & acc as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -210,8 +218,8 @@ class ClientTestCase(unittest.TestCase):
                             channel="BHZ", time=dt, output='fap', units='acc',
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
-                self.assertEqual(fp.readline(),
-                                 '1.000000E-05 1.680571E+08 8.920073E+01\n')
+                assert fp.readline() == \
+                                 '1.000000E-05 1.680571E+08 8.920073E+01\n'
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')
@@ -234,7 +242,7 @@ class ClientTestCase(unittest.TestCase):
         t1 = UTCDateTime("2005-001T00:00:00")
         t2 = UTCDateTime("2008-001T00:00:00")
         result = client.resp("IU", "ANMO", "00", "BHZ", t1, t2)
-        self.assertIn(b'B050F03     Station:     ANMO', result)
+        assert b'B050F03     Station:     ANMO' in result
         # Exception: No response data available
         # 2 - empty location code
         # result = client.resp("UW", "LON", "", "EHZ")
@@ -247,11 +255,11 @@ class ClientTestCase(unittest.TestCase):
         # 4
         dt = UTCDateTime("2010-02-27T06:30:00.000")
         result = client.resp("IU", "ANMO", "*", "*", dt)
-        self.assertIn(b'B050F03     Station:     ANMO', result)
+        assert b'B050F03     Station:     ANMO' in result
 
         dt = UTCDateTime("2005-001T00:00:00")
         result = client.resp("AK", "RIDG", "--", "LH?", dt)
-        self.assertIn(b'B050F03     Station:     RIDG', result)
+        assert b'B050F03     Station:     RIDG' in result
 
     def test_timeseries(self):
         """
@@ -269,7 +277,7 @@ class ClientTestCase(unittest.TestCase):
         st2 = client.timeseries("IU", "ANMO", "00", "BHZ", t1, t2,
                                 filter=["correct"])
         # compare results
-        self.assertEqual(st1[0].stats.starttime, st2[0].stats.starttime)
-        self.assertEqual(st1[0].stats.endtime, st2[0].stats.endtime)
-        self.assertEqual(st1[0].data[0], 24)
-        self.assertAlmostEqual(st2[0].data[0], -2.8373747e-06)
+        assert st1[0].stats.starttime == st2[0].stats.starttime
+        assert st1[0].stats.endtime == st2[0].stats.endtime
+        assert st1[0].data[0] == 24
+        assert round(abs(st2[0].data[0]--2.8373747e-06), 7) == 0

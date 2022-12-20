@@ -95,7 +95,7 @@ class IASPEITestCase(unittest.TestCase):
         Test reading IMS10 bulletin format
         """
         cat = _read_ims10_bulletin(self.path_to_ims, _no_uuid_hashes=True)
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         _assert_catalog(cat)
 
     def test_reading_via_file(self):
@@ -104,12 +104,12 @@ class IASPEITestCase(unittest.TestCase):
         """
         with io.open(self.path_to_ims, "rb") as fh:
             cat = _read_ims10_bulletin(fh, _no_uuid_hashes=True)
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         _assert_catalog(cat)
 
         with io.open(self.path_to_ims, "rt", encoding="UTF-8") as fh:
             cat = _read_ims10_bulletin(fh, _no_uuid_hashes=True)
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         _assert_catalog(cat)
 
     def test_reading_via_bytes_io(self):
@@ -120,7 +120,7 @@ class IASPEITestCase(unittest.TestCase):
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 cat = _read_ims10_bulletin(buf, _no_uuid_hashes=True)
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         _assert_catalog(cat)
 
     def test_reading_via_plugin(self):
@@ -129,36 +129,36 @@ class IASPEITestCase(unittest.TestCase):
         """
         cat = read_events(self.path_to_ims, format='IMS10BULLETIN',
                           _no_uuid_hashes=True)
-        self.assertEqual(len(cat), 1)
+        assert len(cat) == 1
         _assert_catalog(cat)
 
     def test_is_ims10_bulltin(self):
         """
         Test checking if file is IMS10 bulletin format
         """
-        self.assertTrue(_is_ims10_bulletin(self.path_to_ims))
-        self.assertFalse(_is_ims10_bulletin(path_to_quakeml))
+        assert _is_ims10_bulletin(self.path_to_ims)
+        assert not _is_ims10_bulletin(path_to_quakeml)
 
     def test_is_ims10_bulltin_open_file(self):
         with open(self.path_to_ims, "rb") as fh:
-            self.assertTrue(_is_ims10_bulletin(fh))
+            assert _is_ims10_bulletin(fh)
 
         with open(self.path_to_ims, "rt", encoding="utf-8") as fh:
-            self.assertTrue(_is_ims10_bulletin(fh))
+            assert _is_ims10_bulletin(fh)
 
         with open(path_to_quakeml, "rb") as fh:
-            self.assertFalse(_is_ims10_bulletin(fh))
+            assert not _is_ims10_bulletin(fh)
 
         with open(path_to_quakeml, "rt", encoding="utf-8") as fh:
-            self.assertFalse(_is_ims10_bulletin(fh))
+            assert not _is_ims10_bulletin(fh)
 
     def test_is_ims10_bulltin_from_bytes_io(self):
         with open(self.path_to_ims, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                self.assertTrue(_is_ims10_bulletin(buf))
+                assert _is_ims10_bulletin(buf)
 
         with open(path_to_quakeml, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                self.assertFalse(_is_ims10_bulletin(buf))
+                assert not _is_ims10_bulletin(buf)

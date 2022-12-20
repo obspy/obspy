@@ -49,7 +49,7 @@ class FilterTestCase(unittest.TestCase):
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert (rms < 1.0e-05) == True
 
     def test_bandpass_zphsh_vs_pitsa(self):
         """
@@ -82,7 +82,7 @@ class FilterTestCase(unittest.TestCase):
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert (rms < 1.0e-05) == True
 
     def test_lowpass_vs_pitsa(self):
         """
@@ -108,7 +108,7 @@ class FilterTestCase(unittest.TestCase):
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert (rms < 1.0e-05) == True
 
     def test_lowpass_zphsh_vs_pitsa(self):
         """
@@ -140,7 +140,7 @@ class FilterTestCase(unittest.TestCase):
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert (rms < 1.0e-05) == True
 
     def test_highpass_vs_pitsa(self):
         """
@@ -166,7 +166,7 @@ class FilterTestCase(unittest.TestCase):
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert (rms < 1.0e-05) == True
 
     def test_highpass_zphsh_vs_pitsa(self):
         """
@@ -198,7 +198,7 @@ class FilterTestCase(unittest.TestCase):
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert (rms < 1.0e-05) == True
 
     def test_envelope_vs_pitsa(self):
         """
@@ -218,7 +218,7 @@ class FilterTestCase(unittest.TestCase):
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        self.assertEqual(rms < 1.0e-02, True)
+        assert (rms < 1.0e-02) == True
 
     def test_lowpass_cheby_2(self):
         """
@@ -233,9 +233,9 @@ class FilterTestCase(unittest.TestCase):
         freq = w / np.pi * nyquist
         h_db = 20 * np.log10(abs(h))
         # be smaller than -96dB above lowpass frequency
-        self.assertGreater(-96, h_db[freq > 50].max())
+        assert -96 > h_db[freq > 50].max()
         # be 0 (1dB ripple) before filter ramp
-        self.assertGreater(h_db[freq < 25].min(), -1)
+        assert h_db[freq < 25].min() > -1
 
     def test_bandpass_high_corner_at_nyquist(self):
         """
@@ -257,7 +257,7 @@ class FilterTestCase(unittest.TestCase):
                     expected = bandpass(
                         data, low_corner, nyquist * (1 - 1.1e-6), df=df,
                         corners=corners)
-                    self.assertEqual(len(w), 0)
+                    assert len(w) == 0
                 # all of these should be changed into a highpass
                 with warnings.catch_warnings(record=True) as w:
                     warnings.simplefilter("always")
@@ -267,12 +267,12 @@ class FilterTestCase(unittest.TestCase):
                                     df=df, corners=corners)
                     got3 = bandpass(data, low_corner, nyquist + 1.78,
                                     df=df, corners=corners)
-                    self.assertEqual(len(w), 3)
+                    assert len(w) == 3
                     for w_ in w:
-                        self.assertTrue('Selected high corner frequency ' in
-                                        str(w[0].message))
-                        self.assertTrue('Applying a high-pass instead.' in
-                                        str(w[0].message))
+                        assert 'Selected high corner frequency ' in \
+                                        str(w[0].message)
+                        assert 'Applying a high-pass instead.' in \
+                                        str(w[0].message)
                 for got in (got1, got2, got3):
                     np.testing.assert_allclose(got, expected, rtol=1e-3,
                                                atol=0.9)

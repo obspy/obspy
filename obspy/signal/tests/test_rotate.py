@@ -13,6 +13,7 @@ import numpy as np
 from obspy.signal.rotate import (rotate_lqt_zne, rotate_ne_rt, rotate_rt_ne,
                                  rotate_zne_lqt, _dip_azimuth2zne_base_vector,
                                  rotate2zne)
+import pytest
 
 
 class RotateTestCase(unittest.TestCase):
@@ -46,10 +47,10 @@ class RotateTestCase(unittest.TestCase):
                                         angle)) as f:
                 data_pitsa_t = np.loadtxt(f)
             # Assert.
-            self.assertTrue(np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3,
-                                        atol=1E-5))
-            self.assertTrue(np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3,
-                                        atol=1E-5))
+            assert np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3,
+                                        atol=1E-5)
+            assert np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3,
+                                        atol=1E-5)
 
     def test_rotate_zne_lqt_vs_pitsa(self):
         """
@@ -85,18 +86,12 @@ class RotateTestCase(unittest.TestCase):
                 data_pitsa_l = np.loadtxt(f)
             # Assert the output. Has to be to rather low accuracy due to
             # rounding error prone rotation and single precision value.
-            self.assertTrue(
-                np.allclose(data_l, data_pitsa_l, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_q, data_pitsa_q, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_t, data_pitsa_t, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_z, data_back_z, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_n, data_back_n, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_e, data_back_e, rtol=1E-3, atol=1E-5))
+            assert np.allclose(data_l, data_pitsa_l, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_q, data_pitsa_q, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_t, data_pitsa_t, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_z, data_back_z, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_n, data_back_n, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_e, data_back_e, rtol=1E-3, atol=1E-5)
 
     def test_rotate_ne_rt_ne(self):
         """
@@ -114,8 +109,8 @@ class RotateTestCase(unittest.TestCase):
         ba = 33.3
         new_n, new_e = rotate_ne_rt(data_n, data_e, ba)
         new_n, new_e = rotate_rt_ne(new_n, new_e, ba)
-        self.assertTrue(np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12))
-        self.assertTrue(np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12))
+        assert np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12)
+        assert np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12)
 
     def test_rotate2zne_round_trip(self):
         """
@@ -158,9 +153,8 @@ class RotateTestCase(unittest.TestCase):
         dip_1, dip_2, dip_3 = 0.0, 30.0, 60.0
         azi_1, azi_2, azi_3 = 0.0, 170.0, 35.0
 
-        self.assertRaisesRegex(
-            ValueError, 'All three data arrays must be of same length.',
-            rotate2zne, z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
+        with pytest.raises(ValueError, match='All three data arrays must be of same length.'):
+            rotate2zne(z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
 
     def test_base_vector_calculation_simple_cases(self):
         """
@@ -232,9 +226,9 @@ class RotateTestCase(unittest.TestCase):
         v2_ref = np.array([np.sqrt(2.0), np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
         v3_ref = np.array([np.sqrt(2.0), -np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
 
-        self.assertTrue(np.allclose(v1, v1_ref, rtol=1E-7, atol=1E-7))
-        self.assertTrue(np.allclose(v2, v2_ref, rtol=1E-7, atol=1E-7))
-        self.assertTrue(np.allclose(v3, v3_ref, rtol=1E-7, atol=1E-7))
+        assert np.allclose(v1, v1_ref, rtol=1E-7, atol=1E-7)
+        assert np.allclose(v2, v2_ref, rtol=1E-7, atol=1E-7)
+        assert np.allclose(v3, v3_ref, rtol=1E-7, atol=1E-7)
 
     def test_galperin_configuration(self):
         """
@@ -258,9 +252,9 @@ class RotateTestCase(unittest.TestCase):
         n_ref = np.array([0.0, fac * 2.0 * np.sqrt(3.0), 0.0])
         e_ref = np.array([0.0, 0.0, -4.0 * fac])
 
-        self.assertTrue(np.allclose(z, z_ref, rtol=1E-7, atol=1E-7))
-        self.assertTrue(np.allclose(n, n_ref, rtol=1E-7, atol=1E-7))
-        self.assertTrue(np.allclose(e, e_ref, rtol=1E-7, atol=1E-7))
+        assert np.allclose(z, z_ref, rtol=1E-7, atol=1E-7)
+        assert np.allclose(n, n_ref, rtol=1E-7, atol=1E-7)
+        assert np.allclose(e, e_ref, rtol=1E-7, atol=1E-7)
 
     def test_rotate2zne_against_rotate_ne_rt(self):
         np.random.seed(123)
@@ -394,14 +388,14 @@ class RotateTestCase(unittest.TestCase):
                 if a[2] == b[2] == c[2] == 0 or \
                         set([_i[3] for _i in (a, b, c)]) == \
                         set(["Z", "Q", "L"]):
-                    with self.assertRaises(ValueError) as err:
+                    with pytest.raises(ValueError) as err:
                         rotate2zne(a[0], a[1], a[2],
                                    b[0], b[1], b[2],
                                    c[0], c[1], c[2])
-                    self.assertTrue(err.exception.args[0].startswith(
+                    assert err.exception.args[0].startswith(
                         "The given directions are not linearly independent, "
                         "at least within numerical precision. Determinant of "
-                        "the base change matrix:"))
+                        "the base change matrix:")
                     failure_count += 1
                     continue
 
@@ -413,9 +407,9 @@ class RotateTestCase(unittest.TestCase):
                 np.testing.assert_allclose(e_new, e)
                 success_count += 1
         # Make sure it actually tested all combinations.
-        self.assertEqual(success_count, 3888)
+        assert success_count == 3888
         # Also the linearly dependent variants.
-        self.assertEqual(failure_count, 432)
+        assert failure_count == 432
 
     def test_with_real_data(self):
         # Filtered and downsampled test data with two co-located
@@ -490,8 +484,8 @@ class RotateTestCase(unittest.TestCase):
                 a[0], a[1] + 1.5, a[2] - 1.5,
                 b[0], b[1] - 0.7, b[2] + 1.2,
                 c[0], c[1] + 1.0, c[2] - 0.4)
-            with self.assertRaises(AssertionError):
+            with pytest.raises(AssertionError):
                 np.testing.assert_allclose(z_new, z[0], rtol=1E-5)
 
-        self.assertEqual(success_count, 12)
-        self.assertEqual(failure_count, 12)
+        assert success_count == 12
+        assert failure_count == 12

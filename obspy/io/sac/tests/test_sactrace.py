@@ -15,6 +15,7 @@ from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 from .. import header as _hd
 from ..sactrace import SACTrace
 from ..util import SacHeaderError, SacHeaderTimeError
+import pytest
 
 
 class SACTraceTestCase(unittest.TestCase):
@@ -38,15 +39,15 @@ class SACTraceTestCase(unittest.TestCase):
         Tests for SACTrace binary file read
         """
         sac = SACTrace.read(self.file, byteorder='little')
-        self.assertEqual(sac.npts, 100)
-        self.assertEqual(sac.kstnm, 'STA')
-        self.assertEqual(sac.delta, 1.0)
-        self.assertEqual(sac.kcmpnm, 'Q')
-        self.assertEqual(sac.reftime.datetime,
-                         datetime.datetime(1978, 7, 18, 8, 0))
-        self.assertEqual(sac.nvhdr, 6)
-        self.assertEqual(sac.b, 10.0)
-        self.assertAlmostEqual(sac.depmen, 9.0599059e-8)
+        assert sac.npts == 100
+        assert sac.kstnm == 'STA'
+        assert sac.delta == 1.0
+        assert sac.kcmpnm == 'Q'
+        assert sac.reftime.datetime == \
+                         datetime.datetime(1978, 7, 18, 8, 0)
+        assert sac.nvhdr == 6
+        assert sac.b == 10.0
+        assert round(abs(sac.depmen-9.0599059e-8), 7) == 0
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              sac.data[0:10])
 
@@ -55,30 +56,30 @@ class SACTraceTestCase(unittest.TestCase):
         A headonly read should return readable headers and data is None
         """
         sac = SACTrace.read(self.file, byteorder='little', headonly=True)
-        self.assertEqual(sac.data, None)
-        self.assertEqual(sac.npts, 100)
-        self.assertEqual(sac.depmin, -1.0)
-        self.assertAlmostEqual(sac.depmen, 8.344650e-8)
-        self.assertEqual(sac.depmax, 1.0)
+        assert sac.data == None
+        assert sac.npts == 100
+        assert sac.depmin == -1.0
+        assert round(abs(sac.depmen-8.344650e-8), 7) == 0
+        assert sac.depmax == 1.0
 
     def test_read_sac_byteorder(self):
         """
         A read should fail if the byteorder is wrong
         """
-        with self.assertRaises(IOError):
+        with pytest.raises(IOError):
             SACTrace.read(self.filebe, byteorder='little')
-        with self.assertRaises(IOError):
+        with pytest.raises(IOError):
             SACTrace.read(self.file, byteorder='big')
         # a SACTrace should show the correct byteorder
         sac = SACTrace.read(self.filebe, byteorder='big')
-        self.assertEqual(sac.byteorder, 'big')
+        assert sac.byteorder == 'big'
         sac = SACTrace.read(self.file, byteorder='little')
-        self.assertEqual(sac.byteorder, 'little')
+        assert sac.byteorder == 'little'
         # a SACTrace should autodetect the correct byteorder
         sac = SACTrace.read(self.file)
-        self.assertEqual(sac.byteorder, 'little')
+        assert sac.byteorder == 'little'
         sac = SACTrace.read(self.filebe)
-        self.assertEqual(sac.byteorder, 'big')
+        assert sac.byteorder == 'big'
 
     def test_write_sac(self):
         """
@@ -91,7 +92,7 @@ class SACTraceTestCase(unittest.TestCase):
             sac1.write(tempfile, byteorder='little')
             sac2 = SACTrace.read(tempfile, byteorder='little')
         np.testing.assert_array_equal(sac1.data, sac2.data)
-        self.assertEqual(sac1._header, sac2._header)
+        assert sac1._header == sac2._header
 
     def test_write_binary_headonly(self):
         """
@@ -114,15 +115,15 @@ class SACTraceTestCase(unittest.TestCase):
             sac2.write(tempfile, headonly=True, byteorder='little')
             # read it all and compare
             sac3 = SACTrace.read(tempfile, byteorder='little')
-        self.assertEqual(sac3.kcmpnm, 'xyz')
-        self.assertEqual(sac3.b, 7.5)
+        assert sac3.kcmpnm == 'xyz'
+        assert sac3.b == 7.5
         np.testing.assert_array_equal(sac3.data, sac.data)
 
         # ...and fail if the file doesn't exist
         sac = SACTrace.read(self.file, headonly=True, byteorder='little')
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-        with self.assertRaises(IOError):
+        with pytest.raises(IOError):
             sac.write(tempfile, headonly=True, byteorder='little')
 
     def test_read_sac_ascii(self):
@@ -130,13 +131,13 @@ class SACTraceTestCase(unittest.TestCase):
         Read an ASCII SAC file.
         """
         sac = SACTrace.read(self.filexy, ascii=True)
-        self.assertEqual(sac.npts, 100)
-        self.assertEqual(sac.kstnm, 'sta')
-        self.assertEqual(sac.delta, 1.0)
-        self.assertEqual(sac.kcmpnm, 'Q')
-        self.assertEqual(sac.nvhdr, 6)
-        self.assertEqual(sac.b, 10.0)
-        self.assertAlmostEqual(sac.depmen, 9.4771387e-08)
+        assert sac.npts == 100
+        assert sac.kstnm == 'sta'
+        assert sac.delta == 1.0
+        assert sac.kcmpnm == 'Q'
+        assert sac.nvhdr == 6
+        assert sac.b == 10.0
+        assert round(abs(sac.depmen-9.4771387e-08), 7) == 0
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              sac.data[0:10])
 
@@ -145,18 +146,18 @@ class SACTraceTestCase(unittest.TestCase):
         A SACTrace.reftime should be created correctly from a file's nz-times
         """
         sac = SACTrace.read(self.fileseis)
-        self.assertEqual(sac.reftime,
-                         UTCDateTime('1981-03-29T10:38:14.000000Z'))
+        assert sac.reftime == \
+                         UTCDateTime('1981-03-29T10:38:14.000000Z')
         # changes to a reftime should be reflected in the nz times and reftime
         nzsec, nzmsec = sac.nzsec, sac.nzmsec
         sac.reftime = sac.reftime + 2.5
-        self.assertEqual(sac.nzsec, nzsec + 2)
-        self.assertEqual(sac.nzmsec, nzmsec + 500)
-        self.assertEqual(sac.reftime,
-                         UTCDateTime('1981-03-29T10:38:16.500000Z'))
+        assert sac.nzsec == nzsec + 2
+        assert sac.nzmsec == nzmsec + 500
+        assert sac.reftime == \
+                         UTCDateTime('1981-03-29T10:38:16.500000Z')
         # changes in the nztimes should be reflected reftime
         sac.nzyear = 2001
-        self.assertEqual(sac.reftime.year, 2001)
+        assert sac.reftime.year == 2001
 
     def test_reftime_relative_times(self):
         """
@@ -165,17 +166,17 @@ class SACTraceTestCase(unittest.TestCase):
         sac = SACTrace.read(self.fileseis)
         a, b, t1 = sac.a, sac.b, sac.t1
         sac.reftime -= 10.0
-        self.assertAlmostEqual(sac.a, a + 10.0, 5)
-        self.assertAlmostEqual(sac.b, b + 10.0)
-        self.assertAlmostEqual(sac.t1, t1 + 10.0)
+        assert round(abs(sac.a-a + 10.0), 5) == 0
+        assert round(abs(sac.b-b + 10.0), 7) == 0
+        assert round(abs(sac.t1-t1 + 10.0), 7) == 0
         # changes in the reftime should push remainder microseconds to the
         # relative time headers, and milliseconds to the nzmsec
         sac = SACTrace(b=5.0, t1=20.0)
         b, t1, nzmsec = sac.b, sac.t1, sac.nzmsec
         sac.reftime += 1.2e-3
-        self.assertEqual(sac.nzmsec, nzmsec + 1)
-        self.assertAlmostEqual(sac.b, b - 1.0e-3, 6)
-        self.assertAlmostEqual(sac.t1, t1 - 1.0e-3, 5)
+        assert sac.nzmsec == nzmsec + 1
+        assert round(abs(sac.b-b - 1.0e-3), 6) == 0
+        assert round(abs(sac.t1-t1 - 1.0e-3), 5) == 0
 
     def test_lcalda(self):
         """
@@ -190,27 +191,28 @@ class SACTraceTestCase(unittest.TestCase):
 
         # distances are set when lcalda True and all distance values set
         sac = SACTrace(lcalda=True, stla=stla, stlo=stlo, evla=evla, evlo=evlo)
-        self.assertAlmostEqual(sac.az, az, places=4)
-        self.assertAlmostEqual(sac.baz, baz, places=4)
-        self.assertAlmostEqual(sac.dist, km, places=4)
-        self.assertAlmostEqual(sac.gcarc, gcarc, places=4)
+        assert round(abs(sac.az-az), 4) == 0
+        assert round(abs(sac.baz-baz), 4) == 0
+        assert round(abs(sac.dist-km), 4) == 0
+        assert round(abs(sac.gcarc-gcarc), 4) == 0
         # distances are not set when lcalda False and all distance values set
         sac = SACTrace(lcalda=False, stla=stla, stlo=stlo, evla=evla,
                        evlo=evlo)
-        self.assertIs(sac.az, None)
-        self.assertIs(sac.baz, None)
-        self.assertIs(sac.dist, None)
-        self.assertIs(sac.gcarc, None)
+        assert sac.az is None
+        assert sac.baz is None
+        assert sac.dist is None
+        assert sac.gcarc is None
         # distances are not set when lcalda True, not all distance values set
         sac = SACTrace(lcalda=True, stla=stla)
-        self.assertIs(sac.az, None)
-        self.assertIs(sac.baz, None)
-        self.assertIs(sac.dist, None)
-        self.assertIs(sac.gcarc, None)
+        assert sac.az is None
+        assert sac.baz is None
+        assert sac.dist is None
+        assert sac.gcarc is None
         # exception raised when set_distances is forced but not all distances
         # values are set. NOTE: still have a problem when others are "None".
         sac = SACTrace(lcalda=True, stla=stla)
-        self.assertRaises(SacHeaderError, sac._set_distances, force=True)
+        with pytest.raises(SacHeaderError):
+            sac._set_distances(force=True)
 
     def test_propagate_modified_stats_strings_to_sactrace(self):
         """
@@ -226,25 +228,26 @@ class SACTraceTestCase(unittest.TestCase):
             modified_value = tr.stats[statshdr] + '1'
             tr.stats[statshdr] = modified_value
             sac = SACTrace.from_obspy_trace(tr)
-            self.assertEqual(getattr(sac, sachdr), modified_value)
+            assert getattr(sac, sachdr) == modified_value
 
     def test_reftime_incomplete(self):
         """
         Replacement for SACTrace._from_arrays doctest which raises UserWarning
         """
         sac = SACTrace._from_arrays()
-        self.assertTrue(sac.lcalda)
-        self.assertFalse(sac.leven)
-        self.assertFalse(sac.lovrok)
-        self.assertFalse(sac.lpspol)
-        self.assertEqual(sac.iztype, None)
-        self.assertRaises(SacHeaderTimeError, getattr, sac, 'reftime')
+        assert sac.lcalda
+        assert not sac.leven
+        assert not sac.lovrok
+        assert not sac.lpspol
+        assert sac.iztype == None
+        with pytest.raises(SacHeaderTimeError):
+            getattr(sac, 'reftime')
         # raises "UserWarning: Reference time information incomplete"
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always', UserWarning)
             str(sac)
-            self.assertEqual(len(w), 1)
-            self.assertIn("Reference time information incomplete", str(w[0]))
+            assert len(w) == 1
+            assert "Reference time information incomplete" in str(w[0])
 
     def test_floatheader(self):
         """
@@ -259,18 +262,17 @@ class SACTraceTestCase(unittest.TestCase):
 
             # setting value
             setattr(sac, hdr, floatval)
-            self.assertAlmostEqual(sac._hf[_hd.FLOATHDRS.index(hdr)], floatval)
+            assert round(abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-floatval), 7) == 0
             # getting value
-            self.assertAlmostEqual(getattr(sac, hdr), floatval)
+            assert round(abs(getattr(sac, hdr)-floatval), 7) == 0
             # setting None produces null value
             setattr(sac, hdr, None)
-            self.assertAlmostEqual(sac._hf[_hd.FLOATHDRS.index(hdr)],
-                                   _hd.FNULL)
+            assert round(abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-_hd.FNULL), 7) == 0
             # getting existing null values return None
             sac._hf[_hd.FLOATHDRS.index(hdr)] = _hd.FNULL
-            self.assertIsNone(getattr(sac, hdr))
+            assert getattr(sac, hdr) is None
             # __doc__ on class and instance
-            self.assertEqual(getattr(SACTrace, hdr).__doc__, _hd.DOC.get(hdr))
+            assert getattr(SACTrace, hdr).__doc__ == _hd.DOC.get(hdr)
             # self.assertEqual(getattr(sac, hdr).__doc__, _hd.DOC.get(hdr]))
             # TODO: I'd like to find a way for this to work:-(
             # TODO: factor __doc__ tests out into one test for all headers
@@ -291,8 +293,7 @@ class SACTraceTestCase(unittest.TestCase):
             offset_float = random.uniform(-1, 1)
             offset_utc = utc + offset_float
             setattr(sac, hdr, offset_utc)
-            self.assertAlmostEqual(sac._hf[_hd.FLOATHDRS.index(hdr)],
-                                   offset_float, places=5)
+            assert round(abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-offset_float), 5) == 0
 
     def test_int_headers(self):
         """
@@ -307,29 +308,29 @@ class SACTraceTestCase(unittest.TestCase):
 
             # setting value
             setattr(sac, hdr, intval)
-            self.assertEqual(sac._hi[_hd.INTHDRS.index(hdr)], intval)
+            assert sac._hi[_hd.INTHDRS.index(hdr)] == intval
             # getting value
-            self.assertEqual(getattr(sac, hdr), intval)
+            assert getattr(sac, hdr) == intval
             # setting None produces null value
             setattr(sac, hdr, None)
-            self.assertEqual(sac._hi[_hd.INTHDRS.index(hdr)], _hd.INULL)
+            assert sac._hi[_hd.INTHDRS.index(hdr)] == _hd.INULL
             # getting existing null values return None
             sac._hi[_hd.INTHDRS.index(hdr)] = _hd.INULL
-            self.assertIsNone(getattr(sac, hdr))
+            assert getattr(sac, hdr) is None
             # __doc__ on class and instance
-            self.assertEqual(getattr(SACTrace, hdr).__doc__, _hd.DOC.get(hdr))
+            assert getattr(SACTrace, hdr).__doc__ == _hd.DOC.get(hdr)
 
     def test_bool_headers(self):
         sac = SACTrace()
         for hdr in ('leven', 'lpspol', 'lovrok', 'lcalda'):
             # getting existing null values return None
             sac._hi[_hd.INTHDRS.index(hdr)] = _hd.INULL
-            self.assertIsNone(getattr(sac, hdr))
+            assert getattr(sac, hdr) is None
 
             for boolval in (True, False, 0, 1):
                 setattr(sac, hdr, boolval)
-                self.assertEqual(sac._hi[_hd.INTHDRS.index(hdr)], int(boolval))
-                self.assertEqual(getattr(sac, hdr), bool(boolval))
+                assert sac._hi[_hd.INTHDRS.index(hdr)] == int(boolval)
+                assert getattr(sac, hdr) == bool(boolval)
 
     def test_enumheader(self):
         sac = SACTrace()
@@ -344,11 +345,11 @@ class SACTraceTestCase(unittest.TestCase):
                     accepted_int = _hd.ENUM_VALS[accepted_val]
 
                     sac._hi[_hd.INTHDRS.index(enumhdr)] = accepted_int
-                    self.assertEqual(getattr(sac, enumhdr), accepted_val)
+                    assert getattr(sac, enumhdr) == accepted_val
 
                     setattr(sac, enumhdr, accepted_val)
-                    self.assertEqual(sac._hi[_hd.INTHDRS.index(enumhdr)],
-                                     accepted_int)
+                    assert sac._hi[_hd.INTHDRS.index(enumhdr)] == \
+                                     accepted_int
 
     def test_string_headers(self):
         sac = SACTrace()
@@ -361,12 +362,12 @@ class SACTraceTestCase(unittest.TestCase):
 
             # normal get/set
             setattr(sac, hdr, strval)
-            self.assertEqual(sac._hs[_hd.STRHDRS.index(hdr)].decode(), strval)
-            self.assertEqual(getattr(sac, hdr), strval)
+            assert sac._hs[_hd.STRHDRS.index(hdr)].decode() == strval
+            assert getattr(sac, hdr) == strval
 
             # null get/set
             sac._hs[_hd.STRHDRS.index(hdr)] = _hd.SNULL
-            self.assertIsNone(getattr(sac, hdr))
+            assert getattr(sac, hdr) is None
 
             # get/set value too long
             too_long = "{}_1234567890".format(hdr)
@@ -375,15 +376,15 @@ class SACTraceTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter('always', UserWarning)
                 setattr(sac, hdr, too_long)
-                self.assertEqual(len(w), 1)
-                self.assertEqual(w[0].category, UserWarning)
-                self.assertIn('Alphanumeric headers longer than 8', str(w[0]))
-            self.assertEqual(sac._hs[_hd.STRHDRS.index(hdr)].decode(),
-                             too_long[:8])
-            self.assertEqual(getattr(sac, hdr), too_long[:8].strip())
+                assert len(w) == 1
+                assert w[0].category == UserWarning
+                assert 'Alphanumeric headers longer than 8' in str(w[0])
+            assert sac._hs[_hd.STRHDRS.index(hdr)].decode() == \
+                             too_long[:8]
+            assert getattr(sac, hdr) == too_long[:8].strip()
 
             # docstring
-            self.assertEqual(getattr(SACTrace, hdr).__doc__, _hd.DOC.get(hdr))
+            assert getattr(SACTrace, hdr).__doc__ == _hd.DOC.get(hdr)
 
     def test_kevnm(self):
         sac = SACTrace()
@@ -392,15 +393,15 @@ class SACTraceTestCase(unittest.TestCase):
         kevnm1, kevnm2 = kevnm[:8], kevnm[8:]
 
         sac.kevnm = kevnm
-        self.assertEqual(sac._hs[_hd.STRHDRS.index('kevnm')].decode(), kevnm1)
-        self.assertEqual(sac._hs[_hd.STRHDRS.index('kevnm2')].decode(), kevnm2)
-        self.assertEqual(sac.kevnm, kevnm)
+        assert sac._hs[_hd.STRHDRS.index('kevnm')].decode() == kevnm1
+        assert sac._hs[_hd.STRHDRS.index('kevnm2')].decode() == kevnm2
+        assert sac.kevnm == kevnm
 
         sac._hs[_hd.STRHDRS.index('kevnm')] = _hd.SNULL
         sac._hs[_hd.STRHDRS.index('kevnm2')] = _hd.SNULL
-        self.assertIsNone(sac.kevnm)
+        assert sac.kevnm is None
 
-        self.assertEqual(SACTrace.kevnm.__doc__, _hd.DOC.get('kevnm'))
+        assert SACTrace.kevnm.__doc__ == _hd.DOC.get('kevnm')
 
     def test_data_headers(self):
         """
@@ -418,9 +419,9 @@ class SACTraceTestCase(unittest.TestCase):
         for hdr, func in [('depmin', min), ('depmen', np.mean),
                           ('depmax', max), ('npts', len)]:
             # getting value
-            self.assertEqual(getattr(sac, hdr), func(data))
+            assert getattr(sac, hdr) == func(data)
 
-            with self.assertRaises(AttributeError):
+            with pytest.raises(AttributeError):
                 # can't set value on write-only attribute
                 setattr(sac, hdr, func(data))
 
@@ -428,7 +429,7 @@ class SACTraceTestCase(unittest.TestCase):
         sac.data = None
         for hdr, value in [('depmin', depmin), ('depmen', depmen),
                            ('depmax', depmax), ('npts', npts)]:
-            self.assertEqual(getattr(sac, hdr), value)
+            assert getattr(sac, hdr) == value
 
     def test_char_header_padding(self):
         """
@@ -451,6 +452,6 @@ class SACTraceTestCase(unittest.TestCase):
             bio.seek(0)
             result = bio.read()
         # kstnm is at offset 0x1b8 in the file
-        self.assertEqual(result[0x1b8:(0x1b8+8)], b'TEST    ')
+        assert result[0x1b8:(0x1b8+8)] == b'TEST    '
         # kcmpnm is at offset 0x258 in the file
-        self.assertEqual(result[0x258:(0x258+8)], b'Z       ')
+        assert result[0x258:(0x258+8)] == b'Z       '

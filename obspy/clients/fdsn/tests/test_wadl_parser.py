@@ -48,86 +48,85 @@ class WADLParserTestCase(unittest.TestCase):
         parser = WADLParser(wadl_string)
         params = parser.parameters
 
-        self.assertIn("starttime", params)
-        self.assertIn("endtime", params)
-        self.assertIn("network", params)
-        self.assertIn("station", params)
-        self.assertIn("location", params)
-        self.assertIn("channel", params)
-        self.assertIn("quality", params)
-        self.assertIn("minimumlength", params)
-        self.assertIn("quality", params)
-        self.assertIn("longestonly", params)
+        assert "starttime" in params
+        assert "endtime" in params
+        assert "network" in params
+        assert "station" in params
+        assert "location" in params
+        assert "channel" in params
+        assert "quality" in params
+        assert "minimumlength" in params
+        assert "quality" in params
+        assert "longestonly" in params
 
-        self.assertEqual(params["starttime"]["type"], UTCDateTime)
-        self.assertEqual(params["starttime"]["required"], True)
+        assert params["starttime"]["type"] == UTCDateTime
+        assert params["starttime"]["required"] == True
 
-        self.assertEqual(params["endtime"]["type"], UTCDateTime)
-        self.assertEqual(params["endtime"]["required"], True)
+        assert params["endtime"]["type"] == UTCDateTime
+        assert params["endtime"]["required"] == True
 
-        self.assertEqual(params["network"]["type"], str)
-        self.assertEqual(params["station"]["type"], str)
-        self.assertEqual(params["location"]["type"], str)
-        self.assertEqual(params["channel"]["type"], str)
+        assert params["network"]["type"] == str
+        assert params["station"]["type"] == str
+        assert params["location"]["type"] == str
+        assert params["channel"]["type"] == str
 
-        self.assertEqual(sorted(params["quality"]["options"]),
-                         sorted(["D", "R", "Q", "M", "B"]))
+        assert sorted(params["quality"]["options"]) == \
+                         sorted(["D", "R", "Q", "M", "B"])
 
         # Check that the default values did get read correctly.
-        self.assertEqual(params["quality"]["default_value"], "B")
-        self.assertEqual(params["minimumlength"]["default_value"], 0.0)
-        self.assertEqual(params["longestonly"]["default_value"], False)
+        assert params["quality"]["default_value"] == "B"
+        assert params["minimumlength"]["default_value"] == 0.0
+        assert params["longestonly"]["default_value"] == False
 
     def test_event_wadl_parsing(self):
         """
         Tests the parsing of an event wadl.
         """
         parser, w = self._parse_wadl_file("event.wadl")
-        self.assertEqual(len(w), 0)
+        assert len(w) == 0
 
         params = parser.parameters
 
         # The WADL contains some short forms. In the parameters dictionary
         # these should be converted to the long forms.
-        self.assertIn("starttime", params)
-        self.assertIn("endtime", params)
-        self.assertIn("minlatitude", params)
-        self.assertIn("maxlatitude", params)
-        self.assertIn("minlongitude", params)
-        self.assertIn("maxlongitude", params)
-        self.assertIn("minmagnitude", params)
-        self.assertIn("maxmagnitude", params)
-        self.assertIn("magnitudetype", params)
-        self.assertIn("catalog", params)
+        assert "starttime" in params
+        assert "endtime" in params
+        assert "minlatitude" in params
+        assert "maxlatitude" in params
+        assert "minlongitude" in params
+        assert "maxlongitude" in params
+        assert "minmagnitude" in params
+        assert "maxmagnitude" in params
+        assert "magnitudetype" in params
+        assert "catalog" in params
 
-        self.assertIn("contributor", params)
-        self.assertIn("maxdepth", params)
-        self.assertIn("mindepth", params)
-        self.assertIn("latitude", params)
-        self.assertIn("longitude", params)
+        assert "contributor" in params
+        assert "maxdepth" in params
+        assert "mindepth" in params
+        assert "latitude" in params
+        assert "longitude" in params
 
-        self.assertIn("maxradius", params)
-        self.assertIn("minradius", params)
-        self.assertIn("orderby", params)
-        self.assertIn("updatedafter", params)
+        assert "maxradius" in params
+        assert "minradius" in params
+        assert "orderby" in params
+        assert "updatedafter" in params
 
-        self.assertIn("eventid", params)
-        self.assertIn("originid", params)
-        self.assertIn("includearrivals", params)
-        self.assertIn("includeallmagnitudes", params)
-        self.assertIn("includeallorigins", params)
-        self.assertIn("limit", params)
-        self.assertIn("offset", params)
+        assert "eventid" in params
+        assert "originid" in params
+        assert "includearrivals" in params
+        assert "includeallmagnitudes" in params
+        assert "includeallorigins" in params
+        assert "limit" in params
+        assert "offset" in params
 
         # The nodata attribute should not be parsed.
-        self.assertFalse("nodata" in params)
+        assert not ("nodata" in params)
 
-        self.assertEqual(
-            params["magnitudetype"]["doc_title"],
-            "type of Magnitude used to test minimum and maximum limits "
-            "(case insensitive)")
-        self.assertEqual(params["magnitudetype"]["doc"],
-                         "Examples: Ml,Ms,mb,Mw\"")
+        assert params["magnitudetype"]["doc_title"] == \
+            "type of Magnitude used to test minimum and maximum limits " \
+            "(case insensitive)"
+        assert params["magnitudetype"]["doc"] == \
+                         "Examples: Ml,Ms,mb,Mw\""
 
     def test_station_wadl_parsing(self):
         """
@@ -136,40 +135,38 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("station.wadl")
         params = parser.parameters
 
-        self.assertIn("starttime", params)
-        self.assertIn("endtime", params)
-        self.assertIn("startbefore", params)
-        self.assertIn("startafter", params)
-        self.assertIn("endbefore", params)
-        self.assertIn("endafter", params)
-        self.assertIn("network", params)
-        self.assertIn("station", params)
-        self.assertIn("location", params)
-        self.assertIn("channel", params)
-        self.assertIn("minlatitude", params)
-        self.assertIn("maxlatitude", params)
-        self.assertIn("latitude", params)
-        self.assertIn("minlongitude", params)
-        self.assertIn("maxlongitude", params)
-        self.assertIn("longitude", params)
-        self.assertIn("minradius", params)
-        self.assertIn("maxradius", params)
-        self.assertIn("level", params)
-        self.assertIn("includerestricted", params)
-        self.assertIn("includeavailability", params)
-        self.assertIn("updatedafter", params)
-        self.assertIn("matchtimeseries", params)
+        assert "starttime" in params
+        assert "endtime" in params
+        assert "startbefore" in params
+        assert "startafter" in params
+        assert "endbefore" in params
+        assert "endafter" in params
+        assert "network" in params
+        assert "station" in params
+        assert "location" in params
+        assert "channel" in params
+        assert "minlatitude" in params
+        assert "maxlatitude" in params
+        assert "latitude" in params
+        assert "minlongitude" in params
+        assert "maxlongitude" in params
+        assert "longitude" in params
+        assert "minradius" in params
+        assert "maxradius" in params
+        assert "level" in params
+        assert "includerestricted" in params
+        assert "includeavailability" in params
+        assert "updatedafter" in params
+        assert "matchtimeseries" in params
 
         # The nodata attribute should not be parsed.
-        self.assertFalse("nodata" in params)
+        assert not ("nodata" in params)
 
-        self.assertEqual(
-            params["endbefore"]["doc_title"],
-            "limit to stations ending before the specified time")
-        self.assertEqual(
-            params["endbefore"]["doc"],
-            "Examples: endbefore=2012-11-29 or 2012-11-29T00:00:00 or "
-            "2012-11-29T00:00:00.000")
+        assert params["endbefore"]["doc_title"] == \
+            "limit to stations ending before the specified time"
+        assert params["endbefore"]["doc"] == \
+            "Examples: endbefore=2012-11-29 or 2012-11-29T00:00:00 or " \
+            "2012-11-29T00:00:00.000"
 
     def test_reading_wadls_without_type(self):
         """
@@ -179,28 +176,28 @@ class WADLParserTestCase(unittest.TestCase):
         params = parser.parameters
 
         # Assert that types have been assigned.
-        self.assertEqual(params["starttime"]["type"], UTCDateTime)
-        self.assertEqual(params["endtime"]["type"], UTCDateTime)
-        self.assertEqual(params["startbefore"]["type"], UTCDateTime)
-        self.assertEqual(params["startafter"]["type"], UTCDateTime)
-        self.assertEqual(params["endbefore"]["type"], UTCDateTime)
-        self.assertEqual(params["endafter"]["type"], UTCDateTime)
-        self.assertEqual(params["network"]["type"], str)
-        self.assertEqual(params["station"]["type"], str)
-        self.assertEqual(params["location"]["type"], str)
-        self.assertEqual(params["channel"]["type"], str)
-        self.assertEqual(params["minlatitude"]["type"], float)
-        self.assertEqual(params["maxlatitude"]["type"], float)
-        self.assertEqual(params["latitude"]["type"], float)
-        self.assertEqual(params["minlongitude"]["type"], float)
-        self.assertEqual(params["maxlongitude"]["type"], float)
-        self.assertEqual(params["longitude"]["type"], float)
-        self.assertEqual(params["minradius"]["type"], float)
-        self.assertEqual(params["maxradius"]["type"], float)
-        self.assertEqual(params["level"]["type"], str)
-        self.assertEqual(params["includerestricted"]["type"], bool)
-        self.assertEqual(params["includeavailability"]["type"], bool)
-        self.assertEqual(params["updatedafter"]["type"], UTCDateTime)
+        assert params["starttime"]["type"] == UTCDateTime
+        assert params["endtime"]["type"] == UTCDateTime
+        assert params["startbefore"]["type"] == UTCDateTime
+        assert params["startafter"]["type"] == UTCDateTime
+        assert params["endbefore"]["type"] == UTCDateTime
+        assert params["endafter"]["type"] == UTCDateTime
+        assert params["network"]["type"] == str
+        assert params["station"]["type"] == str
+        assert params["location"]["type"] == str
+        assert params["channel"]["type"] == str
+        assert params["minlatitude"]["type"] == float
+        assert params["maxlatitude"]["type"] == float
+        assert params["latitude"]["type"] == float
+        assert params["minlongitude"]["type"] == float
+        assert params["maxlongitude"]["type"] == float
+        assert params["longitude"]["type"] == float
+        assert params["minradius"]["type"] == float
+        assert params["maxradius"]["type"] == float
+        assert params["level"]["type"] == str
+        assert params["includerestricted"]["type"] == bool
+        assert params["includeavailability"]["type"] == bool
+        assert params["updatedafter"]["type"] == UTCDateTime
 
         # Now read a dataselect file with no types.
         filename = os.path.join(self.data_path, "dataselect_no_types.wadl")
@@ -210,15 +207,15 @@ class WADLParserTestCase(unittest.TestCase):
         params = parser.parameters
 
         # Assert that types have been assigned.
-        self.assertEqual(params["starttime"]["type"], UTCDateTime)
-        self.assertEqual(params["endtime"]["type"], UTCDateTime)
-        self.assertEqual(params["network"]["type"], str)
-        self.assertEqual(params["station"]["type"], str)
-        self.assertEqual(params["location"]["type"], str)
-        self.assertEqual(params["channel"]["type"], str)
-        self.assertEqual(params["quality"]["type"], str)
-        self.assertEqual(params["minimumlength"]["type"], float)
-        self.assertEqual(params["longestonly"]["type"], bool)
+        assert params["starttime"]["type"] == UTCDateTime
+        assert params["endtime"]["type"] == UTCDateTime
+        assert params["network"]["type"] == str
+        assert params["station"]["type"] == str
+        assert params["location"]["type"] == str
+        assert params["channel"]["type"] == str
+        assert params["quality"]["type"] == str
+        assert params["minimumlength"]["type"] == float
+        assert params["longestonly"]["type"] == bool
 
     def test_usgs_event_wadl_parsing(self):
         """
@@ -232,34 +229,34 @@ class WADLParserTestCase(unittest.TestCase):
 
         # The WADL contains some short forms. In the parameters dictionary
         # these should be converted to the long forms.
-        self.assertIn("starttime", params)
-        self.assertIn("endtime", params)
-        self.assertIn("minlatitude", params)
-        self.assertIn("maxlatitude", params)
-        self.assertIn("minlongitude", params)
-        self.assertIn("maxlongitude", params)
-        self.assertIn("minmagnitude", params)
-        self.assertIn("maxmagnitude", params)
-        self.assertIn("magnitudetype", params)
-        self.assertIn("catalog", params)
+        assert "starttime" in params
+        assert "endtime" in params
+        assert "minlatitude" in params
+        assert "maxlatitude" in params
+        assert "minlongitude" in params
+        assert "maxlongitude" in params
+        assert "minmagnitude" in params
+        assert "maxmagnitude" in params
+        assert "magnitudetype" in params
+        assert "catalog" in params
 
-        self.assertIn("contributor", params)
-        self.assertIn("maxdepth", params)
-        self.assertIn("mindepth", params)
-        self.assertIn("latitude", params)
-        self.assertIn("longitude", params)
+        assert "contributor" in params
+        assert "maxdepth" in params
+        assert "mindepth" in params
+        assert "latitude" in params
+        assert "longitude" in params
 
-        self.assertIn("maxradius", params)
-        self.assertIn("minradius", params)
-        self.assertIn("orderby", params)
-        self.assertIn("updatedafter", params)
+        assert "maxradius" in params
+        assert "minradius" in params
+        assert "orderby" in params
+        assert "updatedafter" in params
 
-        self.assertIn("eventid", params)
-        self.assertIn("includearrivals", params)
-        self.assertIn("includeallmagnitudes", params)
-        self.assertIn("includeallorigins", params)
-        self.assertIn("limit", params)
-        self.assertIn("offset", params)
+        assert "eventid" in params
+        assert "includearrivals" in params
+        assert "includeallmagnitudes" in params
+        assert "includeallorigins" in params
+        assert "limit" in params
+        assert "offset" in params
 
     def test_parsing_dataselect_wadls_with_missing_attributes(self):
         """
@@ -280,16 +277,16 @@ class WADLParserTestCase(unittest.TestCase):
             warnings.simplefilter("always")
             parser = WADLParser(wadl_string)
             # No warning should be raised due to update to FDSN-WS 1.1.
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
 
         # Assert that some other parameters are still existent.
         params = parser.parameters
-        self.assertIn("starttime", params)
-        self.assertIn("endtime", params)
-        self.assertIn("network", params)
-        self.assertIn("station", params)
-        self.assertIn("location", params)
-        self.assertIn("channel", params)
+        assert "starttime" in params
+        assert "endtime" in params
+        assert "network" in params
+        assert "station" in params
+        assert "location" in params
+        assert "channel" in params
 
     def test_parsing_event_wadls_with_missing_attributes(self):
         """
@@ -310,20 +307,20 @@ class WADLParserTestCase(unittest.TestCase):
             warnings.simplefilter("always")
             parser = WADLParser(wadl_string)
             # No warning should be raised due to update to FDSN-WS 1.1.
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
 
         # Assert that some other parameters are still existent.
         params = parser.parameters
-        self.assertIn("starttime", params)
-        self.assertIn("endtime", params)
-        self.assertIn("minlatitude", params)
-        self.assertIn("maxlatitude", params)
-        self.assertIn("minlongitude", params)
-        self.assertIn("maxlongitude", params)
-        self.assertIn("minmagnitude", params)
-        self.assertIn("maxmagnitude", params)
-        self.assertIn("magnitudetype", params)
-        self.assertIn("catalog", params)
+        assert "starttime" in params
+        assert "endtime" in params
+        assert "minlatitude" in params
+        assert "maxlatitude" in params
+        assert "minlongitude" in params
+        assert "maxlongitude" in params
+        assert "minmagnitude" in params
+        assert "maxmagnitude" in params
+        assert "magnitudetype" in params
+        assert "catalog" in params
 
     def test_parsing_current_wadls_iris(self):
         """
@@ -339,8 +336,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
                     'minlongitude', 'minmagnitude', 'minradius', 'offset',
                     'orderby', 'originid', 'starttime', 'updatedafter']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
         parser, w = self._parse_wadl_file("2014-01-07_iris_station.wadl")
         params = parser.parameters
@@ -351,8 +348,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'maxlatitude', 'maxlongitude', 'maxradius', 'minlatitude',
                     'minlongitude', 'minradius', 'network', 'startafter',
                     'startbefore', 'starttime', 'station', 'updatedafter']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
         parser, w = self._parse_wadl_file("2014-01-07_iris_dataselect.wadl")
         params = parser.parameters
@@ -360,8 +357,8 @@ class WADLParserTestCase(unittest.TestCase):
         expected = ['channel', 'endtime', 'location', 'longestonly',
                     'minimumlength', 'network', 'quality', 'starttime',
                     'station']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
     def test_parsing_current_wadls_usgs(self):
         """
@@ -381,8 +378,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'mingap', 'minlatitude', 'minlongitude', 'minmagnitude',
                     'minmmi', 'minradius', 'minsig', 'offset', 'orderby',
                     'producttype', 'reviewstatus', 'starttime', 'updatedafter']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
     def test_parsing_current_wadls_seismicportal(self):
         """
@@ -399,8 +396,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
                     'minlongitude', 'minmagnitude', 'minradius', 'offset',
                     'orderby', 'starttime', 'updatedafter']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
     def test_parsing_current_wadls_resif(self):
         """
@@ -415,8 +412,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'maxlongitude', 'maxradius', 'minlatitude', 'minlongitude',
                     'minradius', 'network', 'startafter', 'startbefore',
                     'starttime', 'station', 'updatedafter']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
         parser, w = self._parse_wadl_file("2014-01-07_resif_dataselect.wadl")
         params = parser.parameters
@@ -424,8 +421,8 @@ class WADLParserTestCase(unittest.TestCase):
         expected = ['channel', 'endtime', 'location', 'longestonly',
                     'minimumlength', 'network', 'quality', 'starttime',
                     'station']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
     def test_parsing_current_wadls_ncedc(self):
         """
@@ -441,8 +438,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
                     'minlongitude', 'minmagnitude', 'minradius', 'offset',
                     'orderby', 'starttime']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_station.wadl")
         params = parser.parameters
@@ -453,16 +450,16 @@ class WADLParserTestCase(unittest.TestCase):
                     'minlatitude', 'minlongitude', 'minradius', 'network',
                     'startafter', 'startbefore', 'starttime', 'station',
                     'updatedafter']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_dataselect.wadl")
         params = parser.parameters
         # Check parsed parameters
         expected = ['channel', 'endtime', 'location', 'network', 'starttime',
                     'station']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
     def test_parsing_current_wadls_ethz(self):
         """
@@ -478,8 +475,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'maxlongitude', 'maxmagnitude', 'maxradius', 'mindepth',
                     'minlatitude', 'minlongitude', 'minmagnitude', 'minradius',
                     'offset', 'orderby', 'output', 'starttime', 'updatedafter']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
         parser, w = self._parse_wadl_file("2014-01-07_ethz_station.wadl")
         params = parser.parameters
@@ -490,13 +487,13 @@ class WADLParserTestCase(unittest.TestCase):
                     'minlatitude', 'minlongitude', 'minradius', 'network',
                     'output', 'startafter', 'startbefore', 'starttime',
                     'station']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0
 
         parser, w = self._parse_wadl_file("2014-01-07_ethz_dataselect.wadl")
         params = parser.parameters
         # Check parsed parameters
         expected = ['channel', 'endtime', 'location', 'network', 'quality',
                     'starttime', 'station']
-        self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        assert sorted(params.keys()) == expected
+        assert len(w) == 0

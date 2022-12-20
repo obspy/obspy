@@ -60,28 +60,23 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'iris_events.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 2)
-        self.assertEqual(
-            catalog[0].resource_id,
+        assert len(catalog) == 2
+        assert catalog[0].resource_id == \
             ResourceIdentifier(
-                'smi:www.iris.edu/ws/event/query?eventId=3279407'))
-        self.assertEqual(
-            catalog[1].resource_id,
+                'smi:www.iris.edu/ws/event/query?eventId=3279407')
+        assert catalog[1].resource_id == \
             ResourceIdentifier(
-                'smi:www.iris.edu/ws/event/query?eventId=2318174'))
+                'smi:www.iris.edu/ws/event/query?eventId=2318174')
         # NERIES
         catalog = self.neries_catalog
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 3)
-        self.assertEqual(
-            catalog[0].resource_id,
-            ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000041'))
-        self.assertEqual(
-            catalog[1].resource_id,
-            ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000038'))
-        self.assertEqual(
-            catalog[2].resource_id,
-            ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000039'))
+        assert len(catalog) == 3
+        assert catalog[0].resource_id == \
+            ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000041')
+        assert catalog[1].resource_id == \
+            ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000038')
+        assert catalog[2].resource_id == \
+            ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000039')
 
     def test_usgs_eventype(self):
         filename = os.path.join(self.path, 'usgs_event.xml')
@@ -89,10 +84,10 @@ class QuakeMLTestCase(unittest.TestCase):
             warnings.simplefilter("ignore")
             catalog = _read_quakeml(filename)
         # there are some custom namespace attributes
-        self.assertTrue(len(catalog[0].extra) == 3)
-        self.assertTrue(len(catalog[0].origins[0].extra) == 4)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(catalog[0].event_type, 'quarry blast')
+        assert len(catalog[0].extra) == 3
+        assert len(catalog[0].origins[0].extra) == 4
+        assert len(catalog) == 1
+        assert catalog[0].event_type == 'quarry blast'
 
     def test_event(self):
         """
@@ -101,47 +96,42 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'quakeml_1.2_event.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
+        assert len(catalog) == 1
         event = catalog[0]
-        self.assertEqual(
-            event.resource_id,
-            ResourceIdentifier('smi:ch.ethz.sed/event/historical/1165'))
+        assert event.resource_id == \
+            ResourceIdentifier('smi:ch.ethz.sed/event/historical/1165')
         # enums
-        self.assertEqual(event.event_type, 'earthquake')
-        self.assertEqual(event.event_type_certainty, 'suspected')
+        assert event.event_type == 'earthquake'
+        assert event.event_type_certainty == 'suspected'
         # comments
-        self.assertEqual(len(event.comments), 2)
+        assert len(event.comments) == 2
         c = event.comments
-        self.assertEqual(c[0].text, 'Relocated after re-evaluation')
-        self.assertEqual(c[0].resource_id, None)
-        self.assertEqual(c[0].creation_info.agency_id, 'EMSC')
-        self.assertEqual(c[1].text, 'Another comment')
-        self.assertEqual(
-            c[1].resource_id,
-            ResourceIdentifier(id="smi:some/comment/id/number_3"))
-        self.assertEqual(c[1].creation_info, None)
+        assert c[0].text == 'Relocated after re-evaluation'
+        assert c[0].resource_id == None
+        assert c[0].creation_info.agency_id == 'EMSC'
+        assert c[1].text == 'Another comment'
+        assert c[1].resource_id == \
+            ResourceIdentifier(id="smi:some/comment/id/number_3")
+        assert c[1].creation_info == None
         # event descriptions
-        self.assertEqual(len(event.event_descriptions), 3)
+        assert len(event.event_descriptions) == 3
         d = event.event_descriptions
-        self.assertEqual(d[0].text, '1906 San Francisco Earthquake')
-        self.assertEqual(d[0].type, 'earthquake name')
-        self.assertEqual(d[1].text, 'NEAR EAST COAST OF HONSHU, JAPAN')
-        self.assertEqual(d[1].type, 'Flinn-Engdahl region')
-        self.assertEqual(d[2].text, 'free-form string')
-        self.assertEqual(d[2].type, None)
+        assert d[0].text == '1906 San Francisco Earthquake'
+        assert d[0].type == 'earthquake name'
+        assert d[1].text == 'NEAR EAST COAST OF HONSHU, JAPAN'
+        assert d[1].type == 'Flinn-Engdahl region'
+        assert d[2].text == 'free-form string'
+        assert d[2].type == None
         # creation info
-        self.assertEqual(event.creation_info.author, "Erika Mustermann")
-        self.assertEqual(event.creation_info.agency_id, "EMSC")
-        self.assertEqual(
-            event.creation_info.author_uri,
-            ResourceIdentifier("smi:smi-registry/organization/EMSC"))
-        self.assertEqual(
-            event.creation_info.agency_uri,
-            ResourceIdentifier("smi:smi-registry/organization/EMSC"))
-        self.assertEqual(
-            event.creation_info.creation_time,
-            UTCDateTime("2012-04-04T16:40:50+00:00"))
-        self.assertEqual(event.creation_info.version, "1.0.1")
+        assert event.creation_info.author == "Erika Mustermann"
+        assert event.creation_info.agency_id == "EMSC"
+        assert event.creation_info.author_uri == \
+            ResourceIdentifier("smi:smi-registry/organization/EMSC")
+        assert event.creation_info.agency_uri == \
+            ResourceIdentifier("smi:smi-registry/organization/EMSC")
+        assert event.creation_info.creation_time == \
+            UTCDateTime("2012-04-04T16:40:50+00:00")
+        assert event.creation_info.version == "1.0.1"
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -155,96 +145,91 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'quakeml_1.2_origin.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].origins), 1)
+        assert len(catalog) == 1
+        assert len(catalog[0].origins) == 1
         origin = catalog[0].origins[0]
-        self.assertEqual(
-            origin.resource_id,
+        assert origin.resource_id == \
             ResourceIdentifier(
-                'smi:www.iris.edu/ws/event/query?originId=7680412'))
-        self.assertEqual(origin.time, UTCDateTime("2011-03-11T05:46:24.1200"))
-        self.assertEqual(origin.latitude, 38.297)
-        self.assertEqual(origin.latitude_errors.lower_uncertainty, None)
-        self.assertEqual(origin.longitude, 142.373)
-        self.assertEqual(origin.longitude_errors.uncertainty, None)
-        self.assertEqual(origin.depth, 29.0)
-        self.assertEqual(origin.depth_errors.confidence_level, 50.0)
-        self.assertEqual(origin.depth_type, "from location")
-        self.assertEqual(
-            origin.method_id,
-            ResourceIdentifier(id="smi:some/method/NA"))
-        self.assertEqual(origin.time_fixed, None)
-        self.assertEqual(origin.epicenter_fixed, False)
-        self.assertEqual(
-            origin.reference_system_id,
-            ResourceIdentifier(id="smi:some/reference/muh"))
-        self.assertEqual(
-            origin.earth_model_id,
-            ResourceIdentifier(id="smi:same/model/maeh"))
-        self.assertEqual(origin.region, 'Kalamazoo')
-        self.assertEqual(origin.evaluation_mode, "manual")
-        self.assertEqual(origin.evaluation_status, "preliminary")
-        self.assertEqual(origin.origin_type, "hypocenter")
+                'smi:www.iris.edu/ws/event/query?originId=7680412')
+        assert origin.time == UTCDateTime("2011-03-11T05:46:24.1200")
+        assert origin.latitude == 38.297
+        assert origin.latitude_errors.lower_uncertainty == None
+        assert origin.longitude == 142.373
+        assert origin.longitude_errors.uncertainty == None
+        assert origin.depth == 29.0
+        assert origin.depth_errors.confidence_level == 50.0
+        assert origin.depth_type == "from location"
+        assert origin.method_id == \
+            ResourceIdentifier(id="smi:some/method/NA")
+        assert origin.time_fixed == None
+        assert origin.epicenter_fixed == False
+        assert origin.reference_system_id == \
+            ResourceIdentifier(id="smi:some/reference/muh")
+        assert origin.earth_model_id == \
+            ResourceIdentifier(id="smi:same/model/maeh")
+        assert origin.region == 'Kalamazoo'
+        assert origin.evaluation_mode == "manual"
+        assert origin.evaluation_status == "preliminary"
+        assert origin.origin_type == "hypocenter"
         # composite times
-        self.assertEqual(len(origin.composite_times), 2)
+        assert len(origin.composite_times) == 2
         c = origin.composite_times
-        self.assertEqual(c[0].year, 2029)
-        self.assertEqual(c[0].month, None)
-        self.assertEqual(c[0].day, None)
-        self.assertEqual(c[0].hour, 12)
-        self.assertEqual(c[0].minute, None)
-        self.assertEqual(c[0].second, None)
-        self.assertEqual(c[1].year, None)
-        self.assertEqual(c[1].month, None)
-        self.assertEqual(c[1].day, None)
-        self.assertEqual(c[1].hour, 1)
-        self.assertEqual(c[1].minute, None)
-        self.assertEqual(c[1].second, 29.124234)
+        assert c[0].year == 2029
+        assert c[0].month == None
+        assert c[0].day == None
+        assert c[0].hour == 12
+        assert c[0].minute == None
+        assert c[0].second == None
+        assert c[1].year == None
+        assert c[1].month == None
+        assert c[1].day == None
+        assert c[1].hour == 1
+        assert c[1].minute == None
+        assert c[1].second == 29.124234
         # quality
-        self.assertEqual(origin.quality.used_station_count, 16)
-        self.assertEqual(origin.quality.standard_error, 0)
-        self.assertEqual(origin.quality.azimuthal_gap, 231)
-        self.assertEqual(origin.quality.maximum_distance, 53.03)
-        self.assertEqual(origin.quality.minimum_distance, 2.45)
-        self.assertEqual(origin.quality.associated_phase_count, None)
-        self.assertEqual(origin.quality.associated_station_count, None)
-        self.assertEqual(origin.quality.depth_phase_count, None)
-        self.assertEqual(origin.quality.secondary_azimuthal_gap, None)
-        self.assertEqual(origin.quality.ground_truth_level, None)
-        self.assertEqual(origin.quality.median_distance, None)
+        assert origin.quality.used_station_count == 16
+        assert origin.quality.standard_error == 0
+        assert origin.quality.azimuthal_gap == 231
+        assert origin.quality.maximum_distance == 53.03
+        assert origin.quality.minimum_distance == 2.45
+        assert origin.quality.associated_phase_count == None
+        assert origin.quality.associated_station_count == None
+        assert origin.quality.depth_phase_count == None
+        assert origin.quality.secondary_azimuthal_gap == None
+        assert origin.quality.ground_truth_level == None
+        assert origin.quality.median_distance == None
         # comments
-        self.assertEqual(len(origin.comments), 2)
+        assert len(origin.comments) == 2
         c = origin.comments
-        self.assertEqual(c[0].text, 'Some comment')
-        self.assertEqual(
-            c[0].resource_id,
-            ResourceIdentifier(id="smi:some/comment/reference"))
-        self.assertEqual(c[0].creation_info.author, 'EMSC')
-        self.assertEqual(c[1].resource_id, None)
-        self.assertEqual(c[1].creation_info, None)
-        self.assertEqual(c[1].text, 'Another comment')
+        assert c[0].text == 'Some comment'
+        assert c[0].resource_id == \
+            ResourceIdentifier(id="smi:some/comment/reference")
+        assert c[0].creation_info.author == 'EMSC'
+        assert c[1].resource_id == None
+        assert c[1].creation_info == None
+        assert c[1].text == 'Another comment'
         # creation info
-        self.assertEqual(origin.creation_info.author, "NEIC")
-        self.assertEqual(origin.creation_info.agency_id, None)
-        self.assertEqual(origin.creation_info.author_uri, None)
-        self.assertEqual(origin.creation_info.agency_uri, None)
-        self.assertEqual(origin.creation_info.creation_time, None)
-        self.assertEqual(origin.creation_info.version, None)
+        assert origin.creation_info.author == "NEIC"
+        assert origin.creation_info.agency_id == None
+        assert origin.creation_info.author_uri == None
+        assert origin.creation_info.agency_uri == None
+        assert origin.creation_info.creation_time == None
+        assert origin.creation_info.version == None
         # origin uncertainty
         u = origin.origin_uncertainty
-        self.assertEqual(u.preferred_description, "uncertainty ellipse")
-        self.assertEqual(u.horizontal_uncertainty, 9000)
-        self.assertEqual(u.min_horizontal_uncertainty, 6000)
-        self.assertEqual(u.max_horizontal_uncertainty, 10000)
-        self.assertEqual(u.azimuth_max_horizontal_uncertainty, 80.0)
+        assert u.preferred_description == "uncertainty ellipse"
+        assert u.horizontal_uncertainty == 9000
+        assert u.min_horizontal_uncertainty == 6000
+        assert u.max_horizontal_uncertainty == 10000
+        assert u.azimuth_max_horizontal_uncertainty == 80.0
         # confidence ellipsoid
         c = u.confidence_ellipsoid
-        self.assertEqual(c.semi_intermediate_axis_length, 2.123)
-        self.assertEqual(c.major_axis_rotation, 5.123)
-        self.assertEqual(c.major_axis_plunge, 3.123)
-        self.assertEqual(c.semi_minor_axis_length, 1.123)
-        self.assertEqual(c.semi_major_axis_length, 0.123)
-        self.assertEqual(c.major_axis_azimuth, 4.123)
+        assert c.semi_intermediate_axis_length == 2.123
+        assert c.major_axis_rotation == 5.123
+        assert c.major_axis_plunge == 3.123
+        assert c.semi_minor_axis_length == 1.123
+        assert c.semi_major_axis_length == 0.123
+        assert c.major_axis_azimuth == 4.123
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -258,39 +243,36 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'quakeml_1.2_magnitude.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].magnitudes), 1)
+        assert len(catalog) == 1
+        assert len(catalog[0].magnitudes) == 1
         mag = catalog[0].magnitudes[0]
-        self.assertEqual(
-            mag.resource_id,
-            ResourceIdentifier('smi:ch.ethz.sed/magnitude/37465'))
-        self.assertEqual(mag.mag, 5.5)
-        self.assertEqual(mag.mag_errors.uncertainty, 0.1)
-        self.assertEqual(mag.magnitude_type, 'MS')
-        self.assertEqual(
-            mag.method_id,
+        assert mag.resource_id == \
+            ResourceIdentifier('smi:ch.ethz.sed/magnitude/37465')
+        assert mag.mag == 5.5
+        assert mag.mag_errors.uncertainty == 0.1
+        assert mag.magnitude_type == 'MS'
+        assert mag.method_id == \
             ResourceIdentifier(
-                'smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude'))
-        self.assertEqual(mag.station_count, 8)
-        self.assertEqual(mag.evaluation_status, 'preliminary')
+                'smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude')
+        assert mag.station_count == 8
+        assert mag.evaluation_status == 'preliminary'
         # comments
-        self.assertEqual(len(mag.comments), 2)
+        assert len(mag.comments) == 2
         c = mag.comments
-        self.assertEqual(c[0].text, 'Some comment')
-        self.assertEqual(
-            c[0].resource_id,
-            ResourceIdentifier(id="smi:some/comment/id/muh"))
-        self.assertEqual(c[0].creation_info.author, 'EMSC')
-        self.assertEqual(c[1].creation_info, None)
-        self.assertEqual(c[1].text, 'Another comment')
-        self.assertEqual(c[1].resource_id, None)
+        assert c[0].text == 'Some comment'
+        assert c[0].resource_id == \
+            ResourceIdentifier(id="smi:some/comment/id/muh")
+        assert c[0].creation_info.author == 'EMSC'
+        assert c[1].creation_info == None
+        assert c[1].text == 'Another comment'
+        assert c[1].resource_id == None
         # creation info
-        self.assertEqual(mag.creation_info.author, "NEIC")
-        self.assertEqual(mag.creation_info.agency_id, None)
-        self.assertEqual(mag.creation_info.author_uri, None)
-        self.assertEqual(mag.creation_info.agency_uri, None)
-        self.assertEqual(mag.creation_info.creation_time, None)
-        self.assertEqual(mag.creation_info.version, None)
+        assert mag.creation_info.author == "NEIC"
+        assert mag.creation_info.agency_id == None
+        assert mag.creation_info.author_uri == None
+        assert mag.creation_info.agency_uri == None
+        assert mag.creation_info.creation_time == None
+        assert mag.creation_info.version == None
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -305,26 +287,23 @@ class QuakeMLTestCase(unittest.TestCase):
             self.path, 'quakeml_1.2_stationmagnitudecontributions.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].magnitudes), 1)
-        self.assertEqual(
-            len(catalog[0].magnitudes[0].station_magnitude_contributions), 2)
+        assert len(catalog) == 1
+        assert len(catalog[0].magnitudes) == 1
+        assert len(catalog[0].magnitudes[0].station_magnitude_contributions) == 2
         # Check the first stationMagnitudeContribution object.
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[0]
-        self.assertEqual(
-            stat_contrib.station_magnitude_id.id,
-            "smi:ch.ethz.sed/magnitude/station/881342")
-        self.assertEqual(stat_contrib.weight, 0.77)
-        self.assertEqual(stat_contrib.residual, 0.02)
+        assert stat_contrib.station_magnitude_id.id == \
+            "smi:ch.ethz.sed/magnitude/station/881342"
+        assert stat_contrib.weight == 0.77
+        assert stat_contrib.residual == 0.02
         # Check the second stationMagnitudeContribution object.
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[1]
-        self.assertEqual(
-            stat_contrib.station_magnitude_id.id,
-            "smi:ch.ethz.sed/magnitude/station/881334")
-        self.assertEqual(stat_contrib.weight, 0.)
-        self.assertEqual(stat_contrib.residual, 0.)
+        assert stat_contrib.station_magnitude_id.id == \
+            "smi:ch.ethz.sed/magnitude/station/881334"
+        assert stat_contrib.weight == 0.
+        assert stat_contrib.residual == 0.
 
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
@@ -339,32 +318,27 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'quakeml_1.2_stationmagnitude.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].station_magnitudes), 1)
+        assert len(catalog) == 1
+        assert len(catalog[0].station_magnitudes) == 1
         mag = catalog[0].station_magnitudes[0]
         # Assert the actual StationMagnitude object. Everything that is not set
         # in the QuakeML file should be set to None.
-        self.assertEqual(
-            mag.resource_id,
-            ResourceIdentifier("smi:ch.ethz.sed/magnitude/station/881342"))
-        self.assertEqual(
-            mag.origin_id,
-            ResourceIdentifier('smi:some/example/id'))
-        self.assertEqual(mag.mag, 6.5)
-        self.assertEqual(mag.mag_errors.uncertainty, 0.2)
-        self.assertEqual(mag.station_magnitude_type, 'MS')
-        self.assertEqual(
-            mag.amplitude_id,
-            ResourceIdentifier("smi:ch.ethz.sed/amplitude/824315"))
-        self.assertEqual(
-            mag.method_id,
+        assert mag.resource_id == \
+            ResourceIdentifier("smi:ch.ethz.sed/magnitude/station/881342")
+        assert mag.origin_id == \
+            ResourceIdentifier('smi:some/example/id')
+        assert mag.mag == 6.5
+        assert mag.mag_errors.uncertainty == 0.2
+        assert mag.station_magnitude_type == 'MS'
+        assert mag.amplitude_id == \
+            ResourceIdentifier("smi:ch.ethz.sed/amplitude/824315")
+        assert mag.method_id == \
             ResourceIdentifier(
-                "smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude"))
-        self.assertEqual(
-            mag.waveform_id,
+                "smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude")
+        assert mag.waveform_id == \
             WaveformStreamID(network_code='BW', station_code='FUR',
-                             resource_uri="smi:ch.ethz.sed/waveform/201754"))
-        self.assertEqual(mag.creation_info, None)
+                             resource_uri="smi:ch.ethz.sed/waveform/201754")
+        assert mag.creation_info == None
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -382,31 +356,29 @@ class QuakeMLTestCase(unittest.TestCase):
         assert_no_extras(catalog)
         event = catalog[0]
 
-        self.assertTrue(len(event.focal_mechanisms), 2)
+        assert len(event.focal_mechanisms), 2
         # First focmec contains only one data used element.
-        self.assertEqual(
-            len(event.focal_mechanisms[0].moment_tensor.data_used), 1)
+        assert len(event.focal_mechanisms[0].moment_tensor.data_used) == 1
         du = event.focal_mechanisms[0].moment_tensor.data_used[0]
-        self.assertEqual(du.wave_type, "body waves")
-        self.assertEqual(du.station_count, 88)
-        self.assertEqual(du.component_count, 166)
-        self.assertEqual(du.shortest_period, 40.0)
+        assert du.wave_type == "body waves"
+        assert du.station_count == 88
+        assert du.component_count == 166
+        assert du.shortest_period == 40.0
         # Second contains three. focmec contains only one data used element.
-        self.assertEqual(
-            len(event.focal_mechanisms[1].moment_tensor.data_used), 3)
+        assert len(event.focal_mechanisms[1].moment_tensor.data_used) == 3
         du = event.focal_mechanisms[1].moment_tensor.data_used
-        self.assertEqual(du[0].wave_type, "body waves")
-        self.assertEqual(du[0].station_count, 88)
-        self.assertEqual(du[0].component_count, 166)
-        self.assertEqual(du[0].shortest_period, 40.0)
-        self.assertEqual(du[1].wave_type, "surface waves")
-        self.assertEqual(du[1].station_count, 96)
-        self.assertEqual(du[1].component_count, 189)
-        self.assertEqual(du[1].shortest_period, 50.0)
-        self.assertEqual(du[2].wave_type, "mantle waves")
-        self.assertEqual(du[2].station_count, 41)
-        self.assertEqual(du[2].component_count, 52)
-        self.assertEqual(du[2].shortest_period, 125.0)
+        assert du[0].wave_type == "body waves"
+        assert du[0].station_count == 88
+        assert du[0].component_count == 166
+        assert du[0].shortest_period == 40.0
+        assert du[1].wave_type == "surface waves"
+        assert du[1].station_count == 96
+        assert du[1].component_count == 189
+        assert du[1].shortest_period == 50.0
+        assert du[2].wave_type == "mantle waves"
+        assert du[2].station_count == 41
+        assert du[2].component_count == 52
+        assert du[2].shortest_period == 125.0
 
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
@@ -421,30 +393,28 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'quakeml_1.2_arrival.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].origins[0].arrivals), 2)
+        assert len(catalog) == 1
+        assert len(catalog[0].origins[0].arrivals) == 2
         ar = catalog[0].origins[0].arrivals[0]
         # Test the actual Arrival object. Everything not set in the QuakeML
         # file should be None.
-        self.assertEqual(
-            ar.pick_id,
-            ResourceIdentifier('smi:ch.ethz.sed/pick/117634'))
-        self.assertEqual(ar.phase, 'Pn')
-        self.assertEqual(ar.azimuth, 12.0)
-        self.assertEqual(ar.distance, 0.5)
-        self.assertEqual(ar.takeoff_angle, 11.0)
-        self.assertEqual(ar.takeoff_angle_errors.uncertainty, 0.2)
-        self.assertEqual(ar.time_residual, 1.6)
-        self.assertEqual(ar.horizontal_slowness_residual, 1.7)
-        self.assertEqual(ar.backazimuth_residual, 1.8)
-        self.assertEqual(ar.time_weight, 0.48)
-        self.assertEqual(ar.horizontal_slowness_weight, 0.49)
-        self.assertEqual(ar.backazimuth_weight, 0.5)
-        self.assertEqual(
-            ar.earth_model_id,
-            ResourceIdentifier('smi:ch.ethz.sed/earthmodel/U21'))
-        self.assertEqual(len(ar.comments), 1)
-        self.assertEqual(ar.creation_info.author, "Erika Mustermann")
+        assert ar.pick_id == \
+            ResourceIdentifier('smi:ch.ethz.sed/pick/117634')
+        assert ar.phase == 'Pn'
+        assert ar.azimuth == 12.0
+        assert ar.distance == 0.5
+        assert ar.takeoff_angle == 11.0
+        assert ar.takeoff_angle_errors.uncertainty == 0.2
+        assert ar.time_residual == 1.6
+        assert ar.horizontal_slowness_residual == 1.7
+        assert ar.backazimuth_residual == 1.8
+        assert ar.time_weight == 0.48
+        assert ar.horizontal_slowness_weight == 0.49
+        assert ar.backazimuth_weight == 0.5
+        assert ar.earth_model_id == \
+            ResourceIdentifier('smi:ch.ethz.sed/earthmodel/U21')
+        assert len(ar.comments) == 1
+        assert ar.creation_info.author == "Erika Mustermann"
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -458,32 +428,28 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'quakeml_1.2_pick.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].picks), 2)
+        assert len(catalog) == 1
+        assert len(catalog[0].picks) == 2
         pick = catalog[0].picks[0]
-        self.assertEqual(
-            pick.resource_id,
-            ResourceIdentifier('smi:ch.ethz.sed/pick/117634'))
-        self.assertEqual(pick.time, UTCDateTime('2005-09-18T22:04:35Z'))
-        self.assertEqual(pick.time_errors.uncertainty, 0.012)
-        self.assertEqual(
-            pick.waveform_id,
+        assert pick.resource_id == \
+            ResourceIdentifier('smi:ch.ethz.sed/pick/117634')
+        assert pick.time == UTCDateTime('2005-09-18T22:04:35Z')
+        assert pick.time_errors.uncertainty == 0.012
+        assert pick.waveform_id == \
             WaveformStreamID(network_code='BW', station_code='FUR',
-                             resource_uri='smi:ch.ethz.sed/waveform/201754'))
-        self.assertEqual(
-            pick.filter_id,
-            ResourceIdentifier('smi:ch.ethz.sed/filter/lowpass/standard'))
-        self.assertEqual(
-            pick.method_id,
-            ResourceIdentifier('smi:ch.ethz.sed/picker/autopicker/6.0.2'))
-        self.assertEqual(pick.backazimuth, 44.0)
-        self.assertEqual(pick.onset, 'impulsive')
-        self.assertEqual(pick.phase_hint, 'Pn')
-        self.assertEqual(pick.polarity, 'positive')
-        self.assertEqual(pick.evaluation_mode, "manual")
-        self.assertEqual(pick.evaluation_status, "confirmed")
-        self.assertEqual(len(pick.comments), 2)
-        self.assertEqual(pick.creation_info.author, "Erika Mustermann")
+                             resource_uri='smi:ch.ethz.sed/waveform/201754')
+        assert pick.filter_id == \
+            ResourceIdentifier('smi:ch.ethz.sed/filter/lowpass/standard')
+        assert pick.method_id == \
+            ResourceIdentifier('smi:ch.ethz.sed/picker/autopicker/6.0.2')
+        assert pick.backazimuth == 44.0
+        assert pick.onset == 'impulsive'
+        assert pick.phase_hint == 'Pn'
+        assert pick.polarity == 'positive'
+        assert pick.evaluation_mode == "manual"
+        assert pick.evaluation_status == "confirmed"
+        assert len(pick.comments) == 2
+        assert pick.creation_info.author == "Erika Mustermann"
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -497,88 +463,78 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'quakeml_1.2_focalmechanism.xml')
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].focal_mechanisms), 2)
+        assert len(catalog) == 1
+        assert len(catalog[0].focal_mechanisms) == 2
         fm = catalog[0].focal_mechanisms[0]
         # general
-        self.assertEqual(
-            fm.resource_id,
-            ResourceIdentifier('smi:ISC/fmid=292309'))
-        self.assertEqual(len(fm.waveform_id), 2)
-        self.assertEqual(fm.waveform_id[0].network_code, 'BW')
-        self.assertEqual(fm.waveform_id[0].station_code, 'FUR')
-        self.assertEqual(
-            fm.waveform_id[0].resource_uri,
-            ResourceIdentifier(id="smi:ch.ethz.sed/waveform/201754"))
-        self.assertTrue(isinstance(fm.waveform_id[0], WaveformStreamID))
-        self.assertEqual(
-            fm.triggering_origin_id,
-            ResourceIdentifier('smi:local/originId=7680412'))
-        self.assertAlmostEqual(fm.azimuthal_gap, 0.123)
-        self.assertEqual(fm.station_polarity_count, 987)
-        self.assertAlmostEqual(fm.misfit, 1.234)
-        self.assertAlmostEqual(fm.station_distribution_ratio, 2.345)
-        self.assertEqual(
-            fm.method_id,
-            ResourceIdentifier('smi:ISC/methodID=Best_double_couple'))
+        assert fm.resource_id == \
+            ResourceIdentifier('smi:ISC/fmid=292309')
+        assert len(fm.waveform_id) == 2
+        assert fm.waveform_id[0].network_code == 'BW'
+        assert fm.waveform_id[0].station_code == 'FUR'
+        assert fm.waveform_id[0].resource_uri == \
+            ResourceIdentifier(id="smi:ch.ethz.sed/waveform/201754")
+        assert isinstance(fm.waveform_id[0], WaveformStreamID)
+        assert fm.triggering_origin_id == \
+            ResourceIdentifier('smi:local/originId=7680412')
+        assert round(abs(fm.azimuthal_gap-0.123), 7) == 0
+        assert fm.station_polarity_count == 987
+        assert round(abs(fm.misfit-1.234), 7) == 0
+        assert round(abs(fm.station_distribution_ratio-2.345), 7) == 0
+        assert fm.method_id == \
+            ResourceIdentifier('smi:ISC/methodID=Best_double_couple')
         # comments
-        self.assertEqual(len(fm.comments), 2)
+        assert len(fm.comments) == 2
         c = fm.comments
-        self.assertEqual(c[0].text, 'Relocated after re-evaluation')
-        self.assertEqual(c[0].resource_id, None)
-        self.assertEqual(c[0].creation_info.agency_id, 'MUH')
-        self.assertEqual(c[1].text, 'Another MUH')
-        self.assertEqual(
-            c[1].resource_id,
-            ResourceIdentifier(id="smi:some/comment/id/number_3"))
-        self.assertEqual(c[1].creation_info, None)
+        assert c[0].text == 'Relocated after re-evaluation'
+        assert c[0].resource_id == None
+        assert c[0].creation_info.agency_id == 'MUH'
+        assert c[1].text == 'Another MUH'
+        assert c[1].resource_id == \
+            ResourceIdentifier(id="smi:some/comment/id/number_3")
+        assert c[1].creation_info == None
         # creation info
-        self.assertEqual(fm.creation_info.author, "Erika Mustermann")
-        self.assertEqual(fm.creation_info.agency_id, "MUH")
-        self.assertEqual(
-            fm.creation_info.author_uri,
-            ResourceIdentifier("smi:smi-registry/organization/MUH"))
-        self.assertEqual(
-            fm.creation_info.agency_uri,
-            ResourceIdentifier("smi:smi-registry/organization/MUH"))
-        self.assertEqual(
-            fm.creation_info.creation_time,
-            UTCDateTime("2012-04-04T16:40:50+00:00"))
-        self.assertEqual(fm.creation_info.version, "1.0.1")
+        assert fm.creation_info.author == "Erika Mustermann"
+        assert fm.creation_info.agency_id == "MUH"
+        assert fm.creation_info.author_uri == \
+            ResourceIdentifier("smi:smi-registry/organization/MUH")
+        assert fm.creation_info.agency_uri == \
+            ResourceIdentifier("smi:smi-registry/organization/MUH")
+        assert fm.creation_info.creation_time == \
+            UTCDateTime("2012-04-04T16:40:50+00:00")
+        assert fm.creation_info.version == "1.0.1"
         # nodalPlanes
-        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_1.strike, 346.0)
-        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_1.dip, 57.0)
-        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_1.rake, 75.0)
-        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_2.strike, 193.0)
-        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_2.dip, 36.0)
-        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_2.rake, 112.0)
-        self.assertEqual(fm.nodal_planes.preferred_plane, 2)
+        assert round(abs(fm.nodal_planes.nodal_plane_1.strike-346.0), 7) == 0
+        assert round(abs(fm.nodal_planes.nodal_plane_1.dip-57.0), 7) == 0
+        assert round(abs(fm.nodal_planes.nodal_plane_1.rake-75.0), 7) == 0
+        assert round(abs(fm.nodal_planes.nodal_plane_2.strike-193.0), 7) == 0
+        assert round(abs(fm.nodal_planes.nodal_plane_2.dip-36.0), 7) == 0
+        assert round(abs(fm.nodal_planes.nodal_plane_2.rake-112.0), 7) == 0
+        assert fm.nodal_planes.preferred_plane == 2
         # principalAxes
-        self.assertAlmostEqual(fm.principal_axes.t_axis.azimuth, 216.0)
-        self.assertAlmostEqual(fm.principal_axes.t_axis.plunge, 73.0)
-        self.assertAlmostEqual(fm.principal_axes.t_axis.length, 1.050e+18)
-        self.assertAlmostEqual(fm.principal_axes.p_axis.azimuth, 86.0)
-        self.assertAlmostEqual(fm.principal_axes.p_axis.plunge, 10.0)
-        self.assertAlmostEqual(fm.principal_axes.p_axis.length, -1.180e+18)
-        self.assertEqual(fm.principal_axes.n_axis.azimuth, None)
-        self.assertEqual(fm.principal_axes.n_axis.plunge, None)
-        self.assertEqual(fm.principal_axes.n_axis.length, None)
+        assert round(abs(fm.principal_axes.t_axis.azimuth-216.0), 7) == 0
+        assert round(abs(fm.principal_axes.t_axis.plunge-73.0), 7) == 0
+        assert round(abs(fm.principal_axes.t_axis.length-1.050e+18), 7) == 0
+        assert round(abs(fm.principal_axes.p_axis.azimuth-86.0), 7) == 0
+        assert round(abs(fm.principal_axes.p_axis.plunge-10.0), 7) == 0
+        assert round(abs(fm.principal_axes.p_axis.length--1.180e+18), 7) == 0
+        assert fm.principal_axes.n_axis.azimuth == None
+        assert fm.principal_axes.n_axis.plunge == None
+        assert fm.principal_axes.n_axis.length == None
         # momentTensor
         mt = fm.moment_tensor
-        self.assertEqual(
-            mt.resource_id,
-            ResourceIdentifier('smi:ISC/mtid=123321'))
-        self.assertEqual(
-            mt.derived_origin_id,
-            ResourceIdentifier('smi:ISC/origid=13145006'))
-        self.assertAlmostEqual(mt.scalar_moment, 1.100e+18)
-        self.assertAlmostEqual(mt.tensor.m_rr, 9.300e+17)
-        self.assertAlmostEqual(mt.tensor.m_tt, 1.700e+17)
-        self.assertAlmostEqual(mt.tensor.m_pp, -1.100e+18)
-        self.assertAlmostEqual(mt.tensor.m_rt, -2.200e+17)
-        self.assertAlmostEqual(mt.tensor.m_rp, 4.000e+17)
-        self.assertAlmostEqual(mt.tensor.m_tp, 3.000e+16)
-        self.assertAlmostEqual(mt.clvd, 0.22)
+        assert mt.resource_id == \
+            ResourceIdentifier('smi:ISC/mtid=123321')
+        assert mt.derived_origin_id == \
+            ResourceIdentifier('smi:ISC/origid=13145006')
+        assert round(abs(mt.scalar_moment-1.100e+18), 7) == 0
+        assert round(abs(mt.tensor.m_rr-9.300e+17), 7) == 0
+        assert round(abs(mt.tensor.m_tt-1.700e+17), 7) == 0
+        assert round(abs(mt.tensor.m_pp--1.100e+18), 7) == 0
+        assert round(abs(mt.tensor.m_rt--2.200e+17), 7) == 0
+        assert round(abs(mt.tensor.m_rp-4.000e+17), 7) == 0
+        assert round(abs(mt.tensor.m_tp-3.000e+16), 7) == 0
+        assert round(abs(mt.clvd-0.22), 7) == 0
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -594,7 +550,7 @@ class QuakeMLTestCase(unittest.TestCase):
             tmpfile = tf.name
             catalog = _read_quakeml(filename)
             assert_no_extras(catalog)
-            self.assertTrue(len(catalog), 1)
+            assert len(catalog), 1
             _write_quakeml(catalog, tmpfile, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
@@ -602,7 +558,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 warnings.simplefilter("ignore")
                 catalog2 = _read_quakeml(tmpfile)
                 assert_no_extras(catalog2)
-        self.assertTrue(len(catalog2), 1)
+        assert len(catalog2), 1
 
     def test_read_events(self):
         """
@@ -612,7 +568,7 @@ class QuakeMLTestCase(unittest.TestCase):
             tmpfile = tf.name
             catalog = read_events(self.neries_filename)
             assert_no_extras(catalog)
-            self.assertTrue(len(catalog), 3)
+            assert len(catalog), 3
             catalog.write(tmpfile, format='QUAKEML')
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
@@ -620,7 +576,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 warnings.simplefilter("ignore")
                 catalog2 = read_events(tmpfile)
                 assert_no_extras(catalog2)
-        self.assertTrue(len(catalog2), 3)
+        assert len(catalog2), 3
 
     @unittest.skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
     def test_enums(self):
@@ -669,7 +625,7 @@ class QuakeMLTestCase(unittest.TestCase):
             all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
         for enum_name, enum_items in xsd_enum_definitions.items():
-            self.assertIn(enum_name, all_enums.keys())
+            assert enum_name in all_enums.keys()
             # Check that also all enum items are available.
             all_items = all_enums[enum_name]
             all_items = [_i.lower() for _i in all_items]
@@ -697,7 +653,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         catalog = read_events(data)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 3)
+        assert len(catalog) == 3
 
     def test_preferred_tags(self):
         """
@@ -705,27 +661,26 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         # testing empty event
         ev = Event()
-        self.assertEqual(ev.preferred_origin(), None)
-        self.assertEqual(ev.preferred_magnitude(), None)
-        self.assertEqual(ev.preferred_focal_mechanism(), None)
+        assert ev.preferred_origin() == None
+        assert ev.preferred_magnitude() == None
+        assert ev.preferred_focal_mechanism() == None
         # testing existing event
         filename = os.path.join(self.path, 'preferred.xml')
         catalog = read_events(filename)
         assert_no_extras(catalog)
-        self.assertEqual(len(catalog), 1)
+        assert len(catalog) == 1
         ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 " + \
                  "| 2.0  MW"
-        self.assertIn(ev_str, str(catalog.events[0]))
+        assert ev_str in str(catalog.events[0])
         # testing ids
         ev = catalog.events[0]
-        self.assertEqual('smi:orig2', ev.preferred_origin_id)
-        self.assertEqual('smi:mag2', ev.preferred_magnitude_id)
-        self.assertEqual('smi:fm2', ev.preferred_focal_mechanism_id)
+        assert 'smi:orig2' == ev.preferred_origin_id
+        assert 'smi:mag2' == ev.preferred_magnitude_id
+        assert 'smi:fm2' == ev.preferred_focal_mechanism_id
         # testing objects
-        self.assertEqual(ev.preferred_origin(), ev.origins[1])
-        self.assertEqual(ev.preferred_magnitude(), ev.magnitudes[1])
-        self.assertEqual(
-            ev.preferred_focal_mechanism(), ev.focal_mechanisms[1])
+        assert ev.preferred_origin() == ev.origins[1]
+        assert ev.preferred_magnitude() == ev.magnitudes[1]
+        assert ev.preferred_focal_mechanism() == ev.focal_mechanisms[1]
 
     def test_creating_minimal_quakeml_with_mt(self):
         """
@@ -772,32 +727,32 @@ class QuakeMLTestCase(unittest.TestCase):
         memfile.seek(0, 0)
         new_cat = _read_quakeml(memfile)
         assert_no_extras(new_cat)
-        self.assertEqual(len(new_cat), 1)
+        assert len(new_cat) == 1
         event = new_cat[0]
-        self.assertEqual(len(event.origins), 1)
-        self.assertEqual(len(event.magnitudes), 1)
-        self.assertEqual(len(event.focal_mechanisms), 1)
+        assert len(event.origins) == 1
+        assert len(event.magnitudes) == 1
+        assert len(event.focal_mechanisms) == 1
         org = event.origins[0]
         mag = event.magnitudes[0]
         fm = event.focal_mechanisms[0]
-        self.assertEqual(org.latitude, lat)
-        self.assertEqual(org.longitude, lon)
-        self.assertEqual(org.depth, depth)
-        self.assertEqual(org.time, org_time)
+        assert org.latitude == lat
+        assert org.longitude == lon
+        assert org.depth == depth
+        assert org.time == org_time
         # Moment tensor.
         mt = fm.moment_tensor.tensor
-        self.assertTrue((fm.moment_tensor.scalar_moment - scalar_moment) /
-                        scalar_moment < scalar_moment * 1E-10)
-        self.assertEqual(mt.m_rr, mrr)
-        self.assertEqual(mt.m_pp, mpp)
-        self.assertEqual(mt.m_tt, mtt)
-        self.assertEqual(mt.m_rt, mtr)
-        self.assertEqual(mt.m_rp, mpr)
-        self.assertEqual(mt.m_tp, mtp)
+        assert (fm.moment_tensor.scalar_moment - scalar_moment) / \
+                        scalar_moment < scalar_moment * 1E-10
+        assert mt.m_rr == mrr
+        assert mt.m_pp == mpp
+        assert mt.m_tt == mtt
+        assert mt.m_rt == mtr
+        assert mt.m_rp == mpr
+        assert mt.m_tp == mtp
         # Mag
-        self.assertAlmostEqual(mag.mag, moment_magnitude)
-        self.assertEqual(mag.magnitude_type, "Mw")
-        self.assertEqual(mag.evaluation_mode, "automatic")
+        assert round(abs(mag.mag-moment_magnitude), 7) == 0
+        assert mag.magnitude_type == "Mw"
+        assert mag.evaluation_mode == "automatic"
 
     def test_read_equivalence(self):
         """
@@ -808,7 +763,7 @@ class QuakeMLTestCase(unittest.TestCase):
             warnings.simplefilter("ignore", UserWarning)
             cat1 = read_events(self.neries_filename)
             cat2 = _read_quakeml(self.neries_filename)
-        self.assertEqual(cat1, cat2)
+        assert cat1 == cat2
 
     def test_reading_twice_raises_no_warning(self):
         """
@@ -821,12 +776,12 @@ class QuakeMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             cat1 = _read_quakeml(filename)
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
             cat2 = _read_quakeml(filename)
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
         assert_no_extras(cat1)
 
-        self.assertEqual(cat1, cat2)
+        assert cat1 == cat2
 
     def test_read_amplitude_time_window(self):
         """
@@ -837,18 +792,18 @@ class QuakeMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             cat = _read_quakeml(filename)
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
 
-        self.assertEqual(len(cat[0].amplitudes), 1)
+        assert len(cat[0].amplitudes) == 1
         amp = cat[0].amplitudes[0]
-        self.assertEqual(amp.type, "A")
-        self.assertEqual(amp.category, "point")
-        self.assertEqual(amp.unit, "m/s")
-        self.assertEqual(amp.generic_amplitude, 1e-08)
-        self.assertEqual(amp.time_window.begin, 0.0)
-        self.assertEqual(amp.time_window.end, 0.51424)
-        self.assertEqual(amp.time_window.reference,
-                         UTCDateTime("2007-10-10T14:40:39.055"))
+        assert amp.type == "A"
+        assert amp.category == "point"
+        assert amp.unit == "m/s"
+        assert amp.generic_amplitude == 1e-08
+        assert amp.time_window.begin == 0.0
+        assert amp.time_window.end == 0.51424
+        assert amp.time_window.reference == \
+                         UTCDateTime("2007-10-10T14:40:39.055")
 
     def test_write_amplitude_time_window(self):
         """
@@ -859,7 +814,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             cat = _read_quakeml(filename)
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
 
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
@@ -888,7 +843,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 b'<end>0.51424</end>',
                 b'</timeWindow>',
                 b'</amplitude>']
-            self.assertEqual(got, expected)
+            assert got == expected
 
     def test_write_with_extra_tags_and_read(self):
         """
@@ -902,7 +857,7 @@ class QuakeMLTestCase(unittest.TestCase):
             warnings.simplefilter("always")
             cat = _read_quakeml(filename)
             assert_no_extras(cat)
-            self.assertEqual(len(w), 0)
+            assert len(w) == 0
 
         # add some custom tags to first event:
         #  - tag with explicit namespace but no explicit ns abbreviation
@@ -961,7 +916,7 @@ class QuakeMLTestCase(unittest.TestCase):
                         b'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
                         b'xmlns="http://quakeml.org/xmlns/bed/1.2"']
             for line in expected:
-                self.assertIn(line, content)
+                assert line in content
             # check additional tags
             expected = [
                 b'<ns0:custom>True</ns0:custom>',
@@ -972,7 +927,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 b'some_attrib="some_value">false</ns1:public>'
             ]
             for line in expected:
-                self.assertIn(line, content)
+                assert line in content
             # now, read again to test if it's parsed correctly..
             cat = _read_quakeml(tmpfile)
         # when reading..
@@ -980,7 +935,7 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - we always end up with a namespace definition, even if it was
         #    omitted when originally setting the custom tag
         #  - custom namespace abbreviations should attached to Catalog
-        self.assertTrue(hasattr(cat[0], 'extra'))
+        assert hasattr(cat[0], 'extra')
 
         def _tostr(x):
             if isinstance(x, bool):
@@ -997,14 +952,13 @@ class QuakeMLTestCase(unittest.TestCase):
 
         for key, value in my_extra.items():
             my_extra[key]['value'] = _tostr(value['value'])
-        self.assertEqual(cat[0].extra, my_extra)
-        self.assertTrue(hasattr(cat[0].picks[0], 'extra'))
-        self.assertEqual(
-            cat[0].picks[0].extra,
+        assert cat[0].extra == my_extra
+        assert hasattr(cat[0].picks[0], 'extra')
+        assert cat[0].picks[0].extra == \
             {'weight': {'value': '2',
-                        'namespace': 'http://test.org/xmlns/0.1'}})
-        self.assertTrue(hasattr(cat, 'nsmap'))
-        self.assertEqual(getattr(cat, 'nsmap')['ns0'], nsmap['ns0'])
+                        'namespace': 'http://test.org/xmlns/0.1'}}
+        assert hasattr(cat, 'nsmap')
+        assert getattr(cat, 'nsmap')['ns0'] == nsmap['ns0']
 
     def test_read_same_file_twice_to_same_variable(self):
         """
@@ -1046,7 +1000,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         assert_no_extras(cat1)
         # No warning should have been raised.
-        self.assertEqual(len(w), 0)
+        assert len(w) == 0
 
     def test_focal_mechanism_write_read(self):
         """
@@ -1065,7 +1019,7 @@ class QuakeMLTestCase(unittest.TestCase):
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
         assert_no_extras(cat)
-        self.assertEqual(cat[0].focal_mechanisms[0].moment_tensor, None)
+        assert cat[0].focal_mechanisms[0].moment_tensor == None
 
     def test_avoid_empty_stub_elements(self):
         """
@@ -1085,10 +1039,9 @@ class QuakeMLTestCase(unittest.TestCase):
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
         assert_no_extras(cat)
-        self.assertEqual(cat[0].focal_mechanisms[0].moment_tensor.tensor, None)
-        self.assertEqual(
-            cat[0].focal_mechanisms[0].moment_tensor.source_time_function,
-            None)
+        assert cat[0].focal_mechanisms[0].moment_tensor.tensor == None
+        assert cat[0].focal_mechanisms[0].moment_tensor.source_time_function == \
+            None
         # Test 2: Test subelements of focal_mechanism
         memfile = io.BytesIO()
         # create virtually empty FocalMechanism
@@ -1101,8 +1054,8 @@ class QuakeMLTestCase(unittest.TestCase):
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
         assert_no_extras(cat)
-        self.assertEqual(cat[0].focal_mechanisms[0].nodal_planes, None)
-        self.assertEqual(cat[0].focal_mechanisms[0].principal_axes, None)
+        assert cat[0].focal_mechanisms[0].nodal_planes == None
+        assert cat[0].focal_mechanisms[0].principal_axes == None
 
     def test_writing_invalid_quakeml_id(self):
         """
@@ -1112,23 +1065,20 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'invalid_id.xml')
         cat = read_events(filename)
-        self.assertEqual(
-            cat[0].resource_id.id,
-            "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)")
+        assert cat[0].resource_id.id == \
+            "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)"
         with NamedTemporaryFile() as tf:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 cat.write(tf.name, format="quakeml")
                 cat2 = read_events(tf.name)
-        self.assertEqual(len(w), 19)
-        self.assertEqual(
-            w[0].message.args[0],
-            "'smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)' "
-            "is not a valid QuakeML URI. It will be in the final file but "
-            "note that the file will not be a valid QuakeML file.")
-        self.assertEqual(
-            cat2[0].resource_id.id,
-            "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)")
+        assert len(w) == 19
+        assert w[0].message.args[0] == \
+            "'smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)' " \
+            "is not a valid QuakeML URI. It will be in the final file but " \
+            "note that the file will not be a valid QuakeML file."
+        assert cat2[0].resource_id.id == \
+            "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)"
 
     def test_reading_invalid_enums(self):
         """
@@ -1138,16 +1088,15 @@ class QuakeMLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             cat = read_events(filename)
-        self.assertEqual(len(w), 1)
-        self.assertEqual(
-            w[0].message.args[0],
-            'Setting attribute "depth_type" failed. Value "randomized" could '
-            'not be converted to type "Enum(["from location", "from moment '
-            'tensor inversion", ..., "operator assigned", "other"])". The '
-            'attribute "depth_type" will not be set and will be missing in '
-            'the resulting object.')
+        assert len(w) == 1
+        assert w[0].message.args[0] == \
+            'Setting attribute "depth_type" failed. Value "randomized" could ' \
+            'not be converted to type "Enum(["from location", "from moment ' \
+            'tensor inversion", ..., "operator assigned", "other"])". The ' \
+            'attribute "depth_type" will not be set and will be missing in ' \
+            'the resulting object.'
         # It should of course not be set.
-        self.assertIsNone(cat[0].origins[0].depth_type)
+        assert cat[0].origins[0].depth_type is None
 
     def test_issue_2339(self):
         """
@@ -1167,9 +1116,9 @@ class QuakeMLTestCase(unittest.TestCase):
         # the text of the empty EventDescription instances should be equal
         text1 = cat1[0].event_descriptions[-1].text
         text2 = cat2[0].event_descriptions[-1].text
-        self.assertEqual(text1, text2)
+        assert text1 == text2
         # the two catalogs should be equal
-        self.assertEqual(cat1, cat2)
+        assert cat1 == cat2
 
     def test_native_namespace_in_extra(self):
         """
@@ -1194,6 +1143,6 @@ class QuakeMLTestCase(unittest.TestCase):
             buf.seek(0)
             cat2 = read_events(buf, format='QUAKEML')
 
-        self.assertEqual(extra, cat2.extra)
-        self.assertIn(('custom1', custom1), cat2.extra.items())
-        self.assertIn(('custom2', custom2), cat2.extra.items())
+        assert extra == cat2.extra
+        assert ('custom1', custom1) in cat2.extra.items()
+        assert ('custom2', custom2) in cat2.extra.items()

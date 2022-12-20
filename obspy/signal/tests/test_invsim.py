@@ -21,6 +21,7 @@ from obspy.signal.headers import clibevresp
 from obspy.signal.invsim import (
     cosine_taper, estimate_magnitude, evalresp, simulate_seismometer,
     evalresp_for_frequencies)
+import pytest
 
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
@@ -102,7 +103,7 @@ class InvSimTestCase(unittest.TestCase):
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
-            self.assertTrue(rms < 1.1e-05)
+            assert rms < 1.1e-05
 
     def test_seis_sim_vs_pitsa_2(self):
         """
@@ -134,7 +135,7 @@ class InvSimTestCase(unittest.TestCase):
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
-            self.assertTrue(rms < 1e-04)
+            assert rms < 1e-04
 
     def test_estimate_magnitude(self):
         """
@@ -157,11 +158,11 @@ class InvSimTestCase(unittest.TestCase):
                'gain': 1.0,
                'sensitivity': 671140000.0}
         mag_rtsh = estimate_magnitude(paz, 3.34e6, 0.065, 0.255)
-        self.assertAlmostEqual(mag_rtsh, 2.1328727151723488)
+        assert round(abs(mag_rtsh-2.1328727151723488), 7) == 0
         mag_rtbe = estimate_magnitude(paz, 3.61e4, 0.08, 2.197)
-        self.assertAlmostEqual(mag_rtbe, 1.1962687721890191)
+        assert round(abs(mag_rtbe-1.1962687721890191), 7) == 0
         mag_rnon = estimate_magnitude(paz, 6.78e4, 0.125, 1.538)
-        self.assertAlmostEqual(mag_rnon, 1.4995311686507182)
+        assert round(abs(mag_rnon-1.4995311686507182), 7) == 0
 
         # now also test using Response object to calculate amplitude
         # (use RTSH response for all three measurements, see above comment)
@@ -171,11 +172,11 @@ class InvSimTestCase(unittest.TestCase):
         response = read_inventory(os.path.join(self.path, 'BW_RTSH.xml'),
                                   format='STATIONXML')[0][0][0].response
         mag_rtsh = estimate_magnitude(response, 3.34e6, 0.065, 0.255)
-        self.assertAlmostEqual(mag_rtsh, 2.1179529876187635)
+        assert round(abs(mag_rtsh-2.1179529876187635), 7) == 0
         mag_rtbe = estimate_magnitude(response, 3.61e4, 0.08, 2.197)
-        self.assertAlmostEqual(mag_rtbe, 1.1832677953138184)
+        assert round(abs(mag_rtbe-1.1832677953138184), 7) == 0
         mag_rnon = estimate_magnitude(response, 6.78e4, 0.125, 1.538)
-        self.assertAlmostEqual(mag_rnon, 1.4895395665022975)
+        assert round(abs(mag_rnon-1.4895395665022975), 7) == 0
 
     # XXX: Test for really big signal is missing, where the water level is
     # actually acting
@@ -246,7 +247,7 @@ class InvSimTestCase(unittest.TestCase):
         # plt.show()
         rms = np.sqrt(np.sum((tr.data - data) ** 2) /
                       np.sum(tr.data ** 2))
-        self.assertTrue(rms < 0.0421)
+        assert rms < 0.0421
 
     def test_evalresp_vs_obspy(self):
         """
@@ -292,7 +293,7 @@ class InvSimTestCase(unittest.TestCase):
         tr.data *= 1e9
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) /
                       np.sum(trtest.data ** 2))
-        self.assertTrue(rms < 0.0094)
+        assert rms < 0.0094
         # import matplotlib.pyplot as plt #plt.plot(tr.data-trtest.data,'b')
         # plt.plot(trtest.data,'g')
         # plt.figure()
@@ -366,7 +367,7 @@ class InvSimTestCase(unittest.TestCase):
                     UTCDateTime(2012, 9, 4, 5, 12, 15, 863300)]
             kwargs = {'units': 'VEL', 'freq': True}
             _h, f = evalresp(*args, **kwargs)
-            self.assertEqual(len(f), nfft // 2 + 1)
+            assert len(f) == nfft // 2 + 1
 
     def test_evalresp_specific_frequencies(self):
         """
@@ -424,7 +425,7 @@ class InvSimTestCase(unittest.TestCase):
         seedresp['filename'] = stringio
         tr2.data = simulate_seismometer(tr2.data, tr2.stats.sampling_rate,
                                         seedresp=seedresp)
-        self.assertTrue(traces_almost_equal(tr1, tr2))
+        assert traces_almost_equal(tr1, tr2)
 
     def test_segfaulting_resp_file(self):
         """
@@ -438,7 +439,8 @@ class InvSimTestCase(unittest.TestCase):
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
         # raises C-level EVRESP ERROR
         with SuppressOutput():
-            self.assertRaises(ValueError, evalresp, t_samp=10.0, nfft=256,
+            with pytest.raises(ValueError):
+                evalresp(t_samp=10.0, nfft=256,
                               filename=filename, date=date, station="LLRI",
                               channel="EHZ", network="IE", locid="*",
                               units="VEL")
@@ -465,13 +467,14 @@ class InvSimTestCase(unittest.TestCase):
         # the response.
         rel_diff = np.abs(response_2 - response_1).ptp() / \
             max(np.abs(response_1).ptp(), np.abs(response_2).ptp())
-        self.assertGreater(rel_diff, 1E-3)
+        assert rel_diff > 1E-3
 
         # The RESP file only contains two channels.
         kwargs["channel"] = "BHZ"
         # suppress a C-level "no response found" warning
         with SuppressOutput():
-            self.assertRaises(ValueError, evalresp, **kwargs)
+            with pytest.raises(ValueError):
+                evalresp(**kwargs)
 
     def test_evalresp_spline(self):
         """
@@ -510,8 +513,8 @@ class InvSimTestCase(unittest.TestCase):
         res = clibevresp.evr_spline(n, x, y, 0.0, 1.0, xi, ni,
                                     C.byref(p_retvals_arr),
                                     C.byref(p_num_retvals))
-        self.assertEqual(res, None)
-        self.assertEqual(ni, p_num_retvals.value)
+        assert res == None
+        assert ni == p_num_retvals.value
         yi = np.array([p_retvals_arr[i] for i in range(ni)])
 
         if False:  # visually verify
@@ -523,4 +526,4 @@ class InvSimTestCase(unittest.TestCase):
 
         yi_ref = [0.94899576, 0.97572004, 0.9927136, 0.99978309, 0.99686554,
                   0.98398301, 0.96128491]
-        self.assertTrue(np.allclose(yi, yi_ref, rtol=1e-7, atol=0))
+        assert np.allclose(yi, yi_ref, rtol=1e-7, atol=0)

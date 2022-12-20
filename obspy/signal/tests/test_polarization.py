@@ -78,34 +78,34 @@ class PolarizationTestCase(unittest.TestCase):
                                   self.data_win_z, self.fk, self.norm)
         rms = np.sqrt(np.sum((pol[0] - self.res[:, 34]) ** 2) /
                       np.sum(self.res[:, 34] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[1] - self.res[:, 35]) ** 2) /
                       np.sum(self.res[:, 35] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[2] - self.res[:, 36]) ** 2) /
                       np.sum(self.res[:, 36] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[3] - self.res[:, 40]) ** 2) /
                       np.sum(self.res[:, 40] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[4] - self.res[:, 42]) ** 2) /
                       np.sum(self.res[:, 42] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[5][:, 0] - self.res[:, 37]) ** 2) /
                       np.sum(self.res[:, 37] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[5][:, 1] - self.res[:, 38]) ** 2) /
                       np.sum(self.res[:, 38] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[5][:, 2] - self.res[:, 39]) ** 2) /
                       np.sum(self.res[:, 39] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[6] - self.res[:, 41]) ** 2) /
                       np.sum(self.res[:, 41] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((pol[7] - self.res[:, 43]) ** 2) /
                       np.sum(self.res[:, 43] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
 
     def test_polarization_1d(self):
         """
@@ -117,7 +117,7 @@ class PolarizationTestCase(unittest.TestCase):
                                   self.fk, self.norm)
         pol_5_ref = [2.81387533e-04, 3.18409580e-04, 6.74030846e-04,
                      5.55067015e-01, 4.32938188e-01]
-        self.assertTrue(np.allclose(np.concatenate(pol[:5]), pol_5_ref))
+        assert np.allclose(np.concatenate(pol[:5]), pol_5_ref)
 
     def test_polarization_pm(self):
         st = _create_test_data()
@@ -133,23 +133,23 @@ class PolarizationTestCase(unittest.TestCase):
 
         # all values should be equal for the test data, so check first value
         # and make sure all values are almost equal
-        self.assertEqual(out["timestamp"][0], 1393632005.0)
-        self.assertEqual(out["timestamp"][0], t + wlen / 2.0)
-        self.assertAlmostEqual(out["azimuth"][0], 26.56505117707799)
-        self.assertAlmostEqual(out["incidence"][0], 65.905157447889309)
-        self.assertAlmostEqual(out["azimuth_error"][0], 0.000000)
-        self.assertAlmostEqual(out["incidence_error"][0], 0.000000)
+        assert out["timestamp"][0] == 1393632005.0
+        assert out["timestamp"][0] == t + wlen / 2.0
+        assert round(abs(out["azimuth"][0]-26.56505117707799), 7) == 0
+        assert round(abs(out["incidence"][0]-65.905157447889309), 7) == 0
+        assert round(abs(out["azimuth_error"][0]-0.000000), 7) == 0
+        assert round(abs(out["incidence_error"][0]-0.000000), 7) == 0
         for key in ["azimuth", "incidence"]:
             got = out[key]
-            self.assertTrue(np.allclose(got / got[0], np.ones_like(got),
-                                        rtol=1e-4))
+            assert np.allclose(got / got[0], np.ones_like(got),
+                                        rtol=1e-4)
         for key in ["azimuth_error", "incidence_error"]:
             got = out[key]
             expected = np.empty_like(got)
             expected.fill(got[0])
-            self.assertTrue(np.allclose(got, expected, rtol=1e-4, atol=1e-16))
-        self.assertTrue(np.allclose(out["timestamp"] - out["timestamp"][0],
-                                    np.arange(0, 92, 1)))
+            assert np.allclose(got, expected, rtol=1e-4, atol=1e-16)
+        assert np.allclose(out["timestamp"] - out["timestamp"][0],
+                                    np.arange(0, 92, 1))
 
     def test_polarization_flinn(self):
         st = _create_test_data()
@@ -165,18 +165,18 @@ class PolarizationTestCase(unittest.TestCase):
 
         # all values should be equal for the test data, so check first value
         # and make sure all values are almost equal
-        self.assertEqual(out["timestamp"][0], 1393632005.0)
-        self.assertEqual(out["timestamp"][0], t + wlen / 2.0)
-        self.assertAlmostEqual(out["azimuth"][0], 26.56505117707799)
-        self.assertAlmostEqual(out["incidence"][0], 65.905157447889309)
-        self.assertAlmostEqual(out["rectilinearity"][0], 1.000000)
-        self.assertAlmostEqual(out["planarity"][0], 1.000000)
+        assert out["timestamp"][0] == 1393632005.0
+        assert out["timestamp"][0] == t + wlen / 2.0
+        assert round(abs(out["azimuth"][0]-26.56505117707799), 7) == 0
+        assert round(abs(out["incidence"][0]-65.905157447889309), 7) == 0
+        assert round(abs(out["rectilinearity"][0]-1.000000), 7) == 0
+        assert round(abs(out["planarity"][0]-1.000000), 7) == 0
         for key in ["azimuth", "incidence", "rectilinearity", "planarity"]:
             got = out[key]
-            self.assertTrue(np.allclose(got / got[0], np.ones_like(got),
-                                        rtol=1e-4))
-        self.assertTrue(np.allclose(out["timestamp"] - out["timestamp"][0],
-                                    np.arange(0, 92, 1)))
+            assert np.allclose(got / got[0], np.ones_like(got),
+                                        rtol=1e-4)
+        assert np.allclose(out["timestamp"] - out["timestamp"][0],
+                                    np.arange(0, 92, 1))
 
     def test_polarization_vidale(self):
         st = _create_test_data()
@@ -190,16 +190,16 @@ class PolarizationTestCase(unittest.TestCase):
 
         # all values should be equal for the test data, so check first value
         # and make sure all values are almost equal
-        self.assertEqual(out["timestamp"][0], 1393632003.0)
-        self.assertAlmostEqual(out["azimuth"][0], 26.56505117707799)
-        self.assertAlmostEqual(out["incidence"][0], 65.905157447889309)
-        self.assertAlmostEqual(out["rectilinearity"][0], 1.000000)
-        self.assertAlmostEqual(out["planarity"][0], 1.000000)
-        self.assertAlmostEqual(out["ellipticity"][0], 3.8195545129768958e-06)
+        assert out["timestamp"][0] == 1393632003.0
+        assert round(abs(out["azimuth"][0]-26.56505117707799), 7) == 0
+        assert round(abs(out["incidence"][0]-65.905157447889309), 7) == 0
+        assert round(abs(out["rectilinearity"][0]-1.000000), 7) == 0
+        assert round(abs(out["planarity"][0]-1.000000), 7) == 0
+        assert round(abs(out["ellipticity"][0]-3.8195545129768958e-06), 7) == 0
         for key in ["azimuth", "incidence", "rectilinearity", "planarity",
                     "ellipticity"]:
             got = out[key]
-            self.assertTrue(np.allclose(got / got[0], np.ones_like(got),
-                                        rtol=1e-4))
-        self.assertTrue(np.allclose(out["timestamp"] - out["timestamp"][0],
-                                    np.arange(0, 97.85, 0.05), rtol=1e-5))
+            assert np.allclose(got / got[0], np.ones_like(got),
+                                        rtol=1e-4)
+        assert np.allclose(out["timestamp"] - out["timestamp"][0],
+                                    np.arange(0, 97.85, 0.05), rtol=1e-5)

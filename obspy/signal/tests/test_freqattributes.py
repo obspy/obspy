@@ -97,16 +97,16 @@ class FreqTraceTestCase(unittest.TestCase):
                                                  self.smoothie, self.fk)
         rms = np.sqrt(np.sum((cfreq[0] - self.res[:, 18]) ** 2) /
                       np.sum(self.res[:, 18] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((cfreq[1] - self.res[:, 19]) ** 2) /
                       np.sum(self.res[:, 19] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
 
     def test_cfrequency_no_win(self):
         cfreq = freqattributes.central_frequency(self.data_win_bc[0], self.fs,
                                                  self.smoothie, self.fk)
         rms = (cfreq - self.res[0, 18]) / self.res[0, 18]
-        self.assertTrue(rms < 1.0e-5)
+        assert rms < 1.0e-5
 
     def test_bwith(self):
         """
@@ -115,10 +115,10 @@ class FreqTraceTestCase(unittest.TestCase):
                                          self.fk)
         rms = np.sqrt(np.sum((bwith[0] - self.res[:, 16]) ** 2) /
                       np.sum(self.res[:, 16] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((bwith[1] - self.res[:, 17]) ** 2) /
                       np.sum(self.res[:, 17] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
 
     def test_domper(self):
         """
@@ -127,10 +127,10 @@ class FreqTraceTestCase(unittest.TestCase):
                                                  self.smoothie, self.fk)
         rms = np.sqrt(np.sum((dperiod[0] - self.res[:, 14]) ** 2) /
                       np.sum(self.res[:, 14] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((dperiod[1] - self.res[:, 15]) ** 2) /
                       np.sum(self.res[:, 15] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
 
     def test_logcep(self):
         """
@@ -139,13 +139,13 @@ class FreqTraceTestCase(unittest.TestCase):
                                           self.p, self.n, 'Hamming')
         rms = np.sqrt(np.sum((cep[0] - self.res[:, 11]) ** 2) /
                       np.sum(self.res[:, 11] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((cep[1] - self.res[:, 12]) ** 2) /
                       np.sum(self.res[:, 12] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
         rms = np.sqrt(np.sum((cep[2] - self.res[:, 13]) ** 2) /
                       np.sum(self.res[:, 13] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert (rms < 1.0e-5) == True
 
     def test_pgm(self):
         """
@@ -153,22 +153,22 @@ class FreqTraceTestCase(unittest.TestCase):
         # flat array of zeros
         data = np.zeros(100)
         pgm = freqattributes.peak_ground_motion(data, 1.0, 1.0)
-        self.assertEqual(pgm, (0.0, 0.0, 0.0, 0.0))
+        assert pgm == (0.0, 0.0, 0.0, 0.0)
         # spike in middle of signal
         data[50] = 1.0
         (pg, m_dis, m_vel, m_acc) = freqattributes.peak_ground_motion(
             data, 1.0, 1.0)
-        self.assertAlmostEqual(pg, 0.537443503597, 6)
-        self.assertEqual(m_dis, 1.0)
-        self.assertEqual(m_vel, 0.5)
-        self.assertEqual(m_acc, 0.5)
+        assert round(abs(pg-0.537443503597), 6) == 0
+        assert m_dis == 1.0
+        assert m_vel == 0.5
+        assert m_acc == 0.5
         # flat array with one circle of sin (degree)
         data = np.zeros(400)
         for i in range(360):
             data[i + 20] = np.sin(i * pi / 180)
         (pg, m_dis, m_vel, m_acc) = freqattributes.peak_ground_motion(
             data, 1.0, 1.0)
-        self.assertAlmostEqual(pg, 0.00902065171505, 6)
-        self.assertEqual(m_dis, 1.0)
-        self.assertAlmostEqual(m_vel, 0.0174524064373, 6)
-        self.assertAlmostEqual(m_acc, 0.00872487417563, 6)
+        assert round(abs(pg-0.00902065171505), 6) == 0
+        assert m_dis == 1.0
+        assert round(abs(m_vel-0.0174524064373), 6) == 0
+        assert round(abs(m_acc-0.00872487417563), 6) == 0

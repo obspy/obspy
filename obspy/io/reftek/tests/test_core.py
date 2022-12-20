@@ -16,6 +16,7 @@ from obspy.io.reftek.core import (
 from obspy.io.reftek.packet import (
     _unpack_C0_C2_data_fast, _unpack_C0_C2_data_safe, _unpack_C0_C2_data,
     EHPacket, _initial_unpack_packets)
+import pytest
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -113,7 +114,7 @@ class ReftekTestCase(unittest.TestCase):
             tr.stats.pop("mseed")
         # check reftek130 low-level headers separately:
         for tr in st_reftek:
-            self.assertTrue("reftek130" in tr.stats)
+            assert "reftek130" in tr.stats
             # XXX TODO check reftek specific headers
             tr.stats.pop("reftek130")
             tr.stats.pop("_format", None)
@@ -121,10 +122,10 @@ class ReftekTestCase(unittest.TestCase):
         st_reftek = st_reftek.sort()
         st_mseed = st_mseed.sort()
         # check amount of traces
-        self.assertEqual(len(st_reftek), len(st_mseed))
+        assert len(st_reftek) == len(st_mseed)
         # check equality of headers
         for tr_got, tr_expected in zip(st_reftek, st_mseed):
-            self.assertEqual(tr_got.stats, tr_expected.stats)
+            assert tr_got.stats == tr_expected.stats
         # check equality of data
         for tr_got, tr_expected in zip(st_reftek, st_mseed):
             np.testing.assert_array_equal(tr_got.data, tr_expected.data)
@@ -156,13 +157,13 @@ class ReftekTestCase(unittest.TestCase):
             sort_permuted_package_sequence=True)
         # note: test data has stream name defined as 'DS 1', so we end up with
         # non-SEED conforming channel codes which is expected
-        self.assertEqual(len(st), 3)
-        self.assertEqual(len(st[0]), 3788)
-        self.assertEqual(len(st[1]), 3788)
-        self.assertEqual(len(st[2]), 3788)
-        self.assertEqual(st[0].id, 'XX.TL01.01.DS 11')
-        self.assertEqual(st[1].id, 'XX.TL01.01.DS 12')
-        self.assertEqual(st[2].id, 'XX.TL01.01.DS 13')
+        assert len(st) == 3
+        assert len(st[0]) == 3788
+        assert len(st[1]) == 3788
+        assert len(st[2]) == 3788
+        assert st[0].id == 'XX.TL01.01.DS 11'
+        assert st[1].id == 'XX.TL01.01.DS 12'
+        assert st[2].id == 'XX.TL01.01.DS 13'
         np.testing.assert_array_equal(
             st[0].data[:5], [26814, 26823, 26878, 26941, 26942])
         np.testing.assert_array_equal(
@@ -183,18 +184,17 @@ class ReftekTestCase(unittest.TestCase):
             st_reftek = _read_reftek130(
                 self.reftek_file, network="XX", location="01",
                 sort_permuted_package_sequence=True)
-        self.assertEqual(len(w), 8)
+        assert len(w) == 8
         for w_ in w:
-            self.assertEqual(
-                str(w_.message),
-                'No channel code specified in the data file and no component '
-                'codes specified. Using stream label and number of channel in '
-                'file as channel codes.')
+            assert str(w_.message) == \
+                'No channel code specified in the data file and no component ' \
+                'codes specified. Using stream label and number of channel in ' \
+                'file as channel codes.'
         # check that channel codes are set with stream label from EH packet +
         # enumerated channel number starting at 0
         for tr, cha in zip(st_reftek, ('EH0', 'EH0', 'EH0', 'EH1', 'EH1',
                                        'EH1', 'EH2', 'EH2')):
-            self.assertEqual(tr.stats.channel, cha)
+            assert tr.stats.channel == cha
         for tr in st_reftek:
             # need to adapt channel codes to compare against mseed stream now..
             tr.stats.channel = (
@@ -205,9 +205,9 @@ class ReftekTestCase(unittest.TestCase):
         """
         Test checking whether file is REFTEK130 format or not.
         """
-        self.assertTrue(_is_reftek130(self.reftek_file))
+        assert _is_reftek130(self.reftek_file)
         for file_ in self.mseed_files:
-            self.assertFalse(_is_reftek130(file_))
+            assert not _is_reftek130(file_)
 
     def test_integration_with_obspy_core(self):
         """
@@ -224,10 +224,11 @@ class ReftekTestCase(unittest.TestCase):
         """
         with NamedTemporaryFile() as fh:
             # try to read empty file, finding no packets
-            self.assertRaises(Reftek130Exception, _read_reftek130, fh.name)
+            with pytest.raises(Reftek130Exception):
+                _read_reftek130(fh.name)
         # try to read mseed file, finding no packets
-        self.assertRaises(Reftek130Exception, _read_reftek130,
-                          self.mseed_files[0],
+        with pytest.raises(Reftek130Exception):
+            _read_reftek130(self.mseed_files[0],
                           sort_permuted_package_sequence=True)
 
     def test_warning_disturbed_packet_sequence(self):
@@ -249,9 +250,9 @@ class ReftekTestCase(unittest.TestCase):
                 _read_reftek130(fh.name, network="XX", location="01",
                                 component_codes=["1", "2", "3"],
                                 sort_permuted_package_sequence=True)
-        self.assertEqual(len(w), 1)
-        self.assertEqual(str(w[0].message),
-                         'Detected a non-contiguous packet sequence!')
+        assert len(w) == 1
+        assert str(w[0].message) == \
+                         'Detected a non-contiguous packet sequence!'
 
     def test_read_file_perturbed_packet_sequence(self):
         """
@@ -285,9 +286,9 @@ class ReftekTestCase(unittest.TestCase):
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
         st_reftek.merge(-1)
-        self.assertEqual(len(w), 1)
-        self.assertEqual(str(w[0].message),
-                         'Detected permuted packet sequence, sorting.')
+        assert len(w) == 1
+        assert str(w[0].message) == \
+                         'Detected permuted packet sequence, sorting.'
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_drop_not_implemented_packets(self):
@@ -319,18 +320,16 @@ class ReftekTestCase(unittest.TestCase):
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        self.assertEqual(len(w), 2)
-        self.assertTrue(
-            re.match(
+        assert len(w) == 2
+        assert re.match(
                 r"Encountered some packets of types that are not implemented "
                 r"yet \(types: \[b?'AA', b?'BB'\]\). Dropped 3 packets "
                 r"overall.",
-                str(w[0].message)))
+                str(w[0].message))
         # this message we get because ET packet at end is now missing
-        self.assertEqual(
-            str(w[1].message),
-            'No event trailer (ET) packets in packet sequence. File might be '
-            'truncated.')
+        assert str(w[1].message) == \
+            'No event trailer (ET) packets in packet sequence. File might be ' \
+            'truncated.'
 
     def test_missing_event_trailer_packet(self):
         """
@@ -351,11 +350,10 @@ class ReftekTestCase(unittest.TestCase):
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        self.assertEqual(len(w), 1)
-        self.assertEqual(
-            str(w[0].message),
-            'No event trailer (ET) packets in packet sequence. File might be '
-            'truncated.')
+        assert len(w) == 1
+        assert str(w[0].message) == \
+            'No event trailer (ET) packets in packet sequence. File might be ' \
+            'truncated.'
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_truncated_last_packet(self):
@@ -377,16 +375,15 @@ class ReftekTestCase(unittest.TestCase):
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        self.assertEqual(len(w), 2)
+        assert len(w) == 2
         # we get two warnings, one about the truncated packet and one about the
         # missing last (ET) packet
-        self.assertEqual(str(w[0].message), 'Length of data not a multiple of '
-                         '1024. Data might be truncated. Dropping 1014 '
-                         'byte(s) at the end.')
-        self.assertEqual(
-            str(w[1].message),
-            'No event trailer (ET) packets in packet sequence. File might be '
-            'truncated.')
+        assert str(w[0].message) == 'Length of data not a multiple of ' \
+                         '1024. Data might be truncated. Dropping 1014 ' \
+                         'byte(s) at the end.'
+        assert str(w[1].message) == \
+            'No event trailer (ET) packets in packet sequence. File might be ' \
+            'truncated.'
         # data should be read OK aside from the warnings
         self._assert_reftek130_test_stream(st_reftek)
 
@@ -402,15 +399,14 @@ class ReftekTestCase(unittest.TestCase):
                 tmp = fh2.read()
             fh.write(tmp[1024:-1024])
             fh.seek(0)
-            with self.assertRaises(Reftek130Exception) as context:
+            with pytest.raises(Reftek130Exception) as context:
                 _read_reftek130(
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        self.assertEqual(
-            str(context.exception),
-            "Reftek data contains data packets without corresponding header "
-            "or trailer packet.")
+        assert str(context.exception) == \
+            "Reftek data contains data packets without corresponding header " \
+            "or trailer packet."
 
     def test_data_unpacking_steim1(self):
         """
@@ -511,7 +507,7 @@ class ReftekTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
             rt130 = Reftek130.from_file(self.reftek_file)
-        self.assertEqual(expected, str(rt130).splitlines())
+        assert expected == str(rt130).splitlines()
 
     def test_reading_packet_with_vpu_float_string(self):
         """
@@ -521,18 +517,17 @@ class ReftekTestCase(unittest.TestCase):
             data = fh.read(1024)
         data = _initial_unpack_packets(data)
         eh = EHPacket(data[0])
-        self.assertEqual(
-            eh.channel_sensor_vpu,
+        assert eh.channel_sensor_vpu == \
             (2.4, 2.4, 2.4, None, None, None, None, None, None, None, None,
-             None, None, None, None, None))
+             None, None, None, None, None)
         # reading the file should work..
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             st = obspy.read(self.reftek_file_vpu,
                             sort_permuted_package_sequence=True)
-        self.assertEqual(len(st), 2)
-        self.assertEqual(len(st[0]), 890)
-        self.assertEqual(len(st[1]), 890)
+        assert len(st) == 2
+        assert len(st[0]) == 890
+        assert len(st[1]) == 890
         np.testing.assert_array_equal(
             st[0][:10], [210, 212, 208, 211, 211, 220, 216, 215, 219, 218])
 
@@ -551,12 +546,12 @@ class ReftekTestCase(unittest.TestCase):
             warnings.simplefilter("ignore")
             st = obspy.read(bytes_, format='REFTEK130',
                             sort_permuted_package_sequence=True)
-        self.assertEqual(len(st), 10)
+        assert len(st) == 10
         # we should have data from two different files/stations in there
         for tr in st[:8]:
-            self.assertEqual(tr.stats.station, 'KW1')
+            assert tr.stats.station == 'KW1'
         for tr in st[8:]:
-            self.assertEqual(tr.stats.station, 'TL02')
+            assert tr.stats.station == 'TL02'
 
     def test_reading_file_with_no_data_in_channel_zero(self):
         """
@@ -575,11 +570,11 @@ class ReftekTestCase(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             st = obspy.read(bio, format='REFTEK130')
-        self.assertEqual(len(st), 1)
+        assert len(st) == 1
         # just a few basic checks, reading data is covered in other tests
         tr = st[0]
-        self.assertEqual(tr.id, ".TL02..DS 11")
-        self.assertEqual(len(tr), 890)
+        assert tr.id == ".TL02..DS 11"
+        assert len(tr) == 890
 
     def test_reading_file_with_encoding_32(self):
         """
@@ -594,7 +589,7 @@ class ReftekTestCase(unittest.TestCase):
         # read expected data
         npz = np.load(self.reftek_file_32_npz)
         # compare it
-        self.assertEqual(len(st), 3)
+        assert len(st) == 3
         for tr, (_, expected) in zip(st, sorted(npz.items())):
             np.testing.assert_array_equal(expected, tr.data)
 
@@ -611,9 +606,9 @@ class ReftekTestCase(unittest.TestCase):
         # read expected data
         npz = np.load(self.reftek_file_16_npz)
         # compare it
-        self.assertEqual(len(st), 3)
-        self.assertEqual(len(st[0]), 2090)
-        self.assertEqual(len(st[1]), 2090)
-        self.assertEqual(len(st[2]), 2090)
+        assert len(st) == 3
+        assert len(st[0]) == 2090
+        assert len(st[1]) == 2090
+        assert len(st[2]) == 2090
         for tr, (_, expected) in zip(st, sorted(npz.items())):
             np.testing.assert_array_equal(expected, tr.data)

@@ -21,38 +21,38 @@ class UtilsTestCase(unittest.TestCase):
 
     def test_to_tag(self):
         name = "Hello World"
-        self.assertEqual("hello_world", to_tag(name))
+        assert "hello_world" == to_tag(name)
 
     def test_datetime_to_string(self):
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22, 123456)
-        self.assertEqual(datetime_2_string(dt), "2008,358,01:30:22.1234")
+        assert datetime_2_string(dt) == "2008,358,01:30:22.1234"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22, 98765)
-        self.assertEqual(datetime_2_string(dt), "2008,358,01:30:22.0987")
+        assert datetime_2_string(dt) == "2008,358,01:30:22.0987"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22, 1234)
-        self.assertEqual(datetime_2_string(dt), "2008,358,01:30:22.0012")
+        assert datetime_2_string(dt) == "2008,358,01:30:22.0012"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22, 123)
-        self.assertEqual(datetime_2_string(dt), "2008,358,01:30:22.0001")
+        assert datetime_2_string(dt) == "2008,358,01:30:22.0001"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22, 9)
-        self.assertEqual(datetime_2_string(dt), "2008,358,01:30:22.0000")
+        assert datetime_2_string(dt) == "2008,358,01:30:22.0000"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 21)
-        self.assertEqual(datetime_2_string(dt), "2008,358,01:30:21.0000")
+        assert datetime_2_string(dt) == "2008,358,01:30:21.0000"
         dt = UTCDateTime(2008, 12, 23, 0o1, 0, 0, 0)
-        self.assertEqual(datetime_2_string(dt), "2008,358,01:00:00.0000")
+        assert datetime_2_string(dt) == "2008,358,01:00:00.0000"
         dt = UTCDateTime(2008, 12, 23)
-        self.assertEqual(datetime_2_string(dt), "2008,358")
+        assert datetime_2_string(dt) == "2008,358"
 
     def test_datetime_to_string_compact(self):
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22, 123456)
-        self.assertEqual(datetime_2_string(dt, True),
-                         "2008,358,01:30:22.1234")
+        assert datetime_2_string(dt, True) == \
+                         "2008,358,01:30:22.1234"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22)
-        self.assertEqual(datetime_2_string(dt, True), "2008,358,01:30:22")
+        assert datetime_2_string(dt, True) == "2008,358,01:30:22"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30)
-        self.assertEqual(datetime_2_string(dt, True), "2008,358,01:30")
+        assert datetime_2_string(dt, True) == "2008,358,01:30"
         dt = UTCDateTime(2008, 12, 23, 0o1)
-        self.assertEqual(datetime_2_string(dt, True), "2008,358,01")
+        assert datetime_2_string(dt, True) == "2008,358,01"
         dt = UTCDateTime(2008, 12, 23)
-        self.assertEqual(datetime_2_string(dt, True), "2008,358")
+        assert datetime_2_string(dt, True) == "2008,358"
 
     def test_is_resp(self):
         """
@@ -73,6 +73,5 @@ class UtilsTestCase(unittest.TestCase):
         for filename in glob.glob(signal_test_files):
             got = _is_resp(filename)
             expected = os.path.basename(filename) in resp_filenames
-            self.assertEqual(
-                got, expected,
-                "_is_resp() returns %s for file %s" % (got, filename))
+            assert got == expected, \
+                "_is_resp() returns %s for file %s" % (got, filename)

@@ -20,6 +20,7 @@ from obspy.io.stationtxt.core import (is_fdsn_station_text_file,
 from obspy.core.inventory import (Channel, Station, Network, Inventory, Site,
                                   Equipment, Response, InstrumentSensitivity)
 from obspy.core.util.base import NamedTemporaryFile
+import pytest
 
 
 class StationTextTestCase(unittest.TestCase):
@@ -42,53 +43,53 @@ class StationTextTestCase(unittest.TestCase):
 
         # Test with filenames.
         for filename in txt_files:
-            self.assertTrue(is_fdsn_station_text_file(filename))
+            assert is_fdsn_station_text_file(filename)
         for filename in non_txt_files:
-            self.assertFalse(is_fdsn_station_text_file(filename))
+            assert not is_fdsn_station_text_file(filename)
 
         # Text with open files in binary mode.
         for filename in txt_files:
             with open(filename, "rb") as fh:
-                self.assertTrue(is_fdsn_station_text_file(fh))
-                self.assertEqual(fh.tell(), 0)
+                assert is_fdsn_station_text_file(fh)
+                assert fh.tell() == 0
         for filename in non_txt_files:
             with open(filename, "rb") as fh:
-                self.assertFalse(is_fdsn_station_text_file(fh))
-                self.assertEqual(fh.tell(), 0)
+                assert not is_fdsn_station_text_file(fh)
+                assert fh.tell() == 0
 
         # Text with open files in text mode.
         for filename in txt_files:
             with open(filename, "rt", encoding="utf8") as fh:
-                self.assertTrue(is_fdsn_station_text_file(fh))
-                self.assertEqual(fh.tell(), 0)
+                assert is_fdsn_station_text_file(fh)
+                assert fh.tell() == 0
         for filename in non_txt_files:
             with open(filename, "rt", encoding="utf8") as fh:
-                self.assertFalse(is_fdsn_station_text_file(fh))
-                self.assertEqual(fh.tell(), 0)
+                assert not is_fdsn_station_text_file(fh)
+                assert fh.tell() == 0
 
         # Text with BytesIO.
         for filename in txt_files:
             with open(filename, "rb") as fh:
                 with io.BytesIO(fh.read()) as buf:
-                    self.assertTrue(is_fdsn_station_text_file(buf))
-                    self.assertEqual(buf.tell(), 0)
+                    assert is_fdsn_station_text_file(buf)
+                    assert buf.tell() == 0
         for filename in non_txt_files:
             with open(filename, "rb") as fh:
                 with io.BytesIO(fh.read()) as buf:
-                    self.assertFalse(is_fdsn_station_text_file(buf))
-                    self.assertEqual(buf.tell(), 0)
+                    assert not is_fdsn_station_text_file(buf)
+                    assert buf.tell() == 0
 
         # Text with StringIO.
         for filename in txt_files:
             with open(filename, "rt", encoding="utf8") as fh:
                 with io.StringIO(fh.read()) as buf:
-                    self.assertTrue(is_fdsn_station_text_file(buf))
-                    self.assertEqual(buf.tell(), 0)
+                    assert is_fdsn_station_text_file(buf)
+                    assert buf.tell() == 0
         for filename in non_txt_files:
             with open(filename, "rt", encoding="utf8") as fh:
                 with io.StringIO(fh.read()) as buf:
-                    self.assertFalse(is_fdsn_station_text_file(buf))
-                    self.assertEqual(buf.tell(), 0)
+                    assert not is_fdsn_station_text_file(buf)
+                    assert buf.tell() == 0
 
     def test_reading_network_file(self):
         """
@@ -118,8 +119,8 @@ class StationTextTestCase(unittest.TestCase):
         # Copy creation date as it will be slightly different otherwise.
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -128,8 +129,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
@@ -138,8 +139,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from StringIO.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -150,8 +151,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from BytesIO.
         with open(filename, "rb") as fh:
@@ -162,8 +163,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
     def test_reading_station_file(self):
         """
@@ -203,8 +204,8 @@ class StationTextTestCase(unittest.TestCase):
         # Copy creation date as it will be slightly different otherwise.
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -213,8 +214,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
@@ -223,8 +224,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from StringIO.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -235,8 +236,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from BytesIO.
         with open(filename, "rb") as fh:
@@ -247,8 +248,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
     def test_reading_channel_file(self):
         """
@@ -406,8 +407,8 @@ class StationTextTestCase(unittest.TestCase):
         # Copy creation date as it will be slightly different otherwise.
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -416,8 +417,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
@@ -426,8 +427,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from StringIO.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -438,8 +439,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from BytesIO.
         with open(filename, "rb") as fh:
@@ -450,8 +451,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
     def test_reading_unicode_file(self):
         """
@@ -476,8 +477,8 @@ class StationTextTestCase(unittest.TestCase):
         # Copy creation date as it will be slightly different otherwise.
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -486,8 +487,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
@@ -496,8 +497,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from StringIO.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -508,8 +509,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from BytesIO.
         with open(filename, "rb") as fh:
@@ -520,8 +521,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
     def test_reading_channel_without_response_info(self):
         """
@@ -566,8 +567,8 @@ class StationTextTestCase(unittest.TestCase):
         # Copy creation date as it will be slightly different otherwise.
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -576,8 +577,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
@@ -586,8 +587,8 @@ class StationTextTestCase(unittest.TestCase):
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from StringIO.
         with open(filename, "rt", encoding="utf8") as fh:
@@ -598,8 +599,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
         # Read from BytesIO.
         with open(filename, "rb") as fh:
@@ -610,8 +611,8 @@ class StationTextTestCase(unittest.TestCase):
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
         inv_obs.created = expected_inv.created
-        self.assertEqual(inv, expected_inv)
-        self.assertEqual(inv_obs, expected_inv)
+        assert inv == expected_inv
+        assert inv_obs == expected_inv
 
     def test_parsing_faulty_header_at_channel_level(self):
         """
@@ -634,9 +635,9 @@ class StationTextTestCase(unittest.TestCase):
         inv_obs_bad.created = inv_good.created
 
         # The parsed data should be equal in all of them.
-        self.assertEqual(inv_good, inv_obs_good)
-        self.assertEqual(inv_good, inv_bad)
-        self.assertEqual(inv_good, inv_obs_bad)
+        assert inv_good == inv_obs_good
+        assert inv_good == inv_bad
+        assert inv_good == inv_obs_bad
 
     def test_parsing_files_with_no_endtime(self):
         """
@@ -672,9 +673,9 @@ class StationTextTestCase(unittest.TestCase):
                             cha.end_date = None
 
             # The parsed data should now be equal in all of them.
-            self.assertEqual(inv_a, inv_obs_a)
-            self.assertEqual(inv_a, inv_b)
-            self.assertEqual(inv_a, inv_obs_b)
+            assert inv_a == inv_obs_a
+            assert inv_a == inv_b
+            assert inv_a == inv_obs_b
 
     def test_write_stationtxt(self):
         """
@@ -794,11 +795,11 @@ class StationTextTestCase(unittest.TestCase):
                     ]
         num_lines_written = 0
         for line in expected:
-            self.assertIn(line, content)
+            assert line in content
             num_lines_written = num_lines_written + 1
         # assert that the number of lines written equals
         # the number of lines expected
-        self.assertEqual(num_lines_written, len(expected))
+        assert num_lines_written == len(expected)
 
         # STATION level test
         stio = io.StringIO()
@@ -812,11 +813,11 @@ class StationTextTestCase(unittest.TestCase):
                     ]
         num_lines_written = 0
         for line in expected:
-            self.assertIn(line, content)
+            assert line in content
             num_lines_written = num_lines_written + 1
         # assert that the number of lines written equals
         # the number of lines expected
-        self.assertEqual(num_lines_written, len(expected))
+        assert num_lines_written == len(expected)
 
         # NETWORK level test
         stio = io.StringIO()
@@ -831,11 +832,11 @@ class StationTextTestCase(unittest.TestCase):
                     ]
         num_lines_written = 0
         for line in expected:
-            self.assertIn(line, content)
+            assert line in content
             num_lines_written = num_lines_written + 1
         # assert that the number of lines written equals
         # the number of lines expected
-        self.assertEqual(num_lines_written, len(expected))
+        assert num_lines_written == len(expected)
 
     def test_read_write_stationtxt(self):
         """
@@ -859,22 +860,22 @@ class StationTextTestCase(unittest.TestCase):
                     inv_obs.write(tmpfile,
                                   format="STATIONTXT",
                                   level="NETWORK")
-                    self.assertRaises(inv_obs.write(tmpfile,
+                    with pytest.raises(inv_obs.write(tmpfile,
                                                     format="STATIONTXT",
-                                                    level="STATION"),
-                                      ValueError)
-                    self.assertRaises(inv_obs.write(tmpfile,
+                                                    level="STATION")):
+                        ValueError()
+                    with pytest.raises(inv_obs.write(tmpfile,
                                                     format="STATIONTXT",
-                                                    level="CHANNEL"),
-                                      ValueError)
+                                                    level="CHANNEL")):
+                        ValueError()
                 elif filename == "station_level_fdsn.txt":
                     inv_obs.write(tmpfile,
                                   format="STATIONTXT",
                                   level="STATION")
-                    self.assertRaises(inv_obs.write(tmpfile,
+                    with pytest.raises(inv_obs.write(tmpfile,
                                                     format="STATIONTXT",
-                                                    level="CHANNEL"),
-                                      ValueError)
+                                                    level="CHANNEL")):
+                        ValueError()
                 elif filename == "channel_level_fdsn.txt":
                     inv_obs.write(tmpfile,
                                   format="STATIONTXT",
@@ -884,4 +885,4 @@ class StationTextTestCase(unittest.TestCase):
             expected_content = b"".join(expected_content.split(b" "))
             written_content = b"".join(written_text_file.split(b" "))
             for line in written_content:
-                self.assertIn(line, expected_content)
+                assert line in expected_content
