@@ -3,7 +3,6 @@
 The obspy.realtime.signal test suite.
 """
 import os
-import unittest
 
 import numpy as np
 
@@ -17,7 +16,7 @@ PLOT_TRACES = False
 NUM_PACKETS = 3
 
 
-class RealTimeSignalTestCase(unittest.TestCase):
+class RealTimeSignalTestCase():
     """
     The obspy.realtime.signal test suite.
     """

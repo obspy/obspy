@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
 import io
-import unittest
 
 from obspy.core.event import read_events
 from obspy.io.nied.fnetmt import _is_fnetmt_catalog
 
 
-class FNETMTCatalogReadingTestCase(unittest.TestCase):
+class FNETMTCatalogReadingTestCase():
     """
     Test everything related to reading an F-net moment tensor catalog.
     """

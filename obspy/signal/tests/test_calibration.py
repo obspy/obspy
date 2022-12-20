@@ -4,7 +4,6 @@
 The calibration test suite.
 """
 import os
-import unittest
 
 import numpy as np
 
@@ -13,7 +12,7 @@ from obspy.signal.calibration import rel_calib_stack
 from obspy.core.util.misc import TemporaryWorkingDirectory
 
 
-class CalibrationTestCase(unittest.TestCase):
+class CalibrationTestCase():
     """
     Calibration test case
     """

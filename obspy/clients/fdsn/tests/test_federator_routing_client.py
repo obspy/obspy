@@ -8,8 +8,6 @@
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import collections
-import unittest
-from unittest import mock
 
 from packaging.version import parse as parse_version
 import pytest
@@ -23,7 +21,7 @@ _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 pytestmark = pytest.mark.network
 
 
-class FederatorRoutingClientTestCase(unittest.TestCase):
+class FederatorRoutingClientTestCase():
     def setUp(self):
         self.client = FederatorRoutingClient()
         self._cls = ("obspy.clients.fdsn.routing.federator_routing_client."

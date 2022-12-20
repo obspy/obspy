@@ -1,14 +1,13 @@
 """
 Tests for rg16 utilities.
 """
-import unittest
 from io import BytesIO
 
 from obspy.io.rg16.util import _read, _read_bcd, _read_binary
 import pytest
 
 
-class TestRG16Util(unittest.TestCase):
+class TestRG16Util():
 
     def byte_io(self, byte_str):
         """

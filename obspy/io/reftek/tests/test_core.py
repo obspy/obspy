@@ -4,7 +4,6 @@ import inspect
 import io
 import os
 import re
-import unittest
 import warnings
 
 import numpy as np
@@ -19,7 +18,7 @@ from obspy.io.reftek.packet import (
 import pytest
 
 
-class ReftekTestCase(unittest.TestCase):
+class ReftekTestCase():
     """
     Test suite for obspy.io.reftek
     """

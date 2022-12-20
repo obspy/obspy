@@ -13,10 +13,8 @@ import io
 import os
 import re
 import sys
-import unittest
 import warnings
 from difflib import Differ
-from unittest import mock
 
 import urllib.request as urllib_request
 
@@ -100,7 +98,7 @@ def normalize_version_number(string):
     return [line.strip() for line in repl.splitlines()]
 
 
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase():
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """

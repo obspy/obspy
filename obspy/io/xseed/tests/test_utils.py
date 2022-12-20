@@ -2,14 +2,13 @@
 import glob
 import inspect
 import os
-import unittest
 
 from obspy import UTCDateTime
 from obspy.io.xseed.utils import datetime_2_string, to_tag
 from obspy.io.xseed.core import _is_resp
 
 
-class UtilsTestCase(unittest.TestCase):
+class UtilsTestCase():
     """
     Utils test suite.
     """

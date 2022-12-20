@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 import warnings
 
 from obspy.io.y.core import _is_y, _read_y
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Nanometrics Y file test suite.
     """

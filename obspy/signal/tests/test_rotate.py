@@ -6,7 +6,6 @@ The Rotate test suite.
 import gzip
 import itertools
 import os
-import unittest
 
 import numpy as np
 
@@ -16,7 +15,7 @@ from obspy.signal.rotate import (rotate_lqt_zne, rotate_ne_rt, rotate_rt_ne,
 import pytest
 
 
-class RotateTestCase(unittest.TestCase):
+class RotateTestCase():
     """
     Test cases for Rotate.
     """

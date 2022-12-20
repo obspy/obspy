@@ -3,7 +3,6 @@
 The obspy.clients.seedlink.slpacket test suite.
 """
 import os.path
-import unittest
 
 import pytest
 
@@ -13,7 +12,7 @@ from obspy.clients.seedlink.slpacket import SLPacket
 pytestmark = pytest.mark.network
 
 
-class SLPacketTestCase(unittest.TestCase):
+class SLPacketTestCase():
 
     def _read_data_file(self, fn):
         path = os.path.dirname(__file__)

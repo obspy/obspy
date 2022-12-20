@@ -17,8 +17,6 @@ import shutil
 from socket import timeout as socket_timeout
 import sys
 import tempfile
-import unittest
-from unittest import mock
 
 import pytest
 
@@ -46,7 +44,7 @@ from obspy.clients.fdsn.mass_downloader.download_helpers import (
 pytestmark = pytest.mark.network
 
 
-class DomainTestCase(unittest.TestCase):
+class DomainTestCase():
     """
     Test case for the domain definitions.
     """
@@ -113,7 +111,7 @@ class DomainTestCase(unittest.TestCase):
             domain.Domain()
 
 
-class RestrictionsTestCase(unittest.TestCase):
+class RestrictionsTestCase():
     """
     Test case for the restrictions object.
     """
@@ -313,7 +311,7 @@ class RestrictionsTestCase(unittest.TestCase):
                          r.limit_stations_to_inventory
 
 
-class DownloadHelpersUtilTestCase(unittest.TestCase):
+class DownloadHelpersUtilTestCase():
     """
     Test cases for utility functionality for the download helpers.
     """
@@ -1034,7 +1032,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             "status='none')")
 
 
-class TimeIntervalTestCase(unittest.TestCase):
+class TimeIntervalTestCase():
     """
     Test cases for the TimeInterval class.
     """
@@ -1063,7 +1061,7 @@ class TimeIntervalTestCase(unittest.TestCase):
             "status='ignore')"
 
 
-class ChannelTestCase(unittest.TestCase):
+class ChannelTestCase():
     """
     Test cases for the Channel class.
     """
@@ -1101,7 +1099,7 @@ class ChannelTestCase(unittest.TestCase):
         assert not c.needs_station_file
 
 
-class StationTestCase(unittest.TestCase):
+class StationTestCase():
     """
     Test cases for the Station class.
     """
@@ -1729,7 +1727,7 @@ class StationTestCase(unittest.TestCase):
             "status='none')")
 
 
-class ClientDownloadHelperTestCase(unittest.TestCase):
+class ClientDownloadHelperTestCase():
     """
     Test cases for the ClientDownloadHelper class.
     """
@@ -2606,7 +2604,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         assert self.logger.warning.call_count == 0
 
 
-class DownloadHelperTestCase(unittest.TestCase):
+class DownloadHelperTestCase():
     """
     Test cases for the MassDownloader class.
     """

@@ -2,7 +2,6 @@
 """
 The obspy.clients.neic.client test suite.
 """
-import unittest
 
 import pytest
 
@@ -13,7 +12,7 @@ from obspy.clients.neic import Client
 pytestmark = pytest.mark.network
 
 
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase():
     """
     Test cases for obspy.clients.neic.client.Client.
     """

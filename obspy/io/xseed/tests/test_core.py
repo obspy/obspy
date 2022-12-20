@@ -3,7 +3,6 @@ import collections
 import io
 import itertools
 import os
-import unittest
 import warnings
 
 import numpy as np
@@ -18,7 +17,7 @@ from obspy.signal.invsim import evalresp_for_frequencies
 import pytest
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test integration with ObsPy's inventory objects.
     """

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 
 import numpy as np
 
@@ -8,7 +7,7 @@ from obspy import Stream, UTCDateTime
 from obspy.io.pdas import _is_pdas, _read_pdas
 
 
-class PDASTestCase(unittest.TestCase):
+class PDASTestCase():
     """
     Test suite for pdas.
     """

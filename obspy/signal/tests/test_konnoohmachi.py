@@ -3,7 +3,6 @@
 """
 The polarization.core test suite.
 """
-import unittest
 import warnings
 
 import numpy as np
@@ -15,7 +14,7 @@ from obspy.signal.konnoohmachismoothing import (calculate_smoothing_matrix,
 import pytest
 
 
-class KonnoOhmachiTestCase(unittest.TestCase):
+class KonnoOhmachiTestCase():
     """
     Test cases for the Konno Ohmachi Smoothing.
     """

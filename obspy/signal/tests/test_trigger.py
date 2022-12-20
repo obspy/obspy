@@ -4,7 +4,6 @@ The obspy.signal.trigger test suite.
 """
 import gzip
 import os
-import unittest
 import warnings
 from ctypes import ArgumentError
 
@@ -37,7 +36,7 @@ def aic_simple_python(a):
     return aic_cf
 
 
-class TriggerTestCase(unittest.TestCase):
+class TriggerTestCase():
     """
     Test cases for obspy.trigger
     """

@@ -7,7 +7,6 @@ import ctypes as C  # NOQA
 import gzip
 import io
 import os
-import unittest
 import platform
 
 import numpy as np
@@ -64,7 +63,7 @@ INSTRUMENTS = {'None': None,
                'wwssn_sp': PAZ_WWSSN_SP}
 
 
-class InvSimTestCase(unittest.TestCase):
+class InvSimTestCase():
     """
     Test cases for InvSim.
     """
@@ -400,9 +399,9 @@ class InvSimTestCase(unittest.TestCase):
     # differences on Appveyor and we could not reproduce it on a local
     # machine.. so skip on windows.. (e.g. http://tests.obspy.org/101648/#1,
     # https://ci.appveyor.com/project/obspy/obspy/build/1.0.6561-master)
-    @unittest.skipIf(platform.system() == "Windows",
-                     'unreproducible test fail encountered on Appveyor '
-                     'sometimes.')
+    @pytest.mark.skipif(
+        platform.system() == "Windows",
+        reason='unreproducible test fail encountered on Appveyor sometimes.')
     def test_evalresp_file_like_object(self):
         """
         Test evalresp with file like object

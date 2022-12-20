@@ -4,7 +4,6 @@
 The obspy.io.gcf.core test suite.
 """
 import os
-import unittest
 
 import numpy as np
 import pytest
@@ -22,7 +21,7 @@ EXPECTED = np.array([-49378, -49213, -49273, -49277, -49341, -49415, -49289,
                     dtype=np.int32)
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for gcf core interface
     """

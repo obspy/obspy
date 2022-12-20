@@ -14,7 +14,6 @@ seiscomp.event test suite.
 import filecmp
 import os
 import re
-import unittest
 
 from lxml import etree
 
@@ -27,7 +26,7 @@ from obspy.io.seiscomp.event import SCHEMA_VERSION, _read_sc3ml
 import pytest
 
 
-class EventTestCase(unittest.TestCase):
+class EventTestCase():
     """
     Test suite for obspy.io.seiscomp.event
     """

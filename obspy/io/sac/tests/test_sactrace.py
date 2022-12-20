@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import io
 import os
-import unittest
 import datetime
 import warnings
 import random
@@ -18,7 +17,7 @@ from ..util import SacHeaderError, SacHeaderTimeError
 import pytest
 
 
-class SACTraceTestCase(unittest.TestCase):
+class SACTraceTestCase():
     """
     Test suite for obspy.io.sac.sactrace
     """

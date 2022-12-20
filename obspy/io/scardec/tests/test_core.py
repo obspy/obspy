@@ -3,7 +3,6 @@
 import inspect
 import io
 import os
-import unittest
 import numpy as np
 import warnings
 
@@ -12,7 +11,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.scardec.core import _is_scardec
 
 
-class ScardecTestCase(unittest.TestCase):
+class ScardecTestCase():
     """
     Test suite for obspy.io.scardec.
 

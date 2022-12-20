@@ -4,7 +4,6 @@
 The hoctavbands.core test suite.
 """
 import os
-import unittest
 
 import numpy as np
 from scipy import signal
@@ -14,7 +13,7 @@ from obspy.signal import hoctavbands, util
 
 # only tests for windowed data are implemented currently
 
-class HoctavbandsTestCase(unittest.TestCase):
+class HoctavbandsTestCase():
     """
     Test cases for half octav bands
     """

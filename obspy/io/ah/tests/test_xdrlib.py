@@ -52,13 +52,12 @@ products or services of Licensee, or any third party.
 agrees to be bound by the terms and conditions of this License
 Agreement.
 """
-import unittest
 
 from obspy.io.ah import xdrlib
 import pytest
 
 
-class XDRTest(unittest.TestCase):
+class XDRTest():
 
     def test_xdr(self):
         p = xdrlib.Packer()
@@ -108,7 +107,7 @@ class XDRTest(unittest.TestCase):
             up.unpack_uint()
 
 
-class ConversionErrorTest(unittest.TestCase):
+class ConversionErrorTest():
 
     def setUp(self):
         self.packer = xdrlib.Packer()
@@ -131,7 +130,3 @@ class ConversionErrorTest(unittest.TestCase):
 
     def test_uhyper(self):
         self.assertRaisesConversion(self.packer.pack_uhyper, 'string')
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -12,13 +12,12 @@ seiscomp.core test suite.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import os
-import unittest
 
 from obspy.io.seiscomp.core import _is_sc3ml, validate
 import pytest
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test suite for obspy.io.seiscomp.event
     """

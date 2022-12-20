@@ -16,14 +16,13 @@ Modified after obspy.io.stationXML
 
 import inspect
 import os
-import unittest
 
 from obspy.core.inventory import read_inventory
 from obspy.io.arclink.inventory import validate_arclink_xml, SCHEMA_NAMESPACE
 import pytest
 
 
-class ArclinkInventoryTestCase(unittest.TestCase):
+class ArclinkInventoryTestCase():
 
     def setUp(self):
         """

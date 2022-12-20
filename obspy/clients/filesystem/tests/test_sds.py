@@ -4,7 +4,6 @@ import os
 import re
 import shutil
 import tempfile
-import unittest
 
 import numpy as np
 
@@ -75,7 +74,7 @@ class TemporarySDSDirectory(object):
         shutil.rmtree(self.tempdir)
 
 
-class SDSTestCase(unittest.TestCase):
+class SDSTestCase():
     """
     Test reading data from SDS file structure.
     """

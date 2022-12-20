@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import unittest
 import zipfile
 
 from obspy.core.util import NamedTemporaryFile
@@ -13,7 +12,7 @@ from obspy.io.xseed.scripts.xseed2dataless import main as obspy_xseed2dataless
 from obspy.io.xseed.utils import compare_seed
 
 
-class ScriptTestCase(unittest.TestCase):
+class ScriptTestCase():
     def setUp(self):
         self.data = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                  'data'))

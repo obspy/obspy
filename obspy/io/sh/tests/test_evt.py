@@ -1,12 +1,11 @@
 import glob
 import os.path
-import unittest
 
 from obspy import read_events, read_inventory
 from obspy.io.sh.evt import _is_evt
 
 
-class EvtTestCase(unittest.TestCase):
+class EvtTestCase():
 
     def setUp(self):
         # Directory where the test files are located

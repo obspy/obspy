@@ -4,14 +4,13 @@
 The libgse1 test suite.
 """
 import os
-import unittest
 
 from obspy.io.gse2 import libgse1
 from obspy.io.gse2.libgse2 import ChksumError
 import pytest
 
 
-class LibGSE1TestCase(unittest.TestCase):
+class LibGSE1TestCase():
     """
     Test cases for libgse1.
     """

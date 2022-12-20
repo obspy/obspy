@@ -3,14 +3,13 @@
 import inspect
 import io
 import os
-import unittest
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.cmtsolution.core import _is_cmtsolution
 
 
-class CmtsolutionTestCase(unittest.TestCase):
+class CmtsolutionTestCase():
     """
     Test suite for obspy.io.cmtsolution.
 

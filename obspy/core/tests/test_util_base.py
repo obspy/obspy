@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import copy
-from unittest import mock
 
 import numpy as np
 from requests import HTTPError

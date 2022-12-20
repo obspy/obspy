@@ -3,7 +3,6 @@
 The obspy.clients.iris.client test suite.
 """
 import os
-import unittest
 
 import numpy as np
 import pytest
@@ -15,7 +14,7 @@ from obspy.clients.iris import Client
 pytestmark = pytest.mark.network
 
 
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase():
     """
     Test cases for obspy.clients.iris.client.Client.
     """

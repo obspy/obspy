@@ -2,8 +2,6 @@
 """
 The obspy.clients.seedlink.basic_client test suite.
 """
-import unittest
-from unittest import mock
 
 import pytest
 
@@ -12,7 +10,7 @@ from obspy.clients.seedlink.basic_client import Client
 
 
 @pytest.mark.network
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase():
     def setUp(self):
         self.client = Client("rtserver.ipgp.fr")
 

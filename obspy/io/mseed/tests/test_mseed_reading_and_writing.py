@@ -4,7 +4,6 @@ import glob
 import io
 import re
 import os
-import unittest
 import warnings
 from datetime import datetime
 from struct import unpack
@@ -23,7 +22,7 @@ from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
 
-class MSEEDReadingAndWritingTestCase(unittest.TestCase):
+class MSEEDReadingAndWritingTestCase():
     """
     Test everything related to the general reading and writing of MiniSEED
     files.

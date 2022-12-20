@@ -4,7 +4,6 @@
 The freqattributes.core test suite.
 """
 import os
-import unittest
 from math import pi
 
 import numpy as np
@@ -15,7 +14,7 @@ from obspy.signal import freqattributes, util
 
 # only tests for windowed data are implemented currently
 
-class FreqTraceTestCase(unittest.TestCase):
+class FreqTraceTestCase():
     """
     Test cases for frequency attributes
     """

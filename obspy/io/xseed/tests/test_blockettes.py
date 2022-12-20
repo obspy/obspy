@@ -3,7 +3,6 @@ import importlib
 import io
 import os
 import sys
-import unittest
 import warnings
 from glob import iglob
 
@@ -16,7 +15,7 @@ from obspy.io.xseed.fields import SEEDTypeException
 import pytest
 
 
-class BlocketteTestCase(unittest.TestCase):
+class BlocketteTestCase():
     """
     Test cases for all blockettes.
     """

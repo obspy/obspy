@@ -10,14 +10,13 @@ The obspy.clients.fdsn.wadl_parser test suite.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import os
-import unittest
 import warnings
 
 from obspy import UTCDateTime
 from obspy.clients.fdsn.wadl_parser import WADLParser
 
 
-class WADLParserTestCase(unittest.TestCase):
+class WADLParserTestCase():
     """
     Test cases for obspy.clients.fdsn.wadl_parser.WADL_Parser.
     """

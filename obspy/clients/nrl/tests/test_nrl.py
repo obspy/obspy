@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 
 import numpy as np
 import pytest
@@ -11,7 +10,7 @@ from obspy.clients.nrl.client import NRL, LocalNRL, RemoteNRL
 
 
 @pytest.mark.network
-class NRLRemoteTestCase(unittest.TestCase):
+class NRLRemoteTestCase():
     """
     Minimal NRL test suite connecting to online NRL
 
@@ -24,7 +23,7 @@ class NRLRemoteTestCase(unittest.TestCase):
         assert isinstance(self.nrl_online, RemoteNRL)
 
 
-class NRLLocalTestCase(unittest.TestCase):
+class NRLLocalTestCase():
     """
     NRL test suite using stripped down local NRL without network usage.
 

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import unittest
 from copy import deepcopy
 import platform
 
@@ -10,7 +9,7 @@ from obspy.signal.filter import bandpass, bandstop, highpass, lowpass
 import pytest
 
 
-class StreamTestCase(unittest.TestCase):
+class StreamTestCase():
     """
     Test suite for obspy.core.stream.Stream.
     """

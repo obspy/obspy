@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 
 from obspy import read_events, Catalog, UTCDateTime
 from obspy.core.event import Event
@@ -53,7 +52,7 @@ out_file_first_comment = (
 creation_time = UTCDateTime(2017, 9, 8, 14, 54, 58)
 
 
-class FOCMECTestCase(unittest.TestCase):
+class FOCMECTestCase():
     """
     Test everything related to reading FOCMEC files
     """

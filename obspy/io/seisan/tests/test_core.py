@@ -3,7 +3,6 @@
 The seisan.core test suite.
 """
 import os
-import unittest
 
 import numpy as np
 
@@ -12,7 +11,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.seisan.core import _get_version, _is_seisan, _read_seisan
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for SEISAN core interfaces.
     """

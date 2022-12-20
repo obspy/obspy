@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 
 from obspy import read_inventory, read_events
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.testing import compare_xml_strings
 
 
-class KMLTestCase(unittest.TestCase):
+class KMLTestCase():
     """
     Test KML output of Inventory/Catalog.
     """

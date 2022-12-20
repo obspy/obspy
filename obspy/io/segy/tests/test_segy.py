@@ -4,9 +4,7 @@ The obspy.io.segy test suite.
 """
 import io
 import os
-import unittest
 import warnings
-from unittest import mock
 
 import numpy as np
 
@@ -25,7 +23,7 @@ from . import _patch_header
 import pytest
 
 
-class SEGYTestCase(unittest.TestCase):
+class SEGYTestCase():
     """
     Test cases for SEG Y reading and writing..
     """

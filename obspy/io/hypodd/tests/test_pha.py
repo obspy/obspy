@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 import warnings
 
 from obspy import read_events, read_inventory, UTCDateTime
@@ -10,7 +9,7 @@ from obspy.io.hypodd import pha
 import pytest
 
 
-class PHATestCase(unittest.TestCase):
+class PHATestCase():
     """
     Test suite for obspy.io.hypodd.pha
     """

@@ -4,14 +4,13 @@
 The obspy.io.win.core test suite.
 """
 import os
-import unittest
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.win.core import _read_win
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for win core interface
     """

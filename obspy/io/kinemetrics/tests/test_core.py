@@ -5,7 +5,6 @@ The obspy.io.kinemetrics.core test suite.
 """
 import io
 import os
-import unittest
 
 import numpy as np
 
@@ -14,7 +13,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.kinemetrics.core import is_evt, read_evt
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for kinemetrics core interface
     """

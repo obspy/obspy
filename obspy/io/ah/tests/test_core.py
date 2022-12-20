@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import unittest
 
 import numpy as np
 
@@ -11,7 +10,7 @@ from obspy.core.util import NamedTemporaryFile
 import pytest
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     AH (Ad Hoc) file test suite.
     """

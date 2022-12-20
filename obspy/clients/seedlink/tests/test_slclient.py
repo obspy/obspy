@@ -2,7 +2,6 @@
 """
 The obspy.clients.seedlink.slclient test suite.
 """
-import unittest
 
 import pytest
 
@@ -13,7 +12,7 @@ from obspy.clients.seedlink.slclient import SLClient
 pytestmark = pytest.mark.network
 
 
-class SLClientTestCase(unittest.TestCase):
+class SLClientTestCase():
     """
     These test routines use SLClient, which is actually not expected to be
     used, but expected to be subclassed since at least the packet_handler
@@ -25,7 +24,8 @@ class SLClientTestCase(unittest.TestCase):
     below get stuck and not terminate.
     """
 
-    @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
+    @pytest.mark.skipif(
+        __name__ != '__main__', reason='test must be started manually')
     def test_info(self):
         sl_client = SLClient()
         sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
@@ -34,7 +34,8 @@ class SLClientTestCase(unittest.TestCase):
         sl_client.initialize()
         sl_client.run()
 
-    @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
+    @pytest.mark.skipif(
+        __name__ != '__main__', reason='test must be started manually')
     def test_time_window(self):
         sl_client = SLClient()
         sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
@@ -47,7 +48,8 @@ class SLClientTestCase(unittest.TestCase):
         sl_client.initialize()
         sl_client.run()
 
-    @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
+    @pytest.mark.skipif(
+        __name__ != '__main__', reason='test must be started manually')
     def test_issue708(self):
         sl_client = SLClient()
         sl_client.slconn.set_sl_address("rtserve.iris.washington.edu:18000")

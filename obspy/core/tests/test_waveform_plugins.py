@@ -6,7 +6,6 @@ import time
 import warnings
 from copy import deepcopy
 from pathlib import Path
-from unittest import mock
 
 import numpy as np
 import pytest

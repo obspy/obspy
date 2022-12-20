@@ -3,14 +3,13 @@
 """
 The array_analysis test suite.
 """
-import unittest
 
 import numpy as np
 
 from obspy.signal.array_analysis import array_rotation_strain, get_geometry
 
 
-class ArrayTestCase(unittest.TestCase):
+class ArrayTestCase():
     """
     Test cases for array_analysis functions.
     """

@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import unittest
 
 from obspy.core.util.misc import CatchOutput
 from obspy.io.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
 
 
-class RecordAnalyserTestCase(unittest.TestCase):
+class RecordAnalyserTestCase():
     def setUp(self):
         self.maxDiff = None
         self.test_file = os.path.join(os.path.dirname(__file__),

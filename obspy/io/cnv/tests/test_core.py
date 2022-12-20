@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import inspect
 import os
-import unittest
 import warnings
 
 from obspy import read_events
@@ -10,7 +9,7 @@ from obspy.io.cnv.core import _write_cnv
 from obspy.core.util import NamedTemporaryFile
 
 
-class CNVTestCase(unittest.TestCase):
+class CNVTestCase():
     """
     Test suite for obspy.io.cnv
     """

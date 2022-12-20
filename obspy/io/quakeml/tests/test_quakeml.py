@@ -2,7 +2,6 @@
 import io
 import math
 import os
-import unittest
 import warnings
 
 from lxml import etree
@@ -43,7 +42,7 @@ def assert_no_extras(obj, verbose=False):
         assert_no_extras(getattr(obj, name), verbose=verbose)
 
 
-class QuakeMLTestCase(unittest.TestCase):
+class QuakeMLTestCase():
     """
     Test suite for obspy.io.quakeml
     """
@@ -578,7 +577,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 assert_no_extras(catalog2)
         assert len(catalog2), 3
 
-    @unittest.skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
+    @pytest.mark.skipif(not IS_RECENT_LXML, reason="lxml >= 2.3 is required")
     def test_enums(self):
         """
         Parses the QuakeML xsd scheme definition and checks if all enums are

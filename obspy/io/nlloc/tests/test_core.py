@@ -4,7 +4,6 @@ import inspect
 import io
 import os
 import re
-import unittest
 import warnings
 from pathlib import Path
 
@@ -33,7 +32,7 @@ def _mock_coordinate_converter(x, y, z):
         raise Exception("Unexpected values during test run.")
 
 
-class NLLOCTestCase(unittest.TestCase):
+class NLLOCTestCase():
     """
     Test suite for obspy.io.nlloc
     """

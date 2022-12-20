@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 import warnings
 
 from obspy.core.event import ResourceIdentifier, read_events
@@ -20,7 +19,7 @@ except Exception:
     pass
 
 
-class MchedrTestCase(unittest.TestCase):
+class MchedrTestCase():
     """
     Test suite for obspy.mchedr
     """

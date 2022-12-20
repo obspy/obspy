@@ -2,7 +2,6 @@
 import copy
 import datetime
 import os
-import unittest
 import warnings
 
 from obspy import read_events, read_inventory
@@ -172,8 +171,8 @@ def _close_shapefile_reader(reader):
                 pass
 
 
-@unittest.skipIf(not HAS_PYSHP, 'pyshp not installed')
-class ShapefileTestCase(unittest.TestCase):
+@pytest.mark.skipif(not HAS_PYSHP, reason='pyshp not installed')
+class ShapefileTestCase():
     def setUp(self):
         self.path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  'data')

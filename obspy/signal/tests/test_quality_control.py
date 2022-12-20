@@ -3,7 +3,6 @@
 The Quality Control test suite.
 """
 import os
-import unittest
 
 import numpy as np
 
@@ -25,7 +24,7 @@ except ImportError:
     HAS_JSONSCHEMA = False
 
 
-class QualityControlTestCase(unittest.TestCase):
+class QualityControlTestCase():
     """
     Test cases for Quality Control.
     """

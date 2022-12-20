@@ -14,12 +14,11 @@ import inspect
 import os
 import shutil
 import tempfile
-import unittest
 
 import obspy
 
 
-class CSSStationTestCase(unittest.TestCase):
+class CSSStationTestCase():
     """
     Test cases for css station interface
     """

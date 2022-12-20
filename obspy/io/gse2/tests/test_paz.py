@@ -4,12 +4,11 @@
 The paz test suite.
 """
 import io
-import unittest
 
 from obspy.io.gse2 import paz
 
 
-class PAZTestCase(unittest.TestCase):
+class PAZTestCase():
     """
     Test cases for reading GSE PAZ files.
     """

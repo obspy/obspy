@@ -4,7 +4,6 @@ Tests for reading rg16 format.
 """
 import io
 import os
-import unittest
 
 import numpy as np
 import obspy
@@ -24,7 +23,7 @@ HEADER_BLOCK_SAME_RU_CODE = os.path.join(TEST_FCNT_DIRECTORY,
 FCNT_FILES = [ONE_CHAN_FCNT, THREE_CHAN_FCNT]
 
 
-class TestReadRG16(unittest.TestCase):
+class TestReadRG16():
 
     def test_reading_rg16_files(self):
         """
@@ -148,7 +147,7 @@ class TestReadRG16(unittest.TestCase):
         assert stats.channel == 'DPN'
 
 
-class TestReadRG16Headers(unittest.TestCase):
+class TestReadRG16Headers():
 
     def test_cmp_nbr_headers(self):
         """

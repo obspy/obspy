@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import unittest
 from copy import deepcopy
 
 import numpy as np
@@ -11,7 +10,7 @@ from obspy.signal.invsim import simulate_seismometer
 import pytest
 
 
-class TraceTestCase(unittest.TestCase):
+class TraceTestCase():
     """
     Test suite for obspy.core.trace.Trace.
     """

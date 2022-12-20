@@ -3,7 +3,6 @@
 import inspect
 import io
 import os
-import unittest
 import warnings
 
 from obspy import UTCDateTime, read_events
@@ -12,7 +11,7 @@ from obspy.io.ndk.core import (ObsPyNDKException, _parse_date_time, _is_ndk,
 import pytest
 
 
-class NDKTestCase(unittest.TestCase):
+class NDKTestCase():
     """
     Test suite for obspy.io.ndk
     """

@@ -4,7 +4,6 @@ The obspy.io.seg2 test suite.
 """
 import gzip
 import os
-import unittest
 import warnings
 
 import numpy as np
@@ -78,7 +77,7 @@ TRACE3_HEADER = {
 }
 
 
-class SEG2TestCase(unittest.TestCase):
+class SEG2TestCase():
     """
     Test cases for SEG2 reading.
     """

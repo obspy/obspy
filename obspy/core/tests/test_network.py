@@ -10,7 +10,6 @@ Test suite for the network class.
 """
 import io
 import warnings
-from unittest import mock
 
 import numpy as np
 import pytest

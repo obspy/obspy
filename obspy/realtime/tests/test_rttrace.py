@@ -2,7 +2,6 @@
 """
 The obspy.realtime.rttrace test suite.
 """
-import unittest
 import warnings
 
 import numpy as np
@@ -15,7 +14,7 @@ import obspy.signal.filter
 import pytest
 
 
-class RtTraceTestCase(unittest.TestCase):
+class RtTraceTestCase():
 
     def test_eq(self):
         """

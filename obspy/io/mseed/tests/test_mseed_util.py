@@ -5,7 +5,6 @@ import os
 import random
 import shutil
 import sys
-import unittest
 from datetime import datetime
 from struct import pack, unpack
 import warnings
@@ -83,7 +82,7 @@ def _create_mseed_file(filename, record_count, sampling_rate=1.0,
     data.tofile(filename)
 
 
-class MSEEDUtilTestCase(unittest.TestCase):
+class MSEEDUtilTestCase():
     """
     Tests suite for util module of obspy.io.mseed.
     """

@@ -4,7 +4,6 @@ The obspy.io.segy Seismic Unix test suite.
 """
 import io
 import os
-import unittest
 
 import numpy as np
 
@@ -14,7 +13,7 @@ from obspy.io.segy.segy import SEGYTraceReadingError, _read_su, iread_su
 import pytest
 
 
-class SUTestCase(unittest.TestCase):
+class SUTestCase():
     """
     Test cases for SU reading and writing.
 

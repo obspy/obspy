@@ -5,7 +5,6 @@ The obspy.io.css.core test suite.
 """
 import gzip
 import os
-import unittest
 
 import numpy as np
 
@@ -17,7 +16,7 @@ from obspy.io.css.core import (_is_css, _read_css, _is_nnsa_kb_core,
 import pytest
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for css core interface
     """

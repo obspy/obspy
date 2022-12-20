@@ -7,9 +7,7 @@ import platform
 import random
 import signal
 import sys
-import unittest
 import warnings
-from unittest import mock
 
 import numpy as np
 
@@ -49,7 +47,7 @@ def _test_function(filename):
             pass
 
 
-class MSEEDSpecialIssueTestCase(unittest.TestCase):
+class MSEEDSpecialIssueTestCase():
     """
     """
     def setUp(self):

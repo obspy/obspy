@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 
 from obspy.core.event import read_events
 from obspy.core.utcdatetime import UTCDateTime
@@ -16,7 +15,7 @@ _ORIGIN_FIELDS = ('lon', 'lat', 'year', 'month', 'day', 'depth', 'hour',
 _MAGNITUDE_FIELDS = ('mag', 'm_err')
 
 
-class ZMAPTestCase(unittest.TestCase):
+class ZMAPTestCase():
     """
     Test suite for obspy.io.zmap.core
     """

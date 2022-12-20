@@ -5,7 +5,6 @@ The sac.core test suite.
 import copy
 import io
 import os
-import unittest
 import warnings
 
 import numpy as np
@@ -20,7 +19,7 @@ from obspy.io.sac.util import utcdatetime_to_sac_nztimes
 import pytest
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for sac core interface
     """

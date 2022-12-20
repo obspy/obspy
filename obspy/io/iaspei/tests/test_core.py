@@ -2,7 +2,6 @@
 import io
 import os
 import re
-import unittest
 
 from obspy import read_events
 from obspy.io.iaspei.core import _read_ims10_bulletin, _is_ims10_bulletin
@@ -80,7 +79,7 @@ def _assert_catalog(got):
     assert got == expected
 
 
-class IASPEITestCase(unittest.TestCase):
+class IASPEITestCase():
     """
     Test suite for obspy.io.iaspei.core
     """

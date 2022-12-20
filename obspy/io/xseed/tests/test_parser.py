@@ -2,7 +2,6 @@
 import gzip
 import io
 import os
-import unittest
 import warnings
 
 import numpy as np
@@ -22,7 +21,7 @@ from obspy.signal.invsim import evalresp_for_frequencies
 import pytest
 
 
-class ParserTestCase(unittest.TestCase):
+class ParserTestCase():
     """
     Parser test suite.
     """

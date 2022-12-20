@@ -4,7 +4,6 @@
 The obspy.io.dmx.core test suite.
 """
 import os
-import unittest
 
 import numpy as np
 
@@ -13,7 +12,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.dmx.core import _read_dmx
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for dmx core interface
     """

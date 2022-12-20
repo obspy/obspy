@@ -8,9 +8,7 @@
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import collections
-import unittest
 import warnings
-from unittest import mock
 
 import pytest
 
@@ -28,7 +26,7 @@ pytestmark = pytest.mark.network
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 
 
-class BaseRoutingClientTestCase(unittest.TestCase):
+class BaseRoutingClientTestCase():
     def setUp(self):
         # Need to inherit to add two required method by the abstract base
         # class.

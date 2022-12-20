@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import io
-import unittest
 
 import numpy as np
 
@@ -9,7 +8,7 @@ from obspy import read
 from obspy.io.nied.knet import _is_knet_ascii
 
 
-class KnetReadingTestCase(unittest.TestCase):
+class KnetReadingTestCase():
     """
     Test reading of K-NET and KiK-net ASCII format files from a file.
     """

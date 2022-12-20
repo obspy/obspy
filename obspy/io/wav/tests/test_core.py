@@ -5,7 +5,6 @@ The audio wav.core test suite.
 """
 
 import os
-import unittest
 
 import numpy as np
 
@@ -14,7 +13,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.io.wav.core import WIDTH2DTYPE
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for audio WAV support
     """

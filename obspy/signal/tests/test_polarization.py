@@ -3,7 +3,6 @@
 """
 The polarization.core test suite.
 """
-import unittest
 from os.path import dirname, join
 
 import numpy as np
@@ -43,7 +42,7 @@ def _create_test_data():
     return sz
 
 
-class PolarizationTestCase(unittest.TestCase):
+class PolarizationTestCase():
     """
     Test cases for polarization analysis
     """

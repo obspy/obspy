@@ -4,7 +4,6 @@ The obspy.io.segy core test suite.
 """
 import io
 import os
-import unittest
 from struct import unpack
 import warnings
 
@@ -24,7 +23,7 @@ from obspy.io.segy.tests import _patch_header
 from obspy.io.segy.tests.header import DTYPES, FILES
 
 
-class SEGYCoreTestCase(unittest.TestCase):
+class SEGYCoreTestCase():
     """
     Test cases for SEG Y reading and writing..
     """

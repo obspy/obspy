@@ -3,14 +3,13 @@
 """
 Tests for linear regression.
 """
-import unittest
 
 import numpy as np
 
 from obspy.signal.regression import linear_regression
 
 
-class RegressionTestCase(unittest.TestCase):
+class RegressionTestCase():
     """
     Test cases for the regression method.
     """

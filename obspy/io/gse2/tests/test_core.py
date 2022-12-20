@@ -5,7 +5,6 @@ The gse2.core test suite.
 """
 import copy
 import os
-import unittest
 import warnings
 
 import numpy as np
@@ -16,7 +15,7 @@ from obspy.io.gse2.libgse2 import ChksumError
 import pytest
 
 
-class CoreTestCase(unittest.TestCase):
+class CoreTestCase():
     """
     Test cases for libgse2 core interface
     """

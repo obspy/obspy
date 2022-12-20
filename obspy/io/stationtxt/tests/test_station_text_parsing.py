@@ -12,7 +12,6 @@ Test suite for the station text parser.
 import inspect
 import io
 import os
-import unittest
 
 import obspy
 from obspy.io.stationtxt.core import (is_fdsn_station_text_file,
@@ -23,7 +22,7 @@ from obspy.core.util.base import NamedTemporaryFile
 import pytest
 
 
-class StationTextTestCase(unittest.TestCase):
+class StationTextTestCase():
     """
     """
     def setUp(self):

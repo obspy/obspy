@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import inspect
 import os
-import unittest
 
 import numpy as np
 try:
@@ -28,7 +27,7 @@ def _coordinate_conversion(x, y, z):
     return x, y, z
 
 
-class NLLOCTestCase(unittest.TestCase):
+class NLLOCTestCase():
     """
     Test suite for obspy.io.nlloc
     """
@@ -48,7 +47,7 @@ class NLLOCTestCase(unittest.TestCase):
         expected = np.load(filename)
         np.testing.assert_array_equal(got, expected)
 
-    @unittest.skipIf(not HAS_PYPROJ, 'pyproj not installed')
+    @pytest.mark.skipif(not HAS_PYPROJ, reason='pyproj not installed')
     def test_read_nlloc_scatter_coordinate_conversion(self):
         """
         Test reading NLLoc scatter file including coordinate conversion.

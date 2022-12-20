@@ -5,7 +5,6 @@ The libgse2 test suite.
 """
 import io
 import os
-import unittest
 from ctypes import ArgumentError
 import warnings
 
@@ -19,7 +18,7 @@ from obspy.io.gse2.libgse2 import (ChksumError, GSEUtiError, compile_sta2,
 import pytest
 
 
-class LibGSE2TestCase(unittest.TestCase):
+class LibGSE2TestCase():
     """
     Test cases for libgse2.
     """

@@ -4,7 +4,6 @@ import os
 import pickle
 from copy import deepcopy
 import warnings
-from unittest import mock
 
 from packaging.version import parse as parse_version
 import numpy as np

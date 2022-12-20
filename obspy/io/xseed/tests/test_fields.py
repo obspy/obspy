@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import io
 import string
-import unittest
 
 from obspy import UTCDateTime
 from obspy.io.xseed.fields import Float, VariableString, FixedString
 import pytest
 
 
-class FieldsTestCase(unittest.TestCase):
+class FieldsTestCase():
     """
     Fields test suite.
     """

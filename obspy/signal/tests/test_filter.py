@@ -5,7 +5,6 @@ The Filter test suite.
 """
 import gzip
 import os
-import unittest
 import warnings
 
 import numpy as np
@@ -16,7 +15,7 @@ from obspy.signal.filter import (bandpass, highpass, lowpass, envelope,
                                  lowpass_cheby_2)
 
 
-class FilterTestCase(unittest.TestCase):
+class FilterTestCase():
     """
     Test cases for Filter.
     """

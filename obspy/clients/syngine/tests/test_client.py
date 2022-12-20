@@ -3,8 +3,6 @@
 The obspy.clients.syngine test suite.
 """
 import io
-import unittest
-from unittest import mock
 
 import numpy as np
 import pytest
@@ -30,7 +28,7 @@ class RequestsMockResponse(object):
         return self._json
 
 
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase():
     """
     Test cases for obspy.clients.iris.client.Client.
     """

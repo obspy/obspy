@@ -12,7 +12,6 @@ The gse2.bulletin test suite.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import os
-import unittest
 import warnings
 
 from obspy.core.event import read_events
@@ -23,7 +22,7 @@ from obspy.core.inventory.inventory import read_inventory
 import pytest
 
 
-class BulletinTestCase(unittest.TestCase):
+class BulletinTestCase():
     """
     Test suite for obspy.io.gse2.bulletin
     """

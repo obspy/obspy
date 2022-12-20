@@ -14,7 +14,6 @@ import inspect
 import io
 import os
 import re
-import unittest
 import warnings
 
 from lxml import etree
@@ -31,7 +30,7 @@ from obspy.io.stationxml.core import _read_stationxml
 import pytest
 
 
-class StationXMLTestCase(unittest.TestCase):
+class StationXMLTestCase():
     """
     """
 

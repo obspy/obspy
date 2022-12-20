@@ -17,7 +17,6 @@ Modified after obspy.io.stationXML
 import io
 import os
 import re
-import unittest
 import warnings
 
 import pytest
@@ -28,7 +27,7 @@ from obspy.io.seiscomp.inventory import (
     _count_complex, _parse_list_of_complex_string, SCHEMA_NAMESPACE_BASE)
 
 
-class SC3MLTestCase(unittest.TestCase):
+class SC3MLTestCase():
 
     def setUp(self):
         """

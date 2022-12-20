@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
-import unittest
 
 from obspy.io.alsep.core import (_is_pse, _is_wtn, _is_wth,
                                  _read_pse, _read_wtn, _read_wth)
 
 
-class AlsepTestCase(unittest.TestCase):
+class AlsepTestCase():
 
     def setUp(self):
         # Directory where the test files are located

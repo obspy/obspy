@@ -4,7 +4,6 @@
 The cpxtrace.core test suite.
 """
 import os
-import unittest
 
 import numpy as np
 from scipy import signal
@@ -14,7 +13,7 @@ from obspy.signal import cpxtrace, util
 
 # only tests for windowed data are implemented currently
 
-class CpxTraceTestCase(unittest.TestCase):
+class CpxTraceTestCase():
     """
     Test cases for complex trace analysis
     """
