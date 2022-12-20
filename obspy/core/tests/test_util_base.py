@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
 import copy
+from unittest import mock
 
 import numpy as np
-from requests import HTTPError
 import pytest
+from requests import HTTPError
 
 from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
                                   download_to_file, sanitize_filename,

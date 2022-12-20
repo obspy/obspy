@@ -2,6 +2,7 @@
 """
 The obspy.clients.seedlink.basic_client test suite.
 """
+from unittest import mock
 
 import pytest
 

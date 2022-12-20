@@ -14,9 +14,10 @@ import copy
 import logging
 import os
 import shutil
-from socket import timeout as socket_timeout
 import sys
 import tempfile
+from socket import timeout as socket_timeout
+from unittest import mock
 
 import pytest
 

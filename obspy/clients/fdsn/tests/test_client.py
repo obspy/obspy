@@ -15,6 +15,7 @@ import re
 import sys
 import warnings
 from difflib import Differ
+from unittest import mock
 
 import urllib.request as urllib_request
 
