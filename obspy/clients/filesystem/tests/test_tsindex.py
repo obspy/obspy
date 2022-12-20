@@ -9,7 +9,6 @@ import re
 import requests
 import tempfile
 import uuid
-from unittest import mock, TestCase
 
 from obspy import read, UTCDateTime
 from obspy.core.util.misc import TemporaryWorkingDirectory
@@ -35,7 +34,7 @@ def get_test_client():
     return client
 
 
-class ClientTestCase(TestCase):
+class ClientTestCase():
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -585,7 +584,7 @@ def purge(dir, pattern):
             os.remove(os.path.join(dir, f))
 
 
-class IndexerTestCase(TestCase):
+class IndexerTestCase():
 
     def test_bad_rootpath(self):
         """
@@ -870,7 +869,7 @@ class IndexerTestCase(TestCase):
             purge(filepath, '^{}.*$'.format(fname))
 
 
-class TSIndexDatabaseHandlerTestCase(TestCase):
+class TSIndexDatabaseHandlerTestCase():
 
     def test_bad_sqlitdb_filepath(self):
         """
