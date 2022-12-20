@@ -192,7 +192,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     # resize.
     if axes is not None:
         # This is what holds the aspect ratio (but breaks the positioning)
-        collection.set_transform(transforms.IdentityTransform())
+        collection.set_transform(transforms.Affine2D(np.identity(3)))
         # Next is a dirty hack to fix the positioning:
         # 1. Need to bring the all patches to the origin (0, 0).
         for p in collection._paths:
@@ -200,7 +200,11 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # 2. Then use the offset property of the collection to position the
         # patches
         collection.set_offsets(xy)
-        collection._transOffset = axes.transData
+        try:
+            collection.set_offset_transform(axes.transData)
+        except AttributeError:
+            # compatibility for matplotlib 3.3 (and maybe 3.4 too?)
+            collection._transOffset = axes.transData
     collection.set_edgecolors(edgecolor)
     collection.set_alpha(alpha)
     collection.set_linewidth(linewidth)

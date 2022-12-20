@@ -81,6 +81,8 @@ EXTERNAL_EVALRESP = False
 EXTERNAL_LIBMSEED = False
 
 # Hard dependencies needed to install/run ObsPy.
+# Backwards compatibility hacks to be removed later:
+#  - matplotlib 3.3 (/3.4?): imaging (see #3242)
 INSTALL_REQUIRES = [
     'numpy>=1.20',
     'scipy>=1.7',
