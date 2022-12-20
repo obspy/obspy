@@ -214,9 +214,9 @@ class MSEEDSpecialIssueTestCase():
         # test results
         np.testing.assert_array_equal(data, st2[0].data)
 
-    @unittest.skipIf(NO_NEGATIVE_TIMESTAMPS,
-                     'times before 1970 are not supported on this operation '
-                     'system')
+    @pytest.mark.skipif(
+        NO_NEGATIVE_TIMESTAMPS,
+        reason='times before 1970 are not supported on this operation system')
     def test_write_with_date_time_before_1970(self):
         """
         Write an stream via libmseed with a datetime before 1970.
@@ -710,10 +710,11 @@ class MSEEDSpecialIssueTestCase():
         np.testing.assert_array_equal(data_m, data_r)
         np.testing.assert_array_equal(data_m, data_q)
 
-    @unittest.skipIf(
+    @pytest.mark.skipif(
         "CONDAFORGE" in os.environ and
         os.environ.get("APPVEYOR", "false").lower() == "true",
-        'Test is known to fail when building conda package in Appveyor.')
+        reason='Test is known to fail when building conda package in '
+               'Appveyor.')
     def test_infinite_loop(self):
         """
         Tests that libmseed doesn't enter an infinite loop on buggy files.

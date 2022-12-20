@@ -859,8 +859,8 @@ class QualityControlTestCase():
 
         assert md.get_json_meta()
 
-    @unittest.skipIf(not HAS_JSONSCHEMA,
-                     reason="Test requires the jsonschema module")
+    @pytest.mark.skipif(not HAS_JSONSCHEMA,
+                        reason="Test requires the jsonschema module")
     def test_schema_validation(self):
         with NamedTemporaryFile() as tf:
             obspy.Trace(data=np.arange(10, dtype=np.int32),
