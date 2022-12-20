@@ -114,7 +114,7 @@ class ConversionErrorTest():
 
     def assertRaisesConversion(self, *args):
         with pytest.raises(xdrlib.ConversionError):
-            *args()
+            args[0](*args[1:])
 
     def test_pack_int(self):
         self.assertRaisesConversion(self.packer.pack_int, 'string')
