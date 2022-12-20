@@ -27,7 +27,7 @@ class TestRG16Util():
             assert out == answer
         with pytest.raises(ValueError) as e:
             _read_bcd(BytesIO(b'\xFF'), 1, True)
-        assert 'invalid bcd values' in str(e.exception)
+            assert 'invalid bcd values' in str(e.exception)
 
     def test_read_binary(self):
         """
