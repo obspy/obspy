@@ -154,7 +154,7 @@ class TestClient():
         assert len(returned_stream) != len(expected_stream)
         for t1, t2 in zip(returned_stream, expected_stream):
             with pytest.raises(AssertionError):
-                self.assertListEqual(list(t1.data), list(t2.data))
+                assert list(t1.data) == list(t2.data)
 
         # request resulting in no data
         returned_stream = client.get_waveforms(
@@ -576,13 +576,9 @@ class TestIndexer():
                                 'timeseries.sqlite')
 
         # test that a bad leap second file path raises an error
-        self.assertRaisesRegex(OSError,
-                               "^Root path.*does not exists.$",
-                               Indexer,
-                               "/some/bad/path",
-                               database=database,
-                               filename_pattern="*.mseed",
-                               parallel=2)
+        with pytest.raises(OSError, match="^Root path.*does not exists.$"):
+            Indexer("/some/bad/path", database=database,
+                    filename_pattern="*.mseed", parallel=2)
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -590,12 +586,9 @@ class TestIndexer():
         a SQLite database
         """
         filepath = get_test_data_filepath()
-        self.assertRaisesRegex(OSError,
-                               "^Database path.*does not exist.$",
-                               Indexer,
-                               filepath,
-                               database='/some/bad/path/',
-                               filename_pattern="*.mseed")
+        with pytest.raises(OSError, match="^Database path.*does not exist.$"):
+            Indexer(filepath, database='/some/bad/path/',
+                    filename_pattern="*.mseed")
 
     def test_bad_database(self):
         """
@@ -604,13 +597,9 @@ class TestIndexer():
         a ValueError is raised.
         """
         filepath = get_test_data_filepath()
-        self.assertRaisesRegex(ValueError,
-                               "^Database must be a string or "
-                               "TSIndexDatabaseHandler object.$",
-                               Indexer,
-                               filepath,
-                               database=None,
-                               filename_pattern="*.mseed")
+        match = "^Database must be a string or TSIndexDatabaseHandler object.$"
+        with pytest.raises(ValueError, match=match):
+            Indexer(filepath, database=None, filename_pattern="*.mseed")
 
     def test_download_leap_seconds_file(self):
         with TemporaryWorkingDirectory() as tempdir:
@@ -627,8 +616,8 @@ class TestIndexer():
             file_path = indexer.download_leap_seconds_file(test_file)
             # assert that the file was put in the same location as the
             # sqlite db
-            self.assertTrue(os.path.isfile(file_path))
-            self.assertEqual(file_path, test_file)
+            assert os.path.isfile(file_path)
+            assert file_path == test_file
 
     def test_download_leap_seconds_file_no_path_given(self):
         with TemporaryWorkingDirectory() as tempdir:
@@ -641,14 +630,13 @@ class TestIndexer():
                 return_value=requests.Response())
             file_path = indexer.download_leap_seconds_file()
 
-            self.assertEqual(
-                os.path.normpath(file_path),
+            assert os.path.normpath(file_path) == \
                 os.path.normpath(os.path.join(os.path.dirname(database),
-                                              "leap-seconds.list")))
+                                              "leap-seconds.list"))
 
             # assert that the file was put in the same location as the
             # sqlite db
-            self.assertTrue(os.path.isfile(file_path))
+            assert os.path.isfile(file_path)
 
     def test__get_leap_seconds_file(self):
         filepath = get_test_data_filepath()
@@ -657,16 +645,11 @@ class TestIndexer():
                           database=database)
 
         # test that a bad leap second file path raises an error
-        self.assertRaisesRegex(OSError,
-                               "^No leap seconds file exists at.*$",
-                               Indexer,
-                               filepath,
-                               database=database,
-                               leap_seconds_file="/some/bad/path/")
-        self.assertRaisesRegex(OSError,
-                               "^No leap seconds file exists at.*$",
-                               indexer._get_leap_seconds_file,
-                               "/some/bad/path/")
+        with pytest.raises(OSError, match="^No leap seconds file exists at.*$"):
+            Indexer(filepath, database=database,
+                    leap_seconds_file="/some/bad/path/")
+        with pytest.raises(OSError, match="^No leap seconds file exists at.*$"):
+            indexer._get_leap_seconds_file("/some/bad/path/")
 
         # test search
         # create a empty leap-seconds.list file
@@ -679,7 +662,7 @@ class TestIndexer():
             open(test_file, 'a').close()
             file_path = os.path.normpath(
                 indexer._get_leap_seconds_file("SEARCH"))
-            self.assertEqual(file_path, test_file)
+            assert file_path == test_file
 
     def test_build_file_list(self):
         filepath = get_test_data_filepath()
@@ -692,26 +675,24 @@ class TestIndexer():
         file_list = indexer.build_file_list(relative_paths=True,
                                             reindex=True)
         file_list.sort()
-        self.assertEqual(len(file_list), 3)
-        self.assertEqual(os.path.normpath(
-            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
-            file_list[0])
-        self.assertEqual(os.path.normpath(
-            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
-            file_list[1])
-        self.assertEqual(os.path.normpath(
-            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
-            file_list[2])
+        assert len(file_list) == 3
+        assert os.path.normpath(
+            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') == \
+            file_list[0]
+        assert os.path.normpath(
+            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') == \
+            file_list[1]
+        assert os.path.normpath(
+            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') == \
+            file_list[2]
 
         # case where the root path is outside of the absolute
         # data path, to assert that already indexed files are still skipped
         indexer = Indexer(tempfile.mkdtemp(),
                           database=TSIndexDatabaseHandler(database=database),
                           filename_pattern="*.mseed")
-        self.assertRaisesRegex(OSError,
-                               "^No files matching filename.*$",
-                               indexer.build_file_list,
-                               reindex=True)
+        with pytest.raises(OSError, match="^No files matching filename.*$"):
+            indexer.build_file_list(reindex=True)
 
         # test for absolute paths
         # this time pass a TSIndexDatabaseHandler instance as the database
@@ -721,36 +702,30 @@ class TestIndexer():
                           leap_seconds_file=None)
         file_list = indexer.build_file_list(reindex=True)
         file_list.sort()
-        self.assertEqual(len(file_list), 3)
-        self.assertNotEqual(os.path.normpath(
-            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
-            file_list[0])
-        self.assertIn(os.path.normpath(
-            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
-            file_list[0])
-        self.assertNotEqual(os.path.normpath(
-            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
-            file_list[1])
-        self.assertIn(os.path.normpath(
-            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
-            file_list[1])
-        self.assertNotEqual(os.path.normpath(
-            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
-            file_list[2])
-        self.assertIn(os.path.normpath(
-            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
-            file_list[2])
+        assert len(file_list) == 3
+        assert os.path.normpath(
+            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') != \
+            file_list[0]
+        assert os.path.normpath(
+            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') in \
+            file_list[0]
+        assert os.path.normpath(
+            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') != \
+            file_list[1]
+        assert os.path.normpath(
+            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') in \
+            file_list[1]
+        assert os.path.normpath(
+            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') != \
+            file_list[2]
+        assert os.path.normpath(
+            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') in \
+            file_list[2]
         # test that already indexed files (relative and absolute) get skipped.
-        self.assertRaisesRegex(OSError,
-                               "^No unindexed files matching filename.*$",
-                               indexer.build_file_list,
-                               reindex=False,
-                               relative_paths=False)
-        self.assertRaisesRegex(OSError,
-                               "^No unindexed files matching filename.*$",
-                               indexer.build_file_list,
-                               reindex=False,
-                               relative_paths=True)
+        with pytest.raises(OSError, match="^No unindexed files matching filename.*$"):
+            indexer.build_file_list(reindex=False, relative_paths=False)
+        with pytest.raises(OSError, match="^No unindexed files matching filename.*$"):
+            indexer.build_file_list(reindex=False, relative_paths=True)
         # for this test mock an unindexed file ('data.mseed') to ensure that
         # it gets added when reindex is True
         mocked_files = [
@@ -765,10 +740,8 @@ class TestIndexer():
         for i in range(len(mocked_files)):
             mocked_files[i] = os.path.normpath(mocked_files[i])
         indexer._get_rootpath_files = mock.MagicMock(return_value=mocked_files)
-        self.assertEqual(indexer.build_file_list(
-                           reindex=False,
-                           relative_paths=False),
-                         ['data.mseed'])
+        assert indexer.build_file_list(
+            reindex=False, relative_paths=False) == ['data.mseed']
 
     def test_run_bad_index_cmd(self):
         """
@@ -776,14 +749,12 @@ class TestIndexer():
         index_cmd. (such as no command found.)
         """
         filepath = get_test_data_filepath()
-        indexer = Indexer(filepath,
-                          filename_pattern="*.mseed",
-                          index_cmd="some_bad_command"
-                          )
+        indexer = Indexer(filepath, filename_pattern="*.mseed",
+                          index_cmd="some_bad_command")
 
-        self.assertRaisesRegex(OSError,
-                               "^Required program.* is not installed.*$",
-                               indexer.run)
+        match = "^Required program.* is not installed.*$"
+        with pytest.raises(OSError, match=match):
+            indexer.run()
 
     def test_run(self):
         my_uuid = uuid.uuid4().hex
@@ -841,10 +812,10 @@ class TestIndexer():
 
                 for i in range(0, len(expected_tsindex_data)):
                     for j in range(0, len(keys)):
-                        self.assertEqual(getattr(expected_tsindex_data[i],
-                                                 keys[j]),
-                                         getattr(tsindex_data[i], keys[j]))
-                self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
+                        assert getattr(
+                            expected_tsindex_data[i], keys[j]) == \
+                            getattr(tsindex_data[i], keys[j])
+                assert len(tsindex_data) == len(expected_tsindex_data)
         finally:
             purge(filepath, '^{}.*$'.format(fname))
 
@@ -857,13 +828,9 @@ class TestTSIndexDatabaseHandler():
         a SQLite database
         """
         filepath = get_test_data_filepath()
-        self.assertRaisesRegex(OSError,
-                               "^Database path.*does not exist.$",
-                               Indexer,
-                               filepath,
-                               database='/some/bad/path/',
-                               filename_pattern="*.mseed",
-                               parallel=2)
+        with pytest.raises(OSError, match="^Database path.*does not exist.$"):
+            Indexer(filepath, database='/some/bad/path/',
+                    filename_pattern="*.mseed", parallel=2)
 
     def test__fetch_summary_rows(self):
         # test with actual sqlite3 database that is missing a summary table
@@ -897,18 +864,15 @@ class TestTSIndexDatabaseHandler():
 
         for i in range(0, len(expected_ts_summary_data)):
             for j in range(0, len(keys)):
-                self.assertEqual(getattr(expected_ts_summary_data[i], keys[j]),
-                                 getattr(ts_summary_data[i], keys[j]))
+                assert getattr(expected_ts_summary_data[i], keys[j]) == \
+                                 getattr(ts_summary_data[i], keys[j])
 
         # test for case where query returns no results
         ts_summary_data = request_handler._fetch_summary_rows(
-                                              [("XX",
-                                                "ANMO,T*",
-                                                "00,10",
-                                                "BHZ",
-                                                "2018-01-01T00:00:00.000000",
-                                                "2018-12-31T00:00:00.000000")])
-        self.assertEqual(ts_summary_data, [])
+            [("XX", "ANMO,T*", "00,10", "BHZ",
+              "2018-01-01T00:00:00.000000",
+              "2018-12-31T00:00:00.000000")])
+        assert ts_summary_data == []
 
     def test_get_tsindex_summary_cte(self):
         # test with actual sqlite3 database that is missing a summary table
@@ -935,4 +899,4 @@ class TestTSIndexDatabaseHandler():
         query_results = (session().query(ts_summary_cte))
         for idx, r in enumerate(query_results):
             result = r[:6]  # ignore updt date
-            self.assertEqual(result, expected_ts_summary_data[idx])
+            assert result == expected_ts_summary_data[idx]
