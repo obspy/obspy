@@ -163,17 +163,17 @@ class TestSACTrace():
         sac = SACTrace.read(self.fileseis)
         a, b, t1 = sac.a, sac.b, sac.t1
         sac.reftime -= 10.0
-        assert round(abs(sac.a-a + 10.0), 5) == 0
-        assert round(abs(sac.b-b + 10.0), 7) == 0
-        assert round(abs(sac.t1-t1 + 10.0), 7) == 0
+        assert round(abs(sac.a - (a + 10.0)), 5) == 0
+        assert round(abs(sac.b - (b + 10.0)), 7) == 0
+        assert round(abs(sac.t1 - (t1 + 10.0)), 7) == 0
         # changes in the reftime should push remainder microseconds to the
         # relative time headers, and milliseconds to the nzmsec
         sac = SACTrace(b=5.0, t1=20.0)
         b, t1, nzmsec = sac.b, sac.t1, sac.nzmsec
         sac.reftime += 1.2e-3
         assert sac.nzmsec == nzmsec + 1
-        assert round(abs(sac.b-b - 1.0e-3), 6) == 0
-        assert round(abs(sac.t1-t1 - 1.0e-3), 5) == 0
+        assert round(abs(sac.b - (b - 1.0e-3)), 6) == 0
+        assert round(abs(sac.t1 - (t1 - 1.0e-3)), 5) == 0
 
     def test_lcalda(self):
         """
