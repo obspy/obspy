@@ -16,10 +16,11 @@ class TestCalibration():
     """
     Calibration test case
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                 'data'))
+        cls.path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                'data'))
 
     def test_relcal_sts2_vs_unknown(self):
         """

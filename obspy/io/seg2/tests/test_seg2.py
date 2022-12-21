@@ -81,10 +81,11 @@ class TestSEG2():
     """
     Test cases for SEG2 reading.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.dir = os.path.dirname(__file__)
-        self.path = os.path.join(self.dir, 'data')
+        cls.dir = os.path.dirname(__file__)
+        cls.path = os.path.join(cls.dir, 'data')
 
     def test_read_data_format_2(self):
         """

@@ -12,12 +12,6 @@ class TestUtils():
     """
     Utils test suite.
     """
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_to_tag(self):
         name = "Hello World"
         assert "hello_world" == to_tag(name)

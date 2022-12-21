@@ -27,9 +27,10 @@ class TestMSEEDReadingAndWriting():
     Test everything related to the general reading and writing of MiniSEED
     files.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_read_head_file_via_obspy(self):
         """

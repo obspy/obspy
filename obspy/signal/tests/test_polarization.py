@@ -46,7 +46,8 @@ class TestPolarization():
     """
     Test cases for polarization analysis
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         path = join(dirname(__file__), 'data')
         # setting up sliding window data
         data_z = np.loadtxt(join(path, 'MBGA_Z.ASC'))
@@ -55,19 +56,16 @@ class TestPolarization():
         n = 256
         fs = 75
         inc = int(0.05 * fs)
-        self.data_win_z, self.nwin, self.no_win = \
+        cls.data_win_z, cls.nwin, cls.no_win = \
             util.enframe(data_z, signal.hamming(n), inc)
-        self.data_win_e, self.nwin, self.no_win = \
+        cls.data_win_e, cls.nwin, cls.no_win = \
             util.enframe(data_e, signal.hamming(n), inc)
-        self.data_win_n, self.nwin, self.no_win = \
+        cls.data_win_n, cls.nwin, cls.no_win = \
             util.enframe(data_n, signal.hamming(n), inc)
         # global test input
-        self.fk = [2, 1, 0, -1, -2]
-        self.norm = pow(np.max(data_z), 2)
-        self.res = np.loadtxt(join(path, '3cssan.hy.1.MBGA_Z'))
-
-    def tearDown(self):
-        pass
+        cls.fk = [2, 1, 0, -1, -2]
+        cls.norm = pow(np.max(data_z), 2)
+        cls.res = np.loadtxt(join(path, '3cssan.hy.1.MBGA_Z'))
 
     def test_polarization(self):
         """

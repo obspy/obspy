@@ -22,9 +22,10 @@ class TestLibGSE2():
     """
     Test cases for libgse2.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_read(self):
         """

@@ -14,10 +14,11 @@ class TestPHA():
     Test suite for obspy.io.hypodd.pha
     """
 
-    def setUp(self):
-        self.path = os.path.dirname(__file__)
-        self.fname = os.path.join(self.path, 'data', 'example.pha')
-        self.fname2 = os.path.join(self.path, 'data', '60s_nan.pha')
+    @classmethod
+    def setup_class(cls):
+        cls.path = os.path.dirname(__file__)
+        cls.fname = os.path.join(cls.path, 'data', 'example.pha')
+        cls.fname2 = os.path.join(cls.path, 'data', '60s_nan.pha')
 
     def test_is_pha(self):
         assert pha._is_pha(self.fname)

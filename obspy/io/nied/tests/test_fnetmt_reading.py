@@ -10,9 +10,10 @@ class TestFNETMTCatalogReading():
     """
     Test everything related to reading an F-net moment tensor catalog.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_read_fnetmt_catalog(self):
         testfile = os.path.join(self.path, 'data', 'FNETMTCATALOG')

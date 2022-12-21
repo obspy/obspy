@@ -26,13 +26,13 @@ class TestMchedr():
 
     catalog = None
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        filename = os.path.join(self.path, 'mchedr.dat')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
+        filename = os.path.join(cls.path, 'mchedr.dat')
         # read the mchedr file once for all
-        if self.__class__.catalog is None:
-            self.__class__.catalog = _read_mchedr(filename)
+        cls.catalog = _read_mchedr(filename)
 
     def test_catalog(self):
         assert len(self.catalog) == 1

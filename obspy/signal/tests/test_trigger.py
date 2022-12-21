@@ -40,12 +40,13 @@ class TestTrigger():
     """
     Test cases for obspy.trigger
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
         # random seed data
         np.random.seed(815)
-        self.data = np.random.randn(int(1e5))
+        cls.data = np.random.randn(int(1e5))
 
     def test_rec_sta_lta_c(self):
         """

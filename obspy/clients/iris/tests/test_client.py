@@ -19,9 +19,10 @@ class TestClient():
     Test cases for obspy.clients.iris.client.Client.
     """
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_sacpz(self):
         """

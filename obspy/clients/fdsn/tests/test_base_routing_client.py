@@ -28,7 +28,8 @@ _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 
 
 class TestBaseRoutingClient():
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Need to inherit to add two required method by the abstract base
         # class.
         class _DummyBaseRoutingClient(BaseRoutingClient):  # pragma: no cover
@@ -42,9 +43,9 @@ class TestBaseRoutingClient():
             def _handle_requests_http_error(self, r):
                 raise NotImplementedError
 
-        self._cls_object = _DummyBaseRoutingClient
-        self._cls = ("obspy.clients.fdsn.routing.routing_client."
-                     "BaseRoutingClient")
+        cls._cls_object = _DummyBaseRoutingClient
+        cls._cls = ("obspy.clients.fdsn.routing.routing_client."
+                    "BaseRoutingClient")
 
     def test_router_intialization_helper_function(self):
         c = RoutingClient("eida-routing")

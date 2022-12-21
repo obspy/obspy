@@ -109,8 +109,9 @@ class TestXDR():
 
 class TestConversionError():
 
-    def setUp(self):
-        self.packer = xdrlib.Packer()
+    @classmethod
+    def setup_class(cls):
+        cls.packer = xdrlib.Packer()
 
     def assertRaisesConversion(self, *args):
         with pytest.raises(xdrlib.ConversionError):

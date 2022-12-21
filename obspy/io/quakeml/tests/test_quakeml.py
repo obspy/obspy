@@ -47,11 +47,12 @@ class TestQuakeML():
     """
     Test suite for obspy.io.quakeml
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        self.neries_filename = os.path.join(self.path, 'neries_events.xml')
-        self.neries_catalog = _read_quakeml(self.neries_filename)
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.neries_filename = os.path.join(cls.path, 'neries_events.xml')
+        cls.neries_catalog = _read_quakeml(cls.neries_filename)
 
     def test_read_quakeml(self):
         """

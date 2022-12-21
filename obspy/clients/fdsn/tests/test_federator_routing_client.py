@@ -23,10 +23,11 @@ pytestmark = pytest.mark.network
 
 
 class TestFederatorRoutingClient():
-    def setUp(self):
-        self.client = FederatorRoutingClient()
-        self._cls = ("obspy.clients.fdsn.routing.federator_routing_client."
-                     "FederatorRoutingClient")
+    @classmethod
+    def setup_class(cls):
+        cls.client = FederatorRoutingClient()
+        cls._cls = ("obspy.clients.fdsn.routing.federator_routing_client."
+                    "FederatorRoutingClient")
 
     def test_get_service_version(self):
         # At the time of test writing the version is 1.1.1. Here we just

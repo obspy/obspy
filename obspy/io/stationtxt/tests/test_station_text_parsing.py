@@ -25,9 +25,10 @@ import pytest
 class TestStationText():
     """
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Most generic way to get the actual data directory.
-        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
+        cls.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
 
     def test_is_txt_file(self):

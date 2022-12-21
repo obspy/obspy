@@ -7,11 +7,12 @@ from obspy.core.util.misc import CatchOutput
 
 
 class TestPrint():
-    def setUp(self):
-        self.all_files = [os.path.join(os.path.dirname(__file__), os.pardir,
-                                       os.pardir, 'io', 'ascii', 'tests',
-                                       'data', x)
-                          for x in ['slist.ascii', 'tspair.ascii']]
+    @classmethod
+    def setup_class(cls):
+        cls.all_files = [os.path.join(os.path.dirname(__file__), os.pardir,
+                                      os.pardir, 'io', 'ascii', 'tests',
+                                      'data', x)
+                         for x in ['slist.ascii', 'tspair.ascii']]
 
     def test_print(self):
         with CatchOutput() as out:

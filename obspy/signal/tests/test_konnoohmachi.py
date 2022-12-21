@@ -18,11 +18,9 @@ class TestKonnoOhmachi():
     """
     Test cases for the Konno Ohmachi Smoothing.
     """
-    def setUp(self):
-        self.frequencies = np.logspace(-3.0, 2.0, 100)
-
-    def tearDown(self):
-        pass
+    @classmethod
+    def setup_class(cls):
+        cls.frequencies = np.logspace(-3.0, 2.0, 100)
 
     def test_smoothing_window(self):
         """

@@ -15,9 +15,10 @@ class TestCore():
     """
     """
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_read_101_traces(self):
         """

@@ -10,12 +10,13 @@ from obspy.io.quakeml.core import _read_quakeml
 
 class TestJSON():
     """Test JSON module classes and functions"""
-    def setUp(self):
-        self.path = os.path.join(os.path.dirname(__file__))
-        qml_file = os.path.join(self.path, "..", "..", "quakeml", "tests",
+    @classmethod
+    def setup_class(cls):
+        cls.path = os.path.join(os.path.dirname(__file__))
+        qml_file = os.path.join(cls.path, "..", "..", "quakeml", "tests",
                                 "data", "qml-example-1.2-RC3.xml")
-        self.c = _read_quakeml(qml_file)
-        self.event = self.c.events[0]
+        cls.c = _read_quakeml(qml_file)
+        cls.event = cls.c.events[0]
 
     def verify_json(self, s):
         """Test an output is a string and is JSON"""
@@ -68,6 +69,3 @@ class TestJSON():
         # Verify json module can load
         j = json.load(memfile)
         assert isinstance(j, dict)
-
-    def tearDown(self):
-        del self.event

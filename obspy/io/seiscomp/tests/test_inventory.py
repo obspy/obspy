@@ -29,16 +29,17 @@ from obspy.io.seiscomp.inventory import (
 
 class TestSC3ML():
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         """
         Read example SeisComp XML format to Inventory
         """
-        self.data_dir = os.path.join(os.path.dirname(__file__), "data")
-        stationxml_path = os.path.join(self.data_dir, "EB_response_stationXML")
-        sc3ml_path = os.path.join(self.data_dir, "EB_response_sc3ml")
-        self.stationxml_inventory = read_inventory(stationxml_path,
-                                                   format="STATIONXML")
-        self.sc3ml_inventory = read_inventory(sc3ml_path, format="SC3ML")
+        cls.data_dir = os.path.join(os.path.dirname(__file__), "data")
+        stationxml_path = os.path.join(cls.data_dir, "EB_response_stationXML")
+        sc3ml_path = os.path.join(cls.data_dir, "EB_response_sc3ml")
+        cls.stationxml_inventory = read_inventory(stationxml_path,
+                                                  format="STATIONXML")
+        cls.sc3ml_inventory = read_inventory(sc3ml_path, format="SC3ML")
 
     def test_sc3ml_versions(self):
         """

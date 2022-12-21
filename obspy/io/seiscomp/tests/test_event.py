@@ -30,20 +30,21 @@ class TestEvent():
     """
     Test suite for obspy.io.seiscomp.event
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.io_directory = \
+        cls.io_directory = \
             os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        self.quakeml_path = \
-            os.path.join(self.io_directory, 'quakeml', 'tests', 'data')
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        self.write_xslt_filename = os.path.join(
-            self.io_directory, 'seiscomp', 'data',
+        cls.quakeml_path = \
+            os.path.join(cls.io_directory, 'quakeml', 'tests', 'data')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.write_xslt_filename = os.path.join(
+            cls.io_directory, 'seiscomp', 'data',
             'quakeml_1.2__sc3ml_0.11.xsl')
-        self.schema_pattern = re.compile(
+        cls.schema_pattern = re.compile(
             r'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[\d\.]+'
         )
-        self.version_pattern = re.compile(r'version="[\d\.]+"')
+        cls.version_pattern = re.compile(r'version="[\d\.]+"')
 
     def change_reading_version(self, filename, version):
         """

@@ -78,8 +78,9 @@ class TestSDS():
     """
     Test reading data from SDS file structure.
     """
-    def setUp(self):
-        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
+    @classmethod
+    def setup_class(cls):
+        cls.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
 
     def test_read_from_sds(self):

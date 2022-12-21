@@ -18,10 +18,11 @@ class TestCore():
     Test cases for audio WAV support
     """
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        self.file = os.path.join(self.path, '3cssan.near.8.1.RNON.wav')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.file = os.path.join(cls.path, '3cssan.near.8.1.RNON.wav')
 
     def test_read_via_obspy(self):
         """

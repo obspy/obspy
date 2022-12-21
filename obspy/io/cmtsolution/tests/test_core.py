@@ -16,10 +16,11 @@ class TestCmtsolution():
     The tests usually directly utilize the registered function with the
     read_events() to also test the integration.
     """
-    def setUp(self):
-        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
+    @classmethod
+    def setup_class(cls):
+        cls.path = os.path.dirname(os.path.abspath(inspect.getfile(
             inspect.currentframe())))
-        self.datapath = os.path.join(self.path, "data")
+        cls.datapath = os.path.join(cls.path, "data")
 
     def test_read_and_write_cmtsolution_from_files(self):
         """

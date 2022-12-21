@@ -21,13 +21,14 @@ class TestSACTrace():
     """
     Test suite for obspy.io.sac.sactrace
     """
-    def setUp(self):
-        self.path = os.path.dirname(__file__)
-        self.file = os.path.join(self.path, 'data', 'test.sac')
-        self.filexy = os.path.join(self.path, 'data', 'testxy.sac')
-        self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
-        self.fileseis = os.path.join(self.path, 'data', 'seism.sac')
-        self.testdata = np.array(
+    @classmethod
+    def setup_class(cls):
+        cls.path = os.path.dirname(__file__)
+        cls.file = os.path.join(cls.path, 'data', 'test.sac')
+        cls.filexy = os.path.join(cls.path, 'data', 'testxy.sac')
+        cls.filebe = os.path.join(cls.path, 'data', 'test.sac.swap')
+        cls.fileseis = os.path.join(cls.path, 'data', 'seism.sac')
+        cls.testdata = np.array(
             [-8.74227766e-08, -3.09016973e-01,
              -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
              -1.00000000e+00, -9.51056302e-01, -8.09016585e-01,

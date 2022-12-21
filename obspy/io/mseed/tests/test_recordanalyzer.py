@@ -7,11 +7,12 @@ from obspy.io.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
 
 
 class TestRecordAnalyser():
-    def setUp(self):
-        self.maxDiff = None
-        self.test_file = os.path.join(os.path.dirname(__file__),
-                                      'data',
-                                      'timingquality.mseed')
+    @classmethod
+    def setup_class(cls):
+        cls.maxDiff = None
+        cls.test_file = os.path.join(os.path.dirname(__file__),
+                                     'data',
+                                     'timingquality.mseed')
 
     def test_default_record(self):
         with CatchOutput() as out:

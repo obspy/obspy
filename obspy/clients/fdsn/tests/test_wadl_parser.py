@@ -20,9 +20,10 @@ class TestWADLParser():
     """
     Test cases for obspy.clients.fdsn.wadl_parser.WADL_Parser.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.data_path = os.path.join(os.path.dirname(__file__), "data")
+        cls.data_path = os.path.join(os.path.dirname(__file__), "data")
 
     def _parse_wadl_file(self, filename):
         """

@@ -14,9 +14,10 @@ import pytest
 class TestASCII():
     """
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_is_slist_file(self):
         """

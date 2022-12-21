@@ -19,24 +19,25 @@ class TestZMAP():
     """
     Test suite for obspy.io.zmap.core
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         data_dir = os.path.join(os.path.dirname(__file__), 'data')
-        self.data_dir = data_dir
+        cls.data_dir = data_dir
         path_to_catalog = os.path.join(data_dir, 'neries_events.xml')
-        self.catalog = read_events(path_to_catalog)
-        self.zmap_fields = _STD_ZMAP_FIELDS
+        cls.catalog = read_events(path_to_catalog)
+        cls.zmap_fields = _STD_ZMAP_FIELDS
         # Extract our favorite test event from the catalog
         test_event_id = 'quakeml:eu.emsc/event/20120404_0000041'
-        self.test_event = next(e for e in self.catalog.events
-                               if e.resource_id.id == test_event_id)
-        self.test_data = {
+        cls.test_event = next(e for e in cls.catalog.events
+                              if e.resource_id.id == test_event_id)
+        cls.test_data = {
             'lon': '79.689000', 'lat': '41.818000', 'month': '4',
             'year': '2012.258465590847', 'day': '4', 'hour': '14',
             'minute': '21', 'second': '42.3', 'depth': '1.000000',
             'mag': '4.400000'
         }
 
-    def tearDown(self):
+    def teardown_method(self):
         # Make sure events are deleted before the next test to prevent
         # resource identifier warnings
         self.catalog = None

@@ -15,9 +15,10 @@ class TestNRLRemote():
     Minimal NRL test suite connecting to online NRL
 
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # This is also the default URL.
-        self.nrl_online = NRL(root='http://ds.iris.edu/NRL')
+        cls.nrl_online = NRL(root='http://ds.iris.edu/NRL')
 
     def test_nrl_type(self):
         assert isinstance(self.nrl_online, RemoteNRL)
@@ -28,15 +29,16 @@ class TestNRLLocal():
     NRL test suite using stripped down local NRL without network usage.
 
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Longer diffs in the test assertions.
-        self.maxDiff = None
+        cls.maxDiff = None
         # Small subset of NRL included in tests/data
-        self.local_nrl_root = os.path.join(
+        cls.local_nrl_root = os.path.join(
             os.path.dirname(__file__), 'data', 'IRIS')
-        self.nrl_local = NRL(root=self.local_nrl_root)
-        self.local_dl_key = ['REF TEK', 'RT 130 & 130-SMA', '1', '1']
-        self.local_sensor_key = ['Guralp', 'CMG-3T', '120s - 50Hz', '1500']
+        cls.nrl_local = NRL(root=cls.local_nrl_root)
+        cls.local_dl_key = ['REF TEK', 'RT 130 & 130-SMA', '1', '1']
+        cls.local_sensor_key = ['Guralp', 'CMG-3T', '120s - 50Hz', '1500']
 
     def test_nrl_type(self):
         assert isinstance(self.nrl_local, LocalNRL)

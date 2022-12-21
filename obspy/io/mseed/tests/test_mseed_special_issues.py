@@ -51,14 +51,15 @@ def _test_function(filename):
 class TestMSEEDSpecialIssue():
     """
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
         # mseed steim compression is big endian
         if sys.byteorder == 'little':
-            self.swap = 1
+            cls.swap = 1
         else:
-            self.swap = 0
+            cls.swap = 0
 
     def test_invalid_record_length(self):
         """

@@ -7,9 +7,10 @@ from obspy.io.alsep.core import (_is_pse, _is_wtn, _is_wth,
 
 class TestAlsep():
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_is_pse(self):
         """

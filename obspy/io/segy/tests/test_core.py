@@ -27,15 +27,16 @@ class TestSEGYCore():
     """
     Test cases for SEG Y reading and writing..
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.dir = os.path.dirname(__file__)
-        self.path = os.path.join(self.dir, 'data')
+        cls.dir = os.path.dirname(__file__)
+        cls.path = os.path.join(cls.dir, 'data')
         # All the files and information about them. These files will be used in
         # most tests. data_sample_enc is the encoding of the data value and
         # sample_size the size in bytes of these samples.
-        self.files = FILES
-        self.dtypes = DTYPES
+        cls.files = FILES
+        cls.dtypes = DTYPES
 
     def test_is_segy_file(self):
         """

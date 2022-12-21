@@ -12,9 +12,10 @@ class TestKnetReading():
     """
     Test reading of K-NET and KiK-net ASCII format files from a file.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_read_knet_ascii(self):
         testfile = os.path.join(self.path, 'data', 'test.knet')

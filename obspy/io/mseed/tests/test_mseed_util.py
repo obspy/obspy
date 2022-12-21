@@ -86,15 +86,16 @@ class TestMSEEDUtil():
     """
     Tests suite for util module of obspy.io.mseed.
     """
-    def setUp(self):
-        self.maxDiff = None
+    @classmethod
+    def setup_class(cls):
+        cls.maxDiff = None
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
         # mseed steim compression is big endian
         if sys.byteorder == 'little':
-            self.swap = 1
+            cls.swap = 1
         else:
-            self.swap = 0
+            cls.swap = 0
 
     def test_convert_datetime(self):
         """

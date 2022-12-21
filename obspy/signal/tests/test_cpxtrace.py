@@ -17,25 +17,26 @@ class TestCpxTrace():
     """
     Test cases for complex trace analysis
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        file = os.path.join(self.path, '3cssan.hy.1.MBGA_Z')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
+        file = os.path.join(cls.path, '3cssan.hy.1.MBGA_Z')
         f = open(file)
-        self.res = np.loadtxt(f)
+        cls.res = np.loadtxt(f)
         f.close()
-        file = os.path.join(self.path, 'MBGA_Z.ASC')
+        file = os.path.join(cls.path, 'MBGA_Z.ASC')
         f = open(file)
-        self.data = np.loadtxt(f)
+        cls.data = np.loadtxt(f)
         f.close()
-        # self.path = os.path.dirname(__file__)
-        # self.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
+        # cls.path = os.path.dirname(__file__)
+        # cls.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
         # data = np.loadtxt("MBGA_Z.ASC")
-        self.n = 256
-        self.fs = 75
-        self.smoothie = 3
-        self.fk = [2, 1, 0, -1, -2]
-        self.inc = int(0.05 * self.fs)
+        cls.n = 256
+        cls.fs = 75
+        cls.smoothie = 3
+        cls.fk = [2, 1, 0, -1, -2]
+        cls.inc = int(0.05 * cls.fs)
         # [0] Time (k*inc)
         # [1] A_norm
         # [2] dA_norm
@@ -80,12 +81,9 @@ class TestCpxTrace():
         # [41] drect
         # [42] plan
         # [43] dplan
-        self.data_win, self.nwin, self.no_win = \
-            util.enframe(self.data, signal.hamming(self.n), self.inc)
-        # self.data_win = data
-
-    def tearDown(self):
-        pass
+        cls.data_win, cls.nwin, cls.no_win = \
+            util.enframe(cls.data, signal.hamming(cls.n), cls.inc)
+        # cls.data_win = data
 
     def test_normenvelope(self):
         """

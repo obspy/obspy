@@ -56,22 +56,23 @@ class TestFOCMEC():
     """
     Test everything related to reading FOCMEC files
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
-        self.datapath = os.path.join(self.path, 'data')
-        self.lst_file = os.path.join(self.datapath, 'focmec_8sta.lst')
-        self.out_file = os.path.join(self.datapath, 'focmec_8sta.out')
-        with open(self.out_file, 'rb') as fh:
+        cls.path = os.path.dirname(__file__)
+        cls.datapath = os.path.join(cls.path, 'data')
+        cls.lst_file = os.path.join(cls.datapath, 'focmec_8sta.lst')
+        cls.out_file = os.path.join(cls.datapath, 'focmec_8sta.out')
+        with open(cls.out_file, 'rb') as fh:
             header = []
             for i in range(15):
                 header.append(fh.readline().decode('ASCII'))
-            self.out_file_header = ''.join(header).rstrip()
-        with open(self.lst_file, 'rb') as fh:
+            cls.out_file_header = ''.join(header).rstrip()
+        with open(cls.lst_file, 'rb') as fh:
             header = []
             for i in range(48):
                 header.append(fh.readline().decode('ASCII'))
-            self.lst_file_header = ''.join(header).rstrip()
+            cls.lst_file_header = ''.join(header).rstrip()
 
     def _assert_cat_common_parts(self, cat):
         assert isinstance(cat, Catalog)

@@ -12,7 +12,6 @@ from obspy.realtime import RtTrace, signal
 
 
 # some debug flags
-PLOT_TRACES = False
 NUM_PACKETS = 3
 
 
@@ -21,7 +20,7 @@ class TestRealTimeSignal():
     The obspy.realtime.signal test suite.
     """
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         # read test data as float64
         cls.orig_trace = read(os.path.join(os.path.dirname(__file__), 'data',
                                            'II.TLY.BHZ.SAC'),
@@ -30,17 +29,11 @@ class TestRealTimeSignal():
         cls.orig_trace.data = np.require(cls.orig_trace.data, np.float64)
         cls.orig_trace_chunks = cls.orig_trace / NUM_PACKETS
 
-    def setUp(self):
+    def setup_method(self):
         # clear results
         self.filt_trace_data = None
         self.rt_trace = None
         self.rt_appended_traces = []
-
-    def tearDown(self):
-        # use results for debug plots if enabled
-        if PLOT_TRACES and self.filt_trace_data is not None and \
-           self.rt_trace is not None and self.rt_appended_traces:
-            self._plot_results()
 
     def test_square(self):
         """

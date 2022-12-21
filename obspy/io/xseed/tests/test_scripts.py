@@ -13,13 +13,14 @@ from obspy.io.xseed.utils import compare_seed
 
 
 class TestScript():
-    def setUp(self):
-        self.data = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                 'data'))
-        self.dataless_name = 'dataless.seed.BW_FURT'
-        self.dataless_file = os.path.join(self.data, self.dataless_name)
-        self.xseed_name = 'dataless.seed.BW_FURT.xml'
-        self.xseed_file = os.path.join(self.data, self.xseed_name)
+    @classmethod
+    def setup_class(cls):
+        cls.data = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                'data'))
+        cls.dataless_name = 'dataless.seed.BW_FURT'
+        cls.dataless_file = os.path.join(cls.data, cls.dataless_name)
+        cls.xseed_name = 'dataless.seed.BW_FURT.xml'
+        cls.xseed_file = os.path.join(cls.data, cls.xseed_name)
 
     #
     # obspy-dataless2resp

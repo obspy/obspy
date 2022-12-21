@@ -83,11 +83,12 @@ class TestIASPEI():
     """
     Test suite for obspy.io.iaspei.core
     """
-    def setUp(self):
-        self.data_dir = data_dir
+    @classmethod
+    def setup_class(cls):
+        cls.data_dir = data_dir
         # XXX the converted QuakeML file is not complete.. many picks and
         # station magnitudes were removed from it to save space.
-        self.path_to_ims = os.path.join(self.data_dir, '19670130012028.isf')
+        cls.path_to_ims = os.path.join(cls.data_dir, '19670130012028.isf')
 
     def test_reading(self):
         """

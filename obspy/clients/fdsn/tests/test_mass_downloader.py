@@ -1709,22 +1709,23 @@ class TestClientDownloadHelper():
     """
     Test cases for the ClientDownloadHelper class.
     """
-    def setUp(self):
-        self.path = os.path.dirname(__file__)
-        self.data = os.path.join(self.path, "data")
+    @classmethod
+    def setup_class(cls):
+        cls.path = os.path.dirname(__file__)
+        cls.data = os.path.join(cls.path, "data")
 
-        self.client = mock.MagicMock()
-        self.client.base_url = "http://example.com"
-        self.client_name = "Test"
-        self.restrictions = Restrictions(
+        cls.client = mock.MagicMock()
+        cls.client.base_url = "http://example.com"
+        cls.client_name = "Test"
+        cls.restrictions = Restrictions(
             starttime=obspy.UTCDateTime(2001, 1, 1),
             endtime=obspy.UTCDateTime(2015, 1, 1),
             station_starttime=obspy.UTCDateTime(2000, 1, 1),
             station_endtime=obspy.UTCDateTime(2015, 1, 1))
-        self.domain = domain.GlobalDomain()
-        self.mseed_storage = "miniseed"
-        self.stationxml_storage = "stationxml_storage"
-        self.logger = mock.MagicMock()
+        cls.domain = domain.GlobalDomain()
+        cls.mseed_storage = "miniseed"
+        cls.stationxml_storage = "stationxml_storage"
+        cls.logger = mock.MagicMock()
 
     def _init_client(self):
         return ClientDownloadHelper(

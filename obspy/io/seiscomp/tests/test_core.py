@@ -21,8 +21,9 @@ class TestCore():
     """
     Test suite for obspy.io.seiscomp.event
     """
-    def setUp(self):
-        self.data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    @classmethod
+    def setup_class(cls):
+        cls.data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_sc3ml_versions(self):
         """

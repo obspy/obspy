@@ -36,10 +36,11 @@ class TestNLLOC():
     """
     Test suite for obspy.io.nlloc
     """
-    def setUp(self):
-        self.path = Path(os.path.dirname(os.path.abspath(inspect.getfile(
+    @classmethod
+    def setup_class(cls):
+        cls.path = Path(os.path.dirname(os.path.abspath(inspect.getfile(
             inspect.currentframe()))))
-        self.datapath = self.path / "data"
+        cls.datapath = cls.path / "data"
 
     def test_write_nlloc_obs(self):
         """

@@ -27,9 +27,10 @@ class TestBulletin():
     Test suite for obspy.io.gse2.bulletin
     """
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data/bulletin')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data/bulletin')
 
     def test_catalog(self):
         """

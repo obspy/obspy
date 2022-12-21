@@ -19,9 +19,10 @@ class TestCore():
     """
     Test cases for libgse2 core interface
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_read_via_obspy(self):
         """

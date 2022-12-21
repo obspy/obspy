@@ -21,10 +21,11 @@ class TestCore():
     """
     Test integration with ObsPy's inventory objects.
     """
-    def setUp(self):
-        self.data_path = os.path.join(os.path.dirname(__file__), "data")
+    @classmethod
+    def setup_class(cls):
+        cls.data_path = os.path.join(os.path.dirname(__file__), "data")
 
-        self.seed_files = [
+        cls.seed_files = [
             "AI.ESPZ._.BHE.dataless",
             "AI.ESPZ._.BH_.dataless",
             "BN.LPW._.BHE.dataless",
@@ -40,42 +41,42 @@ class TestCore():
             "dataless.seed.BW_ZUGS",
             "dataless.seed.II_COCO"
         ]
-        self.xseed_files = ["dataless.seed.BW_FURT.xml"]
+        cls.xseed_files = ["dataless.seed.BW_FURT.xml"]
 
-        self.resp_files = ["RESP.BW.FURT..EHZ",
-                           "RESP.XX.NR008..HHZ.130.1.100",
-                           "RESP.XX.NS085..BHZ.STS2_gen3.120.1500",
-                           "RESP.BK.BRIB..BV1",
-                           "RESP.BK.DANT.00.LCL",
-                           # Has only a stage 0 with blkts 53 and 58.
-                           "RESP.BN.WR0..SHZ",
-                           # Defines the input units only in stage 2.
-                           "RESP.SG.MEMB..BDI"
-                           ]
-        self.other_files = ["II_COCO_three_channel_borehole.mseed",
-                            "xml-seed-1.0.xsd",
-                            "xml-seed-1.1.xsd"]
+        cls.resp_files = ["RESP.BW.FURT..EHZ",
+                          "RESP.XX.NR008..HHZ.130.1.100",
+                          "RESP.XX.NS085..BHZ.STS2_gen3.120.1500",
+                          "RESP.BK.BRIB..BV1",
+                          "RESP.BK.DANT.00.LCL",
+                          # Has only a stage 0 with blkts 53 and 58.
+                          "RESP.BN.WR0..SHZ",
+                          # Defines the input units only in stage 2.
+                          "RESP.SG.MEMB..BDI"
+                          ]
+        cls.other_files = ["II_COCO_three_channel_borehole.mseed",
+                           "xml-seed-1.0.xsd",
+                           "xml-seed-1.1.xsd"]
 
-        self.seed_files = [
-            os.path.join(self.data_path, _i) for _i in self.seed_files]
-        self.xseed_files = [
-            os.path.join(self.data_path, _i) for _i in self.xseed_files]
-        self.resp_files = [
-            os.path.join(self.data_path, _i) for _i in self.resp_files]
-        self.other_files = [
-            os.path.join(self.data_path, _i) for _i in self.other_files]
+        cls.seed_files = [
+            os.path.join(cls.data_path, _i) for _i in cls.seed_files]
+        cls.xseed_files = [
+            os.path.join(cls.data_path, _i) for _i in cls.xseed_files]
+        cls.resp_files = [
+            os.path.join(cls.data_path, _i) for _i in cls.resp_files]
+        cls.other_files = [
+            os.path.join(cls.data_path, _i) for _i in cls.other_files]
 
         # There are a couple more SEED files in the core test suite.
         core_data = os.path.join(os.path.dirname(os.path.dirname(
-            os.path.dirname(os.path.dirname(self.data_path)))), "core",
+            os.path.dirname(os.path.dirname(cls.data_path)))), "core",
             "tests", "data")
-        self.seed_files.append(os.path.join(core_data, "AU.MEEK.seed"))
-        self.seed_files.append(os.path.join(
+        cls.seed_files.append(os.path.join(core_data, "AU.MEEK.seed"))
+        cls.seed_files.append(os.path.join(
             core_data, "IRIS_single_channel_with_response.seed"))
 
         for _i in itertools.chain.from_iterable([
-                self.seed_files, self.xseed_files, self.resp_files,
-                self.other_files]):
+                cls.seed_files, cls.xseed_files, cls.resp_files,
+                cls.other_files]):
             assert os.path.exists(_i), _i
 
     def test_is_seed(self):

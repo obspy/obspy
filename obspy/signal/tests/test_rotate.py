@@ -19,9 +19,10 @@ class TestRotate():
     """
     Test cases for Rotate.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_rotate_ne_rt_vs_pitsa(self):
         """

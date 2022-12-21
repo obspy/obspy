@@ -24,19 +24,20 @@ import pytest
 
 class TestArclinkInventory():
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         """
         Read example stationXML and arclink format to Inventory
         """
-        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
+        cls.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
-        self.arclink_xml_path = os.path.join(self.data_dir,
-                                             "arclink_inventory.xml")
-        self.station_xml_path = os.path.join(self.data_dir, "gols_station.xml")
-        self.arclink_xml_poly = os.path.join(self.data_dir,
-                                             "arclink_inventory_poly.xml")
-        self.arclink_afc_path = os.path.join(self.data_dir, "arclink_afc.xml")
-        self.station_afc_path = os.path.join(self.data_dir, "station_afc.xml")
+        cls.arclink_xml_path = os.path.join(cls.data_dir,
+                                            "arclink_inventory.xml")
+        cls.station_xml_path = os.path.join(cls.data_dir, "gols_station.xml")
+        cls.arclink_xml_poly = os.path.join(cls.data_dir,
+                                            "arclink_inventory_poly.xml")
+        cls.arclink_afc_path = os.path.join(cls.data_dir, "arclink_afc.xml")
+        cls.station_afc_path = os.path.join(cls.data_dir, "station_afc.xml")
 
     def test_publicid_slash(self):
         v = read_inventory(os.path.join(self.data_dir, "public-id-slash.xml"))

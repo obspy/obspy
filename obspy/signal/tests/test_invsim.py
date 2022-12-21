@@ -67,9 +67,10 @@ class TestInvSim():
     """
     Test cases for InvSim.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_seis_sim_vs_pitsa1(self):
         """

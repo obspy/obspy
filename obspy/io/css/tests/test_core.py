@@ -20,13 +20,14 @@ class TestCore():
     """
     Test cases for css core interface
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        self.filename_css = os.path.join(self.path, 'test_css.wfdisc')
-        self.filename_nnsa = os.path.join(self.path, 'test_nnsa.wfdisc')
-        self.filename_css_2 = os.path.join(self.path, 'test_css_2.wfdisc')
-        self.filename_css_3 = os.path.join(self.path, 'test_css_3.wfdisc')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.filename_css = os.path.join(cls.path, 'test_css.wfdisc')
+        cls.filename_nnsa = os.path.join(cls.path, 'test_nnsa.wfdisc')
+        cls.filename_css_2 = os.path.join(cls.path, 'test_css_2.wfdisc')
+        cls.filename_css_3 = os.path.join(cls.path, 'test_css_3.wfdisc')
         # set up stream for validation
         header = {}
         header['station'] = 'TEST'
@@ -35,7 +36,7 @@ class TestCore():
         header['calib'] = 1.0
         header['calper'] = 1.0
         header['_format'] = 'CSS'
-        filename = os.path.join(self.path, '201101311155.10.ascii.gz')
+        filename = os.path.join(cls.path, '201101311155.10.ascii.gz')
         with gzip.open(filename, 'rb') as fp:
             data = np.loadtxt(fp, dtype=np.int_)
         # traces in the test files are sorted ZEN
@@ -51,10 +52,10 @@ class TestCore():
             tr.stats.station += 'le'
             tr.stats.channel = cha
             st += tr
-        self.st_result_css = st.copy()
+        cls.st_result_css = st.copy()
         for tr in st:
             tr.stats['_format'] = "NNSA_KB_CORE"
-        self.st_result_nnsa = st
+        cls.st_result_nnsa = st
 
     def test_is_css(self):
         """

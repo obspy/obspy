@@ -11,10 +11,11 @@ class TestPDAS():
     """
     Test suite for pdas.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
-        self.testfile = os.path.join(self.path, 'data', 'p1246001.108')
+        cls.path = os.path.dirname(__file__)
+        cls.testfile = os.path.join(cls.path, 'data', 'p1246001.108')
 
     def test_read_pdas(self):
         """

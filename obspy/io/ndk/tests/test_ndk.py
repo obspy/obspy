@@ -15,10 +15,11 @@ class TestNDK():
     """
     Test suite for obspy.io.ndk
     """
-    def setUp(self):
-        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
+    @classmethod
+    def setup_class(cls):
+        cls.path = os.path.dirname(os.path.abspath(inspect.getfile(
             inspect.currentframe())))
-        self.datapath = os.path.join(self.path, "data")
+        cls.datapath = os.path.join(cls.path, "data")
 
     def test_read_single_ndk(self):
         """

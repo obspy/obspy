@@ -34,10 +34,11 @@ class TestStationXML():
     """
     """
 
-    def setUp(self):
-        self.maxDiff = 10000
+    @classmethod
+    def setup_class(cls):
+        cls.maxDiff = 10000
         # Most generic way to get the actual data directory.
-        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
+        cls.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
 
     def _assert_station_xml_equality(self, xml_file_buffer,

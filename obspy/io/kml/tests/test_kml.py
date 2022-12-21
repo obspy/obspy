@@ -10,9 +10,10 @@ class TestKML():
     """
     Test KML output of Inventory/Catalog.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_write_inventory(self):
         """

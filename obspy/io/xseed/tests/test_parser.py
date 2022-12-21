@@ -25,11 +25,12 @@ class TestParser():
     """
     Parser test suite.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        self.BW_SEED_files = [
-            os.path.join(self.path, file) for file in
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.BW_SEED_files = [
+            os.path.join(cls.path, file) for file in
             ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
              'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 

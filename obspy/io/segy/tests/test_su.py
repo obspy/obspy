@@ -21,10 +21,11 @@ class TestSU():
     the SEG Y tests cover certain aspects of the SU format and ensure that the
     SU implementation is working correctly.
     """
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # directory where the test files are located
-        self.dir = os.path.dirname(__file__)
-        self.path = os.path.join(self.dir, 'data')
+        cls.dir = os.path.dirname(__file__)
+        cls.path = os.path.join(cls.dir, 'data')
 
     def test_read_and_write_su(self):
         """

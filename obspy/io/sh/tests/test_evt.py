@@ -7,9 +7,10 @@ from obspy.io.sh.evt import _is_evt
 
 class TestEvt():
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         # Directory where the test files are located
-        self.path = os.path.dirname(__file__)
+        cls.path = os.path.dirname(__file__)
 
     def test_is_evt_file(self):
         path = os.path.join(self.path, 'data', '*.evt')
