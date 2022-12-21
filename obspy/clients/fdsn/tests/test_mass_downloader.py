@@ -115,10 +115,10 @@ class TestRestrictions():
     """
     Test case for the restrictions object.
     """
-    def __init__(self, *args, **kwargs):
-        super(RestrictionsTestCase, self).__init__(*args, **kwargs)
-        self.path = os.path.dirname(__file__)
-        self.data = os.path.join(self.path, "data")
+    @classmethod
+    def setup_class(cls):
+        cls.path = os.path.dirname(__file__)
+        cls.data = os.path.join(cls.path, "data")
 
     def test_passing_string_as_priority_list_raises(self):
         """
@@ -134,50 +134,50 @@ class TestRestrictions():
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "'channel_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities=("HHE"))
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "'channel_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "'channel_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "'channel_priorities' must be a list or other iterable container."
 
         # And for the location priorities key.
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities="00")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "'location_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities=("00"))
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "'location_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities="00")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "'location_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities=("00"))
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "'location_priorities' must be a list or other iterable container."
 
         # All other valid things should of course still work.
@@ -307,10 +307,10 @@ class TestDownloadHelpersUtil():
     """
     Test cases for utility functionality for the download helpers.
     """
-    def __init__(self, *args, **kwargs):
-        super(DownloadHelpersUtilTestCase, self).__init__(*args, **kwargs)
-        self.path = os.path.dirname(__file__)
-        self.data = os.path.join(self.path, "data")
+    @classmethod
+    def setup_class(cls):
+        cls.path = os.path.dirname(__file__)
+        cls.data = os.path.join(cls.path, "data")
 
     def test_channel_priority_filtering(self):
         """
