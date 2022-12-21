@@ -77,7 +77,7 @@ class TestArclinkInventory():
             read_inventory(self.arclink_xml_poly)
 
         assert str(e.value) == \
-            "responsePolynomial not implemented. Contact the ObsPy developers"
+            "responsePolynomial notimplemented. Contact the ObsPy developers"
 
     @pytest.mark.filterwarnings("ignore:Attribute 'storage_format'.*removed")
     def test_auto_read_arclink_xml(self):
