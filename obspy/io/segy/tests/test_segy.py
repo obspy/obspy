@@ -772,7 +772,7 @@ class TestSEGY():
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
                         tr.write(buf, format="segy")
-        assert err.exception.args[0] == (
+        assert str(err.value) == (
             "Failed to pack header value `number_of_data_traces_per_ensemble` "
             "(100000) with format `>h` due to: `'h' format requires -32768 <="
             " number <= 32767`")

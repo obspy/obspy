@@ -399,12 +399,12 @@ class TestReftek():
                 tmp = fh2.read()
             fh.write(tmp[1024:-1024])
             fh.seek(0)
-            with pytest.raises(Reftek130Exception) as context:
+            with pytest.raises(Reftek130Exception) as e:
                 _read_reftek130(
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        assert str(context.exception) == \
+        assert str(e.value) == \
             "Reftek data contains data packets without corresponding header " \
             "or trailer packet."
 

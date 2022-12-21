@@ -392,7 +392,7 @@ class TestRotate():
                         rotate2zne(a[0], a[1], a[2],
                                    b[0], b[1], b[2],
                                    c[0], c[1], c[2])
-                    assert err.exception.args[0].startswith(
+                    assert str(err.value).startswith(
                         "The given directions are not linearly independent, "
                         "at least within numerical precision. Determinant of "
                         "the base change matrix:")

@@ -40,7 +40,7 @@ class TestQualityControl():
         with pytest.raises(ValueError) as e:
             MSEEDMetadata(files=[])
 
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "No data within the temporal constraints."
 
     def test_gaps_and_overlaps(self):
@@ -136,7 +136,7 @@ class TestQualityControl():
             with pytest.raises(ValueError) as e:
                 MSEEDMetadata([tf1.name, tf2.name])
 
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "All traces must have the same SEED id and quality."
 
     def test_gaps_between_multiple_files(self):

@@ -521,7 +521,7 @@ class TestCore():
         with CatchAndAssertWarnings():
             with pytest.raises(InvalidResponseError) as e:
                 obspy.read_inventory(filename, skip_invalid_responses=False)
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "Stage 2: Invalid response specification. A blockette 54 " \
             "must always be followed by a blockette 57 which is missing."
 
@@ -554,7 +554,7 @@ class TestCore():
         with CatchAndAssertWarnings():
             with pytest.raises(InvalidResponseError) as e:
                 obspy.read_inventory(filename, skip_invalid_responses=False)
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "Stage 1: A decimation stage with blockette 57 must be followed " \
             "by a blockette 58 which is missing here."
         # Otherwise continue, but raise a warning.
@@ -597,7 +597,7 @@ class TestCore():
                                 "RESP.blkt53_and_54_in_one_stage")
         with pytest.raises(InvalidResponseError) as e:
             obspy.read_inventory(filename, skip_invalid_responses=False)
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "Stage 1 has both, blockette 53 and 54. This is not valid."
         # If invalid responses are skipped, check the warning.
         msg = (

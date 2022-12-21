@@ -53,7 +53,7 @@ class TestSC3ML():
                     warnings.simplefilter("ignore")
                     read_inventory(filename)
 
-            assert e.exception.args[0] == "Schema version not supported."
+            assert str(e.value) == "Schema version not supported."
 
     @pytest.mark.filterwarnings('ignore:.*rate of 0')
     def test_channel_level(self):

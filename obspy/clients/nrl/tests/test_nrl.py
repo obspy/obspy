@@ -120,6 +120,6 @@ Select the sensor manufacturer (20 items):
     def test_error_handling_invalid_path(self):
         with pytest.raises(ValueError) as err:
             NRL("/some/really/random/path")
-        assert err.exception.args[0] == \
+        assert str(err.value) == \
             "Provided path '/some/really/random/path' seems to be a local " \
             "file path but the directory does not exist."

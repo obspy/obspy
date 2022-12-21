@@ -154,7 +154,7 @@ class TestTrigger():
         with pytest.raises(ValueError) as err:
             ar_pick(data[0], data[1], np.zeros(1), samp_rate, f1, f2, lta_p,
                     sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
-        assert err.exception.args[0] == \
+        assert str(err.value) == \
             "All three data arrays must have the same length."
 
     def test_ar_pick_low_amplitude(self):

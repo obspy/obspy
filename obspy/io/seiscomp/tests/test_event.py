@@ -162,7 +162,7 @@ class TestEvent():
         expected_message = ("Can't read SCXML version 0.5, ObsPy can deal "
                             "with versions [0.6, 0.7, 0.8, 0.9, 0.10, "
                             "0.11, 0.12].")
-        assert e.exception.args[0] == expected_message
+        assert str(e.value) == expected_message
 
         filename = os.path.join(self.path, 'version0.13')
         with pytest.raises(ValueError) as e:
@@ -171,7 +171,7 @@ class TestEvent():
         expected_message = ("Can't read SCXML version 0.13, ObsPy can deal "
                             "with versions [0.6, 0.7, 0.8, 0.9, 0.10, "
                             "0.11, 0.12].")
-        assert e.exception.args[0] == expected_message
+        assert str(e.value) == expected_message
 
     def test_read_xslt_event(self):
         self.cmp_read_xslt_file('quakeml_1.2_event.sc3ml',
@@ -278,7 +278,7 @@ class TestEvent():
             read_events(filename, format='SC3ML')
 
         expected_message = "Not a SCXML compatible file or string."
-        assert e.exception.args[0] == expected_message
+        assert str(e.value) == expected_message
 
     def test_read_sc3ml_fields(self):
         """

@@ -47,4 +47,4 @@ class TestCore():
 
         expected_error = ("0.99 is not a supported version. Use one of these "
                           "versions: [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12].")
-        assert e.exception.args[0] == expected_error
+        assert str(e.value) == expected_error

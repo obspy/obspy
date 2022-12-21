@@ -1294,4 +1294,4 @@ class TestMSEEDUtil():
         buf.seek(0)
         with pytest.raises(ValueError) as e:
             _read_mseed(buf)
-        assert str(e.exception) == "No MiniSEED data record found in file."
+        assert str(e.value) == "No MiniSEED data record found in file."

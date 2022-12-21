@@ -1150,7 +1150,7 @@ class TestMSEEDSpecialIssue():
         with pytest.raises(ObsPyMSEEDFilesizeTooSmallError) as e:
             with io.BytesIO(data[:127]) as buf:
                 _read_mseed(buf)
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             ("The smallest possible mini-SEED record is made up of 128 bytes. "
              "The passed buffer or file contains only 127.")
 
@@ -1166,7 +1166,7 @@ class TestMSEEDSpecialIssue():
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         with pytest.raises(ObsPyMSEEDFilesizeTooLargeError) as e:
             _read_mseed(filename)
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "ObsPy can currently not directly read mini-SEED files that are " \
             "larger than 2^31 bytes (2048 MiB). To still read it, please " \
             "read the file in chunks as documented here: " \
