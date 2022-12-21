@@ -190,9 +190,8 @@ class TestNLLOC():
             == 0
         assert round(abs(
             orig.origin_uncertainty.azimuth_max_horizontal_uncertainty -
-            getattr(orig_expected,
-                    "origin_uncertaintyazimuth_max_horizontal_uncertainty")),
-            7) == 0
+            getattr(orig_expected.origin_uncertainty,
+                    "azimuth_max_horizontal_uncertainty")), 7) == 0
         assert orig.origin_uncertainty.preferred_description == \
             orig_expected.origin_uncertainty.preferred_description
         assert round(abs(
