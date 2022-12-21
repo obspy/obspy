@@ -9,7 +9,7 @@ from obspy.io.cnv.core import _write_cnv
 from obspy.core.util import NamedTemporaryFile
 
 
-class CNVTestCase():
+class TestCNV():
     """
     Test suite for obspy.io.cnv
     """

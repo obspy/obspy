@@ -14,7 +14,7 @@ import obspy.signal.filter
 import pytest
 
 
-class RtTraceTestCase():
+class TestRtTrace():
 
     def test_eq(self):
         """

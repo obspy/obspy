@@ -8,7 +8,7 @@ from obspy.io.json.core import get_dump_kwargs, _write_json
 from obspy.io.quakeml.core import _read_quakeml
 
 
-class JSONTestCase():
+class TestJSON():
     """Test JSON module classes and functions"""
     def setUp(self):
         self.path = os.path.join(os.path.dirname(__file__))

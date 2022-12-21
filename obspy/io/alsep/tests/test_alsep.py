@@ -5,7 +5,7 @@ from obspy.io.alsep.core import (_is_pse, _is_wtn, _is_wth,
                                  _read_pse, _read_wtn, _read_wth)
 
 
-class AlsepTestCase():
+class TestAlsep():
 
     def setUp(self):
         # Directory where the test files are located

@@ -6,7 +6,7 @@ from obspy.scripts.print import main as obspy_print
 from obspy.core.util.misc import CatchOutput
 
 
-class PrintTestCase():
+class TestPrint():
     def setUp(self):
         self.all_files = [os.path.join(os.path.dirname(__file__), os.pardir,
                                        os.pardir, 'io', 'ascii', 'tests',

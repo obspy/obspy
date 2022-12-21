@@ -14,7 +14,7 @@ from obspy.signal import freqattributes, util
 
 # only tests for windowed data are implemented currently
 
-class FreqTraceTestCase():
+class TestFreqTrace():
     """
     Test cases for frequency attributes
     """

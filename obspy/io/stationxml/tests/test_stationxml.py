@@ -30,7 +30,7 @@ from obspy.io.stationxml.core import _read_stationxml
 import pytest
 
 
-class StationXMLTestCase():
+class TestStationXML():
     """
     """
 

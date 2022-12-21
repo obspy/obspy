@@ -35,7 +35,7 @@ def get_test_client():
     return client
 
 
-class ClientTestCase():
+class TestClient():
 
     def test_bad_sqlitdb_filepath(self):
         """
@@ -564,7 +564,7 @@ def purge(dir, pattern):
             os.remove(os.path.join(dir, f))
 
 
-class IndexerTestCase():
+class TestIndexer():
 
     def test_bad_rootpath(self):
         """
@@ -849,7 +849,7 @@ class IndexerTestCase():
             purge(filepath, '^{}.*$'.format(fname))
 
 
-class TSIndexDatabaseHandlerTestCase():
+class TestTSIndexDatabaseHandler():
 
     def test_bad_sqlitdb_filepath(self):
         """

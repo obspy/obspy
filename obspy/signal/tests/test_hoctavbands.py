@@ -13,7 +13,7 @@ from obspy.signal import hoctavbands, util
 
 # only tests for windowed data are implemented currently
 
-class HoctavbandsTestCase():
+class TestHoctavbands():
     """
     Test cases for half octav bands
     """

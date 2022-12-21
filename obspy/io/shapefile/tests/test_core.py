@@ -172,7 +172,7 @@ def _close_shapefile_reader(reader):
 
 
 @pytest.mark.skipif(not HAS_PYSHP, reason='pyshp not installed')
-class ShapefileTestCase():
+class TestShapefile():
     def setUp(self):
         self.path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  'data')

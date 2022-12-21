@@ -12,7 +12,7 @@ from obspy.clients.seedlink.slpacket import SLPacket
 pytestmark = pytest.mark.network
 
 
-class SLPacketTestCase():
+class TestSLPacket():
 
     def _read_data_file(self, fn):
         path = os.path.dirname(__file__)

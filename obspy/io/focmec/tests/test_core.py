@@ -52,7 +52,7 @@ out_file_first_comment = (
 creation_time = UTCDateTime(2017, 9, 8, 14, 54, 58)
 
 
-class FOCMECTestCase():
+class TestFOCMEC():
     """
     Test everything related to reading FOCMEC files
     """

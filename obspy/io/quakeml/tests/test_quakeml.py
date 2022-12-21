@@ -43,7 +43,7 @@ def assert_no_extras(obj, verbose=False):
         assert_no_extras(getattr(obj, name), verbose=verbose)
 
 
-class QuakeMLTestCase():
+class TestQuakeML():
     """
     Test suite for obspy.io.quakeml
     """

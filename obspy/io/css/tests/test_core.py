@@ -16,7 +16,7 @@ from obspy.io.css.core import (_is_css, _read_css, _is_nnsa_kb_core,
 import pytest
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for css core interface
     """

@@ -22,7 +22,7 @@ from obspy.io.arclink.inventory import validate_arclink_xml, SCHEMA_NAMESPACE
 import pytest
 
 
-class ArclinkInventoryTestCase():
+class TestArclinkInventory():
 
     def setUp(self):
         """

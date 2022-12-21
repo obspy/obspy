@@ -11,7 +11,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.scardec.core import _is_scardec
 
 
-class ScardecTestCase():
+class TestScardec():
     """
     Test suite for obspy.io.scardec.
 

@@ -22,7 +22,7 @@ from obspy.core.util.base import NamedTemporaryFile
 import pytest
 
 
-class StationTextTestCase():
+class TestStationText():
     """
     """
     def setUp(self):

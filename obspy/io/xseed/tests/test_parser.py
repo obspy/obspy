@@ -21,7 +21,7 @@ from obspy.signal.invsim import evalresp_for_frequencies
 import pytest
 
 
-class ParserTestCase():
+class TestParser():
     """
     Parser test suite.
     """

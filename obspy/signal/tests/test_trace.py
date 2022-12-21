@@ -10,7 +10,7 @@ from obspy.signal.invsim import simulate_seismometer
 import pytest
 
 
-class TraceTestCase():
+class TestTrace():
     """
     Test suite for obspy.core.trace.Trace.
     """

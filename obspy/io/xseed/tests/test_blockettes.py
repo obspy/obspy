@@ -15,7 +15,7 @@ from obspy.io.xseed.fields import SEEDTypeException
 import pytest
 
 
-class BlocketteTestCase():
+class TestBlockette():
     """
     Test cases for all blockettes.
     """

@@ -19,7 +19,7 @@ from obspy.io.sac.util import utcdatetime_to_sac_nztimes
 import pytest
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for sac core interface
     """

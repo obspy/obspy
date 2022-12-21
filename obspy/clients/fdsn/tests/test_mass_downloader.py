@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The obspy.clients.fdsn.download_helpers test suite.
@@ -45,7 +44,7 @@ from obspy.clients.fdsn.mass_downloader.download_helpers import (
 pytestmark = pytest.mark.network
 
 
-class DomainTestCase():
+class TestDomain():
     """
     Test case for the domain definitions.
     """
@@ -112,7 +111,7 @@ class DomainTestCase():
             domain.Domain()
 
 
-class RestrictionsTestCase():
+class TestRestrictions():
     """
     Test case for the restrictions object.
     """
@@ -304,7 +303,7 @@ class RestrictionsTestCase():
             r.limit_stations_to_inventory
 
 
-class DownloadHelpersUtilTestCase():
+class TestDownloadHelpersUtil():
     """
     Test cases for utility functionality for the download helpers.
     """
@@ -1018,7 +1017,7 @@ class DownloadHelpersUtilTestCase():
             "status='none')")
 
 
-class TimeIntervalTestCase():
+class TestTimeInterval():
     """
     Test cases for the TimeInterval class.
     """
@@ -1047,7 +1046,7 @@ class TimeIntervalTestCase():
             "status='ignore')"
 
 
-class ChannelTestCase():
+class TestChannel():
     """
     Test cases for the Channel class.
     """
@@ -1085,7 +1084,7 @@ class ChannelTestCase():
         assert not c.needs_station_file
 
 
-class StationTestCase():
+class TestStation():
     """
     Test cases for the Station class.
     """
@@ -1706,7 +1705,7 @@ class StationTestCase():
             "status='none')")
 
 
-class ClientDownloadHelperTestCase():
+class TestClientDownloadHelper():
     """
     Test cases for the ClientDownloadHelper class.
     """
@@ -2566,7 +2565,7 @@ class ClientDownloadHelperTestCase():
         assert self.logger.warning.call_count == 0
 
 
-class DownloadHelperTestCase():
+class TestDownloadHelper():
     """
     Test cases for the MassDownloader class.
     """

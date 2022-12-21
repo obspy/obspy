@@ -77,7 +77,7 @@ TRACE3_HEADER = {
 }
 
 
-class SEG2TestCase():
+class TestSEG2():
     """
     Test cases for SEG2 reading.
     """

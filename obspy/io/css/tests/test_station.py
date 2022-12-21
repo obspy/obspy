@@ -18,7 +18,7 @@ import tempfile
 import obspy
 
 
-class CSSStationTestCase():
+class TestCSSStation():
     """
     Test cases for css station interface
     """

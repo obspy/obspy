@@ -29,7 +29,7 @@ class RequestsMockResponse(object):
         return self._json
 
 
-class ClientTestCase():
+class TestClient():
     """
     Test cases for obspy.clients.iris.client.Client.
     """

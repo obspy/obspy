@@ -11,7 +11,7 @@ from obspy.core.util import NamedTemporaryFile
 import pytest
 
 
-class ASCIITestCase():
+class TestASCII():
     """
     """
     def setUp(self):

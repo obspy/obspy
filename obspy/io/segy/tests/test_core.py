@@ -23,7 +23,7 @@ from obspy.io.segy.tests import _patch_header
 from obspy.io.segy.tests.header import DTYPES, FILES
 
 
-class SEGYCoreTestCase():
+class TestSEGYCore():
     """
     Test cases for SEG Y reading and writing..
     """

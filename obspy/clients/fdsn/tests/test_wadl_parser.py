@@ -16,7 +16,7 @@ from obspy import UTCDateTime
 from obspy.clients.fdsn.wadl_parser import WADLParser
 
 
-class WADLParserTestCase():
+class TestWADLParser():
     """
     Test cases for obspy.clients.fdsn.wadl_parser.WADL_Parser.
     """

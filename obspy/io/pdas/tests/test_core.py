@@ -7,7 +7,7 @@ from obspy import Stream, UTCDateTime
 from obspy.io.pdas import _is_pdas, _read_pdas
 
 
-class PDASTestCase():
+class TestPDAS():
     """
     Test suite for pdas.
     """

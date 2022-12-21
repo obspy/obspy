@@ -12,7 +12,7 @@ from obspy.signal.calibration import rel_calib_stack
 from obspy.core.util.misc import TemporaryWorkingDirectory
 
 
-class CalibrationTestCase():
+class TestCalibration():
     """
     Calibration test case
     """

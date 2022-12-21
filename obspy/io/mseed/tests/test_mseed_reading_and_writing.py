@@ -22,7 +22,7 @@ from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
 
-class MSEEDReadingAndWritingTestCase():
+class TestMSEEDReadingAndWriting():
     """
     Test everything related to the general reading and writing of MiniSEED
     files.

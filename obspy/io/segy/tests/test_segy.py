@@ -24,7 +24,7 @@ from . import _patch_header
 import pytest
 
 
-class SEGYTestCase():
+class TestSEGY():
     """
     Test cases for SEG Y reading and writing..
     """

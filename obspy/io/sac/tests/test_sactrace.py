@@ -17,7 +17,7 @@ from ..util import SacHeaderError, SacHeaderTimeError
 import pytest
 
 
-class SACTraceTestCase():
+class TestSACTrace():
     """
     Test suite for obspy.io.sac.sactrace
     """

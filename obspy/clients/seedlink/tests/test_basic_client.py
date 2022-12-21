@@ -11,7 +11,7 @@ from obspy.clients.seedlink.basic_client import Client
 
 
 @pytest.mark.network
-class ClientTestCase():
+class TestClient():
     def setUp(self):
         self.client = Client("rtserver.ipgp.fr")
 

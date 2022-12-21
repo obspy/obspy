@@ -24,7 +24,7 @@ except ImportError:
     HAS_JSONSCHEMA = False
 
 
-class QualityControlTestCase():
+class TestQualityControl():
     """
     Test cases for Quality Control.
     """

@@ -14,7 +14,7 @@ from obspy.clients.iris import Client
 pytestmark = pytest.mark.network
 
 
-class ClientTestCase():
+class TestClient():
     """
     Test cases for obspy.clients.iris.client.Client.
     """

@@ -82,7 +82,7 @@ def _create_mseed_file(filename, record_count, sampling_rate=1.0,
     data.tofile(filename)
 
 
-class MSEEDUtilTestCase():
+class TestMSEEDUtil():
     """
     Tests suite for util module of obspy.io.mseed.
     """

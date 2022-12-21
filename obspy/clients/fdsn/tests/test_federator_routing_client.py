@@ -22,7 +22,7 @@ _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 pytestmark = pytest.mark.network
 
 
-class FederatorRoutingClientTestCase():
+class TestFederatorRoutingClient():
     def setUp(self):
         self.client = FederatorRoutingClient()
         self._cls = ("obspy.clients.fdsn.routing.federator_routing_client."

@@ -11,7 +11,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.seisan.core import _get_version, _is_seisan, _read_seisan
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for SEISAN core interfaces.
     """

@@ -18,7 +18,7 @@ from obspy.io.reftek.packet import (
 import pytest
 
 
-class ReftekTestCase():
+class TestReftek():
     """
     Test suite for obspy.io.reftek
     """

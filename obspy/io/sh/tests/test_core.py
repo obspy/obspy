@@ -10,7 +10,7 @@ from obspy.io.sh.core import (STANDARD_ASC_HEADERS, _is_asc, _is_q, _read_asc,
                               _read_q, _write_asc, _write_q)
 
 
-class CoreTestCase():
+class TestCore():
 
     """
     """

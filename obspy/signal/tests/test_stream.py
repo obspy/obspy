@@ -9,7 +9,7 @@ from obspy.signal.filter import bandpass, bandstop, highpass, lowpass
 import pytest
 
 
-class StreamTestCase():
+class TestStream():
     """
     Test suite for obspy.core.stream.Stream.
     """

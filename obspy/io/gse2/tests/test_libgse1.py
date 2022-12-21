@@ -10,7 +10,7 @@ from obspy.io.gse2.libgse2 import ChksumError
 import pytest
 
 
-class LibGSE1TestCase():
+class TestLibGSE1():
     """
     Test cases for libgse1.
     """

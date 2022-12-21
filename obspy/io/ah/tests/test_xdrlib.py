@@ -57,7 +57,7 @@ from obspy.io.ah import xdrlib
 import pytest
 
 
-class XDRTest():
+class TestXDR():
 
     def test_xdr(self):
         p = xdrlib.Packer()
@@ -107,7 +107,7 @@ class XDRTest():
             up.unpack_uint()
 
 
-class ConversionErrorTest():
+class TestConversionError():
 
     def setUp(self):
         self.packer = xdrlib.Packer()

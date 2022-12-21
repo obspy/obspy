@@ -21,7 +21,7 @@ EXPECTED = np.array([-49378, -49213, -49273, -49277, -49341, -49415, -49289,
                     dtype=np.int32)
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for gcf core interface
     """

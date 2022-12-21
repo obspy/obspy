@@ -10,7 +10,7 @@ from obspy.clients.nrl.client import NRL, LocalNRL, RemoteNRL
 
 
 @pytest.mark.network
-class NRLRemoteTestCase():
+class TestNRLRemote():
     """
     Minimal NRL test suite connecting to online NRL
 
@@ -23,7 +23,7 @@ class NRLRemoteTestCase():
         assert isinstance(self.nrl_online, RemoteNRL)
 
 
-class NRLLocalTestCase():
+class TestNRLLocal():
     """
     NRL test suite using stripped down local NRL without network usage.
 

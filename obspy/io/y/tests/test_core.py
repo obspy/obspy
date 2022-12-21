@@ -5,7 +5,7 @@ import warnings
 from obspy.io.y.core import _is_y, _read_y
 
 
-class CoreTestCase():
+class TestCore():
     """
     Nanometrics Y file test suite.
     """

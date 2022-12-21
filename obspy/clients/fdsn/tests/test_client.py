@@ -99,7 +99,7 @@ def normalize_version_number(string):
     return [line.strip() for line in repl.splitlines()]
 
 
-class ClientTestCase():
+class TestClient():
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """

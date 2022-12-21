@@ -15,7 +15,7 @@ from obspy.io.gse2.libgse2 import ChksumError
 import pytest
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for libgse2 core interface
     """

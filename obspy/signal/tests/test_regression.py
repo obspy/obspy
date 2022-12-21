@@ -9,7 +9,7 @@ import numpy as np
 from obspy.signal.regression import linear_regression
 
 
-class RegressionTestCase():
+class TestRegression():
     """
     Test cases for the regression method.
     """

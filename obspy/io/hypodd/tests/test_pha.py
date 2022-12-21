@@ -9,7 +9,7 @@ from obspy.io.hypodd import pha
 import pytest
 
 
-class PHATestCase():
+class TestPHA():
     """
     Test suite for obspy.io.hypodd.pha
     """

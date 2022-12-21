@@ -22,7 +22,7 @@ from obspy.core.inventory.inventory import read_inventory
 import pytest
 
 
-class BulletinTestCase():
+class TestBulletin():
     """
     Test suite for obspy.io.gse2.bulletin
     """

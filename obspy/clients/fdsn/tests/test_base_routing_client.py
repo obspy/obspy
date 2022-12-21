@@ -27,7 +27,7 @@ pytestmark = pytest.mark.network
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 
 
-class BaseRoutingClientTestCase():
+class TestBaseRoutingClient():
     def setUp(self):
         # Need to inherit to add two required method by the abstract base
         # class.

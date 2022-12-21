@@ -12,7 +12,7 @@ from obspy.io.xseed.scripts.xseed2dataless import main as obspy_xseed2dataless
 from obspy.io.xseed.utils import compare_seed
 
 
-class ScriptTestCase():
+class TestScript():
     def setUp(self):
         self.data = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                  'data'))

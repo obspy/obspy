@@ -16,7 +16,7 @@ PLOT_TRACES = False
 NUM_PACKETS = 3
 
 
-class RealTimeSignalTestCase():
+class TestRealTimeSignal():
     """
     The obspy.realtime.signal test suite.
     """

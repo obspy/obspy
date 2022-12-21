@@ -32,7 +32,7 @@ def _mock_coordinate_converter(x, y, z):
         raise Exception("Unexpected values during test run.")
 
 
-class NLLOCTestCase():
+class TestNLLOC():
     """
     Test suite for obspy.io.nlloc
     """

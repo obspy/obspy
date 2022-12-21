@@ -42,7 +42,7 @@ def _create_test_data():
     return sz
 
 
-class PolarizationTestCase():
+class TestPolarization():
     """
     Test cases for polarization analysis
     """

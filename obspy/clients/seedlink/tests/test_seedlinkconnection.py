@@ -13,7 +13,7 @@ from obspy.clients.seedlink.seedlinkexception import SeedLinkException
 pytestmark = pytest.mark.network
 
 
-class SeedLinkConnectionTestCase():
+class TestSeedLinkConnection():
 
     def test_issue777(self):
         """

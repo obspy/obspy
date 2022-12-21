@@ -15,7 +15,7 @@ _ORIGIN_FIELDS = ('lon', 'lat', 'year', 'month', 'day', 'depth', 'hour',
 _MAGNITUDE_FIELDS = ('mag', 'm_err')
 
 
-class ZMAPTestCase():
+class TestZMAP():
     """
     Test suite for obspy.io.zmap.core
     """

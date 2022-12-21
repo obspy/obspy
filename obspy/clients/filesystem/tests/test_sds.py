@@ -74,7 +74,7 @@ class TemporarySDSDirectory(object):
         shutil.rmtree(self.tempdir)
 
 
-class SDSTestCase():
+class TestSDS():
     """
     Test reading data from SDS file structure.
     """

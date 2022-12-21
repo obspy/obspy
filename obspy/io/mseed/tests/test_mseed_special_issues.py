@@ -48,7 +48,7 @@ def _test_function(filename):
             pass
 
 
-class MSEEDSpecialIssueTestCase():
+class TestMSEEDSpecialIssue():
     """
     """
     def setUp(self):

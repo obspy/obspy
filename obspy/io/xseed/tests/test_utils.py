@@ -8,7 +8,7 @@ from obspy.io.xseed.utils import datetime_2_string, to_tag
 from obspy.io.xseed.core import _is_resp
 
 
-class UtilsTestCase():
+class TestUtils():
     """
     Utils test suite.
     """

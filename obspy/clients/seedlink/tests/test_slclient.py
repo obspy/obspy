@@ -12,7 +12,7 @@ from obspy.clients.seedlink.slclient import SLClient
 pytestmark = pytest.mark.network
 
 
-class SLClientTestCase():
+class TestSLClient():
     """
     These test routines use SLClient, which is actually not expected to be
     used, but expected to be subclassed since at least the packet_handler

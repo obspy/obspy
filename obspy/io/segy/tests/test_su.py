@@ -13,7 +13,7 @@ from obspy.io.segy.segy import SEGYTraceReadingError, _read_su, iread_su
 import pytest
 
 
-class SUTestCase():
+class TestSU():
     """
     Test cases for SU reading and writing.
 

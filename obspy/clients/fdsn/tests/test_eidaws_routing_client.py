@@ -23,7 +23,7 @@ _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 pytestmark = pytest.mark.network
 
 
-class EIDAWSRoutingClientTestCase():
+class TestEIDAWSRoutingClient():
     def setUp(self):
         self.client = EIDAWSRoutingClient(timeout=20)
         self._cls = ("obspy.clients.fdsn.routing.eidaws_routing_client."

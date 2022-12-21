@@ -10,7 +10,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.win.core import _read_win
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for win core interface
     """

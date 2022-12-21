@@ -19,7 +19,7 @@ except Exception:
     pass
 
 
-class MchedrTestCase():
+class TestMchedr():
     """
     Test suite for obspy.mchedr
     """

@@ -79,7 +79,7 @@ def _assert_catalog(got):
     assert got == expected
 
 
-class IASPEITestCase():
+class TestIASPEI():
     """
     Test suite for obspy.io.iaspei.core
     """

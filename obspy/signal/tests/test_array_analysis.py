@@ -9,7 +9,7 @@ import numpy as np
 from obspy.signal.array_analysis import array_rotation_strain, get_geometry
 
 
-class ArrayTestCase():
+class TestArray():
     """
     Test cases for array_analysis functions.
     """

@@ -6,7 +6,7 @@ from obspy.core.util.misc import CatchOutput
 from obspy.io.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
 
 
-class RecordAnalyserTestCase():
+class TestRecordAnalyser():
     def setUp(self):
         self.maxDiff = None
         self.test_file = os.path.join(os.path.dirname(__file__),

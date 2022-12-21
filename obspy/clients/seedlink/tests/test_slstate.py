@@ -11,7 +11,7 @@ from obspy.clients.seedlink.client.slstate import SLState
 pytestmark = pytest.mark.network
 
 
-class SLStateTestCase():
+class TestSLState():
 
     def test_issue561(self):
         """

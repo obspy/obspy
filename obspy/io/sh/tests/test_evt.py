@@ -5,7 +5,7 @@ from obspy import read_events, read_inventory
 from obspy.io.sh.evt import _is_evt
 
 
-class EvtTestCase():
+class TestEvt():
 
     def setUp(self):
         # Directory where the test files are located

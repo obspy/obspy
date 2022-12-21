@@ -15,7 +15,7 @@ from obspy.signal.filter import (bandpass, highpass, lowpass, envelope,
                                  lowpass_cheby_2)
 
 
-class FilterTestCase():
+class TestFilter():
     """
     Test cases for Filter.
     """

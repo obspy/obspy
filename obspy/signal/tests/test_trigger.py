@@ -36,7 +36,7 @@ def aic_simple_python(a):
     return aic_cf
 
 
-class TriggerTestCase():
+class TestTrigger():
     """
     Test cases for obspy.trigger
     """

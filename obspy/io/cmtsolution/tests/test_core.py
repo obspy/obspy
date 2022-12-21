@@ -9,7 +9,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.cmtsolution.core import _is_cmtsolution
 
 
-class CmtsolutionTestCase():
+class TestCmtsolution():
     """
     Test suite for obspy.io.cmtsolution.
 

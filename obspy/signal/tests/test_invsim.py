@@ -63,7 +63,7 @@ INSTRUMENTS = {'None': None,
                'wwssn_sp': PAZ_WWSSN_SP}
 
 
-class InvSimTestCase():
+class TestInvSim():
     """
     Test cases for InvSim.
     """

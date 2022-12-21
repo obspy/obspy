@@ -10,7 +10,7 @@ from obspy.core.util import NamedTemporaryFile
 import pytest
 
 
-class CoreTestCase():
+class TestCore():
     """
     AH (Ad Hoc) file test suite.
     """

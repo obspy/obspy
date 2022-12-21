@@ -17,7 +17,7 @@ from obspy.io.seiscomp.core import _is_sc3ml, validate
 import pytest
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test suite for obspy.io.seiscomp.event
     """

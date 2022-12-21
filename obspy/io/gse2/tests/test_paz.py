@@ -8,7 +8,7 @@ import io
 from obspy.io.gse2 import paz
 
 
-class PAZTestCase():
+class TestPAZ():
     """
     Test cases for reading GSE PAZ files.
     """

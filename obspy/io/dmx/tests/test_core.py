@@ -12,7 +12,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.dmx.core import _read_dmx
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for dmx core interface
     """

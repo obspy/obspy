@@ -11,7 +11,7 @@ from obspy.io.ndk.core import (ObsPyNDKException, _parse_date_time, _is_ndk,
 import pytest
 
 
-class NDKTestCase():
+class TestNDK():
     """
     Test suite for obspy.io.ndk
     """

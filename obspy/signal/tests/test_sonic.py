@@ -12,7 +12,7 @@ from obspy.signal.array_analysis import (array_processing,
 from obspy.signal.util import util_lon_lat
 
 
-class SonicTestCase():
+class TestSonic():
     """
     Test fk analysis, main function is sonic() in array_analysis.py
     """

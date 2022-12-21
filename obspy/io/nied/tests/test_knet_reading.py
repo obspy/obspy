@@ -8,7 +8,7 @@ from obspy import read
 from obspy.io.nied.knet import _is_knet_ascii
 
 
-class KnetReadingTestCase():
+class TestKnetReading():
     """
     Test reading of K-NET and KiK-net ASCII format files from a file.
     """

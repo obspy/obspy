@@ -6,7 +6,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.testing import compare_xml_strings
 
 
-class KMLTestCase():
+class TestKML():
     """
     Test KML output of Inventory/Catalog.
     """

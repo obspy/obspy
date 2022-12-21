@@ -27,7 +27,7 @@ from obspy.io.seiscomp.inventory import (
     _count_complex, _parse_list_of_complex_string, SCHEMA_NAMESPACE_BASE)
 
 
-class SC3MLTestCase():
+class TestSC3ML():
 
     def setUp(self):
         """

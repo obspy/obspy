@@ -14,7 +14,7 @@ from obspy.signal.konnoohmachismoothing import (calculate_smoothing_matrix,
 import pytest
 
 
-class KonnoOhmachiTestCase():
+class TestKonnoOhmachi():
     """
     Test cases for the Konno Ohmachi Smoothing.
     """

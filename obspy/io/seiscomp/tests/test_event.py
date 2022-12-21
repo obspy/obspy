@@ -26,7 +26,7 @@ from obspy.io.seiscomp.event import SCHEMA_VERSION, _read_sc3ml
 import pytest
 
 
-class EventTestCase():
+class TestEvent():
     """
     Test suite for obspy.io.seiscomp.event
     """

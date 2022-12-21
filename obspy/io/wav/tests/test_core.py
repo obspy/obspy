@@ -13,7 +13,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.io.wav.core import WIDTH2DTYPE
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for audio WAV support
     """

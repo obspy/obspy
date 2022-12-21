@@ -13,7 +13,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.kinemetrics.core import is_evt, read_evt
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test cases for kinemetrics core interface
     """

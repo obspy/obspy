@@ -15,7 +15,7 @@ from obspy.signal.rotate import (rotate_lqt_zne, rotate_ne_rt, rotate_rt_ne,
 import pytest
 
 
-class RotateTestCase():
+class TestRotate():
     """
     Test cases for Rotate.
     """

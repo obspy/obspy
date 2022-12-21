@@ -10,7 +10,7 @@ from obspy.signal.differentiate_and_integrate import (
     integrate_cumtrapz, integrate_spline)
 
 
-class IntegrateTestCase():
+class TestIntegrate():
     """
     Test cases for the integration methods.
     """

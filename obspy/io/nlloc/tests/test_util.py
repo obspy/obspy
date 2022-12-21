@@ -28,7 +28,7 @@ def _coordinate_conversion(x, y, z):
     return x, y, z
 
 
-class NLLOCTestCase():
+class TestNLLOC():
     """
     Test suite for obspy.io.nlloc
     """

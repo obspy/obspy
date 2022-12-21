@@ -7,7 +7,7 @@ from obspy.io.xseed.fields import Float, VariableString, FixedString
 import pytest
 
 
-class FieldsTestCase():
+class TestFields():
     """
     Fields test suite.
     """

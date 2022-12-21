@@ -11,7 +11,7 @@ from obspy.clients.seedlink.client.slnetstation import SLNetStation
 pytestmark = pytest.mark.network
 
 
-class SLNetStationTestCase():
+class TestSLNetStation():
 
     def test_issue769(self):
         """

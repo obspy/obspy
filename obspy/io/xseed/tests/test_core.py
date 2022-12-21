@@ -17,7 +17,7 @@ from obspy.signal.invsim import evalresp_for_frequencies
 import pytest
 
 
-class CoreTestCase():
+class TestCore():
     """
     Test integration with ObsPy's inventory objects.
     """

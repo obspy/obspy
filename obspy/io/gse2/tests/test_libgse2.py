@@ -18,7 +18,7 @@ from obspy.io.gse2.libgse2 import (ChksumError, GSEUtiError, compile_sta2,
 import pytest
 
 
-class LibGSE2TestCase():
+class TestLibGSE2():
     """
     Test cases for libgse2.
     """
