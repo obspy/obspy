@@ -56,10 +56,10 @@ class BulletinTestCase():
         assert event.resource_id == 'smi:local/event/280435'
         assert event.event_type == 'earthquake'
         assert event.event_type_certainty == "known"
-        assert event.creation_info != None
+        assert event.creation_info is not None
         assert event.preferred_origin_id == 'smi:local/origin/282672'
         assert event.preferred_magnitude_id == \
-                         'smi:local/origin/282672/magnitude/0'
+            'smi:local/origin/282672/magnitude/0'
         # event descriptions
         assert len(event.event_descriptions) == 1
         event_description = event.event_descriptions[0]
@@ -85,43 +85,43 @@ class BulletinTestCase():
         assert origin.time == UTCDateTime('1995-01-16T07:26:52.4')
         assert origin.time_errors.uncertainty == 12.69
         assert origin.latitude == 39.45
-        assert origin.latitude_errors.uncertainty == None
+        assert origin.latitude_errors.uncertainty is None
         assert origin.longitude == 20.44
-        assert origin.longitude_errors.uncertainty == None
+        assert origin.longitude_errors.uncertainty is None
         assert origin.depth == 66800
         assert origin.depth_errors.uncertainty == 83800
         assert origin.depth_type == OriginDepthType('from location')
-        assert origin.time_fixed == False
-        assert origin.epicenter_fixed == False
-        assert origin.reference_system_id == None
+        assert not origin.time_fixed
+        assert not origin.epicenter_fixed
+        assert origin.reference_system_id is None
         assert origin.method_id == 'smi:local/method/inversion'
-        assert origin.earth_model_id == None
-        assert origin.origin_type == None
-        assert origin.region == None
+        assert origin.earth_model_id is None
+        assert origin.origin_type is None
+        assert origin.region is None
         assert origin.evaluation_mode == "manual"
-        assert origin.evaluation_status == None
+        assert origin.evaluation_status is None
         # quality
         assert origin.quality.associated_phase_count == 9
         assert origin.quality.used_phase_count == 9
         assert origin.quality.associated_station_count == 8
         assert origin.quality.used_station_count == 8
-        assert origin.quality.depth_phase_count == None
+        assert origin.quality.depth_phase_count is None
         assert origin.quality.standard_error == 0.53
         assert origin.quality.azimuthal_gap == 322
-        assert origin.quality.secondary_azimuthal_gap == None
-        assert origin.quality.ground_truth_level == None
+        assert origin.quality.secondary_azimuthal_gap is None
+        assert origin.quality.ground_truth_level is None
         assert origin.quality.minimum_distance == 10.56
         assert origin.quality.maximum_distance == 78.21
-        assert origin.quality.median_distance == None
+        assert origin.quality.median_distance is None
         # origin uncertainty
         u = origin.origin_uncertainty
-        assert u.horizontal_uncertainty == None
+        assert u.horizontal_uncertainty is None
         assert u.min_horizontal_uncertainty == 83700
         assert u.max_horizontal_uncertainty == 93600
         assert u.azimuth_max_horizontal_uncertainty == 27
-        assert u.confidence_ellipsoid == None
+        assert u.confidence_ellipsoid is None
         assert u.preferred_description == 'uncertainty ellipse'
-        assert u.confidence_level == None
+        assert u.confidence_level is None
         # creation info
         assert origin.creation_info.author == 'GSE_IDC'
         # comments
@@ -146,20 +146,20 @@ class BulletinTestCase():
         waveform_1 = pick_1.waveform_id
         assert waveform_1.network_code == 'XX'
         assert waveform_1.station_code == 'GERES'
-        assert waveform_1.channel_code == None
-        assert waveform_1.location_code == None
-        assert waveform_1.resource_uri == None
-        assert pick_1.filter_id == None
-        assert pick_1.method_id == None
+        assert waveform_1.channel_code is None
+        assert waveform_1.location_code is None
+        assert waveform_1.resource_uri is None
+        assert pick_1.filter_id is None
+        assert pick_1.method_id is None
         assert pick_1.horizontal_slowness == 13.8
         assert pick_1.backazimuth == 163.7
-        assert pick_1.slowness_method_id == None
+        assert pick_1.slowness_method_id is None
         assert pick_1.onset == 'emergent'
         assert pick_1.phase_hint == 'P'
-        assert pick_1.polarity == None
+        assert pick_1.polarity is None
         assert pick_1.evaluation_mode == 'manual'
-        assert pick_1.evaluation_status == None
-        assert pick_1.creation_info != None
+        assert pick_1.evaluation_status is None
+        assert pick_1.creation_info is not None
         assert len(pick_1.comments) == 0
         # Test second Pick
         pick_2 = picks[1]
@@ -169,20 +169,20 @@ class BulletinTestCase():
         waveform_2 = pick_2.waveform_id
         assert waveform_2.network_code == 'XX'
         assert waveform_2.station_code == 'GERES'
-        assert waveform_2.channel_code == None
-        assert waveform_2.location_code == None
-        assert waveform_2.resource_uri == None
-        assert pick_2.filter_id == None
-        assert pick_2.method_id == None
+        assert waveform_2.channel_code is None
+        assert waveform_2.location_code is None
+        assert waveform_2.resource_uri is None
+        assert pick_2.filter_id is None
+        assert pick_2.method_id is None
         assert pick_2.horizontal_slowness == 23.4
         assert pick_2.backazimuth == 153.4
-        assert pick_2.slowness_method_id == None
-        assert pick_2.onset == None
+        assert pick_2.slowness_method_id is None
+        assert pick_2.onset is None
         assert pick_2.phase_hint == 'S'
         assert pick_2.polarity == PickPolarity.POSITIVE
-        assert pick_2.evaluation_mode == None
-        assert pick_2.evaluation_status == None
-        assert pick_2.creation_info != None
+        assert pick_2.evaluation_mode is None
+        assert pick_2.evaluation_status is None
+        assert pick_2.creation_info is not None
         assert len(pick_2.comments) == 0
 
     def test_arrival(self):
@@ -197,39 +197,41 @@ class BulletinTestCase():
         assert len(arrivals) == 9
         # Test first Arrival
         arrival_1 = arrivals[0]
-        assert arrival_1.resource_id == 'smi:local/origin/282672/arrival/3586432'
+        assert arrival_1.resource_id == \
+            'smi:local/origin/282672/arrival/3586432'
         assert arrival_1.pick_id == 'smi:local/pick/3586432'
         assert arrival_1.phase == 'P'
-        assert arrival_1.time_correction == None
+        assert arrival_1.time_correction is None
         assert arrival_1.azimuth == 150.3
         assert arrival_1.distance == 10.56
-        assert arrival_1.takeoff_angle == None
+        assert arrival_1.takeoff_angle is None
         assert arrival_1.time_residual == -0.2
         assert arrival_1.horizontal_slowness_residual == 0.1
         assert arrival_1.backazimuth_residual == 13.4
         assert arrival_1.time_weight == 1
-        assert arrival_1.backazimuth_weight == None
-        assert arrival_1.horizontal_slowness_weight == None
-        assert arrival_1.earth_model_id == None
-        assert arrival_1.creation_info != None
+        assert arrival_1.backazimuth_weight is None
+        assert arrival_1.horizontal_slowness_weight is None
+        assert arrival_1.earth_model_id is None
+        assert arrival_1.creation_info is not None
         assert len(arrival_1.comments) == 0
         # Test second Arrival
         arrival_2 = arrivals[1]
-        assert arrival_2.resource_id == 'smi:local/origin/282672/arrival/3586513'
+        assert arrival_2.resource_id == \
+            'smi:local/origin/282672/arrival/3586513'
         assert arrival_2.pick_id == 'smi:local/pick/3586513'
         assert arrival_2.phase == 'S'
-        assert arrival_2.time_correction == None
+        assert arrival_2.time_correction is None
         assert arrival_2.azimuth == 150.3
         assert arrival_2.distance == 10.56
-        assert arrival_2.takeoff_angle == None
+        assert arrival_2.takeoff_angle is None
         assert arrival_2.time_residual == -0.6
         assert arrival_2.horizontal_slowness_residual == -1.0
         assert arrival_2.backazimuth_residual == 3.1
-        assert arrival_2.time_weight == None
+        assert arrival_2.time_weight is None
         assert arrival_2.backazimuth_weight == 1
-        assert arrival_2.horizontal_slowness_weight == None
-        assert arrival_2.earth_model_id == None
-        assert arrival_2.creation_info != None
+        assert arrival_2.horizontal_slowness_weight is None
+        assert arrival_2.earth_model_id is None
+        assert arrival_2.creation_info is not None
         assert len(arrival_2.comments) == 0
 
     def test_magnitude(self):
@@ -248,27 +250,27 @@ class BulletinTestCase():
         assert mag_1.mag_errors.uncertainty == 0.2
         assert mag_1.magnitude_type == 'mb'
         assert mag_1.origin_id == 'smi:local/origin/282672'
-        assert mag_1.method_id == None
+        assert mag_1.method_id is None
         assert mag_1.station_count == 3
-        assert mag_1.azimuthal_gap == None
-        assert mag_1.evaluation_mode == None
-        assert mag_1.evaluation_status == None
-        assert mag_1.creation_info != None
+        assert mag_1.azimuthal_gap is None
+        assert mag_1.evaluation_mode is None
+        assert mag_1.evaluation_status is None
+        assert mag_1.creation_info is not None
         assert len(mag_1.comments) == 0
         assert len(mag_1.station_magnitude_contributions) == 3
         # Test second Magnitude
         mag_2 = magnitudes[1]
         assert mag_2.resource_id == 'smi:local/origin/282672/magnitude/1'
         assert mag_2.mag == 4.0
-        assert mag_2.mag_errors.uncertainty == None
+        assert mag_2.mag_errors.uncertainty is None
         assert mag_2.magnitude_type == 'ML'
         assert mag_2.origin_id == 'smi:local/origin/282672'
-        assert mag_2.method_id == None
+        assert mag_2.method_id is None
         assert mag_2.station_count == 1
-        assert mag_2.azimuthal_gap == None
-        assert mag_2.evaluation_mode == None
-        assert mag_2.evaluation_status == None
-        assert mag_2.creation_info != None
+        assert mag_2.azimuthal_gap is None
+        assert mag_2.evaluation_mode is None
+        assert mag_2.evaluation_status is None
+        assert mag_2.creation_info is not None
         assert len(mag_2.comments) == 0
         assert len(mag_2.station_magnitude_contributions) == 1
 
@@ -288,16 +290,16 @@ class BulletinTestCase():
         assert sta_mag_1.mag == 4.0
         assert sta_mag_1.station_magnitude_type == 'ML'
         assert sta_mag_1.amplitude_id == 'smi:local/amplitude/3586432'
-        assert sta_mag_1.method_id == None
-        assert sta_mag_1.creation_info != None
+        assert sta_mag_1.method_id is None
+        assert sta_mag_1.creation_info is not None
         assert len(sta_mag_1.comments) == 0
 
         waveform_1 = sta_mag_1.waveform_id
         assert waveform_1.network_code == 'XX'
         assert waveform_1.station_code == 'GERES'
-        assert waveform_1.channel_code == None
-        assert waveform_1.location_code == None
-        assert waveform_1.resource_uri == None
+        assert waveform_1.channel_code is None
+        assert waveform_1.location_code is None
+        assert waveform_1.resource_uri is None
 
         # Test second StationMagnitude
         sta_mag_2 = station_magnitudes[1]
@@ -306,8 +308,8 @@ class BulletinTestCase():
         assert sta_mag_2.mag == 3.7
         assert sta_mag_2.station_magnitude_type == 'mb'
         assert sta_mag_2.amplitude_id == 'smi:local/amplitude/3586555'
-        assert sta_mag_2.method_id == None
-        assert sta_mag_2.creation_info != None
+        assert sta_mag_2.method_id is None
+        assert sta_mag_2.creation_info is not None
         assert len(sta_mag_2.comments) == 0
         # Test with a file containig Mag2 but not Mag1
         fields = {
@@ -333,23 +335,22 @@ class BulletinTestCase():
         assert len(station_magnitudes) == 5
         sta_mag_3 = station_magnitudes[0]
         assert sta_mag_3.resource_id.id == \
-                         'quakeml:ldg/magnitude/station/6867444/1'
+            'quakeml:ldg/magnitude/station/6867444/1'
         assert sta_mag_3.origin_id.id == 'quakeml:ldg/origin/375628'
         assert sta_mag_3.mag == 1.7
         assert sta_mag_3.station_magnitude_type == 'Md'
-        assert sta_mag_3.amplitude_id.id == \
-                         'quakeml:ldg/amplitude/6867444'
-        assert sta_mag_3.method_id == None
+        assert sta_mag_3.amplitude_id.id == 'quakeml:ldg/amplitude/6867444'
+        assert sta_mag_3.method_id is None
         assert sta_mag_3.waveform_id.get_seed_string() == 'XX.MBDF..'
-        assert sta_mag_3.creation_info != None
+        assert sta_mag_3.creation_info is not None
         assert len(sta_mag_3.comments) == 0
 
         waveform_2 = sta_mag_2.waveform_id
         assert waveform_2.network_code == 'XX'
         assert waveform_2.station_code == 'FINES'
-        assert waveform_2.channel_code == None
-        assert waveform_2.location_code == None
-        assert waveform_2.resource_uri == None
+        assert waveform_2.channel_code is None
+        assert waveform_2.location_code is None
+        assert waveform_2.resource_uri is None
 
     def test_amplitude(self):
         """
@@ -366,53 +367,53 @@ class BulletinTestCase():
         amplitude_1 = amplitudes[0]
         assert amplitude_1.resource_id == 'smi:local/amplitude/3586432'
         assert amplitude_1.generic_amplitude == 0.6
-        assert amplitude_1.type == None
-        assert amplitude_1.category == None
-        assert amplitude_1.unit == None
-        assert amplitude_1.method_id == None
+        assert amplitude_1.type is None
+        assert amplitude_1.category is None
+        assert amplitude_1.unit is None
+        assert amplitude_1.method_id is None
         assert amplitude_1.period == 0.3
         assert amplitude_1.snr == 6.8
-        assert amplitude_1.time_window == None
+        assert amplitude_1.time_window is None
         assert amplitude_1.pick_id == 'smi:local/pick/3586432'
         # WaveformStreamId
         waveform_1 = amplitude_1.waveform_id
         assert waveform_1.network_code == 'XX'
         assert waveform_1.station_code == 'GERES'
-        assert waveform_1.channel_code == None
-        assert waveform_1.location_code == None
-        assert waveform_1.resource_uri == None
-        assert amplitude_1.filter_id == None
-        assert amplitude_1.scaling_time == None
+        assert waveform_1.channel_code is None
+        assert waveform_1.location_code is None
+        assert waveform_1.resource_uri is None
+        assert amplitude_1.filter_id is None
+        assert amplitude_1.scaling_time is None
         assert amplitude_1.magnitude_hint == 'ML'
-        assert amplitude_1.evaluation_mode == None
-        assert amplitude_1.evaluation_status == None
-        assert amplitude_1.creation_info != None
+        assert amplitude_1.evaluation_mode is None
+        assert amplitude_1.evaluation_status is None
+        assert amplitude_1.creation_info is not None
         assert len(amplitude_1.comments) == 0
         # Test second amplitude
         amplitude_2 = amplitudes[1]
         assert amplitude_2.resource_id == 'smi:local/amplitude/3586513'
         assert amplitude_2.generic_amplitude == 2.9
-        assert amplitude_2.type == None
-        assert amplitude_2.category == None
-        assert amplitude_2.unit == None
-        assert amplitude_2.method_id == None
+        assert amplitude_2.type is None
+        assert amplitude_2.category is None
+        assert amplitude_2.unit is None
+        assert amplitude_2.method_id is None
         assert amplitude_2.period == 0.6
         assert amplitude_2.snr == 4.9
-        assert amplitude_2.time_window == None
+        assert amplitude_2.time_window is None
         assert amplitude_2.pick_id == 'smi:local/pick/3586513'
         # WaveformStreamId
         waveform_2 = amplitude_2.waveform_id
         assert waveform_2.network_code == 'XX'
         assert waveform_2.station_code == 'GERES'
-        assert waveform_2.channel_code == None
-        assert waveform_2.location_code == None
-        assert waveform_2.resource_uri == None
-        assert amplitude_2.filter_id == None
-        assert amplitude_2.scaling_time == None
-        assert amplitude_2.magnitude_hint == None
-        assert amplitude_2.evaluation_mode == None
-        assert amplitude_2.evaluation_status == None
-        assert amplitude_2.creation_info != None
+        assert waveform_2.channel_code is None
+        assert waveform_2.location_code is None
+        assert waveform_2.resource_uri is None
+        assert amplitude_2.filter_id is None
+        assert amplitude_2.scaling_time is None
+        assert amplitude_2.magnitude_hint is None
+        assert amplitude_2.evaluation_mode is None
+        assert amplitude_2.evaluation_status is None
+        assert amplitude_2.creation_info is not None
         assert len(amplitude_2.comments) == 0
 
     def test_several_events(self):
@@ -539,7 +540,8 @@ class BulletinTestCase():
         # Test Arrival ResourceIdentifier
         assert len(origin.arrivals) == 9
         arrival = origin.arrivals[0]
-        assert arrival.resource_id == 'quakeml:idc/origin/282672/arrival/3586432'
+        assert arrival.resource_id == \
+            'quakeml:idc/origin/282672/arrival/3586432'
         # Test Magnitude ResourceIdentifier
         assert len(event.magnitudes) == 2
         magnitude = event.magnitudes[0]
@@ -639,8 +641,8 @@ class BulletinTestCase():
         pick_2 = event.picks[2]
         waveform_2 = pick_2.waveform_id
         assert waveform_2.network_code == 'XX'
-        assert waveform_2.channel_code == None
-        assert waveform_2.location_code == None
+        assert waveform_2.channel_code is None
+        assert waveform_2.location_code is None
 
     def test_inventory_with_multiple_channels(self):
         filename = os.path.join(self.path, 'gse_2.0_non_standard.txt')
@@ -679,14 +681,14 @@ class BulletinTestCase():
         pick_2 = event.picks[2]
         waveform_2 = pick_2.waveform_id
         assert waveform_2.network_code == 'ZU'
-        assert waveform_2.channel_code == None
-        assert waveform_2.location_code == None
+        assert waveform_2.channel_code is None
+        assert waveform_2.location_code is None
         # Test a station not present in the inventory
         pick_3 = event.picks[3]
         waveform_3 = pick_3.waveform_id
         assert waveform_3.network_code == 'XX'
-        assert waveform_3.channel_code == None
-        assert waveform_3.location_code == None
+        assert waveform_3.channel_code is None
+        assert waveform_3.location_code is None
 
     def test_several_begin(self):
         """

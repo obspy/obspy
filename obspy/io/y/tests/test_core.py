@@ -18,9 +18,9 @@ class CoreTestCase():
         Testing Y file format.
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
-        assert _is_y(testfile) == True
-        assert _is_y("/path/to/slist.ascii") == False
-        assert _is_y("/path/to/tspair.ascii") == False
+        assert _is_y(testfile)
+        assert not _is_y("/path/to/slist.ascii")
+        assert not _is_y("/path/to/tspair.ascii")
 
     def test_read_y_file(self):
         """
@@ -36,10 +36,8 @@ class CoreTestCase():
         assert tr.stats.channel == 'BHZ'
         assert tr.stats.location == ''
         assert tr.stats.network == ''
-        assert max(tr.data) == \
-                         tr.stats.y.tag_series_info.max_amplitude
-        assert min(tr.data) == \
-                         tr.stats.y.tag_series_info.min_amplitude
+        assert max(tr.data) == tr.stats.y.tag_series_info.max_amplitude
+        assert min(tr.data) == tr.stats.y.tag_series_info.min_amplitude
 
     def test_ignore_non_ascii_tag_station_info(self):
         """

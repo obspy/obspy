@@ -57,7 +57,7 @@ class ArclinkInventoryTestCase():
             assert arclink_stage.stage_gain == \
                              station_stage.stage_gain
             assert arclink_stage.stage_sequence_number == \
-                             station_stage.stage_sequence_number
+                station_stage.stage_sequence_number
 
             for arc_cs, sta_cs in zip(arclink_stage.__dict__.items(),
                                       station_stage.__dict__.items()):
@@ -75,8 +75,8 @@ class ArclinkInventoryTestCase():
         with pytest.raises(NotImplementedError) as e:
             read_inventory(self.arclink_xml_poly)
 
-        assert e.exception.args[0] == "responsePolynomial not" \
-                         "implemented. Contact the ObsPy developers"
+        assert e.exception.args[0] == \
+            "responsePolynomial not implemented. Contact the ObsPy developers"
 
     @pytest.mark.filterwarnings("ignore:Attribute 'storage_format'.*removed")
     def test_auto_read_arclink_xml(self):
@@ -105,8 +105,8 @@ class ArclinkInventoryTestCase():
                 # reading stationxml will ignore old StationXML 1.0 defined
                 # StorageFormat, Arclink Inventory XML and SC3ML get it stored
                 # in extra now
-                assert st_xml.storage_format == None
-                assert arc.storage_format == None
+                assert st_xml.storage_format is None
+                assert arc.storage_format is None
                 assert arc.extra['format'] == \
                     {'namespace': SCHEMA_NAMESPACE, 'value': None}
 
@@ -129,7 +129,7 @@ class ArclinkInventoryTestCase():
 
                 # Same number of response stages
                 assert len(arc.response.response_stages) == \
-                                 len(st_xml.response.response_stages)
+                    len(st_xml.response.response_stages)
 
                 # Check the response stages
                 for arc_resp, sta_resp in zip(arc.response.response_stages,
@@ -137,7 +137,7 @@ class ArclinkInventoryTestCase():
 
                     assert arc_resp.stage_gain == sta_resp.stage_gain
                     assert arc_resp.stage_sequence_number == \
-                                     sta_resp.stage_sequence_number
+                        sta_resp.stage_sequence_number
 
                     for arc_cs, sta_cs in zip(arc_resp.__dict__.items(),
                                               sta_resp.__dict__.items()):

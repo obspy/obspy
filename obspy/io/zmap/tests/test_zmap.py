@@ -252,10 +252,10 @@ class ZMAPTestCase():
         for event, test_dict in zip(catalog, dicts):
             origin = event.preferred_origin()
             if any(k in test_dict for k in _ORIGIN_FIELDS):
-                assert None != origin
+                assert origin is not None
             magnitude = event.preferred_magnitude()
             if any(k in test_dict for k in _MAGNITUDE_FIELDS):
-                assert None != magnitude
+                assert magnitude is not None
             d = dict((k, float(v) if v != 'NaN' else None)
                      for (k, v) in test_dict.items())
             if 'lon' in d:
@@ -265,13 +265,13 @@ class ZMAPTestCase():
             if 'depth' in d:
                 assert d['depth'] * 1000 == origin.depth
             if 'z_err' in d:
-                assert d['z_err'] * 1000 == origin.depth_errors. \
-                                 uncertainty
+                assert d['z_err'] * 1000 == \
+                    origin.depth_errors.uncertainty
             if 'h_err' in d:
-                assert d['h_err'] == origin.origin_uncertainty \
-                                 .horizontal_uncertainty
-                assert 'horizontal uncertainty' == origin \
-                                 .origin_uncertainty.preferred_description
+                assert d['h_err'] == \
+                    origin.origin_uncertainty.horizontal_uncertainty
+                assert 'horizontal uncertainty' == \
+                    origin.origin_uncertainty.preferred_description
             if 'year' in d:
                 year = d['year']
                 comps = ['year', 'month', 'day', 'hour', 'minute', 'second']

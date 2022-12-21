@@ -252,10 +252,8 @@ class StationXMLTestCase():
         # check new measurementMethod attributes
         assert sta.latitude.measurement_method == "GPS"
         assert sta.longitude.measurement_method == "GPS"
-        assert sta.elevation.measurement_method == \
-                         "digital elevation model"
-        assert cha.azimuth.measurement_method == \
-                         "fibre optic gyro compass"
+        assert sta.elevation.measurement_method == "digital elevation model"
+        assert cha.azimuth.measurement_method == "fibre optic gyro compass"
         # check data availability tags
         assert net.data_availability.start == UTCDateTime(2011, 2, 3, 4, 5, 6)
         assert net.data_availability.end == UTCDateTime(2011, 3, 4, 5, 6, 7)
@@ -277,7 +275,7 @@ class StationXMLTestCase():
         # Comment topic
         assert net.comments[0].subject == "my topic"
         # Comment id optional now
-        assert net.comments[0].id == None
+        assert net.comments[0].id is None
         # storage_format was deprecated since it was removed in StationXML 1.1
         msg = (r"Attribute 'storage_format' was removed in accordance with "
                r"StationXML 1\.1, ignoring\.")
@@ -290,7 +288,7 @@ class StationXMLTestCase():
         with CatchAndAssertWarnings(
                 clear=['obspy.core.inventory.channel'],
                 expected=[(ObsPyDeprecationWarning, msg)]):
-            assert cha.storage_format == None
+            assert cha.storage_format is None
         # check new number attributes on Numerator/Denominator
         resp = cha.response
         stage = resp.response_stages[1]
@@ -312,12 +310,11 @@ class StationXMLTestCase():
         lines = file_buffer.read().decode().splitlines()
         module_line = [_i.strip() for _i in lines if _i.strip().startswith(
             "<Module>")][0]
-        assert fnmatch.fnmatch(module_line,
-                                        "<Module>ObsPy *</Module>")
-        module_uri_line = [_i.strip() for _i in lines if _i.strip().startswith(
-            "<ModuleURI>")][0]
+        assert fnmatch.fnmatch(module_line, "<Module>ObsPy *</Module>")
+        module_uri_line = [_i.strip() for _i in lines if
+                           _i.strip().startswith("<ModuleURI>")][0]
         assert module_uri_line == \
-                         "<ModuleURI>https://www.obspy.org</ModuleURI>"
+            "<ModuleURI>https://www.obspy.org</ModuleURI>"
 
     def test_reading_other_module_tags(self):
         """
@@ -383,10 +380,8 @@ class StationXMLTestCase():
 
         comment_1 = net.comments[0]
         assert comment_1.value == "Comment number 1"
-        assert comment_1.begin_effective_time == \
-                         obspy.UTCDateTime(1990, 5, 5)
-        assert comment_1.end_effective_time == \
-                         obspy.UTCDateTime(2008, 2, 3)
+        assert comment_1.begin_effective_time == obspy.UTCDateTime(1990, 5, 5)
+        assert comment_1.end_effective_time == obspy.UTCDateTime(2008, 2, 3)
         assert len(comment_1.authors) == 1
         authors = comment_1.authors[0]
         assert len(authors.names) == 2
@@ -413,10 +408,8 @@ class StationXMLTestCase():
 
         comment_2 = net.comments[1]
         assert comment_2.value == "Comment number 2"
-        assert comment_2.begin_effective_time == \
-                         obspy.UTCDateTime(1990, 5, 5)
-        assert comment_1.end_effective_time == \
-                         obspy.UTCDateTime(2008, 2, 3)
+        assert comment_2.begin_effective_time == obspy.UTCDateTime(1990, 5, 5)
+        assert comment_1.end_effective_time == obspy.UTCDateTime(2008, 2, 3)
         assert len(comment_2.authors) == 3
         for _i, author in enumerate(comment_2.authors):
             assert len(author.names) == 1
@@ -426,7 +419,7 @@ class StationXMLTestCase():
             assert len(author.emails) == 1
             assert author.emails[0] == "email@mail.com"
             assert len(author.phones) == 1
-            assert author.phones[0].description == None
+            assert author.phones[0].description is None
             assert author.phones[0].country_code == 49
             assert author.phones[0].area_code == 123
             assert author.phones[0].phone_number == "456-7890"
@@ -478,10 +471,8 @@ class StationXMLTestCase():
         assert len(station.comments) == 2
         comment_1 = station.comments[0]
         assert comment_1.value == "Comment number 1"
-        assert comment_1.begin_effective_time == \
-                         obspy.UTCDateTime(1990, 5, 5)
-        assert comment_1.end_effective_time == \
-                         obspy.UTCDateTime(2008, 2, 3)
+        assert comment_1.begin_effective_time == obspy.UTCDateTime(1990, 5, 5)
+        assert comment_1.end_effective_time == obspy.UTCDateTime(2008, 2, 3)
         assert len(comment_1.authors) == 1
         authors = comment_1.authors[0]
         assert len(authors.names) == 2
@@ -507,10 +498,8 @@ class StationXMLTestCase():
         assert authors.phones[1].phone_number == "129-7890"
         comment_2 = station.comments[1]
         assert comment_2.value == "Comment number 2"
-        assert comment_2.begin_effective_time == \
-                         obspy.UTCDateTime(1990, 5, 5)
-        assert comment_1.end_effective_time == \
-                         obspy.UTCDateTime(2008, 2, 3)
+        assert comment_2.begin_effective_time == obspy.UTCDateTime(1990, 5, 5)
+        assert comment_1.end_effective_time == obspy.UTCDateTime(2008, 2, 3)
         assert len(comment_2.authors) == 3
         for _i, author in enumerate(comment_2.authors):
             assert len(author.names) == 1
@@ -520,7 +509,7 @@ class StationXMLTestCase():
             assert len(author.emails) == 1
             assert author.emails[0] == "email@mail.com"
             assert len(author.phones) == 1
-            assert author.phones[0].description == None
+            assert author.phones[0].description is None
             assert author.phones[0].country_code == 49
             assert author.phones[0].area_code == 123
             assert author.phones[0].phone_number == "456-7890"
@@ -543,35 +532,33 @@ class StationXMLTestCase():
         assert station.equipments[0].resource_id == "some_id"
         assert station.equipments[0].type == "Some type"
         assert station.equipments[0].description == "Some description"
-        assert station.equipments[0].manufacturer == \
-                         "Some manufacturer"
+        assert station.equipments[0].manufacturer == "Some manufacturer"
         assert station.equipments[0].vendor == "Some vendor"
         assert station.equipments[0].model == "Some model"
         assert station.equipments[0].serial_number == "12345-ABC"
         assert station.equipments[0].installation_date == \
-                         obspy.UTCDateTime(1990, 5, 5)
+            obspy.UTCDateTime(1990, 5, 5)
         assert station.equipments[0].removal_date == \
-                         obspy.UTCDateTime(1999, 5, 5)
+            obspy.UTCDateTime(1999, 5, 5)
         assert station.equipments[0].calibration_dates[0] == \
-                         obspy.UTCDateTime(1990, 5, 5)
+            obspy.UTCDateTime(1990, 5, 5)
         assert station.equipments[0].calibration_dates[1] == \
-                         obspy.UTCDateTime(1992, 5, 5)
+            obspy.UTCDateTime(1992, 5, 5)
         assert station.equipments[1].resource_id == "something_new"
         assert station.equipments[1].type == "Some type"
         assert station.equipments[1].description == "Some description"
-        assert station.equipments[1].manufacturer == \
-                         "Some manufacturer"
+        assert station.equipments[1].manufacturer == "Some manufacturer"
         assert station.equipments[1].vendor == "Some vendor"
         assert station.equipments[1].model == "Some model"
         assert station.equipments[1].serial_number == "12345-ABC"
         assert station.equipments[1].installation_date == \
-                         obspy.UTCDateTime(1990, 5, 5)
+            obspy.UTCDateTime(1990, 5, 5)
         assert station.equipments[1].removal_date == \
-                         obspy.UTCDateTime(1999, 5, 5)
+            obspy.UTCDateTime(1999, 5, 5)
         assert station.equipments[1].calibration_dates[0] == \
-                         obspy.UTCDateTime(1990, 5, 5)
+            obspy.UTCDateTime(1990, 5, 5)
         assert station.equipments[1].calibration_dates[1] == \
-                         obspy.UTCDateTime(1992, 5, 5)
+            obspy.UTCDateTime(1992, 5, 5)
 
         assert len(station.operators) == 2
         assert station.operators[0].agency == "Agency 1"
@@ -586,25 +573,18 @@ class StationXMLTestCase():
                 clear=['obspy.io.stationxml.core'],
                 expected=[(ObsPyDeprecationWarning, regex)]):
             assert station.operators[0].agencies[0] == "Agency 1"
-        assert station.operators[0].contacts[0].names[0] == \
-                         "This person"
+        assert station.operators[0].contacts[0].names[0] == "This person"
         assert station.operators[0].contacts[0].names[1] == \
-                         "has multiple names!"
+            "has multiple names!"
         assert len(station.operators[0].contacts[0].agencies) == 3
-        assert station.operators[0].contacts[0].agencies[0] == \
-                         "And also"
+        assert station.operators[0].contacts[0].agencies[0] == "And also"
         assert station.operators[0].contacts[0].agencies[1] == "many"
-        assert station.operators[0].contacts[0].agencies[2] == \
-                         "many Agencies"
+        assert station.operators[0].contacts[0].agencies[2] == "many Agencies"
         assert len(station.operators[0].contacts[0].emails) == 4
-        assert station.operators[0].contacts[0].emails[0] == \
-                         "email1@mail.com"
-        assert station.operators[0].contacts[0].emails[1] == \
-                         "email2@mail.com"
-        assert station.operators[0].contacts[0].emails[2] == \
-                         "email3@mail.com"
-        assert station.operators[0].contacts[0].emails[3] == \
-                         "email4@mail.com"
+        assert station.operators[0].contacts[0].emails[0] == "email1@mail.com"
+        assert station.operators[0].contacts[0].emails[1] == "email2@mail.com"
+        assert station.operators[0].contacts[0].emails[2] == "email3@mail.com"
+        assert station.operators[0].contacts[0].emails[3] == "email4@mail.com"
         assert len(station.operators[0].contacts[0].phones) == 2
         assert station.operators[0].contacts[0].phones[0].description == \
             "phone number 1"
@@ -615,15 +595,12 @@ class StationXMLTestCase():
         assert station.operators[0].contacts[0].phones[1].description == \
             "phone number 2"
         assert station.operators[0].contacts[0].phones[1].country_code == 34
-        assert station.operators[0].contacts[0].phones[1].area_code == \
-                         321
+        assert station.operators[0].contacts[0].phones[1].area_code == 321
         assert station.operators[0].contacts[0].phones[1].phone_number == \
             "129-7890"
         assert station.operators[0].contacts[1].names[0] == "Name"
-        assert station.operators[0].contacts[1].agencies[0] == \
-                         "Agency"
-        assert station.operators[0].contacts[1].emails[0] == \
-                         "email@mail.com"
+        assert station.operators[0].contacts[1].agencies[0] == "Agency"
+        assert station.operators[0].contacts[1].emails[0] == "email@mail.com"
         assert station.operators[0].contacts[1].phones[0].description == \
             "phone number 1"
         assert station.operators[0].contacts[1].phones[0].country_code == 49
@@ -634,34 +611,30 @@ class StationXMLTestCase():
 
         assert station.operators[1].agency == "Agency"
         assert station.operators[1].contacts[0].names[0] == "New Name"
-        assert station.operators[1].contacts[0].agencies[0] == \
-                         "Agency"
-        assert station.operators[1].contacts[0].emails[0] == \
-                         "email@mail.com"
+        assert station.operators[1].contacts[0].agencies[0] == "Agency"
+        assert station.operators[1].contacts[0].emails[0] == "email@mail.com"
         assert station.operators[1].contacts[0].phones[0].description == \
             "phone number 1"
         assert station.operators[1].contacts[0].phones[0].country_code == 49
-        assert station.operators[1].contacts[0].phones[0].area_code == \
-                         123
+        assert station.operators[1].contacts[0].phones[0].area_code == 123
         assert station.operators[1].contacts[0].phones[0].phone_number == \
             "456-7890"
         assert station.operators[1].website == "http://www.web.site"
 
         assert station.creation_date == obspy.UTCDateTime(1990, 5, 5)
-        assert station.termination_date == \
-                         obspy.UTCDateTime(2009, 5, 5)
+        assert station.termination_date == obspy.UTCDateTime(2009, 5, 5)
         assert station.total_number_of_channels == 100
         assert station.selected_number_of_channels == 1
 
         assert len(station.external_references) == 2
         assert station.external_references[0].uri == \
-                         "http://path.to/something"
+            "http://path.to/something"
         assert station.external_references[0].description == \
-                         "Some description"
+            "Some description"
         assert station.external_references[1].uri == \
-                         "http://path.to/something/else"
+            "http://path.to/something/else"
         assert station.external_references[1].description == \
-                         "Some other description"
+            "Some other description"
 
         # Now write it again and compare to the original file.
         file_buffer = io.BytesIO()
@@ -697,12 +670,10 @@ class StationXMLTestCase():
         # Assert some fields of the network. This is extensively tested
         # elsewhere.
         assert network.code == "IU"
-        assert network.start_date == \
-                         obspy.UTCDateTime("1988-01-01T00:00:00")
-        assert network.end_date == \
-                         obspy.UTCDateTime("2500-12-12T23:59:59")
+        assert network.start_date == obspy.UTCDateTime("1988-01-01T00:00:00")
+        assert network.end_date == obspy.UTCDateTime("2500-12-12T23:59:59")
         assert network.description == \
-                         "Global Seismograph Network (GSN - IRIS/USGS)"
+            "Global Seismograph Network (GSN - IRIS/USGS)"
         # Assert a few fields of the station. This is extensively tested
         # elsewhere.
         assert station.code == "ANMO"
@@ -713,10 +684,8 @@ class StationXMLTestCase():
         # Start to assert the channel reading.
         assert channel.code == "BHZ"
         assert channel.location_code == "10"
-        assert channel.start_date == \
-                         obspy.UTCDateTime("2012-03-13T08:10:00")
-        assert channel.end_date == \
-                         obspy.UTCDateTime("2599-12-31T23:59:59")
+        assert channel.start_date == obspy.UTCDateTime("2012-03-13T08:10:00")
+        assert channel.end_date == obspy.UTCDateTime("2599-12-31T23:59:59")
         assert channel.restricted_status == "open"
         assert channel.latitude == 34.945913
         assert channel.longitude == -106.457122
@@ -728,7 +697,7 @@ class StationXMLTestCase():
         assert channel.sample_rate == 40.0
         assert channel.clock_drift_in_seconds_per_sample == 0.0
         assert channel.sensor.type == \
-                         "Guralp CMG3-T Seismometer (borehole)"
+            "Guralp CMG3-T Seismometer (borehole)"
         # Check the response.
         response = channel.response
         sensitivity = response.instrument_sensitivity
@@ -736,10 +705,9 @@ class StationXMLTestCase():
         assert sensitivity.frequency == 0.02
         assert sensitivity.input_units == "M/S"
         assert sensitivity.input_units_description == \
-                         "Velocity in Meters Per Second"
+            "Velocity in Meters Per Second"
         assert sensitivity.output_units == "COUNTS"
-        assert sensitivity.output_units_description == \
-                         "Digital Counts"
+        assert sensitivity.output_units_description == "Digital Counts"
         # Assert that there are three stages.
         assert len(response.response_stages) == 3
 
@@ -753,9 +721,9 @@ class StationXMLTestCase():
         inv = obspy.read_inventory(filename, format="stationxml")
         channel = inv[0][0][0]
         assert channel.data_availability.start == \
-                         obspy.UTCDateTime("1998-10-26T20:35:58")
+            obspy.UTCDateTime("1998-10-26T20:35:58")
         assert channel.data_availability.end == \
-                         obspy.UTCDateTime("2014-07-21T12:00:00")
+            obspy.UTCDateTime("2014-07-21T12:00:00")
 
         # Now write it again and compare to the original file.
         file_buffer = io.BytesIO()
@@ -848,7 +816,7 @@ class StationXMLTestCase():
             mynsmap = {None: 'http://bad.custom.ns/'}
             with pytest.raises(ValueError):
                 inv.write(path_or_file_object=tmpfile,
-                format="STATIONXML", nsmap=mynsmap)
+                          format="STATIONXML", nsmap=mynsmap)
 
     def test_write_with_extra_tags_without_read_extra(self):
         """
@@ -1154,10 +1122,10 @@ class StationXMLTestCase():
         # coordinates.
         assert len(w) == 1
         assert w[0].message.args[0] == \
-            "Channel 00.BHZ of station LATE does not have a complete set of " \
-            "coordinates (latitude, longitude), elevation and depth and thus " \
-            "it cannot be read. It will not be part of " \
-            "the final inventory object."
+            ("Channel 00.BHZ of station LATE does not have a complete set of "
+             "coordinates (latitude, longitude), elevation and depth and thus "
+             "it cannot be read. It will not be part of "
+             "the final inventory object.")
 
         assert inv.get_contents() == \
             {'networks': ['IV'], 'stations': ['IV.LATE (Latera)'],
@@ -1194,11 +1162,13 @@ class StationXMLTestCase():
         assert response_2.response_stages[1].input_units == "V"
         assert response_2.response_stages[1].output_units == "V"
         assert response_2.response_stages[1].input_units_description == "Volts"
-        assert response_2.response_stages[1].output_units_description == "Volts"
+        assert response_2.response_stages[1].output_units_description == \
+            "Volts"
         assert response_2.response_stages[2].input_units == "V"
         assert response_2.response_stages[2].output_units == "V"
         assert response_2.response_stages[2].input_units_description == "Volts"
-        assert response_2.response_stages[2].output_units_description == "Volts"
+        assert response_2.response_stages[2].output_units_description == \
+            "Volts"
 
         # Also try from the other side.
         inv = obspy.read_inventory().select(station="RJOB", channel="EHZ",
@@ -1234,11 +1204,13 @@ class StationXMLTestCase():
         assert response_2.response_stages[1].input_units == "V"
         assert response_2.response_stages[1].output_units == "V"
         assert response_2.response_stages[1].input_units_description == "Volts"
-        assert response_2.response_stages[1].output_units_description == "Volts"
+        assert response_2.response_stages[1].output_units_description == \
+            "Volts"
         assert response_2.response_stages[2].input_units == "V"
         assert response_2.response_stages[2].output_units == "V"
         assert response_2.response_stages[2].input_units_description == "Volts"
-        assert response_2.response_stages[2].output_units_description == "Volts"
+        assert response_2.response_stages[2].output_units_description == \
+            "Volts"
 
     def test_reading_full_stationxml_1_0_file(self):
         """
@@ -1250,7 +1222,8 @@ class StationXMLTestCase():
         lats = [cha.latitude for net in inv for sta in net for cha in sta]
         # for now just check that all expected channels are there.. test could
         # be much improved
-        assert lats == [-53.12, 44.77, 63.39, 12.46, -13.16, -84.44, 43.9, -88.41]
+        assert lats == [
+            -53.12, 44.77, 63.39, 12.46, -13.16, -84.44, 43.9, -88.41]
 
     def test_read_with_level(self):
         """
@@ -1263,7 +1236,8 @@ class StationXMLTestCase():
         inv_stationxml_station = _read_stationxml(path, level='station')
         inv_stationxml_network = _read_stationxml(path, level='network')
         # test reading through plugin
-        assert obspy.read_inventory(path, format='STATIONXML', level='station') == \
+        assert obspy.read_inventory(
+            path, format='STATIONXML', level='station') == \
             inv_stationxml_station
         # test reading default which should be equivalent to reading response
         # level

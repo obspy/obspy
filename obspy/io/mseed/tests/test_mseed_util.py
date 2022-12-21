@@ -135,22 +135,19 @@ class MSEEDUtilTestCase():
         # 1
         dt = UTCDateTime(ns=1487021451935737333)
         assert str(dt) == "2017-02-13T21:30:51.935737Z"
-        assert util._convert_datetime_to_mstime(dt) == \
-                         1487021451935737
+        assert util._convert_datetime_to_mstime(dt) == 1487021451935737
         assert dt == util._convert_mstime_to_datetime(
             util._convert_datetime_to_mstime(dt))
         # 2
         dt = UTCDateTime(ns=1487021451935736449)
         assert str(dt) == "2017-02-13T21:30:51.935736Z"
-        assert util._convert_datetime_to_mstime(dt) == \
-                         1487021451935736
+        assert util._convert_datetime_to_mstime(dt) == 1487021451935736
         assert dt == util._convert_mstime_to_datetime(
             util._convert_datetime_to_mstime(dt))
         # 3
         dt = UTCDateTime(ns=1487021451935736501)
         assert str(dt) == "2017-02-13T21:30:51.935737Z"
-        assert util._convert_datetime_to_mstime(dt) == \
-                         1487021451935737
+        assert util._convert_datetime_to_mstime(dt) == 1487021451935737
         assert dt == util._convert_mstime_to_datetime(
             util._convert_datetime_to_mstime(dt))
 
@@ -675,9 +672,9 @@ class MSEEDUtilTestCase():
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('error', UserWarning)
                 with pytest.raises(UserWarning):
-                    util.shift_time_of_file(input_file=filename,
-                                  output_file=output_filename,
-                                  timeshift=123400)
+                    util.shift_time_of_file(
+                        input_file=filename, output_file=output_filename,
+                        timeshift=123400)
                 # Now ignore the warnings and test the default values.
                 warnings.simplefilter('ignore', UserWarning)
                 util.shift_time_of_file(input_file=filename,
@@ -715,53 +712,41 @@ class MSEEDUtilTestCase():
         flag_value = {"INSTANT": UTCDateTime("2009-12-23T06:00:00.0")}
         corrected_flag = util._check_flag_value(flag_value)
         assert isinstance(corrected_flag, list)
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-23T06:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-23T06:00:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-23T06:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-23T06:00:00.0")
 
         # Valid value for an instant flag #2
         flag_value = {"INSTANT": [UTCDateTime("2009-12-24T06:00:00.0")]}
         corrected_flag = util._check_flag_value(flag_value)
         assert isinstance(corrected_flag, list)
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-24T06:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-24T06:00:00.0")
 
         # Valid value for several instant flags
         flag_value = {"INSTANT": [UTCDateTime("2009-12-24T06:00:00.0"),
                                   UTCDateTime("2009-12-24T06:01:00.0")]}
         corrected_flag = util._check_flag_value(flag_value)
         assert isinstance(corrected_flag, list)
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-24T06:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-24T06:00:00.0")
-        assert corrected_flag[1][0] == \
-                         UTCDateTime("2009-12-24T06:01:00.0")
-        assert corrected_flag[1][1] == \
-                         UTCDateTime("2009-12-24T06:01:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[1][0] == UTCDateTime("2009-12-24T06:01:00.0")
+        assert corrected_flag[1][1] == UTCDateTime("2009-12-24T06:01:00.0")
 
         # Valid value for a duration #1
         flag_value = {"DURATION": [UTCDateTime("2009-12-25T06:00:00.0"),
                                    UTCDateTime("2009-12-25T06:10:00.0")]}
         corrected_flag = util._check_flag_value(flag_value)
         assert isinstance(corrected_flag, list)
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-25T06:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-25T06:10:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-25T06:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-25T06:10:00.0")
 
         # Valid value for a duration #2
         flag_value = {"DURATION": [(UTCDateTime("2009-12-25T16:00:00.0"),
                                     UTCDateTime("2009-12-25T16:10:00.0"))]}
         corrected_flag = util._check_flag_value(flag_value)
         assert isinstance(corrected_flag, list)
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-25T16:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-25T16:10:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-25T16:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-25T16:10:00.0")
 
         # Valid value for several durations #1
         flag_value = {"DURATION": [UTCDateTime("2009-12-24T06:00:00.0"),
@@ -770,14 +755,10 @@ class MSEEDUtilTestCase():
                                    UTCDateTime("2009-12-24T07:10:00.0")]}
         corrected_flag = util._check_flag_value(flag_value)
         assert isinstance(corrected_flag, list)
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-24T06:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-24T06:10:00.0")
-        assert corrected_flag[1][0] == \
-                         UTCDateTime("2009-12-24T07:00:00.0")
-        assert corrected_flag[1][1] == \
-                         UTCDateTime("2009-12-24T07:10:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-24T06:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-24T06:10:00.0")
+        assert corrected_flag[1][0] == UTCDateTime("2009-12-24T07:00:00.0")
+        assert corrected_flag[1][1] == UTCDateTime("2009-12-24T07:10:00.0")
 
         # Valid value for several durations #2
         flag_value = {"DURATION": [(UTCDateTime("2009-12-25T06:00:00.0"),
@@ -786,14 +767,10 @@ class MSEEDUtilTestCase():
                                     UTCDateTime("2009-12-25T07:10:00.0"))]}
         corrected_flag = util._check_flag_value(flag_value)
         assert isinstance(corrected_flag, list)
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-25T06:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-25T06:10:00.0")
-        assert corrected_flag[1][0] == \
-                         UTCDateTime("2009-12-25T07:00:00.0")
-        assert corrected_flag[1][1] == \
-                         UTCDateTime("2009-12-25T07:10:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-25T06:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-25T06:10:00.0")
+        assert corrected_flag[1][0] == UTCDateTime("2009-12-25T07:00:00.0")
+        assert corrected_flag[1][1] == UTCDateTime("2009-12-25T07:10:00.0")
 
         # Test of the (valid) example 1 written in set_flags_in_fixed_headers's
         # docstring
@@ -811,22 +788,14 @@ class MSEEDUtilTestCase():
         # Sort by start date to ensure uniqueness of the list
         corrected_flag.sort(key=lambda val: val[0])
         assert len(corrected_flag) == 4
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-23T06:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-23T06:30:00.0")
-        assert corrected_flag[1][0] == \
-                         UTCDateTime("2009-12-24T10:00:00.0")
-        assert corrected_flag[1][1] == \
-                         UTCDateTime("2009-12-24T10:30:00.0")
-        assert corrected_flag[2][0] == \
-                         UTCDateTime("2009-12-26T18:00:00.0")
-        assert corrected_flag[2][1] == \
-                         UTCDateTime("2009-12-26T18:00:00.0")
-        assert corrected_flag[3][0] == \
-                         UTCDateTime("2009-12-26T18:04:00.0")
-        assert corrected_flag[3][1] == \
-                         UTCDateTime("2009-12-26T18:04:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-23T06:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-23T06:30:00.0")
+        assert corrected_flag[1][0] == UTCDateTime("2009-12-24T10:00:00.0")
+        assert corrected_flag[1][1] == UTCDateTime("2009-12-24T10:30:00.0")
+        assert corrected_flag[2][0] == UTCDateTime("2009-12-26T18:00:00.0")
+        assert corrected_flag[2][1] == UTCDateTime("2009-12-26T18:00:00.0")
+        assert corrected_flag[3][0] == UTCDateTime("2009-12-26T18:04:00.0")
+        assert corrected_flag[3][1] == UTCDateTime("2009-12-26T18:04:00.0")
 
         # Test of the (valid) example 2 written in set_flags_in_fixed_headers's
         # docstring
@@ -836,22 +805,14 @@ class MSEEDUtilTestCase():
         # Sort by start date to ensure uniqueness of the list
         corrected_flag.sort(key=lambda val: val[0])
         assert len(corrected_flag) == 4
-        assert corrected_flag[0][0] == \
-                         UTCDateTime("2009-12-23T06:00:00.0")
-        assert corrected_flag[0][1] == \
-                         UTCDateTime("2009-12-23T06:30:00.0")
-        assert corrected_flag[1][0] == \
-                         UTCDateTime("2009-12-24T10:00:00.0")
-        assert corrected_flag[1][1] == \
-                         UTCDateTime("2009-12-24T10:30:00.0")
-        assert corrected_flag[2][0] == \
-                         UTCDateTime("2009-12-26T18:00:00.0")
-        assert corrected_flag[2][1] == \
-                         UTCDateTime("2009-12-26T18:00:00.0")
-        assert corrected_flag[3][0] == \
-                         UTCDateTime("2009-12-26T18:04:00.0")
-        assert corrected_flag[3][1] == \
-                         UTCDateTime("2009-12-26T18:04:00.0")
+        assert corrected_flag[0][0] == UTCDateTime("2009-12-23T06:00:00.0")
+        assert corrected_flag[0][1] == UTCDateTime("2009-12-23T06:30:00.0")
+        assert corrected_flag[1][0] == UTCDateTime("2009-12-24T10:00:00.0")
+        assert corrected_flag[1][1] == UTCDateTime("2009-12-24T10:30:00.0")
+        assert corrected_flag[2][0] == UTCDateTime("2009-12-26T18:00:00.0")
+        assert corrected_flag[2][1] == UTCDateTime("2009-12-26T18:00:00.0")
+        assert corrected_flag[3][0] == UTCDateTime("2009-12-26T18:04:00.0")
+        assert corrected_flag[3][1] == UTCDateTime("2009-12-26T18:04:00.0")
 
         # Invalid type for datation flag
         flag_value = "invalid because str"
@@ -1275,8 +1236,7 @@ class MSEEDUtilTestCase():
                 if len(record_numbers) == 0 or record_count in record_numbers:
                     file_bfr.seek(16, os.SEEK_CUR)
                     readbytes = file_bfr.read(3)
-                    assert readbytes == expected_bytes, \
-                                     "Expected bytes"
+                    assert readbytes == expected_bytes, "Expected bytes"
                 else:
                     file_bfr.seek(19, os.SEEK_CUR)
                 record_count += 1

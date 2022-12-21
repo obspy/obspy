@@ -57,8 +57,8 @@ class KonnoOhmachiTestCase():
         # Just one more to test if there are no invalid values and the
         # range if ok.
         window = konno_ohmachi_smoothing_window(self.frequencies, 20)
-        assert np.any(np.isnan(window)) == False
-        assert np.any(np.isinf(window)) == False
+        assert not np.any(np.isnan(window))
+        assert not np.any(np.isinf(window))
         assert np.all(window <= 1.0)
         assert np.all(window >= 0.0)
 
@@ -112,14 +112,12 @@ class KonnoOhmachiTestCase():
         frequencies = np.require(frequencies, dtype=np.float64)
         # Wrong dtype raises.
         with pytest.raises(ValueError):
-            konno_ohmachi_smoothing(spectra,
-                          np.arange(200))
+            konno_ohmachi_smoothing(spectra, np.arange(200))
         # Differing float dtypes raise a warning.
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             with pytest.raises(UserWarning):
-                konno_ohmachi_smoothing(spectra,
-                              frequencies)
+                konno_ohmachi_smoothing(spectra, frequencies)
         # Correct the dtype.
         frequencies = np.require(frequencies, dtype=np.float32)
         # The first one uses the matrix method, the second one the non matrix

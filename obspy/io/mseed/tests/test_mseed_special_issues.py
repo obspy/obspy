@@ -73,16 +73,13 @@ class MSEEDSpecialIssueTestCase():
             # Writing should fail with invalid record lengths.
             # Not a power of 2.
             with pytest.raises(ValueError):
-                _write_mseed(st, tempfile,
-                              format="MSEED", reclen=1000)
+                _write_mseed(st, tempfile, format="MSEED", reclen=1000)
             # Too small.
             with pytest.raises(ValueError):
-                _write_mseed(st, tempfile,
-                              format="MSEED", reclen=8)
+                _write_mseed(st, tempfile, format="MSEED", reclen=8)
             # Not a number.
             with pytest.raises(ValueError):
-                _write_mseed(st, tempfile,
-                              format="MSEED", reclen='A')
+                _write_mseed(st, tempfile, format="MSEED", reclen='A')
 
     def test_invalid_encoding(self):
         """
@@ -97,12 +94,10 @@ class MSEEDSpecialIssueTestCase():
             # Writing should fail with invalid record lengths.
             # Wrong number.
             with pytest.raises(ValueError):
-                _write_mseed(st, tempfile,
-                              format="MSEED", encoding=2)
+                _write_mseed(st, tempfile, format="MSEED", encoding=2)
             # Wrong Text.
             with pytest.raises(ValueError):
-                _write_mseed(st, tempfile,
-                              format="MSEED", encoding='FLOAT_64')
+                _write_mseed(st, tempfile, format="MSEED", encoding='FLOAT_64')
 
     def test_ctypes_arg_types(self):
         """
@@ -276,8 +271,7 @@ class MSEEDSpecialIssueTestCase():
             # Type is not consistent float32 cannot be compressed with STEIM1,
             # therefore a exception should be raised.
             with pytest.raises(Exception):
-                st.write(tempfile, format="MSEED",
-                              encoding=10)
+                st.write(tempfile, format="MSEED", encoding=10)
 
     def test_write_wrong_encoding_via_mseed_stats(self):
         """
@@ -298,8 +292,7 @@ class MSEEDSpecialIssueTestCase():
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('error', UserWarning)
                 with pytest.raises(UserWarning):
-                    st.write(tempfile,
-                                  format="MSEED")
+                    st.write(tempfile, format="MSEED")
 
     def test_wrong_record_length_as_argument(self):
         """
@@ -353,7 +346,7 @@ class MSEEDSpecialIssueTestCase():
             assert ms == tr.stats.mseed
             assert 4120 == tr.stats.npts
             assert UTCDateTime(2008, 1, 1, 0, 0, 20, 510000) == \
-                             tr.stats.endtime
+                tr.stats.endtime
 
     def test_issue217(self):
         """
@@ -371,8 +364,7 @@ class MSEEDSpecialIssueTestCase():
         assert 'XX.STF1..HHN' == tr.id
         assert ms == tr.stats.mseed
         assert 932 == tr.stats.npts
-        assert UTCDateTime(2007, 5, 31, 22, 45, 46, 720000) == \
-                         tr.stats.endtime
+        assert UTCDateTime(2007, 5, 31, 22, 45, 46, 720000) == tr.stats.endtime
 
     def test_issue296(self):
         """
@@ -556,8 +548,7 @@ class MSEEDSpecialIssueTestCase():
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('error', UserWarning)
                 with pytest.raises(UserWarning):
-                    st.write(tempfile,
-                                  format="MSEED")
+                    st.write(tempfile, format="MSEED")
 
     def test_issue341(self):
         """
@@ -833,28 +824,22 @@ class MSEEDSpecialIssueTestCase():
 
         tr = st[0]
         assert tr.id == "CH.PANIX..LHZ"
-        assert tr.stats.starttime == \
-                         UTCDateTime("2016-08-21T01:41:19.000000Z")
-        assert tr.stats.endtime == \
-                         UTCDateTime("2016-08-21T01:45:30.000000Z")
+        assert tr.stats.starttime == UTCDateTime("2016-08-21T01:41:19.000000Z")
+        assert tr.stats.endtime == UTCDateTime("2016-08-21T01:45:30.000000Z")
         assert tr.stats.npts == len(tr.data)
         assert tr.stats.npts == 252
 
         tr = st[1]
         assert tr.id == "CH.PANIX..LHZ"
-        assert tr.stats.starttime == \
-                         UTCDateTime("2016-08-21T01:43:37.000000Z")
-        assert tr.stats.endtime == \
-                         UTCDateTime("2016-08-21T01:43:37.000000Z")
+        assert tr.stats.starttime == UTCDateTime("2016-08-21T01:43:37.000000Z")
+        assert tr.stats.endtime == UTCDateTime("2016-08-21T01:43:37.000000Z")
         assert tr.stats.npts == len(tr.data)
         assert tr.stats.npts == 0
 
         tr = st[2]
         assert tr.id == "CH.PANIX..LHZ"
-        assert tr.stats.starttime == \
-                         UTCDateTime("2016-08-21T01:45:31.000000Z")
-        assert tr.stats.endtime == \
-                         UTCDateTime("2016-08-21T01:49:52.000000Z")
+        assert tr.stats.starttime == UTCDateTime("2016-08-21T01:45:31.000000Z")
+        assert tr.stats.endtime == UTCDateTime("2016-08-21T01:49:52.000000Z")
         assert tr.stats.npts == len(tr.data)
         assert tr.stats.npts == 262
 
@@ -909,10 +894,10 @@ class MSEEDSpecialIssueTestCase():
             info = util.get_record_information(file)
 
         assert w_1[0].message.args[0] == \
-                         'Record contains a fractional seconds (.0001 secs) ' \
-                         'of 10000 - the maximum strictly allowed value is ' \
-                         '9999. It will be interpreted as one or more ' \
-                         'additional seconds.'
+            ('Record contains a fractional seconds (.0001 secs) '
+             'of 10000 - the maximum strictly allowed value is '
+             '9999. It will be interpreted as one or more '
+             'additional seconds.')
 
         with warnings.catch_warnings(record=True) as w_2:
             warnings.simplefilter("always")
@@ -922,10 +907,10 @@ class MSEEDSpecialIssueTestCase():
         assert w_1[0].message.args[0] == w_2[0].message.args[0]
         # Second warning is raised by libmseed.
         assert w_2[1].message.args[0] == \
-                         'readMSEEDBuffer(): Record with offset=0 has a ' \
-                         'fractional second (.0001 seconds) of 10000. This ' \
-                         'is not strictly valid but will be interpreted as ' \
-                         'one or more additional seconds.'
+            ('readMSEEDBuffer(): Record with offset=0 has a '
+             'fractional second (.0001 seconds) of 10000. This '
+             'is not strictly valid but will be interpreted as '
+             'one or more additional seconds.')
 
         # Make sure libmseed and the internal ObsPy record parser produce
         # the same result.
@@ -950,8 +935,7 @@ class MSEEDSpecialIssueTestCase():
         tr = st[0]
         assert tr.stats.npts == 7536
         np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
-        assert tr.stats.starttime == \
-                         UTCDateTime(1976, 3, 10, 3, 28)
+        assert tr.stats.starttime == UTCDateTime(1976, 3, 10, 3, 28)
         assert tr.id == ".GRA1..BHZ"
 
         # Also test the data to make sure the unpacking was successful.
@@ -1069,8 +1053,7 @@ class MSEEDSpecialIssueTestCase():
         tr = st[0]
         assert tr.stats.npts == 3632
         np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
-        assert tr.stats.starttime == \
-                         UTCDateTime(1995, 9, 22, 0, 0, 18, 238400)
+        assert tr.stats.starttime == UTCDateTime(1995, 9, 22, 0, 0, 18, 238400)
         assert tr.id == "XX.TEST..BHE"
 
         np.testing.assert_equal(
@@ -1101,9 +1084,10 @@ class MSEEDSpecialIssueTestCase():
         assert len(st) == 1
         assert len(w) == 1
         assert w[0].category is InternalMSEEDWarning
-        assert "readMSEEDBuffer(): Unexpected end of file when " \
-                         "parsing record starting at offset 4608. The rest of " \
-                         "the file will not be read." == w[0].message.args[0]
+        assert w[0].message.args[0] == (
+            "readMSEEDBuffer(): Unexpected end of file when "
+            "parsing record starting at offset 4608. The rest of "
+            "the file will not be read.")
 
     def test_reading_truncated_miniseed_files_case_2(self):
         """
@@ -1130,9 +1114,10 @@ class MSEEDSpecialIssueTestCase():
         assert len(st) == 1
         assert len(w) == 1
         assert w[0].category is InternalMSEEDWarning
-        assert "readMSEEDBuffer(): Unexpected end of file when " \
-                         "parsing record starting at offset 4608. The rest of " \
-                         "the file will not be read." == w[0].message.args[0]
+        assert w[0].message.args[0] == (
+            "readMSEEDBuffer(): Unexpected end of file when "
+            "parsing record starting at offset 4608. The rest of "
+            "the file will not be read.")
 
     def test_reading_less_than_128_bytes(self):
         """
@@ -1155,17 +1140,18 @@ class MSEEDSpecialIssueTestCase():
         assert len(st) == 0  # nothing is read here.
         assert len(w) >= 1
         assert w[-1].category is InternalMSEEDWarning
-        assert "readMSEEDBuffer(): Unexpected end of file when " \
-                         "parsing record starting at offset 0. The rest of " \
-                         "the file will not be read." == w[-1].message.args[0]
+        assert w[-1].message.args[0] == (
+            "readMSEEDBuffer(): Unexpected end of file when "
+            "parsing record starting at offset 0. The rest of "
+            "the file will not be read.")
 
         # Reading anything less result in an exception.
         with pytest.raises(ObsPyMSEEDFilesizeTooSmallError) as e:
             with io.BytesIO(data[:127]) as buf:
                 _read_mseed(buf)
         assert e.exception.args[0] == \
-            "The smallest possible mini-SEED record is made up of 128 bytes. " \
-            "The passed buffer or file contains only 127."
+            ("The smallest possible mini-SEED record is made up of 128 bytes. "
+             "The passed buffer or file contains only 127.")
 
     @mock.patch("os.path.getsize")
     def test_reading_file_larger_than_2048_mib(self, getsize_mock):

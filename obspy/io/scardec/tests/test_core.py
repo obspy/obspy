@@ -64,16 +64,16 @@ class ScardecTestCase():
 
         # Test file header
         assert data.decode().splitlines()[0:2] == \
-                         new_data.decode().splitlines()[0:2]
+            new_data.decode().splitlines()[0:2]
 
         for line_data, line_new in zip(data.decode().splitlines()[2:],
                                        new_data.decode().splitlines()[2:]):
             # Compare time stamps
             assert np.allclose(float(line_data.split()[0]),
-                                        float(line_new.split()[0]))
+                               float(line_new.split()[0]))
             # Compare moment rate values
             assert np.allclose(float(line_data.split()[1]),
-                                        float(line_new.split()[1]))
+                               float(line_new.split()[1]))
 
     def test_read_and_write_scardec_from_open_files(self):
         """
@@ -105,16 +105,16 @@ class ScardecTestCase():
 
         # Test file header
         assert data.decode().splitlines()[0:2] == \
-                         new_data.decode().splitlines()[0:2]
+            new_data.decode().splitlines()[0:2]
 
         for line_data, line_new in zip(data.decode().splitlines()[2:],
                                        new_data.decode().splitlines()[2:]):
             # Compare time stamps
             assert np.allclose(float(line_data.split()[0]),
-                                        float(line_new.split()[0]))
+                               float(line_new.split()[0]))
             # Compare moment rate values
             assert np.allclose(float(line_data.split()[1]),
-                                        float(line_new.split()[1]))
+                               float(line_new.split()[1]))
 
     def test_read_and_write_scardec_from_bytes_io(self):
         """
@@ -151,16 +151,16 @@ class ScardecTestCase():
 
         # Test file header
         assert data.decode().splitlines()[0:2] == \
-                         new_data.decode().splitlines()[0:2]
+            new_data.decode().splitlines()[0:2]
 
         for line_data, line_new in zip(data.decode().splitlines()[2:],
                                        new_data.decode().splitlines()[2:]):
             # Compare time stamps
             assert np.allclose(float(line_data.split()[0]),
-                                        float(line_new.split()[0]))
+                               float(line_new.split()[0]))
             # Compare moment rate values
             assert np.allclose(float(line_data.split()[1]),
-                                        float(line_new.split()[1]))
+                               float(line_new.split()[1]))
 
     def test_is_scardec(self):
         """

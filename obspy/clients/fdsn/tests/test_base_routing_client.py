@@ -9,6 +9,7 @@
 """
 import collections
 import warnings
+from unittest import mock
 
 import pytest
 
@@ -127,18 +128,15 @@ class BaseRoutingClientTestCase():
         assert len(st) == 12
         # Test initialization.
         assert p.call_count == 4
-        assert set(_i[0][0] for _i in p.call_args_list) == \
-                         set(split.keys())
-        assert set(_i[1]["debug"] for _i in p.call_args_list) == \
-                         set([False])
-        assert set(_i[1]["timeout"] for _i in p.call_args_list) == \
-                         set([240])
+        assert set(_i[0][0] for _i in p.call_args_list) == set(split.keys())
+        assert set(_i[1]["debug"] for _i in p.call_args_list) == set([False])
+        assert set(_i[1]["timeout"] for _i in p.call_args_list) == set([240])
 
         # Waveform download.
         wf_bulk = mock_instance.get_waveforms_bulk
         assert wf_bulk.call_count == 4
         assert set(_i[0][0] for _i in wf_bulk.call_args_list) == \
-                         set(["test1=a\n1234"])
+            set(["test1=a\n1234"])
         for _i in wf_bulk.call_args_list:
             assert _i[1] == {}
 
@@ -182,25 +180,20 @@ class BaseRoutingClientTestCase():
 
         # Test initialization.
         assert p.call_count == 4
-        assert set(_i[0][0] for _i in p.call_args_list) == \
-                         set(split.keys())
-        assert set(_i[1]["debug"] for _i in p.call_args_list) == \
-                         set([False])
-        assert set(_i[1]["timeout"] for _i in p.call_args_list) == \
-                         set([240])
+        assert set(_i[0][0] for _i in p.call_args_list) == set(split.keys())
+        assert set(_i[1]["debug"] for _i in p.call_args_list) == set([False])
+        assert set(_i[1]["timeout"] for _i in p.call_args_list) == set([240])
 
         # Station download.
         wf_bulk = mock_instance.get_stations_bulk
         assert wf_bulk.call_count == 4
         assert set(_i[0][0] for _i in wf_bulk.call_args_list) == \
-                         set(["test1=a\n1234"])
+            set(["test1=a\n1234"])
         for _i in wf_bulk.call_args_list:
             assert _i[1] == {}
 
     def test_unexpected_exception_handling(self):
-        split = {
-            "https://example.com": "1234"
-        }
+        split = {"https://example.com": "1234"}
 
         with mock.patch("obspy.clients.fdsn.client.Client") as p:
             mock_instance = p.return_value

@@ -77,34 +77,34 @@ class PolarizationTestCase():
                                   self.data_win_z, self.fk, self.norm)
         rms = np.sqrt(np.sum((pol[0] - self.res[:, 34]) ** 2) /
                       np.sum(self.res[:, 34] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[1] - self.res[:, 35]) ** 2) /
                       np.sum(self.res[:, 35] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[2] - self.res[:, 36]) ** 2) /
                       np.sum(self.res[:, 36] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[3] - self.res[:, 40]) ** 2) /
                       np.sum(self.res[:, 40] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[4] - self.res[:, 42]) ** 2) /
                       np.sum(self.res[:, 42] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[5][:, 0] - self.res[:, 37]) ** 2) /
                       np.sum(self.res[:, 37] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[5][:, 1] - self.res[:, 38]) ** 2) /
                       np.sum(self.res[:, 38] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[5][:, 2] - self.res[:, 39]) ** 2) /
                       np.sum(self.res[:, 39] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[6] - self.res[:, 41]) ** 2) /
                       np.sum(self.res[:, 41] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((pol[7] - self.res[:, 43]) ** 2) /
                       np.sum(self.res[:, 43] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
 
     def test_polarization_1d(self):
         """
@@ -140,15 +140,14 @@ class PolarizationTestCase():
         assert round(abs(out["incidence_error"][0]-0.000000), 7) == 0
         for key in ["azimuth", "incidence"]:
             got = out[key]
-            assert np.allclose(got / got[0], np.ones_like(got),
-                                        rtol=1e-4)
+            assert np.allclose(got / got[0], np.ones_like(got), rtol=1e-4)
         for key in ["azimuth_error", "incidence_error"]:
             got = out[key]
             expected = np.empty_like(got)
             expected.fill(got[0])
             assert np.allclose(got, expected, rtol=1e-4, atol=1e-16)
         assert np.allclose(out["timestamp"] - out["timestamp"][0],
-                                    np.arange(0, 92, 1))
+                           np.arange(0, 92, 1))
 
     def test_polarization_flinn(self):
         st = _create_test_data()
@@ -172,10 +171,9 @@ class PolarizationTestCase():
         assert round(abs(out["planarity"][0]-1.000000), 7) == 0
         for key in ["azimuth", "incidence", "rectilinearity", "planarity"]:
             got = out[key]
-            assert np.allclose(got / got[0], np.ones_like(got),
-                                        rtol=1e-4)
+            assert np.allclose(got / got[0], np.ones_like(got), rtol=1e-4)
         assert np.allclose(out["timestamp"] - out["timestamp"][0],
-                                    np.arange(0, 92, 1))
+                           np.arange(0, 92, 1))
 
     def test_polarization_vidale(self):
         st = _create_test_data()
@@ -198,7 +196,6 @@ class PolarizationTestCase():
         for key in ["azimuth", "incidence", "rectilinearity", "planarity",
                     "ellipticity"]:
             got = out[key]
-            assert np.allclose(got / got[0], np.ones_like(got),
-                                        rtol=1e-4)
+            assert np.allclose(got / got[0], np.ones_like(got), rtol=1e-4)
         assert np.allclose(out["timestamp"] - out["timestamp"][0],
-                                    np.arange(0, 97.85, 0.05), rtol=1e-5)
+                           np.arange(0, 97.85, 0.05), rtol=1e-5)

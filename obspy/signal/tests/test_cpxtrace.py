@@ -95,10 +95,10 @@ class CpxTraceTestCase():
                                              self.smoothie, self.fk)
         rms = np.sqrt(np.sum((anorm[0] - self.res[:, 1]) ** 2) /
                       np.sum(self.res[:, 1] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((anorm[1] - self.res[:, 2]) ** 2) /
                       np.sum(self.res[:, 2] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
 
     def test_centroid(self):
         """
@@ -106,10 +106,10 @@ class CpxTraceTestCase():
         centroid = cpxtrace.centroid(self.data_win, self.fk)
         rms = np.sqrt(np.sum((centroid[0] - self.res[:, 5]) ** 2) /
                       np.sum(self.res[:, 5] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((centroid[1] - self.res[:, 6]) ** 2) /
                       np.sum(self.res[:, 6] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
 
     def test_inst_freq(self):
         """
@@ -118,10 +118,10 @@ class CpxTraceTestCase():
                                                  self.fk)
         rms = np.sqrt(np.sum((omega[0] - self.res[:, 7]) ** 2) /
                       np.sum(self.res[:, 7] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((omega[1] - self.res[:, 8]) ** 2) /
                       np.sum(self.res[:, 8] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
 
     def test_inst_bwith(self):
         """
@@ -130,7 +130,7 @@ class CpxTraceTestCase():
                                                  self.fk)
         rms = np.sqrt(np.sum((sigma[0] - self.res[:, 9]) ** 2) /
                       np.sum(self.res[:, 9] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((sigma[1] - self.res[:, 10]) ** 2) /
                       np.sum(self.res[:, 10] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5

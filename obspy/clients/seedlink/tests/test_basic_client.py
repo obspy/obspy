@@ -85,8 +85,7 @@ class ClientTestCase():
             st = self.client.get_waveforms("*", "F?FM", "*", "B*", t, t + 5)
             assert len(st) > 2
             assert len(self.client._station_cache) > station_cache_size
-            assert ("G", "FDFM", "00", "BHZ") in \
-                          self.client._station_cache
+            assert ("G", "FDFM", "00", "BHZ") in self.client._station_cache
             assert self.client._station_cache_level == "channel"
             for tr in st:
                 assert tr.stats.network == "G"

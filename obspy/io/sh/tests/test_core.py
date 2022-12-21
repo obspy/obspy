@@ -34,20 +34,20 @@ class CoreTestCase():
         Testing ASC file format.
         """
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
-        assert _is_asc(testfile) == True
+        assert _is_asc(testfile)
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
-        assert _is_asc(testfile) == False
+        assert not _is_asc(testfile)
 
     def test_is_q_file(self):
         """
         Testing Q header file format.
         """
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
-        assert _is_q(testfile) == True
+        assert _is_q(testfile)
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QBN')
-        assert _is_q(testfile) == False
+        assert not _is_q(testfile)
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
-        assert _is_q(testfile) == False
+        assert not _is_q(testfile)
 
     def test_read_single_channel_asc_file(self):
         """
@@ -59,8 +59,7 @@ class CoreTestCase():
         stream.verify()
         assert stream[0].stats.delta == 5.000000e-02
         assert stream[0].stats.npts == 1000
-        assert stream[0].stats.starttime == \
-                         UTCDateTime(2009, 1, 1, 1, 1, 1)
+        assert stream[0].stats.starttime == UTCDateTime(2009, 1, 1, 1, 1, 1)
         assert stream[0].stats.channel == 'BHZ'
         assert stream[0].stats.station == 'TEST'
         assert stream[0].stats.calib == 1.0e-00
@@ -75,10 +74,8 @@ class CoreTestCase():
         # channel 1
         assert stream[0].stats.delta == 5.000000e-02
         assert stream[0].stats.npts == 801
-        assert stream[0].stats.sh.COMMENT == \
-                         'TEST TRACE IN QFILE #1'
-        assert stream[0].stats.starttime == \
-                         UTCDateTime(2009, 10, 1, 12, 46, 1)
+        assert stream[0].stats.sh.COMMENT == 'TEST TRACE IN QFILE #1'
+        assert stream[0].stats.starttime == UTCDateTime(2009, 10, 1, 12, 46, 1)
         assert stream[0].stats.channel == 'BHN'
         assert stream[0].stats.station == 'TEST'
         assert stream[0].stats.calib == 1.500000e+00
@@ -88,10 +85,8 @@ class CoreTestCase():
         # channel 2
         assert stream[1].stats.delta == 5.000000e-02
         assert stream[1].stats.npts == 801
-        assert stream[1].stats.sh.COMMENT == \
-                         'TEST TRACE IN QFILE #2'
-        assert stream[1].stats.starttime == \
-                         UTCDateTime(2009, 10, 1, 12, 46, 1)
+        assert stream[1].stats.sh.COMMENT == 'TEST TRACE IN QFILE #2'
+        assert stream[1].stats.starttime == UTCDateTime(2009, 10, 1, 12, 46, 1)
         assert stream[1].stats.channel == 'BHE'
         assert stream[1].stats.station == 'TEST'
         assert stream[1].stats.calib == 1.500000e+00
@@ -103,7 +98,7 @@ class CoreTestCase():
         assert stream[2].stats.npts == 4001
         assert stream[2].stats.sh.COMMENT == '******'
         assert stream[2].stats.starttime == \
-                         UTCDateTime(2010, 1, 1, 1, 1, 5, 999000)
+            UTCDateTime(2010, 1, 1, 1, 1, 5, 999000)
         assert stream[2].stats.channel == 'HHZ'
         assert stream[2].stats.station == 'WET'
         assert stream[2].stats.calib == 1.059300e+00

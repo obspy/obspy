@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-from collections import namedtuple
-
-import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker
-
 import os
 import re
 import requests
 import tempfile
 import uuid
+from collections import namedtuple
+from unittest import mock
+
+import pytest
+import sqlalchemy as sa
+from sqlalchemy.orm import sessionmaker
 
 from obspy import read, UTCDateTime
 from obspy.core.util.misc import TemporaryWorkingDirectory
@@ -210,13 +211,10 @@ class ClientTestCase():
                          ("N4", "H43A", "", "VM3"),
                          ("XX", "ANM", "", "VM5")]
 
-        assert client.get_nslc("AK,N4,XX",
-                                         "ANM,H43A",
-                                         "",
-                                         "VM2,VM3,VM4,VM5",
-                                         "2018-08-10T21:09:39.000000",
-                                         "2018-08-10T22:09:28.890415") == \
-                         expected_nslc
+        assert client.get_nslc(
+            "AK,N4,XX", "ANM,H43A", "", "VM2,VM3,VM4,VM5",
+            "2018-08-10T21:09:39.000000",
+            "2018-08-10T22:09:28.890415") == expected_nslc
 
     def test_get_availability_extent(self):
         client = get_test_client()
@@ -286,12 +284,9 @@ class ClientTestCase():
               UTCDateTime("2018-08-10T22:12:39.999991"))]
 
         assert client.get_availability_extent(
-                                            "AK,N4",
-                                            "ANM,H43A", "",
-                                            "VM2,VM3,VM4,VM5",
-                                            "2018-08-10T21:09:39.000000",
-                                            "2018-08-10T22:09:28.890415") == \
-                             expected_avail_extents
+            "AK,N4", "ANM,H43A", "", "VM2,VM3,VM4,VM5",
+            "2018-08-10T21:09:39.000000",
+            "2018-08-10T22:09:28.890415") == expected_avail_extents
 
     def test__are_timespans_adjacent(self):
         client = get_test_client()
@@ -443,24 +438,17 @@ class ClientTestCase():
 
         # test default options
         assert client.get_availability(
-                            "AK",
-                            "BAGL",
-                            "",
-                            "LCC",
-                            UTCDateTime(2018, 8, 10, 22, 0, 54),
-                            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)) == \
-                         expected_unmerged_avail
+            "AK", "BAGL", "", "LCC",
+            UTCDateTime(2018, 8, 10, 22, 0, 54),
+            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)) == \
+            expected_unmerged_avail
 
         # test merge overlap false
         assert client.get_availability(
-                            "AK",
-                            "BAGL",
-                            "--",
-                            "LCC",
-                            UTCDateTime(2018, 8, 10, 22, 0, 54),
-                            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                            merge_overlap=False) == \
-                         expected_unmerged_avail
+            "AK", "BAGL", "--", "LCC",
+            UTCDateTime(2018, 8, 10, 22, 0, 54),
+            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
+            merge_overlap=False) == expected_unmerged_avail
 
         # test merge overlap true
         expected_merged_avail = [("AK", "BAGL", "", "LCC",
@@ -471,14 +459,10 @@ class ClientTestCase():
                                   UTCDateTime(2018, 9, 11, 0, 0, 0))]
 
         assert client.get_availability(
-                    "AK",
-                    "BAGL",
-                    "--",
-                    "LCC",
-                    UTCDateTime(2018, 8, 10, 22, 0, 54),
-                    UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                    merge_overlap=True) == \
-                expected_merged_avail
+            "AK", "BAGL", "--", "LCC",
+            UTCDateTime(2018, 8, 10, 22, 0, 54),
+            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
+            merge_overlap=True) == expected_merged_avail
 
         # test include_sample_rate true
         expected_incl_sr_avail = \
@@ -493,15 +477,11 @@ class ClientTestCase():
               UTCDateTime(2018, 9, 11, 0, 0, 0), 10.0)]
 
         assert client.get_availability(
-                    "AK",
-                    "BAGL",
-                    "--",
-                    "LCC",
-                    UTCDateTime(2018, 8, 10, 22, 0, 54),
-                    UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                    merge_overlap=True,
-                    include_sample_rate=True) == \
-                expected_incl_sr_avail
+            "AK", "BAGL", "--", "LCC",
+            UTCDateTime(2018, 8, 10, 22, 0, 54),
+            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
+            merge_overlap=True,
+            include_sample_rate=True) == expected_incl_sr_avail
 
     def test_get_availability_percentage(self):
         client = get_test_client()
@@ -512,7 +492,7 @@ class ClientTestCase():
                                      UTCDateTime(2018, 8, 12, 23, 20, 53),
                                      UTCDateTime(2018, 9, 11, 0, 0, 0))]
         client.get_availability = mock.MagicMock(
-                                        return_value=mock_availability_output)
+            return_value=mock_availability_output)
 
         avail_percentage = client.get_availability_percentage(
                                     "AK",
@@ -522,9 +502,9 @@ class ClientTestCase():
                                     UTCDateTime(2018, 8, 10, 22, 0, 54),
                                     UTCDateTime(2018, 9, 11, 0, 0, 0))
         expected_avail_percentage = (0.998659490472, 1)
-        assert round(abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
-        assert avail_percentage[1] == \
-                         expected_avail_percentage[1]
+        assert round(
+            abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
+        assert avail_percentage[1] == expected_avail_percentage[1]
         assert isinstance(avail_percentage, tuple)
 
         mock_availability_output = [("AK", "BAGL", "", "LCC",
@@ -537,7 +517,7 @@ class ClientTestCase():
                                      UTCDateTime(2018, 1, 5),
                                      UTCDateTime(2018, 1, 6))]
         client.get_availability = mock.MagicMock(
-                                        return_value=mock_availability_output)
+            return_value=mock_availability_output)
 
         avail_percentage = client.get_availability_percentage(
                                                 "AK",
@@ -547,9 +527,9 @@ class ClientTestCase():
                                                 UTCDateTime(2018, 1, 1),
                                                 UTCDateTime(2018, 1, 6))
         expected_avail_percentage = (0.6, 2)
-        assert round(abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
-        assert avail_percentage[1] == \
-                         expected_avail_percentage[1]
+        assert round(
+            abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
+        assert avail_percentage[1] == expected_avail_percentage[1]
         assert isinstance(avail_percentage, tuple)
 
         # Test for over extending time span
@@ -561,18 +541,18 @@ class ClientTestCase():
                                                 UTCDateTime(2017, 12, 31),
                                                 UTCDateTime(2018, 1, 7))
         expected_avail_percentage = (0.4285714, 4)
-        assert round(abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
-        assert avail_percentage[1] == \
-                         expected_avail_percentage[1]
+        assert round(
+            abs(avail_percentage[0]-expected_avail_percentage[0]), 7) == 0
+        assert avail_percentage[1] == expected_avail_percentage[1]
         assert isinstance(avail_percentage, tuple)
 
     def test_has_data(self):
         client = get_test_client()
         assert client.has_data()
         assert client.has_data(starttime=UTCDateTime(2017, 12, 31),
-                                        endtime=UTCDateTime(2018, 1, 7))
+                               endtime=UTCDateTime(2018, 1, 7))
         assert not client.has_data(starttime=UTCDateTime(1970, 12, 31),
-                                         endtime=UTCDateTime(2013, 1, 7))
+                                   endtime=UTCDateTime(2013, 1, 7))
 
 
 def purge(dir, pattern):

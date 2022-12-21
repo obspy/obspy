@@ -138,10 +138,8 @@ class TestReadRG16():
         assert stats.location == '1'
         assert stats.channel == 'DP3'
         assert stats.npts == 15000
-        assert stats.starttime == \
-                         UTCDateTime('2017-08-09T16:00:00.380000Z')
-        assert stats.endtime == \
-                         UTCDateTime('2017-08-09T16:00:30.378000Z')
+        assert stats.starttime == UTCDateTime('2017-08-09T16:00:00.380000Z')
+        assert stats.endtime == UTCDateTime('2017-08-09T16:00:30.378000Z')
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             stats = rc._make_stats(fi, 288, True, False)
         assert stats.channel == 'DPN'
@@ -208,18 +206,12 @@ class TestReadRG16Headers():
         assert trace_header_2['shot_line_nbr'] == 2240
         assert trace_header_2['shot_point'] == 1
         assert trace_header_2['shot_point_index'] == 0
-        assert abs(trace_header_2['shot_point_pre_plan_x']-0) < \
-                               1e-5
-        assert abs(trace_header_2['shot_point_pre_plan_y']-0) < \
-                               1e-5
-        assert abs(trace_header_2['shot_point_final_x']-0) < \
-                               1e-5
-        assert abs(trace_header_2['shot_point_final_y']-0) < \
-                               1e-5
-        assert abs(trace_header_2['shot_point_final_depth']-0) < \
-                               1e-5
-        assert trace_header_2['source_of_final_shot_info'] == \
-                         'undefined'
+        assert abs(trace_header_2['shot_point_pre_plan_x']-0) < 1e-5
+        assert abs(trace_header_2['shot_point_pre_plan_y']-0) < 1e-5
+        assert abs(trace_header_2['shot_point_final_x']-0) < 1e-5
+        assert abs(trace_header_2['shot_point_final_y']-0) < 1e-5
+        assert abs(trace_header_2['shot_point_final_depth']-0) < 1e-5
+        assert trace_header_2['source_of_final_shot_info'] == 'undefined'
         assert trace_header_2['energy_source_type'] == 'undefined'
 
     def test_read_trace_header_3(self):
@@ -229,7 +221,7 @@ class TestReadRG16Headers():
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_header_3 = rc._read_trace_header_3(fi, 288)
         assert trace_header_3['epoch_time'] == \
-                         UTCDateTime('2017-08-09T16:00:00.380000Z')
+            UTCDateTime('2017-08-09T16:00:00.380000Z')
         assert abs(trace_header_3['shot_skew_time']-0) < 1e-5
         assert abs(trace_header_3['time_shift_clock_correction']-0) < 1e-5
         assert abs(trace_header_3['remaining_clock_correction']-0) < 1e-5
@@ -240,20 +232,17 @@ class TestReadRG16Headers():
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_header_4 = rc._read_trace_header_4(fi, 288)
-        assert abs(trace_header_4['pre_shot_guard_band']-0) < \
-                               1e-5
-        assert abs(trace_header_4['post_shot_guard_band']-0) < \
-                               1e-5
+        assert abs(trace_header_4['pre_shot_guard_band']-0) < 1e-5
+        assert abs(trace_header_4['post_shot_guard_band']-0) < 1e-5
         assert trace_header_4['preamp_gain'] == 24
         assert trace_header_4['trace_clipped_flag'] == 'not clipped'
         assert trace_header_4['record_type_code'] == \
-                         'normal seismic data record'
+            'normal seismic data record'
         assert trace_header_4['shot_status_flag'] == 'normal'
         assert trace_header_4['external_shot_id'] == 0
         key = 'post_processed_first_break_pick_time'
         assert abs(trace_header_4[key]-0) < 1e-5
-        assert abs(trace_header_4['post_processed_rms_noise']-0) < \
-                               1e-5
+        assert abs(trace_header_4['post_processed_rms_noise']-0) < 1e-5
 
     def test_read_trace_header_5(self):
         """
@@ -262,13 +251,13 @@ class TestReadRG16Headers():
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_header_5 = rc._read_trace_header_5(fi, 288)
         assert abs(trace_header_5['receiver_point_pre_plan_x']-469567.2) < 1e-5
-        assert abs(trace_header_5['receiver_point_pre_plan_y']-5280707.8) < 1e-5
+        assert \
+            abs(trace_header_5['receiver_point_pre_plan_y']-5280707.8) < 1e-5
         assert abs(trace_header_5['receiver_point_final_x']-469565.2) < 1e-5
         assert abs(trace_header_5['receiver_point_final_y']-5280709.7) < 1e-5
-        assert abs(trace_header_5['receiver_point_final_depth']-0) < \
-                               1e-5
+        assert abs(trace_header_5['receiver_point_final_depth']-0) < 1e-5
         assert trace_header_5['source_of_final_receiver_info'] == \
-                         'as laid (no navigation sensor)'
+            'as laid (no navigation sensor)'
 
     def test_read_trace_header_6(self):
         """
@@ -276,22 +265,14 @@ class TestReadRG16Headers():
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_header_6 = rc._read_trace_header_6(fi, 288)
-        assert abs(trace_header_6['tilt_matrix_h1x']-0) < \
-                               1e-5
-        assert abs(trace_header_6['tilt_matrix_h2x']-0) < \
-                               1e-5
-        assert abs(trace_header_6['tilt_matrix_vx']-0) < \
-                               1e-5
-        assert abs(trace_header_6['tilt_matrix_h1y']-0) < \
-                               1e-5
-        assert abs(trace_header_6['tilt_matrix_h2y']-0) < \
-                               1e-5
-        assert abs(trace_header_6['tilt_matrix_vy']-0) < \
-                               1e-5
-        assert abs(trace_header_6['tilt_matrix_h1z']-0) < \
-                               1e-5
-        assert abs(trace_header_6['tilt_matrix_h2z']-0) < \
-                               1e-5
+        assert abs(trace_header_6['tilt_matrix_h1x']-0) < 1e-5
+        assert abs(trace_header_6['tilt_matrix_h2x']-0) < 1e-5
+        assert abs(trace_header_6['tilt_matrix_vx']-0) < 1e-5
+        assert abs(trace_header_6['tilt_matrix_h1y']-0) < 1e-5
+        assert abs(trace_header_6['tilt_matrix_h2y']-0) < 1e-5
+        assert abs(trace_header_6['tilt_matrix_vy']-0) < 1e-5
+        assert abs(trace_header_6['tilt_matrix_h1z']-0) < 1e-5
+        assert abs(trace_header_6['tilt_matrix_h2z']-0) < 1e-5
 
     def test_read_trace_header_7(self):
         """
@@ -299,15 +280,12 @@ class TestReadRG16Headers():
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_header_7 = rc._read_trace_header_7(fi, 288)
-        assert abs(trace_header_7['tilt_matrix_vz']-0) < \
-                               1e-5
+        assert abs(trace_header_7['tilt_matrix_vz']-0) < 1e-5
         assert abs(trace_header_7['azimuth_degree']-0) < 1e-5
         assert abs(trace_header_7['pitch_degree']-0) < 1e-5
         assert abs(trace_header_7['roll_degree']-0) < 1e-5
-        assert abs(trace_header_7['remote_unit_temp']-0) < \
-                               1e-5
-        assert abs(trace_header_7['remote_unit_humidity']-0) < \
-                               1e-5
+        assert abs(trace_header_7['remote_unit_temp']-0) < 1e-5
+        assert abs(trace_header_7['remote_unit_humidity']-0) < 1e-5
         assert trace_header_7['orientation_matrix_version_nbr'] == 0
         assert trace_header_7['gimbal_corrections'] == 0
 
@@ -318,18 +296,14 @@ class TestReadRG16Headers():
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_header_8 = rc._read_trace_header_8(fi, 288)
         assert trace_header_8['fairfield_test_analysis_code'] == 0
-        assert trace_header_8['first_test_oscillator_attenuation'] == \
-                         0
-        assert trace_header_8['second_test_oscillator_attenuation'] == \
-                         0
+        assert trace_header_8['first_test_oscillator_attenuation'] == 0
+        assert trace_header_8['second_test_oscillator_attenuation'] == 0
         assert abs(trace_header_8['start_delay']-0) < 1e-5
         assert trace_header_8['dc_filter_flag'] == 0
-        assert abs(trace_header_8['dc_filter_frequency']-0) < \
-                               1e-5
-        assert trace_header_8['preamp_path'] == \
-                         'external input selected'
+        assert abs(trace_header_8['dc_filter_frequency']-0) < 1e-5
+        assert trace_header_8['preamp_path'] == 'external input selected'
         assert trace_header_8['test_oscillator_signal_type'] == \
-                         'test oscillator path open'
+            'test oscillator path open'
 
     def test_read_trace_header_9(self):
         """
@@ -338,15 +312,13 @@ class TestReadRG16Headers():
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_header_9 = rc._read_trace_header_9(fi, 288)
         assert trace_header_9['test_signal_generator_signal_type'] == \
-                         'pattern is address ramp'
+            'pattern is address ramp'
         key = 'test_signal_generator_frequency_1'
         assert abs(trace_header_9[key]-0) < 1e-5
         key = 'test_signal_generator_frequency_2'
         assert abs(trace_header_9[key]-0) < 1e-5
-        assert trace_header_9['test_signal_generator_amplitude_1'] == \
-                         0
-        assert trace_header_9['test_signal_generator_amplitude_2'] == \
-                         0
+        assert trace_header_9['test_signal_generator_amplitude_1'] == 0
+        assert trace_header_9['test_signal_generator_amplitude_2'] == 0
         key = 'test_signal_generator_duty_cycle_percentage'
         assert abs(trace_header_9[key]-0) < 1e-5
         key = 'test_signal_generator_active_duration'
@@ -360,10 +332,8 @@ class TestReadRG16Headers():
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_header_10 = rc._read_trace_header_10(fi, 288)
-        assert trace_header_10['test_signal_generator_idle_level'] == \
-                         0
-        assert trace_header_10['test_signal_generator_active_level'] == \
-                         0
+        assert trace_header_10['test_signal_generator_idle_level'] == 0
+        assert trace_header_10['test_signal_generator_active_level'] == 0
         assert trace_header_10['test_signal_generator_pattern_1'] == 0
         assert trace_header_10['test_signal_generator_pattern_2'] == 0
 
@@ -466,15 +436,11 @@ class TestReadRG16Headers():
         assert channel_set_1['low_cut_filter_freq'] == 0
         assert channel_set_1['low_cut_filter_slope'] == 6
         assert channel_set_1['mp_factor_descaler_multiplier'] == 0
-        assert channel_set_1['nbr_32_byte_trace_header_extension'] == \
-                         10
+        assert channel_set_1['nbr_32_byte_trace_header_extension'] == 10
         assert channel_set_1['nbr_channels_in_channel_set'] == 2
-        assert abs(channel_set_1['notch_2_filter_freq']-0) < \
-                               1e-5
-        assert abs(channel_set_1['notch_3_filter_freq']-0) < \
-                               1e-5
-        assert abs(channel_set_1['notch_filter_freq']-0) < \
-                               1e-5
+        assert abs(channel_set_1['notch_2_filter_freq']-0) < 1e-5
+        assert abs(channel_set_1['notch_3_filter_freq']-0) < 1e-5
+        assert abs(channel_set_1['notch_filter_freq']-0) < 1e-5
         assert channel_set_1['optionnal_MP_factor'] == 0
         assert channel_set_1['scan_type_number'] == 1
         assert channel_set_1['vertical_stack_size'] == 1
@@ -486,12 +452,12 @@ class TestReadRG16Headers():
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             extended_header_1 = rc._read_extended_header_1(fi, 160)
         assert extended_header_1['deployment_time'] == \
-                         UTCDateTime('2017-08-09T15:46:32.230000Z')
+            UTCDateTime('2017-08-09T15:46:32.230000Z')
         assert extended_header_1['id_ru'] == 1219770716358969536
         assert extended_header_1['pick_up_time'] == \
-                         UTCDateTime('2017-08-09T20:06:58.120000Z')
+            UTCDateTime('2017-08-09T20:06:58.120000Z')
         assert extended_header_1['start_time_ru'] == \
-                         UTCDateTime('2017-08-09T15:52:31.366000Z')
+            UTCDateTime('2017-08-09T15:52:31.366000Z')
 
     def test_read_extended_header_2(self):
         """
@@ -502,12 +468,10 @@ class TestReadRG16Headers():
         assert abs(extended_header_2['acquisition_drift_window']-0) < 1e-5
         assert abs(extended_header_2['clock_drift']-0) < 1e-5
         assert extended_header_2['clock_stop_method'] == 'normal'
-        assert extended_header_2['data_collection_method'] == \
-                         'continuous'
+        assert extended_header_2['data_collection_method'] == 'continuous'
         assert extended_header_2['data_decimation'] == 'not decimated'
         assert extended_header_2['file_number'] == 1
-        assert extended_header_2['frequency_drift'] == \
-                         'within specification'
+        assert extended_header_2['frequency_drift'] == 'within specification'
         assert extended_header_2['nbr_files'] == 1
         assert extended_header_2['nbr_time_slices'] == 2
         key = 'nbr_decimation_filter_coef'

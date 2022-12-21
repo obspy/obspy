@@ -14,7 +14,7 @@ class EvtTestCase():
     def test_is_evt_file(self):
         path = os.path.join(self.path, 'data', '*.evt')
         for fname in glob.glob(path):
-            assert _is_evt(fname) == True
+            assert _is_evt(fname)
 
     def test_local_event1(self):
         fname = os.path.join(self.path, 'data', 'local1.evt')

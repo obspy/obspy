@@ -68,10 +68,8 @@ class NRLLocalTestCase():
 
         # The full response is the first stage from the sensor and all
         # following from the datalogger.
-        assert resp.response_stages[0] == \
-                         sensor_resp.response_stages[0]
-        assert resp.response_stages[1:] == \
-                         dl_resp.response_stages[1:]
+        assert resp.response_stages[0] == sensor_resp.response_stages[0]
+        assert resp.response_stages[1:] == dl_resp.response_stages[1:]
 
         # Test the actual responses. Testing the parsing of the exact values
         # and what not is done in obspy.io.xseed.
@@ -87,7 +85,8 @@ class NRLLocalTestCase():
 
         assert isinstance(resp.response_stages[1], ResponseStage)
         for _i in range(2, 15):
-            assert isinstance(resp.response_stages[_i], CoefficientsTypeResponseStage)
+            assert isinstance(resp.response_stages[_i],
+                              CoefficientsTypeResponseStage)
 
     def test_nrl_class_str_method(self):
         out = str(self.nrl_local)

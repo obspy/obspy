@@ -164,19 +164,19 @@ class CoreTestCase():
 
         assert network.code == "BW"
         assert station.code == "FURT"
-        assert station.start_date == None
-        assert station.end_date == None
+        assert station.start_date is None
+        assert station.end_date is None
         assert channel.location_code == ""
         assert channel.code == "EHZ"
         assert channel.start_date == obspy.UTCDateTime(2001, 1, 1)
-        assert channel.end_date == None
+        assert channel.end_date is None
         # Also check the input and output units.
         assert resp.instrument_sensitivity.input_units == "M/S"
         assert resp.instrument_sensitivity.input_units_description == \
-                         "Velocity in Meters per Second"
+            "Velocity in Meters per Second"
         assert resp.instrument_sensitivity.output_units == "COUNTS"
         assert resp.instrument_sensitivity.output_units_description == \
-                         "Digital Counts"
+            "Digital Counts"
 
         # File B
         filename_b = os.path.join(self.data_path,
@@ -193,20 +193,19 @@ class CoreTestCase():
 
         assert network.code == "XX"
         assert station.code == "NR008"
-        assert station.start_date == None
-        assert station.end_date == None
+        assert station.start_date is None
+        assert station.end_date is None
         assert channel.location_code == ""
         assert channel.code == "HHZ"
         assert channel.start_date == obspy.UTCDateTime(2006, 1, 1)
-        assert channel.end_date == \
-                         obspy.UTCDateTime(3000, 1, 1) - 1
+        assert channel.end_date == obspy.UTCDateTime(3000, 1, 1) - 1
         # Also check the input and output units.
         assert resp.instrument_sensitivity.input_units == "M/S"
         assert resp.instrument_sensitivity.input_units_description == \
-                         "Velocity in Meters per Second"
+            "Velocity in Meters per Second"
         assert resp.instrument_sensitivity.output_units == "COUNTS"
         assert resp.instrument_sensitivity.output_units_description == \
-                         "Digital Counts"
+            "Digital Counts"
 
         # File C
         filename_c = os.path.join(self.data_path,
@@ -223,19 +222,19 @@ class CoreTestCase():
 
         assert network.code == "XX"
         assert station.code == "NS085"
-        assert station.start_date == None
-        assert station.end_date == None
+        assert station.start_date is None
+        assert station.end_date is None
         assert channel.location_code == ""
         assert channel.code == "BHZ"
         assert channel.start_date == obspy.UTCDateTime(2006, 1, 1)
-        assert channel.end_date == None
+        assert channel.end_date is None
         # Also check the input and output units.
         assert resp.instrument_sensitivity.input_units == "M/S"
         assert resp.instrument_sensitivity.input_units_description == \
-                         "Velocity in Meters per Second"
+            "Velocity in Meters per Second"
         assert resp.instrument_sensitivity.output_units == "COUNTS"
         assert resp.instrument_sensitivity.output_units_description == \
-                         "Digital Counts"
+            "Digital Counts"
 
         # Merge A + B to get a multi-response file.
         with NamedTemporaryFile() as tf:
@@ -259,19 +258,19 @@ class CoreTestCase():
 
         assert network.code == "BW"
         assert station.code == "FURT"
-        assert station.start_date == None
-        assert station.end_date == None
+        assert station.start_date is None
+        assert station.end_date is None
         assert channel.location_code == ""
         assert channel.code == "EHZ"
         assert channel.start_date == obspy.UTCDateTime(2001, 1, 1)
-        assert channel.end_date == None
+        assert channel.end_date is None
         # Also check the input and output units.
         assert resp.instrument_sensitivity.input_units == "M/S"
         assert resp.instrument_sensitivity.input_units_description == \
-                         "Velocity in Meters per Second"
+            "Velocity in Meters per Second"
         assert resp.instrument_sensitivity.output_units == "COUNTS"
         assert resp.instrument_sensitivity.output_units_description == \
-                         "Digital Counts"
+            "Digital Counts"
 
         network = inv[1]
         station = inv[1][0]
@@ -280,20 +279,19 @@ class CoreTestCase():
 
         assert network.code == "XX"
         assert station.code == "NR008"
-        assert station.start_date == None
-        assert station.end_date == None
+        assert station.start_date is None
+        assert station.end_date is None
         assert channel.location_code == ""
         assert channel.code == "HHZ"
         assert channel.start_date == obspy.UTCDateTime(2006, 1, 1)
-        assert channel.end_date == \
-                         obspy.UTCDateTime(3000, 1, 1) - 1
+        assert channel.end_date == obspy.UTCDateTime(3000, 1, 1) - 1
         # Also check the input and output units.
         assert resp.instrument_sensitivity.input_units == "M/S"
         assert resp.instrument_sensitivity.input_units_description == \
-                         "Velocity in Meters per Second"
+            "Velocity in Meters per Second"
         assert resp.instrument_sensitivity.output_units == "COUNTS"
         assert resp.instrument_sensitivity.output_units_description == \
-                         "Digital Counts"
+            "Digital Counts"
 
     def test_read_seed_metainformation(self):
         """
@@ -318,8 +316,8 @@ class CoreTestCase():
         assert round(abs(station.elevation-430.0), 7) == 0
         assert station.site.name == "Rotzenmuhle,Bavaria, BW-Net"
         assert station.start_date == \
-                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
-        assert station.end_date == None
+            obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
+        assert station.end_date is None
 
         # First channel.
         channel = inv[0][0][0]
@@ -332,18 +330,17 @@ class CoreTestCase():
         assert channel.azimuth == 0.0
         assert channel.dip == -90.0
         assert channel.start_date == \
-                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
-        assert channel.end_date == None
+            obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
+        assert channel.end_date is None
         assert channel.sample_rate == 200.0
-        assert channel.sensor.type == \
-                         "Streckeisen STS-2/N seismometer"
+        assert channel.sensor.type == "Streckeisen STS-2/N seismometer"
         resp = channel.response
         assert resp.instrument_sensitivity.input_units == "M/S"
         assert resp.instrument_sensitivity.input_units_description == \
-                         "Velocity in Meters per Second"
+            "Velocity in Meters per Second"
         assert resp.instrument_sensitivity.output_units == "COUNTS"
         assert resp.instrument_sensitivity.output_units_description == \
-                         "Digital Counts"
+            "Digital Counts"
 
         # Second channel.
         channel = inv[0][0][1]
@@ -356,18 +353,18 @@ class CoreTestCase():
         assert channel.azimuth == 0.0
         assert channel.dip == 0.0
         assert channel.start_date == \
-                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
-        assert channel.end_date == None
+            obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
+        assert channel.end_date is None
         assert channel.sample_rate == 200.0
         assert channel.sensor.type == \
-                         "Streckeisen STS-2/N seismometer"
+            "Streckeisen STS-2/N seismometer"
         resp = channel.response
         assert resp.instrument_sensitivity.input_units == "M/S"
         assert resp.instrument_sensitivity.input_units_description == \
-                         "Velocity in Meters per Second"
+            "Velocity in Meters per Second"
         assert resp.instrument_sensitivity.output_units == "COUNTS"
         assert resp.instrument_sensitivity.output_units_description == \
-                         "Digital Counts"
+            "Digital Counts"
 
         # Third channel.
         channel = inv[0][0][2]
@@ -380,18 +377,18 @@ class CoreTestCase():
         assert channel.azimuth == 90.0
         assert channel.dip == 0.0
         assert channel.start_date == \
-                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
-        assert channel.end_date == None
+            obspy.UTCDateTime("2006-06-04T00:00:00.000000Z")
+        assert channel.end_date is None
         assert channel.sample_rate == 200.0
         assert channel.sensor.type == \
-                         "Streckeisen STS-2/N seismometer"
+            "Streckeisen STS-2/N seismometer"
         resp = channel.response
         assert resp.instrument_sensitivity.input_units == "M/S"
         assert resp.instrument_sensitivity.input_units_description == \
-                         "Velocity in Meters per Second"
+            "Velocity in Meters per Second"
         assert resp.instrument_sensitivity.output_units == "COUNTS"
         assert resp.instrument_sensitivity.output_units_description == \
-                         "Digital Counts"
+            "Digital Counts"
 
     def test_response_calculation_from_resp_files(self):
         """
@@ -476,8 +473,7 @@ class CoreTestCase():
                                             location=l, channel=c,
                                             starttime=t - 1, endtime=t + 1)
                         # Should now only be a single channel.
-                        assert _inv_t.get_contents()["channels"] == \
-                                         [channel]
+                        assert _inv_t.get_contents()["channels"] == [channel]
                         inv_r = _inv_t[0][0][0].response
 
                         for unit in ("DISP", "VEL", "ACC"):

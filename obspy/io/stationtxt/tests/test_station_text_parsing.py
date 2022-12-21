@@ -859,21 +859,18 @@ class StationTextTestCase():
                     inv_obs.write(tmpfile,
                                   format="STATIONTXT",
                                   level="NETWORK")
-                    with pytest.raises(inv_obs.write(tmpfile,
-                                                    format="STATIONTXT",
-                                                    level="STATION")):
+                    with pytest.raises(inv_obs.write(
+                            tmpfile, format="STATIONTXT", level="STATION")):
                         ValueError()
-                    with pytest.raises(inv_obs.write(tmpfile,
-                                                    format="STATIONTXT",
-                                                    level="CHANNEL")):
+                    with pytest.raises(inv_obs.write(
+                            tmpfile, format="STATIONTXT", level="CHANNEL")):
                         ValueError()
                 elif filename == "station_level_fdsn.txt":
                     inv_obs.write(tmpfile,
                                   format="STATIONTXT",
                                   level="STATION")
-                    with pytest.raises(inv_obs.write(tmpfile,
-                                                    format="STATIONTXT",
-                                                    level="CHANNEL")):
+                    with pytest.raises(inv_obs.write(
+                            tmpfile, format="STATIONTXT", level="CHANNEL")):
                         ValueError()
                 elif filename == "channel_level_fdsn.txt":
                     inv_obs.write(tmpfile,

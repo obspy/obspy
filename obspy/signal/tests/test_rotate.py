@@ -46,10 +46,8 @@ class RotateTestCase():
                                         angle)) as f:
                 data_pitsa_t = np.loadtxt(f)
             # Assert.
-            assert np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3,
-                                        atol=1E-5)
-            assert np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3,
-                                        atol=1E-5)
+            assert np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3, atol=1E-5)
+            assert np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3, atol=1E-5)
 
     def test_rotate_zne_lqt_vs_pitsa(self):
         """
@@ -152,7 +150,9 @@ class RotateTestCase():
         dip_1, dip_2, dip_3 = 0.0, 30.0, 60.0
         azi_1, azi_2, azi_3 = 0.0, 170.0, 35.0
 
-        with pytest.raises(ValueError, match='All three data arrays must be of same length.'):
+        with pytest.raises(
+                ValueError,
+                match='All three data arrays must be of same length.'):
             rotate2zne(z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
 
     def test_base_vector_calculation_simple_cases(self):

@@ -45,6 +45,8 @@ def sremove():
 def signal_term_handler(signal, frame):
     log.info('Received SIGTERM: Bye, bye')
     sys.exit(0)
+
+
 signal.signal(signal.SIGTERM, signal_term_handler)
 
 

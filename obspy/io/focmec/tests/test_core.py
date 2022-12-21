@@ -79,7 +79,7 @@ class FOCMECTestCase():
         event = cat[0]
         assert isinstance(event, Event)
         assert event.creation_info.creation_time == \
-                         UTCDateTime(2017, 9, 8, 14, 54, 58)
+            UTCDateTime(2017, 9, 8, 14, 54, 58)
         assert len(event.focal_mechanisms) == 4
         expected_dip_strike_rake = (
             (76.43, 59.08, -64.23),
@@ -104,20 +104,20 @@ class FOCMECTestCase():
         self._assert_cat_common_parts(cat)
         assert cat[0].comments[0].text == self.out_file_header
         assert cat[0].focal_mechanisms[0].comments[0].text == \
-                         out_file_first_comment
+            out_file_first_comment
         for focmec in cat[0].focal_mechanisms:
             # misfit should be None, because the file specifies that polarity
             # errors are weighted and in the out file format we can't know how
             # many individual errors there are
-            assert focmec.misfit == None
+            assert focmec.misfit is None
             # we can't tell the gap from the out format
-            assert focmec.azimuthal_gap == None
+            assert focmec.azimuthal_gap is None
 
     def _assert_cat_lst(self, cat):
         self._assert_cat_common_parts(cat)
         assert cat[0].comments[0].text == self.lst_file_header
         assert cat[0].focal_mechanisms[0].comments[0].text == \
-                         lst_file_first_comment
+            lst_file_first_comment
         for focmec in cat[0].focal_mechanisms:
             # misfit should be 0.0, because in the lst file we can count the
             # number of individual errors (and there's no polarity errors)

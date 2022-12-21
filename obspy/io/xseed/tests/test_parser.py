@@ -79,8 +79,7 @@ class ParserTestCase():
         filename = os.path.join(self.path,
                                 'dataless.seed.newline_between_blockettes')
         p = Parser(filename)
-        assert sorted(list(p.blockettes.keys())) == \
-                         [10, 11, 30, 33, 34]
+        assert sorted(list(p.blockettes.keys())) == [10, 11, 30, 33, 34]
 
     def test_string(self):
         """
@@ -370,8 +369,8 @@ class ParserTestCase():
         assert paz['gain'] == +1.00000e+00
         assert paz['zeros'] == [0j, 0j, 0j]
         assert paz['poles'] == [(-4.44400e+00 + 4.44400e+00j),
-                                        (-4.44400e+00 - 4.44400e+00j),
-                                        (-1.08300e+00 + 0.00000e+00j)]
+                                (-4.44400e+00 - 4.44400e+00j),
+                                (-1.08300e+00 + 0.00000e+00j)]
         assert paz['sensitivity'] == +6.71140E+08
         assert paz['seismometer_gain'] == 4.00000E+02
         # Raise exception for undefined channels
@@ -830,8 +829,7 @@ class ParserTestCase():
         parser = Parser()
         parser.read(filename)
         # value given by pdccgg
-        assert parser.blockettes[50][0].site_name == \
-                         'T3930_b A6689 3930'
+        assert parser.blockettes[50][0].site_name == 'T3930_b A6689 3930'
 
     def test_parsing_resp_file_without_clear_blkt_separation(self):
         """

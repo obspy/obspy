@@ -42,8 +42,7 @@ class SACTraceTestCase():
         assert sac.kstnm == 'STA'
         assert sac.delta == 1.0
         assert sac.kcmpnm == 'Q'
-        assert sac.reftime.datetime == \
-                         datetime.datetime(1978, 7, 18, 8, 0)
+        assert sac.reftime.datetime == datetime.datetime(1978, 7, 18, 8, 0)
         assert sac.nvhdr == 6
         assert sac.b == 10.0
         assert round(abs(sac.depmen-9.0599059e-8), 7) == 0
@@ -55,7 +54,7 @@ class SACTraceTestCase():
         A headonly read should return readable headers and data is None
         """
         sac = SACTrace.read(self.file, byteorder='little', headonly=True)
-        assert sac.data == None
+        assert sac.data is None
         assert sac.npts == 100
         assert sac.depmin == -1.0
         assert round(abs(sac.depmen-8.344650e-8), 7) == 0
@@ -145,15 +144,13 @@ class SACTraceTestCase():
         A SACTrace.reftime should be created correctly from a file's nz-times
         """
         sac = SACTrace.read(self.fileseis)
-        assert sac.reftime == \
-                         UTCDateTime('1981-03-29T10:38:14.000000Z')
+        assert sac.reftime == UTCDateTime('1981-03-29T10:38:14.000000Z')
         # changes to a reftime should be reflected in the nz times and reftime
         nzsec, nzmsec = sac.nzsec, sac.nzmsec
         sac.reftime = sac.reftime + 2.5
         assert sac.nzsec == nzsec + 2
         assert sac.nzmsec == nzmsec + 500
-        assert sac.reftime == \
-                         UTCDateTime('1981-03-29T10:38:16.500000Z')
+        assert sac.reftime == UTCDateTime('1981-03-29T10:38:16.500000Z')
         # changes in the nztimes should be reflected reftime
         sac.nzyear = 2001
         assert sac.reftime.year == 2001
@@ -238,7 +235,7 @@ class SACTraceTestCase():
         assert not sac.leven
         assert not sac.lovrok
         assert not sac.lpspol
-        assert sac.iztype == None
+        assert sac.iztype is None
         with pytest.raises(SacHeaderTimeError):
             getattr(sac, 'reftime')
         # raises "UserWarning: Reference time information incomplete"
@@ -261,12 +258,14 @@ class SACTraceTestCase():
 
             # setting value
             setattr(sac, hdr, floatval)
-            assert round(abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-floatval), 7) == 0
+            assert round(
+                abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-floatval), 7) == 0
             # getting value
             assert round(abs(getattr(sac, hdr)-floatval), 7) == 0
             # setting None produces null value
             setattr(sac, hdr, None)
-            assert round(abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-_hd.FNULL), 7) == 0
+            assert round(
+                abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-_hd.FNULL), 7) == 0
             # getting existing null values return None
             sac._hf[_hd.FLOATHDRS.index(hdr)] = _hd.FNULL
             assert getattr(sac, hdr) is None
@@ -292,7 +291,8 @@ class SACTraceTestCase():
             offset_float = random.uniform(-1, 1)
             offset_utc = utc + offset_float
             setattr(sac, hdr, offset_utc)
-            assert round(abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-offset_float), 5) == 0
+            assert round(
+                abs(sac._hf[_hd.FLOATHDRS.index(hdr)]-offset_float), 5) == 0
 
     def test_int_headers(self):
         """
@@ -348,7 +348,7 @@ class SACTraceTestCase():
 
                     setattr(sac, enumhdr, accepted_val)
                     assert sac._hi[_hd.INTHDRS.index(enumhdr)] == \
-                                     accepted_int
+                        accepted_int
 
     def test_string_headers(self):
         sac = SACTrace()
@@ -378,8 +378,7 @@ class SACTraceTestCase():
                 assert len(w) == 1
                 assert w[0].category == UserWarning
                 assert 'Alphanumeric headers longer than 8' in str(w[0])
-            assert sac._hs[_hd.STRHDRS.index(hdr)].decode() == \
-                             too_long[:8]
+            assert sac._hs[_hd.STRHDRS.index(hdr)].decode() == too_long[:8]
             assert getattr(sac, hdr) == too_long[:8].strip()
 
             # docstring

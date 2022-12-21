@@ -97,8 +97,7 @@ class NLLOCTestCase():
         # test creation times manually as they get omitted in the overall test
         creation_time = UTCDateTime("2014-10-17T16:30:08.000000Z")
         assert cat[0].creation_info.creation_time == creation_time
-        assert cat[0].origins[0].creation_info.creation_time == \
-                         creation_time
+        assert cat[0].origins[0].creation_info.creation_time == creation_time
 
         quakeml_expected = remove_unique_ids(quakeml_expected,
                                              remove_creation_time=True)
@@ -128,45 +127,78 @@ class NLLOCTestCase():
         # test event
         ev = cat[0]
         ev_expected = cat_expected[0]
-        assert round(abs(ev.creation_info.creation_time-ev_expected.creation_info.creation_time), 7) == 0
+        assert round(abs(
+            ev.creation_info.creation_time -
+            ev_expected.creation_info.creation_time), 7) == 0
 
         # test origin
         orig = ev.origins[0]
         orig_expected = ev_expected.origins[0]
         assert round(abs(orig.time-orig_expected.time), 7) == 0
         assert round(abs(orig.longitude-orig_expected.longitude), 7) == 0
-        assert round(abs(orig.longitude_errors.uncertainty-orig_expected.longitude_errors.uncertainty), 7) == 0
+        assert round(abs(
+            orig.longitude_errors.uncertainty -
+            orig_expected.longitude_errors.uncertainty), 7) == 0
         assert round(abs(orig.latitude-orig_expected.latitude), 7) == 0
-        assert round(abs(orig.latitude_errors.uncertainty-orig_expected.latitude_errors.uncertainty), 7) == 0
+        assert round(abs(
+            orig.latitude_errors.uncertainty -
+            orig_expected.latitude_errors.uncertainty), 7) == 0
         assert round(abs(orig.depth-orig_expected.depth), 7) == 0
-        assert round(abs(orig.depth_errors.uncertainty-orig_expected.depth_errors.uncertainty), 7) == 0
-        assert round(abs(orig.depth_errors.confidence_level-orig_expected.depth_errors.confidence_level), 7) == 0
+        assert round(abs(
+            orig.depth_errors.uncertainty -
+            orig_expected.depth_errors.uncertainty), 7) == 0
+        assert round(abs(
+            orig.depth_errors.confidence_level -
+            orig_expected.depth_errors.confidence_level), 7) == 0
         assert orig.depth_type == orig_expected.depth_type
         assert orig.quality.associated_phase_count == \
-                         orig_expected.quality.associated_phase_count
+            orig_expected.quality.associated_phase_count
         assert orig.quality.used_phase_count == \
-                         orig_expected.quality.used_phase_count
+            orig_expected.quality.used_phase_count
         assert orig.quality.associated_station_count == \
-                         orig_expected.quality.associated_station_count
+            orig_expected.quality.associated_station_count
         assert orig.quality.used_station_count == \
-                         orig_expected.quality.used_station_count
-        assert round(abs(orig.quality.standard_error-orig_expected.quality.standard_error), 7) == 0
-        assert round(abs(orig.quality.azimuthal_gap-orig_expected.quality.azimuthal_gap), 7) == 0
-        assert round(abs(orig.quality.secondary_azimuthal_gap-orig_expected.quality.secondary_azimuthal_gap), 7) == 0
+            orig_expected.quality.used_station_count
+        assert round(abs(
+            orig.quality.standard_error -
+            orig_expected.quality.standard_error), 7) == 0
+        assert round(abs(
+            orig.quality.azimuthal_gap -
+            orig_expected.quality.azimuthal_gap), 7) == 0
+        assert round(abs(
+            orig.quality.secondary_azimuthal_gap -
+            orig_expected.quality.secondary_azimuthal_gap), 7) == 0
         assert orig.quality.ground_truth_level == \
-                         orig_expected.quality.ground_truth_level
-        assert round(abs(orig.quality.minimum_distance-orig_expected.quality.minimum_distance), 7) == 0
-        assert round(abs(orig.quality.maximum_distance-orig_expected.quality.maximum_distance), 7) == 0
-        assert round(abs(orig.quality.median_distance-orig_expected.quality.median_distance), 7) == 0
-        assert round(abs(orig.origin_uncertainty.min_horizontal_uncertainty-orig_expected.origin_uncertainty.min_horizontal_uncertainty), 7) == 0
-        assert round(abs(orig.origin_uncertainty.max_horizontal_uncertainty-orig_expected.origin_uncertainty.max_horizontal_uncertainty), 7) == 0
-        assert round(abs(orig.origin_uncertainty.azimuth_max_horizontal_uncertainty-orig_expected.origin_uncertainty.
-            azimuth_max_horizontal_uncertainty), 7) == 0
+            orig_expected.quality.ground_truth_level
+        assert round(abs(
+            orig.quality.minimum_distance -
+            orig_expected.quality.minimum_distance), 7) == 0
+        assert round(abs(
+            orig.quality.maximum_distance -
+            orig_expected.quality.maximum_distance), 7) == 0
+        assert round(abs(
+            orig.quality.median_distance -
+            orig_expected.quality.median_distance), 7) == 0
+        assert round(abs(
+            orig.origin_uncertainty.min_horizontal_uncertainty -
+            orig_expected.origin_uncertainty.min_horizontal_uncertainty), 7) \
+            == 0
+        assert round(abs(
+            orig.origin_uncertainty.max_horizontal_uncertainty -
+            orig_expected.origin_uncertainty.max_horizontal_uncertainty), 7) \
+            == 0
+        assert round(abs(
+            orig.origin_uncertainty.azimuth_max_horizontal_uncertainty -
+            getattr(orig_expected,
+                    "origin_uncertaintyazimuth_max_horizontal_uncertainty")),
+            7) == 0
         assert orig.origin_uncertainty.preferred_description == \
             orig_expected.origin_uncertainty.preferred_description
-        assert round(abs(orig.origin_uncertainty.confidence_level-orig_expected.origin_uncertainty.confidence_level), 7) == 0
+        assert round(abs(
+            orig.origin_uncertainty.confidence_level -
+            orig_expected.origin_uncertainty.confidence_level), 7) == 0
         assert orig.creation_info.creation_time == \
-                         orig_expected.creation_info.creation_time
+            orig_expected.creation_info.creation_time
         assert orig.comments[0].text == orig_expected.comments[0].text
 
         # test a couple of arrivals
@@ -178,8 +210,10 @@ class NLLOCTestCase():
             assert round(abs(arriv.distance-arriv_expected.distance), 7) == 0
             assert arriv.takeoff_angle is None
             assert arriv_expected.takeoff_angle is None
-            assert round(abs(arriv.time_residual-arriv_expected.time_residual), 7) == 0
-            assert round(abs(arriv.time_weight-arriv_expected.time_weight), 7) == 0
+            assert round(
+                abs(arriv.time_residual-arriv_expected.time_residual), 7) == 0
+            assert round(
+                abs(arriv.time_weight-arriv_expected.time_weight), 7) == 0
 
         # test a couple of picks
         for n in range(2):
@@ -187,7 +221,7 @@ class NLLOCTestCase():
             pick_expected = ev_expected.picks[n]
             assert round(abs(pick.time-pick_expected.time), 7) == 0
             assert pick.waveform_id.station_code == \
-                             pick_expected.waveform_id.station_code
+                pick_expected.waveform_id.station_code
             assert pick.onset == pick_expected.onset
             assert pick.phase_hint == pick_expected.phase_hint
             assert pick.polarity == pick_expected.polarity
@@ -229,17 +263,17 @@ class NLLOCTestCase():
                 assert wid.location_code == ''
             else:
                 assert wid.network_code == ''
-                assert wid.location_code == None
+                assert wid.location_code is None
 
     def test_is_nlloc_hyp(self):
         # test positive
         filename = get_example_file("nlloc_custom.hyp")
-        assert is_nlloc_hyp(filename) == True
+        assert is_nlloc_hyp(filename)
         # test some negatives
         for filenames in ["nlloc_custom.qml", "nlloc.obs", "gaps.mseed",
                           "BW_RJOB.xml", "QFILE-TEST-ASC.ASC", "LMOW.BHE.SAC"]:
             filename = get_example_file("nlloc_custom.qml")
-            assert is_nlloc_hyp(filename) == False
+            assert not is_nlloc_hyp(filename)
 
     def test_read_nlloc_with_picks(self):
         """

@@ -8,6 +8,7 @@
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import collections
+from unittest import mock
 
 from packaging.version import parse as parse_version
 import pytest
@@ -102,7 +103,7 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
                 endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
                 filename="out.mseed")
         assert e.exception.args[0] == \
-                         'The `filename` argument is not supported'
+            'The `filename` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_waveforms(
@@ -111,27 +112,27 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
                 endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
                 attach_response=True)
         assert e.exception.args[0] == \
-                         'The `attach_response` argument is not supported'
+            'The `attach_response` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_waveforms_bulk([], filename="out.mseed")
         assert e.exception.args[0] == \
-                         'The `filename` argument is not supported'
+            'The `filename` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_waveforms_bulk([], attach_response=True)
         assert e.exception.args[0] == \
-                         'The `attach_response` argument is not supported'
+            'The `attach_response` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_stations(filename="out.xml")
         assert e.exception.args[0] == \
-                         'The `filename` argument is not supported'
+            'The `filename` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_stations_bulk([], filename="out.xml")
         assert e.exception.args[0] == \
-                         'The `filename` argument is not supported'
+            'The `filename` argument is not supported'
 
     def test_error_handling(self):
         with pytest.raises(FDSNNoDataException) as e:
@@ -159,8 +160,7 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
         assert p.call_args[0][0][0] == \
             ["XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
              obspy.UTCDateTime(2017, 1, 2)]
-        assert p.call_args[1] == \
-                         {"longestonly": True, "minimumlength": 2}
+        assert p.call_args[1] == {"longestonly": True, "minimumlength": 2}
 
     def test_get_waveforms_bulk(self):
         # Some mock routing response.
@@ -194,7 +194,7 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
 
         assert p1.call_count == 1
         assert p1.call_args[0][0] == \
-                         "http://www.orfeus-eu.org/eidaws/routing/1/query"
+            "http://www.orfeus-eu.org/eidaws/routing/1/query"
         # This has been modified by our mocked call to get_stations_bulk().
         assert p1.call_args[1]["data"] == (
             b"service=dataselect\nformat=post\n"
@@ -208,15 +208,14 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
             "AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00",
             "http://example2.com":
             "AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00"}
-        assert p2.call_args[1] == \
-                         {"longestonly": True, "minimumlength": 2}
+        assert p2.call_args[1] == {"longestonly": True, "minimumlength": 2}
 
         # Call to this only dependent on the original bulk request.
         assert p3.call_count == 1
         assert p3.call_args[0][0][0] == \
-                         ["AA", "B*", "--", "DD",
-                          str(obspy.UTCDateTime(2017, 1, 1))[:-1],
-                          str(obspy.UTCDateTime(2017, 1, 2))[:-1]]
+            ["AA", "B*", "--", "DD",
+             str(obspy.UTCDateTime(2017, 1, 1))[:-1],
+             str(obspy.UTCDateTime(2017, 1, 2))[:-1]]
         # Everything should be passed on.
         assert p3.call_args[1] == {
             "level": "channel", "longestonly": True, "minimumlength": 2}
@@ -246,7 +245,7 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
 
         assert p1.call_count == 1
         assert p1.call_args[0][0] == \
-                         "http://www.orfeus-eu.org/eidaws/routing/1/query"
+            "http://www.orfeus-eu.org/eidaws/routing/1/query"
         # Only a few arguments should be part of the URL.
         assert p1.call_args[1] == {
             'content_type': 'text/plain',
@@ -288,7 +287,7 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
 
         assert p1.call_count == 1
         assert p1.call_args[0][0] == \
-                         "http://www.orfeus-eu.org/eidaws/routing/1/query"
+            "http://www.orfeus-eu.org/eidaws/routing/1/query"
         assert p1.call_args[1]["data"] == (
             b"service=station\nformat=post\nalternative=false\n"
             b"AA B* -- DD 2017-01-01T00:00:00.000000 "

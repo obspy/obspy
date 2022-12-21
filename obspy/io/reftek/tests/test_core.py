@@ -186,9 +186,9 @@ class ReftekTestCase():
         assert len(w) == 8
         for w_ in w:
             assert str(w_.message) == \
-                'No channel code specified in the data file and no component ' \
-                'codes specified. Using stream label and number of channel in ' \
-                'file as channel codes.'
+                ('No channel code specified in the data file and no component '
+                 'codes specified. Using stream label and number of channel '
+                 'in file as channel codes.')
         # check that channel codes are set with stream label from EH packet +
         # enumerated channel number starting at 0
         for tr, cha in zip(st_reftek, ('EH0', 'EH0', 'EH0', 'EH1', 'EH1',
@@ -228,7 +228,7 @@ class ReftekTestCase():
         # try to read mseed file, finding no packets
         with pytest.raises(Reftek130Exception):
             _read_reftek130(self.mseed_files[0],
-                          sort_permuted_package_sequence=True)
+                            sort_permuted_package_sequence=True)
 
     def test_warning_disturbed_packet_sequence(self):
         """
@@ -251,7 +251,7 @@ class ReftekTestCase():
                                 sort_permuted_package_sequence=True)
         assert len(w) == 1
         assert str(w[0].message) == \
-                         'Detected a non-contiguous packet sequence!'
+            'Detected a non-contiguous packet sequence!'
 
     def test_read_file_perturbed_packet_sequence(self):
         """
@@ -287,7 +287,7 @@ class ReftekTestCase():
         st_reftek.merge(-1)
         assert len(w) == 1
         assert str(w[0].message) == \
-                         'Detected permuted packet sequence, sorting.'
+            'Detected permuted packet sequence, sorting.'
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_drop_not_implemented_packets(self):
@@ -327,8 +327,8 @@ class ReftekTestCase():
                 str(w[0].message))
         # this message we get because ET packet at end is now missing
         assert str(w[1].message) == \
-            'No event trailer (ET) packets in packet sequence. File might be ' \
-            'truncated.'
+            ('No event trailer (ET) packets in packet sequence. File might be '
+             'truncated.')
 
     def test_missing_event_trailer_packet(self):
         """
@@ -351,8 +351,8 @@ class ReftekTestCase():
                     sort_permuted_package_sequence=True)
         assert len(w) == 1
         assert str(w[0].message) == \
-            'No event trailer (ET) packets in packet sequence. File might be ' \
-            'truncated.'
+            ('No event trailer (ET) packets in packet sequence. File might be '
+             'truncated.')
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_truncated_last_packet(self):
@@ -377,12 +377,13 @@ class ReftekTestCase():
         assert len(w) == 2
         # we get two warnings, one about the truncated packet and one about the
         # missing last (ET) packet
-        assert str(w[0].message) == 'Length of data not a multiple of ' \
-                         '1024. Data might be truncated. Dropping 1014 ' \
-                         'byte(s) at the end.'
+        assert str(w[0].message) == (
+            'Length of data not a multiple of '
+            '1024. Data might be truncated. Dropping 1014 '
+            'byte(s) at the end.')
         assert str(w[1].message) == \
-            'No event trailer (ET) packets in packet sequence. File might be ' \
-            'truncated.'
+            ('No event trailer (ET) packets in packet sequence. File might be '
+             'truncated.')
         # data should be read OK aside from the warnings
         self._assert_reftek130_test_stream(st_reftek)
 

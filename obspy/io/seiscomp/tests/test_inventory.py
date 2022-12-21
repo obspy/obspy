@@ -52,8 +52,7 @@ class SC3MLTestCase():
                     warnings.simplefilter("ignore")
                     read_inventory(filename)
 
-            assert e.exception.args[0] == \
-                             "Schema version not supported."
+            assert e.exception.args[0] == "Schema version not supported."
 
     @pytest.mark.filterwarnings('ignore:.*rate of 0')
     def test_channel_level(self):
@@ -123,16 +122,14 @@ class SC3MLTestCase():
             read_inventory(os.path.join(self.data_dir,
                                         "sc3ml_empty_depth_and_id.sc3ml"))
             assert len(w) == 4
-            assert str(w[0].message) == "Sensor is missing " \
-                                                "longitude information, " \
-                                                "using 0.0"
-            assert str(w[1].message) == "Sensor is missing " \
-                                                "latitude information, " \
-                                                "using 0.0"
-            assert str(w[2].message) == "Sensor is missing elevation " \
-                                                "information, using 0.0"
-            assert str(w[3].message) == "Channel is missing depth " \
-                                                "information, using 0.0"
+            assert str(w[0].message) == \
+                "Sensor is missing longitude information, using 0.0"
+            assert str(w[1].message) == \
+                "Sensor is missing latitude information, using 0.0"
+            assert str(w[2].message) == \
+                "Sensor is missing elevation information, using 0.0"
+            assert str(w[3].message) == \
+                "Channel is missing depth information, using 0.0"
 
     def test_compare_upper_level(self):
         """
@@ -152,25 +149,20 @@ class SC3MLTestCase():
                                              self.stationxml_inventory):
 
             assert sc3ml_net.code == stationxml_net.code
-            assert sc3ml_net.description == \
-                             stationxml_net.description
+            assert sc3ml_net.description == stationxml_net.description
             assert sc3ml_net.start_date == stationxml_net.start_date
             assert sc3ml_net.end_date == stationxml_net.end_date
             assert sc3ml_net.restricted_status == \
-                             stationxml_net.restricted_status
+                stationxml_net.restricted_status
 
             for sc3ml_sta, stationxml_sta in zip(sc3ml_net, stationxml_net):
 
-                assert sc3ml_sta.latitude == \
-                                 stationxml_sta.latitude
-                assert sc3ml_sta.longitude == \
-                                 stationxml_sta.longitude
-                assert sc3ml_sta.elevation == \
-                                 stationxml_sta.elevation
-                assert sc3ml_sta.creation_date == \
-                                 stationxml_sta.creation_date
+                assert sc3ml_sta.latitude == stationxml_sta.latitude
+                assert sc3ml_sta.longitude == stationxml_sta.longitude
+                assert sc3ml_sta.elevation == stationxml_sta.elevation
+                assert sc3ml_sta.creation_date == stationxml_sta.creation_date
                 assert sc3ml_sta.termination_date == \
-                                 stationxml_sta.termination_date
+                    stationxml_sta.termination_date
 
                 staxml_items = stationxml_sta.site.__dict__.items()
                 sc3ml_items = sc3ml_sta.site.__dict__.items()
@@ -182,30 +174,24 @@ class SC3MLTestCase():
                                                      stationxml_sta):
 
                     assert sc3ml_cha.code == stationxml_cha.code
-                    assert sc3ml_cha.latitude == \
-                                     stationxml_cha.latitude
-                    assert sc3ml_cha.longitude == \
-                                     stationxml_cha.longitude
-                    assert sc3ml_cha.elevation == \
-                                     stationxml_cha.elevation
-                    assert sc3ml_cha.azimuth == \
-                                     stationxml_cha.azimuth
-                    assert sc3ml_cha.dip == \
-                                     stationxml_cha.dip
+                    assert sc3ml_cha.latitude == stationxml_cha.latitude
+                    assert sc3ml_cha.longitude == stationxml_cha.longitude
+                    assert sc3ml_cha.elevation == stationxml_cha.elevation
+                    assert sc3ml_cha.azimuth == stationxml_cha.azimuth
+                    assert sc3ml_cha.dip == stationxml_cha.dip
                     # reading stationxml will ignore old StationXML 1.0 defined
                     # StorageFormat, Arclink Inventory XML and SC3ML get it
                     # stored in extra now
                     with pytest.warns(UserWarning, match='.*storage_format.*'):
-                        assert sc3ml_cha.storage_format == None
-                        assert stationxml_cha.storage_format == None
-                    assert sc3ml_cha.extra['format']['value'] == \
-                                     'Steim2'
+                        assert sc3ml_cha.storage_format is None
+                        assert stationxml_cha.storage_format is None
+                    assert sc3ml_cha.extra['format']['value'] == 'Steim2'
                     namespace = sc3ml_cha.extra['format'].get('namespace')
                     assert namespace.startswith(SCHEMA_NAMESPACE_BASE)
 
                     cdisps = "clock_drift_in_seconds_per_sample"
                     assert getattr(sc3ml_cha, cdisps) == \
-                                     getattr(stationxml_cha, cdisps)
+                        getattr(stationxml_cha, cdisps)
 
                     for sc3ml, stationxml in zip(stationxml_cha.data_logger.
                                                  __dict__.items(),
@@ -218,31 +204,24 @@ class SC3MLTestCase():
                                                  __dict__.items()):
                         assert sc3ml == stationxml
 
-                    assert sc3ml_cha.sample_rate == \
-                                     stationxml_cha.sample_rate
+                    assert sc3ml_cha.sample_rate == stationxml_cha.sample_rate
 
                     sc3ml_ins = sc3ml_cha.response.instrument_sensitivity
                     stationxml_ins = sc3ml_cha.response.instrument_sensitivity
 
-                    assert sc3ml_ins.value == \
-                                     stationxml_ins.value
-                    assert sc3ml_ins.frequency == \
-                                     stationxml_ins.frequency
-                    assert sc3ml_ins.input_units == \
-                                     stationxml_ins.input_units
+                    assert sc3ml_ins.value == stationxml_ins.value
+                    assert sc3ml_ins.frequency == stationxml_ins.frequency
+                    assert sc3ml_ins.input_units == stationxml_ins.input_units
                     assert len(sc3ml_cha.response.response_stages) == \
-                                     len(stationxml_cha.
-                                         response.response_stages)
+                        len(stationxml_cha.response.response_stages)
 
                     for sc3ml, stationxml in zip(sc3ml_cha.response.
                                                  response_stages,
                                                  stationxml_cha.response.
                                                  response_stages):
-                        assert sc3ml.stage_gain == \
-                                         stationxml.stage_gain
+                        assert sc3ml.stage_gain == stationxml.stage_gain
                         assert sc3ml.stage_sequence_number == \
-                                         stationxml. \
-                                         stage_sequence_number
+                            stationxml.stage_sequence_number
 
                         # We skip checking this stage, because the input
                         # sample rates may not match
@@ -261,11 +240,11 @@ class SC3MLTestCase():
                     stationxml_paz = stationxml_cha.response.get_paz()
 
                     assert sc3ml_paz.normalization_frequency == \
-                                     stationxml_paz.normalization_frequency
+                        stationxml_paz.normalization_frequency
                     assert sc3ml_paz.normalization_factor == \
-                                     stationxml_paz.normalization_factor
+                        stationxml_paz.normalization_factor
                     assert sc3ml_paz.pz_transfer_function_type == \
-                                     stationxml_paz.pz_transfer_function_type
+                        stationxml_paz.pz_transfer_function_type
                     for sc3ml, stationxml in zip(sc3ml_paz.poles,
                                                  stationxml_paz.poles):
                         assert sc3ml == stationxml
@@ -282,7 +261,7 @@ class SC3MLTestCase():
         assert _count_complex(complex_string) == 4
         parsed = _parse_list_of_complex_string(complex_string)
         assert parsed == [('-0.037', '0.037'), ('-0.037', '-0.037'),
-                                  ('-6909', '9208'), ('-6909', '-9208')]
+                          ('-6909', '9208'), ('-6909', '-9208')]
         # test some bad string
         complex_string = "  (   -0.037 ,     0.037 )  (-0.037,-0.037"
         with pytest.raises(ValueError):

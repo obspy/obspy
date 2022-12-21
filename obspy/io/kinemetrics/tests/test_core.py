@@ -78,11 +78,11 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 3
         assert st[0].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert len(st[0]) == 230 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
@@ -98,17 +98,17 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[3].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[4].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[5].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert len(st[0]) == 390 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
@@ -127,11 +127,11 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 3
         assert st[0].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert len(st[0]) == 230 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
@@ -150,17 +150,17 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[3].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[4].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[5].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert len(st[0]) == 390 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
@@ -176,11 +176,11 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 3
         assert st[0].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert len(st[0]) == 230 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
@@ -196,17 +196,17 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[3].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[4].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[5].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert len(st[0]) == 390 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
@@ -226,11 +226,11 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 3
         assert st[0].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert len(st[0]) == 230 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
@@ -249,17 +249,17 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[3].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[4].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert st[5].stats.starttime == \
-                         UTCDateTime('2012-01-17T09:54:36.000000Z')
+            UTCDateTime('2012-01-17T09:54:36.000000Z')
         assert len(st[0]) == 390 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
@@ -276,8 +276,7 @@ class CoreTestCase():
         for key in dico:
             assert round(abs(dico[key]-evt_stats[key]), 6) == 0
 
-        assert UTCDateTime(2013, 8, 15, 9, 20, 28) == \
-                         evt_stats['starttime']
+        assert UTCDateTime(2013, 8, 15, 9, 20, 28) == evt_stats['starttime']
 
     def verify_data_evt0(self, data):
         valuesdeb = np.array([-2.4464752525e-002, -2.4534918368e-002,
@@ -331,11 +330,11 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 3
         assert st[0].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[1].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert st[2].stats.starttime == \
-                         UTCDateTime('2013-08-15T09:20:28.000000Z')
+            UTCDateTime('2013-08-15T09:20:28.000000Z')
         assert len(st[0]) == 230 * 25
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'

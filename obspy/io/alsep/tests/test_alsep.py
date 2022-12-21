@@ -16,33 +16,33 @@ class AlsepTestCase():
         Testing ALSEP PSE file format.
         """
         testfile = os.path.join(self.path, 'data', 'pse.a15.1.2.mini')
-        assert _is_pse(testfile) == True
+        assert _is_pse(testfile)
         testfile = os.path.join(self.path, 'data', 'wtn.1.2.mini')
-        assert _is_pse(testfile) == False
+        assert not _is_pse(testfile)
         testfile = os.path.join(self.path, 'data', 'wth.1.5.mini')
-        assert _is_pse(testfile) == False
+        assert not _is_pse(testfile)
 
     def test_is_wtn(self):
         """
         Testing ALSEP WTN file format.
         """
         testfile = os.path.join(self.path, 'data', 'pse.a15.1.2.mini')
-        assert _is_wtn(testfile) == False
+        assert not _is_wtn(testfile)
         testfile = os.path.join(self.path, 'data', 'wtn.1.2.mini')
-        assert _is_wtn(testfile) == True
+        assert _is_wtn(testfile)
         testfile = os.path.join(self.path, 'data', 'wth.1.5.mini')
-        assert _is_wtn(testfile) == False
+        assert not _is_wtn(testfile)
 
     def test_is_wth(self):
         """
         Testing ALSEP WTH file format.
         """
         testfile = os.path.join(self.path, 'data', 'pse.a15.1.2.mini')
-        assert _is_wth(testfile) == False
+        assert not _is_wth(testfile)
         testfile = os.path.join(self.path, 'data', 'wtn.1.2.mini')
-        assert _is_wth(testfile) == False
+        assert not _is_wth(testfile)
         testfile = os.path.join(self.path, 'data', 'wth.1.5.mini')
-        assert _is_wth(testfile) == True
+        assert _is_wth(testfile)
 
     def test_read_alsep_pse_file(self):
         """

@@ -43,7 +43,7 @@ class LibGSE2TestCase():
         assert 'Z' == header['channel']
         assert 200.0 == header['sampling_rate']
         assert UTCDateTime(2005, 8, 31, 2, 33, 49, 850000) == \
-                         header['starttime']
+            header['starttime']
         assert round(abs(9.49e-02-header['calib']), 7) == 0
         assert 1.0 == header['gse2']['calper']
         assert -1.0 == header['gse2']['vang']
@@ -120,7 +120,7 @@ class LibGSE2TestCase():
         assert 750 == header['npts']
         assert 'M24' == header['gse2']['instype']
         assert UTCDateTime(2009, 5, 18, 6, 47, 20, 255000) == \
-                         header['starttime']
+            header['starttime']
 
     def test_is_widi_2(self):
         """
@@ -129,7 +129,7 @@ class LibGSE2TestCase():
         filename = os.path.join(self.path, 'loc_RNON20040609200559.z')
         with open(filename, 'rb') as f:
             pos = f.tell()
-            assert None == libgse2.is_gse2(f)
+            assert libgse2.is_gse2(f) is None
             assert pos == f.tell()
             f.seek(10)
             with pytest.raises(TypeError):

@@ -240,25 +240,22 @@ class EventTestCase():
 
         assert len(event.origins) == 1
         origin = event.origins[0]
-        assert origin.resource_id == \
-                         'quakeml:obspy.org/test_origin_id'
+        assert origin.resource_id == 'quakeml:obspy.org/test_origin_id'
         assert origin.reference_system_id == \
-                         'quakeml:obspy.org/test_reference_system_id'
+            'quakeml:obspy.org/test_reference_system_id'
 
         assert len(event.amplitudes) == 1
         amplitude = event.amplitudes[0]
-        assert amplitude.resource_id == \
-                         'quakeml:obspy.org/test_amplitude_id'
+        assert amplitude.resource_id == 'quakeml:obspy.org/test_amplitude_id'
 
         assert len(event.magnitudes) == 1
         magnitude = event.magnitudes[0]
-        assert magnitude.resource_id == \
-                         'quakeml:obspy.org/test_magnitude_id'
+        assert magnitude.resource_id == 'quakeml:obspy.org/test_magnitude_id'
 
         assert len(event.station_magnitudes) == 1
         station_magnitude = event.station_magnitudes[0]
         assert station_magnitude.resource_id == \
-                         'quakeml:obspy.org/test_station_magnitude_id'
+            'quakeml:obspy.org/test_station_magnitude_id'
 
     def test_read_string(self):
         """

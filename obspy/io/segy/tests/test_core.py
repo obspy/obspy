@@ -44,13 +44,13 @@ class SEGYCoreTestCase():
         # Test all files in the test directory.
         for file in self.files.keys():
             file = os.path.join(self.path, file)
-            assert _is_segy(file) == True
+            assert _is_segy(file)
         # Also check all the other files in the test directory and they should
         # not work. Just check certain files to ensure reproducibility.
         files = ['test_core.py', 'test_segy.py', '__init__.py']
         for file in files:
             file = os.path.join(self.dir, file)
-            assert _is_segy(file) == False
+            assert not _is_segy(file)
 
     def test_is_su_file(self):
         """
@@ -59,16 +59,16 @@ class SEGYCoreTestCase():
         # Test all SEG Y files in the test directory.
         for file in self.files.keys():
             file = os.path.join(self.path, file)
-            assert _is_su(file) == False
+            assert not _is_su(file)
         # Also check all the other files in the test directory and they should
         # not work. Just check certain files to ensure reproducibility.
         files = ['test_core.py', 'test_segy.py', '__init__.py']
         for file in files:
             file = os.path.join(self.dir, file)
-            assert _is_su(file) == False
+            assert not _is_su(file)
         # Check an actual Seismic Unix file.
         file = os.path.join(self.path, '1.su_first_trace')
-        assert _is_su(file) == True
+        assert _is_su(file)
 
     def test_read_head_only(self):
         """
@@ -94,23 +94,18 @@ class SEGYCoreTestCase():
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = _read_segy(file, textual_header_encoding='EBCDIC')
-        assert st1.stats.textual_file_header[3:21] == \
-                         b'CLIENT: LITHOPROBE'
+        assert st1.stats.textual_file_header[3:21] == b'CLIENT: LITHOPROBE'
         # This should also be written the stats dictionary.
-        assert st1.stats.textual_file_header_encoding == \
-                         'EBCDIC'
+        assert st1.stats.textual_file_header_encoding == 'EBCDIC'
         # Reading again with ASCII should yield bad results. Lowercase keyword
         # argument should also work.
         st2 = _read_segy(file, textual_header_encoding='ascii')
-        assert not (st2.stats.textual_file_header[3:21] ==
-                         b'CLIENT: LITHOPROBE')
-        assert st2.stats.textual_file_header_encoding == \
-                         'ASCII'
+        assert st2.stats.textual_file_header[3:21] != b'CLIENT: LITHOPROBE'
+        assert st2.stats.textual_file_header_encoding == 'ASCII'
         # Autodetection should also write the textual file header encoding to
         # the stats dictionary.
         st3 = _read_segy(file)
-        assert st3.stats.textual_file_header_encoding == \
-                         'EBCDIC'
+        assert st3.stats.textual_file_header_encoding == 'EBCDIC'
 
     def test_enforcing_endianness_while_writing(self):
         """
@@ -206,8 +201,7 @@ class SEGYCoreTestCase():
             # Loop over all encodings.
             for data_encoding in encodings:
                 with pytest.raises(SEGYCoreWritingError):
-                    _write_segy(st,
-                                  out_file, data_encoding=data_encoding)
+                    _write_segy(st, out_file, data_encoding=data_encoding)
 
     def test_invalid_data_encoding_raises(self):
         """
@@ -218,11 +212,9 @@ class SEGYCoreTestCase():
         with NamedTemporaryFile() as tf:
             out_file = tf.name
             with pytest.raises(SEGYCoreWritingError):
-                _write_segy(st, out_file,
-                              data_encoding=0)
+                _write_segy(st, out_file, data_encoding=0)
             with pytest.raises(SEGYCoreWritingError):
-                _write_segy(st, out_file,
-                              data_encoding='')
+                _write_segy(st, out_file, data_encoding='')
 
     def test_enforcing_textual_header_encoding_while_writing(self):
         """
@@ -251,8 +243,7 @@ class SEGYCoreTestCase():
         # re-encode both to ASCII to easily compare them.
         assert header.decode("EBCDIC-CP-BE").encode("ASCII") == \
             new_header.decode("EBCDIC-CP-BE").encode("ASCII")
-        assert st2.stats.textual_file_header_encoding == \
-                         'EBCDIC'
+        assert st2.stats.textual_file_header_encoding == 'EBCDIC'
         # Do once again to enforce EBCDIC.
         _write_segy(st1, out_file, textual_header_encoding='EBCDIC')
         st3 = _read_segy(out_file)
@@ -261,8 +252,7 @@ class SEGYCoreTestCase():
             new_header = f.read(3200)
         assert header == new_header
         os.remove(out_file)
-        assert st3.stats.textual_file_header_encoding == \
-                         'EBCDIC'
+        assert st3.stats.textual_file_header_encoding == 'EBCDIC'
         # Enforce ASCII
         _write_segy(st1, out_file, textual_header_encoding='ASCII')
         st4 = _read_segy(out_file)
@@ -271,8 +261,7 @@ class SEGYCoreTestCase():
             new_header = f.read(3200)
         assert not (header == new_header)
         os.remove(out_file)
-        assert st4.stats.textual_file_header_encoding == \
-                         'ASCII'
+        assert st4.stats.textual_file_header_encoding == 'ASCII'
 
     def test_enforcing_endianness_while_reading(self):
         """
@@ -316,20 +305,18 @@ class SEGYCoreTestCase():
             np.testing.assert_array_equal(segy_file.traces[0].data, st[0].data)
             # Textual header.
             assert segy_file.textual_file_header == \
-                             st.stats.textual_file_header
+                st.stats.textual_file_header
             # Textual_header_encoding.
             assert segy_file.textual_header_encoding == \
-                             st.stats.textual_file_header_encoding
+                st.stats.textual_file_header_encoding
             # Endianness.
             assert segy_file.endian == st.stats.endian
             # Data encoding.
-            assert segy_file.data_encoding == \
-                             st.stats.data_encoding
+            assert segy_file.data_encoding == st.stats.data_encoding
             # Test the file and trace binary headers.
             for key, value in \
                     segy_file.binary_file_header.__dict__.items():
-                assert getattr(st.stats.binary_file_header,
-                                 key) == value
+                assert getattr(st.stats.binary_file_header, key) == value
             for key, value in \
                     segy_file.traces[0].header.__dict__.items():
                 assert getattr(st[0].stats.segy.trace_header, key) == \
@@ -372,8 +359,7 @@ class SEGYCoreTestCase():
         """
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         with pytest.raises(SEGYError):
-            _read_segy(file,
-                          textual_header_encoding='BLUB')
+            _read_segy(file, textual_header_encoding='BLUB')
 
     def test_setting_delta_and_sampling_rate_in_stats(self):
         """
@@ -443,8 +429,7 @@ class SEGYCoreTestCase():
             # Slightly larger should raise.
             segy[0].stats.delta = 0.065536
             with pytest.raises(SEGYSampleIntervalError):
-                _write_segy(segy,
-                              outfile)
+                _write_segy(segy, outfile)
             # Same for SU.
             file = os.path.join(self.path, '1.su_first_trace')
             su = _read_su(file)
@@ -476,8 +461,7 @@ class SEGYCoreTestCase():
             np.testing.assert_array_equal(st[0].data, st2[0].data)
             assert st[0].stats.starttime == st2[0].stats.starttime
             assert st[0].stats.endtime == st2[0].stats.endtime
-            assert st[0].stats.sampling_rate == \
-                             st2[0].stats.sampling_rate
+            assert st[0].stats.sampling_rate == st2[0].stats.sampling_rate
             # Writing and reading this new stream object should not change
             # anything.
             st2.write(outfile, format='SU')
@@ -524,8 +508,11 @@ class SEGYCoreTestCase():
             f.seek(3600 + 156, 0)
             date_time = f.read(10)
         year, julday, hour, minute, second = unpack(b'>5h', date_time)
-        assert [year == 2005, julday == 353, hour == 15, minute == 7,
-                          second == 54] == 5 * [True]
+        assert year == 2005
+        assert julday == 353
+        assert hour == 15
+        assert minute == 7
+        assert second == 54
         # Read and set zero time.
         segy = _read_segy(file)
         segy.stats.textual_file_header = \
@@ -539,8 +526,8 @@ class SEGYCoreTestCase():
                 f.seek(3600 + 156, 0)
                 date_time = f.read(10)
         year, julday, hour, minute, second = unpack(b'>5h', date_time)
-        assert [year == 0, julday == 0, hour == 0, minute == 0,
-                          second == 0] == 5 * [True]
+        for item in (year, julday, hour, minute, second):
+            assert item == 0
         # The same for SU.
         file = os.path.join(self.path, '1.su_first_trace')
         # This file has a set date!
@@ -548,8 +535,11 @@ class SEGYCoreTestCase():
             f.seek(156, 0)
             date_time = f.read(10)
         year, julday, hour, minute, second = unpack(b'<5h', date_time)
-        assert [year == 2005, julday == 353, hour == 15, minute == 7,
-                          second == 54] == 5 * [True]
+        assert year == 2005
+        assert julday == 353
+        assert hour == 15
+        assert minute == 7
+        assert second == 54
         # Read and set zero time.
         su = _read_su(file)
         su[0].stats.starttime = UTCDateTime(0)
@@ -561,8 +551,8 @@ class SEGYCoreTestCase():
                 f.seek(156, 0)
                 date_time = f.read(10)
         year, julday, hour, minute, second = unpack(b'<5h', date_time)
-        assert [year == 0, julday == 0, hour == 0, minute == 0,
-                          second == 0] == 5 * [True]
+        for item in (year, julday, hour, minute, second):
+            assert item == 0
 
     def test_two_digit_years_segy(self):
         """

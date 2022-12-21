@@ -29,10 +29,9 @@ class CoreTestCase():
         st = read(filename)
         st.verify()
         assert len(st) == 2
-        assert st[0].stats.starttime == \
-                         UTCDateTime(2013, 11, 14, 9, 6)
+        assert st[0].stats.starttime == UTCDateTime(2013, 11, 14, 9, 6)
         assert st[0].stats.endtime == \
-                         UTCDateTime(2013, 11, 14, 9, 6, 59, 990000)
+            UTCDateTime(2013, 11, 14, 9, 6, 59, 990000)
         assert "dmx" in st[0].stats
         assert len(st[0]) == 6000
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
@@ -48,10 +47,9 @@ class CoreTestCase():
         st = _read_dmx(filename)
         st.verify()
         assert len(st) == 2
-        assert st[0].stats.starttime == \
-                         UTCDateTime(2013, 11, 14, 9, 6)
+        assert st[0].stats.starttime == UTCDateTime(2013, 11, 14, 9, 6)
         assert st[0].stats.endtime == \
-                         UTCDateTime(2013, 11, 14, 9, 6, 59, 990000)
+            UTCDateTime(2013, 11, 14, 9, 6, 59, 990000)
         assert "dmx" in st[0].stats
         assert len(st[0]) == 6000
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0

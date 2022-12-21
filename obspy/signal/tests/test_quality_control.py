@@ -40,7 +40,7 @@ class QualityControlTestCase():
             MSEEDMetadata(files=[])
 
         assert e.exception.args[0] == \
-                         "No data within the temporal constraints."
+            "No data within the temporal constraints."
 
     def test_gaps_and_overlaps(self):
         """
@@ -70,7 +70,7 @@ class QualityControlTestCase():
             assert mseed_metadata.meta['sum_overlaps'] == 5.0
             assert mseed_metadata.meta['sum_gaps'] == 20.0
             assert mseed_metadata.meta['percent_availability'] == \
-                             45.0 / 65.0 * 100.0
+                45.0 / 65.0 * 100.0
 
             # Same again but this time with start-and end time settings.
             mseed_metadata = MSEEDMetadata(
@@ -81,7 +81,7 @@ class QualityControlTestCase():
             assert mseed_metadata.meta['sum_overlaps'] == 5.0
             assert mseed_metadata.meta['sum_gaps'] == 20.0
             assert mseed_metadata.meta['percent_availability'] == \
-                             35.0 / 55.0 * 100.0
+                35.0 / 55.0 * 100.0
 
             # Head and tail gaps.
             mseed_metadata = MSEEDMetadata(
@@ -92,7 +92,7 @@ class QualityControlTestCase():
             assert mseed_metadata.meta['sum_overlaps'] == 5.0
             assert mseed_metadata.meta['sum_gaps'] == 45.0
             assert mseed_metadata.meta['percent_availability'] == \
-                             45.0 / 90.0 * 100.0
+                45.0 / 90.0 * 100.0
 
             # Tail gap must be larger than 1 delta, otherwise it does not
             # count.
@@ -101,19 +101,19 @@ class QualityControlTestCase():
             assert mseed_metadata.meta['num_gaps'] == 2
             assert mseed_metadata.meta['sum_gaps'] == 20.0
             assert mseed_metadata.meta['percent_availability'] == \
-                             44.0 / 64.0 * 100.0
+                44.0 / 64.0 * 100.0
             mseed_metadata = MSEEDMetadata(files=[tf.name],
                                            endtime=obspy.UTCDateTime(65))
             assert mseed_metadata.meta['num_gaps'] == 2
             assert mseed_metadata.meta['sum_gaps'] == 20.0
             assert mseed_metadata.meta['percent_availability'] == \
-                             45.0 / 65.0 * 100.0
+                45.0 / 65.0 * 100.0
             mseed_metadata = MSEEDMetadata(files=[tf.name],
                                            endtime=obspy.UTCDateTime(66))
             assert mseed_metadata.meta['num_gaps'] == 3
             assert mseed_metadata.meta['sum_gaps'] == 21.0
             assert mseed_metadata.meta['percent_availability'] == \
-                             45.0 / 66.0 * 100.0
+                45.0 / 66.0 * 100.0
 
     def test_raise_unmatching_ids(self):
         """
@@ -136,7 +136,7 @@ class QualityControlTestCase():
                 MSEEDMetadata([tf1.name, tf2.name])
 
         assert e.exception.args[0] == \
-                         "All traces must have the same SEED id and quality."
+            "All traces must have the same SEED id and quality."
 
     def test_gaps_between_multiple_files(self):
         """
@@ -169,12 +169,9 @@ class QualityControlTestCase():
                 tf1.name, format="mseed")
             mseed_metadata = MSEEDMetadata([tf1.name], add_flags=True)
             ref = mseed_metadata.meta['miniseed_header_percentages']
-            assert ref['timing_quality_max'] == \
-                             None
-            assert ref['timing_quality_min'] == \
-                             None
-            assert ref['timing_quality_mean'] == \
-                             None
+            assert ref['timing_quality_max'] is None
+            assert ref['timing_quality_min'] is None
+            assert ref['timing_quality_mean'] is None
 
     def test_extraction_of_basic_mseed_headers(self):
         """
@@ -200,8 +197,7 @@ class QualityControlTestCase():
             assert md.meta["channel"] == "EHE"
             assert md.meta["quality"] == "D"
             assert md.meta["start_time"] == obspy.UTCDateTime(0)
-            assert md.meta["end_time"] == \
-                             obspy.UTCDateTime(105)
+            assert md.meta["end_time"] == obspy.UTCDateTime(105)
             assert md.meta["num_records"] == 2
             assert md.meta["num_samples"] == 20
             assert md.meta["sample_rate"] == [1.0, 2.0]
@@ -390,9 +386,9 @@ class QualityControlTestCase():
             _assert_float_equal(meta_io['end_time_series'], 28 / 0.58)
 
             ref = md.meta['miniseed_header_percentages']
-            assert ref['timing_quality_mean'] == None
-            assert ref['timing_quality_min'] == None
-            assert ref['timing_quality_max'] == None
+            assert ref['timing_quality_mean'] is None
+            assert ref['timing_quality_min'] is None
+            assert ref['timing_quality_max'] is None
 
     def test_timing_quality(self):
         """
@@ -592,9 +588,9 @@ class QualityControlTestCase():
         # Gap in beginning, cseg starts at first sample
         cseg = md.meta['c_segments'][0]
         assert cseg['start_time'] == \
-                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
+            obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
         assert cseg['end_time'] == \
-                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
+            obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
 
         # Start beyond a sample, but it is padded to the left, no gap
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000)
@@ -608,9 +604,9 @@ class QualityControlTestCase():
         # first sample is padded, first cseg starttime is window starttime
         cseg = md.meta['c_segments'][0]
         assert cseg['start_time'] == \
-                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000)
+            obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000)
         assert cseg['end_time'] == \
-                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
+            obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
 
         md = MSEEDMetadata([file], add_c_segments=True)
         assert md.meta["num_gaps"] == 0
@@ -620,9 +616,9 @@ class QualityControlTestCase():
         # No window, start time is first sample, end time is last sample + dt
         cseg = md.meta['c_segments'][0]
         assert cseg['start_time'] == \
-                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
+            obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
         assert cseg['end_time'] == \
-                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 325000)
+            obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 325000)
 
     def test_random_window(self):
         """
@@ -641,7 +637,7 @@ class QualityControlTestCase():
 
         # Slicing to a start & end without asking for flags, num_records
         # will be set to None
-        assert md.meta["num_records"] == None
+        assert md.meta["num_records"] is None
 
     def test_end_gap(self):
         """

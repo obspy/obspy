@@ -76,10 +76,11 @@ class TriggerTestCase():
         ndat = 1
         charfct = np.empty(ndat, dtype=np.float64)
         with pytest.raises(ArgumentError):
-            clibsignal.recstalta([1], charfct,
-                          ndat, 5, 10)
+            clibsignal.recstalta(
+                [1], charfct, ndat, 5, 10)
         with pytest.raises(ArgumentError):
-            clibsignal.recstalta(np.array([1], dtype=np.int32), charfct, ndat, 5, 10)
+            clibsignal.recstalta(
+                np.array([1], dtype=np.int32), charfct, ndat, 5, 10)
 
     def test_pk_baer(self):
         """
@@ -153,7 +154,7 @@ class TriggerTestCase():
             ar_pick(data[0], data[1], np.zeros(1), samp_rate, f1, f2, lta_p,
                     sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
         assert err.exception.args[0] == \
-                         "All three data arrays must have the same length."
+            "All three data arrays must have the same length."
 
     def test_ar_pick_low_amplitude(self):
         """
@@ -287,14 +288,12 @@ class TriggerTestCase():
             assert len(w) == 1
             assert "At least one trace's ID was not" in str(w[0])
         assert len(re) == 2
-        assert re[0]['time'] > \
-                           UTCDateTime("2010-05-27T16:24:31")
+        assert re[0]['time'] > UTCDateTime("2010-05-27T16:24:31")
         assert re[0]['time'] < UTCDateTime("2010-05-27T16:24:35")
         assert 4.2 < re[0]['duration'] < 4.8
         assert re[0]['stations'] == ['UH3', 'UH1', 'UH4']
         assert re[0]['coincidence_sum'] == 3
-        assert re[1]['time'] > \
-                           UTCDateTime("2010-05-27T16:27:27")
+        assert re[1]['time'] > UTCDateTime("2010-05-27T16:27:27")
         assert re[1]['time'] < UTCDateTime("2010-05-27T16:27:33")
         assert 4.2 < re[1]['duration'] < 4.4
         assert re[1]['stations'] == ['UH3', 'UH1', 'UH4']
@@ -336,14 +335,12 @@ class TriggerTestCase():
             assert "At least one trace's ID was not" in str(w[0])
             assert "At least one trace's ID was not" in str(w[1])
         assert len(re) == 2
-        assert re[0]['time'] > \
-                           UTCDateTime("2010-05-27T16:24:31")
+        assert re[0]['time'] > UTCDateTime("2010-05-27T16:24:31")
         assert re[0]['time'] < UTCDateTime("2010-05-27T16:24:35")
         assert 0.2 < re[0]['duration'] < 0.3
         assert re[0]['stations'] == ['UH2', 'UH1']
         assert re[0]['coincidence_sum'] == 1.2
-        assert re[1]['time'] > \
-                           UTCDateTime("2010-05-27T16:27:27")
+        assert re[1]['time'] > UTCDateTime("2010-05-27T16:27:27")
         assert re[1]['time'] < UTCDateTime("2010-05-27T16:27:33")
         assert 0.18 < re[1]['duration'] < 0.2
         assert re[1]['stations'] == ['UH2', 'UH1']
@@ -516,24 +513,29 @@ class TriggerTestCase():
             "At least one trace's ID was not found in the trace ID list and " \
             "was disregarded (BW.UH3..SHE)"
         assert str(w[2].message) == \
-            'Skipping trace BW.UH1..XHZ in template correlation (not present ' \
-            'in stream to check).'
+            ('Skipping trace BW.UH1..XHZ in template correlation (not present '
+             'in stream to check).')
         assert str(w[3].message) == \
-            "Skipping template(s) for station 'UH1': No common SEED IDs when " \
-            "comparing template (BW.UH1..XHZ) and data streams (BW.UH1..SHZ, " \
-            "BW.UH2..SHZ, BW.UH3..SHE, BW.UH3..SHN, BW.UH3..SHZ, " \
-            "BW.UH4..EHZ)."
+            ("Skipping template(s) for station 'UH1': No common SEED IDs when "
+             "comparing template (BW.UH1..XHZ) and data streams (BW.UH1..SHZ, "
+             "BW.UH2..SHZ, BW.UH3..SHE, BW.UH3..SHN, BW.UH3..SHZ, "
+             "BW.UH4..EHZ).")
         # check floats in resulting dictionary separately
         assert round(abs(trig[0].pop('duration')-3.96), 6) == 0
         assert round(abs(trig[1].pop('duration')-1.99), 6) == 0
         assert round(abs(trig[2].pop('duration')-1.92), 6) == 0
         assert round(abs(trig[3].pop('duration')-3.92), 6) == 0
-        assert round(abs(trig[0]['similarity'].pop('UH1')-0.94149447384), 6) == 0
+        assert round(abs(trig[0]['similarity'].pop('UH1')-0.94149447384), 6) \
+            == 0
         assert round(abs(trig[0]['similarity'].pop('UH3')-1), 6) == 0
-        assert round(abs(trig[1]['similarity'].pop('UH1')-0.65228204570), 6) == 0
-        assert round(abs(trig[1]['similarity'].pop('UH3')-0.72679293429), 6) == 0
-        assert round(abs(trig[2]['similarity'].pop('UH1')-0.89404458774), 6) == 0
-        assert round(abs(trig[2]['similarity'].pop('UH3')-0.74581409371), 6) == 0
+        assert round(abs(trig[1]['similarity'].pop('UH1')-0.65228204570), 6) \
+            == 0
+        assert round(abs(trig[1]['similarity'].pop('UH3')-0.72679293429), 6) \
+            == 0
+        assert round(abs(trig[2]['similarity'].pop('UH1')-0.89404458774), 6) \
+            == 0
+        assert round(abs(trig[2]['similarity'].pop('UH3')-0.74581409371), 6) \
+            == 0
         assert round(abs(trig[3]['similarity'].pop('UH1')-1), 6) == 0
         assert round(abs(trig[3]['similarity'].pop('UH3')-1), 6) == 0
         remaining_results = \

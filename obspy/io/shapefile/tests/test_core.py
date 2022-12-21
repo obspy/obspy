@@ -192,11 +192,11 @@ class ShapefileTestCase():
             for w_ in w:
                 try:
                     assert str(w_.message) == \
-                        'Encountered an event with origin uncertainty ' \
-                        'description of type "confidence ellipsoid". This is ' \
-                        'not yet implemented for output as shapefile. No ' \
-                        'origin uncertainty will be added to shapefile for ' \
-                        'such events.'
+                        ('Encountered an event with origin uncertainty '
+                         'description of type "confidence ellipsoid". This is '
+                         'not yet implemented for output as shapefile. No '
+                         'origin uncertainty will be added to shapefile for '
+                         'such events.')
                 except AssertionError:
                     continue
                 break
@@ -235,24 +235,26 @@ class ShapefileTestCase():
                     _write_shapefile(
                         cat, "catalog.shp",
                         extra_fields=bad_extra_fields_wrong_length)
-                assert str(cm.exception) == "list of values for each item in " \
-                    "'extra_fields' must have same length as Catalog object"
+                assert str(cm.exception) == (
+                    "list of values for each item in "
+                    "'extra_fields' must have same length as Catalog object")
                 with pytest.raises(ValueError) as cm:
                     _write_shapefile(
                         cat, "catalog.shp",
                         extra_fields=bad_extra_fields_name_clash)
-                assert str(cm.exception) == "Conflict with existing field named " \
-                    "'Magnitude'."
+                assert str(cm.exception) == (
+                    "Conflict with existing field named "
+                    "'Magnitude'.")
                 # now test a good call that should work
                 _write_shapefile(cat, "catalog.shp", extra_fields=extra_fields)
             for w_ in w:
                 try:
                     assert str(w_.message) == \
-                        'Encountered an event with origin uncertainty ' \
-                        'description of type "confidence ellipsoid". This is ' \
-                        'not yet implemented for output as shapefile. No ' \
-                        'origin uncertainty will be added to shapefile for ' \
-                        'such events.'
+                        ('Encountered an event with origin uncertainty '
+                         'description of type "confidence ellipsoid". This is '
+                         'not yet implemented for output as shapefile. No '
+                         'origin uncertainty will be added to shapefile for '
+                         'such events.')
                 except AssertionError:
                     continue
                 break
@@ -336,11 +338,11 @@ class ShapefileTestCase():
             for w_ in w:
                 try:
                     assert str(w_.message) == \
-                        'Encountered an event with origin uncertainty ' \
-                        'description of type "confidence ellipsoid". This is ' \
-                        'not yet implemented for output as shapefile. No ' \
-                        'origin uncertainty will be added to shapefile for ' \
-                        'such events.'
+                        ('Encountered an event with origin uncertainty '
+                         'description of type "confidence ellipsoid". This is '
+                         'not yet implemented for output as shapefile. No '
+                         'origin uncertainty will be added to shapefile for '
+                         'such events.')
                 except AssertionError:
                     continue
                 break

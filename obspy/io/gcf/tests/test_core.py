@@ -39,9 +39,9 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 1
         assert st[0].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:55:00.000000Z')
+            UTCDateTime('2016-06-03T19:55:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:55:02.990000Z')
+            UTCDateTime('2016-06-03T19:55:02.990000Z')
         assert len(st[0]) == 300
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
         assert st[0].stats.channel == 'HHN'
@@ -57,9 +57,9 @@ class CoreTestCase():
         st = read(filename, headonly=True)
         assert len(st) == 1
         assert st[0].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:55:00.000000Z')
+            UTCDateTime('2016-06-03T19:55:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:55:02.990000Z')
+            UTCDateTime('2016-06-03T19:55:02.990000Z')
         assert st[0].stats.npts == 300
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
         assert st[0].stats.channel == 'HHN'
@@ -75,9 +75,9 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 1
         assert st[0].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:55:00.000000Z')
+            UTCDateTime('2016-06-03T19:55:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:55:02.990000Z')
+            UTCDateTime('2016-06-03T19:55:02.990000Z')
         assert len(st[0]) == 300
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
         assert st[0].stats.channel == 'HHN'
@@ -93,9 +93,9 @@ class CoreTestCase():
         st = _read_gcf(filename, headonly=True)
         assert len(st) == 1
         assert st[0].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:55:00.000000Z')
+            UTCDateTime('2016-06-03T19:55:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:55:02.990000Z')
+            UTCDateTime('2016-06-03T19:55:02.990000Z')
         assert st[0].stats.npts == 300
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
         assert st[0].stats.channel == 'HHN'
@@ -110,9 +110,9 @@ class CoreTestCase():
         st = read(filename, headonly=True, channel_prefix="HN")
         assert len(st) == 1
         assert st[0].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:55:00.000000Z')
+            UTCDateTime('2016-06-03T19:55:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:55:02.990000Z')
+            UTCDateTime('2016-06-03T19:55:02.990000Z')
         assert st[0].stats.npts == 300
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
         assert st[0].stats.channel == 'HNN'
@@ -135,9 +135,9 @@ class CoreTestCase():
         st2 = merge_gcf_stream(st2)
         assert len(st1) == len(st2)
         assert st2[0].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:55:00.000000Z')
+            UTCDateTime('2016-06-03T19:55:00.000000Z')
         assert st2[0].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:55:02.990000Z')
+            UTCDateTime('2016-06-03T19:55:02.990000Z')
         assert st2[0].stats.npts == 300
         assert round(abs(st2[0].stats.sampling_rate-100.0), 7) == 0
         assert st2[0].stats.channel == 'HNN'
@@ -152,9 +152,9 @@ class CoreTestCase():
         st = read(filename, headonly=True, channel_prefix="HN")
         assert len(st) == 1
         assert st[0].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:10:00.000000Z')
+            UTCDateTime('2016-06-03T19:10:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:10:01.998000Z')
+            UTCDateTime('2016-06-03T19:10:01.998000Z')
         assert st[0].stats.npts == 1000
         assert round(abs(st[0].stats.sampling_rate-500.0), 7) == 0
         assert st[0].stats.channel == 'HNN'
@@ -170,9 +170,9 @@ class CoreTestCase():
         assert len(st) == 2
         # 1
         assert st[0].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:10:00.000000Z')
+            UTCDateTime('2016-06-03T19:10:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:10:00.998000Z')
+            UTCDateTime('2016-06-03T19:10:00.998000Z')
         assert st[0].stats.npts == 500
         assert round(abs(st[0].stats.sampling_rate-500.0), 7) == 0
         assert st[0].stats.channel == 'HNN'
@@ -181,9 +181,9 @@ class CoreTestCase():
         assert st[0].stats.gcf.RIC == -49952
         # 2
         assert st[1].stats.starttime == \
-                         UTCDateTime('2016-06-03T19:10:01.000000Z')
+            UTCDateTime('2016-06-03T19:10:01.000000Z')
         assert st[1].stats.endtime == \
-                         UTCDateTime('2016-06-03T19:10:01.998000Z')
+            UTCDateTime('2016-06-03T19:10:01.998000Z')
         assert st[1].stats.npts == 500
         assert round(abs(st[1].stats.sampling_rate-500.0), 7) == 0
         assert st[1].stats.channel == 'HNN'

@@ -439,10 +439,9 @@ class InvSimTestCase():
         # raises C-level EVRESP ERROR
         with SuppressOutput():
             with pytest.raises(ValueError):
-                evalresp(t_samp=10.0, nfft=256,
-                              filename=filename, date=date, station="LLRI",
-                              channel="EHZ", network="IE", locid="*",
-                              units="VEL")
+                evalresp(t_samp=10.0, nfft=256, filename=filename, date=date,
+                         station="LLRI", channel="EHZ", network="IE",
+                         locid="*", units="VEL")
 
     def test_evalresp_seed_identifiers_work(self):
         """
@@ -512,7 +511,7 @@ class InvSimTestCase():
         res = clibevresp.evr_spline(n, x, y, 0.0, 1.0, xi, ni,
                                     C.byref(p_retvals_arr),
                                     C.byref(p_num_retvals))
-        assert res == None
+        assert res is None
         assert ni == p_num_retvals.value
         yi = np.array([p_retvals_arr[i] for i in range(ni)])
 

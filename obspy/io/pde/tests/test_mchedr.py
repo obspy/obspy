@@ -49,8 +49,8 @@ class MchedrTestCase():
             ResourceIdentifier(
                 id='quakeml:us.anss.org/event/20120101052755.98')
         # enums
-        assert event.event_type == None
-        assert event.event_type_certainty == None
+        assert event.event_type is None
+        assert event.event_type_certainty is None
         # comments
         assert len(event.comments) == 1
         c = event.comments
@@ -67,7 +67,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert d[1].text == '211'
         assert d[1].type == 'Flinn-Engdahl region'
         # creation info
-        assert event.creation_info == None
+        assert event.creation_info is None
 
     def test_origin(self):
         """
@@ -88,14 +88,14 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert origin.depth == 365300.0
         assert origin.depth_errors.uncertainty == 2700.0
         assert origin.depth_type == 'from location'
-        assert origin.method_id == None
-        assert origin.time_fixed == None
-        assert origin.epicenter_fixed == None
+        assert origin.method_id is None
+        assert origin.time_fixed is None
+        assert origin.epicenter_fixed is None
         assert origin.earth_model_id == \
             ResourceIdentifier(
                 id='quakeml:us.anss.org/earthmodel/ak135')
-        assert origin.evaluation_mode == None
-        assert origin.evaluation_status == None
+        assert origin.evaluation_mode is None
+        assert origin.evaluation_status is None
         assert origin.origin_type == 'hypocenter'
         # composite times
         assert len(origin.composite_times) == 0
@@ -108,25 +108,25 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert origin.quality.associated_phase_count == 52
         assert origin.quality.associated_station_count == 628
         assert origin.quality.depth_phase_count == 0
-        assert origin.quality.secondary_azimuthal_gap == None
-        assert origin.quality.ground_truth_level == None
-        assert origin.quality.median_distance == None
+        assert origin.quality.secondary_azimuthal_gap is None
+        assert origin.quality.ground_truth_level is None
+        assert origin.quality.median_distance is None
         # comments
         assert len(origin.comments) == 0
         # creation info
-        assert origin.creation_info.author == None
+        assert origin.creation_info.author is None
         assert origin.creation_info.agency_id == 'USGS-NEIC'
-        assert origin.creation_info.author_uri == None
-        assert origin.creation_info.agency_uri == None
-        assert origin.creation_info.creation_time == None
-        assert origin.creation_info.version == None
+        assert origin.creation_info.author_uri is None
+        assert origin.creation_info.agency_uri is None
+        assert origin.creation_info.creation_time is None
+        assert origin.creation_info.version is None
         # origin uncertainty
         u = origin.origin_uncertainty
         assert u.preferred_description == 'confidence ellipsoid'
-        assert u.horizontal_uncertainty == None
-        assert u.min_horizontal_uncertainty == None
-        assert u.max_horizontal_uncertainty == None
-        assert u.azimuth_max_horizontal_uncertainty == None
+        assert u.horizontal_uncertainty is None
+        assert u.min_horizontal_uncertainty is None
+        assert u.max_horizontal_uncertainty is None
+        assert u.azimuth_max_horizontal_uncertainty is None
         # confidence ellipsoid
         c = u.confidence_ellipsoid
         assert c.semi_intermediate_axis_length == 2750.0
@@ -147,19 +147,19 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
             ResourceIdentifier(
                 id='quakeml:us.anss.org/magnitude/20120101052755.98/mb')
         assert mag.mag == 6.2
-        assert mag.mag_errors.uncertainty == None
+        assert mag.mag_errors.uncertainty is None
         assert mag.magnitude_type == 'Mb'
         assert mag.station_count == 294
-        assert mag.evaluation_status == None
+        assert mag.evaluation_status is None
         # comments
         assert len(mag.comments) == 0
         # creation info
-        assert mag.creation_info.author == None
+        assert mag.creation_info.author is None
         assert mag.creation_info.agency_id == 'USGS-NEIC'
-        assert mag.creation_info.author_uri == None
-        assert mag.creation_info.agency_uri == None
-        assert mag.creation_info.creation_time == None
-        assert mag.creation_info.version == None
+        assert mag.creation_info.author_uri is None
+        assert mag.creation_info.agency_uri is None
+        assert mag.creation_info.creation_time is None
+        assert mag.creation_info.version is None
 
     def test_stationmagnitude(self):
         """
@@ -168,10 +168,10 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert len(self.catalog[0].station_magnitudes) == 19
         mag = self.catalog[0].station_magnitudes[0]
         assert mag.mag == 6.6
-        assert mag.mag_errors.uncertainty == None
+        assert mag.mag_errors.uncertainty is None
         assert mag.station_magnitude_type == 'Mb'
         assert mag.waveform_id.station_code == 'MDJ'
-        assert mag.creation_info == None
+        assert mag.creation_info is None
 
     def test_amplitude(self):
         """
@@ -184,7 +184,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert amp.period == 1.3
         assert amp.magnitude_hint == 'Mb'
         assert amp.waveform_id.station_code == 'MDJ'
-        assert amp.creation_info == None
+        assert amp.creation_info is None
 
     def test_arrival(self):
         """
@@ -195,14 +195,14 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert ar.phase == 'Pn'
         assert ar.azimuth == 41.4
         assert ar.distance == 2.22
-        assert ar.takeoff_angle == None
-        assert ar.takeoff_angle_errors.uncertainty == None
+        assert ar.takeoff_angle is None
+        assert ar.takeoff_angle_errors.uncertainty is None
         assert ar.time_residual == -1.9
-        assert ar.horizontal_slowness_residual == None
-        assert ar.backazimuth_residual == None
-        assert ar.time_weight == None
-        assert ar.horizontal_slowness_weight == None
-        assert ar.backazimuth_weight == None
+        assert ar.horizontal_slowness_residual is None
+        assert ar.backazimuth_residual is None
+        assert ar.time_weight is None
+        assert ar.horizontal_slowness_weight is None
+        assert ar.backazimuth_weight is None
         assert ar.earth_model_id == \
             ResourceIdentifier('quakeml:us.anss.org/earthmodel/ak135')
         assert len(ar.comments) == 0
@@ -214,14 +214,14 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert len(self.catalog[0].picks) == 52
         pick = self.catalog[0].picks[0]
         assert pick.time == UTCDateTime(2012, 1, 1, 5, 28, 48, 180000)
-        assert pick.time_errors.uncertainty == None
+        assert pick.time_errors.uncertainty is None
         assert pick.waveform_id.station_code == 'JHJ2'
         assert round(abs(pick.backazimuth--138.6), 7) == 0
         assert pick.onset == 'emergent'
         assert pick.phase_hint == 'Pn'
-        assert pick.polarity == None
-        assert pick.evaluation_mode == None
-        assert pick.evaluation_status == None
+        assert pick.polarity is None
+        assert pick.evaluation_mode is None
+        assert pick.evaluation_status is None
         assert len(pick.comments) == 0
 
     def test_focalmechanism(self):
@@ -236,23 +236,23 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
                    '20120101052755.98/ucmt/mwc')
         # general
         assert fm.waveform_id == []
-        assert fm.triggering_origin_id == None
-        assert fm.azimuthal_gap == None
-        assert fm.station_polarity_count == None
-        assert fm.misfit == None
-        assert fm.station_distribution_ratio == None
+        assert fm.triggering_origin_id is None
+        assert fm.azimuthal_gap is None
+        assert fm.station_polarity_count is None
+        assert fm.misfit is None
+        assert fm.station_distribution_ratio is None
         assert fm.method_id == \
             ResourceIdentifier(
                 id='quakeml:us.anss.org/methodID=CMT')
         # comments
         assert len(fm.comments) == 0
         # creation info
-        assert fm.creation_info.author == None
+        assert fm.creation_info.author is None
         assert fm.creation_info.agency_id == 'UCMT'
-        assert fm.creation_info.author_uri == None
-        assert fm.creation_info.agency_uri == None
-        assert fm.creation_info.creation_time == None
-        assert fm.creation_info.version == None
+        assert fm.creation_info.author_uri is None
+        assert fm.creation_info.agency_uri is None
+        assert fm.creation_info.creation_time is None
+        assert fm.creation_info.version is None
         # nodalPlanes
         assert round(abs(fm.nodal_planes.nodal_plane_1.strike-5.0), 7) == 0
         assert round(abs(fm.nodal_planes.nodal_plane_1.dip-85.0), 7) == 0
@@ -260,7 +260,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert round(abs(fm.nodal_planes.nodal_plane_2.strike-116.0), 7) == 0
         assert round(abs(fm.nodal_planes.nodal_plane_2.dip-15.0), 7) == 0
         assert round(abs(fm.nodal_planes.nodal_plane_2.rake--159.0), 7) == 0
-        assert fm.nodal_planes.preferred_plane == None
+        assert fm.nodal_planes.preferred_plane is None
         # principalAxes
         assert round(abs(fm.principal_axes.t_axis.azimuth-82.0), 7) == 0
         assert round(abs(fm.principal_axes.t_axis.plunge-38.0), 7) == 0
@@ -284,7 +284,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         assert round(abs(mt.tensor.m_rt--1.9e+18), 7) == 0
         assert round(abs(mt.tensor.m_rp--1.77e+19), 7) == 0
         assert round(abs(mt.tensor.m_tp--4.2e+18), 7) == 0
-        assert mt.clvd == None
+        assert mt.clvd is None
 
     def test_write_quakeml(self):
         """

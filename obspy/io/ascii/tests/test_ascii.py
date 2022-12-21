@@ -23,14 +23,14 @@ class ASCIITestCase():
         Testing SLIST file format.
         """
         testfile = os.path.join(self.path, 'data', 'slist.ascii')
-        assert _is_slist(testfile) == True
+        assert _is_slist(testfile)
         testfile = os.path.join(self.path, 'data', 'slist_2_traces.ascii')
-        assert _is_slist(testfile) == True
+        assert _is_slist(testfile)
         testfile = os.path.join(self.path, 'data', 'tspair.ascii')
-        assert _is_slist(testfile) == False
+        assert not _is_slist(testfile)
         # not existing file should fail
         testfile = os.path.join(self.path, 'data', 'xyz')
-        assert _is_slist(testfile) == False
+        assert not _is_slist(testfile)
 
     def test_read_slist_file_single_trace(self):
         """
@@ -47,7 +47,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 635
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         # check first 4 samples
         data = [185, 181, 185, 189]
@@ -71,7 +71,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 635
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         # check first 4 samples
         data = [185, 181, 185, 189]
@@ -87,7 +87,7 @@ class ASCIITestCase():
         assert stream[1].stats.sampling_rate == 40.0
         assert stream[1].stats.npts == 630
         assert stream[1].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[1].stats.calib == 1.0e-00
         # check first 4 samples
         data = [185, 181, 185, 189]
@@ -110,7 +110,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 635
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         assert len(stream[0].data) == 0
 
@@ -128,7 +128,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 12
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
                 209.07, 214.08, 222.09, 225.98, 226.99, 219.00]
@@ -143,14 +143,14 @@ class ASCIITestCase():
         Testing TSPAIR file format.
         """
         testfile = os.path.join(self.path, 'data', 'tspair.ascii')
-        assert _is_tspair(testfile) == True
+        assert _is_tspair(testfile)
         testfile = os.path.join(self.path, 'data', 'tspair_2_traces.ascii')
-        assert _is_tspair(testfile) == True
+        assert _is_tspair(testfile)
         testfile = os.path.join(self.path, 'data', 'slist.ascii')
-        assert _is_tspair(testfile) == False
+        assert not _is_tspair(testfile)
         # not existing file should fail
         testfile = os.path.join(self.path, 'data', 'xyz')
-        assert _is_tspair(testfile) == False
+        assert not _is_tspair(testfile)
 
     def test_read_tspair_file_single_trace(self):
         """
@@ -167,7 +167,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 635
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         assert stream[0].stats.mseed.dataquality == 'R'
         # check first 4 samples
@@ -194,7 +194,7 @@ class ASCIITestCase():
         assert stream[1].stats.sampling_rate == 40.0
         assert stream[1].stats.npts == 635
         assert stream[1].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[1].stats.calib == 1.0e-00
         assert stream[1].stats.mseed.dataquality == 'R'
         # check first 4 samples
@@ -211,7 +211,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 630
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         assert stream[0].stats.mseed.dataquality == 'R'
         # check first 4 samples
@@ -235,7 +235,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 635
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         assert stream[0].stats.mseed.dataquality == 'R'
         assert len(stream[0].data) == 0
@@ -255,7 +255,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 12
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         assert stream[0].stats.mseed.dataquality == 'R'
         data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
@@ -295,7 +295,7 @@ class ASCIITestCase():
             assert stream[0].stats.sampling_rate == 40.0
             assert stream[0].stats.npts == 12
             assert stream[0].stats.starttime == \
-                             UTCDateTime("2008-01-15T00:00:00.025000")
+                UTCDateTime("2008-01-15T00:00:00.025000")
             assert stream[0].stats.calib == 1.0e-00
             assert stream[0].stats.mseed.dataquality == 'R'
             data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
@@ -340,7 +340,7 @@ class ASCIITestCase():
             assert stream[0].stats.sampling_rate == 40.0
             assert stream[0].stats.npts == 12
             assert stream[0].stats.starttime == \
-                             UTCDateTime("2008-01-15T00:00:00.025000")
+                UTCDateTime("2008-01-15T00:00:00.025000")
             assert stream[0].stats.calib == 1.0e-00
             assert stream[0].stats.mseed.dataquality == 'R'
             data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
@@ -406,7 +406,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 630
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         assert stream[0].stats.mseed.dataquality == 'R'
         # check first 4 samples
@@ -423,7 +423,7 @@ class ASCIITestCase():
         assert stream[1].stats.sampling_rate == 40.0
         assert stream[1].stats.npts == 635
         assert stream[1].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[1].stats.calib == 1.0e-00
         assert stream[0].stats.mseed.dataquality == 'R'
         # check first 4 samples
@@ -463,7 +463,7 @@ class ASCIITestCase():
             assert stream[0].stats.sampling_rate == 40.0
             assert stream[0].stats.npts == 12
             assert stream[0].stats.starttime == \
-                             UTCDateTime("2008-01-15T00:00:00.025000")
+                UTCDateTime("2008-01-15T00:00:00.025000")
             assert stream[0].stats.calib == 1.0e-00
             assert stream[0].stats.mseed.dataquality == 'R'
             data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
@@ -510,7 +510,7 @@ class ASCIITestCase():
             assert stream[0].stats.sampling_rate == 40.0
             assert stream[0].stats.npts == 12
             assert stream[0].stats.starttime == \
-                             UTCDateTime("2008-01-15T00:00:00.025000")
+                UTCDateTime("2008-01-15T00:00:00.025000")
             assert stream[0].stats.calib == 1.0e-00
             assert stream[0].stats.mseed.dataquality == 'R'
             data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
@@ -576,7 +576,7 @@ class ASCIITestCase():
         assert stream[0].stats.sampling_rate == 40.0
         assert stream[0].stats.npts == 630
         assert stream[0].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
         assert stream[0].stats.mseed.dataquality == 'R'
         # check first 4 samples
@@ -593,7 +593,7 @@ class ASCIITestCase():
         assert stream[1].stats.sampling_rate == 40.0
         assert stream[1].stats.npts == 635
         assert stream[1].stats.starttime == \
-                         UTCDateTime("2008-01-15T00:00:00.025000")
+            UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[1].stats.calib == 1.0e-00
         assert stream[0].stats.mseed.dataquality == 'R'
         # check first 4 samples
@@ -634,8 +634,7 @@ class ASCIITestCase():
                     tr.write(tempfile, format=format)
                     # test results
                     got = read(tempfile, format=format)[0]
-                assert tr.stats.sampling_rate == \
-                                 got.stats.sampling_rate
+                assert tr.stats.sampling_rate == got.stats.sampling_rate
 
     def test_determine_dtype(self):
         """

@@ -105,8 +105,7 @@ class SEG2TestCase():
         for tr, result in zip(st, results):
             # convert raw data to micrometer/s (descaling goes to mm/s)
             scaled_data = tr.data * float(tr.stats.seg2.DESCALING_FACTOR) * 1e3
-            assert np.allclose(scaled_data, result, rtol=1e-7,
-                                        atol=1e-7)
+            assert np.allclose(scaled_data, result, rtol=1e-7, atol=1e-7)
         # test seg2 specific header values
         # (trace headers include SEG2 file header)
         assert st[0].stats.seg2 == TRACE2_HEADER

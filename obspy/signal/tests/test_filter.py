@@ -48,7 +48,7 @@ class FilterTestCase():
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        assert (rms < 1.0e-05) == True
+        assert rms < 1.0e-05
 
     def test_bandpass_zphsh_vs_pitsa(self):
         """
@@ -81,7 +81,7 @@ class FilterTestCase():
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        assert (rms < 1.0e-05) == True
+        assert rms < 1.0e-05
 
     def test_lowpass_vs_pitsa(self):
         """
@@ -107,7 +107,7 @@ class FilterTestCase():
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        assert (rms < 1.0e-05) == True
+        assert rms < 1.0e-05
 
     def test_lowpass_zphsh_vs_pitsa(self):
         """
@@ -139,7 +139,7 @@ class FilterTestCase():
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        assert (rms < 1.0e-05) == True
+        assert rms < 1.0e-05
 
     def test_highpass_vs_pitsa(self):
         """
@@ -165,7 +165,7 @@ class FilterTestCase():
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        assert (rms < 1.0e-05) == True
+        assert rms < 1.0e-05
 
     def test_highpass_zphsh_vs_pitsa(self):
         """
@@ -197,7 +197,7 @@ class FilterTestCase():
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        assert (rms < 1.0e-05) == True
+        assert rms < 1.0e-05
 
     def test_envelope_vs_pitsa(self):
         """
@@ -217,7 +217,7 @@ class FilterTestCase():
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        assert (rms < 1.0e-02) == True
+        assert rms < 1.0e-02
 
     def test_lowpass_cheby_2(self):
         """
@@ -269,9 +269,9 @@ class FilterTestCase():
                     assert len(w) == 3
                     for w_ in w:
                         assert 'Selected high corner frequency ' in \
-                                        str(w[0].message)
+                            str(w[0].message)
                         assert 'Applying a high-pass instead.' in \
-                                        str(w[0].message)
+                            str(w[0].message)
                 for got in (got1, got2, got3):
                     np.testing.assert_allclose(got, expected, rtol=1e-3,
                                                atol=0.9)

@@ -107,12 +107,12 @@ class QuakeMLTestCase():
         assert len(event.comments) == 2
         c = event.comments
         assert c[0].text == 'Relocated after re-evaluation'
-        assert c[0].resource_id == None
+        assert c[0].resource_id is None
         assert c[0].creation_info.agency_id == 'EMSC'
         assert c[1].text == 'Another comment'
         assert c[1].resource_id == \
             ResourceIdentifier(id="smi:some/comment/id/number_3")
-        assert c[1].creation_info == None
+        assert c[1].creation_info is None
         # event descriptions
         assert len(event.event_descriptions) == 3
         d = event.event_descriptions
@@ -121,7 +121,7 @@ class QuakeMLTestCase():
         assert d[1].text == 'NEAR EAST COAST OF HONSHU, JAPAN'
         assert d[1].type == 'Flinn-Engdahl region'
         assert d[2].text == 'free-form string'
-        assert d[2].type == None
+        assert d[2].type is None
         # creation info
         assert event.creation_info.author == "Erika Mustermann"
         assert event.creation_info.agency_id == "EMSC"
@@ -153,16 +153,16 @@ class QuakeMLTestCase():
                 'smi:www.iris.edu/ws/event/query?originId=7680412')
         assert origin.time == UTCDateTime("2011-03-11T05:46:24.1200")
         assert origin.latitude == 38.297
-        assert origin.latitude_errors.lower_uncertainty == None
+        assert origin.latitude_errors.lower_uncertainty is None
         assert origin.longitude == 142.373
-        assert origin.longitude_errors.uncertainty == None
+        assert origin.longitude_errors.uncertainty is None
         assert origin.depth == 29.0
         assert origin.depth_errors.confidence_level == 50.0
         assert origin.depth_type == "from location"
         assert origin.method_id == \
             ResourceIdentifier(id="smi:some/method/NA")
-        assert origin.time_fixed == None
-        assert origin.epicenter_fixed == False
+        assert origin.time_fixed is None
+        assert not origin.epicenter_fixed
         assert origin.reference_system_id == \
             ResourceIdentifier(id="smi:some/reference/muh")
         assert origin.earth_model_id == \
@@ -175,16 +175,16 @@ class QuakeMLTestCase():
         assert len(origin.composite_times) == 2
         c = origin.composite_times
         assert c[0].year == 2029
-        assert c[0].month == None
-        assert c[0].day == None
+        assert c[0].month is None
+        assert c[0].day is None
         assert c[0].hour == 12
-        assert c[0].minute == None
-        assert c[0].second == None
-        assert c[1].year == None
-        assert c[1].month == None
-        assert c[1].day == None
+        assert c[0].minute is None
+        assert c[0].second is None
+        assert c[1].year is None
+        assert c[1].month is None
+        assert c[1].day is None
         assert c[1].hour == 1
-        assert c[1].minute == None
+        assert c[1].minute is None
         assert c[1].second == 29.124234
         # quality
         assert origin.quality.used_station_count == 16
@@ -192,12 +192,12 @@ class QuakeMLTestCase():
         assert origin.quality.azimuthal_gap == 231
         assert origin.quality.maximum_distance == 53.03
         assert origin.quality.minimum_distance == 2.45
-        assert origin.quality.associated_phase_count == None
-        assert origin.quality.associated_station_count == None
-        assert origin.quality.depth_phase_count == None
-        assert origin.quality.secondary_azimuthal_gap == None
-        assert origin.quality.ground_truth_level == None
-        assert origin.quality.median_distance == None
+        assert origin.quality.associated_phase_count is None
+        assert origin.quality.associated_station_count is None
+        assert origin.quality.depth_phase_count is None
+        assert origin.quality.secondary_azimuthal_gap is None
+        assert origin.quality.ground_truth_level is None
+        assert origin.quality.median_distance is None
         # comments
         assert len(origin.comments) == 2
         c = origin.comments
@@ -205,16 +205,16 @@ class QuakeMLTestCase():
         assert c[0].resource_id == \
             ResourceIdentifier(id="smi:some/comment/reference")
         assert c[0].creation_info.author == 'EMSC'
-        assert c[1].resource_id == None
-        assert c[1].creation_info == None
+        assert c[1].resource_id is None
+        assert c[1].creation_info is None
         assert c[1].text == 'Another comment'
         # creation info
         assert origin.creation_info.author == "NEIC"
-        assert origin.creation_info.agency_id == None
-        assert origin.creation_info.author_uri == None
-        assert origin.creation_info.agency_uri == None
-        assert origin.creation_info.creation_time == None
-        assert origin.creation_info.version == None
+        assert origin.creation_info.agency_id is None
+        assert origin.creation_info.author_uri is None
+        assert origin.creation_info.agency_uri is None
+        assert origin.creation_info.creation_time is None
+        assert origin.creation_info.version is None
         # origin uncertainty
         u = origin.origin_uncertainty
         assert u.preferred_description == "uncertainty ellipse"
@@ -263,16 +263,16 @@ class QuakeMLTestCase():
         assert c[0].resource_id == \
             ResourceIdentifier(id="smi:some/comment/id/muh")
         assert c[0].creation_info.author == 'EMSC'
-        assert c[1].creation_info == None
+        assert c[1].creation_info is None
         assert c[1].text == 'Another comment'
-        assert c[1].resource_id == None
+        assert c[1].resource_id is None
         # creation info
         assert mag.creation_info.author == "NEIC"
-        assert mag.creation_info.agency_id == None
-        assert mag.creation_info.author_uri == None
-        assert mag.creation_info.agency_uri == None
-        assert mag.creation_info.creation_time == None
-        assert mag.creation_info.version == None
+        assert mag.creation_info.agency_id is None
+        assert mag.creation_info.author_uri is None
+        assert mag.creation_info.agency_uri is None
+        assert mag.creation_info.creation_time is None
+        assert mag.creation_info.version is None
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -289,7 +289,8 @@ class QuakeMLTestCase():
         assert_no_extras(catalog)
         assert len(catalog) == 1
         assert len(catalog[0].magnitudes) == 1
-        assert len(catalog[0].magnitudes[0].station_magnitude_contributions) == 2
+        assert len(
+            catalog[0].magnitudes[0].station_magnitude_contributions) == 2
         # Check the first stationMagnitudeContribution object.
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[0]
@@ -338,7 +339,7 @@ class QuakeMLTestCase():
         assert mag.waveform_id == \
             WaveformStreamID(network_code='BW', station_code='FUR',
                              resource_uri="smi:ch.ethz.sed/waveform/201754")
-        assert mag.creation_info == None
+        assert mag.creation_info is None
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:
             original = fp.read()
@@ -487,12 +488,12 @@ class QuakeMLTestCase():
         assert len(fm.comments) == 2
         c = fm.comments
         assert c[0].text == 'Relocated after re-evaluation'
-        assert c[0].resource_id == None
+        assert c[0].resource_id is None
         assert c[0].creation_info.agency_id == 'MUH'
         assert c[1].text == 'Another MUH'
         assert c[1].resource_id == \
             ResourceIdentifier(id="smi:some/comment/id/number_3")
-        assert c[1].creation_info == None
+        assert c[1].creation_info is None
         # creation info
         assert fm.creation_info.author == "Erika Mustermann"
         assert fm.creation_info.agency_id == "MUH"
@@ -518,9 +519,9 @@ class QuakeMLTestCase():
         assert round(abs(fm.principal_axes.p_axis.azimuth-86.0), 7) == 0
         assert round(abs(fm.principal_axes.p_axis.plunge-10.0), 7) == 0
         assert round(abs(fm.principal_axes.p_axis.length--1.180e+18), 7) == 0
-        assert fm.principal_axes.n_axis.azimuth == None
-        assert fm.principal_axes.n_axis.plunge == None
-        assert fm.principal_axes.n_axis.length == None
+        assert fm.principal_axes.n_axis.azimuth is None
+        assert fm.principal_axes.n_axis.plunge is None
+        assert fm.principal_axes.n_axis.length is None
         # momentTensor
         mt = fm.moment_tensor
         assert mt.resource_id == \
@@ -661,9 +662,9 @@ class QuakeMLTestCase():
         """
         # testing empty event
         ev = Event()
-        assert ev.preferred_origin() == None
-        assert ev.preferred_magnitude() == None
-        assert ev.preferred_focal_mechanism() == None
+        assert ev.preferred_origin() is None
+        assert ev.preferred_magnitude() is None
+        assert ev.preferred_focal_mechanism() is None
         # testing existing event
         filename = os.path.join(self.path, 'preferred.xml')
         catalog = read_events(filename)
@@ -742,7 +743,7 @@ class QuakeMLTestCase():
         # Moment tensor.
         mt = fm.moment_tensor.tensor
         assert (fm.moment_tensor.scalar_moment - scalar_moment) / \
-                        scalar_moment < scalar_moment * 1E-10
+            scalar_moment < scalar_moment * 1E-10
         assert mt.m_rr == mrr
         assert mt.m_pp == mpp
         assert mt.m_tt == mtt
@@ -803,7 +804,7 @@ class QuakeMLTestCase():
         assert amp.time_window.begin == 0.0
         assert amp.time_window.end == 0.51424
         assert amp.time_window.reference == \
-                         UTCDateTime("2007-10-10T14:40:39.055")
+            UTCDateTime("2007-10-10T14:40:39.055")
 
     def test_write_amplitude_time_window(self):
         """
@@ -1019,7 +1020,7 @@ class QuakeMLTestCase():
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
         assert_no_extras(cat)
-        assert cat[0].focal_mechanisms[0].moment_tensor == None
+        assert cat[0].focal_mechanisms[0].moment_tensor is None
 
     def test_avoid_empty_stub_elements(self):
         """
@@ -1039,9 +1040,10 @@ class QuakeMLTestCase():
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
         assert_no_extras(cat)
-        assert cat[0].focal_mechanisms[0].moment_tensor.tensor == None
-        assert cat[0].focal_mechanisms[0].moment_tensor.source_time_function == \
-            None
+        assert cat[0].focal_mechanisms[0].moment_tensor.tensor is None
+        assert \
+            cat[0].focal_mechanisms[0].moment_tensor.source_time_function \
+            is None
         # Test 2: Test subelements of focal_mechanism
         memfile = io.BytesIO()
         # create virtually empty FocalMechanism
@@ -1054,8 +1056,8 @@ class QuakeMLTestCase():
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
         assert_no_extras(cat)
-        assert cat[0].focal_mechanisms[0].nodal_planes == None
-        assert cat[0].focal_mechanisms[0].principal_axes == None
+        assert cat[0].focal_mechanisms[0].nodal_planes is None
+        assert cat[0].focal_mechanisms[0].principal_axes is None
 
     def test_writing_invalid_quakeml_id(self):
         """
@@ -1074,9 +1076,9 @@ class QuakeMLTestCase():
                 cat2 = read_events(tf.name)
         assert len(w) == 19
         assert w[0].message.args[0] == \
-            "'smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)' " \
-            "is not a valid QuakeML URI. It will be in the final file but " \
-            "note that the file will not be a valid QuakeML file."
+            ("'smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)' "
+             "is not a valid QuakeML URI. It will be in the final file but "
+             "note that the file will not be a valid QuakeML file.")
         assert cat2[0].resource_id.id == \
             "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)"
 
@@ -1090,11 +1092,11 @@ class QuakeMLTestCase():
             cat = read_events(filename)
         assert len(w) == 1
         assert w[0].message.args[0] == \
-            'Setting attribute "depth_type" failed. Value "randomized" could ' \
-            'not be converted to type "Enum(["from location", "from moment ' \
-            'tensor inversion", ..., "operator assigned", "other"])". The ' \
-            'attribute "depth_type" will not be set and will be missing in ' \
-            'the resulting object.'
+            ('Setting attribute "depth_type" failed. Value "randomized" could '
+             'not be converted to type "Enum(["from location", "from moment '
+             'tensor inversion", ..., "operator assigned", "other"])". The '
+             'attribute "depth_type" will not be set and will be missing in '
+             'the resulting object.')
         # It should of course not be set.
         assert cat[0].origins[0].depth_type is None
 

@@ -3,6 +3,7 @@
 The obspy.clients.syngine test suite.
 """
 import io
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -47,11 +48,10 @@ class ClientTestCase():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         'http://service.iris.edu/irisws/syngine/1/info'
-        assert p.call_args[1]["params"] == \
-                         {'model': 'test_model'}
+            'http://service.iris.edu/irisws/syngine/1/info'
+        assert p.call_args[1]["params"] == {'model': 'test_model'}
         assert p.call_args[1]["headers"] == \
-                         {'User-Agent': DEFAULT_TESTING_USER_AGENT}
+            {'User-Agent': DEFAULT_TESTING_USER_AGENT}
 
     def test_get_model_info(self):
         """
@@ -74,10 +74,10 @@ class ClientTestCase():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         'http://service.iris.edu/irisws/syngine/1/models'
-        assert p.call_args[1]["params"] == None
+            'http://service.iris.edu/irisws/syngine/1/models'
+        assert p.call_args[1]["params"] is None
         assert p.call_args[1]["headers"] == \
-                         {'User-Agent': DEFAULT_TESTING_USER_AGENT}
+            {'User-Agent': DEFAULT_TESTING_USER_AGENT}
 
     def test_get_available_models(self):
         models = self.c.get_available_models()
@@ -85,8 +85,7 @@ class ClientTestCase():
         assert len(models) > 3
         assert "ak135f_5s" in models
         # Check random key.
-        assert models["ak135f_5s"]["components"] == \
-                         "vertical and horizontal"
+        assert models["ak135f_5s"]["components"] == "vertical and horizontal"
 
     def test_get_service_version_mock(self):
         with mock.patch("requests.get") as p:
@@ -98,10 +97,10 @@ class ClientTestCase():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         'http://service.iris.edu/irisws/syngine/1/version'
-        assert p.call_args[1]["params"] == None
+            'http://service.iris.edu/irisws/syngine/1/version'
+        assert p.call_args[1]["params"] is None
         assert p.call_args[1]["headers"] == \
-                         {'User-Agent': DEFAULT_TESTING_USER_AGENT}
+            {'User-Agent': DEFAULT_TESTING_USER_AGENT}
 
     def test_get_waveforms_mock(self):
         """
@@ -127,7 +126,7 @@ class ClientTestCase():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         "http://service.iris.edu/irisws/syngine/1/query"
+            "http://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "components": "ZRT",
             "eventid": "GCMT:M110302J",
@@ -136,7 +135,7 @@ class ClientTestCase():
             "network": "IU",
             "station": "ANMO"}
         assert p.call_args[1]["headers"] == \
-                         {"User-Agent": DEFAULT_TESTING_USER_AGENT}
+            {"User-Agent": DEFAULT_TESTING_USER_AGENT}
 
         # http://service.iris.edu/irisws/syngine/1/query?network=_GSN&
         # components=Z&eventid=GCMT:M110302J&endtime=1800
@@ -152,7 +151,7 @@ class ClientTestCase():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         "http://service.iris.edu/irisws/syngine/1/query"
+            "http://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "components": "Z",
             "endtime": 1800.0,
@@ -161,7 +160,7 @@ class ClientTestCase():
             "model": "ak135f_5s",
             "network": "_GSN"}
         assert p.call_args[1]["headers"] == \
-                         {"User-Agent": DEFAULT_TESTING_USER_AGENT}
+            {"User-Agent": DEFAULT_TESTING_USER_AGENT}
 
         # http://service.iris.edu/irisws/syngine/1/query?network=_GSN&
         # components=Z&eventid=GCMT:M110302J&starttime=P-10&endtime=ScS%2B60
@@ -178,7 +177,7 @@ class ClientTestCase():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         "http://service.iris.edu/irisws/syngine/1/query"
+            "http://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "components": "Z",
             "starttime": "P-10",
@@ -188,7 +187,7 @@ class ClientTestCase():
             "model": "ak135f_5s",
             "network": "_GSN"}
         assert p.call_args[1]["headers"] == \
-                         {"User-Agent": DEFAULT_TESTING_USER_AGENT}
+            {"User-Agent": DEFAULT_TESTING_USER_AGENT}
 
     def test_error_handling_arguments(self):
         # Floating points value
@@ -214,7 +213,7 @@ class ClientTestCase():
                                  sourcemomenttensor=[1, 2, 3, 4, 5, 6])
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         "http://service.iris.edu/irisws/syngine/1/query"
+            "http://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "model": "ak135f_5s",
             "format": "miniseed",
@@ -226,7 +225,7 @@ class ClientTestCase():
                                  sourcedoublecouple=[1, 2, 3, 4])
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         "http://service.iris.edu/irisws/syngine/1/query"
+            "http://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "model": "ak135f_5s",
             "format": "miniseed",
@@ -238,7 +237,7 @@ class ClientTestCase():
                                  sourceforce=[3.32, 4.23, 5.11])
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-                         "http://service.iris.edu/irisws/syngine/1/query"
+            "http://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "model": "ak135f_5s",
             "format": "miniseed",

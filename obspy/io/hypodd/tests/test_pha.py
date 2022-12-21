@@ -20,11 +20,11 @@ class PHATestCase():
         self.fname2 = os.path.join(self.path, 'data', '60s_nan.pha')
 
     def test_is_pha(self):
-        assert pha._is_pha(self.fname) == True
+        assert pha._is_pha(self.fname)
 
     def test_is_not_pha(self):
         fname = os.path.join(self.path, 'test_pha.py')
-        assert pha._is_pha(fname) == False
+        assert not pha._is_pha(fname)
 
     def test_read_pha(self):
         cat = read_events(self.fname)
@@ -55,7 +55,7 @@ class PHATestCase():
         ori = event.preferred_origin()
         assert round(abs(ori.latitude_errors.uncertainty-0.0045), 5) == 0
         assert ori.latitude_errors.uncertainty < \
-                        ori.longitude_errors.uncertainty
+            ori.longitude_errors.uncertainty
         assert ori.depth_errors.uncertainty == 400
         assert ori.quality.standard_error == 0.3
         assert ori.quality.associated_phase_count == 2

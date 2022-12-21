@@ -104,7 +104,7 @@ class CoreTestCase():
         assert ah.event.latitude == 0.0
         assert ah.event.longitude == 0.0
         assert ah.event.depth == 0.0
-        assert ah.event.origin_time == None
+        assert ah.event.origin_time is None
         assert ah.event.comment == 'null'
         # record
         assert ah.record.type == 1
@@ -155,7 +155,7 @@ class CoreTestCase():
         assert ah.event.latitude == 0.0
         assert ah.event.longitude == 0.0
         assert ah.event.depth == 0.0
-        assert ah.event.origin_time == None
+        assert ah.event.origin_time is None
         assert ah.event.comment == 'null'
         # record
         assert ah.record.type == 1
@@ -207,8 +207,10 @@ class CoreTestCase():
         assert round(abs(ah.station.longitude-70.282799), 6) == 0
         # calibration
         assert len(ah.station.poles) == 7
-        assert round(abs(ah.station.poles[0]-complex(-1.342653e-01, 1.168836e-01)), 6) == 0
-        assert round(abs(ah.station.poles[1]-complex(-1.342653e-01, -1.168836e-01)), 6) == 0
+        assert round(abs(
+            ah.station.poles[0]-complex(-1.342653e-01, 1.168836e-01)), 6) == 0
+        assert round(abs(
+            ah.station.poles[1]-complex(-1.342653e-01, -1.168836e-01)), 6) == 0
         assert len(ah.station.zeros) == 4
         assert round(abs(ah.station.zeros[0]-complex(0.0, 0.0)), 6) == 0
         assert round(abs(ah.station.zeros[1]-complex(0.0, 0.0)), 6) == 0
@@ -235,7 +237,7 @@ class CoreTestCase():
         assert ah.record.abscissa_min == 0.0
         assert ah.record.comment == 'DS response in counts/nm;'
         assert ah.record.log == \
-                         'brv2ah: ahtedit;demeaned;modhead;modhead;ahtedit;'
+            'brv2ah: ahtedit;demeaned;modhead;modhead;ahtedit;'
         # extras
         assert len(ah.extras) == 21
         assert ah.extras[0] == 0.0

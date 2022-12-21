@@ -91,18 +91,12 @@ class CoreTestCase():
         # check if equal
         assert tr3.stats['station'] == tr1.stats['station']
         assert tr3.stats.npts == tr1.stats.npts
-        assert tr3.stats['sampling_rate'] == \
-                         tr1.stats['sampling_rate']
-        assert tr3.stats.get('channel') == \
-                         tr1.stats.get('channel')
-        assert tr3.stats.get('starttime') == \
-                         tr1.stats.get('starttime')
-        assert tr3.stats.get('calib') == \
-                         tr1.stats.get('calib')
-        assert tr3.stats.gse2.get('vang') == \
-                         tr1.stats.gse2.get('vang')
-        assert tr3.stats.gse2.get('calper') == \
-                         tr1.stats.gse2.get('calper')
+        assert tr3.stats['sampling_rate'] == tr1.stats['sampling_rate']
+        assert tr3.stats.get('channel') == tr1.stats.get('channel')
+        assert tr3.stats.get('starttime') == tr1.stats.get('starttime')
+        assert tr3.stats.get('calib') == tr1.stats.get('calib')
+        assert tr3.stats.gse2.get('vang') == tr1.stats.gse2.get('vang')
+        assert tr3.stats.gse2.get('calper') == tr1.stats.gse2.get('calper')
         np.testing.assert_equal(tr3.data, tr1.data)
 
     def test_read_and_write_streams_via_obspy(self):
@@ -239,8 +233,7 @@ class CoreTestCase():
         assert round(abs(tr.stats['sampling_rate']-124.9999924), 7) == 0
         assert tr.stats.get('channel') == '  Z'
         assert round(abs(tr.stats.get('calib')-16.0000001), 7) == 0
-        assert str(tr.stats.starttime) == \
-                         '2003-11-19T01:16:59.990000Z'
+        assert str(tr.stats.starttime) == '2003-11-19T01:16:59.990000Z'
         assert tr.data[0:10].tolist() == testdata
 
     def test_read_gse1_head_via_obspy(self):
@@ -256,8 +249,7 @@ class CoreTestCase():
         assert round(abs(tr.stats['sampling_rate']-124.9999924), 7) == 0
         assert tr.stats.get('channel') == '  Z'
         assert round(abs(tr.stats.get('calib')-16.0000001), 7) == 0
-        assert str(tr.stats.starttime) == \
-                         '2003-11-19T01:16:59.990000Z'
+        assert str(tr.stats.starttime) == '2003-11-19T01:16:59.990000Z'
 
     def test_read_intv_gse1_via_obspy(self):
         """
@@ -285,7 +277,7 @@ class CoreTestCase():
         assert st[0].stats.get('channel') == ' BZ'
         assert round(abs(st[0].stats.get('calib')-0.9900001), 7) == 0
         assert st[0].stats.starttime == \
-                         UTCDateTime('2003-11-02T02:25:00.000000Z')
+            UTCDateTime('2003-11-02T02:25:00.000000Z')
         # second trace
         assert len(st) == 2
         assert st[1].stats['station'] == 'GRA1'
@@ -294,7 +286,7 @@ class CoreTestCase():
         assert st[1].stats.get('channel') == ' BN'
         assert round(abs(st[1].stats.get('calib')-0.9200001), 7) == 0
         assert st[1].stats.starttime == \
-                         UTCDateTime('2003-11-02T02:25:00.000000Z')
+            UTCDateTime('2003-11-02T02:25:00.000000Z')
         # check first 8 samples
         assert st[0].data[0:8].tolist() == data1
         # check last 8 samples
@@ -359,6 +351,5 @@ class CoreTestCase():
         assert round(abs(tr.stats['sampling_rate']-50.0), 7) == 0
         assert tr.stats.get('channel') == 'CPZ'
         assert round(abs(tr.stats.get('calib')-0.313), 7) == 0
-        assert str(tr.stats.starttime) == \
-                         '1990-04-07T00:07:33.000000Z'
+        assert str(tr.stats.starttime) == '1990-04-07T00:07:33.000000Z'
         assert tr.data[0:10].tolist() == testdata

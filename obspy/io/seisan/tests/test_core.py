@@ -71,9 +71,9 @@ class CoreTestCase():
         assert st[20].stats.location == 'J'
         assert st[20].stats.channel == 'SBE'
         assert st[20].stats.starttime == \
-                         UTCDateTime('1997-01-30T10:48:54.040000Z')
+            UTCDateTime('1997-01-30T10:48:54.040000Z')
         assert st[20].stats.endtime == \
-                         UTCDateTime('1997-01-30T10:49:42.902881Z')
+            UTCDateTime('1997-01-30T10:49:42.902881Z')
         assert round(abs(st[20].stats.sampling_rate-75.2), 1) == 0
         assert st[20].stats.npts == 3675
         assert round(abs(st[20].stats.delta-0.0133), 4) == 0
@@ -82,7 +82,7 @@ class CoreTestCase():
         # less values than the original Seisan file!)
         assert st[20].stats.npts == 3675
         assert list(st[20].data[1:3666]) == \
-                         np.loadtxt(datafile, dtype=np.int32).tolist()
+            np.loadtxt(datafile, dtype=np.int32).tolist()
 
         # 2 - little endian, 32 bit, version 7
         fn = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
@@ -98,8 +98,7 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 1
         assert st[0].stats.npts == 12000
-        assert list(st[0].data[0:5]) == \
-                         [24, 64, 139, 123, 99]
+        assert list(st[0].data[0:5]) == [24, 64, 139, 123, 99]
 
         # 4 - little endian, 32 bit, version 6, 3 channels
         fn = os.path.join(self.path, '2005-07-23-1452-04S.CER___030')
@@ -107,8 +106,7 @@ class CoreTestCase():
         st.verify()
         assert len(st) == 3
         assert st[0].stats.npts == 10650
-        assert list(st[0].data[0:5]) == \
-                         [7520, 7484, 7482, 7480, 7478]
+        assert list(st[0].data[0:5]) == [7520, 7484, 7482, 7480, 7478]
 
     def test_read_seisan_head_only(self):
         """
@@ -123,9 +121,9 @@ class CoreTestCase():
         assert st[0].stats.location == 'J'
         assert st[0].stats.channel == 'SBZ'
         assert st[0].stats.starttime == \
-                         UTCDateTime('1997-01-30T10:48:54.040000Z')
+            UTCDateTime('1997-01-30T10:48:54.040000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('1997-01-30T10:49:42.902881Z')
+            UTCDateTime('1997-01-30T10:49:42.902881Z')
         assert round(abs(st[0].stats.sampling_rate-75.2), 1) == 0
         assert st[0].stats.npts == 3675
         assert round(abs(st[20].stats.delta-0.0133), 4) == 0
@@ -140,9 +138,9 @@ class CoreTestCase():
         assert st[0].stats.location == '0'
         assert st[0].stats.channel == 'B0Z'
         assert st[0].stats.starttime == \
-                         UTCDateTime(2001, 1, 13, 17, 45, 1, 999000)
+            UTCDateTime(2001, 1, 13, 17, 45, 1, 999000)
         assert st[0].stats.endtime == \
-                         UTCDateTime(2001, 1, 13, 17, 50, 1, 949000)
+            UTCDateTime(2001, 1, 13, 17, 50, 1, 949000)
         assert st[0].stats.sampling_rate == 20.0
         assert st[0].stats.npts == 6000
         assert list(st[0].data) == []  # no data
@@ -155,10 +153,9 @@ class CoreTestCase():
         assert st[0].stats.station == 'mart'
         assert st[0].stats.location == '1'
         assert st[0].stats.channel == 'cp'
-        assert st[0].stats.starttime == \
-                         UTCDateTime(2017, 7, 22, 9, 30)
+        assert st[0].stats.starttime == UTCDateTime(2017, 7, 22, 9, 30)
         assert st[0].stats.endtime == \
-                         UTCDateTime(2017, 7, 22, 9, 31, 59, 990000)
+            UTCDateTime(2017, 7, 22, 9, 31, 59, 990000)
         assert st[0].stats.sampling_rate == 100.0
         assert st[0].stats.npts == 12000
         assert list(st[0].data) == []
@@ -175,9 +172,9 @@ class CoreTestCase():
             assert st[i].stats.station == 'CER'
             assert st[i].stats.location == ''
             assert st[i].stats.starttime == \
-                             UTCDateTime('2005-07-23T14:52:04.000000Z')
+                UTCDateTime('2005-07-23T14:52:04.000000Z')
             assert st[i].stats.endtime == \
-                             UTCDateTime('2005-07-23T14:53:14.993333Z')
+                UTCDateTime('2005-07-23T14:53:14.993333Z')
             assert st[i].stats.sampling_rate == 150.0
             assert st[i].stats.npts == 10650
             assert list(st[i].data) == []

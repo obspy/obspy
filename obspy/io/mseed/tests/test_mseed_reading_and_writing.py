@@ -51,7 +51,7 @@ class MSEEDReadingAndWritingTestCase():
                      '2008-01-01T00:00:18.455000Z']
         assert 4 == len(stream.traces)
         for _k, _i in enumerate(stream.traces):
-            assert True == isinstance(_i, Trace)
+            assert isinstance(_i, Trace)
             assert str(_i.data) == '[]'
             assert str(_i.stats.starttime) == starttime[_k]
 
@@ -139,12 +139,9 @@ class MSEEDReadingAndWritingTestCase():
                     # Assert the new stream still has the chosen attributes.
                     # This should mean that writing as well as reading them
                     # works.
-                    assert new_stream[0].stats.mseed.byteorder == \
-                                     byteorder
-                    assert new_stream[0].stats.mseed.record_length == \
-                                     reclen
-                    assert new_stream[0].stats.mseed.encoding == \
-                                     encoding
+                    assert new_stream[0].stats.mseed.byteorder == byteorder
+                    assert new_stream[0].stats.mseed.record_length == reclen
+                    assert new_stream[0].stats.mseed.encoding == encoding
 
                     np.testing.assert_array_equal(this_stream[0].data,
                                                   new_stream[0].data)
@@ -527,8 +524,8 @@ class MSEEDReadingAndWritingTestCase():
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             with pytest.raises(ValueError):
-                data_stream.write(tempfile,
-                              format="MSEED", encoding=11, reclen=512)
+                data_stream.write(tempfile, format="MSEED", encoding=11,
+                                  reclen=512)
 
         # Seq num out of range #1
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
@@ -540,8 +537,8 @@ class MSEEDReadingAndWritingTestCase():
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             with pytest.raises(ValueError):
-                data_stream.write(tempfile,
-                              format="MSEED", encoding=11, reclen=512)
+                data_stream.write(tempfile, format="MSEED", encoding=11,
+                                  reclen=512)
         # Seq num out of range #2
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
                   'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
@@ -552,8 +549,8 @@ class MSEEDReadingAndWritingTestCase():
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             with pytest.raises(ValueError):
-                data_stream.write(tempfile,
-                              format="MSEED", encoding=11, reclen=512)
+                data_stream.write(tempfile, format="MSEED", encoding=11,
+                                  reclen=512)
 
         # Seq num missing, defaults to 1
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
@@ -722,8 +719,7 @@ class MSEEDReadingAndWritingTestCase():
                     stream2[0].stats.mseed.pop('filesize')
                     stream2[0].stats.mseed.pop('number_of_records')
                     # compare stats
-                    assert stream[0].stats.mseed == \
-                                     stream2[0].stats.mseed
+                    assert stream[0].stats.mseed == stream2[0].stats.mseed
                     del stream
                     del stream2
 
@@ -822,9 +818,8 @@ class MSEEDReadingAndWritingTestCase():
                 for dtype in ["i4", "i4", "f4", "f8", "S1"]:
                     for enc in ["<", ">", "="]:
                         tr = st2.pop(0).data
-                        assert tr.dtype.kind + \
-                                         str(tr.dtype.itemsize) == \
-                                         dtype
+                        assert \
+                            tr.dtype.kind + str(tr.dtype.itemsize) == dtype
                         # byte order is always native (=)
                         typed_data = data.astype("=" + dtype)
                         np.testing.assert_array_equal(tr, typed_data)
@@ -902,8 +897,7 @@ class MSEEDReadingAndWritingTestCase():
                 ms = _MSStruct(cur_file, init_msrmsf=False)
                 ms.read(-1, 0, 1, 0)
                 # Check values.
-                assert getattr(ms.msr.contents, 'encoding') == \
-                                 files[file][2]
+                assert getattr(ms.msr.contents, 'encoding') == files[file][2]
                 if _i == 'littleEndian':
                     assert getattr(ms.msr.contents, 'byteorder') == 0
                 else:
@@ -1042,9 +1036,9 @@ class MSEEDReadingAndWritingTestCase():
                 assert len(st) == 1
                 assert st[0].id == "NL.HGN.00.BHZ"
                 assert st[0].stats.starttime == \
-                                 UTCDateTime("2003-05-29T02:13:22.043400Z")
+                    UTCDateTime("2003-05-29T02:13:22.043400Z")
                 assert st[0].stats.endtime == \
-                                 UTCDateTime("2003-05-29T02:18:20.693400Z")
+                    UTCDateTime("2003-05-29T02:18:20.693400Z")
                 assert st[0].stats.npts == 11947
                 assert list(st[0].data[0:3]) == [2787, 2776, 2774]
 
@@ -1158,8 +1152,7 @@ class MSEEDReadingAndWritingTestCase():
             st = read(filename, reclen=512)
 
         assert len(w) == 1
-        assert "Last reclen exceeds buflen, skipping" in \
-                      str(w[-1].message)
+        assert "Last reclen exceeds buflen, skipping" in str(w[-1].message)
         assert st[0].stats.station == 'BGLD'
 
     def test_verbosity(self):
@@ -1176,8 +1169,7 @@ class MSEEDReadingAndWritingTestCase():
         assert w[0].category == InternalMSEEDWarning
 
         assert "calling msr_parse with" in out.stdout
-        assert "buflen=512, reclen=-1, dataflag=0, verbose=2" in \
-                      out.stdout
+        assert "buflen=512, reclen=-1, dataflag=0, verbose=2" in out.stdout
         assert st[0].stats.station == 'UH3'
 
     def test_writing_with_some_encoding_fails(self):
@@ -1206,11 +1198,9 @@ class MSEEDReadingAndWritingTestCase():
             else:
                 # Test with integer code and string name.
                 with pytest.raises(ValueError):
-                    tr2.write(buf,
-                                  format="mseed", encoding=encoding)
+                    tr2.write(buf, format="mseed", encoding=encoding)
                 with pytest.raises(ValueError):
-                    tr2.write(buf,
-                                  format="mseed", encoding=value[0])
+                    tr2.write(buf, format="mseed", encoding=value[0])
 
             # Test again by setting the encoding on the trace stats.
             tr2.stats.mseed = AttribDict()
@@ -1325,24 +1315,21 @@ class MSEEDReadingAndWritingTestCase():
         st = Stream([Trace(data=data, header=stat_header)])
         with NamedTemporaryFile() as tf:
             with pytest.raises(ValueError):
-                st.write(tf, format="mseed",
-                              encoding=11, reclen=512)
+                st.write(tf, format="mseed", encoding=11, reclen=512)
 
         # Test invalid data: <0 value
         stat_header['mseed']['blkt1001']['timing_quality'] = -1
         st = Stream([Trace(data=data, header=stat_header)])
         with NamedTemporaryFile() as tf:
             with pytest.raises(ValueError):
-                st.write(tf, format="mseed",
-                              encoding=11, reclen=512)
+                st.write(tf, format="mseed", encoding=11, reclen=512)
 
         # Test invalid data: > 100 value
         stat_header['mseed']['blkt1001']['timing_quality'] = 254
         st = Stream([Trace(data=data, header=stat_header)])
         with NamedTemporaryFile() as tf:
             with pytest.raises(ValueError):
-                st.write(tf, format="mseed",
-                              encoding=11, reclen=512)
+                st.write(tf, format="mseed", encoding=11, reclen=512)
 
     def test_libmseed_test_cases(self):
         """
@@ -1391,10 +1378,8 @@ class MSEEDReadingAndWritingTestCase():
                 dt = UTCDateTime(dt)
 
                 assert tr.id == _id, filename
-                assert tr.stats.mseed.record_length == reclen, \
-                                 filename
-                assert tr.stats.mseed.dataquality == dq, \
-                                 filename
+                assert tr.stats.mseed.record_length == reclen, filename
+                assert tr.stats.mseed.dataquality == dq, filename
                 assert tr.stats.npts == npts, filename
                 np.testing.assert_allclose(
                     tr.stats.sampling_rate, sr, err_msg=filename)
@@ -1587,14 +1572,9 @@ class MSEEDReadingAndWritingTestCase():
         tr = st[0]
         assert 0.0 == tr.stats.sampling_rate
         assert tr.stats.mseed == \
-                         {'dataquality': 'D',
-                          'number_of_records': 1,
-                          'encoding': 'ASCII',
-                          'byteorder': '>',
-                          'record_length': 512,
-                          'filesize': 2560}
-        assert ''.join(tr.data.astype(str)) == \
-                         '001:00:00:00 REF TEK 130\r\n'
+            {'dataquality': 'D', 'number_of_records': 1, 'encoding': 'ASCII',
+             'byteorder': '>', 'record_length': 512, 'filesize': 2560}
+        assert ''.join(tr.data.astype(str)) == '001:00:00:00 REF TEK 130\r\n'
 
     def test_reading_and_writing_zero_sampling_rate_traces(self):
         """

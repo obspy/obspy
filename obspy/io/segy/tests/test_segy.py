@@ -5,6 +5,7 @@ The obspy.io.segy test suite.
 import io
 import os
 import warnings
+from unittest import mock
 
 import numpy as np
 
@@ -409,8 +410,10 @@ class SEGYTestCase():
         assert header.number_of_data_traces_per_ensemble == 24
         assert header.number_of_auxiliary_traces_per_ensemble == 0
         assert header.sample_interval_in_microseconds == 250
-        assert header.sample_interval_in_microseconds_of_original_field_recording == \
-            250
+        assert getattr(
+            header,
+            "sample_interval_in_microseconds_of_original_field_recording") \
+            == 250
         assert header.number_of_samples_per_data_trace == 8000
         assert header. \
             number_of_samples_per_data_trace_for_original_field_recording == \
@@ -433,8 +436,8 @@ class SEGYTestCase():
         assert header.measurement_system == 0
         assert header.impulse_signal_polarity == 0
         assert header.vibratory_polarity_code == 0
-        assert header.number_of_3200_byte_ext_file_header_records_following == \
-            0
+        assert header.number_of_3200_byte_ext_file_header_records_following \
+            == 0
 
     def test_unpack_trace_header(self):
         """
@@ -448,16 +451,17 @@ class SEGYTestCase():
         assert header.trace_sequence_number_within_line == 0
         assert header.trace_sequence_number_within_segy_file == 0
         assert header.original_field_record_number == 1
-        assert header.trace_number_within_the_original_field_record == \
-                         1
+        assert header.trace_number_within_the_original_field_record == 1
         assert header.energy_source_point_number == 0
         assert header.ensemble_number == 0
         assert header.trace_number_within_the_ensemble == 0
         assert header.trace_identification_code == 1
-        assert header.number_of_vertically_summed_traces_yielding_this_trace == \
+        assert \
+            header.number_of_vertically_summed_traces_yielding_this_trace == \
             5
-        assert header.number_of_horizontally_stacked_traces_yielding_this_trace == \
-            0
+        assert \
+            header.number_of_horizontally_stacked_traces_yielding_this_trace \
+            == 0
         assert header.data_use == 0
         assert getattr(
             header, 'distance_from_center_of_the_' +
@@ -523,9 +527,11 @@ class SEGYTestCase():
         assert header.over_travel_associated_with_taper == 0
         assert header.x_coordinate_of_ensemble_position_of_this_trace == 0
         assert header.y_coordinate_of_ensemble_position_of_this_trace == 0
-        assert header.for_3d_poststack_data_this_field_is_for_in_line_number == 0
-        assert header.for_3d_poststack_data_this_field_is_for_cross_line_number == \
-            0
+        assert \
+            header.for_3d_poststack_data_this_field_is_for_in_line_number == 0
+        assert \
+            header.for_3d_poststack_data_this_field_is_for_cross_line_number \
+            == 0
         assert header.shotpoint_number == 0
         assert header.scalar_to_be_applied_to_the_shotpoint_number == 0
         assert header.trace_value_measurement_unit == 0
@@ -629,8 +635,9 @@ class SEGYTestCase():
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 tr.write(buf, format="segy")
-            assert len([_i for _i in w
-                     if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
+            assert len([
+                _i for _i in w
+                if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
             buf.seek(0, 0)
             data = buf.read()
 
@@ -652,8 +659,9 @@ class SEGYTestCase():
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 st.write(buf, format="segy", textual_header_encoding="EBCDIC")
-            assert len([_i for _i in w
-                     if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
+            assert len([
+                _i for _i in w
+                if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
             buf.seek(0, 0)
             data = buf.read()
 
@@ -675,8 +683,9 @@ class SEGYTestCase():
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 st.write(buf, format="segy")
-            assert len([_i for _i in w
-                     if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
+            assert len([
+                _i for _i in w
+                if _i.category is SEGYInvalidTextualHeaderWarning]) == 0
             buf.seek(0, 0)
             data = buf.read()
 
@@ -700,11 +709,11 @@ class SEGYTestCase():
             w = [_i for _i in w
                  if _i.category is SEGYInvalidTextualHeaderWarning]
             assert len(w) == 1
-            assert w[0].message.args[0] == \
-                "The revision number in the textual header should be set as " \
-                "'C39 SEG Y REV1' for a fully valid SEG-Y file. It is set to " \
-                "'ABCDEFGHIJKLMN' which will be written to the file. Please " \
-                "change it if you want a fully valid file."
+            assert w[0].message.args[0] == (
+                "The revision number in the textual header should be set as "
+                "'C39 SEG Y REV1' for a fully valid SEG-Y file. It is set to "
+                "'ABCDEFGHIJKLMN' which will be written to the file. Please "
+                "change it if you want a fully valid file.")
             buf.seek(0, 0)
             data = buf.read()
 
@@ -727,12 +736,12 @@ class SEGYTestCase():
             w = [_i for _i in w
                  if _i.category is SEGYInvalidTextualHeaderWarning]
             assert len(w) == 1
-            assert w[0].message.args[0] == \
-                "The end header mark in the textual header should be set as " \
-                "'C40 END TEXTUAL HEADER' or as 'C40 END EBCDIC        ' for " \
-                "a fully valid SEG-Y file. It is " \
-                "set to 'ABCDEFGHIJKLMNOPQRSTUV' which will be written to the " \
-                "file. Please change it if you want a fully valid file."
+            assert w[0].message.args[0] == (
+                "The end header mark in the textual header should be set as "
+                "'C40 END TEXTUAL HEADER' or as 'C40 END EBCDIC        ' for "
+                "a fully valid SEG-Y file. It is "
+                "set to 'ABCDEFGHIJKLMNOPQRSTUV' which will be written to the "
+                "file. Please change it if you want a fully valid file.")
             buf.seek(0, 0)
             data = buf.read()
 
@@ -762,10 +771,10 @@ class SEGYTestCase():
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
                         tr.write(buf, format="segy")
-        assert err.exception.args[0] == \
-            "Failed to pack header value `number_of_data_traces_per_ensemble` " \
-            "(100000) with format `>h` due to: `'h' format requires -32768 <=" \
-            " number <= 32767`"
+        assert err.exception.args[0] == (
+            "Failed to pack header value `number_of_data_traces_per_ensemble` "
+            "(100000) with format `>h` due to: `'h' format requires -32768 <="
+            " number <= 32767`")
 
 
 def rms(x, y):

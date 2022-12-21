@@ -136,58 +136,50 @@ class RestrictionsTestCase():
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
         assert e.exception.args[0] == \
-                         "'channel_priorities' must be a list or other " \
-                         "iterable container."
+            "'channel_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities=("HHE"))
         assert e.exception.args[0] == \
-                         "'channel_priorities' must be a list or other " \
-                         "iterable container."
+            "'channel_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
         assert e.exception.args[0] == \
-                         "'channel_priorities' must be a list or other " \
-                         "iterable container."
+            "'channel_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
         assert e.exception.args[0] == \
-                         "'channel_priorities' must be a list or other " \
-                         "iterable container."
+            "'channel_priorities' must be a list or other iterable container."
 
         # And for the location priorities key.
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities="00")
         assert e.exception.args[0] == \
-                         "'location_priorities' must be a list or other " \
-                         "iterable container."
+            "'location_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities=("00"))
         assert e.exception.args[0] == \
-                         "'location_priorities' must be a list or other " \
-                         "iterable container."
+            "'location_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities="00")
         assert e.exception.args[0] == \
-                         "'location_priorities' must be a list or other " \
-                         "iterable container."
+            "'location_priorities' must be a list or other iterable container."
 
         with pytest.raises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities=("00"))
         assert e.exception.args[0] == \
-                         "'location_priorities' must be a list or other " \
-                         "iterable container."
+            "'location_priorities' must be a list or other iterable container."
 
         # All other valid things should of course still work.
         Restrictions(starttime=start, endtime=end,
@@ -265,29 +257,29 @@ class RestrictionsTestCase():
 
         # No station start-and endtime by default
         res = Restrictions(starttime=start, endtime=start + 10)
-        assert res.station_starttime == None
-        assert res.station_endtime == None
+        assert res.station_starttime is None
+        assert res.station_endtime is None
 
         # One can only set one of the two.
         res = Restrictions(starttime=start, endtime=start + 10,
                            station_starttime=start - 10)
         assert res.station_starttime == start - 10
-        assert res.station_endtime == None
+        assert res.station_endtime is None
 
         res = Restrictions(starttime=start, endtime=start + 10,
                            station_endtime=start + 20)
-        assert res.station_starttime == None
+        assert res.station_starttime is None
         assert res.station_endtime == start + 20
 
         # Will raise a ValueError if either within the time interval of the
         # normal start- and endtime.
         with pytest.raises(ValueError):
             Restrictions(starttime=start,
-                          endtime=start + 10, station_starttime=start + 1)
+                         endtime=start + 10, station_starttime=start + 1)
 
         with pytest.raises(ValueError):
             Restrictions(starttime=start,
-                          endtime=start + 10, station_endtime=start + 9)
+                         endtime=start + 10, station_endtime=start + 9)
 
         # Fine if they are equal with both.
         Restrictions(starttime=start, endtime=start + 10,
@@ -309,7 +301,7 @@ class RestrictionsTestCase():
                          endtime=obspy.UTCDateTime(2011, 2, 1),
                          limit_stations_to_inventory=inv)
         assert {("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")} == \
-                         r.limit_stations_to_inventory
+            r.limit_stations_to_inventory
 
 
 class DownloadHelpersUtilTestCase():
@@ -504,7 +496,7 @@ class DownloadHelpersUtilTestCase():
 
         assert logger.info.call_count == 1
         assert logger.info.call_args[0][0] == \
-                         "Client 'mock' - Successfully downloaded 'temp.xml'."
+            "Client 'mock' - Successfully downloaded 'temp.xml'."
         assert client.get_stations_bulk.call_count == 1
         assert client.get_stations_bulk.call_args[1]["bulk"] == bulk
         assert client.get_stations_bulk.call_args[1]["level"] == "response"
@@ -520,7 +512,7 @@ class DownloadHelpersUtilTestCase():
 
         ret_val = download_stationxml(client, client_name, bulk, filename,
                                       logger)
-        assert ret_val == None
+        assert ret_val is None
 
         assert logger.info.call_count == 1
         assert logger.info.call_args[0][0] == \
@@ -578,13 +570,12 @@ class DownloadHelpersUtilTestCase():
                         ("file_2.mseed", "BW.ALTM..EHN"),
                         ("file_3.mseed", "BW.ALTM..EHZ")]
 
-            assert ret_val == \
-                             sorted([os.path.join(tmpdir, _i[0])
-                                     for _i in contents])
+            assert ret_val == sorted([os.path.join(tmpdir, _i[0])
+                                      for _i in contents])
 
             # Make sure all files have been written.
             assert sorted(os.listdir(tmpdir)) == \
-                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
+                ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
             # Check the actual files.
             for filename, id, in contents:
                 st = obspy.read(os.path.join(tmpdir, filename))
@@ -664,13 +655,12 @@ class DownloadHelpersUtilTestCase():
                         ("file_2.mseed", "BW.ALTM..EHN"),
                         ("file_3.mseed", "BW.ALTM..EHZ")]
 
-            assert ret_val == \
-                             sorted([os.path.join(tmpdir, _i[0])
-                                     for _i in contents])
+            assert ret_val == sorted([os.path.join(tmpdir, _i[0])
+                                      for _i in contents])
 
             # Make sure all files have been written.
             assert sorted(os.listdir(tmpdir)) == \
-                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
+                ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
             # Check the actual files.
             for filename, id, in contents:
                 st = obspy.read(os.path.join(tmpdir, filename))
@@ -736,13 +726,11 @@ class DownloadHelpersUtilTestCase():
                         ("file_5.mseed", "BW.ALTM..EHE"),
                         ("file_6.mseed", "BW.ALTM..EHE")]
 
-            assert ret_val == \
-                             sorted([os.path.join(tmpdir, _i[0])
-                                     for _i in contents])
+            assert ret_val == sorted([os.path.join(tmpdir, _i[0])
+                                      for _i in contents])
 
             # Make sure all files have been written.
-            assert sorted(os.listdir(tmpdir)) == \
-                             [_i[0] for _i in contents]
+            assert sorted(os.listdir(tmpdir)) == [_i[0] for _i in contents]
 
             # The interesting thing here is that it should only send a
             # request for single time span and then split again on the
@@ -802,13 +790,12 @@ class DownloadHelpersUtilTestCase():
                         ("file_2.mseed", "BW.ALTM..EHE"),
                         ("file_3.mseed", "BW.ALTM..EHE")]
 
-            assert ret_val == \
-                             sorted([os.path.join(tmpdir, _i[0])
-                                     for _i in contents])
+            assert ret_val == sorted([os.path.join(tmpdir, _i[0])
+                                      for _i in contents])
 
             # Make sure all files have been written.
             assert sorted(os.listdir(tmpdir)) == \
-                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
+                ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
             # Check the actual files. There will be no overlap of data in
             # the files but the data should be distributed across
             # files according to some heuristics.
@@ -893,39 +880,38 @@ class DownloadHelpersUtilTestCase():
             return {"missing_channels": [c1],
                     "available_channels": [c2]}
         with pytest.raises(ValueError):
-            get_stationxml_filename(get_name,
-                          "BW", "FURT", channels, starttime, endtime)
+            get_stationxml_filename(
+                get_name, "BW", "FURT", channels, starttime, endtime)
 
         # Wrong value types should also raise.
         def get_name(network, station, channels, starttime, endtime):
-            return {"missing_channels": [c1],
-                    "available_channels": [c2],
+            return {"missing_channels": [c1], "available_channels": [c2],
                     "filename": True}
         with pytest.raises(ValueError):
-            get_stationxml_filename(get_name,
-                          "BW", "FURT", channels, starttime, endtime)
+            get_stationxml_filename(
+                get_name, "BW", "FURT", channels, starttime, endtime)
 
         def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": True,
                     "available_channels": [c2],
                     "filename": "test.xml"}
         with pytest.raises(ValueError):
-            get_stationxml_filename(get_name,
-                          "BW", "FURT", channels, starttime, endtime)
+            get_stationxml_filename(
+                get_name, "BW", "FURT", channels, starttime, endtime)
 
         def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": True,
                     "filename": "test.xml"}
         with pytest.raises(ValueError):
-            get_stationxml_filename(get_name,
-                          "BW", "FURT", channels, starttime, endtime)
+            get_stationxml_filename(
+                get_name, "BW", "FURT", channels, starttime, endtime)
 
         # It will raise a type error, if the function does not return the
         # proper type.
         with pytest.raises(TypeError):
-            get_stationxml_filename(lambda x: 1,
-                          "BW", "FURT", starttime, endtime)
+            get_stationxml_filename(
+                lambda x: 1, "BW", "FURT", starttime, endtime)
 
     def test_mseed_filename_helper(self):
         """
@@ -935,15 +921,15 @@ class DownloadHelpersUtilTestCase():
         endtime = obspy.UTCDateTime(2014, 2, 3, 4, 5, 6)
 
         # A normal string is considered a path.
-        assert get_mseed_filename("FOLDER", network="BW", station="FURT",
-                               location="", channel="BHE",
-                               starttime=starttime, endtime=endtime) == \
+        assert get_mseed_filename(
+            "FOLDER", network="BW", station="FURT", location="", channel="BHE",
+            starttime=starttime, endtime=endtime) == \
             os.path.join(
                 "FOLDER", "BW.FURT..BHE__20140102T030405Z__"
                 "20140203T040506Z.mseed")
-        assert get_mseed_filename("waveforms", network="BW", station="FURT",
-                               location="00", channel="BHE",
-                               starttime=starttime, endtime=endtime) == \
+        assert get_mseed_filename(
+            "waveforms", network="BW", station="FURT", location="00",
+            channel="BHE", starttime=starttime, endtime=endtime) == \
             os.path.join("waveforms", "BW.FURT.00.BHE__20140102T030405Z__"
                          "20140203T040506Z.mseed")
 
@@ -951,7 +937,8 @@ class DownloadHelpersUtilTestCase():
         assert get_mseed_filename(
             "{network}_{station}_{location}_{channel}_"
             "{starttime}_{endtime}.ms", network="BW", station="FURT",
-            location="", channel="BHE", starttime=starttime, endtime=endtime) == \
+            location="", channel="BHE", starttime=starttime,
+            endtime=endtime) == \
             "BW_FURT__BHE_20140102T030405Z_20140203T040506Z.ms"
         assert get_mseed_filename(
             "{network}_{station}_{location}_{channel}_"
@@ -967,21 +954,19 @@ class DownloadHelpersUtilTestCase():
             return "network" + "__" + station + location + channel
 
         # Returning a filename is possible.
-        assert get_mseed_filename(get_name, network="BW", station="FURT",
-                               location="", channel="BHE",
-                               starttime=starttime, endtime=endtime) == \
-            "network__FURTBHE"
+        assert get_mseed_filename(
+            get_name, network="BW", station="FURT", location="", channel="BHE",
+            starttime=starttime, endtime=endtime) == "network__FURTBHE"
         # 'True' can also be returned. This indicates that the file already
         # exists.
-        assert get_mseed_filename(get_name, network="AH", station="FURT",
-                               location="", channel="BHE",
-                               starttime=starttime, endtime=endtime) == True
+        assert get_mseed_filename(
+            get_name, network="AH", station="FURT", location="", channel="BHE",
+            starttime=starttime, endtime=endtime) is True
 
         # It will raise a type error, if the function does not return the
         # proper type.
         with pytest.raises(TypeError):
-            get_mseed_filename(lambda x: 1,
-                          "BW", "FURT", "", "BHE")
+            get_mseed_filename(lambda x: 1, "BW", "FURT", "", "BHE")
 
     def test_get_stationxml_contents(self):
         """
@@ -1015,7 +1000,7 @@ class DownloadHelpersUtilTestCase():
         """
         filename = os.path.join(self.data, "AU.MEEK.xml")
         assert get_stationxml_contents(filename) == \
-                         _get_stationxml_contents_slow(filename)
+            _get_stationxml_contents_slow(filename)
 
     def test_channel_str_representation(self):
         """
@@ -1419,15 +1404,14 @@ class StationTestCase():
             assert exists_p.call_count == 2
             assert exists_p.call_args_list[0][0][0] == "random"
             assert exists_p.call_args_list[1][0][0] == \
-                             os.path.join("random", "TA.A001.xml")
+                os.path.join("random", "TA.A001.xml")
             # Thus it should attempt to download everything
             assert station.stationxml_filename == \
-                             os.path.join("random", "TA.A001.xml")
-            assert station.stationxml_status == \
-                             STATUS.NEEDS_DOWNLOADING
+                os.path.join("random", "TA.A001.xml")
+            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
             assert station.have_station_information == {}
             assert station.want_station_information == \
-                             station.miss_station_information
+                station.miss_station_information
             assert station.want_station_information == {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
@@ -1463,7 +1447,7 @@ class StationTestCase():
             assert station.stationxml_status == STATUS.EXISTS
             assert station.miss_station_information == {}
             assert station.want_station_information == \
-                             station.have_station_information
+                station.have_station_information
             assert station.want_station_information == {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
@@ -1490,11 +1474,10 @@ class StationTestCase():
                     assert p.call_count == 0
             # It then should not attempt to download anything as everything
             # that's needed is already available.
-            assert station.stationxml_status == \
-                             STATUS.NEEDS_DOWNLOADING
+            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
             assert station.have_station_information == {}
             assert station.want_station_information == \
-                             station.miss_station_information
+                station.miss_station_information
             assert station.want_station_information == {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
@@ -1523,11 +1506,10 @@ class StationTestCase():
                     assert p.call_count == 0
             # It then should not attempt to download anything as everything
             # that's needed is already available.
-            assert STATUS.NEEDS_DOWNLOADING == \
-                             station.stationxml_status
+            assert STATUS.NEEDS_DOWNLOADING == station.stationxml_status
             assert {} == station.have_station_information
             assert station.want_station_information == \
-                             station.miss_station_information
+                station.miss_station_information
             assert station.want_station_information == {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
@@ -1580,11 +1562,10 @@ class StationTestCase():
             # The directory should have been created if it does not exists.
             assert p.call_count == 1
             assert p.call_args[0][0] == "random"
-            assert station.stationxml_status == \
-                             STATUS.NEEDS_DOWNLOADING
+            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
             assert station.have_station_information == {}
             assert station.want_station_information == \
-                             station.miss_station_information
+                station.miss_station_information
             assert station.want_station_information == {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
@@ -1609,11 +1590,10 @@ class StationTestCase():
             # The directory should have been created if it does not exists.
             assert p.call_count == 1
             assert p.call_args[0][0] == "random"
-            assert station.stationxml_status == \
-                             STATUS.EXISTS
+            assert station.stationxml_status == STATUS.EXISTS
             assert station.miss_station_information == {}
             assert station.want_station_information == \
-                             station.have_station_information
+                station.have_station_information
             assert station.have_station_information == {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
@@ -1640,8 +1620,7 @@ class StationTestCase():
             # The directory should have been created if it does not exist.
             assert p.call_count == 1
             assert p.call_args[0][0] == "random"
-            assert station.stationxml_status == \
-                             STATUS.NEEDS_DOWNLOADING
+            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
             assert station.miss_station_information == {
                 ("00", "EHE"): temporal_bounds
             }
@@ -1676,8 +1655,7 @@ class StationTestCase():
             # The directory should have been created if it does not exist.
             assert p.call_count == 1
             assert p.call_args[0][0] == "random"
-            assert station.stationxml_status == \
-                             STATUS.NEEDS_DOWNLOADING
+            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
             assert station.miss_station_information == {
                 ("00", "EHE"): temporal_bounds
             }
@@ -1843,9 +1821,8 @@ class ClientDownloadHelperTestCase():
         # that one is picked "A" and "C" can both be no longer picked.
         rej = c.filter_stations_based_on_minimum_distance([])
         assert [("A", "A"), ("C", "C"), ("D", "D")] == \
-                         sorted(c.stations.keys())
-        assert [("B", "B")] == \
-                         sorted(rej.keys())
+            sorted(c.stations.keys())
+        assert [("B", "B")] == sorted(rej.keys())
 
         # The two at 200 and 250 m longitude should be removed.
         c.stations = {
@@ -1856,9 +1833,8 @@ class ClientDownloadHelperTestCase():
             ("E", "E"): Station("E", "E", 0, _m_to_deg(2000), [])}
         rej = c.filter_stations_based_on_minimum_distance([])
         assert [("A", "A"), ("D", "D"), ("E", "E")] == \
-                         sorted(c.stations.keys())
-        assert [("B", "B"), ("C", "C")] == \
-                         sorted(rej.keys())
+            sorted(c.stations.keys())
+        assert [("B", "B"), ("C", "C")] == sorted(rej.keys())
 
         # Set the distance to 1 degree and check the longitude behaviour at
         # the longitude wraparound point.
@@ -1878,10 +1854,10 @@ class ClientDownloadHelperTestCase():
         # Only 4 stations should remain and either the one at 0,180 or the
         # one at 0, -180 should have been removed as they are equal.
         assert len(c.stations) == 4
-        assert sorted(c.stations.keys()) == [("A", "A"), ("B", "B"), ("C", "C"),
-                                          ("D", "D")] or \
-            sorted(c.stations.keys()) == [("A", "A"), ("B", "B"), ("D", "D"),
-                                          ("E", "E")]
+        assert sorted(c.stations.keys()) == \
+            [("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")] or \
+            sorted(c.stations.keys()) == \
+            [("A", "A"), ("B", "B"), ("D", "D"), ("E", "E")]
         assert len(rej) == 1
 
         # Test filtering around the longitude wraparound.
@@ -1892,10 +1868,8 @@ class ClientDownloadHelperTestCase():
         # The middle one should be removed as then the other two can be kept.
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert [("B", "B"), ("C", "C")] == \
-                         sorted(c.stations.keys())
-        assert [("A", "A")] == \
-                         sorted(rej.keys())
+        assert [("B", "B"), ("C", "C")] == sorted(c.stations.keys())
+        assert [("A", "A")] == sorted(rej.keys())
         # Same but longitude defined the other way around.
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
@@ -1903,10 +1877,8 @@ class ClientDownloadHelperTestCase():
             ("C", "C"): Station("C", "C", 0, -179.2, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert [("B", "B"), ("C", "C")] == \
-                         sorted(c.stations.keys())
-        assert [("A", "A")] == \
-                         sorted(rej.keys())
+        assert [("B", "B"), ("C", "C")] == sorted(c.stations.keys())
+        assert [("A", "A")] == sorted(rej.keys())
 
         # Test the conversion of lat/lng to meter distances.
         stations = {
@@ -2021,10 +1993,8 @@ class ClientDownloadHelperTestCase():
         # to the existing stations.
         rej = c.filter_stations_based_on_minimum_distance(
             existing_client_dl_helpers=ex_clients)
-        assert [("C", "C")] == \
-                         sorted(c.stations.keys())
-        assert [("B", "B"), ("X", "X"), ("Y", "Y")] == \
-                         sorted(rej.keys())
+        assert [("C", "C")] == sorted(c.stations.keys())
+        assert [("B", "B"), ("X", "X"), ("Y", "Y")] == sorted(rej.keys())
 
     @mock.patch("obspy.clients.fdsn.mass_downloader."
                 "utils.download_and_split_mseed_bulk")
@@ -2265,7 +2235,7 @@ class ClientDownloadHelperTestCase():
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
         assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
-                         sorted(c.stations.keys())
+            sorted(c.stations.keys())
 
         # Excluding things that don't exists does not do anything.
         self.restrictions = Restrictions(
@@ -2281,7 +2251,7 @@ class ClientDownloadHelperTestCase():
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
         assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
-                         sorted(c.stations.keys())
+            sorted(c.stations.keys())
 
         # Simple network exclude.
         self.restrictions = Restrictions(
@@ -2294,8 +2264,7 @@ class ClientDownloadHelperTestCase():
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AZ", "BZN")] == \
-                         sorted(c.stations.keys())
+        assert [("AZ", "BZN")] == sorted(c.stations.keys())
 
         # Wildcarded network exclude.
         self.restrictions = Restrictions(
@@ -2308,8 +2277,7 @@ class ClientDownloadHelperTestCase():
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AZ", "BZN")] == \
-                         sorted(c.stations.keys())
+        assert [("AZ", "BZN")] == sorted(c.stations.keys())
 
         # Multiple network excludes
         self.restrictions = Restrictions(
@@ -2336,8 +2304,7 @@ class ClientDownloadHelperTestCase():
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AK", "BWN"), ("AZ", "BZN")] == \
-                         sorted(c.stations.keys())
+        assert [("AK", "BWN"), ("AZ", "BZN")] == sorted(c.stations.keys())
 
         # Wildcarded station exclude.
         self.restrictions = Restrictions(
@@ -2351,8 +2318,7 @@ class ClientDownloadHelperTestCase():
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AK", "BAGL")] == \
-                         sorted(c.stations.keys())
+        assert [("AK", "BAGL")] == sorted(c.stations.keys())
 
         # Multiple excludes.
         self.restrictions = Restrictions(
@@ -2366,8 +2332,7 @@ class ClientDownloadHelperTestCase():
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AK", "BAGL")] == \
-                         sorted(c.stations.keys())
+        assert [("AK", "BAGL")] == sorted(c.stations.keys())
 
         # When 'channel' or 'location' are set they should override
         # 'channel_priorities' and 'location_priorities'. If this isn't
@@ -2406,8 +2371,7 @@ class ClientDownloadHelperTestCase():
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "uncommon_channel_location.txt"))
         c.get_availability()
-        assert [("AK", "BAGLC"), ("AK", "BAGLD")] == \
-                         sorted(c.stations.keys())
+        assert [("AK", "BAGLC"), ("AK", "BAGLD")] == sorted(c.stations.keys())
 
         # Same with the set channel.
         self.restrictions = Restrictions(
@@ -2420,8 +2384,7 @@ class ClientDownloadHelperTestCase():
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "uncommon_channel_location.txt"))
         c.get_availability()
-        assert [("AK", "BAGLB"), ("AK", "BAGLD")] == \
-                         sorted(c.stations.keys())
+        assert [("AK", "BAGLB"), ("AK", "BAGLD")] == sorted(c.stations.keys())
 
         # If both are set, the priorities are properly ignored.
         self.restrictions = Restrictions(
@@ -2436,8 +2399,7 @@ class ClientDownloadHelperTestCase():
             os.path.join(self.data, "uncommon_channel_location.txt"))
         c.get_availability()
         assert [("AK", "BAGLA"), ("AK", "BAGLB"), ("AK", "BAGLC"),
-                          ("AK", "BAGLD")] == \
-                         sorted(c.stations.keys())
+                ("AK", "BAGLD")] == sorted(c.stations.keys())
 
     def test_excluding_networks_and_stations_with_an_inventory_object(self):
         """
@@ -2453,7 +2415,7 @@ class ClientDownloadHelperTestCase():
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
         assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
-                         sorted(c.stations.keys())
+            sorted(c.stations.keys())
 
         # Keep everything.
         self.restrictions = Restrictions(
@@ -2468,7 +2430,7 @@ class ClientDownloadHelperTestCase():
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
         assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
-                         sorted(c.stations.keys())
+            sorted(c.stations.keys())
 
         # Exclude one station.
         self.restrictions = Restrictions(
@@ -2483,8 +2445,7 @@ class ClientDownloadHelperTestCase():
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AK", "BAGL"), ("AK", "BWN")] == \
-                         sorted(c.stations.keys())
+        assert [("AK", "BAGL"), ("AK", "BWN")] == sorted(c.stations.keys())
 
         # Keep only one station.
         self.restrictions = Restrictions(
@@ -2553,9 +2514,9 @@ class ClientDownloadHelperTestCase():
             assert result[0].location == ""
             assert result[0].channel == "EHZ"
             assert result[0].starttime == \
-                             obspy.UTCDateTime(2009, 8, 24, 0, 20, 3)
+                obspy.UTCDateTime(2009, 8, 24, 0, 20, 3)
             assert result[0].endtime == \
-                             obspy.UTCDateTime(2009, 8, 24, 0, 20, 32, 990000)
+                obspy.UTCDateTime(2009, 8, 24, 0, 20, 32, 990000)
             assert result[0].filename == filename
 
             # Add a gap.
@@ -2590,9 +2551,9 @@ class ClientDownloadHelperTestCase():
         assert c.stations == {}
         # But a warning should have been raised.
         assert self.logger.warning.call_count == 1
-        assert self.logger.warning.call_args[0][0] == \
-            "Client 'Test' - No channel at station AK.BAGL has been selected " \
-            "due to the `location_priorities` settings."
+        assert self.logger.warning.call_args[0][0] == (
+            "Client 'Test' - No channel at station AK.BAGL has been selected "
+            "due to the `location_priorities` settings.")
 
         self.logger.warning.reset_mock()
         assert self.logger.warning.call_count == 0
@@ -2693,8 +2654,7 @@ class DownloadHelperTestCase():
         assert list(d._initialized_clients.keys()) == \
             ['GFZ', 'http://service.iris.edu', 'ORFEUS']
         # Make sure it is the same object.
-        assert d._initialized_clients["http://service.iris.edu"] is \
-                      client
+        assert d._initialized_clients["http://service.iris.edu"] is client
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
                 autospec=True)

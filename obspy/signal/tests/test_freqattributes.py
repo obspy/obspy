@@ -96,10 +96,10 @@ class FreqTraceTestCase():
                                                  self.smoothie, self.fk)
         rms = np.sqrt(np.sum((cfreq[0] - self.res[:, 18]) ** 2) /
                       np.sum(self.res[:, 18] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((cfreq[1] - self.res[:, 19]) ** 2) /
                       np.sum(self.res[:, 19] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
 
     def test_cfrequency_no_win(self):
         cfreq = freqattributes.central_frequency(self.data_win_bc[0], self.fs,
@@ -114,10 +114,10 @@ class FreqTraceTestCase():
                                          self.fk)
         rms = np.sqrt(np.sum((bwith[0] - self.res[:, 16]) ** 2) /
                       np.sum(self.res[:, 16] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((bwith[1] - self.res[:, 17]) ** 2) /
                       np.sum(self.res[:, 17] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
 
     def test_domper(self):
         """
@@ -126,10 +126,10 @@ class FreqTraceTestCase():
                                                  self.smoothie, self.fk)
         rms = np.sqrt(np.sum((dperiod[0] - self.res[:, 14]) ** 2) /
                       np.sum(self.res[:, 14] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((dperiod[1] - self.res[:, 15]) ** 2) /
                       np.sum(self.res[:, 15] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
 
     def test_logcep(self):
         """
@@ -138,13 +138,13 @@ class FreqTraceTestCase():
                                           self.p, self.n, 'Hamming')
         rms = np.sqrt(np.sum((cep[0] - self.res[:, 11]) ** 2) /
                       np.sum(self.res[:, 11] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((cep[1] - self.res[:, 12]) ** 2) /
                       np.sum(self.res[:, 12] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((cep[2] - self.res[:, 13]) ** 2) /
                       np.sum(self.res[:, 13] ** 2))
-        assert (rms < 1.0e-5) == True
+        assert rms < 1.0e-5
 
     def test_pgm(self):
         """

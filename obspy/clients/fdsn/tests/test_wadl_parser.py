@@ -59,10 +59,10 @@ class WADLParserTestCase():
         assert "longestonly" in params
 
         assert params["starttime"]["type"] == UTCDateTime
-        assert params["starttime"]["required"] == True
+        assert params["starttime"]["required"]
 
         assert params["endtime"]["type"] == UTCDateTime
-        assert params["endtime"]["required"] == True
+        assert params["endtime"]["required"]
 
         assert params["network"]["type"] == str
         assert params["station"]["type"] == str
@@ -70,12 +70,12 @@ class WADLParserTestCase():
         assert params["channel"]["type"] == str
 
         assert sorted(params["quality"]["options"]) == \
-                         sorted(["D", "R", "Q", "M", "B"])
+            sorted(["D", "R", "Q", "M", "B"])
 
         # Check that the default values did get read correctly.
         assert params["quality"]["default_value"] == "B"
         assert params["minimumlength"]["default_value"] == 0.0
-        assert params["longestonly"]["default_value"] == False
+        assert not params["longestonly"]["default_value"]
 
     def test_event_wadl_parsing(self):
         """
@@ -124,8 +124,7 @@ class WADLParserTestCase():
         assert params["magnitudetype"]["doc_title"] == \
             "type of Magnitude used to test minimum and maximum limits " \
             "(case insensitive)"
-        assert params["magnitudetype"]["doc"] == \
-                         "Examples: Ml,Ms,mb,Mw\""
+        assert params["magnitudetype"]["doc"] == "Examples: Ml,Ms,mb,Mw\""
 
     def test_station_wadl_parsing(self):
         """

@@ -162,16 +162,16 @@ class BlocketteTestCase():
                 # conversion to SEED
                 seed = blkt1['Blkt'].get_seed()
                 assert seed == versions['SEED']['data'], \
-                                 errmsg % (blkt_number, 'SEED', key1,
-                                           seed, versions['SEED']['data'])
+                    errmsg % (blkt_number, 'SEED', key1,
+                              seed, versions['SEED']['data'])
                 for key2, blkt2 in versions.items():
                     if key2 == 'SEED':
                         continue
                     xseed = etree.tostring(blkt1['Blkt'].get_xml(
                         xseed_version=blkt2['version']))
                     assert xseed == versions[key2]['data'], \
-                                     errmsg % (blkt_number, 'XSEED', key2,
-                                               xseed, blkt2['data'])
+                        errmsg % (blkt_number, 'XSEED', key2,
+                                  xseed, blkt2['data'])
 
     def test_all_blockettes(self):
         """

@@ -29,11 +29,11 @@ class CoreTestCase():
         st.sort(keys=['channel'])
         assert len(st) == 2
         assert st[0].stats.starttime == \
-                         UTCDateTime('2010-03-03T02:00:00.000000Z')
+            UTCDateTime('2010-03-03T02:00:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2010-03-03T02:00:59.990000Z')
+            UTCDateTime('2010-03-03T02:00:59.990000Z')
         assert st[0].stats.starttime == \
-                         UTCDateTime('2010-03-03T02:00:00.000000Z')
+            UTCDateTime('2010-03-03T02:00:00.000000Z')
         assert len(st[0]) == 6000
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
         assert st[0].stats.channel == 'a100'
@@ -49,11 +49,11 @@ class CoreTestCase():
         st.sort(keys=['channel'])
         assert len(st) == 2
         assert st[0].stats.starttime == \
-                         UTCDateTime('2010-03-03T02:00:00.000000Z')
+            UTCDateTime('2010-03-03T02:00:00.000000Z')
         assert st[0].stats.endtime == \
-                         UTCDateTime('2010-03-03T02:00:59.990000Z')
+            UTCDateTime('2010-03-03T02:00:59.990000Z')
         assert st[0].stats.starttime == \
-                         UTCDateTime('2010-03-03T02:00:00.000000Z')
+            UTCDateTime('2010-03-03T02:00:00.000000Z')
         assert len(st[0]) == 6000
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
         assert st[0].stats.channel == 'a100'

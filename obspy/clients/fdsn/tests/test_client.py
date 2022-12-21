@@ -176,32 +176,31 @@ class ClientTestCase():
         """
         # Application WADL
         assert build_url("http://service.iris.edu", "dataselect", 1,
-                      "application.wadl") == \
+                         "application.wadl") == \
             "http://service.iris.edu/fdsnws/dataselect/1/application.wadl"
         assert build_url("http://service.iris.edu", "event", 1,
-                      "application.wadl") == \
+                         "application.wadl") == \
             "http://service.iris.edu/fdsnws/event/1/application.wadl"
         assert build_url("http://service.iris.edu", "station", 1,
-                      "application.wadl") == \
+                         "application.wadl") == \
             "http://service.iris.edu/fdsnws/station/1/application.wadl"
 
         # Test one parameter.
         assert build_url("http://service.iris.edu", "dataselect", 1,
-                      "query", {"network": "BW"}) == \
+                         "query", {"network": "BW"}) == \
             "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW"
         assert build_url("http://service.iris.edu", "dataselect", 1,
-                      "queryauth", {"network": "BW"}) == \
+                         "queryauth", {"network": "BW"}) == \
             "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW"
         # Test two parameters. Note random order, two possible results.
         assert build_url("http://service.iris.edu", "dataselect", 1,
-                      "query", {"net": "A", "sta": "BC"}) in \
+                         "query", {"net": "A", "sta": "BC"}) in \
             ("http://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
              "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A")
 
         # A wrong service raises a ValueError
         with pytest.raises(ValueError):
-            build_url("http://service.iris.edu",
-                          "obspy", 1, "query")
+            build_url("http://service.iris.edu", "obspy", 1, "query")
 
     def test_location_parameters(self):
         """
@@ -217,43 +216,43 @@ class ClientTestCase():
         <space><space>"
         """
         # requests with no specified location should be treated as a wildcard
-        assert not ("--" in build_url("http://service.iris.edu", "station", 1,
-                              "query", {"network": "IU", "station": "ANMO",
-                                        "starttime": "2013-01-01"}))
+        assert not ("--" in build_url(
+            "http://service.iris.edu", "station", 1, "query",
+            {"network": "IU", "station": "ANMO", "starttime": "2013-01-01"}))
         # location of "  " is the same as "--"
         assert build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "  "}) == \
+                         "query", {"location": "  "}) == \
             "http://service.iris.edu/fdsnws/station/1/query?location=--"
         # wildcard locations are valid. Will be encoded.
         assert build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "*"}) == \
+                         "query", {"location": "*"}) == \
             "http://service.iris.edu/fdsnws/station/1/query?location=%2A"
         assert build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "A?"}) == \
+                         "query", {"location": "A?"}) == \
             "http://service.iris.edu/fdsnws/station/1/query?location=A%3F"
 
         # lists are valid, including <space><space> lists. Again encoded
         # result.
         assert build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "  ,1?,?0"}) == \
+                         "query", {"location": "  ,1?,?0"}) == \
             "http://service.iris.edu/fdsnws/station/1/query?" \
             "location=--%2C1%3F%2C%3F0"
         assert build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "1?,--,?0"}) == \
+                         "query", {"location": "1?,--,?0"}) == \
             "http://service.iris.edu/fdsnws/station/1/query?" \
             "location=1%3F%2C--%2C%3F0"
 
         # Test all three special cases with empty parameters into lists.
         assert build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "  ,AA,BB"}) == \
+                         "query", {"location": "  ,AA,BB"}) == \
             "http://service.iris.edu/fdsnws/station/1/query?" \
             "location=--%2CAA%2CBB"
         assert build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "AA,  ,BB"}) == \
+                         "query", {"location": "AA,  ,BB"}) == \
             "http://service.iris.edu/fdsnws/station/1/query?" \
             "location=AA%2C--%2CBB"
         assert build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "AA,BB,  "}) == \
+                         "query", {"location": "AA,BB,  "}) == \
             "http://service.iris.edu/fdsnws/station/1/query?" \
             "location=AA%2CBB%2C--"
 
@@ -345,9 +344,8 @@ class ClientTestCase():
         """
         client = self.client
         assert set(client.services.keys()) == \
-                         set(("dataselect", "event", "station",
-                              "available_event_contributors",
-                              "available_event_catalogs"))
+            set(("dataselect", "event", "station",
+                 "available_event_contributors", "available_event_catalogs"))
 
         # The test sets are copied from the IRIS webpage.
         assert set(client.services["dataselect"].keys()) == \
@@ -376,11 +374,11 @@ class ClientTestCase():
         # Also check an exemplary value in more detail.
         minradius = client.services["event"]["minradius"]
         assert minradius["default_value"] == 0.0
-        assert minradius["required"] == False
+        assert not minradius["required"]
         assert minradius["doc"] == ""
-        assert minradius["doc_title"] == "Specify minimum distance " \
-                         "from the geographic point defined by latitude and " \
-                         "longitude"
+        assert minradius["doc_title"] == (
+            "Specify minimum distance from the geographic point defined by "
+            "latitude and longitude")
         assert minradius["type"] == float
         assert minradius["options"] == []
 
@@ -389,7 +387,7 @@ class ClientTestCase():
         Tests the parsing of the available event catalogs.
         """
         assert set(self.client.services["available_event_catalogs"]) == \
-                         set(("GCMT", "ISC", "NEIC PDE"))
+            set(("GCMT", "ISC", "NEIC PDE"))
 
     def test_iris_event_contributors_availability(self):
         """
@@ -430,9 +428,8 @@ class ClientTestCase():
               <Catalog>UofW</Catalog>
               <Catalog>NEIC PDE</Catalog>
             </Catalogs>""")
-        assert catalogs == {"catalogs": set(("ANF", "GCMT", "TEST",
-                                                     "ISC", "UofW",
-                                                     "NEIC PDE"))}
+        assert catalogs == {"catalogs": set(
+            ("ANF", "GCMT", "TEST", "ISC", "UofW", "NEIC PDE"))}
 
     def test_iris_example_queries_event(self):
         """
@@ -456,10 +453,8 @@ class ClientTestCase():
         assert len(cat) > 0
         for event in cat:
             assert event.origins[0].extra.catalog.value == "ISC"
-            assert event.origins[0].time > \
-                               UTCDateTime("2001-01-07T01:00:00")
-            assert UTCDateTime("2001-01-07T01:05:00") > \
-                               event.origins[0].time
+            assert event.origins[0].time > UTCDateTime("2001-01-07T01:00:00")
+            assert UTCDateTime("2001-01-07T01:05:00") > event.origins[0].time
 
         # Misc query.
         cat = client.get_events(
@@ -471,8 +466,7 @@ class ClientTestCase():
         for event in cat:
             assert event.origins[0].time > \
                                UTCDateTime("2001-01-07T14:00:00")
-            assert UTCDateTime("2001-01-08T00:00:00") > \
-                               event.origins[0].time
+            assert UTCDateTime("2001-01-08T00:00:00") > event.origins[0].time
             assert event.origins[0].latitude > 14.9
             assert 40.1 > event.origins[0].latitude
             assert event.origins[0].latitude > -170.1
@@ -516,8 +510,7 @@ class ClientTestCase():
                 dist = locations2degrees(sta.latitude, sta.longitude,
                                          -56.1, -26.7)
                 # small tolerance for WGS84.
-                assert 15.1 > dist, "%s.%s" % (net.code,
-                                                          sta.code)
+                assert 15.1 > dist, "%s.%s" % (net.code, sta.code)
 
         # Misc query.
         inv = client.get_stations(
@@ -529,8 +522,7 @@ class ClientTestCase():
             assert len(net.stations) > 0  # at least one station
             for sta in net:
                 msg = "%s.%s" % (net.code, sta.code)
-                assert sta.start_date > UTCDateTime("2003-01-07"), \
-                                   msg
+                assert sta.start_date > UTCDateTime("2003-01-07"), msg
                 if sta.end_date is not None:
                     assert UTCDateTime("2011-02-07") > sta.end_date, \
                                        msg
@@ -603,8 +595,8 @@ class ClientTestCase():
             expected = read(file_)
             # The client trims by default.
             _normalize_stats(got)
-            assert got == expected, "Dataselect failed for query %s" % \
-                             repr(query)
+            assert got == expected, \
+                "Dataselect failed for query %s" % repr(query)
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_waveforms(*query, filename=tf.name)
@@ -612,8 +604,8 @@ class ClientTestCase():
                     got = fh.read()
                 with open(file_, 'rb') as fh:
                     expected = fh.read()
-            assert got == expected, "Dataselect failed for query %s" % \
-                             repr(query)
+            assert got == expected, \
+                "Dataselect failed for query %s" % repr(query)
 
     def test_authentication(self):
         """
@@ -654,10 +646,8 @@ class ClientTestCase():
         assert len(cat) > 0
         for event in cat:
             assert event.origins[0].extra.catalog.value == "ISC"
-            assert event.origins[0].time > \
-                               UTCDateTime("2001-01-07T01:00:00")
-            assert UTCDateTime("2001-01-07T01:05:00") > \
-                               event.origins[0].time
+            assert event.origins[0].time > UTCDateTime("2001-01-07T01:00:00")
+            assert UTCDateTime("2001-01-07T01:05:00") > event.origins[0].time
 
         # Misc query.
         cat = client.get_events(
@@ -669,8 +659,7 @@ class ClientTestCase():
         for event in cat:
             assert event.origins[0].time > \
                                UTCDateTime("2001-01-07T14:00:00")
-            assert UTCDateTime("2001-01-08T00:00:00") > \
-                               event.origins[0].time
+            assert UTCDateTime("2001-01-08T00:00:00") > event.origins[0].time
             assert event.origins[0].latitude > 14.9
             assert 40.1 > event.origins[0].latitude
             assert event.origins[0].latitude > -170.1
@@ -703,8 +692,7 @@ class ClientTestCase():
                 dist = locations2degrees(sta.latitude, sta.longitude,
                                          -56.1, -26.7)
                 # small tolerance for WGS84.
-                assert 15.1 > dist, "%s.%s" % (net.code,
-                                                          sta.code)
+                assert 15.1 > dist, "%s.%s" % (net.code, sta.code)
 
         # Misc query.
         inv = client.get_stations(
@@ -716,8 +704,7 @@ class ClientTestCase():
             assert len(net.stations) > 0  # at least one station
             for sta in net:
                 msg = "%s.%s" % (net.code, sta.code)
-                assert sta.start_date > UTCDateTime("2003-01-07"), \
-                                   msg
+                assert sta.start_date > UTCDateTime("2003-01-07"), msg
                 if sta.end_date is not None:
                     assert UTCDateTime("2011-02-07") > sta.end_date, \
                                        msg
@@ -791,8 +778,8 @@ class ClientTestCase():
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
             _normalize_stats(got)
-            assert got == expected, "Dataselect failed for query %s" % \
-                             repr(query)
+            assert got == expected, \
+                "Dataselect failed for query %s" % repr(query)
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_waveforms(*query, filename=tf.name)
@@ -800,8 +787,8 @@ class ClientTestCase():
                     got = fh.read()
                 with open(file_, 'rb') as fh:
                     expected = fh.read()
-            assert got == expected, "Dataselect failed for query %s" % \
-                             repr(query)
+            assert got == expected, \
+                "Dataselect failed for query %s" % repr(query)
 
     def test_conflicting_params(self):
         """
@@ -1204,8 +1191,7 @@ class ClientTestCase():
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
                         service_mappings={"event": None})
-        assert sorted(client.services.keys()) == \
-                         ['dataselect', 'station']
+        assert sorted(client.services.keys()) == ['dataselect', 'station']
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_download_urls_for_custom_mapping(self, download_url_mock):
@@ -1368,8 +1354,8 @@ class ClientTestCase():
             warnings.filterwarnings('ignore', 'unclosed')
             with pytest.raises(FDSNRedirectException):
                 Client("IRIS", service_mappings=service_mappings,
-                user="nobody@iris.edu", password="anonymous",
-                user_agent=USER_AGENT)
+                       user="nobody@iris.edu", password="anonymous",
+                       user_agent=USER_AGENT)
             # The force_redirect flag overwrites that behaviour.
             c_auth = Client("IRIS", service_mappings=service_mappings,
                             user="nobody@iris.edu", password="anonymous",
@@ -1478,8 +1464,7 @@ class ClientTestCase():
                 Client(eida_token="TEST")
 
         with pytest.raises(FDSNDoubleAuthenticationException):
-            Client("IRIS",
-                          eida_token="TEST", user="TEST")
+            Client("IRIS", eida_token="TEST", user="TEST")
 
         download_url_mock.return_value = (401, None)
         with pytest.raises(FDSNUnauthorizedException):
@@ -1597,7 +1582,7 @@ class ClientTestCase():
 
         client = Client('GFZ')
         # this is a plain client, so it should not have http digest auth
-        assert _get_http_digest_auth_handler(client) == None
+        assert _get_http_digest_auth_handler(client) is None
         # now, if we set new user/password, we should get a http digest auth
         # handler
         user, password = ("spam", "eggs")
@@ -1639,8 +1624,7 @@ class ClientTestCase():
                 a dummy stream.
                 """
                 # check that we're at the expected FDSN WS server
-                assert 'http://geofon.gfz-potsdam.de' == \
-                                 self_.base_url
+                assert 'http://geofon.gfz-potsdam.de' == self_.base_url
                 # check if credentials were used
                 # eida auth availability should be positive in all cases
                 assert self_._has_eida_auth
@@ -1653,7 +1637,7 @@ class ClientTestCase():
                     for user, password in handler.passwd.passwd[None].values():
                         _assert_eida_user_and_password(user, password)
                 else:
-                    assert handler == None
+                    assert handler is None
                 # just always return some dummy stream, we're not
                 # interested in checking the data downloading which
                 # succeeds regardless if auth is used or not as it's public
@@ -1679,10 +1663,13 @@ class ClientTestCase():
                     endtime=UTCDateTime("2010-02-27T06:40:00.000"))
 
         # test invalid token/token file
-        with pytest.raises(ValueError, match='EIDA token does not seem to be a valid PGP message'):
+        with pytest.raises(
+                ValueError,
+                match='EIDA token does not seem to be a valid PGP message'):
             client = Client('GFZ', eida_token="spam")
-        with pytest.raises(ValueError, match="Read EIDA token from file '[^']*event_helpstring.txt' but it "
-                "does not seem to contain a valid PGP message."):
+        msg = ("Read EIDA token from file '[^']*event_helpstring.txt' but it "
+               "does not seem to contain a valid PGP message.")
+        with pytest.raises(ValueError, match=msg):
             client = Client(
                 'GFZ', eida_token=os.path.join(self.datapath,
                                                'event_helpstring.txt'))

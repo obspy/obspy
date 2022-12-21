@@ -237,12 +237,13 @@ class CoreTestCase():
         assert st2[0].stats.sac.nvhdr == 6
         assert round(abs(st2[0].stats.sac.b-0.000400), 7) == 0
         # compare with correct digit size (nachkommastellen)
-        assert round(abs((0.0004 + (st[0].stats.npts - 1) *
-                               st[0].stats.delta) / st2[0].stats.sac.e-1.0), 7) == 0
+        assert round(abs(
+            (0.0004 + (st[0].stats.npts - 1) *
+             st[0].stats.delta) / st2[0].stats.sac.e-1.0), 7) == 0
         assert st2[0].stats.sac.iftype == 1
         assert st2[0].stats.sac.leven == 1
         assert round(abs(st2[0].stats.sampling_rate /
-                               st[0].stats.sampling_rate-1.0), 7) == 0
+                         st[0].stats.sampling_rate-1.0), 7) == 0
 
     def test_iztype11(self):
         # test that iztype 11 is read correctly
@@ -280,8 +281,7 @@ class CoreTestCase():
         # see that starttime is set correctly (#107)
         assert round(abs(tr.stats.sac.iztype-9), 7) == 0
         assert round(abs(tr.stats.sac.b-9.4599991), 7) == 0
-        assert tr.stats.starttime == \
-                         UTCDateTime("1981-03-29 10:38:23.459999")
+        assert tr.stats.starttime == UTCDateTime("1981-03-29 10:38:23.459999")
         # check that if we rewrite the file, nothing changed
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
@@ -1012,14 +1012,14 @@ class CoreTestCase():
         # the SAC iztype was 'ib', so the reference time of the written/read
         # SAC file should be the first sample time of the trimmed trace.
         assert tr_trimmed_read.stats.sac['nzyear'] == \
-                         tr_trimmed.stats.starttime.year
+            tr_trimmed.stats.starttime.year
         assert tr_trimmed_read.stats.sac['nzjday'] == \
-                         tr_trimmed.stats.starttime.julday
+            tr_trimmed.stats.starttime.julday
         assert tr_trimmed_read.stats.sac['nzhour'] == \
-                         tr_trimmed.stats.starttime.hour
+            tr_trimmed.stats.starttime.hour
         assert tr_trimmed_read.stats.sac['nzmin'] == \
-                         tr_trimmed.stats.starttime.minute
+            tr_trimmed.stats.starttime.minute
         assert tr_trimmed_read.stats.sac['nzsec'] == \
-                         tr_trimmed.stats.starttime.second
+            tr_trimmed.stats.starttime.second
         assert tr_trimmed_read.stats.sac['nzmsec'] == \
-                         tr_trimmed.stats.starttime.microsecond * 1000
+            tr_trimmed.stats.starttime.microsecond * 1000

@@ -42,8 +42,7 @@ class UtilsTestCase():
 
     def test_datetime_to_string_compact(self):
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22, 123456)
-        assert datetime_2_string(dt, True) == \
-                         "2008,358,01:30:22.1234"
+        assert datetime_2_string(dt, True) == "2008,358,01:30:22.1234"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22)
         assert datetime_2_string(dt, True) == "2008,358,01:30:22"
         dt = UTCDateTime(2008, 12, 23, 0o1, 30)

@@ -45,8 +45,7 @@ class CmtsolutionTestCase():
             except Exception:
                 pass
 
-        assert data.decode().splitlines() == \
-                         new_data.decode().splitlines()
+        assert data.decode().splitlines() == new_data.decode().splitlines()
 
     def test_write_no_preferred_focal_mechanism(self):
         """
@@ -73,8 +72,7 @@ class CmtsolutionTestCase():
             except Exception:
                 pass
 
-        assert data.decode().splitlines() == \
-                         new_data.decode().splitlines()
+        assert data.decode().splitlines() == new_data.decode().splitlines()
 
     def test_read_and_write_cmtsolution_from_open_files(self):
         """
@@ -94,8 +92,7 @@ class CmtsolutionTestCase():
             tf.seek(0, 0)
             new_data = tf.read()
 
-        assert data.decode().splitlines() == \
-                         new_data.decode().splitlines()
+        assert data.decode().splitlines() == new_data.decode().splitlines()
 
     def test_read_and_write_cmtsolution_from_bytes_io(self):
         """
@@ -119,8 +116,7 @@ class CmtsolutionTestCase():
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        assert data.decode().splitlines() == \
-                         new_data.decode().splitlines()
+        assert data.decode().splitlines() == new_data.decode().splitlines()
 
     def test_read_and_write_cmtsolution_explosion(self):
         """
@@ -144,8 +140,7 @@ class CmtsolutionTestCase():
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        assert data.decode().splitlines() == \
-                         new_data.decode().splitlines()
+        assert data.decode().splitlines() == new_data.decode().splitlines()
 
     def test_is_cmtsolution(self):
         """
@@ -189,8 +184,7 @@ class CmtsolutionTestCase():
             except Exception:
                 pass
 
-        assert data.decode().splitlines() == \
-                         new_data.decode().splitlines()
+        assert data.decode().splitlines() == new_data.decode().splitlines()
 
     def test_read_and_write_multiple_events_from_bytes_io(self):
         """
@@ -216,8 +210,7 @@ class CmtsolutionTestCase():
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        assert data.decode().splitlines() == \
-                         new_data.decode().splitlines()
+        assert data.decode().splitlines() == new_data.decode().splitlines()
 
     def test_reading_newer_cmtsolution_files(self):
         """
