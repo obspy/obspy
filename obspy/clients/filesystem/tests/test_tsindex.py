@@ -645,10 +645,12 @@ class TestIndexer():
                           database=database)
 
         # test that a bad leap second file path raises an error
-        with pytest.raises(OSError, match="^No leap seconds file exists at.*$"):
+        with pytest.raises(OSError,
+                           match="^No leap seconds file exists at.*$"):
             Indexer(filepath, database=database,
                     leap_seconds_file="/some/bad/path/")
-        with pytest.raises(OSError, match="^No leap seconds file exists at.*$"):
+        with pytest.raises(OSError,
+                           match="^No leap seconds file exists at.*$"):
             indexer._get_leap_seconds_file("/some/bad/path/")
 
         # test search
@@ -722,9 +724,11 @@ class TestIndexer():
             'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') in \
             file_list[2]
         # test that already indexed files (relative and absolute) get skipped.
-        with pytest.raises(OSError, match="^No unindexed files matching filename.*$"):
+        with pytest.raises(
+                OSError, match="^No unindexed files matching filename.*$"):
             indexer.build_file_list(reindex=False, relative_paths=False)
-        with pytest.raises(OSError, match="^No unindexed files matching filename.*$"):
+        with pytest.raises(
+                OSError, match="^No unindexed files matching filename.*$"):
             indexer.build_file_list(reindex=False, relative_paths=True)
         # for this test mock an unindexed file ('data.mseed') to ensure that
         # it gets added when reindex is True
