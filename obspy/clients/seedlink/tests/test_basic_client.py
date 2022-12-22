@@ -67,7 +67,7 @@ class TestClient():
         """
         def _test_offset_from_realtime(offset):
             # need to reinit to clean out any caches
-            self.setUp()
+            self.setup_method()
             t = UTCDateTime() - offset
             # first do a request that needs an info request on station level
             # only

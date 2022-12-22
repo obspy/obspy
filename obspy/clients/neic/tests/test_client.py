@@ -17,7 +17,7 @@ class TestClient():
     Test cases for obspy.clients.neic.client.Client.
     """
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls.client = Client(host="137.227.224.97", port=2061, timeout=8)
         cls.starttime = UTCDateTime() - 5 * 60 * 60
 
