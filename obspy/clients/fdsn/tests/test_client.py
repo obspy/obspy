@@ -104,7 +104,7 @@ class TestClient():
     Test cases for obspy.clients.fdsn.client.Client.
     """
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         # directory where the test files are located
         cls.path = os.path.dirname(__file__)
         cls.datapath = os.path.join(cls.path, "data")

@@ -63,16 +63,18 @@ class TestFOCMEC():
         cls.datapath = os.path.join(cls.path, 'data')
         cls.lst_file = os.path.join(cls.datapath, 'focmec_8sta.lst')
         cls.out_file = os.path.join(cls.datapath, 'focmec_8sta.out')
-        with open(cls.out_file, 'rb') as fh:
+
+    def setup_method(self):
+        with open(self.out_file, 'rb') as fh:
             header = []
             for i in range(15):
                 header.append(fh.readline().decode('ASCII'))
-            cls.out_file_header = ''.join(header).rstrip()
-        with open(cls.lst_file, 'rb') as fh:
+            self.out_file_header = ''.join(header).rstrip()
+        with open(self.lst_file, 'rb') as fh:
             header = []
             for i in range(48):
                 header.append(fh.readline().decode('ASCII'))
-            cls.lst_file_header = ''.join(header).rstrip()
+            self.lst_file_header = ''.join(header).rstrip()
 
     def _assert_cat_common_parts(self, cat):
         assert isinstance(cat, Catalog)

@@ -28,6 +28,8 @@ class TestCore():
         cls.filename_nnsa = os.path.join(cls.path, 'test_nnsa.wfdisc')
         cls.filename_css_2 = os.path.join(cls.path, 'test_css_2.wfdisc')
         cls.filename_css_3 = os.path.join(cls.path, 'test_css_3.wfdisc')
+
+    def setup_method(self):
         # set up stream for validation
         header = {}
         header['station'] = 'TEST'
@@ -36,7 +38,7 @@ class TestCore():
         header['calib'] = 1.0
         header['calper'] = 1.0
         header['_format'] = 'CSS'
-        filename = os.path.join(cls.path, '201101311155.10.ascii.gz')
+        filename = os.path.join(self.path, '201101311155.10.ascii.gz')
         with gzip.open(filename, 'rb') as fp:
             data = np.loadtxt(fp, dtype=np.int_)
         # traces in the test files are sorted ZEN
@@ -52,10 +54,10 @@ class TestCore():
             tr.stats.station += 'le'
             tr.stats.channel = cha
             st += tr
-        cls.st_result_css = st.copy()
+        self.st_result_css = st.copy()
         for tr in st:
             tr.stats['_format'] = "NNSA_KB_CORE"
-        cls.st_result_nnsa = st
+        self.st_result_nnsa = st
 
     def test_is_css(self):
         """

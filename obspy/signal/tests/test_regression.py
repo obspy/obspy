@@ -13,15 +13,14 @@ class TestRegression():
     """
     Test cases for the regression method.
     """
-    @classmethod
-    def setup_class(cls):
+    def setup_method(self):
         # seed a random sequence and add some noise
         np.random.seed(0)
         n = 10
-        cls.x = np.arange(n, dtype=float)
-        cls.y = np.arange(n, dtype=float) + np.random.random(n) + 5 + \
+        self.x = np.arange(n, dtype=float)
+        self.y = np.arange(n, dtype=float) + np.random.random(n) + 5 + \
             np.random.random(n)
-        cls.weights = np.linspace(1.0, 10.0, n)
+        self.weights = np.linspace(1.0, 10.0, n)
 
     def test_weight_intercept(self):
         """

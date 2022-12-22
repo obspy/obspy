@@ -52,7 +52,9 @@ class TestQuakeML():
         # directory where the test files are located
         cls.path = os.path.join(os.path.dirname(__file__), 'data')
         cls.neries_filename = os.path.join(cls.path, 'neries_events.xml')
-        cls.neries_catalog = _read_quakeml(cls.neries_filename)
+
+    def setup_method(self):
+        self.neries_catalog = _read_quakeml(self.neries_filename)
 
     def test_read_quakeml(self):
         """

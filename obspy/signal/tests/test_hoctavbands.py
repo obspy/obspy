@@ -21,24 +21,26 @@ class TestHoctavbands():
     def setup_class(cls):
         # directory where the test files are located
         cls.path = os.path.join(os.path.dirname(__file__), 'data')
-        file = os.path.join(cls.path, '3cssan.hy.1.MBGA_Z')
+
+    def setup_method(self):
+        file = os.path.join(self.path, '3cssan.hy.1.MBGA_Z')
         f = open(file)
-        cls.res = np.loadtxt(f)
+        self.res = np.loadtxt(f)
         f.close()
-        file = os.path.join(cls.path, 'MBGA_Z.ASC')
+        file = os.path.join(self.path, 'MBGA_Z.ASC')
         f = open(file)
         data = np.loadtxt(f)
         f.close()
-        # cls.path = os.path.dirname(__file__)
-        # cls.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
+        # self.path = os.path.dirname(__file__)
+        # self.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
         # data = np.loadtxt("MBGA_Z.ASC")
-        cls.n = 256
-        cls.fs = 75
-        cls.smoothie = 3
-        cls.fk = [2, 1, 0, -1, -2]
-        cls.inc = int(0.05 * cls.fs)
-        cls.fc1 = 0.68
-        cls.nofb = 8
+        self.n = 256
+        self.fs = 75
+        self.smoothie = 3
+        self.fk = [2, 1, 0, -1, -2]
+        self.inc = int(0.05 * self.fs)
+        self.fc1 = 0.68
+        self.nofb = 8
         # [0] Time (k*inc)
         # [1] A_norm
         # [2] dA_norm
@@ -83,8 +85,8 @@ class TestHoctavbands():
         # [41] drect
         # [42] plan
         # [43] dplan
-        cls.data_win, cls.nwin, cls.no_win = \
-            util.enframe(data, signal.hamming(cls.n), cls.inc)
+        self.data_win, self.nwin, self.no_win = \
+            util.enframe(data, signal.hamming(self.n), self.inc)
 
     def test_hoctavbands(self):
         """

@@ -30,9 +30,11 @@ class TestMchedr():
     def setup_class(cls):
         # directory where the test files are located
         cls.path = os.path.join(os.path.dirname(__file__), 'data')
-        filename = os.path.join(cls.path, 'mchedr.dat')
+        cls.filename = os.path.join(cls.path, 'mchedr.dat')
+
+    def setup_method(self):
         # read the mchedr file once for all
-        cls.catalog = _read_mchedr(filename)
+        self.catalog = _read_mchedr(self.filename)
 
     def test_catalog(self):
         assert len(self.catalog) == 1

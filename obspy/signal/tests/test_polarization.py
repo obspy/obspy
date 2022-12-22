@@ -48,24 +48,26 @@ class TestPolarization():
     """
     @classmethod
     def setup_class(cls):
-        path = join(dirname(__file__), 'data')
+        cls.path = join(dirname(__file__), 'data')
+
+    def setup_method(self):
         # setting up sliding window data
-        data_z = np.loadtxt(join(path, 'MBGA_Z.ASC'))
-        data_e = np.loadtxt(join(path, 'MBGA_E.ASC'))
-        data_n = np.loadtxt(join(path, 'MBGA_N.ASC'))
+        data_z = np.loadtxt(join(self.path, 'MBGA_Z.ASC'))
+        data_e = np.loadtxt(join(self.path, 'MBGA_E.ASC'))
+        data_n = np.loadtxt(join(self.path, 'MBGA_N.ASC'))
         n = 256
         fs = 75
         inc = int(0.05 * fs)
-        cls.data_win_z, cls.nwin, cls.no_win = \
+        self.data_win_z, self.nwin, self.no_win = \
             util.enframe(data_z, signal.hamming(n), inc)
-        cls.data_win_e, cls.nwin, cls.no_win = \
+        self.data_win_e, self.nwin, self.no_win = \
             util.enframe(data_e, signal.hamming(n), inc)
-        cls.data_win_n, cls.nwin, cls.no_win = \
+        self.data_win_n, self.nwin, self.no_win = \
             util.enframe(data_n, signal.hamming(n), inc)
         # global test input
-        cls.fk = [2, 1, 0, -1, -2]
-        cls.norm = pow(np.max(data_z), 2)
-        cls.res = np.loadtxt(join(path, '3cssan.hy.1.MBGA_Z'))
+        self.fk = [2, 1, 0, -1, -2]
+        self.norm = pow(np.max(data_z), 2)
+        self.res = np.loadtxt(join(self.path, '3cssan.hy.1.MBGA_Z'))
 
     def test_polarization(self):
         """

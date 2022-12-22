@@ -13,10 +13,12 @@ class TestJSON():
     @classmethod
     def setup_class(cls):
         cls.path = os.path.join(os.path.dirname(__file__))
-        qml_file = os.path.join(cls.path, "..", "..", "quakeml", "tests",
-                                "data", "qml-example-1.2-RC3.xml")
-        cls.c = _read_quakeml(qml_file)
-        cls.event = cls.c.events[0]
+        cls.qml_file = os.path.join(cls.path, "..", "..", "quakeml", "tests",
+                                    "data", "qml-example-1.2-RC3.xml")
+
+    def setup_method(self):
+        self.c = _read_quakeml(self.qml_file)
+        self.event = self.c.events[0]
 
     def verify_json(self, s):
         """Test an output is a string and is JSON"""
