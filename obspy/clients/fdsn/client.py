@@ -52,7 +52,8 @@ import urllib.request as urllib_request
 import queue
 
 
-DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
+DEFAULT_SERVICE_VERSIONS = {'dataselect': 1,
+                            'station': 1, 'event': 1, 'availability': 1}
 
 
 class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
@@ -191,7 +192,7 @@ class Client(object):
         :param service_mappings: For advanced use only. Allows the direct
             setting of the endpoints of the different services. (e.g.
             ``service_mappings={'station': 'http://example.com/test/stat/1'}``)
-            Valid keys are ``event``, ``station``, and ``dataselect``. This
+            Valid keys are ``event``, ``station``, ``dataselect``, and ``availability``. This
             will overwrite the ``base_url`` and ``major_versions`` arguments.
             For all services not specified, the default default locations
             indicated by ``base_url`` and ``major_versions`` will be used. Any
@@ -556,6 +557,27 @@ class Client(object):
             cat = obspy.read_events(data_stream, format="quakeml")
             data_stream.close()
             return cat
+
+    def get_availability(self, network=None, station=None, location=None,
+                         channel=None, starttime=None, endtime=None,
+                         quality=None, orderby=None, limit=None,
+                         format=None, mergegaps=None, filename=None, **kwargs):
+        if "availability" not in self.services:
+            msg = "The current client does not have an availability service."
+            raise ValueError(msg)
+
+        locs = locals()
+        setup_query_dict('availability', locs, kwargs)
+
+        url = self._create_url_from_parameters(
+            "availability", DEFAULT_PARAMETERS['availability'], kwargs)
+
+        availability = self._download(url)
+        lines = [line.decode().split()
+                 for line in availability.readlines()[1:]]
+        extents = [(line[0], line[1], line[2], line[3], UTCDateTime(
+            line[6]), UTCDateTime(line[7])) for line in lines]
+        return extents
 
     def get_stations(self, starttime=None, endtime=None, startbefore=None,
                      startafter=None, endbefore=None, endafter=None,
@@ -1276,9 +1298,11 @@ class Client(object):
         """
         service_params = self.services[service]
         # Get all required parameters and make sure they are available!
+
         required_parameters = [
             key for key, value in service_params.items()
             if value["required"] is True]
+
         for req_param in required_parameters:
             if req_param not in parameters:
                 msg = "Parameter '%s' is required." % req_param
@@ -1495,7 +1519,7 @@ class Client(object):
         """
         # authenticated dataselect queries have different target URL
         if self.user is not None:
-            if service == "dataselect" and resource_type == "query":
+            if service in ("dataselect", "availability") and resource_type == "query":
                 resource_type = "queryauth"
         return build_url(self.base_url, service, self.major_versions[service],
                          resource_type, parameters,
@@ -1509,7 +1533,7 @@ class Client(object):
         They are discovered by downloading the corresponding WADL files. If a
         WADL does not exist, the services are assumed to be non-existent.
         """
-        services = ["dataselect", "event", "station"]
+        services = ["dataselect", "event", "station", "availability"]
         # omit manually deactivated services
         for service, custom_target in self._service_mappings.items():
             if custom_target is None:
@@ -1606,6 +1630,10 @@ class Client(object):
                     self.services["eida-auth"] = True
                 if self.debug is True:
                     print("Discovered dataselect service")
+            elif "availability" in url:
+                self.services["availability"] = WADLParser(wadl).parameters
+                if self.debug is True:
+                    print("Discovered availability service")
             elif "event" in url and "application.wadl" in url:
                 self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:
@@ -1744,9 +1772,9 @@ def build_url(base_url, service, major_version, resource_type,
         service_mappings = {}
 
     # Only allow certain resource types.
-    if service not in ["dataselect", "event", "station"]:
+    if service not in ["dataselect", "event", "station", "availability"]:
         msg = "Resource type '%s' not allowed. Allowed types: \n%s" % \
-            (service, ",".join(("dataselect", "event", "station")))
+            (service, ",".join(("dataselect", "event", "station", "availability")))
         raise ValueError(msg)
 
     # Special location handling.
@@ -1904,7 +1932,6 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         return None, e
 
     code = url_obj.getcode()
-
     # Unpack gzip if necessary.
     if url_obj.info().get("Content-Encoding") == "gzip":
         if debug is True:
@@ -1922,7 +1949,6 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         f = gzip.GzipFile(fileobj=buf)
     else:
         f = url_obj
-
     if return_string is False:
         data = io.BytesIO(f.read())
     else:
@@ -1951,7 +1977,6 @@ def setup_query_dict(service, locs, kwargs):
             value = kwargs.pop(key)
             if value is not None:
                 kwargs[PARAMETER_ALIASES[key]] = value
-
     for param in DEFAULT_PARAMETERS[service] + OPTIONAL_PARAMETERS[service]:
         param = PARAMETER_ALIASES.get(param, param)
         value = locs[param]

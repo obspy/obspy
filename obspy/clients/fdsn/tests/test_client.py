@@ -104,6 +104,8 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """
+    maxDiff = None
+
     @classmethod
     def setUpClass(cls):
         # directory where the test files are located
@@ -113,6 +115,8 @@ class ClientTestCase(unittest.TestCase):
         cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
+        # cls.log = logging.getLogger("TestLog")
+        # cls.log.setLevel(logging.DEBUG)
 
     def test_empty_bulk_string(self):
         """
@@ -190,6 +194,10 @@ class ClientTestCase(unittest.TestCase):
             build_url("http://service.iris.edu", "station", 1,
                       "application.wadl"),
             "http://service.iris.edu/fdsnws/station/1/application.wadl")
+        self.assertEqual(
+            build_url("http://service.iris.edu", "availability", 1,
+                      "application.wadl"),
+            "http://service.iris.edu/fdsnws/availability/1/application.wadl")
 
         # Test one parameter.
         self.assertEqual(
@@ -278,7 +286,7 @@ class ClientTestCase(unittest.TestCase):
         # _create_url_from_parameters() method and thus has to survive it!
         # This guards against a regression where all empty location codes
         # where removed by this function!
-        for service in ["station", "dataselect"]:
+        for service in ["station", "dataselect", "availability"]:
             for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
                         u"", u" ", u"  ", u"--"]:
                 self.assertIn(
@@ -298,6 +306,11 @@ class ClientTestCase(unittest.TestCase):
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 self.client.get_waveforms(1, 2, loc, 4, 0, 0,
                                           filename=mock.Mock())
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                self.client.get_availability(1, 2, loc, 4, 0, 0,
+                                             filename=mock.Mock())
             self.assertEqual(p.call_count, 1)
             self.assertIn("location=--", p.call_args[0][0])
 
@@ -365,7 +378,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(set(client.services.keys()),
                          set(("dataselect", "event", "station",
                               "available_event_contributors",
-                              "available_event_catalogs")))
+                              "available_event_catalogs", "availability")))
 
         # The test sets are copied from the IRIS webpage.
         self.assertEqual(
@@ -392,6 +405,12 @@ class ClientTestCase(unittest.TestCase):
                  "includearrivals", "eventid",
                  "originid"  # XXX: This is currently just specified in the
                              #      WADL.
+                 )))
+        self.assertEqual(
+            set(client.services['availability'].keys()),
+            set(('starttime', 'endtime', 'network', 'station', 'location',
+                 'channel', 'merge', 'show', 'format', 'mergegaps', 'orderby',
+                 'location', 'limit', 'includerestricted', 'quality'
                  )))
 
         # Also check an exemplary value in more detail.
@@ -517,6 +536,130 @@ class ClientTestCase(unittest.TestCase):
         cat = client.get_events(catalog='8A')
         self.assertEqual(len(cat), 19)
         self.assertEqual(cat[0].event_type, 'controlled explosion')
+
+    def test_get_availability_unbounded_query_auth(self):
+        """
+        Extent information for all network IU, station ANMO channel BHZ
+        http://service.iris.edu/fdsnws/availability/1/query?network=IU&station=ANMO&channel=BHZ
+        """
+
+        client = self.client_auth
+
+        avail = client.get_availability('IU', 'ANMO', '', 'BHZ')
+
+        # check that we have a list
+        self.assertIsInstance(avail, list)
+        self.assertTrue(len(avail) >= 1)
+
+        # check that the structure of the list is as we expect
+        self.assertTrue(
+            all([type(list_item) == tuple for list_item in avail]))
+        self.assertTrue(all([len(list_item) == 6 for list_item in avail]))
+        self.assertTrue(all([[type(x) for x in list_item] == [
+                        str, str, str, str, UTCDateTime, UTCDateTime] for list_item in avail]))
+
+        # check that the network and station are as we expect
+        self.assertTrue(all([list_item[0] == 'IU' for list_item in avail]))
+        self.assertTrue(
+            all([list_item[1] == 'ANMO' for list_item in avail]))
+
+    def test_get_availability_unbounded_query(self):
+        """
+        Extent information for all network IU, station ANMO channel BHZ
+        http://service.iris.edu/fdsnws/availability/1/query?network=IU&station=ANMO&channel=BHZ
+        """
+
+        client = self.client
+
+        avail = client.get_availability('IU', 'ANMO', '', 'BHZ')
+
+        # check that we have a list
+        self.assertIsInstance(avail, list)
+        self.assertTrue(len(avail) >= 1)
+
+        # check that the structure of the list is as we expect
+        self.assertTrue(
+            all([type(list_item) == tuple for list_item in avail]))
+        self.assertTrue(all([len(list_item) == 6 for list_item in avail]))
+        self.assertTrue(all([[type(x) for x in list_item] == [
+                        str, str, str, str, UTCDateTime, UTCDateTime] for list_item in avail]))
+
+        # check that the network and station are as we expect
+        self.assertTrue(all([list_item[0] == 'IU' for list_item in avail]))
+        self.assertTrue(
+            all([list_item[1] == 'ANMO' for list_item in avail]))
+
+    def test_get_availability_bounded_query_auth(self):
+        """
+        Tests a bounded (in time) example query
+        Available Data from network IU, station ANMO, channel BHZ for a given time interval
+        http://service.iris.edu/fdsnws/availability/1/query?network=IU&station=ANMO&channel=BHZ&start=2000-03-23T00:00:00&end=2001-03-23T00:00:00
+        """
+        client = self.client_auth
+        starttime = UTCDateTime('2000-03-23T00:00:00')
+        endtime = UTCDateTime('2001-03-23T00:00:00')
+        avail = client.get_availability(
+            network='IU', station='ANMO', channel="BHZ", starttime=starttime, endtime=endtime)
+
+        # check that we have a list
+        self.assertIsInstance(avail, list)
+        self.assertTrue(len(avail) >= 1)
+
+        # check that the structure of the list is as we expect
+        self.assertTrue(
+            all([type(list_item) == tuple for list_item in avail]))
+        self.assertTrue(all([len(list_item) == 6 for list_item in avail]))
+        self.assertTrue(all([[type(x) for x in list_item] == [
+                    str, str, str, str, UTCDateTime, UTCDateTime] for list_item in avail]))
+
+        # check that the network, station, and channel are as we expect
+        self.assertTrue(all([list_item[0] == 'IU' for list_item in avail]))
+        self.assertTrue(
+            all([list_item[1] == 'ANMO' for list_item in avail]))
+        self.assertTrue(
+            all([list_item[3] == 'BHZ' for list_item in avail]))
+
+        # check that all returned data are within bounds
+        self.assertTrue(
+            all([list_item[4] >= starttime for list_item in avail]))
+        self.assertTrue(
+            all([list_item[5] <= endtime for list_item in avail]))
+
+    def test_get_availability_bounded_query(self):
+        """
+        Tests a bounded (in time) example query
+        Available Data from network IU, station ANMO, channel BHZ for a given time interval
+        http://service.iris.edu/fdsnws/availability/1/query?network=IU&station=ANMO&channel=BHZ&start=2000-03-23T00:00:00&end=2001-03-23T00:00:00
+        """
+        client = self.client
+        starttime = UTCDateTime('2000-03-23T00:00:00')
+        endtime = UTCDateTime('2001-03-23T00:00:00')
+        avail = client.get_availability(
+            network='IU', station='ANMO', channel="BHZ", starttime=starttime, endtime=endtime)
+
+        # check that we have a list
+        self.assertIsInstance(avail, list)
+        self.assertTrue(len(avail) >= 1)
+
+        # check that the structure of the list is as we expect
+        self.assertTrue(
+            all([type(list_item) == tuple for list_item in avail]))
+        self.assertTrue(all([len(list_item) == 6 for list_item in avail]))
+        self.assertTrue(all([[type(x) for x in list_item] == [
+                    str, str, str, str, UTCDateTime, UTCDateTime] for list_item in avail]))
+
+        # check that the network, station, and channel are as we expect
+        self.assertTrue(all([list_item[0] == 'IU' for list_item in avail]))
+        self.assertTrue(
+            all([list_item[1] == 'ANMO' for list_item in avail]))
+        self.assertTrue(
+            all([list_item[3] == 'BHZ' for list_item in avail]))
+
+        # check that all returned data are within bounds
+        self.assertTrue(
+            all([list_item[4] >= starttime for list_item in avail]))
+        self.assertTrue(
+            all([list_item[5] <= endtime for list_item in avail]))
 
     def test_iris_example_queries_station(self):
         """
@@ -906,7 +1049,7 @@ class ClientTestCase(unittest.TestCase):
         expected = (
             "FDSN Webservice Client (base url: http://service.iris.edu)\n"
             "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
-            "'station' (v1.0.7), 'available_event_catalogs', "
+            "'station' (v1.0.7), 'availability', 'available_event_catalogs', "
             "'available_event_contributors'\n\n"
             "Use e.g. client.help('dataselect') for the\n"
             "parameter description of the individual services\n"
@@ -1098,6 +1241,7 @@ class ClientTestCase(unittest.TestCase):
             "%s/fdsnws/event/1/application.wadl" % base_url,
             "%s/fdsnws/station/1/application.wadl" % base_url,
             "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+            "%s/fdsnws/availability/1/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -1125,6 +1269,7 @@ class ClientTestCase(unittest.TestCase):
             "%s/fdsnws/event/1/application.wadl" % base_url,
             "%s/fdsnws/station/1/application.wadl" % base_url,
             "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+            "%s/fdsnws/availability/1/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -1133,7 +1278,8 @@ class ClientTestCase(unittest.TestCase):
         # Replace all
         download_url_mock.reset_mock()
         download_url_mock.return_value = (404, None)
-        major_versions = {"event": 7, "station": 8, "dataselect": 9}
+        major_versions = {"event": 7, "station": 8,
+                          "dataselect": 9, "availability": 10}
         # An exception will be raised if not actual WADLs are returned.
         try:
             Client(base_url=base_url, major_versions=major_versions)
@@ -1145,6 +1291,7 @@ class ClientTestCase(unittest.TestCase):
             "%s/fdsnws/event/7/application.wadl" % base_url,
             "%s/fdsnws/station/8/application.wadl" % base_url,
             "%s/fdsnws/dataselect/9/application.wadl" % base_url,
+            "%s/fdsnws/availability/10/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -1165,6 +1312,7 @@ class ClientTestCase(unittest.TestCase):
             "%s/fdsnws/event/7/application.wadl" % base_url,
             "%s/fdsnws/station/8/application.wadl" % base_url,
             "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+            "%s/fdsnws/availability/1/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -1183,12 +1331,14 @@ class ClientTestCase(unittest.TestCase):
         base_url_event = "http://other_url.com/beta/event_service/11"
         base_url_station = "http://some_url.com/beta2/stat_serv/7"
         base_url_ds = "http://new.com/beta3/waveforms/8"
+        base_url_avail = "http://something.org/beta4/availability/9"
         # An exception will be raised if not actual WADLs are returned.
         try:
             Client(base_url=base_url, service_mappings={
                 "event": base_url_event,
                 "station": base_url_station,
                 "dataselect": base_url_ds,
+                "availability": base_url_avail,
             })
         except FDSNException:
             pass
@@ -1198,6 +1348,7 @@ class ClientTestCase(unittest.TestCase):
             "%s/application.wadl" % base_url_event,
             "%s/application.wadl" % base_url_station,
             "%s/application.wadl" % base_url_ds,
+            "%s/application.wadl" % base_url_avail,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -1223,6 +1374,7 @@ class ClientTestCase(unittest.TestCase):
             "%s/fdsnws/event/1/application.wadl" % base_url,
             "%s/application.wadl" % base_url_station,
             "%s/application.wadl" % base_url_ds,
+            "%s/fdsnws/availability/1/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -1235,7 +1387,11 @@ class ClientTestCase(unittest.TestCase):
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
                         service_mappings={"event": None})
         self.assertEqual(sorted(client.services.keys()),
-                         ['dataselect', 'station'])
+                         ['availability', 'dataselect', 'station'])
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        service_mappings={"availability": None})
+        self.assertEqual(sorted(client.services.keys()),
+                         ['available_event_catalogs', 'available_event_contributors', 'dataselect', 'event', 'station'])
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_download_urls_for_custom_mapping(self, download_url_mock):
@@ -1263,14 +1419,19 @@ class ClientTestCase(unittest.TestCase):
                         self.datapath,
                         "2014-01-07_iris_dataselect.wadl"), "rb") as fh:
                     return 200, fh.read()
+            elif "availability" in args[0]:
+                with open(os.path.join(
+                       self.datapath,
+                        "availability.wadl"), "rb") as fh:
+                    return 200, fh.read()
             return 404, None
-
         download_url_mock.side_effect = custom_side_effects
 
         # Some custom urls
         base_url_event = "http://example.com/beta/event_service/11"
         base_url_station = "http://example.org/beta2/station/7"
         base_url_ds = "http://example.edu/beta3/dataselect/8"
+        base_url_avail = "http://example.edu/beta3/availability/5"
 
         # An exception will be raised if not actual WADLs are returned.
         # Catch warnings to avoid them being raised for the tests.
@@ -1280,6 +1441,7 @@ class ClientTestCase(unittest.TestCase):
                 "event": base_url_event,
                 "station": base_url_station,
                 "dataselect": base_url_ds,
+                "availability": base_url_avail,
             })
         for warning in w:
             self.assertTrue("Could not parse" in str(warning) or
@@ -1318,6 +1480,17 @@ class ClientTestCase(unittest.TestCase):
             pass
         self.assertTrue(
             base_url_event in download_url_mock.call_args_list[0][0][0])
+
+        # Test the availability downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_availability()
+        except Exception:
+            pass
+        self.assertTrue(
+            base_url_avail in download_url_mock.call_args_list[0][0][0])
 
     def test_redirection(self):
         """
