@@ -123,7 +123,7 @@ class TestClient():
         for bad_input in [[], '', None]:
             with pytest.raises(FDSNInvalidRequestException) as e:
                 get_bulk_string(bulk=bad_input, arguments={})
-            assert e.exception.args[0] == msg
+            assert str(e.value) == msg
 
     def test_validate_base_url(self):
         """
@@ -1604,9 +1604,9 @@ class TestClient():
         _assert_credentials(client, user, password)
 
         # Raise if token and user/pw are given.
-        with pytest.raises(FDSNException) as err:
+        with pytest.raises(FDSNException) as e:
             Client('GFZ', eida_token=token, user="foo", password="bar")
-        assert err.exception.args[0] == \
+        assert str(e.value) == \
             "EIDA authentication token provided, but user and password are " \
             "also given."
 

@@ -103,7 +103,7 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
                 starttime=obspy.UTCDateTime(2017, 1, 1),
                 endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
                 filename="out.mseed")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             'The `filename` argument is not supported'
 
         with pytest.raises(ValueError) as e:
@@ -112,27 +112,27 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
                 starttime=obspy.UTCDateTime(2017, 1, 1),
                 endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
                 attach_response=True)
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             'The `attach_response` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_waveforms_bulk([], filename="out.mseed")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             'The `filename` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_waveforms_bulk([], attach_response=True)
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             'The `attach_response` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_stations(filename="out.xml")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             'The `filename` argument is not supported'
 
         with pytest.raises(ValueError) as e:
             self.client.get_stations_bulk([], filename="out.xml")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             'The `filename` argument is not supported'
 
     def test_error_handling(self):
@@ -141,7 +141,7 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
                 network="XX", station="XXXXX", location="XX", channel="XXX",
                 starttime=obspy.UTCDateTime(2017, 1, 1),
                 endtime=obspy.UTCDateTime(2017, 1, 2))
-        assert e.exception.args[0].startswith(
+        assert str(e.value).startswith(
             "No data available for request.")
 
     def test_get_waveforms(self):
@@ -367,4 +367,4 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
             self.client.get_waveforms(
                 network='OE', station='UNNA', channel='HHZ', location='*',
                 starttime=t1, endtime=t2)
-        assert 'No data' in e.exception.args[0]
+        assert 'No data' in str(e.value)

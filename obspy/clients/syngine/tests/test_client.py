@@ -249,12 +249,12 @@ class TestClient():
         syngine and rely on the service for the error detection.
         """
         # Wrong components.
-        with pytest.raises(ClientHTTPException) as cm:
+        with pytest.raises(ClientHTTPException) as e:
             self.c.get_waveforms(
                 model="ak135f_5s", eventid="GCMT:C201002270634A",
                 station="ANMO", network="IU", components="ABC")
 
-        msg = cm.exception.args[0]
+        msg = str(e.value)
         assert "HTTP code 400 when" in msg
         assert "Unrecognized component" in msg
 

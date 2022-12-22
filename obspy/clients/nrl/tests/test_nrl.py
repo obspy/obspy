@@ -119,8 +119,8 @@ Select the sensor manufacturer (20 items):
   'Sprengnether (now Eentec)', 'Streckeisen'""".strip()
 
     def test_error_handling_invalid_path(self):
-        with pytest.raises(ValueError) as err:
+        with pytest.raises(ValueError) as e:
             NRL("/some/really/random/path")
-        assert str(err.value) == \
+        assert str(e.value) == \
             "Provided path '/some/really/random/path' seems to be a local " \
             "file path but the directory does not exist."

@@ -70,7 +70,7 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
         # Error handling.
         with pytest.raises(ValueError) as e:
             FederatorRoutingClient._split_routing_response(data, "random")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "Service must be 'dataselect' or 'station'."
 
     def test_response_splitting_fdsnws_subdomain(self):
@@ -188,7 +188,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
             self.client.get_waveforms_bulk([[
                 "AA", "BB", "", "LHZ", obspy.UTCDateTime(2016, 1, 1),
                 obspy.UTCDateTime(2016, 1, 2)]], network="BB")
-        assert e.exception.args[0] == (
+        assert str(e.value) == (
             "`network` must not be part of the optional parameters in a bulk "
             "request.")
 
@@ -288,7 +288,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
             self.client.get_stations_bulk([[
                 "AA", "BB", "", "LHZ", obspy.UTCDateTime(2016, 1, 1),
                 obspy.UTCDateTime(2016, 1, 2)]], network="BB")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             ("`network` must not be part of the optional parameters in a bulk "
              "request.")
 

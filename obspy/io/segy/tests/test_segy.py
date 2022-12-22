@@ -768,11 +768,11 @@ class TestSEGY():
                 create=True, new_callable=mock.PropertyMock,
                 return_value=100000):
             with io.BytesIO() as buf:
-                with pytest.raises(ValueError) as err:
+                with pytest.raises(ValueError) as e:
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
                         tr.write(buf, format="segy")
-        assert str(err.value) == (
+        assert str(e.value) == (
             "Failed to pack header value `number_of_data_traces_per_ensemble` "
             "(100000) with format `>h` due to: `'h' format requires -32768 <="
             " number <= 32767`")

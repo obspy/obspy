@@ -56,7 +56,7 @@ class TestBaseRoutingClient():
 
         with pytest.raises(NotImplementedError) as e:
             RoutingClient("random")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "Routing type 'random' is not implemented. Available types: " \
             "`iris-federator`, `eida-routing`"
 
@@ -158,7 +158,7 @@ class TestBaseRoutingClient():
         c.include_providers = "http://random.com"
         with pytest.raises(FDSNNoDataException) as e:
             c._download_waveforms(split=split, test1="a", test2="b")
-        assert e.exception.args[0] == \
+        assert str(e.value) == \
             "Nothing remains to download after the provider " \
             "inclusion/exclusion filters have been applied."
 
