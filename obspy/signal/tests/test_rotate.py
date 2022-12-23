@@ -388,11 +388,11 @@ class TestRotate():
                 if a[2] == b[2] == c[2] == 0 or \
                         set([_i[3] for _i in (a, b, c)]) == \
                         set(["Z", "Q", "L"]):
-                    with pytest.raises(ValueError) as e:
+                    with pytest.raises(ValueError) as err:
                         rotate2zne(a[0], a[1], a[2],
                                    b[0], b[1], b[2],
                                    c[0], c[1], c[2])
-                    assert str(e.value).startswith(
+                    assert str(err.value).startswith(
                         "The given directions are not linearly independent, "
                         "at least within numerical precision. Determinant of "
                         "the base change matrix:")
