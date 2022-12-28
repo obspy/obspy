@@ -49,6 +49,15 @@ class _SlotsEqualityComparisionObject(object):
                     for _i in self.__slots__])
 
 
+def _sta_int_key(station, interval):
+    """
+    Returns a tuple that can be used as a key in dictionaries to identify a
+    unique combination of Station+Interval
+    """
+    return (station.network, station.station, interval.start.ns,
+            interval.end.ns)
+
+
 class Station(_SlotsEqualityComparisionObject):
     """
     Object representing a seismic station within the download helper classes.
@@ -393,12 +402,16 @@ class Channel(_SlotsEqualityComparisionObject):
     Object representing a Channel. Each time interval should end up in one
     MiniSEED file.
     """
-    __slots__ = ["location", "channel", "intervals"]
+    __slots__ = ["location", "channel", "intervals", "channel_priority",
+                 "location_priority"]
 
-    def __init__(self, location, channel, intervals):
+    def __init__(self, location, channel, intervals, channel_priority=0,
+                 location_priority=0):
         self.location = location
         self.channel = channel
         self.intervals = intervals
+        self.channel_priority = channel_priority
+        self.location_priority = location_priority
 
     @property
     def needs_station_file(self):
@@ -927,9 +940,18 @@ class ClientDownloadHelper(object):
         """
         downloaded_bytes = 0
         discarded_bytes = 0
+        highest_channel_priorities = {}
+        highest_location_priorities = {}
         for sta in self.stations.values():
             for cha in sta.channels:
                 for interval in cha.intervals:
+                    sta_int_key = _sta_int_key(sta, interval)
+                    current_cha_prio_high = \
+                        highest_channel_priorities.setdefault(
+                            sta_int_key, np.inf)
+                    current_loc_prio_high = \
+                        highest_location_priorities.setdefault(
+                            sta_int_key, np.inf)
                     # The status of the interval should not have changed if
                     # it did not require downloading in the first place.
                     if interval.status != STATUS.NEEDS_DOWNLOADING:
@@ -1000,8 +1022,40 @@ class ClientDownloadHelper(object):
                             interval.status = STATUS.DOWNLOAD_REJECTED
                             continue
 
+                    if cha.channel_priority < current_cha_prio_high:
+                        highest_channel_priorities[sta_int_key] = \
+                            cha.channel_priority
+                    if cha.location_priority < current_loc_prio_high:
+                        highest_location_priorities[sta_int_key] = \
+                            cha.location_priority
                     downloaded_bytes += size
                     interval.status = STATUS.DOWNLOADED
+
+        # last step: from all the valid/good data we kept, determine for each
+        # station+interval combination group channels by priority and only keep
+        # data with highest priority
+        for sta in self.stations.values():
+            for cha in sta.channels:
+                for interval in cha.intervals:
+                    # we only look at actually downloaded and approved data
+                    if interval.status != STATUS.DOWNLOADED:
+                        continue
+                    key = _sta_int_key(sta, interval)
+                    # greater than here actually means a lower priority
+                    cha_prio = cha.channel_priority
+                    loc_prio = cha.location_priority
+                    if cha_prio > highest_channel_priorities[key] or \
+                            loc_prio > highest_location_priorities[key]:
+                        self.logger.info(
+                            f"File {interval.filename} is not needed since a "
+                            f"higher priority channel was downloaded as well. "
+                            f"File will be deleted.")
+                        size = os.path.getsize(interval.filename)
+                        utils.safe_delete(interval.filename)
+                        discarded_bytes += size
+                        downloaded_bytes -= size
+                        interval.status = STATUS.DOWNLOAD_REJECTED
+
         return downloaded_bytes, discarded_bytes
 
     def _parse_miniseed_filenames(self, filenames, restrictions):

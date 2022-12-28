@@ -326,13 +326,13 @@ def filter_channel_priority(channels, key, priorities=None):
     if priorities is None:
         return channels
     filtered_channels = []
-    for pattern in priorities:
-        if filtered_channels:
-            break
-        for channel in channels:
+    for channel in channels:
+        setattr(channel, f'{key}_priority', np.inf)
+        for i, pattern in enumerate(priorities):
             if fnmatch.fnmatch(getattr(channel, key), pattern):
+                setattr(channel, f'{key}_priority', i)
                 filtered_channels.append(channel)
-                continue
+                break
     return filtered_channels
 
 
