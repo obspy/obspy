@@ -872,8 +872,8 @@ class Trace(object):
         >>> print(tr.id)
         BW.MANZ..EHZ
         """
-        out = "%(network)s.%(station)s.%(location)s.%(channel)s"
-        return out % (self.stats)
+        return (self.stats.network + '.' + self.stats.station + '.' +
+                self.stats.location + '.' + self.stats.channel)
 
     id = property(get_id)
 
