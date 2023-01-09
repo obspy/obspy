@@ -484,6 +484,7 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
                 event_str=event_str, catalog=catalog, wav_names=wav_names,
                 **kwargs)
             event_str = []
+            event_str.append(line)
         elif len(line.rstrip()) > 0:
             event_str.append(line)
         elif len(event_str) > 0:
