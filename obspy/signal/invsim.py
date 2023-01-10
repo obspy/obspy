@@ -23,6 +23,7 @@ import ctypes as C  # NOQA
 import math
 import os
 import warnings
+from pathlib import Path
 
 import numpy as np
 import scipy.signal
@@ -224,7 +225,7 @@ def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
     :param t_samp: Sampling interval in seconds
     :type frequencies: list[float]
     :param frequencies: Discrete frequencies to calculate response for.
-    :type filename: str or file
+    :type filename: str or file or Path
     :param filename: SEED RESP-filename or open file like object with RESP
         information. Any object that provides a read() method will be
         considered to be a file like object.
@@ -245,7 +246,7 @@ def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
     :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response from SEED RESP-file for given frequencies
     """
-    if isinstance(filename, str):
+    if isinstance(filename, (str, Path)):
         with open(filename, 'rb') as fh:
             data = fh.read()
     elif hasattr(filename, 'read'):

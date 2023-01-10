@@ -101,7 +101,7 @@ def get_flags(files, starttime=None, endtime=None,
     file and returns statistics about the timing quality if applicable.
 
     :param files: MiniSEED file or list of MiniSEED files.
-    :type files: list, str, file-like object
+    :type files: list, str, :class:`~pathlib.Path`, file-like object
     :param starttime: Only use records whose end time is larger than this
         given time.
     :type starttime: str or :class:`obspy.core.utcdatetime.UTCDateTime`
@@ -228,7 +228,7 @@ def get_flags(files, starttime=None, endtime=None,
     for file in files:
 
         # If it's a file name just read it.
-        if isinstance(file, str):
+        if isinstance(file, (str, Path)):
             # Read to NumPy array which is used as a buffer.
             bfr_np = np.fromfile(file, dtype=np.int8)
         elif hasattr(file, 'read'):

@@ -18,6 +18,7 @@ import os
 import re
 import warnings
 import zipfile
+from pathlib import Path
 
 from lxml import etree
 from lxml.etree import parse as xmlparse
@@ -171,7 +172,9 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into BytesIO object
-        if isinstance(data, str):
+        if isinstance(data, (str, Path)):
+            if isinstance(data, Path):
+                data = str(data)
             if re.search(r"://", data) is not None:
                 url = data
                 data = io.BytesIO()
