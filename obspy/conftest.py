@@ -2,6 +2,7 @@
 Obspy's testing configuration file.
 """
 import argparse
+import inspect
 import os
 import platform
 import shutil
@@ -25,6 +26,33 @@ REPORT_DEPENDENCIES = ['cartopy', 'flake8', 'geographiclib', 'pyproj',
                        'shapefile', 'pytest', 'pytest-json-report']
 
 # --- ObsPy fixtures
+
+
+@pytest.fixture(scope='package')
+def root():
+    """
+    Path to the obspy root directory (in which "core", "io", ... subdirs are)
+    """
+    return Path(inspect.getfile(obspy)).parent
+
+
+@pytest.fixture(scope='module')
+def datapath(request):
+    """
+    Path to the 'data' directory of the current 'tests' directory
+    """
+    module_path = Path(request.module.__file__)
+    datapath = module_path.parent / 'data'
+    return datapath
+
+
+@pytest.fixture(scope='module')
+def testdata(datapath):
+    """
+    Dictionary with full paths to test files of current module by filename
+    """
+    files = {path.name: path for path in datapath.glob('*')}
+    return files
 
 
 @pytest.fixture(scope='class')
