@@ -16,6 +16,7 @@ from datetime import timedelta
 import io
 import math
 import string as s
+from pathlib import Path
 
 import numpy as np
 
@@ -1068,7 +1069,7 @@ def _read_mchedr(filename):
         ObsPy :func:`~obspy.core.event.read_events` function, call this
         instead.
 
-    :type filename: str
+    :type filename: str or :class:`~pathlib.Path`
     :param filename: mchedr file to be read.
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
@@ -1081,6 +1082,8 @@ def _read_mchedr(filename):
     1 Event(s) in Catalog:
     2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2  Mb
     """
+    if isinstance(filename, Path):
+        filename = str(filename)
     return Unpickler().load(filename)
 
 

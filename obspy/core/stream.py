@@ -208,6 +208,8 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         st = _generic_reader(pathname_or_url, _read, **kwargs)
 
     if len(st) == 0:
+        if isinstance(pathname_or_url, Path):
+            pathname_or_url = str(pathname_or_url)
         # try to give more specific information why the stream is empty
         if has_magic(pathname_or_url) and not glob(pathname_or_url):
             raise Exception("No file matching file pattern: %s" %
