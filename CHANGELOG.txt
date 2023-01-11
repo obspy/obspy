@@ -15,6 +15,15 @@ Changes:
      routine "beach" with providing an existing axes instance (for proper
      scaling) and saving to vector graphics as pdf/eps (see #2887)
 
+ - obspy.io.gcf:
+   * Fixed an issue in algorithm to split and encode last few data into GCF 
+      blocks. Problem were that number of data samples in a GCF block is
+      computed from product of number of four-byte records in data block and
+      compression code (which can be 1, 2, or 4) hence number of samples must
+      be an integer multiple of the compression code meaning that compression
+      used in last data block may have to be other than highest possible based
+      on the data solely. 
+
 1.4.0 (doi: 10.5281/zenodo.6645832)
 ===================================
 

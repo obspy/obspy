@@ -306,8 +306,8 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
  *                or where decoding data failed will not be merged.
  *                
  *  RETURN:
- *   function returns 0 if all went well, -1 if file could not be opened, 1 if file is
- *   not data file, Note, even if 0 is returned file may still contain errors in individual
+ *   function returns 0 if all went well, -1 if file could not be opened, > 0 if file is
+ *   not a data file, Note, even if 0 is returned file may still contain errors in individual
  *   segments.
  */
 int read_gcf(const char *f, GcfFile *obj, int mode);
