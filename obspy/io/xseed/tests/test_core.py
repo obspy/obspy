@@ -566,8 +566,8 @@ class TestCore():
         with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
 
-    def test_warning_with_multiple_differing_blockettes_58_in_stage_0(self,
-            testdata):
+    def test_warning_with_multiple_differing_blockettes_58_in_stage_0(
+            self, testdata):
         filename = testdata["RESP.repeated_differing_stage_0"]
         msg = (r"Epoch BN.WR0..SHZ "
                r"\[1996-03-01T00:00:00.000000Z - "

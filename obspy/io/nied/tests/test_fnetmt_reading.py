@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import io
 
 from obspy.core.event import read_events

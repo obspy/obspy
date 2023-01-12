@@ -3,7 +3,6 @@ import importlib
 import io
 import sys
 import warnings
-from glob import iglob
 
 from lxml import etree
 

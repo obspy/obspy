@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import inspect
 import os
 import re
 import shutil

@@ -2,7 +2,6 @@
 """
 The obspy.imaging.scripts.plot / obspy-plot test suite.
 """
-import os
 import shutil
 from pathlib import Path
 

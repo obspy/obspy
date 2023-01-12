@@ -4,7 +4,6 @@
 The obspy.io.css.core test suite.
 """
 import gzip
-import os
 
 import numpy as np
 

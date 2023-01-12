@@ -3,7 +3,6 @@
 The obspy.signal.trigger test suite.
 """
 import gzip
-import os
 import warnings
 from ctypes import ArgumentError
 

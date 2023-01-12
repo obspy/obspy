@@ -4,7 +4,6 @@
 The obspy.io.kinemetrics.core test suite.
 """
 import io
-import os
 
 import numpy as np
 

@@ -2288,7 +2288,6 @@ class TestClientDownloadHelper():
             c.get_availability()
             assert sorted(c.stations.keys()) == expected
 
-
         # When 'channel' or 'location' are set they should override
         # 'channel_priorities' and 'location_priorities'. If this isn't
         # happening this test will fail, as we're requesting data

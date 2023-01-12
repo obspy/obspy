@@ -1146,7 +1146,8 @@ class TestMSEEDUtil():
             assert flags['glitches'] == 2
             assert flags['suspect_time_tag'] == 2
 
-    def test_regression_segfault_when_hooking_up_libmseeds_logging(self, testdata):
+    def test_regression_segfault_when_hooking_up_libmseeds_logging(
+            self, testdata):
         filename = testdata['wrong_blockette_numbers_specified.mseed']
         # Read it once - that hooks up the logging.
         with warnings.catch_warnings(record=True) as w:

@@ -9,7 +9,6 @@ Test suite for the response handling.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import os
 import warnings
 from math import pi
 

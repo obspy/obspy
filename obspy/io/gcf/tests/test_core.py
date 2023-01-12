@@ -3,8 +3,6 @@
 """
 The obspy.io.gcf.core test suite.
 """
-import os
-
 import numpy as np
 import pytest
 
