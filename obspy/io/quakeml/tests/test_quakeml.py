@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import io
 import math
-import os
 import warnings
 
 import pytest
@@ -47,20 +46,11 @@ class TestQuakeML():
     """
     Test suite for obspy.io.quakeml
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-        cls.neries_filename = os.path.join(cls.path, 'neries_events.xml')
-
-    def setup_method(self):
-        self.neries_catalog = _read_quakeml(self.neries_filename)
-
-    def test_read_quakeml(self):
+    def test_read_quakeml(self, testdata):
         """
         """
         # IRIS
-        filename = os.path.join(self.path, 'iris_events.xml')
+        filename = testdata['iris_events.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 2
@@ -71,7 +61,7 @@ class TestQuakeML():
             ResourceIdentifier(
                 'smi:www.iris.edu/ws/event/query?eventId=2318174')
         # NERIES
-        catalog = self.neries_catalog
+        catalog = _read_quakeml(testdata['neries_events.xml'])
         assert_no_extras(catalog)
         assert len(catalog) == 3
         assert catalog[0].resource_id == \
@@ -81,8 +71,8 @@ class TestQuakeML():
         assert catalog[2].resource_id == \
             ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000039')
 
-    def test_usgs_eventype(self):
-        filename = os.path.join(self.path, 'usgs_event.xml')
+    def test_usgs_eventype(self, testdata):
+        filename = testdata['usgs_event.xml']
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             catalog = _read_quakeml(filename)
@@ -92,11 +82,11 @@ class TestQuakeML():
         assert len(catalog) == 1
         assert catalog[0].event_type == 'quarry blast'
 
-    def test_event(self):
+    def test_event(self, testdata):
         """
         Tests Event object.
         """
-        filename = os.path.join(self.path, 'quakeml_1.2_event.xml')
+        filename = testdata['quakeml_1.2_event.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -141,11 +131,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_origin(self):
+    def test_origin(self, testdata):
         """
         Tests Origin object.
         """
-        filename = os.path.join(self.path, 'quakeml_1.2_origin.xml')
+        filename = testdata['quakeml_1.2_origin.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -239,11 +229,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_magnitude(self):
+    def test_magnitude(self, testdata):
         """
         Tests Magnitude object.
         """
-        filename = os.path.join(self.path, 'quakeml_1.2_magnitude.xml')
+        filename = testdata['quakeml_1.2_magnitude.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -282,12 +272,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_station_magnitude_contribution(self):
+    def test_station_magnitude_contribution(self, testdata):
         """
         Tests the station magnitude contribution object.
         """
-        filename = os.path.join(
-            self.path, 'quakeml_1.2_stationmagnitudecontributions.xml')
+        filename = testdata['quakeml_1.2_stationmagnitudecontributions.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -315,11 +304,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_station_magnitude(self):
+    def test_station_magnitude(self, testdata):
         """
         Tests StationMagnitude object.
         """
-        filename = os.path.join(self.path, 'quakeml_1.2_stationmagnitude.xml')
+        filename = testdata['quakeml_1.2_stationmagnitude.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -349,11 +338,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_data_used_in_moment_tensor(self):
+    def test_data_used_in_moment_tensor(self, testdata):
         """
         Tests the data used objects in moment tensors.
         """
-        filename = os.path.join(self.path, 'quakeml_1.2_data_used.xml')
+        filename = testdata['quakeml_1.2_data_used.xml']
 
         # Test reading first.
         catalog = _read_quakeml(filename)
@@ -390,11 +379,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_arrival(self):
+    def test_arrival(self, testdata):
         """
         Tests Arrival object.
         """
-        filename = os.path.join(self.path, 'quakeml_1.2_arrival.xml')
+        filename = testdata['quakeml_1.2_arrival.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -425,11 +414,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_pick(self):
+    def test_pick(self, testdata):
         """
         Tests Pick object.
         """
-        filename = os.path.join(self.path, 'quakeml_1.2_pick.xml')
+        filename = testdata['quakeml_1.2_pick.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -460,11 +449,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_focalmechanism(self):
+    def test_focalmechanism(self, testdata):
         """
         Tests FocalMechanism object.
         """
-        filename = os.path.join(self.path, 'quakeml_1.2_focalmechanism.xml')
+        filename = testdata['quakeml_1.2_focalmechanism.xml']
         catalog = _read_quakeml(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -545,11 +534,11 @@ class TestQuakeML():
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_write_quakeml(self):
+    def test_write_quakeml(self, testdata):
         """
         Tests writing a QuakeML document.
         """
-        filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
+        filename = testdata['qml-example-1.2-RC3.xml']
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             catalog = _read_quakeml(filename)
@@ -564,13 +553,13 @@ class TestQuakeML():
                 assert_no_extras(catalog2)
         assert len(catalog2), 1
 
-    def test_read_events(self):
+    def test_read_events(self, testdata):
         """
         Tests reading a QuakeML document via read_events.
         """
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            catalog = read_events(self.neries_filename)
+            catalog = read_events(testdata['neries_events.xml'])
             assert_no_extras(catalog)
             assert len(catalog), 3
             catalog.write(tmpfile, format='QUAKEML')
@@ -583,7 +572,7 @@ class TestQuakeML():
         assert len(catalog2), 3
 
     @pytest.mark.skipif(not IS_RECENT_LXML, reason="lxml >= 2.3 is required")
-    def test_enums(self):
+    def test_enums(self, datapath):
         """
         Parses the QuakeML xsd scheme definition and checks if all enums are
         correctly defined.
@@ -595,8 +584,7 @@ class TestQuakeML():
         from lxml.etree import parse
 
         xsd_enum_definitions = {}
-        xsd_file = os.path.join(
-            self.path, os.pardir, os.pardir, "data", "QuakeML-BED-1.2.xsd")
+        xsd_file = datapath.parent.parent / "data" / "QuakeML-BED-1.2.xsd"
         root = parse(xsd_file).getroot()
 
         # Get all enums from the xsd file.
@@ -648,18 +636,18 @@ class TestQuakeML():
                                  enumerations=", ".join(additional_items))
                 raise Exception(msg)
 
-    def test_read_string(self):
+    def test_read_string(self, testdata):
         """
         Test reading a QuakeML string/unicode object via read_events.
         """
-        with open(self.neries_filename, 'rb') as fp:
+        with open(testdata['neries_events.xml'], 'rb') as fp:
             data = fp.read()
 
         catalog = read_events(data)
         assert_no_extras(catalog)
         assert len(catalog) == 3
 
-    def test_preferred_tags(self):
+    def test_preferred_tags(self, testdata):
         """
         Testing preferred magnitude, origin and focal mechanism tags
         """
@@ -669,7 +657,7 @@ class TestQuakeML():
         assert ev.preferred_magnitude() is None
         assert ev.preferred_focal_mechanism() is None
         # testing existing event
-        filename = os.path.join(self.path, 'preferred.xml')
+        filename = testdata['preferred.xml']
         catalog = read_events(filename)
         assert_no_extras(catalog)
         assert len(catalog) == 1
@@ -758,24 +746,24 @@ class TestQuakeML():
         assert mag.magnitude_type == "Mw"
         assert mag.evaluation_mode == "automatic"
 
-    def test_read_equivalence(self):
+    def test_read_equivalence(self, testdata):
         """
         See #662.
         Tests if _read_quakeml() and read_events() return the same results.
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
-            cat1 = read_events(self.neries_filename)
-            cat2 = _read_quakeml(self.neries_filename)
+            cat1 = read_events(testdata['neries_events.xml'])
+            cat2 = _read_quakeml(testdata['neries_events.xml'])
         assert cat1 == cat2
 
-    def test_reading_twice_raises_no_warning(self):
+    def test_reading_twice_raises_no_warning(self, testdata):
         """
         Tests that reading a QuakeML file twice does not raise a warnings.
 
         Not an extensive test but likely good enough.
         """
-        filename = os.path.join(self.path, "qml-example-1.2-RC3.xml")
+        filename = testdata['qml-example-1.2-RC3.xml']
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -787,11 +775,11 @@ class TestQuakeML():
 
         assert cat1 == cat2
 
-    def test_read_amplitude_time_window(self):
+    def test_read_amplitude_time_window(self, testdata):
         """
         Tests reading an QuakeML Amplitude with TimeWindow.
         """
-        filename = os.path.join(self.path, "qml-example-1.2-RC3.xml")
+        filename = testdata['qml-example-1.2-RC3.xml']
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -809,11 +797,11 @@ class TestQuakeML():
         assert amp.time_window.reference == \
             UTCDateTime("2007-10-10T14:40:39.055")
 
-    def test_write_amplitude_time_window(self):
+    def test_write_amplitude_time_window(self, testdata):
         """
         Tests writing an QuakeML Amplitude with TimeWindow.
         """
-        filename = os.path.join(self.path, "qml-example-1.2-RC3.xml")
+        filename = testdata['qml-example-1.2-RC3.xml']
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -849,13 +837,13 @@ class TestQuakeML():
                 b'</amplitude>']
             assert got == expected
 
-    def test_write_with_extra_tags_and_read(self):
+    def test_write_with_extra_tags_and_read(self, testdata):
         """
         Tests that a QuakeML file with additional custom "extra" tags gets
         written correctly and that when reading it again the extra tags are
         parsed correctly.
         """
-        filename = os.path.join(self.path, "quakeml_1.2_origin.xml")
+        filename = testdata['quakeml_1.2_origin.xml']
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -1062,13 +1050,13 @@ class TestQuakeML():
         assert cat[0].focal_mechanisms[0].nodal_planes is None
         assert cat[0].focal_mechanisms[0].principal_axes is None
 
-    def test_writing_invalid_quakeml_id(self):
+    def test_writing_invalid_quakeml_id(self, testdata):
         """
         Some ids might be invalid. We still want to write them to not mess
         with any external tools relying on the ids. But we also raise a
         warning of course.
         """
-        filename = os.path.join(self.path, 'invalid_id.xml')
+        filename = testdata['invalid_id.xml']
         cat = read_events(filename)
         assert cat[0].resource_id.id == \
             "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)"
@@ -1085,11 +1073,11 @@ class TestQuakeML():
         assert cat2[0].resource_id.id == \
             "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)"
 
-    def test_reading_invalid_enums(self):
+    def test_reading_invalid_enums(self, testdata):
         """
         Raise a warning when an invalid enum value is attempted to be read.
         """
-        filename = os.path.join(self.path, "invalid_enum.xml")
+        filename = testdata['invalid_enum.xml']
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             cat = read_events(filename)

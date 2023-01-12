@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import inspect
 import io
-import os
 import re
 import warnings
-from pathlib import Path
 
 from obspy import UTCDateTime, read_events
 from obspy.core.inventory import Inventory, Network, Station, Channel
-from obspy.core.util import NamedTemporaryFile, get_example_file
+from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.testing import compare_xml_strings, remove_unique_ids
 from obspy.io.nlloc.core import is_nlloc_hyp, read_nlloc_hyp, write_nlloc_obs
 
@@ -36,18 +33,12 @@ class TestNLLOC():
     """
     Test suite for obspy.io.nlloc
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = Path(os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe()))))
-        cls.datapath = cls.path / "data"
-
-    def test_write_nlloc_obs(self):
+    def test_write_nlloc_obs(self, testdata):
         """
         Test writing nonlinloc observations phase file.
         """
         # load nlloc_custom.qml QuakeML file to generate OBS file from it
-        filename = get_example_file("nlloc_custom.qml")
+        filename = testdata["nlloc_custom.qml"]
         cat = read_events(filename, "QUAKEML")
         # adjust one pick time that got cropped by nonlinloc in NLLOC HYP file
         # due to less precision in hypocenter file (that we used to create the
@@ -58,7 +49,7 @@ class TestNLLOC():
                 pick.time -= 0.005
 
         # read expected OBS file output
-        filename = get_example_file("nlloc.obs")
+        filename = testdata["nlloc.obs"]
         with open(filename, "rb") as fh:
             expected = fh.read().decode()
 
@@ -78,17 +69,17 @@ class TestNLLOC():
 
         assert expected == got
 
-    def test_read_nlloc_hyp(self):
+    def test_read_nlloc_hyp(self, testdata):
         """
         Test reading nonlinloc hypocenter phase file.
         """
-        filename = get_example_file("nlloc_custom.hyp")
+        filename = testdata["nlloc_custom.hyp"]
         cat = read_nlloc_hyp(filename,
                              coordinate_converter=_mock_coordinate_converter)
         # reset pick channel codes, these got automatically mapped upon reading
         for pick in cat[0].picks:
             pick.waveform_id.channel_code = None
-        with open(get_example_file("nlloc_custom.qml"), 'rb') as tf:
+        with open(testdata["nlloc_custom.qml"], 'rb') as tf:
             quakeml_expected = tf.read().decode()
         with NamedTemporaryFile() as tf:
             cat.write(tf, format="QUAKEML")
@@ -118,12 +109,12 @@ class TestNLLOC():
 
         compare_xml_strings(quakeml_expected.encode(), quakeml_got.encode())
 
-    def test_read_nlloc_hyp_with_builtin_projection(self):
+    def test_read_nlloc_hyp_with_builtin_projection(self, testdata):
         """
         Test reading nonlinloc hyp file without a coordinate_converter.
         """
-        cat = read_nlloc_hyp(get_example_file("nlloc.hyp"))
-        cat_expected = read_events(get_example_file("nlloc.qml"))
+        cat = read_nlloc_hyp(testdata["nlloc.hyp"])
+        cat_expected = read_events(testdata["nlloc.qml"])
 
         # test event
         ev = cat[0]
@@ -226,14 +217,14 @@ class TestNLLOC():
             assert pick.phase_hint == pick_expected.phase_hint
             assert pick.polarity == pick_expected.polarity
 
-    def test_read_nlloc_hyp_via_plugin(self):
-        filename = get_example_file("nlloc_custom.hyp")
+    def test_read_nlloc_hyp_via_plugin(self, testdata):
+        filename = testdata["nlloc_custom.hyp"]
         cat = read_events(filename)
         assert len(cat) == 1
         cat = read_events(filename, format="NLLOC_HYP")
         assert len(cat) == 1
 
-    def test_read_nlloc_with_pick_seed_id_lookup(self):
+    def test_read_nlloc_with_pick_seed_id_lookup(self, testdata):
         # create some bogus metadata for lookup
         cha = Channel('HHZ', '00', 0, 0, 0, 0)
         sta = Station('HM02', 0, 0, 0, channels=[cha])
@@ -249,7 +240,7 @@ class TestNLLOC():
 
         inv = Inventory(networks=[net, net2], source='')
 
-        filename = get_example_file("nlloc_custom.hyp")
+        filename = testdata["nlloc_custom.hyp"]
         # we get some warnings since we only provide sufficient metadata for
         # one pick
         with warnings.catch_warnings():
@@ -265,34 +256,34 @@ class TestNLLOC():
                 assert wid.network_code == ''
                 assert wid.location_code is None
 
-    def test_is_nlloc_hyp(self):
+    def test_is_nlloc_hyp(self, testdata):
         # test positive
-        filename = get_example_file("nlloc_custom.hyp")
+        filename = testdata["nlloc_custom.hyp"]
         assert is_nlloc_hyp(filename)
         # test some negatives
         for filenames in ["nlloc_custom.qml", "nlloc.obs", "gaps.mseed",
                           "BW_RJOB.xml", "QFILE-TEST-ASC.ASC", "LMOW.BHE.SAC"]:
-            filename = get_example_file("nlloc_custom.qml")
+            filename = testdata["nlloc_custom.qml"]
             assert not is_nlloc_hyp(filename)
 
-    def test_read_nlloc_with_picks(self):
+    def test_read_nlloc_with_picks(self, testdata):
         """
         Test correct resource ID linking when reading NLLOC_HYP file with
         providing original picks.
         """
-        picks = read_events(get_example_file("nlloc_custom.qml"))[0].picks
+        picks = read_events(testdata["nlloc_custom.qml"])[0].picks
         arrivals = read_events(
-            get_example_file("nlloc_custom.hyp"), format="NLLOC_HYP",
+            testdata["nlloc_custom.hyp"], format="NLLOC_HYP",
             picks=picks)[0].origins[0].arrivals
         expected = [p.resource_id for p in picks]
         got = [a.pick_id for a in arrivals]
         assert expected == got
 
-    def test_read_nlloc_with_multiple_events(self):
+    def test_read_nlloc_with_multiple_events(self, testdata):
         """
         Test reading a NLLOC_HYP file with multiple hypocenters in it.
         """
-        got = read_events(get_example_file("vanua.sum.grid0.loc.hyp"),
+        got = read_events(testdata["vanua.sum.grid0.loc.hyp"],
                           format="NLLOC_HYP")
         assert len(got) == 3
         assert got[0].origins[0].longitude == 167.049
@@ -307,7 +298,7 @@ class TestNLLOC():
             assert event.comments[0].text == \
                              "Central Vanuatu (3D tomo 2016)"
 
-    def test_read_nlloc_6_beta_signature(self):
+    def test_read_nlloc_6_beta_signature(self, testdata):
         """
         SIGNATURE field of nlloc hypocenter output file was somehow changed at
         some point after version 6.0 (it appears in 6.0.3 beta release for
@@ -315,20 +306,20 @@ class TestNLLOC():
         Date is now seemingly always prepended with 'run:' without a space
         afterwards.
         """
-        filename = os.path.join(self.datapath, 'nlloc_post_version_6.hyp')
+        filename = testdata['nlloc_post_version_6.hyp']
         cat = read_nlloc_hyp(filename)
         # check that signature time-of-run part is correctly read
         # (actually before the fix the above reading already fails..)
         assert cat[0].creation_info.creation_time == \
             UTCDateTime(2017, 5, 9, 11, 0, 22)
 
-    def test_issue_2222(self):
+    def test_issue_2222(self, testdata):
         """
         Test that hour values of 24 don't break parser.
         """
 
         # modify the example file to contain an hour 24 and second 60
-        with open(get_example_file('nlloc.hyp')) as f:
+        with open(testdata['nlloc.hyp']) as f:
             nll_str = f.read().splitlines()
         # first add a line with hour 24
         str_list = list(nll_str[-3])
@@ -349,12 +340,12 @@ class TestNLLOC():
         assert pick1.time.hour == 0
         assert pick2.time.second == 0
 
-    def test_reading_nlloc_v7_hyp_file(self):
+    def test_reading_nlloc_v7_hyp_file(self, testdata):
         """
         Tests that we are getting the positioning of items in phase lines
         right. Values for arrivals are shifted by one index to the right in hyp
         files written by newer nonlinloc versions, see #3223
         """
-        path = str(self.datapath / 'nlloc_v7.hyp')
+        path = testdata['nlloc_v7.hyp']
         cat = read_nlloc_hyp(path)
         assert cat[0].origins[0].arrivals[0].azimuth == 107.42

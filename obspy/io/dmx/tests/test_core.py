@@ -3,8 +3,6 @@
 """
 The obspy.io.dmx.core test suite.
 """
-import os
-
 import numpy as np
 
 from obspy import read
@@ -16,16 +14,11 @@ class TestCore():
     """
     Test cases for dmx core interface
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_read_via_obspy(self):
+    def test_read_via_obspy(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '131114_090600.dmx')
+        filename = testdata['131114_090600.dmx']
         # 1
         st = read(filename)
         st.verify()
@@ -39,11 +32,11 @@ class TestCore():
         assert st[0].stats.channel == 'Z'
         assert st[0].id == 'ETNA.EMFO..Z'
 
-    def test_read_via_module(self):
+    def test_read_via_module(self, testdata):
         """
         Read files via obspy.io.mdx.core._read_dmx function directly.
         """
-        filename = os.path.join(self.path, '131114_090600.dmx')
+        filename = testdata['131114_090600.dmx']
         # 1
         st = _read_dmx(filename)
         st.verify()
@@ -57,11 +50,11 @@ class TestCore():
         assert st[0].stats.channel == 'Z'
         assert st[0].id == 'ETNA.EMFO..Z'
 
-    def test_read_with_station(self):
+    def test_read_with_station(self, testdata):
         """
         Read files and passing a station keyword argument.
         """
-        filename = os.path.join(self.path, '131114_090600.dmx')
+        filename = testdata['131114_090600.dmx']
         # 1
         st = read(filename, station='EMPL')
         st.verify()
@@ -71,11 +64,11 @@ class TestCore():
         for tr in st:
             assert tr.stats.station == "EMPL"
 
-    def test_check_data_content_sum(self):
+    def test_check_data_content_sum(self, testdata):
         """
         Read files and passing a station keyword argument.
         """
-        filename = os.path.join(self.path, '131114_090600.dmx')
+        filename = testdata['131114_090600.dmx']
         # 1
         st = read(filename)
         st.verify()

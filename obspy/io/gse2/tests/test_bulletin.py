@@ -11,7 +11,6 @@ The gse2.bulletin test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import os
 import warnings
 
 from obspy.core.event import read_events
@@ -26,17 +25,11 @@ class TestBulletin():
     """
     Test suite for obspy.io.gse2.bulletin
     """
-
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data/bulletin')
-
-    def test_catalog(self):
+    def test_catalog(self, datapath):
         """
         Test Catalog object.
         """
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         catalog = _read_gse2(filename)
         assert catalog.resource_id == 'smi:local/event/evid'
         assert len(catalog.comments) == 1
@@ -46,11 +39,11 @@ class TestBulletin():
         assert comment.text == text
         assert comment.resource_id.id[:10] == 'smi:local/'
 
-    def test_event(self):
+    def test_event(self, datapath):
         """
         Test Event object.
         """
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 1
         event = catalog[0]
@@ -73,11 +66,11 @@ class TestBulletin():
         assert comment.text == 'GSE2.0:evtype=ke'
         assert comment.resource_id.id[:10] == 'smi:local/'
 
-    def test_origin(self):
+    def test_origin(self, datapath):
         """
         Test Origin object.
         """
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 1
         assert len(catalog[0].origins) == 1
@@ -130,11 +123,11 @@ class TestBulletin():
         # composite times
         assert len(origin.composite_times) == 0
 
-    def test_pick(self):
+    def test_pick(self, datapath):
         """
         Test Pick object.
         """
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 1
         picks = catalog[0].picks
@@ -186,11 +179,11 @@ class TestBulletin():
         assert pick_2.creation_info is not None
         assert len(pick_2.comments) == 0
 
-    def test_arrival(self):
+    def test_arrival(self, datapath):
         """
         Test Arrival object.
         """
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 1
         assert len(catalog[0].origins) == 1
@@ -235,11 +228,11 @@ class TestBulletin():
         assert arrival_2.creation_info is not None
         assert len(arrival_2.comments) == 0
 
-    def test_magnitude(self):
+    def test_magnitude(self, datapath):
         """
         Test Magnitude object.
         """
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 1
         magnitudes = catalog[0].magnitudes
@@ -275,11 +268,11 @@ class TestBulletin():
         assert len(mag_2.comments) == 0
         assert len(mag_2.station_magnitude_contributions) == 1
 
-    def test_station_magnitude(self):
+    def test_station_magnitude(self, datapath):
         """
         Test StationMagnitude object.
         """
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 1
         station_magnitudes = catalog[0].station_magnitudes
@@ -328,7 +321,7 @@ class TestBulletin():
                 'amp': slice(94, 104),
             },
         }
-        filename = os.path.join(self.path, 'event.txt')
+        filename = datapath / 'bulletin' / 'event.txt'
         catalog = _read_gse2(filename, fields=fields,
                              res_id_prefix="quakeml:ldg",
                              event_point_separator=True)
@@ -353,11 +346,11 @@ class TestBulletin():
         assert waveform_2.location_code is None
         assert waveform_2.resource_uri is None
 
-    def test_amplitude(self):
+    def test_amplitude(self, datapath):
         """
         Test Amplitude object.
         """
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 1
         amplitudes = catalog[0].amplitudes
@@ -417,11 +410,11 @@ class TestBulletin():
         assert amplitude_2.creation_info is not None
         assert len(amplitude_2.comments) == 0
 
-    def test_several_events(self):
+    def test_several_events(self, datapath):
         """
         Test with several events.
         """
-        filename = os.path.join(self.path, 'gse_2.0_2_events.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_2_events.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 2
         # Test firt event
@@ -449,8 +442,8 @@ class TestBulletin():
         assert len(event_2.magnitudes) == 1
         assert len(event_2.station_magnitudes) == 2
 
-    def test_parameters(self):
-        filename = os.path.join(self.path, 'gse_2.0_standard.txt')
+    def test_parameters(self, datapath):
+        filename = datapath / 'bulletin' / 'gse_2.0_standard.txt'
         fields = {
             'line_1': {
                 'time': slice(0, 21),
@@ -561,11 +554,11 @@ class TestBulletin():
         assert waveform.channel_code == 'SHZ'
         assert waveform.location_code == '00'
 
-    def test_non_standard_format(self):
+    def test_non_standard_format(self, datapath):
         """
         Test non-standard GSE2 format which can normally be parsed too.
         """
-        filename = os.path.join(self.path, 'gse_2.0_non_standard.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_non_standard.txt'
         fields = {
             'line_1': {
                 'author': slice(105, 113),
@@ -606,9 +599,9 @@ class TestBulletin():
         amplitude = event.amplitudes[0]
         assert amplitude.generic_amplitude == 2.9
 
-    def test_inventory(self):
-        filename = os.path.join(self.path, 'gse_2.0_non_standard.txt')
-        inventory_filename = os.path.join(self.path, 'inventory.xml')
+    def test_inventory(self, datapath):
+        filename = datapath / 'bulletin' / 'gse_2.0_non_standard.txt'
+        inventory_filename = datapath / 'bulletin' / 'inventory.xml'
         inventory = read_inventory(inventory_filename)
         fields = {
             'line_1': {
@@ -645,10 +638,10 @@ class TestBulletin():
         assert waveform_2.channel_code is None
         assert waveform_2.location_code is None
 
-    def test_inventory_with_multiple_channels(self):
-        filename = os.path.join(self.path, 'gse_2.0_non_standard.txt')
-        inventory_filename = os.path.join(self.path,
-                                          'inventory_multiple_channels.xml')
+    def test_inventory_with_multiple_channels(self, datapath):
+        filename = datapath / 'bulletin' / 'gse_2.0_non_standard.txt'
+        inventory_filename = \
+            datapath / 'bulletin' / 'inventory_multiple_channels.xml'
         inventory = read_inventory(inventory_filename)
         fields = {
             'line_1': {
@@ -691,11 +684,11 @@ class TestBulletin():
         assert waveform_3.channel_code is None
         assert waveform_3.location_code is None
 
-    def test_several_begin(self):
+    def test_several_begin(self, datapath):
         """
         Test with several events.
         """
-        filename = os.path.join(self.path, 'gse_2.0_2_begins.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_2_begins.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 2
         # Test firt event
@@ -723,15 +716,15 @@ class TestBulletin():
         assert len(event_2.magnitudes) == 1
         assert len(event_2.station_magnitudes) == 2
 
-    def test_read_events(self):
+    def test_read_events(self, datapath):
         """
         Tests reading a GSE2.0 document via read_events.
         """
-        filename = os.path.join(self.path, 'gse_2.0_2_events.txt')
+        filename = datapath / 'bulletin' / 'gse_2.0_2_events.txt'
         catalog = read_events(filename)
         assert len(catalog) == 2
 
-    def test_incomplete_file(self):
-        filename = os.path.join(self.path, 'gse_2.0_incomplete.txt')
+    def test_incomplete_file(self, datapath):
+        filename = datapath / 'bulletin' / 'gse_2.0_incomplete.txt'
         with pytest.raises(GSE2BulletinSyntaxError):
             _read_gse2(filename)

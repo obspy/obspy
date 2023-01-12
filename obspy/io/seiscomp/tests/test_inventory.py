@@ -15,7 +15,6 @@ Modified after obspy.io.stationXML
 """
 
 import io
-import os
 import re
 import warnings
 
@@ -29,27 +28,20 @@ from obspy.io.seiscomp.inventory import (
 
 class TestSC3ML():
 
-    @classmethod
-    def setup_class(cls):
-        """
-        Read example SeisComp XML format to Inventory
-        """
-        cls.data_dir = os.path.join(os.path.dirname(__file__), "data")
-        cls.stationxml_path = os.path.join(
-            cls.data_dir, "EB_response_stationXML")
-        cls.sc3ml_path = os.path.join(cls.data_dir, "EB_response_sc3ml")
-
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.stationxml_path = testdata["EB_response_stationXML"]
+        self.sc3ml_path = testdata["EB_response_sc3ml"]
         self.stationxml_inventory = read_inventory(self.stationxml_path,
                                                    format="STATIONXML")
         self.sc3ml_inventory = read_inventory(self.sc3ml_path, format="SC3ML")
 
-    def test_sc3ml_versions(self):
+    def test_sc3ml_versions(self, testdata):
         """
         Test multiple schema versions
         """
         for version in ['0.5', '0.99']:
-            filename = os.path.join(self.data_dir, 'version%s' % version)
+            filename = testdata['version%s' % version]
 
             with pytest.raises(ValueError) as e:
                 with warnings.catch_warnings():
@@ -59,13 +51,12 @@ class TestSC3ML():
             assert str(e.value) == "Schema version not supported."
 
     @pytest.mark.filterwarnings('ignore:.*rate of 0')
-    def test_channel_level(self):
+    def test_channel_level(self, testdata):
         """
         Test inventory without repsonse information up to
         channel level
         """
-        inv = read_inventory(os.path.join(self.data_dir,
-                                          "channel_level.sc3ml"))
+        inv = read_inventory(testdata["channel_level.sc3ml"])
         assert inv[0].code == "NL"
         assert inv[0][0].code == "HGN"
         for cha in inv[0][0].channels:
@@ -117,14 +108,13 @@ class TestSC3ML():
                 tag = str(stationxml).split(">")[0][1:]
                 assert tag in excluded_tags
 
-    def test_empty_depth(self):
+    def test_empty_depth(self, testdata):
         """
         Assert depth, latitude, longitude, elevation set to 0.0 if left empty
         """
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("default")
-            read_inventory(os.path.join(self.data_dir,
-                                        "sc3ml_empty_depth_and_id.sc3ml"))
+            read_inventory(testdata["sc3ml_empty_depth_and_id.sc3ml"])
             assert len(w) == 4
             assert str(w[0].message) == \
                 "Sensor is missing longitude information, using 0.0"
@@ -273,12 +263,11 @@ class TestSC3ML():
         with pytest.raises(ValueError):
             _parse_list_of_complex_string(complex_string)
 
-    def test_stage_empty_poles_and_zeros(self):
+    def test_stage_empty_poles_and_zeros(self, testdata):
         """
         Tests for a case where the poles and zeros are empty see #2633
         """
-        sc3ml_mbar_path = os.path.join(
-            self.data_dir, "zero_poles_and_zeros.sc3ml")
+        sc3ml_mbar_path = testdata["zero_poles_and_zeros.sc3ml"]
         sc3ml_inv = read_inventory(sc3ml_mbar_path)
         response = sc3ml_inv[0][0][0].response
         zeros = response.response_stages[1].zeros

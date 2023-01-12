@@ -4,7 +4,6 @@
 The Filter test suite.
 """
 import gzip
-import os
 import warnings
 
 import numpy as np
@@ -19,12 +18,7 @@ class TestFilter():
     """
     Test cases for Filter.
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_bandpass_vs_pitsa(self):
+    def test_bandpass_vs_pitsa(self, testdata):
         """
         Test Butterworth bandpass filter against Butterworth bandpass filter
         of PITSA. Note that the corners value is twice the value of the filter
@@ -32,8 +26,7 @@ class TestFilter():
         tends to get bigger with higher order filtering.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        with gzip.open(file) as f:
+        with gzip.open(testdata['rjob_20051006.gz']) as f:
             data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
@@ -43,15 +36,14 @@ class TestFilter():
         # filter trace
         datcorr = bandpass(data, freq1, freq2, df=samp_rate, corners=corners)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_bandpass.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006_bandpass.gz']) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
         assert rms < 1.0e-05
 
-    def test_bandpass_zphsh_vs_pitsa(self):
+    def test_bandpass_zphsh_vs_pitsa(self, testdata):
         """
         Test Butterworth zero-phase bandpass filter against Butterworth
         zero-phase bandpass filter of PITSA. Note that the corners value is
@@ -64,8 +56,7 @@ class TestFilter():
         generally be of low interest/importance.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006.gz']) as f:
             data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
@@ -76,15 +67,14 @@ class TestFilter():
         datcorr = bandpass(data, freq1, freq2, df=samp_rate,
                            corners=corners, zerophase=True)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_bandpassZPHSH.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006_bandpassZPHSH.gz']) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
         assert rms < 1.0e-05
 
-    def test_lowpass_vs_pitsa(self):
+    def test_lowpass_vs_pitsa(self, testdata):
         """
         Test Butterworth lowpass filter against Butterworth lowpass filter of
         PITSA. Note that the corners value is twice the value of the filter
@@ -92,8 +82,7 @@ class TestFilter():
         tends to get bigger with higher order filtering.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006.gz']) as f:
             data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
@@ -102,15 +91,14 @@ class TestFilter():
         # filter trace
         datcorr = lowpass(data, freq, df=samp_rate, corners=corners)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_lowpass.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006_lowpass.gz']) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
         assert rms < 1.0e-05
 
-    def test_lowpass_zphsh_vs_pitsa(self):
+    def test_lowpass_zphsh_vs_pitsa(self, testdata):
         """
         Test Butterworth zero-phase lowpass filter against Butterworth
         zero-phase lowpass filter of PITSA. Note that the corners value is
@@ -123,7 +111,7 @@ class TestFilter():
         generally be of low interest/importance.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # parameters for the test
@@ -134,7 +122,7 @@ class TestFilter():
         datcorr = lowpass(data, freq, df=samp_rate, corners=corners,
                           zerophase=True)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_lowpassZPHSH.gz')
+        filename = testdata['rjob_20051006_lowpassZPHSH.gz']
         with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
@@ -142,7 +130,7 @@ class TestFilter():
                       np.sum(data_pitsa[:-200] ** 2))
         assert rms < 1.0e-05
 
-    def test_highpass_vs_pitsa(self):
+    def test_highpass_vs_pitsa(self, testdata):
         """
         Test Butterworth highpass filter against Butterworth highpass filter
         of PITSA. Note that the corners value is twice the value of the filter
@@ -150,7 +138,7 @@ class TestFilter():
         tends to get bigger with higher order filtering.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # parameters for the test
@@ -160,7 +148,7 @@ class TestFilter():
         # filter trace
         datcorr = highpass(data, freq, df=samp_rate, corners=corners)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_highpass.gz')
+        filename = testdata['rjob_20051006_highpass.gz']
         with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
@@ -168,7 +156,7 @@ class TestFilter():
                       np.sum(data_pitsa ** 2))
         assert rms < 1.0e-05
 
-    def test_highpass_zphsh_vs_pitsa(self):
+    def test_highpass_zphsh_vs_pitsa(self, testdata):
         """
         Test Butterworth zero-phase highpass filter against Butterworth
         zero-phase highpass filter of PITSA. Note that the corners value is
@@ -181,7 +169,7 @@ class TestFilter():
         generally be of low interest/importance.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # parameters for the test
@@ -192,7 +180,7 @@ class TestFilter():
         datcorr = highpass(data, freq, df=samp_rate, corners=corners,
                            zerophase=True)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_highpassZPHSH.gz')
+        filename = testdata['rjob_20051006_highpassZPHSH.gz']
         with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
@@ -200,19 +188,19 @@ class TestFilter():
                       np.sum(data_pitsa[:-200] ** 2))
         assert rms < 1.0e-05
 
-    def test_envelope_vs_pitsa(self):
+    def test_envelope_vs_pitsa(self, testdata):
         """
         Test Envelope filter against PITSA.
         The rms is not so good, but the fit is still good in most parts.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # filter trace
         datcorr = envelope(data)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_envelope.gz')
+        filename = testdata['rjob_20051006_envelope.gz']
         with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms

@@ -16,20 +16,14 @@ class TestCalibration():
     """
     Calibration test case
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                'data'))
-
-    def test_relcal_sts2_vs_unknown(self):
+    def test_relcal_sts2_vs_unknown(self, testdata):
         """
         Test relative calibration of unknown instrument vs STS2 in the same
         time range. Window length is set to 20 s, smoothing rate to 10.
         """
-        st1 = read(os.path.join(self.path, 'ref_STS2'))
-        st2 = read(os.path.join(self.path, 'ref_unknown'))
-        calfile = os.path.join(self.path, 'STS2_simp.cal')
+        st1 = read(testdata['ref_STS2'])
+        st2 = read(testdata['ref_unknown'])
+        calfile = testdata['STS2_simp.cal']
 
         with TemporaryWorkingDirectory():
             freq, amp, phase = rel_calib_stack(st1, st2, calfile, 20,
@@ -42,8 +36,8 @@ class TestCalibration():
             assert np.allclose(phase, phase_, rtol=1e-8, atol=1e-8)
 
         # read in the reference responses
-        un_resp = np.loadtxt(os.path.join(self.path, 'unknown.resp'))
-        kn_resp = np.loadtxt(os.path.join(self.path, 'STS2.refResp'))
+        un_resp = np.loadtxt(testdata['unknown.resp'])
+        kn_resp = np.loadtxt(testdata['STS2.refResp'])
 
         # bug resolved with 2f9876d, arctan was used which maps to
         # [-pi/2, pi/2]. arctan2 or np.angle shall be used instead
@@ -68,13 +62,13 @@ class TestCalibration():
         np.testing.assert_array_almost_equal(phase[1:], un_resp[1:, 2],
                                              decimal=4)
 
-    def test_relcal_using_traces(self):
+    def test_relcal_using_traces(self, testdata):
         """
         Tests using traces instead of stream objects as input parameters.
         """
-        st1 = read(os.path.join(self.path, 'ref_STS2'))
-        st2 = read(os.path.join(self.path, 'ref_unknown'))
-        calfile = os.path.join(self.path, 'STS2_simp.cal')
+        st1 = read(testdata['ref_STS2'])
+        st2 = read(testdata['ref_unknown'])
+        calfile = testdata['STS2_simp.cal']
         # stream
         freq, amp, phase = rel_calib_stack(st1, st2, calfile, 20, smooth=10,
                                            save_data=False)
@@ -85,15 +79,15 @@ class TestCalibration():
         np.testing.assert_array_almost_equal(amp, amp2, decimal=4)
         np.testing.assert_array_almost_equal(phase, phase2, decimal=4)
 
-    def test_relcal_different_overlaps(self):
+    def test_relcal_different_overlaps(self, testdata):
         """
         Tests using different window overlap percentages.
 
         Regression test for bug #1821.
         """
-        st1 = read(os.path.join(self.path, 'ref_STS2'))
-        st2 = read(os.path.join(self.path, 'ref_unknown'))
-        calfile = os.path.join(self.path, 'STS2_simp.cal')
+        st1 = read(testdata['ref_STS2'])
+        st2 = read(testdata['ref_unknown'])
+        calfile = testdata['STS2_simp.cal']
 
         def median_amplitude_plateau(freq, amp):
             # resulting response is pretty much flat in this frequency range
@@ -114,13 +108,13 @@ class TestCalibration():
             # make sure results are close for any overlap choice
             assert percentual_difference < 0.01
 
-    def test_relcal_using_dict(self):
+    def test_relcal_using_dict(self, testdata):
         """
         Tests using paz dictionary instead of a gse2 file.
         """
-        st1 = read(os.path.join(self.path, 'ref_STS2'))
-        st2 = read(os.path.join(self.path, 'ref_unknown'))
-        calfile = os.path.join(self.path, 'STS2_simp.cal')
+        st1 = read(testdata['ref_STS2'])
+        st2 = read(testdata['ref_unknown'])
+        calfile = testdata['STS2_simp.cal']
         calpaz = dict()
         calpaz['poles'] = [-0.03677 + 0.03703j, -0.03677 - 0.03703j]
         calpaz['zeros'] = [0 + 0j, 0 - 0j]

@@ -9,9 +9,8 @@ Test suite for the CSS station writer.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import fnmatch
-import inspect
 import os
+import pytest
 import shutil
 import tempfile
 
@@ -22,11 +21,9 @@ class TestCSSStation():
     """
     Test cases for css station interface
     """
-    @classmethod
-    def setup_class(cls):
-        # Most generic way to get the actual data directory.
-        cls.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), 'data', 'station')
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, datapath):
+        self.data_dir = datapath / 'station'
 
     def _run_test(self, inv, fname):
         tempdir = tempfile.mkdtemp(prefix='obspy-')
@@ -34,8 +31,8 @@ class TestCSSStation():
         try:
             inv.write(os.path.join(tempdir, fname), format='CSS')
 
-            expected_files = sorted(name for name in os.listdir(self.data_dir)
-                                    if fnmatch.fnmatch(name, fname + '.*'))
+            expected_files = sorted(
+                path.name for path in self.data_dir.glob(fname + '.*'))
             actual_files = sorted(os.listdir(tempdir))
             assert expected_files == actual_files
 

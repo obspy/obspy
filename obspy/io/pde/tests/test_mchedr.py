@@ -2,6 +2,8 @@
 import os
 import warnings
 
+import pytest
+
 from obspy.core.event import ResourceIdentifier, read_events
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
@@ -23,18 +25,10 @@ class TestMchedr():
     """
     Test suite for obspy.mchedr
     """
-
-    catalog = None
-
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-        cls.filename = os.path.join(cls.path, 'mchedr.dat')
-
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
         # read the mchedr file once for all
-        self.catalog = _read_mchedr(self.filename)
+        self.catalog = _read_mchedr(testdata['mchedr.dat'])
 
     def test_catalog(self):
         assert len(self.catalog) == 1
@@ -302,11 +296,11 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
                 catalog2 = _read_quakeml(tf)
         assert len(catalog2), 1
 
-    def test_read_events(self):
+    def test_read_events(self, testdata):
         """
         Tests reading an mchedr document via read_events.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
+        filename = testdata['mchedr.dat']
         # Read file again. Avoid the (legit) warning about the already used
         # resource identifiers.
         with warnings.catch_warnings(record=True):

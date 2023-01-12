@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import inspect
 import io
-import os
 import re
 import warnings
 
@@ -22,8 +20,8 @@ class TestReftek():
     """
     Test suite for obspy.io.reftek
     """
-    @classmethod
-    def setup_class(cls):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
         try:
             # doctests of __init__.py produce warnings that get caught. if we
             # don't raze the slate out the registry here, we can't test those
@@ -34,26 +32,18 @@ class TestReftek():
             # import error means no warning has been issued
             # before, so nothing to do.
             pass
-        cls.path = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        cls.datapath = os.path.join(cls.path, "data")
-        cls.reftek_filename = "225051000_00008656"
-        cls.reftek_file = os.path.join(cls.datapath, cls.reftek_filename)
-        cls.reftek_file_steim2 = os.path.join(cls.datapath,
-                                              '104800000_000093F8')
-        cls.reftek_file_16 = os.path.join(
-            cls.datapath, '065520000_013EE8A0.rt130')
-        cls.reftek_file_16_npz = os.path.join(
-            cls.datapath, '065520000_013EE8A0.npz')
-        cls.reftek_file_32 = os.path.join(
-            cls.datapath, '230000005_0036EE80_cropped.rt130')
-        cls.reftek_file_32_npz = os.path.join(
-            cls.datapath, '230000005_0036EE80_cropped.npz')
-        cls.mseed_filenames = [
+        self.reftek_filename = "225051000_00008656"
+        self.reftek_file = testdata[self.reftek_filename]
+        self.reftek_file_steim2 = testdata['104800000_000093F8']
+        self.reftek_file_16 = testdata['065520000_013EE8A0.rt130']
+        self.reftek_file_16_npz = testdata['065520000_013EE8A0.npz']
+        self.reftek_file_32 = testdata['230000005_0036EE80_cropped.rt130']
+        self.reftek_file_32_npz = testdata['230000005_0036EE80_cropped.npz']
+        self.mseed_filenames = [
             "2015282_225051_0ae4c_1_1.msd",
             "2015282_225051_0ae4c_1_2.msd", "2015282_225051_0ae4c_1_3.msd"]
-        cls.mseed_files = [os.path.join(cls.datapath, filename)
-                           for filename in cls.mseed_filenames]
+        self.mseed_files = [
+            testdata[filename] for filename in self.mseed_filenames]
         # files "2015282_225051_0ae4c_1_[123].msd" contain miniseed data
         # converted with "rt_mseed" tool of Reftek utilities.
 
@@ -92,7 +82,7 @@ class TestReftek():
         #   25 1 673 2015-10-09T22:51:22.025000Z
         #   26 2 759 2015-10-09T22:51:21.595000Z
         #   27 0 067 2015-10-09T22:51:25.055000Z
-        cls.reftek_file_vpu = os.path.join(cls.datapath, '221935615_00000000')
+        self.reftek_file_vpu = testdata['221935615_00000000']
 
     def _assert_reftek130_test_stream(self, st_reftek):
         """
@@ -408,26 +398,24 @@ class TestReftek():
             "Reftek data contains data packets without corresponding header " \
             "or trailer packet."
 
-    def test_data_unpacking_steim1(self):
+    def test_data_unpacking_steim1(self, testdata):
         """
         Test both unpacking routines for C0 data coding (STEIM1)
         """
         rt = Reftek130.from_file(self.reftek_file)
-        expected = np.load(os.path.join(self.datapath,
-                                        "unpacked_data_steim1.npy"))
+        expected = np.load(testdata['unpacked_data_steim1.npy'])
         packets = rt._data[rt._data['packet_type'] == b'DT'][:10]
         for func in (_unpack_C0_C2_data, _unpack_C0_C2_data_fast,
                      _unpack_C0_C2_data_safe):
             got = func(packets, encoding='C0')
             np.testing.assert_array_equal(got, expected)
 
-    def test_data_unpacking_steim2(self):
+    def test_data_unpacking_steim2(self, testdata):
         """
         Test both unpacking routines for C2 data coding (STEIM2)
         """
         rt = Reftek130.from_file(self.reftek_file_steim2)
-        expected = np.load(os.path.join(self.datapath,
-                                        "unpacked_data_steim2.npy"))
+        expected = np.load(testdata['unpacked_data_steim2.npy'])
         packets = rt._data[rt._data['packet_type'] == b'DT'][:10]
         for func in (_unpack_C0_C2_data, _unpack_C0_C2_data_fast,
                      _unpack_C0_C2_data_safe):

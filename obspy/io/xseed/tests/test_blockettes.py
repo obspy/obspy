@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import importlib
 import io
-import os
 import sys
 import warnings
 from glob import iglob
@@ -19,11 +18,6 @@ class TestBlockette():
     """
     Test cases for all blockettes.
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-
     def test_invalid_blockette_length(self):
         """
         A wrong blockette length should raise an exception.
@@ -174,16 +168,15 @@ class TestBlockette():
                         errmsg % (blkt_number, 'XSEED', key2,
                                   xseed, blkt2['data'])
 
-    def test_all_blockettes(self):
+    def test_all_blockettes(self, datapath):
         """
         Tests all Blockettes.
         """
         # Loop over all files in the blockette-tests directory.
-        path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
         test_example_count = 0
-        for blkt_file in iglob(path):
+        for blkt_file in (datapath / 'blockette-tests').glob('blockette*.txt'):
             # Get blockette number.
-            blkt_number = blkt_file[-7:-4]
+            blkt_number = str(blkt_file)[-7:-4]
             # Check whether the blockette class can be loaded.
             try:
                 __import__('obspy.io.xseed.blockette.blockette' + blkt_number)
@@ -199,17 +192,16 @@ class TestBlockette():
             self.seed_and_xseed_conversion(test_examples, blkt_number)
         assert test_example_count > 0
 
-    def test_all_blockettes_get_resp(self):
+    def test_all_blockettes_get_resp(self, datapath):
         """
         Tests get_resp() for all blockettes that have that method.
         """
         tested_blockettes = 0
         # Loop over all files in the blockette-tests directory.
-        path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
-        for blkt_file in iglob(path):
+        for blkt_file in (datapath / 'blockette-tests').glob('blockette*.txt'):
 
             # Import the corresponding blockette.
-            blkt_number = blkt_file[-7:-4]
+            blkt_number = str(blkt_file)[-7:-4]
             blkt = importlib.import_module(
                 'obspy.io.xseed.blockette.blockette%s' % blkt_number)
             blkt = getattr(blkt, "Blockette%s" % blkt_number)

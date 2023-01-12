@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
-
 from obspy.core.util.misc import CatchOutput
 from obspy.io.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
 
@@ -10,13 +8,10 @@ class TestRecordAnalyser():
     @classmethod
     def setup_class(cls):
         cls.maxDiff = None
-        cls.test_file = os.path.join(os.path.dirname(__file__),
-                                     'data',
-                                     'timingquality.mseed')
 
-    def test_default_record(self):
+    def test_default_record(self, testdata):
         with CatchOutput() as out:
-            obspy_recordanalyzer([self.test_file])
+            obspy_recordanalyzer([str(testdata['timingquality.mseed'])])
 
         expected = '''FILE: %s
 Record Number: 0
@@ -53,12 +48,13 @@ BLOCKETTES
 CALCULATED VALUES
     Corrected Starttime: 2007-12-31T23:59:59.765000Z
 
-''' % (self.test_file,)  # noqa
+''' % (testdata['timingquality.mseed'],)  # noqa
         assert expected == out.stdout.replace("\t", "    ")  # noqa
 
-    def test_second_record(self):
+    def test_second_record(self, testdata):
         with CatchOutput() as out:
-            obspy_recordanalyzer(['-n', '1', self.test_file])
+            obspy_recordanalyzer(
+                ['-n', '1', str(testdata['timingquality.mseed'])])
 
         expected = '''FILE: %s
 Record Number: 1
@@ -95,16 +91,15 @@ BLOCKETTES
 CALCULATED VALUES
     Corrected Starttime: 2008-01-01T00:00:01.825000Z
 
-''' % (self.test_file,)  # noqa
+''' % (testdata['timingquality.mseed'],)  # noqa
         assert expected == out.stdout.replace("\t", "    ")  # noqa
 
-    def test_record_with_data_offset_zero(self):
+    def test_record_with_data_offset_zero(self, datapath):
         """
         The test file has a middle record which has data offset zero. Make
         sure it can be read, as well as the following record.
         """
-        filename = os.path.join(os.path.dirname(__file__), 'data', 'bizarre',
-                                'mseed_data_offset_0.mseed')
+        filename = str(datapath / 'bizarre' / 'mseed_data_offset_0.mseed')
 
         with CatchOutput() as out:
             obspy_recordanalyzer(['-n', '1', filename])
@@ -186,14 +181,13 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         assert expected == out.stdout.replace("\t", "    ")  # noqa
 
-    def test_record_with_negative_sr_fact_and_mult(self):
+    def test_record_with_negative_sr_fact_and_mult(self, testdata):
         """
         Regression tests as there was an issue with the record analyzer for
         negative sampling rates and factors.
         """
-        filename = os.path.join(
-            os.path.dirname(__file__), 'data',
-            'single_record_negative_sr_fact_and_mult.mseed')
+        filename = str(
+            testdata['single_record_negative_sr_fact_and_mult.mseed'])
 
         with CatchOutput() as out:
             obspy_recordanalyzer([filename])
@@ -233,13 +227,11 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         assert expected == out.stdout.replace("\t", "    ")  # noqa
 
-    def test_step_cal_blockette(self):
+    def test_step_cal_blockette(self, testdata):
         """
         Test the step calibration blockette type 300.
         """
-        filename = os.path.join(
-            os.path.dirname(__file__), 'data',
-            'blockette300.mseed')
+        filename = str(testdata['blockette300.mseed'])
 
         with CatchOutput() as out:
             obspy_recordanalyzer([filename])
@@ -291,13 +283,11 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         assert expected == out.stdout.replace("\t", "    ")  # noqa
 
-    def test_sine_cal_blockette(self):
+    def test_sine_cal_blockette(self, testdata):
         """
         Test the step calibration blockette type 310.
         """
-        filename = os.path.join(
-            os.path.dirname(__file__), 'data',
-            'blockette310.mseed')
+        filename = str(testdata['blockette310.mseed'])
 
         with CatchOutput() as out:
             obspy_recordanalyzer([filename])
@@ -348,13 +338,11 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         assert expected == out.stdout.replace("\t", "    ")  # noq
 
-    def test_random_cal_blockette(self):
+    def test_random_cal_blockette(self, testdata):
         """
         Test the random calibration blockette type 320.
         """
-        filename = os.path.join(
-            os.path.dirname(__file__), 'data',
-            'blockette320.mseed')
+        filename = str(testdata['blockette320.mseed'])
 
         with CatchOutput() as out:
             obspy_recordanalyzer([filename])

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import io
 import json
-import os
+
+import pytest
 
 from obspy.io.json.default import Default
 from obspy.io.json.core import get_dump_kwargs, _write_json
@@ -10,14 +11,11 @@ from obspy.io.quakeml.core import _read_quakeml
 
 class TestJSON():
     """Test JSON module classes and functions"""
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.join(os.path.dirname(__file__))
-        cls.qml_file = os.path.join(cls.path, "..", "..", "quakeml", "tests",
-                                    "data", "qml-example-1.2-RC3.xml")
-
-    def setup_method(self):
-        self.c = _read_quakeml(self.qml_file)
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, root):
+        qml_file = (root / 'io' / 'quakeml' / 'tests' / 'data' /
+                    "qml-example-1.2-RC3.xml")
+        self.c = _read_quakeml(qml_file)
         self.event = self.c.events[0]
 
     def verify_json(self, s):

@@ -11,50 +11,43 @@ from obspy.io.sh.core import (STANDARD_ASC_HEADERS, _is_asc, _is_q, _read_asc,
 
 
 class TestCore():
-
     """
     """
-
-    @classmethod
-    def setup_class(cls):
-        # Directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-
-    def test_read_101_traces(self):
+    def test_read_101_traces(self, testdata):
         """
         Testing reading Q file with more than 100 traces.
         """
-        testfile = os.path.join(self.path, 'data', '101.QHD')
+        testfile = testdata['101.QHD']
         # read
         stream = _read_q(testfile)
         stream.verify()
         assert len(stream) == 101
 
-    def test_is_asc_file(self):
+    def test_is_asc_file(self, testdata):
         """
         Testing ASC file format.
         """
-        testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
+        testfile = testdata['TEST_090101_0101.ASC']
         assert _is_asc(testfile)
-        testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
+        testfile = testdata['QFILE-TEST-SUN.QHD']
         assert not _is_asc(testfile)
 
-    def test_is_q_file(self):
+    def test_is_q_file(self, testdata):
         """
         Testing Q header file format.
         """
-        testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
+        testfile = testdata['QFILE-TEST-SUN.QHD']
         assert _is_q(testfile)
-        testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QBN')
+        testfile = testdata['QFILE-TEST-SUN.QBN']
         assert not _is_q(testfile)
-        testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
+        testfile = testdata['TEST_090101_0101.ASC']
         assert not _is_q(testfile)
 
-    def test_read_single_channel_asc_file(self):
+    def test_read_single_channel_asc_file(self, testdata):
         """
         Read ASC file test via obspy.io.sh.core._read_asc.
         """
-        testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
+        testfile = testdata['TEST_090101_0101.ASC']
         # read
         stream = _read_asc(testfile)
         stream.verify()
@@ -107,11 +100,11 @@ class TestCore():
         data = [4.449060e+02, 4.279572e+02, 4.120677e+02, 4.237200e+02]
         np.testing.assert_array_almost_equal(stream[2].data[0:4], data, 4)
 
-    def test_read_and_write_multi_channel_asc_file(self):
+    def test_read_and_write_multi_channel_asc_file(self, testdata):
         """
         Read and write ASC file via obspy.io.sh.core._read_asc.
         """
-        origfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
+        origfile = testdata['QFILE-TEST-ASC.ASC']
         # read original
         stream1 = _read_asc(origfile)
         stream1.verify()
@@ -131,11 +124,11 @@ class TestCore():
             stream2.verify()
             self._compare_stream(stream2)
 
-    def test_read_and_write_multi_channel_asc_file_via_obspy(self):
+    def test_read_and_write_multi_channel_asc_file_via_obspy(self, testdata):
         """
         Read and write ASC file test via obspy.core.
         """
-        origfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
+        origfile = testdata['QFILE-TEST-ASC.ASC']
         # read original
         stream1 = read(origfile, format="SH_ASC")
         stream1.verify()
@@ -150,12 +143,12 @@ class TestCore():
             stream2.verify()
             self._compare_stream(stream2)
 
-    def test_read_and_write_multi_channel_q_file(self):
+    def test_read_and_write_multi_channel_q_file(self, testdata):
         """
         Read and write Q file via obspy.io.sh.core._read_q.
         """
         # 1 - little endian (PC)
-        origfile = os.path.join(self.path, 'data', 'QFILE-TEST.QHD')
+        origfile = testdata['QFILE-TEST.QHD']
         # read original
         stream1 = _read_q(origfile)
         stream1.verify()
@@ -171,7 +164,7 @@ class TestCore():
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         # 2 - big endian (SUN)
-        origfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
+        origfile = testdata['QFILE-TEST-SUN.QHD']
         # read original
         stream1 = _read_q(origfile, byteorder=">")
         stream1.verify()
@@ -187,12 +180,12 @@ class TestCore():
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
 
-    def test_read_and_write_multi_channel_q_file_via_obspy(self):
+    def test_read_and_write_multi_channel_q_file_via_obspy(self, testdata):
         """
         Read and write Q file test via obspy.core.
         """
         # 1 - little endian (PC)
-        origfile = os.path.join(self.path, 'data', 'QFILE-TEST.QHD')
+        origfile = testdata['QFILE-TEST.QHD']
         # read original
         stream1 = read(origfile, format="Q")
         stream1.verify()
@@ -208,7 +201,7 @@ class TestCore():
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         # 2 - big endian (SUN)
-        origfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
+        origfile = testdata['QFILE-TEST-SUN.QHD']
         # read original
         stream1 = read(origfile, format="Q", byteorder=">")
         stream1.verify()
@@ -224,8 +217,8 @@ class TestCore():
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
 
-    def test_skip_asc_lines(self):
-        testfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
+    def test_skip_asc_lines(self, testdata):
+        testfile = testdata['QFILE-TEST-ASC.ASC']
         # read
         stream = _read_asc(testfile, skip=100, delta=0.1, length=2)
         stream.verify()

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+import pytest
 
 from obspy.core.event import read_events
 from obspy.core.utcdatetime import UTCDateTime
@@ -19,12 +19,8 @@ class TestZMAP():
     """
     Test suite for obspy.io.zmap.core
     """
-    @classmethod
-    def setup_class(cls):
-        data_dir = os.path.join(os.path.dirname(__file__), 'data')
-        cls.data_dir = data_dir
-
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
         self.zmap_fields = _STD_ZMAP_FIELDS
         self.test_data = {
             'lon': '79.689000', 'lat': '41.818000', 'month': '4',
@@ -32,16 +28,10 @@ class TestZMAP():
             'minute': '21', 'second': '42.3', 'depth': '1.000000',
             'mag': '4.400000'
         }
-        path_to_catalog = os.path.join(self.data_dir, 'neries_events.xml')
+        path_to_catalog = testdata['neries_events.xml']
         self.catalog = read_events(path_to_catalog)
         # Extract our favorite test event from the catalog
         self.test_event = self.catalog.events[0]
-
-    def teardown_method(self):
-        # Make sure events are deleted before the next test to prevent
-        # resource identifier warnings
-        self.catalog = None
-        self.test_event = None
 
     def test_serialize(self):
         """
@@ -235,11 +225,11 @@ class TestZMAP():
         catalog = zmap._read_zmap(zmap_str)
         self._assert_zmap_equal(catalog, test_events)
 
-    def test_read_float_seconds(self):
+    def test_read_float_seconds(self, testdata):
         """
         Test that floating point part of seconds is parsed correctly.
         """
-        catalog = zmap._read_zmap(os.path.join(self.data_dir, "templates.txt"))
+        catalog = zmap._read_zmap(testdata["templates.txt"])
         assert catalog[0].origins[0].time.microsecond == 840000
         assert catalog[1].origins[0].time.microsecond == 880000
         assert catalog[2].origins[0].time.microsecond == 550000

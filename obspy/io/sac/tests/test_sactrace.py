@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import io
-import os
 import datetime
 import warnings
 import random
@@ -21,14 +20,13 @@ class TestSACTrace():
     """
     Test suite for obspy.io.sac.sactrace
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(__file__)
-        cls.file = os.path.join(cls.path, 'data', 'test.sac')
-        cls.filexy = os.path.join(cls.path, 'data', 'testxy.sac')
-        cls.filebe = os.path.join(cls.path, 'data', 'test.sac.swap')
-        cls.fileseis = os.path.join(cls.path, 'data', 'seism.sac')
-        cls.testdata = np.array(
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.file = testdata['test.sac']
+        self.filexy = testdata['testxy.sac']
+        self.filebe = testdata['test.sac.swap']
+        self.fileseis = testdata['seism.sac']
+        self.testdata = np.array(
             [-8.74227766e-08, -3.09016973e-01,
              -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
              -1.00000000e+00, -9.51056302e-01, -8.09016585e-01,

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
-
 import numpy as np
 import pytest
 
@@ -15,12 +13,9 @@ class TestNRLRemote():
     Minimal NRL test suite connecting to online NRL
 
     """
-    def setup_method(self):
-        # This is also the default URL.
-        self.nrl_online = NRL(root='http://ds.iris.edu/NRL')
-
     def test_nrl_type(self):
-        assert isinstance(self.nrl_online, RemoteNRL)
+        nrl_online = NRL(root='http://ds.iris.edu/NRL')
+        assert isinstance(nrl_online, RemoteNRL)
 
 
 class TestNRLLocal():
@@ -28,17 +23,14 @@ class TestNRLLocal():
     NRL test suite using stripped down local NRL without network usage.
 
     """
-    @classmethod
-    def setup_class(cls):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, datapath):
         # Longer diffs in the test assertions.
-        cls.maxDiff = None
+        self.maxDiff = None
         # Small subset of NRL included in tests/data
-        cls.local_nrl_root = os.path.join(
-            os.path.dirname(__file__), 'data', 'IRIS')
-        cls.local_dl_key = ['REF TEK', 'RT 130 & 130-SMA', '1', '1']
-        cls.local_sensor_key = ['Guralp', 'CMG-3T', '120s - 50Hz', '1500']
-
-    def setup_method(self):
+        self.local_dl_key = ['REF TEK', 'RT 130 & 130-SMA', '1', '1']
+        self.local_sensor_key = ['Guralp', 'CMG-3T', '120s - 50Hz', '1500']
+        self.local_nrl_root = str(datapath / 'IRIS')
         self.nrl_local = NRL(root=self.local_nrl_root)
 
     def test_nrl_type(self):

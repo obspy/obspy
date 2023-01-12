@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import warnings
 
 from obspy.io.y.core import _is_y, _read_y
@@ -9,25 +8,20 @@ class TestCore():
     """
     Nanometrics Y file test suite.
     """
-    @classmethod
-    def setup_class(cls):
-        # Directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-
-    def test_is_y_file(self):
+    def test_is_y_file(self, testdata):
         """
         Testing Y file format.
         """
-        testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
+        testfile = testdata['YAYT_BHZ_20021223.124800']
         assert _is_y(testfile)
         assert not _is_y("/path/to/slist.ascii")
         assert not _is_y("/path/to/tspair.ascii")
 
-    def test_read_y_file(self):
+    def test_read_y_file(self, testdata):
         """
         Testing reading Y file format.
         """
-        testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
+        testfile = testdata['YAYT_BHZ_20021223.124800']
         st = _read_y(testfile)
         assert len(st) == 1
         tr = st[0]
@@ -40,11 +34,11 @@ class TestCore():
         assert max(tr.data) == tr.stats.y.tag_series_info.max_amplitude
         assert min(tr.data) == tr.stats.y.tag_series_info.min_amplitude
 
-    def test_ignore_non_ascii_tag_station_info(self):
+    def test_ignore_non_ascii_tag_station_info(self, testdata):
         """
         Test faulty Y file containing non ASCII chars in TAG_STATION_INFO.
         """
-        testfile = os.path.join(self.path, 'data', 'YAZRSPE.20100119.060433')
+        testfile = testdata['YAZRSPE.20100119.060433']
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             st = _read_y(testfile)

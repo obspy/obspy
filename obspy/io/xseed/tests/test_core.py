@@ -21,11 +21,9 @@ class TestCore():
     """
     Test integration with ObsPy's inventory objects.
     """
-    @classmethod
-    def setup_class(cls):
-        cls.data_path = os.path.join(os.path.dirname(__file__), "data")
-
-        cls.seed_files = [
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata, root):
+        self.seed_files = [
             "AI.ESPZ._.BHE.dataless",
             "AI.ESPZ._.BH_.dataless",
             "BN.LPW._.BHE.dataless",
@@ -41,42 +39,36 @@ class TestCore():
             "dataless.seed.BW_ZUGS",
             "dataless.seed.II_COCO"
         ]
-        cls.xseed_files = ["dataless.seed.BW_FURT.xml"]
+        self.xseed_files = ["dataless.seed.BW_FURT.xml"]
 
-        cls.resp_files = ["RESP.BW.FURT..EHZ",
-                          "RESP.XX.NR008..HHZ.130.1.100",
-                          "RESP.XX.NS085..BHZ.STS2_gen3.120.1500",
-                          "RESP.BK.BRIB..BV1",
-                          "RESP.BK.DANT.00.LCL",
-                          # Has only a stage 0 with blkts 53 and 58.
-                          "RESP.BN.WR0..SHZ",
-                          # Defines the input units only in stage 2.
-                          "RESP.SG.MEMB..BDI"
-                          ]
-        cls.other_files = ["II_COCO_three_channel_borehole.mseed",
-                           "xml-seed-1.0.xsd",
-                           "xml-seed-1.1.xsd"]
+        self.resp_files = ["RESP.BW.FURT..EHZ",
+                           "RESP.XX.NR008..HHZ.130.1.100",
+                           "RESP.XX.NS085..BHZ.STS2_gen3.120.1500",
+                           "RESP.BK.BRIB..BV1",
+                           "RESP.BK.DANT.00.LCL",
+                           # Has only a stage 0 with blkts 53 and 58.
+                           "RESP.BN.WR0..SHZ",
+                           # Defines the input units only in stage 2.
+                           "RESP.SG.MEMB..BDI"
+                           ]
+        self.other_files = ["II_COCO_three_channel_borehole.mseed",
+                            "xml-seed-1.0.xsd",
+                            "xml-seed-1.1.xsd"]
 
-        cls.seed_files = [
-            os.path.join(cls.data_path, _i) for _i in cls.seed_files]
-        cls.xseed_files = [
-            os.path.join(cls.data_path, _i) for _i in cls.xseed_files]
-        cls.resp_files = [
-            os.path.join(cls.data_path, _i) for _i in cls.resp_files]
-        cls.other_files = [
-            os.path.join(cls.data_path, _i) for _i in cls.other_files]
+        self.seed_files = [testdata[_i] for _i in self.seed_files]
+        self.xseed_files = [testdata[_i] for _i in self.xseed_files]
+        self.resp_files = [testdata[_i] for _i in self.resp_files]
+        self.other_files = [testdata[_i] for _i in self.other_files]
 
         # There are a couple more SEED files in the core test suite.
-        core_data = os.path.join(os.path.dirname(os.path.dirname(
-            os.path.dirname(os.path.dirname(cls.data_path)))), "core",
-            "tests", "data")
-        cls.seed_files.append(os.path.join(core_data, "AU.MEEK.seed"))
-        cls.seed_files.append(os.path.join(
-            core_data, "IRIS_single_channel_with_response.seed"))
+        core_data = root / 'core' / 'tests' / 'data'
+        self.seed_files.append(core_data / "AU.MEEK.seed")
+        self.seed_files.append(
+            core_data / "IRIS_single_channel_with_response.seed")
 
         for _i in itertools.chain.from_iterable([
-                cls.seed_files, cls.xseed_files, cls.resp_files,
-                cls.other_files]):
+                self.seed_files, self.xseed_files, self.resp_files,
+                self.other_files]):
             assert os.path.exists(_i), _i
 
     def test_is_seed(self):
@@ -145,14 +137,13 @@ class TestCore():
         for f in self.xseed_files:
             _read_xseed(f)
 
-    def test_read_resp_metadata(self):
+    def test_read_resp_metadata(self, testdata):
         """
         Manually assert that the meta-data is read correctly for all the
         RESP files.
         """
         # File A
-        filename_a = os.path.join(self.data_path,
-                                  "RESP.BW.FURT..EHZ")
+        filename_a = testdata["RESP.BW.FURT..EHZ"]
         inv = obspy.read_inventory(filename_a)
         assert len(inv) == 1
         assert len(inv[0]) == 1
@@ -180,8 +171,7 @@ class TestCore():
             "Digital Counts"
 
         # File B
-        filename_b = os.path.join(self.data_path,
-                                  "RESP.XX.NR008..HHZ.130.1.100")
+        filename_b = testdata["RESP.XX.NR008..HHZ.130.1.100"]
         inv = obspy.read_inventory(filename_b)
         assert len(inv) == 1
         assert len(inv[0]) == 1
@@ -209,8 +199,7 @@ class TestCore():
             "Digital Counts"
 
         # File C
-        filename_c = os.path.join(self.data_path,
-                                  "RESP.XX.NS085..BHZ.STS2_gen3.120.1500")
+        filename_c = testdata["RESP.XX.NS085..BHZ.STS2_gen3.120.1500"]
         inv = obspy.read_inventory(filename_c)
         assert len(inv) == 1
         assert len(inv[0]) == 1
@@ -294,12 +283,12 @@ class TestCore():
         assert resp.instrument_sensitivity.output_units_description == \
             "Digital Counts"
 
-    def test_read_seed_metainformation(self):
+    def test_read_seed_metainformation(self, testdata):
         """
         Test the mapping of meta-information for SEED files. This will be
         exactly identical for XML-SEED files so no need to test these as well.
         """
-        filename = os.path.join(self.data_path, "dataless.seed.BW_ROTZ")
+        filename = testdata["dataless.seed.BW_ROTZ"]
         inv = obspy.read_inventory(filename)
 
         assert len(inv) == 1
@@ -404,11 +393,11 @@ class TestCore():
         for filename in self.resp_files:
             # Set the times for the response.
             t = obspy.UTCDateTime(2008, 1, 1)
-            if "AZ.DHL..BS1" in filename:
+            if "AZ.DHL..BS1" in str(filename):
                 t = obspy.UTCDateTime(1999, julday=351)
-            elif "BK.DANT.00.LCL" in filename:
+            elif "BK.DANT.00.LCL" in str(filename):
                 t = obspy.UTCDateTime(2017, 1, 1)
-            elif "BN.WR0..SHZ" in filename:
+            elif "BN.WR0..SHZ" in str(filename):
                 t = obspy.UTCDateTime(1998, 1, 1)
 
             for unit in ("DISP", "VEL", "ACC"):
@@ -515,8 +504,8 @@ class TestCore():
                                                                  unit),
                                 rtol=1E-6, atol=atol)
 
-    def test_warning_when_blockette_54_is_not_followed_by_57(self):
-        filename = os.path.join(self.data_path, "RESP.SG.ST..LDO")
+    def test_warning_when_blockette_54_is_not_followed_by_57(self, testdata):
+        filename = testdata["RESP.SG.ST..LDO"]
         # Fail if responses are explicitly not skipped.
         with CatchAndAssertWarnings():
             with pytest.raises(InvalidResponseError) as e:
@@ -548,8 +537,8 @@ class TestCore():
                 expected=[(Warning, msg1), (Warning, msg2)]):
             obspy.read_inventory(filename)
 
-    def test_warning_when_blockette_57_is_not_followed_by_58(self):
-        filename = os.path.join(self.data_path, "RESP.decimation_without_gain")
+    def test_warning_when_blockette_57_is_not_followed_by_58(self, testdata):
+        filename = testdata["RESP.decimation_without_gain"]
         # Fail if responses are explicitly not skipped.
         with CatchAndAssertWarnings():
             with pytest.raises(InvalidResponseError) as e:
@@ -567,8 +556,8 @@ class TestCore():
         with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
 
-    def test_warning_with_multiple_blockettes_58_in_stage_0(self):
-        filename = os.path.join(self.data_path, "RESP.repeated_stage_0")
+    def test_warning_with_multiple_blockettes_58_in_stage_0(self, testdata):
+        filename = testdata["RESP.repeated_stage_0"]
         msg = (r"Epoch BN.WR0..SHZ "
                r"\[1996-03-01T00:00:00.000000Z - "
                r"1999-01-03T00:00:00.000000Z\]: "
@@ -577,9 +566,8 @@ class TestCore():
         with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
 
-    def test_warning_with_multiple_differing_blockettes_58_in_stage_0(self):
-        filename = os.path.join(self.data_path,
-                                "RESP.repeated_differing_stage_0")
+    def test_warning_with_multiple_differing_blockettes_58_in_stage_0(self, testdata):
+        filename = testdata["RESP.repeated_differing_stage_0"]
         msg = (r"Epoch BN.WR0..SHZ "
                r"\[1996-03-01T00:00:00.000000Z - "
                r"1999-01-03T00:00:00.000000Z\]: "
@@ -589,12 +577,11 @@ class TestCore():
         with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
 
-    def test_blkts_53_and_54_in_one_stage(self):
+    def test_blkts_53_and_54_in_one_stage(self, testdata):
         """
         This should naturally raise.
         """
-        filename = os.path.join(self.data_path,
-                                "RESP.blkt53_and_54_in_one_stage")
+        filename = testdata["RESP.blkt53_and_54_in_one_stage"]
         with pytest.raises(InvalidResponseError) as e:
             obspy.read_inventory(filename, skip_invalid_responses=False)
         assert str(e.value) == \
@@ -609,10 +596,10 @@ class TestCore():
             inv = obspy.read_inventory(filename)
         assert inv[0][0][0].response is None
 
-    def test_reconstructing_stage_0_from_other_blockettes(self):
+    def test_reconstructing_stage_0_from_other_blockettes(self, testdata):
         # This file has no stage 0 but a bunch of other blockettes 58 from
         # other stages. Try to reconstruct stage 0.
-        filename = os.path.join(self.data_path, "RESP.JM.NMIA0.00.HHN")
+        filename = testdata["RESP.JM.NMIA0.00.HHN"]
 
         frequencies = np.logspace(-3, 3, 100)
         t = obspy.UTCDateTime(2015, 1, 1)
@@ -635,8 +622,8 @@ class TestCore():
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r)
 
-    def test_parsing_blockette_62(self):
-        filename = os.path.join(self.data_path, "RESP.blockette_62")
+    def test_parsing_blockette_62(self, testdata):
+        filename = testdata["RESP.blockette_62"]
         inv = obspy.read_inventory(filename)
         assert inv.get_contents()["channels"] == ["XH.DR01.30.LDO"]
         r = inv[0][0][0].response
@@ -657,8 +644,8 @@ class TestCore():
             coefficients=[8e2, 1.5e-4]
         )
 
-    def test_parsing_blockette_62_as_stage_0(self):
-        filename = os.path.join(self.data_path, "RESP.blockette_62_as_stage_0")
+    def test_parsing_blockette_62_as_stage_0(self, testdata):
+        filename = testdata["RESP.blockette_62_as_stage_0"]
         # Make sure there are no warnings.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -671,8 +658,8 @@ class TestCore():
         # For now just test that it is actually read.
         assert isinstance(r.response_stages[0], PolynomialResponseStage)
 
-    def test_warning_with_no_blockettes_58(self):
-        filename = os.path.join(self.data_path, "RESP.repeated_stage_0")
+    def test_warning_with_no_blockettes_58(self, testdata):
+        filename = testdata["RESP.repeated_stage_0"]
         msg = (r"Epoch BN.WR0..SHZ "
                r"\[1996-03-01T00:00:00.000000Z - "
                r"1999-01-03T00:00:00.000000Z\]: "
@@ -681,8 +668,8 @@ class TestCore():
         with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
 
-    def test_paz_with_no_actual_values(self):
-        filename = os.path.join(self.data_path, "RESP.paz_with_no_values")
+    def test_paz_with_no_actual_values(self, testdata):
+        filename = testdata["RESP.paz_with_no_values"]
         frequencies = np.logspace(-3, 3, 20)
 
         # Set the times for the response.
@@ -697,8 +684,8 @@ class TestCore():
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
 
-    def test_response_of_strain_meter(self):
-        filename = os.path.join(self.data_path, "RESP.strain_meter")
+    def test_response_of_strain_meter(self, testdata):
+        filename = testdata["RESP.strain_meter"]
         frequencies = np.logspace(-3, 3, 20)
 
         # Set the times for the response.
@@ -713,12 +700,11 @@ class TestCore():
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
 
-    def test_response_multiple_gain_blockettes(self):
+    def test_response_multiple_gain_blockettes(self, testdata):
         """
         Evalresp chooses the last one - make sure we do the same.
         """
-        filename = os.path.join(self.data_path,
-                                "RESP.multiple_gain_blockettes")
+        filename = testdata["RESP.multiple_gain_blockettes"]
         frequencies = np.logspace(-3, 3, 20)
 
         # Set the times for the response.
@@ -735,11 +721,11 @@ class TestCore():
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
 
-    def test_response_regression_1(self):
+    def test_response_regression_1(self, testdata):
         """
         Regression test as fixing one issue broke something else.
         """
-        filename = os.path.join(self.data_path, "RESP.regression_1")
+        filename = testdata["RESP.regression_1"]
         frequencies = np.logspace(-3, 3, 20)
 
         # Set the times for the response.
@@ -754,11 +740,11 @@ class TestCore():
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
 
-    def test_response_regression_2(self):
+    def test_response_regression_2(self, testdata):
         """
         Another regression test.
         """
-        filename = os.path.join(self.data_path, "RESP.regression_2")
+        filename = testdata["RESP.regression_2"]
         frequencies = np.logspace(-3, 3, 20)
 
         # Set the times for the response.
@@ -773,11 +759,11 @@ class TestCore():
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
 
-    def test_response_regression_segfault(self):
+    def test_response_regression_segfault(self, testdata):
         """
         Another regression test.
         """
-        filename = os.path.join(self.data_path, "RESP.regression_segfault")
+        filename = testdata["RESP.regression_segfault"]
         frequencies = np.logspace(-3, 3, 20)
 
         # Set the times for the response.
@@ -795,11 +781,11 @@ class TestCore():
             r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
 
-    def test_response_lots_zero_frequency_gains(self):
+    def test_response_lots_zero_frequency_gains(self, testdata):
         """
         Test a RESP file with many zero frequency gains in file.
         """
-        filename = os.path.join(self.data_path, "RESP.many_zero_frequencies")
+        filename = testdata["RESP.many_zero_frequencies"]
         frequencies = np.logspace(-3, 3, 20)
 
         # Set the times for the response.

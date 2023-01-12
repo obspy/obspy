@@ -1,29 +1,19 @@
-import glob
-import os.path
-
 from obspy import read_events, read_inventory
 from obspy.io.sh.evt import _is_evt
 
 
 class TestEvt():
-
-    @classmethod
-    def setup_class(cls):
-        # Directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-
-    def test_is_evt_file(self):
-        path = os.path.join(self.path, 'data', '*.evt')
-        for fname in glob.glob(path):
+    def test_is_evt_file(self, datapath):
+        for fname in datapath.glob('*.evt'):
             assert _is_evt(fname)
 
-    def test_local_event1(self):
-        fname = os.path.join(self.path, 'data', 'local1.evt')
+    def test_local_event1(self, testdata):
+        fname = testdata['local1.evt']
         cat = read_events(fname)
         assert len(cat) == 2
 
-    def test_local_event2(self):
-        fname = os.path.join(self.path, 'data', 'local2.evt')
+    def test_local_event2(self, testdata):
+        fname = testdata['local2.evt']
         cat = read_events(fname)
         assert len(cat) == 1
         ev = cat[0]
@@ -39,14 +29,14 @@ class TestEvt():
         assert oc.azimuth_max_horizontal_uncertainty == 75.70
         assert origin.arrivals[0].time_weight == 4.0
 
-    def test_tele_event1(self):
-        fname = os.path.join(self.path, 'data', 'tele1.evt')
+    def test_tele_event1(self, testdata):
+        fname = testdata['tele1.evt']
         cat = read_events(fname)
         assert len(cat) == 1
 
-    def test_tele_event2(self):
+    def test_tele_event2(self, testdata):
         # untested field: sign
-        fname = os.path.join(self.path, 'data', 'tele2.evt')
+        fname = testdata['tele2.evt']
         cat = read_events(fname)
         assert len(cat) == 1
         ev = cat[0]
@@ -86,8 +76,8 @@ class TestEvt():
         assert sta_mag.station_magnitude_type == 'Mb'
         assert sta_mag.waveform_id.get_seed_string() == '.AHRW..Z'
 
-    def test_populate_waveform_id(self):
-        fname = os.path.join(self.path, 'data', 'tele2.evt')
+    def test_populate_waveform_id(self, testdata):
+        fname = testdata['tele2.evt']
         # read invenroty - FUR with channels, WET without channels
         inv = read_inventory().select(channel='HH?')
         inv[0][1].channels = []

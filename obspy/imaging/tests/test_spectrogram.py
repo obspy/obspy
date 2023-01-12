@@ -2,7 +2,6 @@
 """
 The obspy.imaging.spectrogram test suite.
 """
-import os
 import warnings
 
 import numpy as np
@@ -17,8 +16,6 @@ class TestSpectrogram:
     """
     Test cases for spectrogram plotting.
     """
-    path = os.path.join(os.path.dirname(__file__), 'images')
-
     def test_spectrogram(self, image_path):
         """
         Create spectrogram plotting examples in tests/output directory.

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import warnings
 
 from obspy import read_events, read_inventory, UTCDateTime
@@ -13,18 +12,16 @@ class TestPHA():
     """
     Test suite for obspy.io.hypodd.pha
     """
-
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(__file__)
-        cls.fname = os.path.join(cls.path, 'data', 'example.pha')
-        cls.fname2 = os.path.join(cls.path, 'data', '60s_nan.pha')
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.fname = testdata['example.pha']
+        self.fname2 = testdata['60s_nan.pha']
 
     def test_is_pha(self):
         assert pha._is_pha(self.fname)
 
-    def test_is_not_pha(self):
-        fname = os.path.join(self.path, 'test_pha.py')
+    def test_is_not_pha(self, datapath):
+        fname = datapath.parent / 'test_pha.py'
         assert not pha._is_pha(fname)
 
     def test_read_pha(self):

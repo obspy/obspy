@@ -25,16 +25,11 @@ class TestCore():
     """
     Test cases for gcf core interface
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_read_via_obspy(self):
+    def test_read_via_obspy(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '20160603_1955n.gcf')
+        filename = testdata['20160603_1955n.gcf']
         # 1
         st = read(filename)
         st.verify()
@@ -49,11 +44,11 @@ class TestCore():
         assert st[0].stats.station == '6018'
         np.testing.assert_array_equal(EXPECTED, st[0].data[:20])
 
-    def test_read_head_via_obspy(self):
+    def test_read_head_via_obspy(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '20160603_1955n.gcf')
+        filename = testdata['20160603_1955n.gcf']
         # 1
         st = read(filename, headonly=True)
         assert len(st) == 1
@@ -66,11 +61,11 @@ class TestCore():
         assert st[0].stats.channel == 'HHN'
         assert st[0].stats.station == '6018'
 
-    def test_read_via_module(self):
+    def test_read_via_module(self, testdata):
         """
         Read files via obspy.io.gcf.core._read_gcf function.
         """
-        filename = os.path.join(self.path, '20160603_1955n.gcf')
+        filename = testdata['20160603_1955n.gcf']
         # 1
         st = _read_gcf(filename)
         st.verify()
@@ -85,11 +80,11 @@ class TestCore():
         assert st[0].stats.station == '6018'
         np.testing.assert_array_equal(EXPECTED, st[0].data[:20])
 
-    def test_read_head_via_module(self):
+    def test_read_head_via_module(self, testdata):
         """
         Read files via obspy.io.gcf.core._read_gcf function.
         """
-        filename = os.path.join(self.path, '20160603_1955n.gcf')
+        filename = testdata['20160603_1955n.gcf']
         # 1
         st = _read_gcf(filename, headonly=True)
         assert len(st) == 1
@@ -102,11 +97,11 @@ class TestCore():
         assert st[0].stats.channel == 'HHN'
         assert st[0].stats.station == '6018'
 
-    def test_read_channel_prefix_via_obspy(self):
+    def test_read_channel_prefix_via_obspy(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '20160603_1955n.gcf')
+        filename = testdata['20160603_1955n.gcf']
         # 1
         st = read(filename, headonly=True, channel_prefix="HN")
         assert len(st) == 1
@@ -119,11 +114,11 @@ class TestCore():
         assert st[0].stats.channel == 'HNN'
         assert st[0].stats.station == '6018'
 
-    def test_merge_gcf_stream(self):
+    def test_merge_gcf_stream(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '20160603_1955n.gcf')
+        filename = testdata['20160603_1955n.gcf']
         # 1
         st1 = read(filename, headonly=True, channel_prefix="HN")
         st2 = st1.copy()
@@ -144,11 +139,11 @@ class TestCore():
         assert st2[0].stats.channel == 'HNN'
         assert st2[0].stats.station == '6018'
 
-    def test_sps_d(self):
+    def test_sps_d(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '20160603_1910n.gcf')
+        filename = testdata['20160603_1910n.gcf']
         # 1
         st = read(filename, headonly=True, channel_prefix="HN")
         assert len(st) == 1
@@ -161,12 +156,12 @@ class TestCore():
         assert st[0].stats.channel == 'HNN'
         assert st[0].stats.station == '6018'
 
-    def test_read_no_merge(self):
+    def test_read_no_merge(self, testdata):
         """
         test preserving individual blocks in file as is, i.e. do not
         merge traces
         """
-        filename = os.path.join(self.path, '20160603_1910n.gcf')
+        filename = testdata['20160603_1910n.gcf']
         st = read(filename, blockmerge=False, channel_prefix="HN")
         assert len(st) == 2
         # 1

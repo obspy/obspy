@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import math
-import os
 import pickle
 import warnings
 from copy import deepcopy
@@ -1742,12 +1741,9 @@ class TestTrace:
         tr2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
         np.testing.assert_array_almost_equal(tr1.data, tr2.data)
 
-    def test_remove_polynomial_response(self):
+    def test_remove_polynomial_response(self, testdata):
         """
         """
-        from obspy import read_inventory
-        path = os.path.dirname(__file__)
-
         # blockette 62, stage 0
         tr = read()[0]
         tr.stats.network = 'IU'
@@ -1757,8 +1753,8 @@ class TestTrace:
         tr.stats.starttime = UTC("2010-07-23T00:00:00")
         # remove response
         del tr.stats.response
-        filename = os.path.join(path, 'data', 'stationxml_IU.ANTO.30.LDO.xml')
-        inv = read_inventory(filename, format='StationXML')
+        inv = read_inventory(
+            testdata['stationxml_IU.ANTO.30.LDO.xml'], format='StationXML')
         tr.attach_response(inv)
         tr.remove_response()
 
@@ -1771,8 +1767,8 @@ class TestTrace:
         tr.stats.starttime = UTC("2004-06-16T00:00:00")
         # remove response
         del tr.stats.response
-        filename = os.path.join(path, 'data', 'stationxml_BK.CMB.__.LKS.xml')
-        inv = read_inventory(filename, format='StationXML')
+        inv = read_inventory(
+            testdata['stationxml_BK.CMB.__.LKS.xml'], format='StationXML')
         tr.attach_response(inv)
 
         # raises UserWarning: Stage gain not defined - ignoring

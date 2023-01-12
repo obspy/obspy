@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import inspect
 import io
-import os
 import warnings
 
 from obspy import UTCDateTime, read_events
@@ -15,32 +13,26 @@ class TestNDK():
     """
     Test suite for obspy.io.ndk
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        cls.datapath = os.path.join(cls.path, "data")
-
-    def test_read_single_ndk(self):
+    def test_read_single_ndk(self, testdata):
         """
         Test reading a single event from an NDK file and comparing it to a
         QuakeML file that has been manually checked to contain all the
         information in the NDK file.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
         cat = _read_ndk(filename)
 
-        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        reference = testdata['C200604092050A.xml']
         ref_cat = read_events(reference)
 
         assert cat == ref_cat
 
-    def test_read_multiple_events(self):
+    def test_read_multiple_events(self, testdata):
         """
         Tests the reading of multiple events in one file. The file has been
         edited to test a variety of settings.
         """
-        filename = os.path.join(self.datapath, "multiple_events.ndk")
+        filename = testdata['multiple_events.ndk']
         cat = _read_ndk(filename)
 
         assert len(cat) == 6
@@ -71,16 +63,13 @@ class TestNDK():
             assert "Quick" in \
                           event.focal_mechanisms[0].comments[0].text
 
-    def test_is_ndk(self):
+    def test_is_ndk(self, testdata, datapath):
         """
         Test for the the _is_ndk() function.
         """
-        valid_files = [os.path.join(self.datapath, "C200604092050A.ndk"),
-                       os.path.join(self.datapath, "multiple_events.ndk")]
-        invalid_files = []
-        for filename in os.listdir(self.path):
-            if filename.endswith(".py"):
-                invalid_files.append(os.path.join(self.path, filename))
+        valid_files = [testdata['C200604092050A.ndk'],
+                       testdata['multiple_events.ndk']]
+        invalid_files = list(datapath.parent.glob('*.py'))
         assert len(invalid_files) > 0
 
         for filename in valid_files:
@@ -88,82 +77,83 @@ class TestNDK():
         for filename in invalid_files:
             assert not _is_ndk(filename)
 
-    def test_reading_using_obspy_plugin(self):
+    def test_reading_using_obspy_plugin(self, testdata):
         """
         Checks that reading with the read_events() function works correctly.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
         cat = read_events(filename)
 
-        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        reference = testdata['C200604092050A.xml']
         ref_cat = read_events(reference)
 
         assert cat == ref_cat
 
-    def test_reading_from_string_io(self):
+    def test_reading_from_string_io(self, testdata):
         """
         Tests reading from StringIO.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
         with open(filename, "rt") as fh:
             file_object = io.StringIO(fh.read())
 
         cat = read_events(file_object)
         file_object.close()
 
-        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        reference = testdata['C200604092050A.xml']
         ref_cat = read_events(reference)
 
         assert cat == ref_cat
 
-    def test_reading_from_bytes_io(self):
+    def test_reading_from_bytes_io(self, testdata):
         """
         Tests reading from BytesIO.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
         with open(filename, "rb") as fh:
             file_object = io.BytesIO(fh.read())
 
         cat = read_events(file_object)
         file_object.close()
 
-        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        reference = testdata['C200604092050A.xml']
         ref_cat = read_events(reference)
 
         assert cat == ref_cat
 
-    def test_reading_from_open_file_in_text_mode(self):
+    def test_reading_from_open_file_in_text_mode(self, testdata):
         """
         Tests reading from an open file in text mode.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
         with open(filename, "rt") as fh:
             cat = read_events(fh)
 
-        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        reference = testdata['C200604092050A.xml']
         ref_cat = read_events(reference)
 
         assert cat == ref_cat
 
-    def test_reading_from_open_file_in_binary_mode(self):
+    def test_reading_from_open_file_in_binary_mode(self, testdata):
         """
         Tests reading from an open file in binary mode.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
         with open(filename, "rb") as fh:
             cat = read_events(fh)
 
-        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        reference = testdata['C200604092050A.xml']
         ref_cat = read_events(reference)
 
         assert cat == ref_cat
 
-    def test_reading_the_same_file_twice_does_not_raise_a_warnings(self):
+    def test_reading_the_same_file_twice_does_not_raise_a_warnings(
+            self, testdata):
         """
         Asserts that reading the same file twice does not raise a warning
         due to resource identifier already in use.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
         cat_1 = read_events(filename)
 
         with warnings.catch_warnings(record=True) as w:
@@ -173,7 +163,7 @@ class TestNDK():
         assert len(w) == 0
         assert cat_1 == cat_2
 
-        filename = os.path.join(self.datapath, "multiple_events.ndk")
+        filename = testdata['multiple_events.ndk']
         cat_1 = read_events(filename)
 
         with warnings.catch_warnings(record=True) as w:
@@ -183,32 +173,29 @@ class TestNDK():
         assert len(w) == 0
         assert cat_1 == cat_2
 
-    def test_is_ndk_for_file_with_invalid_date(self):
+    def test_is_ndk_for_file_with_invalid_date(self, testdata):
         """
         Tests the _is_ndk function for a file with invalid date.
         """
-        assert not _is_ndk(os.path.join(
-            self.datapath, "faulty_invalid_date.ndk"))
+        assert not _is_ndk(testdata["faulty_invalid_date.ndk"])
 
-    def test_is_ndk_for_file_with_invalid_latitude(self):
+    def test_is_ndk_for_file_with_invalid_latitude(self, testdata):
         """
         Tests the _is_ndk function a file with an invalid latitude.
         """
-        assert not _is_ndk(os.path.join(
-            self.datapath, "faulty_invalid_latitude.ndk"))
+        assert not _is_ndk(testdata["faulty_invalid_latitude.ndk"])
 
-    def test_is_ndk_for_file_with_infeasible_latitude(self):
+    def test_is_ndk_for_file_with_infeasible_latitude(self, testdata):
         """
         Tests the _is_ndk function a file with an unfeasible latitude.
         """
-        assert not _is_ndk(os.path.join(
-            self.datapath, "faulty_infeasible_latitude.ndk"))
+        assert not _is_ndk(testdata["faulty_infeasible_latitude.ndk"])
 
-    def test_reading_file_with_multiple_errors(self):
+    def test_reading_file_with_multiple_errors(self, testdata):
         """
         Tests reading a file with multiple errors.
         """
-        filename = os.path.join(self.datapath, "faulty_multiple_events.ndk")
+        filename = testdata['faulty_multiple_events.ndk']
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -225,13 +212,13 @@ class TestNDK():
         # One event should still be available.
         assert len(cat) == 1
 
-    def test_reading_from_string(self):
+    def test_reading_from_string(self, testdata):
         """
         Tests reading from a string.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
 
-        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        reference = testdata['C200604092050A.xml']
         ref_cat = read_events(reference)
 
         with io.open(filename, "rt") as fh:
@@ -242,13 +229,13 @@ class TestNDK():
 
         assert cat == ref_cat
 
-    def test_reading_from_bytestring(self):
+    def test_reading_from_bytestring(self, testdata):
         """
         Tests reading from a byte string.
         """
-        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        filename = testdata['C200604092050A.ndk']
 
-        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        reference = testdata['C200604092050A.xml']
         ref_cat = read_events(reference)
 
         with io.open(filename, "rb") as fh:
@@ -259,11 +246,11 @@ class TestNDK():
 
         assert cat == ref_cat
 
-    def test_missing_lines(self):
+    def test_missing_lines(self, testdata):
         """
         Tests the raised warning if an event has less then 5 lines.
         """
-        with open(os.path.join(self.datapath, "multiple_events.ndk"), "rt") \
+        with open(testdata['multiple_events.ndk'], "rt") \
                 as fh:
             lines = [_i.rstrip() for _i in fh.readlines()]
 
@@ -281,13 +268,14 @@ class TestNDK():
         # Only five events will have been read.
         assert len(cat) == 5
 
-    def test_reading_event_with_faulty_but_often_occurring_timestamp(self):
+    def test_reading_event_with_faulty_but_often_occurring_timestamp(
+            self, testdata):
         """
         The timestamp "O-00000000000000" is not valid according to the NDK
         definition but occurs a lot in the GCMT catalog thus we include it
         here.
         """
-        filename = os.path.join(self.datapath, "faulty_cmt_timestamp.ndk")
+        filename = testdata['faulty_cmt_timestamp.ndk']
 
         cat = read_events(filename)
 
@@ -296,12 +284,12 @@ class TestNDK():
         assert "CMT Analysis Type: Unknown" in comments[0].text
         assert "CMT Timestamp: O-000000000" in comments[1].text
 
-    def test_raise_exception_if_no_events_in_file(self):
+    def test_raise_exception_if_no_events_in_file(self, testdata):
         """
         The parser is fairly relaxed and will skip invalid files. This test
         assures that an exception is raised if every event has been skipped.
         """
-        with open(os.path.join(self.datapath, "C200604092050A.ndk"), "rt") \
+        with open(testdata['C200604092050A.ndk'], "rt") \
                 as fh:
             lines = [_i.rstrip() for _i in fh.readlines()]
 

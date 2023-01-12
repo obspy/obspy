@@ -3,9 +3,8 @@
 """
 The polarization.core test suite.
 """
-from os.path import dirname, join
-
 import numpy as np
+import pytest
 from scipy import signal
 
 import obspy
@@ -46,15 +45,12 @@ class TestPolarization():
     """
     Test cases for polarization analysis
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = join(dirname(__file__), 'data')
-
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup_data(self, testdata):
         # setting up sliding window data
-        data_z = np.loadtxt(join(self.path, 'MBGA_Z.ASC'))
-        data_e = np.loadtxt(join(self.path, 'MBGA_E.ASC'))
-        data_n = np.loadtxt(join(self.path, 'MBGA_N.ASC'))
+        data_z = np.loadtxt(testdata['MBGA_Z.ASC'])
+        data_e = np.loadtxt(testdata['MBGA_E.ASC'])
+        data_n = np.loadtxt(testdata['MBGA_N.ASC'])
         n = 256
         fs = 75
         inc = int(0.05 * fs)
@@ -67,7 +63,7 @@ class TestPolarization():
         # global test input
         self.fk = [2, 1, 0, -1, -2]
         self.norm = pow(np.max(data_z), 2)
-        self.res = np.loadtxt(join(self.path, '3cssan.hy.1.MBGA_Z'))
+        self.res = np.loadtxt(testdata['3cssan.hy.1.MBGA_Z'])
 
     def test_polarization(self):
         """

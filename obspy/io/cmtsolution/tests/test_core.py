@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import inspect
 import io
 import os
 
@@ -16,18 +15,12 @@ class TestCmtsolution():
     The tests usually directly utilize the registered function with the
     read_events() to also test the integration.
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        cls.datapath = os.path.join(cls.path, "data")
-
-    def test_read_and_write_cmtsolution_from_files(self):
+    def test_read_and_write_cmtsolution_from_files(self, testdata):
         """
         Tests that reading and writing a CMTSOLUTION file does not change
         anything.
         """
-        filename = os.path.join(self.datapath, "CMTSOLUTION")
+        filename = testdata['CMTSOLUTION']
         with open(filename, "rb") as fh:
             data = fh.read()
 
@@ -48,12 +41,12 @@ class TestCmtsolution():
 
         assert data.decode().splitlines() == new_data.decode().splitlines()
 
-    def test_write_no_preferred_focal_mechanism(self):
+    def test_write_no_preferred_focal_mechanism(self, testdata):
         """
         Tests that writing a CMTSOLUTION file with no preferred (but at least
         one) focal mechanism works, see #1303.
         """
-        filename = os.path.join(self.datapath, "CMTSOLUTION")
+        filename = testdata['CMTSOLUTION']
         with open(filename, "rb") as fh:
             data = fh.read()
 
@@ -75,14 +68,14 @@ class TestCmtsolution():
 
         assert data.decode().splitlines() == new_data.decode().splitlines()
 
-    def test_read_and_write_cmtsolution_from_open_files(self):
+    def test_read_and_write_cmtsolution_from_open_files(self, testdata):
         """
         Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         This time it tests reading from and writing to open files.
         """
-        filename = os.path.join(self.datapath, "CMTSOLUTION")
+        filename = testdata['CMTSOLUTION']
         with open(filename, "rb") as fh:
             data = fh.read()
             fh.seek(0, 0)
@@ -95,14 +88,14 @@ class TestCmtsolution():
 
         assert data.decode().splitlines() == new_data.decode().splitlines()
 
-    def test_read_and_write_cmtsolution_from_bytes_io(self):
+    def test_read_and_write_cmtsolution_from_bytes_io(self, testdata):
         """
         Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         This time it tests reading from and writing to BytesIO objects.
         """
-        filename = os.path.join(self.datapath, "CMTSOLUTION")
+        filename = testdata['CMTSOLUTION']
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
             data = buf.read()
@@ -119,14 +112,14 @@ class TestCmtsolution():
 
         assert data.decode().splitlines() == new_data.decode().splitlines()
 
-    def test_read_and_write_cmtsolution_explosion(self):
+    def test_read_and_write_cmtsolution_explosion(self, testdata):
         """
         Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         Tests another file.
         """
-        filename = os.path.join(self.datapath, "CMTSOLUTION_EXPLOSION")
+        filename = testdata['CMTSOLUTION_EXPLOSION']
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
 
@@ -143,28 +136,27 @@ class TestCmtsolution():
 
         assert data.decode().splitlines() == new_data.decode().splitlines()
 
-    def test_is_cmtsolution(self):
+    def test_is_cmtsolution(self, testdata, datapath):
         """
         Tests the is_cmtsolution function.
         """
-        good_files = [os.path.join(self.datapath, "CMTSOLUTION"),
-                      os.path.join(self.datapath, "CMTSOLUTION_EXPLOSION")]
+        good_files = [testdata['CMTSOLUTION'],
+                      testdata['CMTSOLUTION_EXPLOSION']]
 
-        bad_files = [
-            os.path.join(self.datapath, os.path.pardir, "test_core.py"),
-            os.path.join(self.datapath, os.path.pardir, "__init__.py")]
+        bad_files = [datapath.parent / "test_core.py",
+                     datapath.parent / "__init__.py"]
 
         for filename in good_files:
             assert _is_cmtsolution(filename)
         for filename in bad_files:
             assert not _is_cmtsolution(filename)
 
-    def test_read_and_write_multiple_cmtsolution_from_files(self):
+    def test_read_and_write_multiple_cmtsolution_from_files(self, testdata):
         """
         Tests that reading and writing a CMTSOLUTION file with multiple
         events does not change anything.
         """
-        filename = os.path.join(self.datapath, "MULTIPLE_EVENTS")
+        filename = testdata['MULTIPLE_EVENTS']
         with open(filename, "rb") as fh:
             data = fh.read()
 
@@ -187,14 +179,14 @@ class TestCmtsolution():
 
         assert data.decode().splitlines() == new_data.decode().splitlines()
 
-    def test_read_and_write_multiple_events_from_bytes_io(self):
+    def test_read_and_write_multiple_events_from_bytes_io(self, testdata):
         """
         Tests that reading and writing a CMTSOLUTION file with multiple
         events does not change anything.
 
         This time it tests reading from and writing to BytesIO objects.
         """
-        filename = os.path.join(self.datapath, "MULTIPLE_EVENTS")
+        filename = testdata['MULTIPLE_EVENTS']
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
             data = buf.read()
@@ -213,11 +205,11 @@ class TestCmtsolution():
 
         assert data.decode().splitlines() == new_data.decode().splitlines()
 
-    def test_reading_newer_cmtsolution_files(self):
+    def test_reading_newer_cmtsolution_files(self, testdata):
         """
         The format changed a bit. Make sure these files can also be read.
         """
-        filename = os.path.join(self.datapath, "CMTSOLUTION_NEW")
+        filename = testdata['CMTSOLUTION_NEW']
         cat = obspy.read_events(filename)
 
         assert len(cat) == 3

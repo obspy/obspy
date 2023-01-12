@@ -78,11 +78,6 @@ class TestSDS():
     """
     Test reading data from SDS file structure.
     """
-    @classmethod
-    def setup_class(cls):
-        cls.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
-
     def test_read_from_sds(self):
         """
         Test reading data across year and day breaks from SDS directory
@@ -155,7 +150,7 @@ class TestSDS():
                 st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200)
                 assert len(st) == num_matching_ids
 
-    def test_sds_report(self):
+    def test_sds_report(self, testdata):
         """
         Test command line script for generating SDS report html.
 
@@ -208,8 +203,7 @@ class TestSDS():
             # check content of html report
             with open(file_html, "rb") as fh:
                 got_lines = fh.readlines()
-            html_regex_file = os.path.join(self.data_dir, "sds_report.regex")
-            with open(html_regex_file, "rb") as fh:
+            with open(testdata["sds_report.regex"], "rb") as fh:
                 regex_patterns = fh.readlines()
             failed = False  # XXX remove again
             for got, pattern in zip(got_lines, regex_patterns):

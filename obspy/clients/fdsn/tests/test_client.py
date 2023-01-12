@@ -10,7 +10,6 @@ The obspy.clients.fdsn.client test suite.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
-import os
 import re
 import sys
 import warnings
@@ -105,9 +104,6 @@ class TestClient():
     """
     @classmethod
     def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-        cls.datapath = os.path.join(cls.path, "data")
         cls.client = Client(base_url="IRIS", user_agent=USER_AGENT)
         cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
@@ -560,7 +556,7 @@ class TestClient():
                 assert net.code == "IU"
                 assert sta.code.startswith("A")
 
-    def test_iris_example_queries_dataselect(self):
+    def test_iris_example_queries_dataselect(self, testdata):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
@@ -591,8 +587,7 @@ class TestClient():
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
-            file_ = os.path.join(self.datapath, filename)
-            expected = read(file_)
+            expected = read(testdata[filename])
             # The client trims by default.
             _normalize_stats(got)
             assert got == expected, \
@@ -602,12 +597,12 @@ class TestClient():
                 client.get_waveforms(*query, filename=tf.name)
                 with open(tf.name, 'rb') as fh:
                     got = fh.read()
-                with open(file_, 'rb') as fh:
+                with open(testdata[filename], 'rb') as fh:
                     expected = fh.read()
             assert got == expected, \
                 "Dataselect failed for query %s" % repr(query)
 
-    def test_authentication(self):
+    def test_authentication(self, testdata):
         """
         Test dataselect with authentication.
         """
@@ -616,10 +611,8 @@ class TestClient():
         query = ("IU", "ANMO", "00", "BHZ",
                  UTCDateTime("2010-02-27T06:30:00.000"),
                  UTCDateTime("2010-02-27T06:40:00.000"))
-        filename = "dataselect_example.mseed"
         got = client.get_waveforms(*query)
-        file_ = os.path.join(self.datapath, filename)
-        expected = read(file_)
+        expected = read(testdata["dataselect_example.mseed"])
         _normalize_stats(got)
         assert got == expected, failmsg(got, expected)
 
@@ -742,7 +735,8 @@ class TestClient():
                 assert net.code == "IU"
                 assert sta.code.startswith("A")
 
-    def test_iris_example_queries_dataselect_discover_services_false(self):
+    def test_iris_example_queries_dataselect_discover_services_false(
+            self, testdata):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage,
         without discovering services first.
@@ -775,8 +769,7 @@ class TestClient():
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
-            file_ = os.path.join(self.datapath, filename)
-            expected = read(file_)
+            expected = read(testdata[filename])
             _normalize_stats(got)
             assert got == expected, \
                 "Dataselect failed for query %s" % repr(query)
@@ -785,7 +778,7 @@ class TestClient():
                 client.get_waveforms(*query, filename=tf.name)
                 with open(tf.name, 'rb') as fh:
                     got = fh.read()
-                with open(file_, 'rb') as fh:
+                with open(testdata[filename], 'rb') as fh:
                     expected = fh.read()
             assert got == expected, \
                 "Dataselect failed for query %s" % repr(query)
@@ -796,7 +789,7 @@ class TestClient():
         with pytest.raises(FDSNInvalidRequestException):
             self.client.get_stations(network="IU", net="IU")
 
-    def test_help_function_with_iris(self):
+    def test_help_function_with_iris(self, testdata):
         """
         Tests the help function with the IRIS example.
 
@@ -815,7 +808,7 @@ class TestClient():
             sys.stdout = sys.__stdout__
             tmp.close()
             filename = "event_helpstring.txt"
-            with open(os.path.join(self.datapath, filename)) as fh:
+            with open(testdata[filename]) as fh:
                 expected = fh.read()
             # allow for changes in version number..
             got = normalize_version_number(got)
@@ -838,7 +831,7 @@ class TestClient():
             tmp.close()
 
             filename = "station_helpstring.txt"
-            with open(os.path.join(self.datapath, filename)) as fh:
+            with open(testdata[filename]) as fh:
                 expected = fh.read()
             got = normalize_version_number(got)
             expected = normalize_version_number(expected)
@@ -854,7 +847,7 @@ class TestClient():
             tmp.close()
 
             filename = "dataselect_helpstring.txt"
-            with open(os.path.join(self.datapath, filename)) as fh:
+            with open(testdata[filename]) as fh:
                 expected = fh.read()
             got = normalize_version_number(got)
             expected = normalize_version_number(expected)
@@ -878,14 +871,13 @@ class TestClient():
         expected = normalize_version_number(expected)
         assert got == expected, failmsg(got, expected)
 
-    def test_dataselect_bulk(self):
+    def test_dataselect_bulk(self, testdata):
         """
         Test bulk dataselect requests, POSTing data to server. Also tests
         authenticated bulk request.
         """
         clients = [self.client, self.client_auth]
-        file = os.path.join(self.datapath, "bulk.mseed")
-        expected = read(file)
+        expected = read(testdata["bulk.mseed"])
         # test cases for providing lists of lists
         # Deliberately requesting data that overlap the end-time of a channel.
         # TA.A25A..BHZ ends at 2011-07-22T14:50:25.5
@@ -1194,7 +1186,8 @@ class TestClient():
         assert sorted(client.services.keys()) == ['dataselect', 'station']
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_download_urls_for_custom_mapping(self, download_url_mock):
+    def test_download_urls_for_custom_mapping(
+            self, download_url_mock, testdata):
         """
         Tests the downloading of data with custom mappings.
         """
@@ -1205,19 +1198,15 @@ class TestClient():
             if "version" in args[0]:
                 return 200, "1.0.200"
             elif "event" in args[0]:
-                with open(os.path.join(
-                        self.datapath, "2014-01-07_iris_event.wadl"),
-                        "rb") as fh:
+                with open(testdata["2014-01-07_iris_event.wadl"], "rb") as fh:
                     return 200, fh.read()
             elif "station" in args[0]:
-                with open(os.path.join(
-                        self.datapath,
-                        "2014-01-07_iris_station.wadl"), "rb") as fh:
+                with open(testdata["2014-01-07_iris_station.wadl"],
+                          "rb") as fh:
                     return 200, fh.read()
             elif "dataselect" in args[0]:
-                with open(os.path.join(
-                        self.datapath,
-                        "2014-01-07_iris_dataselect.wadl"), "rb") as fh:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
                     return 200, fh.read()
             return 404, None
 
@@ -1549,12 +1538,12 @@ class TestClient():
             self.client.get_stations()
 
     @pytest.mark.skip(reason='Token is expired')
-    def test_eida_token_resolution(self):
+    def test_eida_token_resolution(self, testdata):
         """
         Tests that EIDA tokens are resolved correctly and new credentials get
         installed with the opener of the Client.
         """
-        token = os.path.join(self.datapath, 'eida_token.txt')
+        token = testdata['eida_token.txt']
         with open(token, 'rb') as fh:
             token_data = fh.read().decode()
 
@@ -1670,6 +1659,4 @@ class TestClient():
         msg = ("Read EIDA token from file '[^']*event_helpstring.txt' but it "
                "does not seem to contain a valid PGP message.")
         with pytest.raises(ValueError, match=msg):
-            client = Client(
-                'GFZ', eida_token=os.path.join(self.datapath,
-                                               'event_helpstring.txt'))
+            client = Client('GFZ', eida_token=testdata['event_helpstring.txt'])

@@ -2,8 +2,6 @@
 """
 The obspy.imaging.waveform test suite.
 """
-import os
-
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
@@ -17,8 +15,6 @@ class TestWaveformPlot:
     """
     Test cases for waveform plotting.
     """
-    path = os.path.join(os.path.dirname(__file__), 'images')
-
     def _create_stream(self, starttime, endtime, sampling_rate):
         """
         Helper method to create a Stream object that can be used for testing

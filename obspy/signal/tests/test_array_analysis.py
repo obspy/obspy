@@ -3,8 +3,8 @@
 """
 The array_analysis test suite.
 """
-
 import numpy as np
+import pytest
 
 from obspy.signal.array_analysis import array_rotation_strain, get_geometry
 
@@ -13,7 +13,8 @@ class TestArray():
     """
     Test cases for array_analysis functions.
     """
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
         self.array_coords = np.array([[0.0, 0.0, 0.0],
                                      [-5.0, 7.0, 0.0],
                                      [5.0, 7.0, 0.0],

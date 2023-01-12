@@ -20,16 +20,12 @@ class TestCore():
     """
     Test cases for css core interface
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-        cls.filename_css = os.path.join(cls.path, 'test_css.wfdisc')
-        cls.filename_nnsa = os.path.join(cls.path, 'test_nnsa.wfdisc')
-        cls.filename_css_2 = os.path.join(cls.path, 'test_css_2.wfdisc')
-        cls.filename_css_3 = os.path.join(cls.path, 'test_css_3.wfdisc')
-
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.filename_css = testdata['test_css.wfdisc']
+        self.filename_nnsa = testdata['test_nnsa.wfdisc']
+        self.filename_css_2 = testdata['test_css_2.wfdisc']
+        self.filename_css_3 = testdata['test_css_3.wfdisc']
         # set up stream for validation
         header = {}
         header['station'] = 'TEST'
@@ -38,7 +34,7 @@ class TestCore():
         header['calib'] = 1.0
         header['calper'] = 1.0
         header['_format'] = 'CSS'
-        filename = os.path.join(self.path, '201101311155.10.ascii.gz')
+        filename = testdata['201101311155.10.ascii.gz']
         with gzip.open(filename, 'rb') as fp:
             data = np.loadtxt(fp, dtype=np.int_)
         # traces in the test files are sorted ZEN

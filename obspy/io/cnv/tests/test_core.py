@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import inspect
-import os
 import warnings
 
 from obspy import read_events
@@ -13,22 +11,16 @@ class TestCNV():
     """
     Test suite for obspy.io.cnv
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        cls.datapath = os.path.join(cls.path, "data")
-
-    def test_write_cnv(self):
+    def test_write_cnv(self, testdata):
         """
         Test writing CNV catalog summary file.
         """
         # load QuakeML file to generate CNV file from it
-        filename = os.path.join(self.datapath, "obspyck_20141020150701.xml")
+        filename = testdata['obspyck_20141020150701.xml']
         cat = read_events(filename, format="QUAKEML")
 
         # read expected OBS file output
-        filename = os.path.join(self.datapath, "obspyck_20141020150701.cnv")
+        filename = testdata['obspyck_20141020150701.cnv']
         with open(filename, "rb") as fh:
             expected = fh.read().decode()
 
@@ -58,7 +50,7 @@ class TestCNV():
 
         # write via plugin and with phase_mapping with only P
         # read expected OBS file output
-        filename = os.path.join(self.datapath, "obspyck_20141020150701_P.cnv")
+        filename = testdata['obspyck_20141020150701_P.cnv']
         with open(filename, "rb") as fh:
             expected = fh.read().decode()
 

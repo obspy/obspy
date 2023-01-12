@@ -9,7 +9,6 @@ The obspy.clients.fdsn.wadl_parser test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import os
 import warnings
 
 from obspy import UTCDateTime
@@ -20,17 +19,11 @@ class TestWADLParser():
     """
     Test cases for obspy.clients.fdsn.wadl_parser.WADL_Parser.
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.data_path = os.path.join(os.path.dirname(__file__), "data")
-
-    def _parse_wadl_file(self, filename):
+    def _parse_wadl_file(self, path):
         """
         Parses wadl, returns WADLParser and any catched warnings.
         """
-        filename = os.path.join(self.data_path, filename)
-        with open(filename, "rb") as fh:
+        with open(path, "rb") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -38,12 +31,11 @@ class TestWADLParser():
             parser = WADLParser(wadl_string)
         return parser, w
 
-    def test_dataselect_wadl_parsing(self):
+    def test_dataselect_wadl_parsing(self, testdata):
         """
         Tests the parsing of a dataselect wadl.
         """
-        filename = os.path.join(self.data_path, "dataselect.wadl")
-        with open(filename, "rb") as fh:
+        with open(testdata["dataselect.wadl"], "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -78,11 +70,11 @@ class TestWADLParser():
         assert params["minimumlength"]["default_value"] == 0.0
         assert not params["longestonly"]["default_value"]
 
-    def test_event_wadl_parsing(self):
+    def test_event_wadl_parsing(self, testdata):
         """
         Tests the parsing of an event wadl.
         """
-        parser, w = self._parse_wadl_file("event.wadl")
+        parser, w = self._parse_wadl_file(testdata["event.wadl"])
         assert len(w) == 0
 
         params = parser.parameters
@@ -127,11 +119,11 @@ class TestWADLParser():
             "(case insensitive)"
         assert params["magnitudetype"]["doc"] == "Examples: Ml,Ms,mb,Mw\""
 
-    def test_station_wadl_parsing(self):
+    def test_station_wadl_parsing(self, testdata):
         """
         Tests the parsing of a station wadl.
         """
-        parser, w = self._parse_wadl_file("station.wadl")
+        parser, w = self._parse_wadl_file(testdata["station.wadl"])
         params = parser.parameters
 
         assert "starttime" in params
@@ -167,11 +159,11 @@ class TestWADLParser():
             "Examples: endbefore=2012-11-29 or 2012-11-29T00:00:00 or " \
             "2012-11-29T00:00:00.000"
 
-    def test_reading_wadls_without_type(self):
+    def test_reading_wadls_without_type(self, testdata):
         """
         Tests the reading of WADL files that have no type.
         """
-        parser, w = self._parse_wadl_file("station_no_types.wadl")
+        parser, w = self._parse_wadl_file(testdata["station_no_types.wadl"])
         params = parser.parameters
 
         # Assert that types have been assigned.
@@ -199,8 +191,7 @@ class TestWADLParser():
         assert params["updatedafter"]["type"] == UTCDateTime
 
         # Now read a dataselect file with no types.
-        filename = os.path.join(self.data_path, "dataselect_no_types.wadl")
-        with open(filename, "rb") as fh:
+        with open(testdata["dataselect_no_types.wadl"], "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -216,12 +207,11 @@ class TestWADLParser():
         assert params["minimumlength"]["type"] == float
         assert params["longestonly"]["type"] == bool
 
-    def test_usgs_event_wadl_parsing(self):
+    def test_usgs_event_wadl_parsing(self, testdata):
         """
         Tests the parsing of an event wadl.
         """
-        filename = os.path.join(self.data_path, "usgs_event.wadl")
-        with open(filename, "rb") as fh:
+        with open(testdata["usgs_event.wadl"], "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -257,7 +247,7 @@ class TestWADLParser():
         assert "limit" in params
         assert "offset" in params
 
-    def test_parsing_dataselect_wadls_with_missing_attributes(self):
+    def test_parsing_dataselect_wadls_with_missing_attributes(self, testdata):
         """
         Some WADL file miss required attributes. In this case a warning will be
         raised.
@@ -267,9 +257,7 @@ class TestWADLParser():
         """
         # This dataselect WADL misses the quality, minimumlength, and
         # longestonly parameters.
-        filename = os.path.join(self.data_path,
-                                "dataselect_missing_attributes.wadl")
-        with open(filename, "rb") as fh:
+        with open(testdata["dataselect_missing_attributes.wadl"], "rb") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -287,7 +275,7 @@ class TestWADLParser():
         assert "location" in params
         assert "channel" in params
 
-    def test_parsing_event_wadls_with_missing_attributes(self):
+    def test_parsing_event_wadls_with_missing_attributes(self, testdata):
         """
         Some WADL file miss required attributes. In this case a warning will be
         raised.
@@ -297,9 +285,7 @@ class TestWADLParser():
         """
         # This event WADL misses the includeallorigins and the updatedafter
         # parameters.
-        filename = os.path.join(self.data_path,
-                                "event_missing_attributes.wadl")
-        with open(filename, "rb") as fh:
+        with open(testdata["event_missing_attributes.wadl"], "rb") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -321,178 +307,103 @@ class TestWADLParser():
         assert "magnitudetype" in params
         assert "catalog" in params
 
-    def test_parsing_current_wadls_iris(self):
+    def test_parsing_current_wadls(self, testdata):
         """
         Test parsing real world wadls provided by servers as of 2014-01-07.
         """
-        parser, w = self._parse_wadl_file("2014-01-07_iris_event.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['catalog', 'contributor', 'endtime', 'eventid', 'format',
-                    'includeallmagnitudes', 'includeallorigins',
-                    'includearrivals', 'latitude', 'limit', 'longitude',
-                    'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
-                    'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
-                    'minlongitude', 'minmagnitude', 'minradius', 'offset',
-                    'orderby', 'originid', 'starttime', 'updatedafter']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
+        filenames = ["2014-01-07_iris_event.wadl",
+                     "2014-01-07_iris_station.wadl",
+                     "2014-01-07_iris_dataselect.wadl",
+                     "2014-01-07_usgs_event.wadl",
+                     "2014-02-16_seismicportal_event.wadl",
+                     "2014-01-07_resif_station.wadl",
+                     "2014-01-07_resif_dataselect.wadl",
+                     "2014-01-07_ncedc_event.wadl",
+                     "2014-01-07_ncedc_station.wadl",
+                     "2014-01-07_ncedc_dataselect.wadl",
+                     "2014-01-07_ethz_event.wadl",
+                     "2014-01-07_ethz_station.wadl",
+                     "2014-01-07_ethz_dataselect.wadl",
+                     ]
+        expected_list = [
+            ['catalog', 'contributor', 'endtime', 'eventid', 'format',
+             'includeallmagnitudes', 'includeallorigins',
+             'includearrivals', 'latitude', 'limit', 'longitude',
+             'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
+             'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
+             'minlongitude', 'minmagnitude', 'minradius', 'offset',
+             'orderby', 'originid', 'starttime', 'updatedafter'],
+            ['channel', 'endafter', 'endbefore', 'endtime', 'format',
+             'includeavailability', 'includerestricted', 'latitude',
+             'level', 'location', 'longitude', 'matchtimeseries',
+             'maxlatitude', 'maxlongitude', 'maxradius', 'minlatitude',
+             'minlongitude', 'minradius', 'network', 'startafter',
+             'startbefore', 'starttime', 'station', 'updatedafter'],
+            ['channel', 'endtime', 'location', 'longestonly',
+             'minimumlength', 'network', 'quality', 'starttime',
+             'station'],
+            ['alertlevel', 'callback', 'catalog', 'contributor',
+             'endtime', 'eventid', 'eventtype',
+             'format', 'includeallmagnitudes',
+             'includeallorigins', 'includearrivals', 'kmlanimated',
+             'kmlcolorby', 'latitude', 'limit', 'longitude',
+             'magnitudetype', 'maxcdi', 'maxdepth', 'maxgap',
+             'maxlatitude', 'maxlongitude', 'maxmagnitude', 'maxmmi',
+             'maxradius', 'maxsig', 'mincdi', 'mindepth', 'minfelt',
+             'mingap', 'minlatitude', 'minlongitude', 'minmagnitude',
+             'minmmi', 'minradius', 'minsig', 'offset', 'orderby',
+             'producttype', 'reviewstatus', 'starttime', 'updatedafter'],
+            ['callback', 'catalog', 'contributor', 'endtime', 'eventid',
+             'format', 'includeallmagnitudes', 'includeallorigins',
+             'includearrivals', 'latitude', 'limit', 'longitude',
+             'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
+             'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
+             'minlongitude', 'minmagnitude', 'minradius', 'offset',
+             'orderby', 'starttime', 'updatedafter'],
+            ['channel', 'endafter', 'endbefore', 'endtime',
+             'includeavailability', 'includerestricted', 'latitude',
+             'level', 'location', 'longitude', 'maxlatitude',
+             'maxlongitude', 'maxradius', 'minlatitude', 'minlongitude',
+             'minradius', 'network', 'startafter', 'startbefore',
+             'starttime', 'station', 'updatedafter'],
+            ['channel', 'endtime', 'location', 'longestonly',
+             'minimumlength', 'network', 'quality', 'starttime',
+             'station'],
+            ['catalog', 'contributor', 'endtime', 'eventid', 'format',
+             'includeallmagnitudes', 'includearrivals',
+             'includemechanisms', 'latitude', 'limit', 'longitude',
+             'magnitudetype', 'maxdepth', 'maxlatitude', 'maxlongitude',
+             'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
+             'minlongitude', 'minmagnitude', 'minradius', 'offset',
+             'orderby', 'starttime'],
+            ['channel', 'endafter', 'endbefore', 'endtime', 'format',
+             'includeavailability', 'latitude', 'level', 'location',
+             'longitude', 'maxlatitude', 'maxlongitude', 'maxradius',
+             'minlatitude', 'minlongitude', 'minradius', 'network',
+             'startafter', 'startbefore', 'starttime', 'station',
+             'updatedafter'],
+            ['channel', 'endtime', 'location', 'network', 'starttime',
+             'station'],
+            ['contributor', 'endtime', 'eventid', 'formatted',
+             'includeallorigins', 'includearrivals', 'includecomments',
+             'includemagnitudes', 'includepicks', 'latitude', 'limit',
+             'longitude', 'magnitudetype', 'maxdepth', 'maxlatitude',
+             'maxlongitude', 'maxmagnitude', 'maxradius', 'mindepth',
+             'minlatitude', 'minlongitude', 'minmagnitude', 'minradius',
+             'offset', 'orderby', 'output', 'starttime', 'updatedafter'],
+            ['channel', 'endafter', 'endbefore', 'endtime', 'formatted',
+             'includerestricted', 'latitude', 'level', 'location',
+             'longitude', 'maxlatitude', 'maxlongitude', 'maxradius',
+             'minlatitude', 'minlongitude', 'minradius', 'network',
+             'output', 'startafter', 'startbefore', 'starttime',
+             'station'],
+            ['channel', 'endtime', 'location', 'network', 'quality',
+             'starttime', 'station'],
+            ]
 
-        parser, w = self._parse_wadl_file("2014-01-07_iris_station.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['channel', 'endafter', 'endbefore', 'endtime', 'format',
-                    'includeavailability', 'includerestricted', 'latitude',
-                    'level', 'location', 'longitude', 'matchtimeseries',
-                    'maxlatitude', 'maxlongitude', 'maxradius', 'minlatitude',
-                    'minlongitude', 'minradius', 'network', 'startafter',
-                    'startbefore', 'starttime', 'station', 'updatedafter']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-        parser, w = self._parse_wadl_file("2014-01-07_iris_dataselect.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['channel', 'endtime', 'location', 'longestonly',
-                    'minimumlength', 'network', 'quality', 'starttime',
-                    'station']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-    def test_parsing_current_wadls_usgs(self):
-        """
-        Test parsing real world wadls provided by servers as of 2014-01-07.
-        """
-        parser, w = self._parse_wadl_file("2014-01-07_usgs_event.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['alertlevel', 'callback', 'catalog', 'contributor',
-                    'endtime', 'eventid', 'eventtype',
-                    'format', 'includeallmagnitudes',
-                    'includeallorigins', 'includearrivals', 'kmlanimated',
-                    'kmlcolorby', 'latitude', 'limit', 'longitude',
-                    'magnitudetype', 'maxcdi', 'maxdepth', 'maxgap',
-                    'maxlatitude', 'maxlongitude', 'maxmagnitude', 'maxmmi',
-                    'maxradius', 'maxsig', 'mincdi', 'mindepth', 'minfelt',
-                    'mingap', 'minlatitude', 'minlongitude', 'minmagnitude',
-                    'minmmi', 'minradius', 'minsig', 'offset', 'orderby',
-                    'producttype', 'reviewstatus', 'starttime', 'updatedafter']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-    def test_parsing_current_wadls_seismicportal(self):
-        """
-        Test parsing real world wadls provided by servers as of 2014-02-16.
-        """
-        parser, w = \
-            self._parse_wadl_file("2014-02-16_seismicportal_event.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['callback', 'catalog', 'contributor', 'endtime', 'eventid',
-                    'format', 'includeallmagnitudes', 'includeallorigins',
-                    'includearrivals', 'latitude', 'limit', 'longitude',
-                    'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
-                    'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
-                    'minlongitude', 'minmagnitude', 'minradius', 'offset',
-                    'orderby', 'starttime', 'updatedafter']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-    def test_parsing_current_wadls_resif(self):
-        """
-        Test parsing real world wadls provided by servers as of 2014-01-07.
-        """
-        parser, w = self._parse_wadl_file("2014-01-07_resif_station.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['channel', 'endafter', 'endbefore', 'endtime',
-                    'includeavailability', 'includerestricted', 'latitude',
-                    'level', 'location', 'longitude', 'maxlatitude',
-                    'maxlongitude', 'maxradius', 'minlatitude', 'minlongitude',
-                    'minradius', 'network', 'startafter', 'startbefore',
-                    'starttime', 'station', 'updatedafter']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-        parser, w = self._parse_wadl_file("2014-01-07_resif_dataselect.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['channel', 'endtime', 'location', 'longestonly',
-                    'minimumlength', 'network', 'quality', 'starttime',
-                    'station']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-    def test_parsing_current_wadls_ncedc(self):
-        """
-        Test parsing real world wadls provided by servers as of 2014-01-07.
-        """
-        parser, w = self._parse_wadl_file("2014-01-07_ncedc_event.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['catalog', 'contributor', 'endtime', 'eventid', 'format',
-                    'includeallmagnitudes', 'includearrivals',
-                    'includemechanisms', 'latitude', 'limit', 'longitude',
-                    'magnitudetype', 'maxdepth', 'maxlatitude', 'maxlongitude',
-                    'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
-                    'minlongitude', 'minmagnitude', 'minradius', 'offset',
-                    'orderby', 'starttime']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-        parser, w = self._parse_wadl_file("2014-01-07_ncedc_station.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['channel', 'endafter', 'endbefore', 'endtime', 'format',
-                    'includeavailability', 'latitude', 'level', 'location',
-                    'longitude', 'maxlatitude', 'maxlongitude', 'maxradius',
-                    'minlatitude', 'minlongitude', 'minradius', 'network',
-                    'startafter', 'startbefore', 'starttime', 'station',
-                    'updatedafter']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-        parser, w = self._parse_wadl_file("2014-01-07_ncedc_dataselect.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['channel', 'endtime', 'location', 'network', 'starttime',
-                    'station']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-    def test_parsing_current_wadls_ethz(self):
-        """
-        Test parsing real world wadls provided by servers as of 2014-01-07.
-        """
-        parser, w = self._parse_wadl_file("2014-01-07_ethz_event.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['contributor', 'endtime', 'eventid', 'formatted',
-                    'includeallorigins', 'includearrivals', 'includecomments',
-                    'includemagnitudes', 'includepicks', 'latitude', 'limit',
-                    'longitude', 'magnitudetype', 'maxdepth', 'maxlatitude',
-                    'maxlongitude', 'maxmagnitude', 'maxradius', 'mindepth',
-                    'minlatitude', 'minlongitude', 'minmagnitude', 'minradius',
-                    'offset', 'orderby', 'output', 'starttime', 'updatedafter']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-        parser, w = self._parse_wadl_file("2014-01-07_ethz_station.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['channel', 'endafter', 'endbefore', 'endtime', 'formatted',
-                    'includerestricted', 'latitude', 'level', 'location',
-                    'longitude', 'maxlatitude', 'maxlongitude', 'maxradius',
-                    'minlatitude', 'minlongitude', 'minradius', 'network',
-                    'output', 'startafter', 'startbefore', 'starttime',
-                    'station']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
-
-        parser, w = self._parse_wadl_file("2014-01-07_ethz_dataselect.wadl")
-        params = parser.parameters
-        # Check parsed parameters
-        expected = ['channel', 'endtime', 'location', 'network', 'quality',
-                    'starttime', 'station']
-        assert sorted(params.keys()) == expected
-        assert len(w) == 0
+        for filename, expected in zip(filenames, expected_list):
+            parser, w = self._parse_wadl_file(testdata[filename])
+            params = parser.parameters
+            # Check parsed parameters
+            assert sorted(params.keys()) == expected
+            assert len(w) == 0

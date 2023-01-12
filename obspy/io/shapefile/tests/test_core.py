@@ -173,13 +173,6 @@ def _close_shapefile_reader(reader):
 
 @pytest.mark.skipif(not HAS_PYSHP, reason='pyshp not installed')
 class TestShapefile():
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                'data')
-        cls.catalog_shape_basename = os.path.join(cls.path, 'catalog')
-        cls.inventory_shape_basename = os.path.join(cls.path, 'inventory')
-
     def test_write_catalog_shapefile(self):
         # read two events with uncertainties, one deserializes with "confidence
         # ellipsoid" origin uncertainty which is not yet implemented for

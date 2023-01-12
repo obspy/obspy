@@ -6,7 +6,6 @@ The InvSim test suite.
 import ctypes as C  # NOQA
 import gzip
 import io
-import os
 import platform
 
 import numpy as np
@@ -67,18 +66,13 @@ class TestInvSim():
     """
     Test cases for InvSim.
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_seis_sim_vs_pitsa1(self):
+    def test_seis_sim_vs_pitsa1(self, testdata):
         """
         Test simulate_seismometer seismometer simulation against seismometer
         simulation of Pitsa - LE3D seismometer.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
 
@@ -97,7 +91,7 @@ class TestInvSim():
                 data, samp_rate, paz_remove=paz_le3d, paz_simulate=paz,
                 water_level=600.0, zero_mean=False, nfft_pow2=True)
             # load pitsa file
-            filename = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
+            filename = testdata['rjob_20051006_%s.gz' % id]
             with gzip.open(filename) as f:
                 data_pitsa = np.loadtxt(f)
             # calculate normalized rms
@@ -105,13 +99,13 @@ class TestInvSim():
                           np.sum(data_pitsa ** 2))
             assert rms < 1.1e-05
 
-    def test_seis_sim_vs_pitsa_2(self):
+    def test_seis_sim_vs_pitsa_2(self, testdata):
         """
         Test simulate_seismometer seismometer simulation against seismometer
         simulation of Pitsa - STS-2 seismometer.
         """
         # load test file
-        file = os.path.join(self.path, 'rotz_20081028.gz')
+        file = testdata['rotz_20081028.gz']
         with gzip.open(file) as f:
             data = np.loadtxt(f)
 
@@ -129,7 +123,7 @@ class TestInvSim():
                 data, samp_rate, paz_remove=paz_sts2, paz_simulate=paz,
                 water_level=600.0, zero_mean=False, nfft_pow2=True)
             # load pitsa file
-            filename = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
+            filename = testdata['rotz_20081028_%s.gz' % id]
             with gzip.open(filename) as f:
                 data_pitsa = np.loadtxt(f)
             # calculate normalized rms
@@ -137,7 +131,7 @@ class TestInvSim():
                           np.sum(data_pitsa ** 2))
             assert rms < 1e-04
 
-    def test_estimate_magnitude(self):
+    def test_estimate_magnitude(self, testdata):
         """
         Tests against PITSA. Note that PITSA displays microvolt, that is
         the amplitude values must be computed back into counts (for this
@@ -169,7 +163,7 @@ class TestInvSim():
         # response calculated using all stages is slightly different from the
         # PAZ + overall sensitivity used above, so we get slightly different
         # values here..
-        response = read_inventory(os.path.join(self.path, 'BW_RTSH.xml'),
+        response = read_inventory(testdata['BW_RTSH.xml'],
                                   format='STATIONXML')[0][0][0].response
         mag_rtsh = estimate_magnitude(response, 3.34e6, 0.065, 0.255)
         assert round(abs(mag_rtsh-2.1179529876187635), 7) == 0
@@ -189,7 +183,7 @@ class TestInvSim():
     #    # paz of test file
     #    samp_rate = 200.0
 
-    def test_sac_instrument_correction(self):
+    def test_sac_instrument_correction(self, testdata):
         # SAC recommends to taper the transfer function if a pure
         # deconvolution is done instead of simulating a different
         # instrument. This test checks the difference between the
@@ -200,9 +194,9 @@ class TestInvSim():
         # floating point arithmetic of SAC vs. the double precision
         # arithmetic of Python. However differences still seem to be
         # too big for that.
-        pzf = os.path.join(self.path, 'SAC_PZs_KARC_BHZ')
-        sacf = os.path.join(self.path, 'KARC.LHZ.SAC.asc.gz')
-        testsacf = os.path.join(self.path, 'KARC_corrected.sac.asc.gz')
+        pzf = testdata['SAC_PZs_KARC_BHZ']
+        sacf = testdata['KARC.LHZ.SAC.asc.gz']
+        testsacf = testdata['KARC_corrected.sac.asc.gz']
         plow = 160.
         phigh = 4.
         fl1 = 1.0 / (plow + 0.0625 * plow)
@@ -249,16 +243,16 @@ class TestInvSim():
                       np.sum(tr.data ** 2))
         assert rms < 0.0421
 
-    def test_evalresp_vs_obspy(self):
+    def test_evalresp_vs_obspy(self, testdata):
         """
         Compare results from removing instrument response using
         evalresp in SAC and ObsPy. Visual inspection shows that the traces are
         pretty much identical but differences remain (rms ~ 0.042). Haven't
         found the cause for those, yet.
         """
-        evalrespf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC_resp')
-        rawf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC')
-        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
+        evalrespf = testdata['CRLZ.HHZ.10.NZ.SAC_resp']
+        rawf = testdata['CRLZ.HHZ.10.NZ.SAC']
+        respf = testdata['RESP.NZ.CRLZ.10.HHZ']
         fl1 = 0.00588
         fl2 = 0.00625
         fl3 = 30.
@@ -303,12 +297,11 @@ class TestInvSim():
         # plt.psd(tr.data - trtest.data, Fs=100., NFFT=32768)
         # plt.show()
 
-    def test_cosine_taper(self):
+    def test_cosine_taper(self, testdata):
         # SAC trace was generated with:
         # taper type cosine width 0.05
         for i in [99, 100]:
-            sac_taper = os.path.join(self.path,
-                                     'ones_trace_%d_tapered.sac' % i)
+            sac_taper = testdata['ones_trace_%d_tapered.sac' % i]
             tr = read(sac_taper)[0]
             tap = cosine_taper(i, p=0.1, halfcosine=False, sactaper=True)
             np.testing.assert_array_almost_equal(tap, tr.data, decimal=6)
@@ -330,7 +323,7 @@ class TestInvSim():
         # plt.plot(tap2,'g--')
         # plt.show()
 
-    def test_evalresp_using_different_line_separator(self):
+    def test_evalresp_using_different_line_separator(self, testdata):
         """
         The evalresp needs a file with correct line separator, so '\n' for
         POSIX, '\r' for Mac OS, or '\r\n' for Windows. Here we check that
@@ -343,20 +336,20 @@ class TestInvSim():
         dt = UTCDateTime(2003, 11, 1, 0, 0, 0)
         nfft = 8
         # Linux
-        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
+        respf = testdata['RESP.NZ.CRLZ.10.HHZ']
         evalresp(0.01, nfft, respf, dt)
         # Mac
-        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.mac')
+        respf = testdata['RESP.NZ.CRLZ.10.HHZ.mac']
         evalresp(0.01, nfft, respf, dt)
         # Windows
-        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.windows')
+        respf = testdata['RESP.NZ.CRLZ.10.HHZ.windows']
         evalresp(0.01, nfft, respf, dt)
 
-    def test_evalresp_bug_395(self):
+    def test_evalresp_bug_395(self, testdata):
         """
         Was a bug due to inconstistent numerical range
         """
-        resp = os.path.join(self.path, 'RESP.CH._.HHZ.gz')
+        resp = testdata['RESP.CH._.HHZ.gz']
         with NamedTemporaryFile() as fh:
             tmpfile = fh.name
             with gzip.open(resp) as f:
@@ -369,11 +362,11 @@ class TestInvSim():
             _h, f = evalresp(*args, **kwargs)
             assert len(f) == nfft // 2 + 1
 
-    def test_evalresp_specific_frequencies(self):
+    def test_evalresp_specific_frequencies(self, testdata):
         """
         Test getting response for specific frequencies from evalresp
         """
-        resp = os.path.join(self.path, 'RESP.CH._.HHZ.gz')
+        resp = testdata['RESP.CH._.HHZ.gz']
         # test some frequencies (results taken from routine
         # test_evalresp_bug_395)
         freqs = [0.0, 0.0021303792075, 0.21303792075, 0.63911376225,
@@ -403,12 +396,12 @@ class TestInvSim():
     @pytest.mark.skipif(
         platform.system() == "Windows",
         reason='unreproducible test fail encountered on Appveyor sometimes.')
-    def test_evalresp_file_like_object(self):
+    def test_evalresp_file_like_object(self, testdata):
         """
         Test evalresp with file like object
         """
-        rawf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC')
-        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
+        rawf = testdata['CRLZ.HHZ.10.NZ.SAC']
+        respf = testdata['RESP.NZ.CRLZ.10.HHZ']
 
         tr1 = read(rawf)[0]
         tr2 = read(rawf)[0]
@@ -427,15 +420,14 @@ class TestInvSim():
                                         seedresp=seedresp)
         assert traces_almost_equal(tr1, tr2)
 
-    def test_segfaulting_resp_file(self):
+    def test_segfaulting_resp_file(self, testdata):
         """
         Test case for a file that segfaults when compiled with clang and
         active optimization.
 
         As long as the test does not segfault it is ok.
         """
-        filename = os.path.join(self.path, "segfaulting_RESPs",
-                                "RESP.IE.LLRI..EHZ")
+        filename = testdata["segfaulting_RESPs"] / "RESP.IE.LLRI..EHZ"
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
         # raises C-level EVRESP ERROR
         with SuppressOutput():
@@ -444,12 +436,12 @@ class TestInvSim():
                          station="LLRI", channel="EHZ", network="IE",
                          locid="*", units="VEL")
 
-    def test_evalresp_seed_identifiers_work(self):
+    def test_evalresp_seed_identifiers_work(self, testdata):
         """
         Asserts that the network, station, location and channel identifiers can
         be used to select difference responses.
         """
-        kwargs = {"filename": os.path.join(self.path, "RESP.OB.AAA._.BH_"),
+        kwargs = {"filename": str(testdata['RESP.OB.AAA._.BH_']),
                   "t_samp": 0.1, "nfft": 1024, "units": "VEL",
                   "date": UTCDateTime(2013, 1, 1), "network": "OP",
                   "station": "AAA", "locid": "", "freq": False, "debug": False}

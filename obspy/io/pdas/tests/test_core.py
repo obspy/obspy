@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
-
 import numpy as np
 
 from obspy import Stream, UTCDateTime
@@ -11,17 +9,11 @@ class TestPDAS():
     """
     Test suite for pdas.
     """
-    @classmethod
-    def setup_class(cls):
-        # Directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-        cls.testfile = os.path.join(cls.path, 'data', 'p1246001.108')
-
-    def test_read_pdas(self):
+    def test_read_pdas(self, testdata):
         """
         Tests the _read_pdas function.
         """
-        st = _read_pdas(self.testfile)
+        st = _read_pdas(testdata['p1246001.108'])
         assert isinstance(st, Stream)
         assert len(st) == 1
         tr = st[0]
@@ -49,8 +41,8 @@ class TestPDAS():
                             dtype=np.int16)
         np.testing.assert_array_equal(tr.data[:10], expected)
 
-    def test_is_pdas(self):
+    def test_is_pdas(self, testdata):
         """
         Tests the _read_pdas function.
         """
-        assert _is_pdas(self.testfile)
+        assert _is_pdas(testdata['p1246001.108'])

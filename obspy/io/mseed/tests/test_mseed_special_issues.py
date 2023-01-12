@@ -53,8 +53,6 @@ class TestMSEEDSpecialIssue():
     """
     @classmethod
     def setup_class(cls):
-        # Directory where the test files are located
-        cls.path = os.path.dirname(__file__)
         # mseed steim compression is big endian
         if sys.byteorder == 'little':
             cls.swap = 1
@@ -138,12 +136,12 @@ class TestMSEEDSpecialIssue():
         with pytest.raises(argument_error):
             cl.msr_init(*args)
 
-    def test_broken_last_record(self):
+    def test_broken_last_record(self, testdata):
         """
         Test if Libmseed is able to read files with broken last record. Use
         both methods, readMSTracesViaRecords and readMSTraces
         """
-        file = os.path.join(self.path, "data", "brokenlastrecord.mseed")
+        file = testdata['brokenlastrecord.mseed']
 
         # independent reading of the data, 128 Bytes header
         d = np.fromfile(file, dtype=np.uint8)[128:]
@@ -257,13 +255,12 @@ class TestMSEEDSpecialIssue():
             with pytest.raises(Exception):
                 st.write(tempfile, format="MSEED")
 
-    def test_write_wrong_encoding(self):
+    def test_write_wrong_encoding(self, testdata):
         """
         Test to write a floating point mseed file with encoding STEIM1.
         An exception should be raised.
         """
-        file = os.path.join(self.path, "data",
-                            "BW.BGLD.__.EHE.D.2008.001.first_record")
+        file = testdata['BW.BGLD.__.EHE.D.2008.001.first_record']
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # Read the data and convert them to float
@@ -274,14 +271,13 @@ class TestMSEEDSpecialIssue():
             with pytest.raises(Exception):
                 st.write(tempfile, format="MSEED", encoding=10)
 
-    def test_write_wrong_encoding_via_mseed_stats(self):
+    def test_write_wrong_encoding_via_mseed_stats(self, testdata):
         """
         Test to write a floating point mseed file with encoding STEIM1 with the
         encoding set in stats.mseed.encoding.
         This will just raise a warning.
         """
-        file = os.path.join(self.path, "data",
-                            "BW.BGLD.__.EHE.D.2008.001.first_record")
+        file = testdata['BW.BGLD.__.EHE.D.2008.001.first_record']
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # Read the data and convert them to float
@@ -295,12 +291,11 @@ class TestMSEEDSpecialIssue():
                 with pytest.raises(UserWarning):
                     st.write(tempfile, format="MSEED")
 
-    def test_wrong_record_length_as_argument(self):
+    def test_wrong_record_length_as_argument(self, datapath):
         """
         Specifying a wrong record length should raise an error.
         """
-        file = os.path.join(self.path, 'data', 'encoding',
-                            'float32_Float32_bigEndian.mseed')
+        file = datapath / "encoding" / 'float32_Float32_bigEndian.mseed'
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             # invalid reclen
@@ -313,30 +308,28 @@ class TestMSEEDSpecialIssue():
             assert 'reclen exceeds buflen' in str(w[1].message)
             assert w[1].category == InternalMSEEDWarning
 
-    def test_read_with_missing_blockette010(self):
+    def test_read_with_missing_blockette010(self, testdata):
         """
         Reading a Full/Mini-SEED w/o blockette 010 but blockette 008.
         """
         # 1 - Mini-SEED
-        file = os.path.join(self.path, 'data', 'blockette008.mseed')
+        file = testdata['blockette008.mseed']
         tr = read(file)[0]
         assert 'BW.PART..EHZ' == tr.id
         assert 1642 == tr.stats.npts
         # 2 - full SEED
-        file = os.path.join(self.path, 'data',
-                            'RJOB.BW.EHZ.D.300806.0000.fullseed')
+        file = testdata['RJOB.BW.EHZ.D.300806.0000.fullseed']
         tr = read(file)[0]
         assert 'BW.RJOB..EHZ' == tr.id
         assert 412 == tr.stats.npts
 
-    def test_issue160(self):
+    def test_issue160(self, testdata):
         """
         Tests issue #160.
 
         Reading the header of SEED file.
         """
-        file = os.path.join(self.path, 'data',
-                            'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        file = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
         tr_one = read(file)[0]
         tr_two = read(file, headonly=True)[0]
         ms = AttribDict({'record_length': 512, 'encoding': 'STEIM1',
@@ -349,15 +342,14 @@ class TestMSEEDSpecialIssue():
             assert UTCDateTime(2008, 1, 1, 0, 0, 20, 510000) == \
                 tr.stats.endtime
 
-    def test_issue217(self):
+    def test_issue217(self, testdata):
         """
         Tests issue #217.
 
         Reading a MiniSEED file without sequence numbers and a record length of
         1024.
         """
-        file = os.path.join(self.path, 'data',
-                            'reclen_1024_without_sequence_numbers.mseed')
+        file = testdata['reclen_1024_without_sequence_numbers.mseed']
         tr = read(file)[0]
         ms = AttribDict({'record_length': 1024, 'encoding': 'STEIM1',
                          'filesize': 2048, 'dataquality': 'D',
@@ -442,7 +434,7 @@ class TestMSEEDSpecialIssue():
             # write the whole stream with encoding 0
             st.write(tempfile, format="MSEED", encoding=0)
 
-    def test_issue289(self):
+    def test_issue289(self, testdata):
         """
         Tests issue #289.
 
@@ -450,24 +442,23 @@ class TestMSEEDSpecialIssue():
         an empty Stream object.
         """
         # 1
-        file = os.path.join(self.path, 'data', 'steim2.mseed')
+        file = testdata['steim2.mseed']
         st = read(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
         assert len(st) == 0
         # 2
-        file = os.path.join(self.path, 'data', 'fullseed.mseed')
+        file = testdata['fullseed.mseed']
         st = read(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
         assert len(st) == 0
 
-    def test_issue312(self):
+    def test_issue312(self, testdata):
         """
         Tests issue #312
 
         The blkt_link struct was defined wrong.
         """
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
         # start and end time
-        ms = _MSStruct(filename)
+        ms = _MSStruct(str(filename))
         ms.read(-1, 0, 1, 0)
         blkt_link = ms.msr.contents.blkts.contents
         # The first blockette usually begins after 48 bytes. In the test file
@@ -481,14 +472,13 @@ class TestMSEEDSpecialIssue():
         assert blkt_link.blktdatalen == 4
         del ms
 
-    def test_issue272(self):
+    def test_issue272(self, testdata):
         """
         Tests issue #272
 
         Option headonly should not read the actual waveform data.
         """
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
         # everything
         st = read(filename)
         assert st[0].stats.npts == 4120
@@ -498,11 +488,11 @@ class TestMSEEDSpecialIssue():
         assert st[0].stats.npts == 4120
         assert len(st[0].data) == 0
 
-    def test_issue325(self):
+    def test_issue325(self, testdata):
         """
         Tests issue #325: Use selection with non default dataquality flag.
         """
-        filename = os.path.join(self.path, 'data', 'dataquality-m.mseed')
+        filename = testdata['dataquality-m.mseed']
         # 1 - read all
         st = read(filename)
         assert len(st) == 3
@@ -576,13 +566,13 @@ class TestMSEEDSpecialIssue():
             st = read(tempfile)
             assert round(abs(st[0].stats.delta-10000000.0), 0) == 0
 
-    def test_issue485(self):
+    def test_issue485(self, datapath):
         """
         Test reading floats and doubles, which are bytswapped nans
         """
         ref = [-1188.07800293, 638.16400146, 395.07809448, 1060.28112793]
         for filename in ('nan_float32.mseed', 'nan_float64.mseed'):
-            filename = os.path.join(self.path, 'data', 'encoding', filename)
+            filename = datapath / 'encoding' / filename
             data = read(filename)[0].data.tolist()
             np.testing.assert_array_almost_equal(
                 data, ref, decimal=8, err_msg='Data of file %s not equal' %
@@ -668,32 +658,29 @@ class TestMSEEDSpecialIssue():
                 del tr2.stats._format
                 assert tr == tr2
 
-    def test_full_seed_with_non_default_dataquality(self):
+    def test_full_seed_with_non_default_dataquality(self, testdata):
         """
         Tests the reading of full SEED files with dataqualities other then D.
         """
         # Test the normal one first.
-        filename = os.path.join(self.path, 'data', 'fullseed.mseed')
+        filename = testdata['fullseed.mseed']
         st = read(filename)
         assert st[0].stats.mseed.dataquality == "D"
 
         # Test the others. They should also have identical data.
-        filename = os.path.join(self.path, 'data',
-                                'fullseed_dataquality_M.mseed')
+        filename = testdata['fullseed_dataquality_M.mseed']
         st = read(filename)
         data_m = st[0].data
         assert len(st) == 1
         assert st[0].stats.mseed.dataquality == "M"
 
-        filename = os.path.join(self.path, 'data',
-                                'fullseed_dataquality_R.mseed')
+        filename = testdata['fullseed_dataquality_R.mseed']
         st = read(filename)
         data_r = st[0].data
         assert len(st) == 1
         assert st[0].stats.mseed.dataquality == "R"
 
-        filename = os.path.join(self.path, 'data',
-                                'fullseed_dataquality_Q.mseed')
+        filename = testdata['fullseed_dataquality_Q.mseed']
         st = read(filename)
         data_q = st[0].data
         assert len(st) == 1
@@ -708,11 +695,11 @@ class TestMSEEDSpecialIssue():
         os.environ.get("APPVEYOR", "false").lower() == "true",
         reason='Test is known to fail when building conda package in '
                'Appveyor.')
-    def test_infinite_loop(self):
+    def test_infinite_loop(self, testdata):
         """
         Tests that libmseed doesn't enter an infinite loop on buggy files.
         """
-        filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
+        filename = testdata['infinite-loop.mseed']
 
         process = multiprocessing.Process(target=_test_function,
                                           args=(filename, ))
@@ -756,12 +743,11 @@ class TestMSEEDSpecialIssue():
             assert tr2.stats.starttime == starttime
             assert tr2 == tr
 
-    def test_reading_noise_records(self):
+    def test_reading_noise_records(self, testdata):
         """
         Tests reading a noise record. See #1495.
         """
-        file = os.path.join(self.path, "data",
-                            "single_record_plus_noise_record.mseed")
+        file = testdata['single_record_plus_noise_record.mseed']
         st = read(file)
         assert len(st) == 1
         tr = st[0]
@@ -769,7 +755,7 @@ class TestMSEEDSpecialIssue():
         assert tr.stats.npts == 277
         assert tr.stats.sampling_rate == 40.0
 
-    def test_read_file_with_various_noise_records(self):
+    def test_read_file_with_various_noise_records(self, testdata):
         """
         Tests reading a custom made file with noise records.
         """
@@ -783,7 +769,7 @@ class TestMSEEDSpecialIssue():
         # 7. 512 byte normal record - station NV32
         # 8. 1024 byte NOISE record
         # 9. 512 byte normal record - station NV33
-        file = os.path.join(self.path, "data", "various_noise_records.mseed")
+        file = testdata['various_noise_records.mseed']
         st = read(file)
 
         assert len(st), 4
@@ -797,7 +783,7 @@ class TestMSEEDSpecialIssue():
         np.testing.assert_allclose(st[0].data, st[2].data)
         np.testing.assert_allclose(st[0].data, st[3].data)
 
-    def test_mseed_zero_data_offset(self):
+    def test_mseed_zero_data_offset(self, datapath):
         """
         Tests that a data offset of zero in the fixed header does not
         confuse ObsPy.
@@ -817,8 +803,7 @@ class TestMSEEDSpecialIssue():
           2016-08-21T01:45:31.000000Z - 2016-08-21T01:49:52.000000Z |
           1.0 Hz, 262 samples
         """
-        file = os.path.join(self.path, "data", "bizarre",
-                            "mseed_data_offset_0.mseed")
+        file = datapath / "bizarre" / "mseed_data_offset_0.mseed"
         st = read(file)
 
         assert len(st) == 3
@@ -844,12 +829,11 @@ class TestMSEEDSpecialIssue():
         assert tr.stats.npts == len(tr.data)
         assert tr.stats.npts == 262
 
-    def test_mseed_zero_data_headonly(self):
+    def test_mseed_zero_data_headonly(self, testdata):
         """
         Tests that records with no data correctly work in headonly mode.
         """
-        file = os.path.join(self.path, "data",
-                            "three_records_zero_data_in_middle.mseed")
+        file = testdata['three_records_zero_data_in_middle.mseed']
 
         expected = [
             ("BW.BGLD..EHE", UTCDateTime("2007-12-31T23:59:59.765000Z"),
@@ -879,7 +863,7 @@ class TestMSEEDSpecialIssue():
             assert tr.stats.sampling_rate == exp[3]
             assert tr.stats.npts == exp[4]
 
-    def test_read_file_with_microsecond_wrap(self):
+    def test_read_file_with_microsecond_wrap(self, testdata):
         """
         This is not strictly valid but I encountered such a file in practice
         so I guess it happens. Libmseed can also correctly deal with it.
@@ -887,8 +871,7 @@ class TestMSEEDSpecialIssue():
         The test file is a single record with the .0001 seconds field set to
         10000. SEED strictly allows only 0-9999 in this field.
         """
-        file = os.path.join(self.path, "data",
-                            "microsecond_wrap.mseed")
+        file = testdata['microsecond_wrap.mseed']
 
         with warnings.catch_warnings(record=True) as w_1:
             warnings.simplefilter("always")
@@ -924,12 +907,11 @@ class TestMSEEDSpecialIssue():
         assert ref_time == info["starttime"]
         assert ref_time == tr.stats.starttime
 
-    def test_reading_miniseed_with_no_blockette_1000(self):
+    def test_reading_miniseed_with_no_blockette_1000(self, datapath):
         """
         Blockette 1000 was only introduced with SEED version 2.3.
         """
-        file = os.path.join(self.path, "data", "bizarre",
-                            "mseed_no_blkt_1000.mseed")
+        file = datapath / "bizarre" / "mseed_no_blkt_1000.mseed"
         st = read(file)
 
         assert len(st) == 1
@@ -1039,15 +1021,13 @@ class TestMSEEDSpecialIssue():
                 np.float32(sr)
             assert not has_blkt_100(tempfile)
 
-    def test_reading_file_with_data_offset_of_48(self):
+    def test_reading_file_with_data_offset_of_48(self, testdata):
         """
         Tests reading a file which has a data offset of 48 bytes.
 
         It thus does not have a single blockette.
         """
-        file = os.path.join(
-            self.path, "data",
-            "mseed_not_a_single_blkt_48byte_data_offset.mseed")
+        file = testdata['mseed_not_a_single_blkt_48byte_data_offset.mseed']
         st = read(file)
 
         assert len(st) == 1
@@ -1061,12 +1041,11 @@ class TestMSEEDSpecialIssue():
             st[0].data[:6],
             [337, 396, 454, 503, 547, 581])
 
-    def test_reading_truncated_miniseed_files(self):
+    def test_reading_truncated_miniseed_files(self, testdata):
         """
         Regression test to guard against a segfault.
         """
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
 
         with io.open(filename, 'rb') as fh:
             data = fh.read()
@@ -1090,13 +1069,12 @@ class TestMSEEDSpecialIssue():
             "parsing record starting at offset 4608. The rest of "
             "the file will not be read.")
 
-    def test_reading_truncated_miniseed_files_case_2(self):
+    def test_reading_truncated_miniseed_files_case_2(self, testdata):
         """
         Second test in the same vain as
         test_reading_truncated_miniseed_files. Previously forgot a `<=` test.
         """
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
 
         with io.open(filename, 'rb') as fh:
             data = fh.read()
@@ -1120,14 +1098,13 @@ class TestMSEEDSpecialIssue():
             "parsing record starting at offset 4608. The rest of "
             "the file will not be read.")
 
-    def test_reading_less_than_128_bytes(self):
+    def test_reading_less_than_128_bytes(self, testdata):
         """
         128 bytes is the smallest possible MiniSEED record.
 
         Reading anything smaller should result in an error.
         """
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
 
         with io.open(filename, 'rb') as fh:
             data = fh.read()
@@ -1155,15 +1132,14 @@ class TestMSEEDSpecialIssue():
              "The passed buffer or file contains only 127.")
 
     @mock.patch("os.path.getsize")
-    def test_reading_file_larger_than_2048_mib(self, getsize_mock):
+    def test_reading_file_larger_than_2048_mib(self, getsize_mock, testdata):
         """
         ObsPy can currently not directly read files that are larger than
         2^31 bytes. This raises an exception with a description of how to
         get around it.
         """
         getsize_mock.return_value = 2 ** 31 + 1
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
         with pytest.raises(ObsPyMSEEDFilesizeTooLargeError) as e:
             _read_mseed(filename)
         assert str(e.value) == \
@@ -1172,12 +1148,12 @@ class TestMSEEDSpecialIssue():
             "read the file in chunks as documented here: " \
             "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369"
 
-    def test_read_file_with_non_valid_blocks_in_between(self):
+    def test_read_file_with_non_valid_blocks_in_between(self, testdata):
         """
         Test reading MiniSEED files that have some non-valid blocks in-between.
         """
         # This file has two 4096 bytes records.
-        filename = os.path.join(self.path, 'data', 'test.mseed')
+        filename = testdata['test.mseed']
         with io.open(filename, "rb") as fh:
             rec1 = fh.read(4096)
             rec2 = fh.read(4096)
@@ -1232,14 +1208,13 @@ class TestMSEEDSpecialIssue():
             del st[0].stats.mseed
             assert reference == st
 
-    def test_reading_files_with_non_ascii_headers(self):
+    def test_reading_files_with_non_ascii_headers(self, testdata):
         """
         Some dataloggers appear to do this.
 
         See #2177.
         """
-        filename = os.path.join(self.path, "data",
-                                "gecko_non_ascii_header.ms")
+        filename = testdata['gecko_non_ascii_header.ms']
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             st = read(filename)

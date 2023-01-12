@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+import pytest
 
 from obspy import read_events, Catalog, UTCDateTime
 from obspy.core.event import Event
@@ -56,15 +56,10 @@ class TestFOCMEC():
     """
     Test everything related to reading FOCMEC files
     """
-    @classmethod
-    def setup_class(cls):
-        # Directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-        cls.datapath = os.path.join(cls.path, 'data')
-        cls.lst_file = os.path.join(cls.datapath, 'focmec_8sta.lst')
-        cls.out_file = os.path.join(cls.datapath, 'focmec_8sta.out')
-
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.lst_file = testdata['focmec_8sta.lst']
+        self.out_file = testdata['focmec_8sta.out']
         with open(self.out_file, 'rb') as fh:
             header = []
             for i in range(15):
@@ -160,7 +155,7 @@ class TestFOCMEC():
         cat = read_events(self.lst_file)
         self._assert_cat_lst(cat)
 
-    def test_read_focmec_lst_other_flavors(self):
+    def test_read_focmec_lst_other_flavors(self, testdata):
         """
         This tests some additional files. lst files have a pretty free format
         unfortunately. It depends on focmec program version and on input data /
@@ -171,7 +166,7 @@ class TestFOCMEC():
         covered by basic tests above
         """
         # 1: focmec_qedUWne.lst
-        cat = read_events(os.path.join(self.datapath, 'focmec_qedUWne.lst'))
+        cat = read_events(testdata['focmec_qedUWne.lst'])
         assert len(cat) == 1
         focmecs = cat[0].focal_mechanisms
         assert len(focmecs) == 5
@@ -190,7 +185,7 @@ class TestFOCMEC():
         assert focmecs[-1].misfit == 20.0 / 190
 
         # 2: focmec_all.lst
-        cat = read_events(os.path.join(self.datapath, 'focmec_all.lst'))
+        cat = read_events(testdata['focmec_all.lst'])
         assert len(cat) == 1
         focmecs = cat[0].focal_mechanisms
         assert len(focmecs) == 3
@@ -205,8 +200,7 @@ class TestFOCMEC():
             assert focmec.misfit == float(errors) / 212
 
         # 3: focmec_8sta-noratios.lst
-        cat = read_events(os.path.join(self.datapath,
-                                       'focmec_8sta-noratios.lst'))
+        cat = read_events(testdata['focmec_8sta-noratios.lst'])
         assert len(cat) == 1
         focmecs = cat[0].focal_mechanisms
         assert len(focmecs) == 184

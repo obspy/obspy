@@ -3,6 +3,8 @@
 import os
 import zipfile
 
+import pytest
+
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
 from obspy.io.xseed.parser import Parser
@@ -13,14 +15,12 @@ from obspy.io.xseed.utils import compare_seed
 
 
 class TestScript():
-    @classmethod
-    def setup_class(cls):
-        cls.data = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                'data'))
-        cls.dataless_name = 'dataless.seed.BW_FURT'
-        cls.dataless_file = os.path.join(cls.data, cls.dataless_name)
-        cls.xseed_name = 'dataless.seed.BW_FURT.xml'
-        cls.xseed_file = os.path.join(cls.data, cls.xseed_name)
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.dataless_name = 'dataless.seed.BW_FURT'
+        self.dataless_file = str(testdata[self.dataless_name])
+        self.xseed_name = 'dataless.seed.BW_FURT.xml'
+        self.xseed_file = str(testdata[self.xseed_name])
 
     #
     # obspy-dataless2resp
@@ -85,13 +85,13 @@ Parsing file %s
 
             assert expected == actual
 
-    def test_dataless2xseed_split(self):
-        dataless_multi_file = os.path.join(self.data, 'CL.AIO.dataless')
+    def test_dataless2xseed_split(self, testdata):
+        dataless_multi_file = testdata['CL.AIO.dataless']
 
         with TemporaryWorkingDirectory():
             with CatchOutput() as out:
                 obspy_dataless2xseed(['--split-stations',
-                                      dataless_multi_file])
+                                      str(dataless_multi_file)])
 
             expected = '''Found 1 files.
 Parsing file %s

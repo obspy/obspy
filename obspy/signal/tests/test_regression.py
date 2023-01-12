@@ -3,8 +3,8 @@
 """
 Tests for linear regression.
 """
-
 import numpy as np
+import pytest
 
 from obspy.signal.regression import linear_regression
 
@@ -13,7 +13,8 @@ class TestRegression():
     """
     Test cases for the regression method.
     """
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
         # seed a random sequence and add some noise
         np.random.seed(0)
         n = 10

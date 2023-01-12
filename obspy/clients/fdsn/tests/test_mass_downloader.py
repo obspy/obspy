@@ -115,11 +115,6 @@ class TestRestrictions():
     """
     Test case for the restrictions object.
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(__file__)
-        cls.data = os.path.join(cls.path, "data")
-
     def test_passing_string_as_priority_list_raises(self):
         """
         Users reported errors as they used "tuples" with single items as
@@ -284,7 +279,7 @@ class TestRestrictions():
         Restrictions(starttime=start, endtime=start + 10,
                      station_starttime=start, station_endtime=start + 10)
 
-    def test_inventory_parsing(self):
+    def test_inventory_parsing(self, testdata):
         """
         Test the inventory parsing if an inventory is given.
         """
@@ -294,8 +289,7 @@ class TestRestrictions():
         assert r.limit_stations_to_inventory is None
 
         # An inventory object is given.
-        inv = obspy.read_inventory(os.path.join(
-            self.data, "channel_level_fdsn.txt"))
+        inv = obspy.read_inventory(testdata["channel_level_fdsn.txt"])
         r = Restrictions(starttime=obspy.UTCDateTime(2011, 1, 1),
                          endtime=obspy.UTCDateTime(2011, 2, 1),
                          limit_stations_to_inventory=inv)
@@ -307,11 +301,6 @@ class TestDownloadHelpersUtil():
     """
     Test cases for utility functionality for the download helpers.
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(__file__)
-        cls.data = os.path.join(cls.path, "data")
-
     def test_channel_priority_filtering(self):
         """
         Tests the channel priority filtering.
@@ -967,7 +956,7 @@ class TestDownloadHelpersUtil():
         with pytest.raises(TypeError):
             get_mseed_filename(lambda x: 1, "BW", "FURT", "", "BHE")
 
-    def test_get_stationxml_contents(self):
+    def test_get_stationxml_contents(self, testdata):
         """
         Tests the fast get_stationxml_contents() function.
         """
@@ -976,30 +965,28 @@ class TestDownloadHelpersUtil():
             ["network", "station", "location", "channel", "starttime",
              "endtime", "filename"])
 
-        filename = os.path.join(self.data, "AU.MEEK.xml")
         # Read with ObsPy and the fast variant.
-        inv = obspy.read_inventory(filename)
+        inv = obspy.read_inventory(testdata["AU.MEEK.xml"])
         # Consistency test.
         assert len(inv.networks) == 1
-        contents = get_stationxml_contents(filename)
+        contents = get_stationxml_contents(testdata["AU.MEEK.xml"])
         net = inv[0]
         sta = net[0]
         cha = sta[0]
         assert contents == \
             [ChannelAvailability(net.code, sta.code, cha.location_code,
                                  cha.code, cha.start_date, cha.end_date,
-                                 filename)]
+                                 testdata["AU.MEEK.xml"])]
 
-    def test_fast_vs_slow_get_stationxml_contents(self):
+    def test_fast_vs_slow_get_stationxml_contents(self, testdata):
         """
         Both should of course return the same result.
 
         For some old lxml versions both will be using the same function,
         but this is still a useful test.
         """
-        filename = os.path.join(self.data, "AU.MEEK.xml")
-        assert get_stationxml_contents(filename) == \
-            _get_stationxml_contents_slow(filename)
+        assert get_stationxml_contents(testdata["AU.MEEK.xml"]) == \
+            _get_stationxml_contents_slow(testdata["AU.MEEK.xml"])
 
     def test_channel_str_representation(self):
         """
@@ -1709,12 +1696,8 @@ class TestClientDownloadHelper():
     """
     Test cases for the ClientDownloadHelper class.
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(__file__)
-        cls.data = os.path.join(cls.path, "data")
-
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
         self.client = mock.MagicMock()
         self.client.base_url = "http://example.com"
         self.client_name = "Test"
@@ -2202,23 +2185,22 @@ class TestClientDownloadHelper():
 
         c.download_stationxml()
 
-    def test_get_availability(self):
+    def test_get_availability(self, testdata):
         """
         Tests the get_availability function.
         """
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
+            testdata["channel_level_fdsn.txt"])
         c.get_availability()
 
-    def test_get_availability_with_multiple_channel_epochs(self):
+    def test_get_availability_with_multiple_channel_epochs(self, testdata):
         """
         Make sure to get rid of du
         """
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data,
-                         "channel_level_fdsn_with_multiple_epochs.txt"))
+            testdata["channel_level_fdsn_with_multiple_epochs.txt"])
         c.get_availability()
         assert list(c.stations.keys()) == [("TA", "857A")]
         assert len(c.stations[("TA", "857A")].channels) == 1
@@ -2226,114 +2208,86 @@ class TestClientDownloadHelper():
         assert chan.intervals[0].start == c.restrictions.starttime
         assert chan.intervals[0].end == c.restrictions.endtime
 
-    def test_excluding_networks_and_stations(self):
+    def test_excluding_networks_and_stations(self, testdata):
         """
         Tests the excluding of networks and stations.
         """
-        # Default
-        c = self._init_client()
-        c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
-        c.get_availability()
-        assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
-            sorted(c.stations.keys())
+        restrictions_list = [
+            # Default
+            Restrictions(
+                starttime=obspy.UTCDateTime(2001, 1, 1),
+                endtime=obspy.UTCDateTime(2015, 1, 1),
+                station_starttime=obspy.UTCDateTime(2000, 1, 1),
+                station_endtime=obspy.UTCDateTime(2015, 1, 1)),
+            # Excluding things that don't exists does not do anything.
+            Restrictions(
+                starttime=obspy.UTCDateTime(2001, 1, 1),
+                endtime=obspy.UTCDateTime(2015, 1, 1),
+                station_starttime=obspy.UTCDateTime(2000, 1, 1),
+                station_endtime=obspy.UTCDateTime(2015, 1, 1),
+                exclude_networks=["Z*", "ZNB", "[XYZ]?"],
+                exclude_stations=["A*", "[CD]?", "ZNF"]),
+            # Simple network exclude.
+            Restrictions(
+                starttime=obspy.UTCDateTime(2001, 1, 1),
+                endtime=obspy.UTCDateTime(2015, 1, 1),
+                station_starttime=obspy.UTCDateTime(2000, 1, 1),
+                station_endtime=obspy.UTCDateTime(2015, 1, 1),
+                exclude_networks=["AK"]),
+            # Wildcarded network exclude.
+            Restrictions(
+                starttime=obspy.UTCDateTime(2001, 1, 1),
+                endtime=obspy.UTCDateTime(2015, 1, 1),
+                station_starttime=obspy.UTCDateTime(2000, 1, 1),
+                station_endtime=obspy.UTCDateTime(2015, 1, 1),
+                exclude_networks=["?K"]),
+            # Multiple network excludes
+            Restrictions(
+                starttime=obspy.UTCDateTime(2001, 1, 1),
+                endtime=obspy.UTCDateTime(2015, 1, 1),
+                station_starttime=obspy.UTCDateTime(2000, 1, 1),
+                station_endtime=obspy.UTCDateTime(2015, 1, 1),
+                exclude_networks=["AK", "AZ"]),
+            # Simple station exclude.
+            Restrictions(
+                starttime=obspy.UTCDateTime(2001, 1, 1),
+                endtime=obspy.UTCDateTime(2015, 1, 1),
+                station_starttime=obspy.UTCDateTime(2000, 1, 1),
+                station_endtime=obspy.UTCDateTime(2015, 1, 1),
+                exclude_stations=["BAGL"]),
+            # Wildcarded station exclude.
+            Restrictions(
+                starttime=obspy.UTCDateTime(2001, 1, 1),
+                endtime=obspy.UTCDateTime(2015, 1, 1),
+                station_starttime=obspy.UTCDateTime(2000, 1, 1),
+                station_endtime=obspy.UTCDateTime(2015, 1, 1),
+                exclude_stations=["[AB]?N"]),
+            # Multiple excludes.
+            Restrictions(
+                starttime=obspy.UTCDateTime(2001, 1, 1),
+                endtime=obspy.UTCDateTime(2015, 1, 1),
+                station_starttime=obspy.UTCDateTime(2000, 1, 1),
+                station_endtime=obspy.UTCDateTime(2015, 1, 1),
+                exclude_stations=["BWN", "BZN"]),
+            ]
+        results_list = [
+            [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
+            [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
+            [("AZ", "BZN")],
+            [("AZ", "BZN")],
+            [],
+            [("AK", "BWN"), ("AZ", "BZN")],
+            [("AK", "BAGL")],
+            [("AK", "BAGL")],
+            ]
+        for restrictions, expected in zip(restrictions_list, results_list):
+            self.restrictions = restrictions
+            c = self._init_client()
+            c.client.get_stations.return_value = \
+                obspy.read_inventory(testdata["channel_level_fdsn.txt"])
+            c.get_availability()
+            assert sorted(c.stations.keys()) == expected
 
-        # Excluding things that don't exists does not do anything.
-        self.restrictions = Restrictions(
-            starttime=obspy.UTCDateTime(2001, 1, 1),
-            endtime=obspy.UTCDateTime(2015, 1, 1),
-            station_starttime=obspy.UTCDateTime(2000, 1, 1),
-            station_endtime=obspy.UTCDateTime(2015, 1, 1),
-            exclude_networks=["Z*", "ZNB", "[XYZ]?"],
-            exclude_stations=["A*", "[CD]?", "ZNF"]
-        )
-        c = self._init_client()
-        c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
-        c.get_availability()
-        assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
-            sorted(c.stations.keys())
-
-        # Simple network exclude.
-        self.restrictions = Restrictions(
-            starttime=obspy.UTCDateTime(2001, 1, 1),
-            endtime=obspy.UTCDateTime(2015, 1, 1),
-            station_starttime=obspy.UTCDateTime(2000, 1, 1),
-            station_endtime=obspy.UTCDateTime(2015, 1, 1),
-            exclude_networks=["AK"])
-        c = self._init_client()
-        c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
-        c.get_availability()
-        assert [("AZ", "BZN")] == sorted(c.stations.keys())
-
-        # Wildcarded network exclude.
-        self.restrictions = Restrictions(
-            starttime=obspy.UTCDateTime(2001, 1, 1),
-            endtime=obspy.UTCDateTime(2015, 1, 1),
-            station_starttime=obspy.UTCDateTime(2000, 1, 1),
-            station_endtime=obspy.UTCDateTime(2015, 1, 1),
-            exclude_networks=["?K"])
-        c = self._init_client()
-        c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
-        c.get_availability()
-        assert [("AZ", "BZN")] == sorted(c.stations.keys())
-
-        # Multiple network excludes
-        self.restrictions = Restrictions(
-            starttime=obspy.UTCDateTime(2001, 1, 1),
-            endtime=obspy.UTCDateTime(2015, 1, 1),
-            station_starttime=obspy.UTCDateTime(2000, 1, 1),
-            station_endtime=obspy.UTCDateTime(2015, 1, 1),
-            exclude_networks=["AK", "AZ"])
-        c = self._init_client()
-        c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
-        c.get_availability()
-        assert [] == sorted(c.stations.keys())
-
-        # Simple station exclude.
-        self.restrictions = Restrictions(
-            starttime=obspy.UTCDateTime(2001, 1, 1),
-            endtime=obspy.UTCDateTime(2015, 1, 1),
-            station_starttime=obspy.UTCDateTime(2000, 1, 1),
-            station_endtime=obspy.UTCDateTime(2015, 1, 1),
-            exclude_stations=["BAGL"]
-        )
-        c = self._init_client()
-        c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
-        c.get_availability()
-        assert [("AK", "BWN"), ("AZ", "BZN")] == sorted(c.stations.keys())
-
-        # Wildcarded station exclude.
-        self.restrictions = Restrictions(
-            starttime=obspy.UTCDateTime(2001, 1, 1),
-            endtime=obspy.UTCDateTime(2015, 1, 1),
-            station_starttime=obspy.UTCDateTime(2000, 1, 1),
-            station_endtime=obspy.UTCDateTime(2015, 1, 1),
-            exclude_stations=["[AB]?N"]
-        )
-        c = self._init_client()
-        c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
-        c.get_availability()
-        assert [("AK", "BAGL")] == sorted(c.stations.keys())
-
-        # Multiple excludes.
-        self.restrictions = Restrictions(
-            starttime=obspy.UTCDateTime(2001, 1, 1),
-            endtime=obspy.UTCDateTime(2015, 1, 1),
-            station_starttime=obspy.UTCDateTime(2000, 1, 1),
-            station_endtime=obspy.UTCDateTime(2015, 1, 1),
-            exclude_stations=["BWN", "BZN"]
-        )
-        c = self._init_client()
-        c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
-        c.get_availability()
-        assert [("AK", "BAGL")] == sorted(c.stations.keys())
 
         # When 'channel' or 'location' are set they should override
         # 'channel_priorities' and 'location_priorities'. If this isn't
@@ -2357,7 +2311,7 @@ class TestClientDownloadHelper():
             location_priorities=["", "01"])
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "uncommon_channel_location.txt"))
+            testdata["uncommon_channel_location.txt"])
         c.get_availability()
         assert [("AK", "BAGLD")] == sorted(c.stations.keys())
 
@@ -2370,7 +2324,7 @@ class TestClientDownloadHelper():
             location="31")
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "uncommon_channel_location.txt"))
+            testdata["uncommon_channel_location.txt"])
         c.get_availability()
         assert [("AK", "BAGLC"), ("AK", "BAGLD")] == sorted(c.stations.keys())
 
@@ -2383,7 +2337,7 @@ class TestClientDownloadHelper():
             channel="RST")
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "uncommon_channel_location.txt"))
+            testdata["uncommon_channel_location.txt"])
         c.get_availability()
         assert [("AK", "BAGLB"), ("AK", "BAGLD")] == sorted(c.stations.keys())
 
@@ -2397,23 +2351,23 @@ class TestClientDownloadHelper():
             channel="RST")
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "uncommon_channel_location.txt"))
+            testdata["uncommon_channel_location.txt"])
         c.get_availability()
         assert [("AK", "BAGLA"), ("AK", "BAGLB"), ("AK", "BAGLC"),
                 ("AK", "BAGLD")] == sorted(c.stations.keys())
 
-    def test_excluding_networks_and_stations_with_an_inventory_object(self):
+    def test_excluding_networks_and_stations_with_an_inventory_object(
+            self, testdata):
         """
         Tests the excluding of networks and stations with the help of an
         inventory object.
         """
-        full_inv = obspy.read_inventory(os.path.join(
-            self.data, "channel_level_fdsn.txt"))
+        full_inv = obspy.read_inventory(testdata["channel_level_fdsn.txt"])
 
         # Default
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
+            testdata["channel_level_fdsn.txt"])
         c.get_availability()
         assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
             sorted(c.stations.keys())
@@ -2428,7 +2382,7 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
+            testdata["channel_level_fdsn.txt"])
         c.get_availability()
         assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
             sorted(c.stations.keys())
@@ -2444,7 +2398,7 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
+            testdata["channel_level_fdsn.txt"])
         c.get_availability()
         assert [("AK", "BAGL"), ("AK", "BWN")] == sorted(c.stations.keys())
 
@@ -2459,7 +2413,7 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
+            testdata["channel_level_fdsn.txt"])
         c.get_availability()
         assert [("AZ", "BZN")] == sorted(c.stations.keys())
 
@@ -2473,7 +2427,7 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
+            testdata["channel_level_fdsn.txt"])
         c.get_availability()
         assert [("AZ", "BZN")] == sorted(c.stations.keys())
 
@@ -2487,7 +2441,7 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data, "channel_level_fdsn.txt"))
+            testdata["channel_level_fdsn.txt"])
         c.get_availability()
         assert [] == sorted(c.stations.keys())
 
@@ -2536,7 +2490,7 @@ class TestClientDownloadHelper():
             with open(filename, "w") as buf:
                 buf.write("obspy")
 
-    def test_warning_when_location_prios_excludes_all_channels(self):
+    def test_warning_when_location_prios_excludes_all_channels(self, testdata):
         """
         Tests that the logger raises a warning when the location_priorities
         settings excludes all channels.
@@ -2545,8 +2499,7 @@ class TestClientDownloadHelper():
         assert self.logger.warning.call_count == 0
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            os.path.join(self.data,
-                         "channel_level_fdsn_obscure_location_code.txt"))
+            testdata["channel_level_fdsn_obscure_location_code.txt"])
         c.get_availability()
         # Nothing should have been selected.
         assert c.stations == {}

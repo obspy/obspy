@@ -89,8 +89,6 @@ class TestMSEEDUtil():
     @classmethod
     def setup_class(cls):
         cls.maxDiff = None
-        # Directory where the test files are located
-        cls.path = os.path.dirname(__file__)
         # mseed steim compression is big endian
         if sys.byteorder == 'little':
             cls.swap = 1
@@ -152,12 +150,11 @@ class TestMSEEDUtil():
         assert dt == util._convert_mstime_to_datetime(
             util._convert_datetime_to_mstime(dt))
 
-    def test_get_record_information(self):
+    def test_get_record_information(self, testdata):
         """
         Tests the util._get_ms_file_info method with known values.
         """
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
         # Simply reading the file.
         info = util.get_record_information(filename)
         assert info['filesize'] == 5120
@@ -186,19 +183,18 @@ class TestMSEEDUtil():
         assert info['excess_bytes'] == 401
         assert open_file_string.tell() == 111
         # One more file containing two records.
-        filename = os.path.join(self.path, 'data', 'test.mseed')
+        filename = testdata['test.mseed']
         info = util.get_record_information(filename)
         assert info['filesize'] == 8192
         assert info['record_length'] == 4096
         assert info['number_of_records'] == 2
         assert info['excess_bytes'] == 0
 
-    def test_get_record_information_negative_sr_rate_and_mult(self):
+    def test_get_record_information_negative_sr_rate_and_mult(self, testdata):
         """
         Tests the method for negative sampling rate factors and multipliers.
         """
-        filename = os.path.join(
-            self.path, 'data', 'single_record_negative_sr_fact_and_mult.mseed')
+        filename = testdata['single_record_negative_sr_fact_and_mult.mseed']
         info = util.get_record_information(filename)
         assert info == {
             'activity_flags': 0,
@@ -221,7 +217,7 @@ class TestMSEEDUtil():
             'time_correction': 0
         }
 
-    def test_issue2069(self):
+    def test_issue2069(self, testdata):
         """
         Tests the util._get_ms_file_info method with sample rate of 0.
         Reads a datafile and sets sr factor and multipier to 0 and and mseed
@@ -229,8 +225,7 @@ class TestMSEEDUtil():
         """
 
         # Test with a file by setting sr = 0
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
         fmt = '>HHBBBxHHhhBBBxlxxH'
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
@@ -247,11 +242,11 @@ class TestMSEEDUtil():
                 assert info['samp_rate'] == 0
 
         # Test with an actual sr = 0 file
-        filename = os.path.join(self.path, 'data', 'rt130_sr0_cropped.mseed')
+        filename = testdata['rt130_sr0_cropped.mseed']
         info = util.get_record_information(filename)
         assert info['samp_rate'] == 0
 
-    def test_get_data_quality(self):
+    def test_get_data_quality(self, testdata):
         """
         This test reads a self-made Mini-SEED file with set Data Quality Bits.
         A real test file would be better as this test tests a file that was
@@ -261,7 +256,7 @@ class TestMSEEDUtil():
         the meanwhile been replaced by a more general get_flags() method.
         This test uses the general method but is otherwise not altered.
         """
-        filename = os.path.join(self.path, 'data', 'qualityflags.mseed')
+        filename = testdata['qualityflags.mseed']
         # Read quality flags.
         result = util.get_flags(filename, timing_quality=False,
                                 io_flags=False, activity_flags=False,
@@ -282,7 +277,7 @@ class TestMSEEDUtil():
             "suspect_time_tag": 2}
 
         # No set quality flags should result in a list of zeros.
-        filename = os.path.join(self.path, 'data', 'test.mseed')
+        filename = testdata['test.mseed']
         result = util.get_flags(filename, timing_quality=False,
                                 io_flags=False, activity_flags=False,
                                 data_quality_flags=True)
@@ -522,7 +517,7 @@ class TestMSEEDUtil():
                     "end_time_series": 4,
                     "clock_locked": 32}
 
-    def test_get_start_and_end_time(self):
+    def test_get_start_and_end_time(self, testdata):
         """
         Tests getting the start- and endtime of a file.
 
@@ -531,7 +526,7 @@ class TestMSEEDUtil():
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'test.mseed', 'timingquality.mseed']
         for _i in mseed_filenames:
-            filename = os.path.join(self.path, 'data', _i)
+            filename = testdata[_i]
             # Get the start- and end time.
             (start, end) = util.get_start_and_end_time(filename)
             # Parse the whole file.
@@ -539,7 +534,7 @@ class TestMSEEDUtil():
             assert start == stream[0].stats.starttime
             assert end == stream[0].stats.endtime
 
-    def test_get_timing_quality(self):
+    def test_get_timing_quality(self, testdata):
         """
         This test reads a self-made Mini-SEED file with Timing Quality
         information in Blockette 1001. A real test file would be better.
@@ -556,7 +551,7 @@ class TestMSEEDUtil():
         the meanwhile been replaced by a more general get_flags() method.
         This test uses the general method but is otherwise not altered.
         """
-        filename = os.path.join(self.path, 'data', 'timingquality.mseed')
+        filename = testdata['timingquality.mseed']
         result = util.get_flags(filename, timing_quality=True,
                                 io_flags=False, activity_flags=False,
                                 data_quality_flags=False)
@@ -577,20 +572,18 @@ class TestMSEEDUtil():
             'max': 100.0}
 
         # No timing quality set should result in an empty dictionary.
-        filename = os.path.join(self.path, 'data',
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
         result = util.get_flags(filename, timing_quality=True,
                                 io_flags=False, activity_flags=False,
                                 data_quality_flags=False)
         assert result["timing_quality"] == {}
 
-    def test_unpack_steim_1(self):
+    def test_unpack_steim_1(self, testdata):
         """
         Test decompression of Steim1 strings. Remove 64 Bytes of header
         by hand, see SEEDManual_V2.4.pdf page 100.
         """
-        steim1_file = os.path.join(self.path, 'data',
-                                   'BW.BGLD.__.EHE.D.2008.001.first_record')
+        steim1_file = testdata['BW.BGLD.__.EHE.D.2008.001.first_record']
         # 64 Bytes header.
         d = np.fromfile(steim1_file, dtype=np.uint8)[64:]
         data = util._unpack_steim_1(d, 412, swapflag=self.swap,
@@ -598,12 +591,12 @@ class TestMSEEDUtil():
         data_record = _read_mseed(steim1_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
-    def test_unpack_steim_2(self):
+    def test_unpack_steim_2(self, testdata):
         """
         Test decompression of Steim2 strings. Remove 128 Bytes of header
         by hand, see SEEDManual_V2.4.pdf page 100.
         """
-        steim2_file = os.path.join(self.path, 'data', 'steim2.mseed')
+        steim2_file = testdata['steim2.mseed']
         # 128 Bytes header.
         d = np.fromfile(steim2_file, dtype=np.uint8)[128:]
         data = util._unpack_steim_2(d, 5980, swapflag=self.swap,
@@ -611,16 +604,14 @@ class TestMSEEDUtil():
         data_record = _read_mseed(steim2_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
-    def test_time_shifting(self):
+    def test_time_shifting(self, testdata):
         """
         Tests the shift_time_of_file() function.
         """
         with NamedTemporaryFile() as tf:
             output_filename = tf.name
             # Test a normal file first.
-            filename = os.path.join(
-                self.path, 'data',
-                "BW.BGLD.__.EHE.D.2008.001.first_10_records")
+            filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
             # Shift by one second.
             util.shift_time_of_file(filename, output_filename, 10000)
             st_before = _read_mseed(filename)
@@ -642,9 +633,8 @@ class TestMSEEDUtil():
 
             # Test a special case with the time correction applied flag set but
             # no actual time correction in the field.
-            filename = os.path.join(
-                self.path, 'data',
-                "one_record_time_corr_applied_but_time_corr_is_zero.mseed")
+            filename = testdata[
+                'one_record_time_corr_applied_but_time_corr_is_zero.mseed']
             # Positive shift.
             util.shift_time_of_file(filename, output_filename, 22000)
             st_before = _read_mseed(filename)
@@ -658,7 +648,7 @@ class TestMSEEDUtil():
             st_before[0].stats.starttime -= 33.3
             assert st_before == st_after
 
-    def test_time_shifting_special_case(self):
+    def test_time_shifting_special_case(self, testdata):
         """
         Sometimes actually changing the time value is necessary. This works but
         is considered experimental and thus emits a warning. Therefore Python
@@ -667,9 +657,8 @@ class TestMSEEDUtil():
         with NamedTemporaryFile() as tf:
             output_filename = tf.name
             # This file was created only for testing purposes.
-            filename = os.path.join(
-                self.path, 'data',
-                "one_record_already_applied_time_correction.mseed")
+            filename = testdata[
+                'one_record_already_applied_time_correction.mseed']
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('error', UserWarning)
                 with pytest.raises(UserWarning):
@@ -1133,14 +1122,14 @@ class TestMSEEDUtil():
             with pytest.raises(ValueError):
                 set_flags_in_fixed_headers(file_name, wrong_trace)
 
-    def test_set_flags_in_fixed_header_with_blockette_100(self):
+    def test_set_flags_in_fixed_header_with_blockette_100(self, testdata):
         """
         Test the set_flags_in_fixed_header function for a file with
         blockette 100.
         """
         with NamedTemporaryFile() as tf:
             tf.close()
-            shutil.copy(os.path.join(self.path, 'data', 'test.mseed'),
+            shutil.copy(testdata['test.mseed'],
                         tf.name)
             # No data quality flags set.
             flags = util.get_flags(tf.name)['data_quality_flags_counts']
@@ -1157,9 +1146,8 @@ class TestMSEEDUtil():
             assert flags['glitches'] == 2
             assert flags['suspect_time_tag'] == 2
 
-    def test_regression_segfault_when_hooking_up_libmseeds_logging(self):
-        filename = os.path.join(self.path, 'data',
-                                'wrong_blockette_numbers_specified.mseed')
+    def test_regression_segfault_when_hooking_up_libmseeds_logging(self, testdata):
+        filename = testdata['wrong_blockette_numbers_specified.mseed']
         # Read it once - that hooks up the logging.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -1251,9 +1239,8 @@ class TestMSEEDUtil():
         # Move the file_bfr to where it was before
         file_bfr.seek(prev_pos, os.SEEK_SET)
 
-    def test_get_record_information_with_invalid_word_order(self):
-        filename = os.path.join(self.path, "data",
-                                "record_with_invalid_word_order.mseed")
+    def test_get_record_information_with_invalid_word_order(self, testdata):
+        filename = testdata['record_with_invalid_word_order.mseed']
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             info = util.get_record_information(filename)
@@ -1282,10 +1269,9 @@ class TestMSEEDUtil():
             'number_of_records': 1,
             'excess_bytes': 0}
 
-    def test_read_fullseed_no_data_record(self):
+    def test_read_fullseed_no_data_record(self, testdata):
         # see 2534
-        filename = os.path.join(self.path, 'data',
-                                'RJOB.BW.EHZ.D.300806.0000.fullseed')
+        filename = testdata['RJOB.BW.EHZ.D.300806.0000.fullseed']
         # file contains two records, the second being the miniseed record.
         # make a bytes buffer without the data record
         with open(filename, 'rb') as fh:

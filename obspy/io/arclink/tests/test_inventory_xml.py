@@ -13,10 +13,6 @@ Modified after obspy.io.stationXML
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-
-import inspect
-import os
-
 from obspy.core.inventory import read_inventory
 from obspy.io.arclink.inventory import validate_arclink_xml, SCHEMA_NAMESPACE
 import pytest
@@ -24,23 +20,19 @@ import pytest
 
 class TestArclinkInventory():
 
-    @classmethod
-    def setup_class(cls):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
         """
         Read example stationXML and arclink format to Inventory
         """
-        cls.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
-        cls.arclink_xml_path = os.path.join(cls.data_dir,
-                                            "arclink_inventory.xml")
-        cls.station_xml_path = os.path.join(cls.data_dir, "gols_station.xml")
-        cls.arclink_xml_poly = os.path.join(cls.data_dir,
-                                            "arclink_inventory_poly.xml")
-        cls.arclink_afc_path = os.path.join(cls.data_dir, "arclink_afc.xml")
-        cls.station_afc_path = os.path.join(cls.data_dir, "station_afc.xml")
+        self.arclink_xml_path = testdata["arclink_inventory.xml"]
+        self.station_xml_path = testdata["gols_station.xml"]
+        self.arclink_xml_poly = testdata["arclink_inventory_poly.xml"]
+        self.arclink_afc_path = testdata["arclink_afc.xml"]
+        self.station_afc_path = testdata["station_afc.xml"]
 
-    def test_publicid_slash(self):
-        v = read_inventory(os.path.join(self.data_dir, "public-id-slash.xml"))
+    def test_publicid_slash(self, testdata):
+        v = read_inventory(testdata["public-id-slash.xml"])
         assert len(v[0][0][0].response.response_stages) == 11
 
     def test_analogue_filter_chain(self):

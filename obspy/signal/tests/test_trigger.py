@@ -42,8 +42,6 @@ class TestTrigger():
     """
     @classmethod
     def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
         # random seed data
         np.random.seed(815)
         cls.data = np.random.randn(int(1e5))
@@ -83,12 +81,11 @@ class TestTrigger():
             clibsignal.recstalta(
                 np.array([1], dtype=np.int32), charfct, ndat, 5, 10)
 
-    def test_pk_baer(self):
+    def test_pk_baer(self, testdata):
         """
         Test pk_baer against implementation for UNESCO short course
         """
-        filename = os.path.join(self.path, 'manz_waldk.a01.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['manz_waldk.a01.gz']) as f:
             data = np.loadtxt(f, dtype=np.float32)
         df, ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
@@ -97,12 +94,11 @@ class TestTrigger():
         assert nptime == 17545
         assert pfm == 'IPU0'
 
-    def test_pk_baer_cf(self):
+    def test_pk_baer_cf(self, testdata):
         """
         Test pk_baer against implementation for UNESCO short course
         """
-        filename = os.path.join(self.path, 'manz_waldk.a01.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['manz_waldk.a01.gz']) as f:
             data = np.loadtxt(f, dtype=np.float32)
         df, ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
@@ -130,15 +126,14 @@ class TestTrigger():
         aic_true = aic_simple_python(data)
         assert_array_almost_equal(aic, aic_true)
 
-    def test_ar_pick(self):
+    def test_ar_pick(self, testdata):
         """
         Test ar_pick against implementation for UNESCO short course
         """
         data = []
         for channel in ['z', 'n', 'e']:
-            file = os.path.join(self.path,
-                                'loc_RJOB20050801145719850.' + channel)
-            data.append(np.loadtxt(file, dtype=np.float32))
+            filename = 'loc_RJOB20050801145719850.' + channel
+            data.append(np.loadtxt(testdata[filename], dtype=np.float32))
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
             200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
@@ -157,15 +152,14 @@ class TestTrigger():
         assert str(e.value) == \
             "All three data arrays must have the same length."
 
-    def test_ar_pick_low_amplitude(self):
+    def test_ar_pick_low_amplitude(self, testdata):
         """
         Test ar_pick with low amplitude data
         """
         data = []
         for channel in ['z', 'n', 'e']:
-            file = os.path.join(self.path,
-                                'loc_RJOB20050801145719850.' + channel)
-            data.append(np.loadtxt(file, dtype=np.float32))
+            filename = 'loc_RJOB20050801145719850.' + channel
+            data.append(np.loadtxt(testdata[filename], dtype=np.float32))
 
         # articially reduce signal amplitude
         for d in data:
@@ -216,7 +210,7 @@ class TestTrigger():
             plt.legend()
             plt.show()
 
-    def test_trigger_onset_issue_2891(self):
+    def test_trigger_onset_issue_2891(self, testdata):
         """
         Regression test for issue 2891
 
@@ -227,12 +221,11 @@ class TestTrigger():
         unusual, but we fixed it nevertheless, since people can run into this
         playing around with different threshold settings
         """
-        tr = read(os.path.join(
-            self.path, 'BW.UH1._.EHZ.D.2010.147.a.slist.gz'))[0]
+        tr = read(testdata['BW.UH1._.EHZ.D.2010.147.a.slist.gz'])[0]
         cft = recursive_sta_lta(tr.data, 5, 30)
         trigger_onset(cft, 2.5, 3.2)
 
-    def test_coincidence_trigger(self):
+    def test_coincidence_trigger(self, testdata):
         """
         Test network coincidence trigger.
         """
@@ -242,8 +235,7 @@ class TestTrigger():
                  "BW.UH3._.SHZ.D.2010.147.cut.slist.gz",
                  "BW.UH4._.EHZ.D.2010.147.cut.slist.gz"]
         for filename in files:
-            filename = os.path.join(self.path, filename)
-            st += read(filename)
+            st += read(testdata[filename])
         # some prefiltering used for UH network
         st.filter('bandpass', freqmin=10, freqmax=20)
 
@@ -455,7 +447,7 @@ class TestTrigger():
         assert round(abs(ev['cft_stds'][2]-5.3499401252675964), 5) == 0
         assert round(abs(ev['cft_stds'][3]-4.2723814539487703), 5) == 0
 
-    def test_coincidence_trigger_with_similarity_checking(self):
+    def test_coincidence_trigger_with_similarity_checking(self, testdata):
         """
         Test network coincidence trigger with cross correlation similarity
         checking of given event templates.
@@ -468,8 +460,7 @@ class TestTrigger():
                  "BW.UH3._.SHE.D.2010.147.cut.slist.gz",
                  "BW.UH4._.EHZ.D.2010.147.cut.slist.gz"]
         for filename in files:
-            filename = os.path.join(self.path, filename)
-            st += read(filename)
+            st += read(testdata[filename])
         # some prefiltering used for UH network
         st.filter('bandpass', freqmin=10, freqmax=20)
         # set up template event streams

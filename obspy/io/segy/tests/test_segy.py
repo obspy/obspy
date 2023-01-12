@@ -3,7 +3,6 @@
 The obspy.io.segy test suite.
 """
 import io
-import os
 import warnings
 from unittest import mock
 
@@ -28,26 +27,15 @@ class TestSEGY():
     """
     Test cases for SEG Y reading and writing..
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.dir = os.path.dirname(__file__)
-        cls.path = os.path.join(cls.dir, 'data')
-        # All the files and information about them. These files will be used in
-        # most tests. data_sample_enc is the encoding of the data value and
-        # sample_size the size in bytes of these samples.
-        cls.files = FILES
-        cls.dtypes = DTYPES
-
-    def test_unpack_segy_data(self):
+    def test_unpack_segy_data(self, testdata):
         """
         Tests the unpacking of various SEG Y files.
         """
-        for file, attribs in self.files.items():
+        for file, attribs in FILES.items():
             data_format = attribs['data_sample_enc']
             endian = attribs['endian']
             count = attribs['sample_count']
-            file = os.path.join(self.path, file)
+            file = str(testdata[file])
             # Use the with statement to make sure the file closes.
             with open(file, 'rb') as f:
                 # Jump to the beginning of the data.
@@ -56,26 +44,26 @@ class TestSEGY():
                 data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[data_format](
                     f, count, endian)
             # Check the dtype of the data.
-            assert data.dtype == self.dtypes[data_format]
+            assert data.dtype == DTYPES[data_format]
             # Proven data values, read with Madagascar.
             correct_data = np.load(file + '.npy').ravel()
             # Compare both.
             np.testing.assert_array_equal(correct_data, data)
 
-    def test_pack_segy_data(self):
+    def test_pack_segy_data(self, testdata):
         """
         Tests the packing of various SEG Y files.
         """
         # Loop over all files.
-        for file, attribs in self.files.items():
+        for file, attribs in FILES.items():
             # Get some attributes.
             data_format = attribs['data_sample_enc']
             endian = attribs['endian']
             count = attribs['sample_count']
             size = attribs['sample_size']
             non_normalized_samples = attribs['non_normalized_samples']
-            dtype = self.dtypes[data_format]
-            file = os.path.join(self.path, file)
+            dtype = DTYPES[data_format]
+            file = str(testdata[file])
             # Load the data. This data has previously been unpacked by
             # Madagascar.
             data = np.load(file + '.npy').ravel()
@@ -267,13 +255,13 @@ class TestSEGY():
             # Test both.
             np.testing.assert_array_equal(new_data, data)
 
-    def test_read_and_write_binary_file_header(self):
+    def test_read_and_write_binary_file_header(self, testdata):
         """
         Reading and writing should not change the binary file header.
         """
-        for file, attribs in self.files.items():
+        for file, attribs in FILES.items():
             endian = attribs['endian']
-            file = os.path.join(self.path, file)
+            file = testdata[file]
             # Read the file.
             with open(file, 'rb') as f:
                 f.seek(3200)
@@ -289,14 +277,14 @@ class TestSEGY():
             # Assert the actual header.
             assert org_header == new_header
 
-    def test_read_and_write_textual_file_header(self):
+    def test_read_and_write_textual_file_header(self, testdata):
         """
         Reading and writing should not change the textual file header.
         """
-        for file, attribs in self.files.items():
+        for file, attribs in FILES.items():
             endian = attribs['endian']
             header_enc = attribs['textual_header_enc']
-            file = os.path.join(self.path, file)
+            file = testdata[file]
             # Read the file.
             with open(file, 'rb') as f:
                 org_header = f.read(3200)
@@ -325,13 +313,13 @@ class TestSEGY():
             # Assert the actual header.
             assert org_header == new_header
 
-    def test_read_and_write_trace_header(self):
+    def test_read_and_write_trace_header(self, testdata):
         """
         Reading and writing should not change the trace header.
         """
-        for file, attribs in self.files.items():
+        for file, attribs in FILES.items():
             endian = attribs['endian']
-            file = os.path.join(self.path, file)
+            file = testdata[file]
             # Read the file.
             with open(file, 'rb') as f:
                 f.seek(3600)
@@ -347,12 +335,13 @@ class TestSEGY():
             # Assert the actual header.
             assert org_header == new_header
 
-    def test_read_and_write_segy(self, headonly=False):
+    @pytest.mark.parametrize("headonly", (True, False))
+    def test_read_and_write_segy(self, testdata, headonly):
         """
         Reading and writing again should not change a file.
         """
-        for file, attribs in self.files.items():
-            file = os.path.join(self.path, file)
+        for file, attribs in FILES.items():
+            file = testdata[file]
             non_normalized_samples = attribs['non_normalized_samples']
             # Read the file.
             with open(file, 'rb') as f:
@@ -390,18 +379,12 @@ class TestSEGY():
             assert org_data[:3500] == new_data[:3500]
             assert org_data[3502:] == new_data[3502:]
 
-    def test_read_and_write_segy_headonly(self):
-        """
-        Reading with headonly=True and writing again should not change a file.
-        """
-        self.test_read_and_write_segy(headonly=True)
-
-    def test_unpack_binary_file_header(self):
+    def test_unpack_binary_file_header(self, testdata):
         """
         Compares some values of the binary header with values read with
         SeisView 2 by the DMNG.
         """
-        file = os.path.join(self.path, '1.sgy_first_trace')
+        file = testdata['1.sgy_first_trace']
         segy = _read_segy(file)
         header = segy.binary_file_header
         # Compare the values.
@@ -440,12 +423,12 @@ class TestSEGY():
         assert header.number_of_3200_byte_ext_file_header_records_following \
             == 0
 
-    def test_unpack_trace_header(self):
+    def test_unpack_trace_header(self, testdata):
         """
         Compares some values of the first trace header with values read with
         SeisView 2 by the DMNG.
         """
-        file = os.path.join(self.path, '1.sgy_first_trace')
+        file = testdata['1.sgy_first_trace']
         segy = _read_segy(file)
         header = segy.traces[0].header
         # Compare the values.
@@ -548,47 +531,47 @@ class TestSEGY():
         assert header.source_measurement_exponent == 0
         assert header.source_measurement_unit == 0
 
-    def test_read_bytes_io(self):
+    def test_read_bytes_io(self, testdata):
         """
         Tests reading from BytesIO instances.
         """
         # 1
-        file = os.path.join(self.path, 'example.y_first_trace')
+        file = testdata['example.y_first_trace']
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
         assert len(st.traces[0].data) == 500
         # 2
-        file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
+        file = testdata['ld0042_file_00018.sgy_first_trace']
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
         assert len(st.traces[0].data) == 2050
         # 3
-        file = os.path.join(self.path, '1.sgy_first_trace')
+        file = testdata['1.sgy_first_trace']
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
         assert len(st.traces[0].data) == 8000
         # 4
-        file = os.path.join(self.path, '00001034.sgy_first_trace')
+        file = testdata['00001034.sgy_first_trace']
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
         assert len(st.traces[0].data) == 2001
         # 5
-        file = os.path.join(self.path, 'planes.segy_first_trace')
+        file = testdata['planes.segy_first_trace']
         with open(file, 'rb') as f:
             data = f.read()
         st = _read_segy(io.BytesIO(data))
         assert len(st.traces[0].data) == 512
 
-    def test_iterative_reading(self):
+    def test_iterative_reading(self, testdata):
         """
         Tests iterative reading.
         """
         # Read normally.
-        filename = os.path.join(self.path, 'example.y_first_trace')
+        filename = testdata['example.y_first_trace']
         st = obspy.read(filename, unpack_trace_headers=True)
 
         # Read iterative.

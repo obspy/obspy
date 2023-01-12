@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import inspect
-import os
-
 import numpy as np
 import pytest
 try:
@@ -32,33 +29,27 @@ class TestNLLOC():
     """
     Test suite for obspy.io.nlloc
     """
-    @classmethod
-    def setup_class(cls):
-        cls.path = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        cls.datapath = os.path.join(cls.path, "data")
-
-    def test_read_nlloc_scatter_plain(self):
+    def test_read_nlloc_scatter_plain(self, testdata):
         """
         Test reading NLLoc scatter file without coordinate conversion.
         """
         # test without coordinate manipulation
-        filename = os.path.join(self.datapath, "nlloc.scat")
+        filename = testdata['nlloc.scat']
         got = read_nlloc_scatter(filename)
-        filename = os.path.join(self.datapath, "nlloc_scat.npy")
+        filename = testdata['nlloc_scat.npy']
         expected = np.load(filename)
         np.testing.assert_array_equal(got, expected)
 
     @pytest.mark.skipif(not HAS_PYPROJ, reason='pyproj not installed')
-    def test_read_nlloc_scatter_coordinate_conversion(self):
+    def test_read_nlloc_scatter_coordinate_conversion(self, testdata):
         """
         Test reading NLLoc scatter file including coordinate conversion.
         """
         # test including coordinate manipulation
-        filename = os.path.join(self.datapath, "nlloc.scat")
+        filename = testdata['nlloc.scat']
         got = read_nlloc_scatter(
             filename, coordinate_converter=_coordinate_conversion)
-        filename = os.path.join(self.datapath, "nlloc_scat_converted.npy")
+        filename = testdata['nlloc_scat_converted.npy']
         expected = np.load(filename)
         for field in expected.dtype.fields:
             np.testing.assert_allclose(got[field], expected[field], rtol=1e-5)

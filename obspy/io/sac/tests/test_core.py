@@ -4,7 +4,6 @@ The sac.core test suite.
 """
 import copy
 import io
-import os
 import warnings
 
 import numpy as np
@@ -23,18 +22,16 @@ class TestCore():
     """
     Test cases for sac core interface
     """
-    @classmethod
-    def setup_class(cls):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
         # directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-        cls.file = os.path.join(cls.path, 'data', 'test.sac')
-        cls.filexy = os.path.join(cls.path, 'data', 'testxy.sac')
-        cls.filebe = os.path.join(cls.path, 'data', 'test.sac.swap')
-        cls.fileseis = os.path.join(cls.path, "data", "seism.sac")
-        cls.file_notascii = os.path.join(cls.path, "data",
-                                         "non_ascii.sac")
-        cls.file_encode = os.path.join(cls.path, "data", "test_encode.sac")
-        cls.testdata = np.array(
+        self.file = testdata['test.sac']
+        self.filexy = testdata['testxy.sac']
+        self.filebe = testdata['test.sac.swap']
+        self.fileseis = testdata['seism.sac']
+        self.file_notascii = testdata['non_ascii.sac']
+        self.file_encode = testdata['test_encode.sac']
+        self.testdata = np.array(
             [-8.74227766e-08, -3.09016973e-01,
              -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
              -1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
@@ -246,9 +243,9 @@ class TestCore():
         assert round(abs(st2[0].stats.sampling_rate /
                          st[0].stats.sampling_rate-1.0), 7) == 0
 
-    def test_iztype11(self):
+    def test_iztype11(self, testdata):
         # test that iztype 11 is read correctly
-        sod_file = os.path.join(self.path, 'data', 'dis.G.SCZ.__.BHE_short')
+        sod_file = testdata['dis.G.SCZ.__.BHE_short']
         tr = read(sod_file)[0]
         with open(sod_file, "rb") as fh:
             sac = SACTrace.read(fh)
@@ -401,12 +398,12 @@ class TestCore():
         assert st2[0].stats.starttime == st[0].stats.starttime
         assert round(abs(st2[0].stats.sac.b-0.000999), 7) == 0
 
-    def test_null_terminated_strings(self):
+    def test_null_terminated_strings(self, testdata):
         """
         Test case for #374. Check that strings stop at the position
         of null termination '\x00'
         """
-        null_file = os.path.join(self.path, 'data', 'null_terminated.sac')
+        null_file = testdata['null_terminated.sac']
         tr = read(null_file)[0]
         assert tr.stats.station == 'PIN1'
         assert tr.stats.network == 'GD'
@@ -460,13 +457,13 @@ class TestCore():
         assert tr.stats.sac.kstnm == 'sta     '
         assert tr.stats.sac.kcmpnm == 'Q       '
 
-    def test_read_with_fsize(self):
+    def test_read_with_fsize(self, testdata):
         """
         Testing fsize option on read()
         """
         # reading sac file with wrong file size should raise error
-        longer_file = os.path.join(self.path, 'data', 'seism-longer.sac')
-        shorter_file = os.path.join(self.path, 'data', 'seism-shorter.sac')
+        longer_file = testdata['seism-longer.sac']
+        shorter_file = testdata['seism-shorter.sac']
         # default
         with pytest.raises(SacError):
             read(longer_file)

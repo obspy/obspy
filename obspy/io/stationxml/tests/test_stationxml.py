@@ -10,9 +10,7 @@ Test suite for the StationXML reader and writer.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import fnmatch
-import inspect
 import io
-import os
 import re
 import warnings
 
@@ -33,13 +31,9 @@ import pytest
 class TestStationXML():
     """
     """
-
     @classmethod
     def setup_class(cls):
         cls.maxDiff = 10000
-        # Most generic way to get the actual data directory.
-        cls.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
 
     def _assert_station_xml_equality(self, xml_file_buffer,
                                      expected_xml_file_buffer):
@@ -73,12 +67,12 @@ class TestStationXML():
         # helpful as you do not know which line is missing.
         assert len(new_lines) == len(org_lines)
 
-    def test_is_stationxml(self):
+    def test_is_stationxml(self, testdata, datapath):
         """
         Tests the _is_stationxml() function.
         """
         # Check positives.
-        stationxmls = [os.path.join(self.data_dir, "minimal_station.xml")]
+        stationxmls = [testdata["minimal_station.xml"]]
         for stat in stationxmls:
             assert obspy.io.stationxml.core._is_stationxml(stat)
 
@@ -86,18 +80,16 @@ class TestStationXML():
         not_stationxmls = [
             "Variations-FDSNSXML-SEED.txt",
             "fdsn-station+availability-1.0.xsd", "fdsn-station-1.0.xsd"]
-        not_stationxmls = [
-            os.path.join(self.data_dir, os.path.pardir,
-                         os.path.pardir, "data", _i) for _i in not_stationxmls]
+        not_stationxmls = [datapath.parent.parent / 'data' / name
+                           for name in not_stationxmls]
         for stat in not_stationxmls:
-            assert not obspy.io.stationxml.core._is_stationxml(
-                stat)
+            assert not obspy.io.stationxml.core._is_stationxml(stat)
 
-    def test_different_write_levels(self):
+    def test_different_write_levels(self, testdata):
         """
         Tests different levels of writing
         """
-        filename = os.path.join(self.data_dir, "stationxml_BK.CMB.__.LKS.xml")
+        filename = testdata["stationxml_BK.CMB.__.LKS.xml"]
         inv = obspy.read_inventory(filename)
 
         # Write to network level
@@ -138,11 +130,11 @@ class TestStationXML():
                 for cha in sta.channels:
                     assert cha.response is None
 
-    def test_read_and_write_minimal_file(self):
+    def test_read_and_write_minimal_file(self, testdata):
         """
         Test that writing the most basic StationXML document possible works.
         """
-        filename = os.path.join(self.data_dir, "minimal_station.xml")
+        filename = testdata["minimal_station.xml"]
         inv = obspy.read_inventory(filename)
 
         # Assert the few values that are set directly.
@@ -165,14 +157,13 @@ class TestStationXML():
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
-    def test_subsecond_read_and_write_minimal_file(self):
+    def test_subsecond_read_and_write_minimal_file(self, testdata):
         """
         Test reading and writing of sub-second time in datetime field,
         using creation time
 
         """
-        filename = os.path.join(self.data_dir,
-                                "minimal_station_with_microseconds.xml")
+        filename = testdata["minimal_station_with_microseconds.xml"]
         inv = obspy.read_inventory(filename)
 
         # Write it again. Also validate it to get more confidence. Suppress the
@@ -190,12 +181,12 @@ class TestStationXML():
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
-    def test_read_and_write_full_file(self):
+    def test_read_and_write_full_file(self, testdata):
         """
         Test that reading and writing of a full StationXML document with all
         possible tags works.
         """
-        filename = os.path.join(self.data_dir, "full_random_stationxml.xml")
+        filename = testdata["full_random_stationxml.xml"]
         inv = obspy.read_inventory(filename)
 
         # Write it again. Also validate it to get more confidence. Suppress the
@@ -317,25 +308,23 @@ class TestStationXML():
         assert module_uri_line == \
             "<ModuleURI>https://www.obspy.org</ModuleURI>"
 
-    def test_reading_other_module_tags(self):
+    def test_reading_other_module_tags(self, testdata):
         """
         Even though the ObsPy Tags are always written, other tags should be
         able to be read.
         """
-        filename = os.path.join(
-            self.data_dir,
-            "minimal_with_non_obspy_module_and_sender_tags_station.xml")
+        filename = testdata[
+            "minimal_with_non_obspy_module_and_sender_tags_station.xml"]
         inv = obspy.read_inventory(filename)
         assert inv.module == "Some Random Module"
         assert inv.module_uri == "http://www.some-random.site"
 
-    def test_reading_and_writing_full_root_tag(self):
+    def test_reading_and_writing_full_root_tag(self, testdata):
         """
         Tests reading and writing a full StationXML root tag.
         """
-        filename = os.path.join(
-            self.data_dir,
-            "minimal_with_non_obspy_module_and_sender_tags_station.xml")
+        filename = testdata[
+            "minimal_with_non_obspy_module_and_sender_tags_station.xml"]
         inv = obspy.read_inventory(filename)
         assert inv.source == "OBS"
         assert inv.created == obspy.UTCDateTime(2013, 1, 1)
@@ -358,13 +347,12 @@ class TestStationXML():
         self._assert_station_xml_equality(
             file_buffer, expected_xml_file_buffer)
 
-    def test_reading_and_writing_full_network_tag(self):
+    def test_reading_and_writing_full_network_tag(self, testdata):
         """
         Tests the reading and writing of a file with a more or less full
         network tag.
         """
-        filename = os.path.join(self.data_dir,
-                                "full_network_field_station.xml")
+        filename = testdata["full_network_field_station.xml"]
         inv = obspy.read_inventory(filename)
 
         # Assert all the values...
@@ -439,13 +427,12 @@ class TestStationXML():
             file_buffer,
             expected_xml_file_buffer)
 
-    def test_reading_and_writing_full_station_tag(self):
+    def test_reading_and_writing_full_station_tag(self, testdata):
         """
         Tests the reading and writing of a file with a more or less full
         station tag.
         """
-        filename = os.path.join(self.data_dir,
-                                "full_station_field_station.xml")
+        filename = testdata["full_station_field_station.xml"]
         inv = obspy.read_inventory(filename)
 
         # Assert all the values...
@@ -650,13 +637,12 @@ class TestStationXML():
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
-    def test_reading_and_writing_channel_with_response(self):
+    def test_reading_and_writing_channel_with_response(self, testdata):
         """
         Test the reading and writing of a single channel including a
         multi-stage response object.
         """
-        filename = os.path.join(self.data_dir,
-                                "IRIS_single_channel_with_response.xml")
+        filename = testdata["IRIS_single_channel_with_response.xml"]
         inv = obspy.read_inventory(filename)
         assert inv.source == "IRIS-DMC"
         assert inv.sender == "IRIS-DMC"
@@ -712,13 +698,12 @@ class TestStationXML():
         # Assert that there are three stages.
         assert len(response.response_stages) == 3
 
-    def test_stationxml_with_availability(self):
+    def test_stationxml_with_availability(self, testdata):
         """
         A variant of StationXML has support for availability information.
         Make sure this works.
         """
-        filename = os.path.join(self.data_dir,
-                                "stationxml_with_availability.xml")
+        filename = testdata["stationxml_with_availability.xml"]
         inv = obspy.read_inventory(filename, format="stationxml")
         channel = inv[0][0][0]
         assert channel.data_availability.start == \
@@ -739,23 +724,23 @@ class TestStationXML():
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
-    def test_parse_file_with_no_default_namespace(self):
+    def test_parse_file_with_no_default_namespace(self, testdata):
         """
         Tests that reading a file with no default namespace works fine.
 
         See #1060.
         """
-        filename = os.path.join(self.data_dir, "no_default_namespace.xml")
+        filename = testdata["no_default_namespace.xml"]
         inv = obspy.read_inventory(filename)
         # Very small file with almost no content.
         assert len(inv.networks) == 1
         assert inv[0].code == "XX"
 
-    def test_parse_file_with_schema_2(self):
+    def test_parse_file_with_schema_2(self, testdata):
         """
         Reading a StationXML file version 2.0
         """
-        filename = os.path.join(self.data_dir, "version20.xml")
+        filename = testdata["version20.xml"]
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always', UserWarning)
@@ -801,13 +786,12 @@ class TestStationXML():
         assert '<Pole number="1"> <Real>2.0</Real> ' \
             '<Imaginary>3.0</Imaginary> </Pole>' in data
 
-    def test_write_with_extra_tags_namespace_redef(self):
+    def test_write_with_extra_tags_namespace_redef(self, testdata):
         """
         Tests the exceptions are raised when namespaces
         are redefined.
         """
-        filename = os.path.join(
-            self.data_dir, "stationxml_with_availability.xml")
+        filename = testdata["stationxml_with_availability.xml"]
         # read the StationXML with availability
         inv = obspy.read_inventory(filename)
         with NamedTemporaryFile() as tf:
@@ -922,15 +906,15 @@ class TestStationXML():
             for line in expected:
                 assert line in content
 
-    def test_write_with_extra_tags_and_read(self):
+    def test_write_with_extra_tags_and_read(self, testdata):
         """
         First tests that a StationXML file with additional
         custom "extra" tags gets written correctly. Then
         tests that when reading the written file again the
         extra tags are parsed correctly.
         """
-        filename = os.path.join(
-            self.data_dir, "IRIS_single_channel_with_response_custom_tags.xml")
+        filename = testdata[
+            "IRIS_single_channel_with_response_custom_tags.xml"]
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -1097,24 +1081,23 @@ class TestStationXML():
             # now, read again to test if it's parsed correctly..
             inv = obspy.read_inventory(tmpfile)
 
-    def test_reading_file_with_empty_channel_object(self):
+    def test_reading_file_with_empty_channel_object(self, testdata):
         """
         Tests reading a file with an empty channel object. This is strictly
         speaking not valid but we are forgiving.
         """
-        filename = os.path.join(self.data_dir, "empty_channel.xml")
+        filename = testdata["empty_channel.xml"]
         inv = obspy.read_inventory(filename)
         assert inv.get_contents() == \
             {'networks': ['IV'], 'stations': ['IV.LATE (Latera)'],
              'channels': []}
 
-    def test_reading_channel_without_coordinates(self):
+    def test_reading_channel_without_coordinates(self, testdata):
         """
         Tests reading a file with an empty channel object. This is strictly
         speaking not valid but we are forgiving.
         """
-        filename = os.path.join(self.data_dir,
-                                "channel_without_coordinates.xml")
+        filename = testdata["channel_without_coordinates.xml"]
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             inv = obspy.read_inventory(filename)
@@ -1213,12 +1196,11 @@ class TestStationXML():
         assert response_2.response_stages[2].output_units_description == \
             "Volts"
 
-    def test_reading_full_stationxml_1_0_file(self):
+    def test_reading_full_stationxml_1_0_file(self, testdata):
         """
         Tests reading a fully filled StationXML 1.0 file.
         """
-        filename = os.path.join(self.data_dir,
-                                "full_random_stationxml_1_0.xml")
+        filename = testdata["full_random_stationxml_1_0.xml"]
         inv = obspy.read_inventory(filename, format='STATIONXML')
         lats = [cha.latitude for net in inv for sta in net for cha in sta]
         # for now just check that all expected channels are there.. test could
@@ -1226,11 +1208,11 @@ class TestStationXML():
         assert lats == [
             -53.12, 44.77, 63.39, 12.46, -13.16, -84.44, 43.9, -88.41]
 
-    def test_read_with_level(self):
+    def test_read_with_level(self, testdata):
         """
         Tests reading StationXML with specifying the level of detail.
         """
-        path = os.path.join(self.data_dir, 'stationxml_BK.CMB.__.LKS.xml')
+        path = testdata['stationxml_BK.CMB.__.LKS.xml']
         inv_stationxml_no_level = _read_stationxml(path)
         inv_stationxml_response = _read_stationxml(path, level='response')
         inv_stationxml_channel = _read_stationxml(path, level='channel')
@@ -1261,12 +1243,12 @@ class TestStationXML():
         assert len(inv_stationxml_network) == 1
         assert len(inv_stationxml_network[0]) == 0
 
-    def test_read_basic_responsestage_with_decimation(self):
+    def test_read_basic_responsestage_with_decimation(self, testdata):
         """
         Make sure basic ResponseStage elements that have decimation information
         do not lose that information.
         """
-        path = os.path.join(self.data_dir, 'F1_423_small.xml')
+        path = testdata['F1_423_small.xml']
         inv = _read_stationxml(path)
         stage = inv[0][0][0].response.response_stages[0]
         assert stage.decimation_correction == 0.4

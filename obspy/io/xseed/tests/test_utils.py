@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-import glob
-import inspect
-import os
-
 from obspy import UTCDateTime
 from obspy.io.xseed.utils import datetime_2_string, to_tag
 from obspy.io.xseed.core import _is_resp
@@ -46,14 +42,11 @@ class TestUtils():
         dt = UTCDateTime(2008, 12, 23)
         assert datetime_2_string(dt, True) == "2008,358"
 
-    def test_is_resp(self):
+    def test_is_resp(self, root):
         """
         Checks _is_resp() routine on all files in signal/tests/data.
         """
-        signal_test_files = os.path.abspath(os.path.join(
-            inspect.getfile(inspect.currentframe()),
-            os.path.pardir, os.path.pardir, os.path.pardir, os.path.pardir,
-            "signal", "tests", "data", "*"))
+        signal_test_files = (root / 'signal' / 'tests' / 'data').glob('*')
         # List of files that are actually RESP files, all other files are
         # considered non-RESP files
         resp_filenames = [
@@ -62,8 +55,8 @@ class TestUtils():
             "RESP.NZ.CRLZ.10.HHZ.mac",
             "RESP.NZ.CRLZ.10.HHZ.windows",
             "RESP.OB.AAA._.BH_"]
-        for filename in glob.glob(signal_test_files):
+        for filename in signal_test_files:
             got = _is_resp(filename)
-            expected = os.path.basename(filename) in resp_filenames
+            expected = filename.name in resp_filenames
             assert got == expected, \
                 "_is_resp() returns %s for file %s" % (got, filename)

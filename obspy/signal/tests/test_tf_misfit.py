@@ -3,8 +3,6 @@
 """
 The tf_misfit test suite.
 """
-import os
-
 import numpy as np
 import pytest
 from scipy.signal import hilbert
@@ -19,9 +17,6 @@ class TestTf:
     """
     Test cases for tf functions.
     """
-    # path to test files
-    path = os.path.join(os.path.dirname(__file__), 'data')
-
     @pytest.fixture(scope='class')
     def state(self):
         """Return a dict with state needed to run tests."""
@@ -78,7 +73,7 @@ class TestTf:
         )
         return out
 
-    def test_phase_misfit(self, state):
+    def test_phase_misfit(self, state, testdata):
         """
         Tests all tf misfits with a signal that has phase misfit
         """
@@ -91,14 +86,14 @@ class TestTf:
         fmax = state['fmax']
         nf = state['nf']
 
-        tfem_11p_ref = np.loadtxt(self.path + os.sep + 'TFEM_11p.dat')
-        tfpm_11p_ref = np.loadtxt(self.path + os.sep + 'TFPM_11p.dat')
-        tem_11p_ref = np.loadtxt(self.path + os.sep + 'TEM_11p.dat')
-        fem_11p_ref = np.loadtxt(self.path + os.sep + 'FEM_11p.dat')
-        fpm_11p_ref = np.loadtxt(self.path + os.sep + 'FPM_11p.dat')
-        tpm_11p_ref = np.loadtxt(self.path + os.sep + 'TPM_11p.dat')
-        em_11p_ref = np.loadtxt(self.path + os.sep + 'EM_11p.dat')
-        pm_11p_ref = np.loadtxt(self.path + os.sep + 'PM_11p.dat')
+        tfem_11p_ref = np.loadtxt(testdata['TFEM_11p.dat'])
+        tfpm_11p_ref = np.loadtxt(testdata['TFPM_11p.dat'])
+        tem_11p_ref = np.loadtxt(testdata['TEM_11p.dat'])
+        fem_11p_ref = np.loadtxt(testdata['FEM_11p.dat'])
+        fpm_11p_ref = np.loadtxt(testdata['FPM_11p.dat'])
+        tpm_11p_ref = np.loadtxt(testdata['TPM_11p.dat'])
+        em_11p_ref = np.loadtxt(testdata['EM_11p.dat'])
+        pm_11p_ref = np.loadtxt(testdata['PM_11p.dat'])
 
         tfem_11p = tfem(s1p, s1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         tfpm_11p = tfpm(s1p, s1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
@@ -141,7 +136,7 @@ class TestTf:
         # np.savetxt(self.path + os.sep + 'EM_11p.dat', (EM_11p,), fmt='%1.5e')
         # np.savetxt(self.path + os.sep + 'PM_11p.dat', (PM_11p,), fmt='%1.5e')
 
-    def test_envelope_misfit(self, state):
+    def test_envelope_misfit(self, state, testdata):
         """
         Tests all tf misfits with a signal that has envelope misfit
         """
@@ -154,14 +149,14 @@ class TestTf:
         fmax = state['fmax']
         nf = state['nf']
 
-        tfem_11a_ref = np.loadtxt(self.path + os.sep + 'TFEM_11a.dat')
-        tfpm_11a_ref = np.loadtxt(self.path + os.sep + 'TFPM_11a.dat')
-        tem_11a_ref = np.loadtxt(self.path + os.sep + 'TEM_11a.dat')
-        fem_11a_ref = np.loadtxt(self.path + os.sep + 'FEM_11a.dat')
-        fpm_11a_ref = np.loadtxt(self.path + os.sep + 'FPM_11a.dat')
-        tpm_11a_ref = np.loadtxt(self.path + os.sep + 'TPM_11a.dat')
-        em_11a_ref = np.loadtxt(self.path + os.sep + 'EM_11a.dat')
-        pm_11a_ref = np.loadtxt(self.path + os.sep + 'PM_11a.dat')
+        tfem_11a_ref = np.loadtxt(testdata['TFEM_11a.dat'])
+        tfpm_11a_ref = np.loadtxt(testdata['TFPM_11a.dat'])
+        tem_11a_ref = np.loadtxt(testdata['TEM_11a.dat'])
+        fem_11a_ref = np.loadtxt(testdata['FEM_11a.dat'])
+        fpm_11a_ref = np.loadtxt(testdata['FPM_11a.dat'])
+        tpm_11a_ref = np.loadtxt(testdata['TPM_11a.dat'])
+        em_11a_ref = np.loadtxt(testdata['EM_11a.dat'])
+        pm_11a_ref = np.loadtxt(testdata['PM_11a.dat'])
 
         tfem_11a = tfem(s1a(t), s1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         tfpm_11a = tfpm(s1a(t), s1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
@@ -242,15 +237,11 @@ class TestTfPlot:
     """
     Test cases for tf plot functions.
     """
-    path = os.path.join(os.path.dirname(__file__), 'images')
-
     @pytest.fixture(scope='class')
     def state(self):
         """return state for testing."""
         from obspy.core.util import AttribDict
         out = AttribDict()
-        # path to test files
-        # self.path =
         # general constants
         tmax = 6.
         out.dt = 0.01

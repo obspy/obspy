@@ -3,34 +3,31 @@
 Tests for reading rg16 format.
 """
 import io
-import os
 
 import numpy as np
+import pytest
+
 import obspy
 import obspy.io.rg16.core as rc
-from obspy import read
-from obspy import UTCDateTime
-
-TEST_FCNT_DIRECTORY = os.path.join(os.path.dirname(__file__), 'data')
-ONE_CHAN_FCNT = os.path.join(TEST_FCNT_DIRECTORY,
-                             'one_channel_many_traces.fcnt')
-THREE_CHAN_FCNT = os.path.join(TEST_FCNT_DIRECTORY,
-                               'three_chans_six_traces.fcnt')
-BAD_ALIAS_FILTER = os.path.join(TEST_FCNT_DIRECTORY,
-                                'channel_set_bad_alias_filter.dat')
-HEADER_BLOCK_SAME_RU_CODE = os.path.join(TEST_FCNT_DIRECTORY,
-                                         'header_3_chan_one_code.dat')
-FCNT_FILES = [ONE_CHAN_FCNT, THREE_CHAN_FCNT]
+from obspy import read, UTCDateTime
 
 
 class TestReadRG16():
+
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.one_chan_fcnt = testdata['one_channel_many_traces.fcnt']
+        self.three_chan_fcnt = testdata['three_chans_six_traces.fcnt']
+        self.bad_alias_filter = testdata['channel_set_bad_alias_filter.dat']
+        self.header_block_same_ru_code = testdata['header_3_chan_one_code.dat']
+        self.fcnt_files = [self.one_chan_fcnt, self.three_chan_fcnt]
 
     def test_reading_rg16_files(self):
         """
         Ensure that the rg16 files are read by the function
         :func:`~obspy.core.stream.read` with or without specifying the format.
         """
-        for fcnt_file in FCNT_FILES:
+        for fcnt_file in self.fcnt_files:
             st_1 = read(fcnt_file)
             st_2 = read(fcnt_file, format="RG16")
             st_3 = rc._read_rg16(fcnt_file)
@@ -48,7 +45,7 @@ class TestReadRG16():
         """
         Ensure the rg16 files are correctly labeled as such.
         """
-        for fcnt_file in FCNT_FILES:
+        for fcnt_file in self.fcnt_files:
             assert rc._is_rg16(fcnt_file)
             with open(fcnt_file, 'rb') as fi:
                 assert rc._is_rg16(fi)
@@ -64,7 +61,7 @@ class TestReadRG16():
         """
         Ensure no data is returned when the option headonly is used.
         """
-        st = rc._read_rg16(THREE_CHAN_FCNT, headonly=True)
+        st = rc._read_rg16(self.three_chan_fcnt, headonly=True)
         for tr in st:
             assert len(tr.data) == 0
             assert tr.stats.npts != 0
@@ -78,8 +75,8 @@ class TestReadRG16():
 
         # read streams for testing. The three channel rg16 file has 6 traces
         # but the streams may have less depending on the starttime/endtime
-        st = rc._read_rg16(THREE_CHAN_FCNT)  # no time filtering
-        st1 = rc._read_rg16(THREE_CHAN_FCNT, starttime=t1, endtime=t2)
+        st = rc._read_rg16(self.three_chan_fcnt)  # no time filtering
+        st1 = rc._read_rg16(self.three_chan_fcnt, starttime=t1, endtime=t2)
 
         # test using starttime and endtime
         assert len(st1) == len(st)
@@ -96,8 +93,8 @@ class TestReadRG16():
         t2 = UTCDateTime(2017, 8, 9, 16, 0, 58)
 
         # read streams for testing
-        st = rc._read_rg16(THREE_CHAN_FCNT)  # no time filtering
-        st1 = rc._read_rg16(THREE_CHAN_FCNT, starttime=t1, endtime=t2)
+        st = rc._read_rg16(self.three_chan_fcnt)  # no time filtering
+        st1 = rc._read_rg16(self.three_chan_fcnt, starttime=t1, endtime=t2)
 
         # test when starttime and endtime are comprised in a data packet.
         assert len(st1) == 3
@@ -110,7 +107,7 @@ class TestReadRG16():
         Ensure the merge option of read_rg16 merges all contiguous traces
         together.
         """
-        for fcnt_file in FCNT_FILES:
+        for fcnt_file in self.fcnt_files:
             st_merged = rc._read_rg16(fcnt_file, merge=True)
             st = rc._read_rg16(fcnt_file).merge()
             assert len(st) == len(st_merged)
@@ -121,7 +118,7 @@ class TestReadRG16():
         Ensure the "contacts_north" and "merge" parameters can be used
         together. See #2198.
         """
-        for filename in FCNT_FILES:
+        for filename in self.fcnt_files:
             st = rc._read_rg16(filename, contacts_north=True, merge=True)
             assert isinstance(st, obspy.Stream)
 
@@ -129,7 +126,7 @@ class TestReadRG16():
         """
         Check function make_stats.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             stats = rc._make_stats(fi, 288, False, False)
         assert isinstance(stats, obspy.core.trace.Stats)
         assert abs(stats.sampling_rate-500) < 1e-5
@@ -140,18 +137,26 @@ class TestReadRG16():
         assert stats.npts == 15000
         assert stats.starttime == UTCDateTime('2017-08-09T16:00:00.380000Z')
         assert stats.endtime == UTCDateTime('2017-08-09T16:00:30.378000Z')
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             stats = rc._make_stats(fi, 288, True, False)
         assert stats.channel == 'DPN'
 
 
 class TestReadRG16Headers():
 
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.one_chan_fcnt = testdata['one_channel_many_traces.fcnt']
+        self.three_chan_fcnt = testdata['three_chans_six_traces.fcnt']
+        self.bad_alias_filter = testdata['channel_set_bad_alias_filter.dat']
+        self.header_block_same_ru_code = testdata['header_3_chan_one_code.dat']
+        self.fcnt_files = [self.one_chan_fcnt, self.three_chan_fcnt]
+
     def test_cmp_nbr_headers(self):
         """
         Test to check that the number of headers is correct.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             (nbr_channel_set_headers, nbr_extended_headers,
              nbr_external_headers) = rc._cmp_nbr_headers(fi)
         assert nbr_channel_set_headers == 3
@@ -162,10 +167,10 @@ class TestReadRG16Headers():
         """
         Check the number of records in the file.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             nbr_records = rc._cmp_nbr_records(fi)
         assert nbr_records == 6
-        with open(ONE_CHAN_FCNT, 'rb') as fi:
+        with open(self.one_chan_fcnt, 'rb') as fi:
             nbr_records = rc._cmp_nbr_records(fi)
         assert nbr_records == 10
 
@@ -173,7 +178,7 @@ class TestReadRG16Headers():
         """
         Check the number of bytes to jump to reach the next trace block.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             jump = rc._cmp_jump(fi, 288)
         assert jump == 60340
 
@@ -181,7 +186,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header = rc._read_trace_header(fi, 288)
         assert trace_header['trace_number'] == 1
         assert trace_header['trace_edit_code'] == 0
@@ -190,7 +195,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 1.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_1 = rc._read_trace_header_1(fi, 288)
         assert trace_header_1['extended_receiver_line_nbr'] == 65536
         assert trace_header_1['extended_receiver_point_nbr'] == 65536
@@ -201,7 +206,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 2.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_2 = rc._read_trace_header_2(fi, 288)
         assert trace_header_2['shot_line_nbr'] == 2240
         assert trace_header_2['shot_point'] == 1
@@ -218,7 +223,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 3.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_3 = rc._read_trace_header_3(fi, 288)
         assert trace_header_3['epoch_time'] == \
             UTCDateTime('2017-08-09T16:00:00.380000Z')
@@ -230,7 +235,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 4.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_4 = rc._read_trace_header_4(fi, 288)
         assert abs(trace_header_4['pre_shot_guard_band']-0) < 1e-5
         assert abs(trace_header_4['post_shot_guard_band']-0) < 1e-5
@@ -248,7 +253,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 5.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_5 = rc._read_trace_header_5(fi, 288)
         assert abs(trace_header_5['receiver_point_pre_plan_x']-469567.2) < 1e-5
         assert \
@@ -263,7 +268,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 6.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_6 = rc._read_trace_header_6(fi, 288)
         assert abs(trace_header_6['tilt_matrix_h1x']-0) < 1e-5
         assert abs(trace_header_6['tilt_matrix_h2x']-0) < 1e-5
@@ -278,7 +283,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 7.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_7 = rc._read_trace_header_7(fi, 288)
         assert abs(trace_header_7['tilt_matrix_vz']-0) < 1e-5
         assert abs(trace_header_7['azimuth_degree']-0) < 1e-5
@@ -293,7 +298,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 8.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_8 = rc._read_trace_header_8(fi, 288)
         assert trace_header_8['fairfield_test_analysis_code'] == 0
         assert trace_header_8['first_test_oscillator_attenuation'] == 0
@@ -309,7 +314,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 9.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_9 = rc._read_trace_header_9(fi, 288)
         assert trace_header_9['test_signal_generator_signal_type'] == \
             'pattern is address ramp'
@@ -330,7 +335,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the trace header 10.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_header_10 = rc._read_trace_header_10(fi, 288)
         assert trace_header_10['test_signal_generator_idle_level'] == 0
         assert trace_header_10['test_signal_generator_active_level'] == 0
@@ -342,7 +347,7 @@ class TestReadRG16Headers():
         Test if the ten first samples of the waveform are read correctly
         and if the output is a Trace object.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             trace_3 = rc._make_trace(fi, 288, False, False, False)
             trace_z = rc._make_trace(fi, 241648, False, True, False)
         expected = np.array([-0.18864873, -0.30852857, -0.35189095,
@@ -363,7 +368,7 @@ class TestReadRG16Headers():
         Ensure the result of _read_rg16 is a stream object and that
         it can be written as mseed.
         """
-        st = rc._read_rg16(THREE_CHAN_FCNT)
+        st = rc._read_rg16(self.three_chan_fcnt)
         assert isinstance(st, obspy.core.stream.Stream)
         bytstr = io.BytesIO()
         # test passes if this doesn't raise
@@ -376,7 +381,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the general header 1.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             header_1 = rc._read_general_header_1(fi)
         assert header_1['base_scan_interval'] == 32
         assert header_1['file_number'] == 1
@@ -398,7 +403,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the general header 2.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             header_2 = rc._read_general_header_2(fi)
         assert header_2['extended_channel_sets_per_scan_type'] == 3
         assert header_2['extended_file_number'] == 1
@@ -412,7 +417,7 @@ class TestReadRG16Headers():
         """
         Test that all the channel sets are read.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             channel_sets = rc._read_channel_sets(fi)
         assert len(channel_sets) == 3
 
@@ -420,7 +425,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the first channel set.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             channel_set_1 = rc._read_channel_set(fi, 64)
         assert channel_set_1['RU_channel_number'] == 1
         assert channel_set_1['alias_filter_frequency'] == 207
@@ -449,7 +454,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the extended header 1.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             extended_header_1 = rc._read_extended_header_1(fi, 160)
         assert extended_header_1['deployment_time'] == \
             UTCDateTime('2017-08-09T15:46:32.230000Z')
@@ -463,7 +468,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the extended header 2.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             extended_header_2 = rc._read_extended_header_2(fi, 192)
         assert abs(extended_header_2['acquisition_drift_window']-0) < 1e-5
         assert abs(extended_header_2['clock_drift']-0) < 1e-5
@@ -483,7 +488,7 @@ class TestReadRG16Headers():
         """
         Test the reading of the extended header 3.
         """
-        with open(THREE_CHAN_FCNT, 'rb') as fi:
+        with open(self.three_chan_fcnt, 'rb') as fi:
             extended_header_3 = rc._read_extended_header_3(fi, 224)
         assert extended_header_3['first_shot_line'] == 0
         assert extended_header_3['first_shot_point'] == 0
@@ -500,7 +505,7 @@ class TestReadRG16Headers():
         Tests for when alias filter is written as an int32 rather than BSD in
         the channel descriptor block.
         """
-        with open(BAD_ALIAS_FILTER, 'rb') as fi:
+        with open(self.bad_alias_filter, 'rb') as fi:
             out = rc._read_channel_set(fi, 0)
         alias_freq = out['alias_filter_frequency']
         assert alias_freq == 207
@@ -510,6 +515,6 @@ class TestReadRG16Headers():
         Tests for header which has three traces but identical RU channel
         number.
         """
-        with open(HEADER_BLOCK_SAME_RU_CODE, 'rb') as fi:
+        with open(self.header_block_same_ru_code, 'rb') as fi:
             num_records = rc._cmp_nbr_records(fi)
         assert num_records == 2180 * 3

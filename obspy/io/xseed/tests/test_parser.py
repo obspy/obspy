@@ -25,16 +25,14 @@ class TestParser():
     """
     Parser test suite.
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-        cls.BW_SEED_files = [
-            os.path.join(cls.path, file) for file in
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, testdata):
+        self.BW_SEED_files = [
+            testdata[file] for file in
             ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
              'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 
-    def test_issue165(self):
+    def test_issue165(self, testdata):
         """
         Test cases related to #165:
          - number of poles or zeros can be 0
@@ -43,7 +41,7 @@ class TestParser():
            still be retrieved
         """
         parser = Parser(strict=True)
-        file = os.path.join(self.path, "bug165.dataless")
+        file = testdata["bug165.dataless"]
         t = UTCDateTime("2010-01-01T00:00:00")
         parser.read(file)
         paz = parser.get_paz("NZ.DCZ.20.HNZ", t)
@@ -72,21 +70,20 @@ class TestParser():
         with pytest.raises(SEEDParserException):
             sp.read(data)
 
-    def test_newline_between_blockettes(self):
+    def test_newline_between_blockettes(self, testdata):
         """
         A very rare case.
         """
         # Handcrafted files.
-        filename = os.path.join(self.path,
-                                'dataless.seed.newline_between_blockettes')
+        filename = testdata['dataless.seed.newline_between_blockettes']
         p = Parser(filename)
         assert sorted(list(p.blockettes.keys())) == [10, 11, 30, 33, 34]
 
-    def test_string(self):
+    def test_string(self, testdata):
         """
         Tests string representation of L{obspy.io.xseed.Parser} object.
         """
-        filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
+        filename = testdata['dataless.seed.BW_MANZ']
         p = Parser(filename)
         sp = str(p).splitlines()
         sp = [_i.strip() for _i in sp]
@@ -103,11 +100,11 @@ class TestParser():
             ("BW.MANZ..EHZ | 200.00 Hz | Streckeisen STS-2/N seismometer | "
                 "2005-12-06 -  | Lat: 50.0, Lng: 12.1")]
 
-    def test_get_inventory(self):
+    def test_get_inventory(self, testdata):
         """
         Tests the parser's get_inventory() method.
         """
-        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        filename = testdata['dataless.seed.BW_FURT']
         p = Parser(filename)
         assert p.get_inventory() == \
             {'networks': [{'network_code': 'BW',
@@ -284,7 +281,7 @@ class TestParser():
             assert parser1.get_seed() == parser2.get_seed()
             del parser1, parser2
 
-    def test_create_read_assert_and_write_xseed(self):
+    def test_create_read_assert_and_write_xseed(self, testdata):
         """
         This test takes some SEED files, reads them to a Parser object
         and converts them back to SEED once. This is done to avoid any
@@ -301,7 +298,7 @@ class TestParser():
         # Loop over all files and versions.
         for version in ['1.0', '1.1']:
             # Path to XML schema file.
-            xsd_path = os.path.join(self.path, 'xml-seed-%s.xsd' % version)
+            xsd_path = testdata['xml-seed-%s.xsd' % version]
             # Prepare validator.
             f = open(xsd_path, 'rb')
             xmlschema_doc = etree.parse(f)
@@ -328,11 +325,11 @@ class TestParser():
                 assert original_seed == new_seed
                 del parser3, original_seed, new_seed
 
-    def test_read_full_seed(self):
+    def test_read_full_seed(self, testdata):
         """
         Test the reading of a full-SEED file. The data portion will be omitted.
         """
-        filename = os.path.join(self.path, 'arclink_full.seed')
+        filename = testdata['arclink_full.seed']
         sp = Parser(filename)
         # Just checks whether certain blockettes are written.
         assert len(sp.stations) == 1
@@ -343,11 +340,11 @@ class TestParser():
         assert sp.stations[0][0].network_code == 'GR'
         assert sp.stations[0][0].station_call_letters == 'FUR'
 
-    def test_get_paz(self):
+    def test_get_paz(self, testdata):
         """
         Test extracting poles and zeros information
         """
-        filename = os.path.join(self.path, 'arclink_full.seed')
+        filename = testdata['arclink_full.seed']
         sp = Parser(filename)
         paz = sp.get_paz('BHE')
         assert paz['gain'] == +6.00770e+07
@@ -364,7 +361,7 @@ class TestParser():
         #
         # Do the same for another dataless file
         #
-        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        filename = testdata['dataless.seed.BW_FURT']
         sp = Parser(filename)
         paz = sp.get_paz('EHE')
         assert paz['gain'] == +1.00000e+00
@@ -388,7 +385,7 @@ class TestParser():
         #
         # And the same for yet another dataless file
         #
-        filename = os.path.join(self.path, 'nied.dataless.gz')
+        filename = testdata['nied.dataless.gz']
         with gzip.open(filename) as g:
             f = io.BytesIO(g.read())
         sp = Parser(f)
@@ -412,7 +409,7 @@ class TestParser():
             assert paz['poles'] == poles[i]
             assert paz['sensitivity'] == sensitivity[i]
             assert paz['seismometer_gain'] == seismometer_gain[i]
-        sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
+        sp = Parser(testdata['dataless.seed.BW_RJOB'])
         paz = sp.get_paz("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         result = {'gain': 1.0,
                   'poles': [(-4.444 + 4.444j), (-4.444 - 4.444j),
@@ -449,7 +446,7 @@ class TestParser():
                          datetime=UTCDateTime("2010-01-01"))
         assert sorted(paz.items()) == sorted(result.items())
         # test for multiple blockette 53s using II dataless
-        sp = Parser(os.path.join(self.path, 'dataless.seed.II_COCO'))
+        sp = Parser(testdata['dataless.seed.II_COCO'])
         paz = sp.get_paz("II.COCO.00.BHZ", UTCDateTime("2013-01-01"))
         result = {'gain': 1057.5083723679224,
                   'poles': [(-0.004799989149937387 + 0j),
@@ -462,11 +459,11 @@ class TestParser():
                   'digitizer_gain': 1662150.0}
         assert sorted(paz.items()) == sorted(result.items())
 
-    def test_get_paz_from_xseed(self):
+    def test_get_paz_from_xseed(self, testdata):
         """
         Get PAZ from XSEED file, testcase for #146
         """
-        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        filename = testdata['dataless.seed.BW_FURT']
         sp1 = Parser(filename)
         sp2 = Parser(sp1.get_xseed())
         paz = sp2.get_paz('EHE')
@@ -480,12 +477,12 @@ class TestParser():
                   'digitizer_gain': 1677850.0}
         assert sorted(paz.items()) == sorted(result.items())
 
-    def test_get_coordinates(self):
+    def test_get_coordinates(self, testdata):
         """
         Test extracting coordinates for SEED and XSEED (including #146)
         """
         # SEED
-        sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
+        sp = Parser(testdata['dataless.seed.BW_RJOB'])
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
                   'longitude': 12.795714, 'local_depth': 0,
                   'azimuth': 0.0, 'local_depth': 0, 'dip': -90.0}
@@ -500,30 +497,30 @@ class TestParser():
         paz = sp2.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         assert sorted(paz.items()) == sorted(result.items())
         # Additional test with non-trivial azimuth
-        sp = Parser(os.path.join(self.path, 'dataless.seed.II_COCO'))
+        sp = Parser(testdata['dataless.seed.II_COCO'])
         result = {'elevation': 1.0, 'latitude': -12.1901,
                   'longitude': 96.8349, 'local_depth': 1.3,
                   'azimuth': 92.0, 'local_depth': 1.3, 'dip': 0.0}
         paz = sp.get_coordinates("II.COCO.10.BH2", UTCDateTime("2010-11-11"))
         assert sorted(paz.items()) == sorted(result.items())
 
-    def test_select_does_not_change_the_parser_format(self):
+    def test_select_does_not_change_the_parser_format(self, testdata):
         """
         Test that using the _select() method of the Parser object does
         not change the _format attribute.
         """
-        p = Parser(os.path.join(self.path, "dataless.seed.BW_FURT.xml"))
+        p = Parser(testdata["dataless.seed.BW_FURT.xml"])
         assert p._format == "XSEED"
         p._select(p.get_inventory()["channels"][0]["channel_id"])
         assert p._format == "XSEED"
 
-    def test_create_resp_from_xseed(self):
+    def test_create_resp_from_xseed(self, testdata):
         """
         Tests RESP file creation from XML-SEED.
         """
         # 1
         # parse Dataless SEED
-        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        filename = testdata['dataless.seed.BW_FURT']
         sp1 = Parser(filename)
         # write XML-SEED
         with NamedTemporaryFile() as fh:
@@ -535,7 +532,7 @@ class TestParser():
             sp2.get_resp()
         # 2
         # parse Dataless SEED
-        filename = os.path.join(self.path, 'arclink_full.seed')
+        filename = testdata['arclink_full.seed']
         sp1 = Parser(filename)
         # write XML-SEED
         with NamedTemporaryFile() as fh:
@@ -546,35 +543,31 @@ class TestParser():
             # create RESP files
             sp2.get_resp()
 
-    def test_read_resp(self):
+    def test_read_resp(self, testdata):
         """
         Tests reading a respfile by calling Parser(filename)
         """
-        sts2_resp_file = os.path.join(self.path,
-                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        sts2_resp_file = testdata['RESP.XX.NS085..BHZ.STS2_gen3.120.1500']
         p = Parser(sts2_resp_file)
         # Weak but at least tests that something has been read.
         assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
 
-        rt130_resp_file = os.path.join(self.path,
-                                       'RESP.XX.NR008..HHZ.130.1.100')
+        rt130_resp_file = testdata['RESP.XX.NR008..HHZ.130.1.100']
         p = Parser(rt130_resp_file)
         # Weak but at least tests that something has been read.
         assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
 
-    def test_read_resp_data(self):
+    def test_read_resp_data(self, testdata):
         """
         Tests reading a resp string by calling Parser(string)
         """
-        sts2_resp_file = os.path.join(self.path,
-                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        sts2_resp_file = testdata['RESP.XX.NS085..BHZ.STS2_gen3.120.1500']
         with open(sts2_resp_file, "rt") as fh:
             p = Parser(fh.read())
         # Weak but at least tests that something has been read.
         assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
 
-        rt130_resp_file = os.path.join(self.path,
-                                       'RESP.XX.NR008..HHZ.130.1.100')
+        rt130_resp_file = testdata['RESP.XX.NR008..HHZ.130.1.100']
         with open(rt130_resp_file, "rt") as fh:
             p = Parser(fh.read())
         # Weak but at least tests that something has been read.
@@ -598,11 +591,9 @@ class TestParser():
             ret.append(line)
         return ret
 
-    def test_resp_round_trip(self):
-        single_seed = os.path.join(
-            self.path,
-            '../../../../',
-            'core/tests/data/IRIS_single_channel_with_response.seed')
+    def test_resp_round_trip(self, root):
+        single_seed = (root / 'core' / 'tests' / 'data' /
+                       'IRIS_single_channel_with_response.seed')
         # Make parser and get resp from SEED
         seed_p = Parser(single_seed)
         resp_from_seed = seed_p.get_resp()[0][1]
@@ -673,23 +664,23 @@ class TestParser():
             blockette.parse_seed(b010)
         assert b010 == blockette.get_seed()
 
-    def test_issue_298a(self):
+    def test_issue_298a(self, testdata):
         """
         Test case for issue #298: blockette size exceeds 9999 bytes.
         """
-        file = os.path.join(self.path, "AI.ESPZ._.BHE.dataless")
+        file = testdata["AI.ESPZ._.BHE.dataless"]
         parser = Parser(file)
         parser.get_resp()
 
-    def test_issue_298b(self):
+    def test_issue_298b(self, testdata):
         """
         Second test case for issue #298: blockette size exceeds 9999 bytes.
         """
-        file = os.path.join(self.path, "AI.ESPZ._.BH_.dataless")
+        file = testdata["AI.ESPZ._.BH_.dataless"]
         parser = Parser(file)
         parser.get_resp()
 
-    def test_issue_319(self):
+    def test_issue_319(self, testdata):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
         """
@@ -698,7 +689,7 @@ class TestParser():
         if hasattr(obspy.io.xseed.parser, "__warningregistry__"):
             obspy.io.xseed.parser.__warningregistry__.clear()
 
-        filename = os.path.join(self.path, 'BN.LPW._.BHE.dataless')
+        filename = testdata['BN.LPW._.BHE.dataless']
         # raises a UserWarning: More than one Abbreviation Dictionary Control
         # Headers found!
         with warnings.catch_warnings(record=True) as w:
@@ -708,15 +699,15 @@ class TestParser():
             "More than one Abbreviation Dictionary Control Headers found!"
         assert parser.version == 2.3
 
-    def test_issue_157(self):
+    def test_issue_157(self, testdata):
         """
         Test case for issue #157: re-using parser object.
         """
         expected = {'latitude': 48.162899, 'elevation': 565.0,
                     'longitude': 11.2752, 'local_depth': 0.0,
                     'azimuth': 0.0, 'dip': -90.0}
-        filename1 = os.path.join(self.path, 'dataless.seed.BW_FURT')
-        filename2 = os.path.join(self.path, 'dataless.seed.BW_MANZ')
+        filename1 = testdata['dataless.seed.BW_FURT']
+        filename2 = testdata['dataless.seed.BW_MANZ']
         t = UTCDateTime("2010-07-01")
         parser = Parser()
         parser.read(filename2)
@@ -731,21 +722,21 @@ class TestParser():
             result = parser.get_coordinates("BW.FURT..EHZ", t)
             assert expected == result
 
-    def test_issue_358(self):
+    def test_issue_358(self, testdata):
         """
         Test case for issue #358.
         """
-        filename = os.path.join(self.path, 'CL.AIO.dataless')
+        filename = testdata['CL.AIO.dataless']
         parser = Parser()
         parser.read(filename)
         dt = UTCDateTime('2012-01-01')
         parser.get_paz('CL.AIO.00.EHZ', dt)
 
-    def test_issue_361(self):
+    def test_issue_361(self, testdata):
         """
         Test case for issue #361.
         """
-        filename = os.path.join(self.path, 'G.SPB.dataless')
+        filename = testdata['G.SPB.dataless']
         parser = Parser()
         parser.read(filename)
         # 1 - G.SPB..BHZ - no Laplace transform - works
@@ -760,11 +751,11 @@ class TestParser():
         dt = UTCDateTime('2012-01-01')
         parser.get_paz('G.SPB.00.BHZ', dt)
 
-    def test_split_stations_dataless_to_xseed(self):
+    def test_split_stations_dataless_to_xseed(self, testdata):
         """
         Test case for writing dataless to XSEED with multiple entries.
         """
-        filename = os.path.join(self.path, 'dataless.seed.BW_DHFO')
+        filename = testdata['dataless.seed.BW_DHFO']
         parser = Parser()
         parser.read(filename)
         with NamedTemporaryFile() as fh:
@@ -775,15 +766,14 @@ class TestParser():
             # period
             os.remove(tempfile + '.1301529600.0.xml')
 
-    def test_rotation_to_zne(self):
+    def test_rotation_to_zne(self, testdata):
         """
         Weak test for rotation of arbitrarily rotated components to ZNE.
         """
-        st = read(os.path.join(self.path,
-                               "II_COCO_three_channel_borehole.mseed"))
+        st = read(testdata["II_COCO_three_channel_borehole.mseed"])
         # Read the SEED file and rotate the Traces with the information stored
         # in the SEED file.
-        p = Parser(os.path.join(self.path, "dataless.seed.II_COCO"))
+        p = Parser(testdata["dataless.seed.II_COCO"])
         st_r = p.rotate_to_zne(st)
 
         # Still three channels left.
@@ -822,24 +812,24 @@ class TestParser():
         # result.
         assert np.allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0)
 
-    def test_underline_in_site_name(self):
+    def test_underline_in_site_name(self, testdata):
         """
         Test case for issue #1893.
         """
-        filename = os.path.join(self.path, 'UP_BACU_HH.dataless')
+        filename = testdata['UP_BACU_HH.dataless']
         parser = Parser()
         parser.read(filename)
         # value given by pdccgg
         assert parser.blockettes[50][0].site_name == 'T3930_b A6689 3930'
 
-    def test_parsing_resp_file_without_clear_blkt_separation(self):
+    def test_parsing_resp_file_without_clear_blkt_separation(self, testdata):
         """
         This is a slightly malformed RESP file that has two blockettes 58 at
         the end. Most RESP files separate blockettes with comments of which
         at least one contains a plus sign. This one does not so additional
         heuristics are needed.
         """
-        filename = os.path.join(self.path, '6D6-Trillium-250sps.resp')
+        filename = testdata['6D6-Trillium-250sps.resp']
         parser = Parser()
         parser.read(filename)
         b = parser.blockettes[58][-1]

@@ -2,8 +2,6 @@
 """
 The Quality Control test suite.
 """
-import os
-
 import numpy as np
 
 import obspy
@@ -28,11 +26,6 @@ class TestQualityControl():
     """
     Test cases for Quality Control.
     """
-    @classmethod
-    def setup_class(cls):
-        # Directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), "data")
-
     def test_no_files_given(self):
         """
         Tests the raised exception if no file is given.
@@ -391,14 +384,13 @@ class TestQualityControl():
             assert ref['timing_quality_min'] is None
             assert ref['timing_quality_max'] is None
 
-    def test_timing_quality(self):
+    def test_timing_quality(self, testdata):
         """
         Test extraction of timing quality with a file that actually has it.
         """
         # Test file is constructed and orignally from the obspy.io.mseed
         # test suite.
-        md = MSEEDMetadata(files=[os.path.join(self.path,
-                                               "timingquality.mseed")],
+        md = MSEEDMetadata(files=[testdata["timingquality.mseed"]],
                            add_flags=True)
         ref = md.meta['miniseed_header_percentages']
         assert ref['timing_quality_mean'] == 50.0
@@ -566,14 +558,14 @@ class TestQualityControl():
             assert _rapid_gap_testing(0, 5.01) == 5
             assert _rapid_gap_testing(0, 20) == 13
 
-    def test_start_gap(self):
+    def test_start_gap(self, testdata):
         """
         Tests whether a gap in the beginning of the file is interpreted
         A gap at the beginning of the window is ignored if a sample can be
         found before the starttime, and is continuous
         Trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
-        file = os.path.join(self.path, "tiny_quality_file.mseed")
+        file = testdata['tiny_quality_file.mseed']
 
         # first sample is 625000, so we introduce a gap of 0.025
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600000)
@@ -621,12 +613,12 @@ class TestQualityControl():
         assert cseg['end_time'] == \
             obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 325000)
 
-    def test_random_window(self):
+    def test_random_window(self, testdata):
         """
         Tests a random window within a continuous trace, expect no gaps
         Continuous trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
-        file = os.path.join(self.path, "tiny_quality_file.mseed")
+        file = testdata['tiny_quality_file.mseed']
 
         # Go randomly somewhere between two samples, find no gaps because
         # the trace is continuous everywhere between start-end
@@ -640,13 +632,13 @@ class TestQualityControl():
         # will be set to None
         assert md.meta["num_records"] is None
 
-    def test_end_gap(self):
+    def test_end_gap(self, testdata):
         """
         Test for the end gap. A gap should be found if the
         endtime exceeds the last sample + delta + time tolerance
         Trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
-        file = os.path.join(self.path, "tiny_quality_file.mseed")
+        file = testdata['tiny_quality_file.mseed']
 
         # Last sample is at 300000, but this sample covers the trace
         # up to 300000 + delta (0.025) => 325000 - no gaps
@@ -664,12 +656,12 @@ class TestQualityControl():
         assert md.meta["sum_gaps"] == 0.025001
         assert md.meta["end_gap"] == 0.025001
 
-    def test_clock_locked_percentage(self):
+    def test_clock_locked_percentage(self, testdata):
         """
         7/10 records with io_flag clock_locked set to 1 for which we
         count the percentage of record time of total time
         """
-        file = os.path.join(self.path, "tiny_quality_file.mseed")
+        file = testdata['tiny_quality_file.mseed']
 
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
@@ -695,7 +687,7 @@ class TestQualityControl():
         meta_io = meta['io_and_clock_flags']
         assert abs(meta_io["clock_locked"] - percentage) < 1e-6
 
-    def test_endtime_on_sample(self):
+    def test_endtime_on_sample(self, testdata):
         """
         [T0, T1), T0 should be included; T1 excluded
         Test to see whether points on starttime are included, and
@@ -703,7 +695,7 @@ class TestQualityControl():
         Total number of samples for this test = 2308
         Trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
-        file = os.path.join(self.path, "tiny_quality_file.mseed")
+        file = testdata['tiny_quality_file.mseed']
 
         # Set T0 and T1 on sample (N-1)
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)

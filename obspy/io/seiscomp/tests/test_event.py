@@ -30,21 +30,19 @@ class TestEvent():
     """
     Test suite for obspy.io.seiscomp.event
     """
-    @classmethod
-    def setup_class(cls):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, root, datapath):
         # directory where the test files are located
-        cls.io_directory = \
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        cls.quakeml_path = \
-            os.path.join(cls.io_directory, 'quakeml', 'tests', 'data')
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-        cls.write_xslt_filename = os.path.join(
-            cls.io_directory, 'seiscomp', 'data',
+        self.io_directory = root / 'io'
+        self.quakeml_path = self.io_directory / 'quakeml' / 'tests' / 'data'
+        self.path = datapath
+        self.write_xslt_filename = (
+            self.io_directory / 'seiscomp' / 'data' /
             'quakeml_1.2__sc3ml_0.11.xsl')
-        cls.schema_pattern = re.compile(
+        self.schema_pattern = re.compile(
             r'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[\d\.]+'
         )
-        cls.version_pattern = re.compile(r'version="[\d\.]+"')
+        self.version_pattern = re.compile(r'version="[\d\.]+"')
 
     def change_reading_version(self, filename, version):
         """
@@ -96,7 +94,7 @@ class TestEvent():
 
             transform = etree.XSLT(etree.parse(read_xslt_filename))
 
-            filename = os.path.join(self.path, sc3ml_file)
+            filename = self.path / sc3ml_file
             sc3ml_doc = self.change_reading_version(filename, version)
 
             # Only test valid SCXML file
@@ -110,7 +108,7 @@ class TestEvent():
                 if validate:
                     assert _validate_quakeml(tf.name)
 
-                filepath_cmp = os.path.join(self.path, quakeml_file)
+                filepath_cmp = self.path / quakeml_file
                 assert filecmp.cmp(filepath_cmp, tf.name)
 
     def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, target_version,
@@ -144,18 +142,18 @@ class TestEvent():
 
             if validate:
                 assert validate_sc3ml(tf.name, target_version)
-            filepath_cmp = os.path.join(self.path, sc3ml_file)
+            filepath_cmp = self.path / sc3ml_file
             assert filecmp.cmp(filepath_cmp, tf.name)
 
-    def test_sc3ml_versions(self):
+    def test_sc3ml_versions(self, testdata):
         """
         Test multiple schema versions
         """
         for version in ['0.9', '0.10', '0.11', '0.12']:
-            filename = os.path.join(self.path, 'version%s' % version)
+            filename = testdata['version%s' % version]
             read_events(filename)
 
-        filename = os.path.join(self.path, 'version0.5')
+        filename = testdata['version0.5']
         with pytest.raises(ValueError) as e:
             read_events(filename)
 
@@ -164,7 +162,7 @@ class TestEvent():
                             "0.11, 0.12].")
         assert str(e.value) == expected_message
 
-        filename = os.path.join(self.path, 'version0.13')
+        filename = testdata['version0.13']
         with pytest.raises(ValueError) as e:
             read_events(filename)
 
@@ -223,16 +221,16 @@ class TestEvent():
         self.cmp_read_xslt_file('qml-example-1.2-RC3.sc3ml',
                                 'qml-example-1.2-RC3.xml')
 
-    def test_read_example(self):
-        filename = os.path.join(self.path, 'qml-example-1.2-RC3.sc3ml')
+    def test_read_example(self, testdata):
+        filename = testdata['qml-example-1.2-RC3.sc3ml']
         catalog = _read_sc3ml(filename)
 
         assert len(catalog.events) == 1
         assert len(catalog.events[0].origins) == 1
 
-    def test_read_id_prefix(self):
+    def test_read_id_prefix(self, testdata):
         filename = \
-            os.path.join(self.path, 'qml-example-1.2-RC3_wrong_id.sc3ml')
+            testdata['qml-example-1.2-RC3_wrong_id.sc3ml']
         catalog = _read_sc3ml(filename, id_prefix='quakeml:obspy.org/')
 
         assert len(catalog.events) == 1
@@ -258,33 +256,33 @@ class TestEvent():
         assert station_magnitude.resource_id == \
             'quakeml:obspy.org/test_station_magnitude_id'
 
-    def test_read_string(self):
+    def test_read_string(self, testdata):
         """
         Test reading a SCXML string/unicode object via read_events.
         """
-        filename = os.path.join(self.path, 'qml-example-1.2-RC3.sc3ml')
+        filename = testdata['qml-example-1.2-RC3.sc3ml']
         with open(filename, 'rb') as fp:
             data = fp.read()
 
             catalog = read_events(data)
             assert len(catalog) == 1
 
-    def test_read_quakeml(self):
+    def test_read_quakeml(self, testdata):
         """
         Test reading a QuakeML file via read_events.
         """
-        filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
+        filename = testdata['qml-example-1.2-RC3.xml']
         with pytest.raises(ValueError) as e:
             read_events(filename, format='SC3ML')
 
         expected_message = "Not a SCXML compatible file or string."
         assert str(e.value) == expected_message
 
-    def test_read_sc3ml_fields(self):
+    def test_read_sc3ml_fields(self, testdata):
         """
         Test SCXML fields which are not in the QuakeML 1.2.
         """
-        filename = os.path.join(self.path, 'sc3ml_fields.sc3ml')
+        filename = testdata['sc3ml_fields.sc3ml']
         catalog = read_events(filename, format='SC3ML')
 
         assert 'reading' in catalog.extra
@@ -398,40 +396,40 @@ class TestEvent():
                                  'qml-example-1.2-RC3.sc3ml',
                                  '0.11')
 
-    def test_write_example(self):
-        filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
+    def test_write_example(self, testdata):
+        filename = testdata['qml-example-1.2-RC3.xml']
         catalog = _read_quakeml(filename)
 
         with NamedTemporaryFile() as tf:
             catalog.write(tf, format='SC3ML', validate=True)
             filepath_cmp = \
-                os.path.join(self.path, 'qml-example-1.2-RC3_write.sc3ml')
+                testdata['qml-example-1.2-RC3_write.sc3ml']
             assert filecmp.cmp(filepath_cmp, tf.name)
 
-    def test_write_remove_events(self):
-        filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
+    def test_write_remove_events(self, testdata):
+        filename = testdata['qml-example-1.2-RC3.xml']
         catalog = _read_quakeml(filename)
 
         with NamedTemporaryFile() as tf:
             catalog.write(tf, format='SC3ML', validate=True,
                           event_removal=True)
             filepath_cmp = \
-                os.path.join(self.path, 'qml-example-1.2-RC3_no_events.sc3ml')
+                testdata['qml-example-1.2-RC3_no_events.sc3ml']
             assert filecmp.cmp(filepath_cmp, tf.name)
 
-    def test_read_and_write(self):
-        filename = os.path.join(self.path, 'qml-example-1.2-RC3_write.sc3ml')
+    def test_read_and_write(self, testdata):
+        filename = testdata['qml-example-1.2-RC3_write.sc3ml']
         catalog = read_events(filename)
 
         with NamedTemporaryFile() as tf:
             catalog.write(tf, format='SC3ML', validate=True)
             assert filecmp.cmp(filename, tf.name)
 
-    def test_read_and_write_sc3ml_fields(self):
+    def test_read_and_write_sc3ml_fields(self, testdata):
         """
         Test that the non-QuakeML nodes are correctly rewritten.
         """
-        filename = os.path.join(self.path, 'sc3ml_fields.sc3ml')
+        filename = testdata['sc3ml_fields.sc3ml']
         catalog = read_events(filename)
 
         with NamedTemporaryFile() as tf:

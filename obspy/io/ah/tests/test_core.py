@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
-
 import numpy as np
 
 from obspy import UTCDateTime, read
@@ -14,78 +12,73 @@ class TestCore():
     """
     AH (Ad Hoc) file test suite.
     """
-    @classmethod
-    def setup_class(cls):
-        # Directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_is_ah(self):
+    def test_is_ah(self, testdata, datapath):
         """
         Testing AH file format.
         """
         # AH v1
-        testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.DS.lE21.resp')
+        testfile = datapath / 'TSG' / 'BRV.TSG.DS.lE21.resp'
         assert _is_ah(testfile)
-        testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.KSM.sE12.resp')
+        testfile = datapath / 'TSG' / 'BRV.TSG.KSM.sE12.resp'
         assert _is_ah(testfile)
-        testfile = os.path.join(self.path, 'ah1.f')
+        testfile = testdata['ah1.f']
         assert _is_ah(testfile)
-        testfile = os.path.join(self.path, 'ah1.c')
+        testfile = testdata['ah1.c']
         assert _is_ah(testfile)
-        testfile = os.path.join(self.path, 'ah1.t')
+        testfile = testdata['ah1.t']
         assert _is_ah(testfile)
-        testfile = os.path.join(self.path, 'hrv.lh.zne')
+        testfile = testdata['hrv.lh.zne']
         assert _is_ah(testfile)
 
         # AH v2
-        testfile = os.path.join(self.path, 'ah2.f')
+        testfile = testdata['ah2.f']
         assert _is_ah(testfile)
-        testfile = os.path.join(self.path, 'ah2.f-e')
+        testfile = testdata['ah2.f-e']
         assert _is_ah(testfile)
-        testfile = os.path.join(self.path, 'ah2.c')
+        testfile = testdata['ah2.c']
         assert _is_ah(testfile)
-        testfile = os.path.join(self.path, 'ah2.t')
+        testfile = testdata['ah2.t']
         assert _is_ah(testfile)
 
         # non AH files
-        testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.DS.lE21.asc')
+        testfile = datapath / 'TSG' / 'BRV.TSG.DS.lE21.asc'
         assert not _is_ah(testfile)
-        testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.KSM.sE12.asc')
+        testfile = datapath / 'TSG' / 'BRV.TSG.KSM.sE12.asc'
         assert not _is_ah(testfile)
-        testfile = os.path.join(self.path, 'TSG', 'Readme_TSG_response.txt')
+        testfile = datapath / 'TSG' / 'Readme_TSG_response.txt'
         assert not _is_ah(testfile)
 
-    def test_read(self):
+    def test_read(self, testdata):
         """
         Testing reading AH file format using read() function.
         """
         # AH v1
-        testfile = os.path.join(self.path, 'hrv.lh.zne')
+        testfile = testdata['hrv.lh.zne']
         st = read(testfile)
         assert len(st) == 3
-        testfile = os.path.join(self.path, 'ah1.f')
+        testfile = testdata['ah1.f']
         st = read(testfile)
         assert len(st) == 4
         # not supported data types (vector, complex, tensor)
-        testfile = os.path.join(self.path, 'ah1.c')
+        testfile = testdata['ah1.c']
         with pytest.raises(NotImplementedError):
             _read_ah(testfile)
-        testfile = os.path.join(self.path, 'ah1.t')
+        testfile = testdata['ah1.t']
         with pytest.raises(NotImplementedError):
             _read_ah(testfile)
 
         # AH v2
         # float
-        testfile = os.path.join(self.path, 'ah2.f')
+        testfile = testdata['ah2.f']
         st = read(testfile)
         assert len(st) == 4
 
-    def test_read_ah(self):
+    def test_read_ah(self, testdata):
         """
         Testing reading AH file format using _read_ah() function.
         """
         # AH v1
-        testfile = os.path.join(self.path, 'ah1.f')
+        testfile = testdata['ah1.f']
         st = _read_ah(testfile)
         assert len(st) == 4
         tr = st[0]
@@ -128,15 +121,15 @@ class TestCore():
             -1421.41247559, 118.58750153, 88.58750153, -982.41247559]))
 
         # not supported data types (vector, complex, tensor)
-        testfile = os.path.join(self.path, 'ah1.c')
+        testfile = testdata['ah1.c']
         with pytest.raises(NotImplementedError):
             _read_ah(testfile)
-        testfile = os.path.join(self.path, 'ah1.t')
+        testfile = testdata['ah1.t']
         with pytest.raises(NotImplementedError):
             _read_ah(testfile)
 
         # AH v2
-        testfile = os.path.join(self.path, 'ah2.f')
+        testfile = testdata['ah2.f']
         st = _read_ah(testfile)
         assert len(st) == 4
         tr = st[0]
@@ -179,18 +172,18 @@ class TestCore():
             -1421.41247559, 118.58750153, 88.58750153, -982.41247559]))
 
         # not supported data types (vector, complex, tensor)
-        testfile = os.path.join(self.path, 'ah2.t')
+        testfile = testdata['ah2.t']
         with pytest.raises(NotImplementedError):
             _read_ah(testfile)
 
-    def test_tsg(self):
+    def test_tsg(self, datapath):
         """
         Test reading AH v1 files of the STsR-TSG System at Borovoye.
 
         .. seealso:: https://www.ldeo.columbia.edu/res/pi/Monitoring/Data/
         """
         # 1 - BRV.TSG.DS.lE21
-        testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.DS.lE21.resp')
+        testfile = datapath / 'TSG' / 'BRV.TSG.DS.lE21.resp'
         st = _read_ah(testfile)
         assert len(st) == 1
         tr = st[0]
@@ -256,12 +249,12 @@ class TestCore():
         np.testing.assert_array_almost_equal(tr.data[-4:], np.array([
             1.80574405, 2.80574393, 3.80574393, 3.80574393]))
 
-    def test_write_ah1(self):
+    def test_write_ah1(self, testdata):
         """
         Testing writing AH1 file format using _write_ah1() function.
         """
         # AH v1
-        testfile = os.path.join(self.path, 'st.ah')
+        testfile = testdata['st.ah']
         stream_orig = _read_ah(testfile)
 
         with NamedTemporaryFile() as tf:

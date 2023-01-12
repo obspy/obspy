@@ -2,7 +2,6 @@
 """
 The obspy.clients.neic.client test suite.
 """
-
 import pytest
 
 from obspy.core.utcdatetime import UTCDateTime

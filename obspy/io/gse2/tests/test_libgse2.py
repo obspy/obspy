@@ -4,7 +4,6 @@
 The libgse2 test suite.
 """
 import io
-import os
 from ctypes import ArgumentError
 import warnings
 
@@ -22,12 +21,7 @@ class TestLibGSE2():
     """
     Test cases for libgse2.
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_read(self):
+    def test_read(self, testdata):
         """
         Compares waveform data read by libgse2 with an ASCII dump.
 
@@ -35,7 +29,7 @@ class TestLibGSE2():
         The values are assumed to be correct. The values were created using
         getevents. Only checks relative values.
         """
-        gse2file = os.path.join(self.path, 'loc_RJOB20050831023349.z')
+        gse2file = testdata['loc_RJOB20050831023349.z']
         # list of known data samples
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         f = open(gse2file, 'rb')
@@ -52,12 +46,11 @@ class TestLibGSE2():
         assert data[0:13].tolist() == datalist
         f.close()
 
-    def test_read_with_wrong_checksum(self):
+    def test_read_with_wrong_checksum(self, testdata):
         """
         """
         # read original file
-        gse2file = os.path.join(self.path,
-                                'loc_RJOB20050831023349.z.wrong_chksum')
+        gse2file = testdata['loc_RJOB20050831023349.z.wrong_chksum']
         # should fail
         fp = open(gse2file, 'rb')
         with pytest.raises(ChksumError):
@@ -67,11 +60,11 @@ class TestLibGSE2():
         libgse2.read(fp, verify_chksum=False)
         fp.close()
 
-    def test_read_and_write(self):
+    def test_read_and_write(self, testdata):
         """
         Writes, reads and compares files created via libgse2.
         """
-        gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
+        gse2file = testdata['loc_RNON20040609200559.z']
         with open(gse2file, 'rb') as f:
             header, data = libgse2.read(f)
         with NamedTemporaryFile() as f:
@@ -85,11 +78,11 @@ class TestLibGSE2():
         assert header == newheader
         np.testing.assert_equal(data, newdata)
 
-    def test_bytes_io(self):
+    def test_bytes_io(self, testdata):
         """
         Checks that reading and writing works via BytesIO.
         """
-        gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
+        gse2file = testdata['loc_RNON20040609200559.z']
         with open(gse2file, 'rb') as f:
             fin = io.BytesIO(f.read())
         header, data = libgse2.read(fin)
@@ -106,13 +99,13 @@ class TestLibGSE2():
         assert header == newheader
         np.testing.assert_equal(data, newdata)
 
-    def test_read_header(self):
+    def test_read_header(self, testdata):
         """
         Reads and compares header info from the first record.
 
         The values can be read from the filename.
         """
-        gse2file = os.path.join(self.path, 'twiceCHK2.gse2')
+        gse2file = testdata['twiceCHK2.gse2']
         with open(gse2file, 'rb') as f:
             header = libgse2.read_header(f)
         assert 'RNHA' == header['station']
@@ -123,11 +116,11 @@ class TestLibGSE2():
         assert UTCDateTime(2009, 5, 18, 6, 47, 20, 255000) == \
             header['starttime']
 
-    def test_is_widi_2(self):
+    def test_is_widi_2(self, testdata):
         """
         See if first 4 characters are WID2, if not raise type error.
         """
-        filename = os.path.join(self.path, 'loc_RNON20040609200559.z')
+        filename = testdata['loc_RNON20040609200559.z']
         with open(filename, 'rb') as f:
             pos = f.tell()
             assert libgse2.is_gse2(f) is None
@@ -175,34 +168,33 @@ class TestLibGSE2():
                     libgse2.write(header, data,
                                   f)
 
-    def test_chk2_in_cm6(self):
+    def test_chk2_in_cm6(self, testdata):
         """
         Tests a file which contains the "CHK2" string in the CM6 encoded
         string (line 13 of twiceCHK2.gse2).
         """
-        with open(os.path.join(self.path, 'twiceCHK2.gse2'), 'rb') as f:
+        with open(testdata['twiceCHK2.gse2'], 'rb') as f:
             header, data = libgse2.read(f, verify_chksum=True)
         assert header['npts'] == 750
         np.testing.assert_array_equal(data[-4:],
                                       np.array([-139, -153, -169, -156]))
 
-    def test_broken_head(self):
+    def test_broken_head(self, testdata):
         """
         Tests that gse2 files with n_samps=0 will not end up with a
         segmentation fault
         """
-        with open(os.path.join(self.path, 'broken_head.gse2'), 'rb') as f:
+        with open(testdata['broken_head.gse2'], 'rb') as f:
             with pytest.raises(ChksumError):
                 libgse2.read(f)
 
-    def test_no_dat2_null_pointer(self):
+    def test_no_dat2_null_pointer(self, testdata):
         """
         Checks that null pointers are returned correctly by read83 function
         of read. Error "decomp_6b: Neither DAT2 or DAT1 found!" is on
         purpose.
         """
-        filename = os.path.join(self.path,
-                                'loc_RJOB20050831023349_first100_dos.z')
+        filename = testdata['loc_RJOB20050831023349_first100_dos.z']
         fout = io.BytesIO()
         with open(filename, 'rb') as fin:
             lines = (line for line in fin if not line.startswith(b'DAT2'))
@@ -213,15 +205,13 @@ class TestLibGSE2():
             with pytest.raises(GSEUtiError):
                 libgse2.read(fout)
 
-    def test_parse_sta2(self):
+    def test_parse_sta2(self, testdata):
         """
         Tests parsing of STA2 lines on a collection of (modified) real world
         examples.
         """
-        filename = os.path.join(self.path,
-                                'STA2.testlines')
-        filename2 = os.path.join(self.path,
-                                 'STA2.testlines_out')
+        filename = testdata['STA2.testlines']
+        filename2 = testdata['STA2.testlines_out']
         results = [
             {'network': 'ABCD', 'lon': 12.12345, 'edepth': 0.0, 'elev': -290.0,
              'lat': 37.12345, 'coordsys': 'WGS-84'},

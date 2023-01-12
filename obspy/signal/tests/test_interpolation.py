@@ -3,8 +3,6 @@
 """
 The interpolation test suite for ObsPy.
 """
-import os
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -17,9 +15,6 @@ class TestInterpolation:
     """
     Interpolation test case
     """
-    path = os.path.join(os.path.dirname(__file__), 'data')
-    path_images = os.path.join(os.path.dirname(__file__), 'images')
-
     def test_calculate_lanczos_kernel(self):
         """
         Tests the kernels implemented in C against their numpy counterpart.

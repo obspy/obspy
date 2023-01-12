@@ -2,8 +2,6 @@
 """
 The obspy.clients.iris.client test suite.
 """
-import os
-
 import numpy as np
 import pytest
 
@@ -18,13 +16,7 @@ class TestClient():
     """
     Test cases for obspy.clients.iris.client.Client.
     """
-
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-
-    def test_sacpz(self):
+    def test_sacpz(self, testdata):
         """
         Fetches SAC poles and zeros information.
         """
@@ -35,8 +27,7 @@ class TestClient():
         result = client.sacpz("IU", "ANMO", "00", "BHZ", t1, t2)
         # drop lines with creation date (current time during request)
         result = result.splitlines()
-        sacpz_file = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.sacpz')
-        with open(sacpz_file, 'rb') as fp:
+        with open(testdata['IU.ANMO.00.BHZ.sacpz'], 'rb') as fp:
             expected = fp.read().splitlines()
         result.pop(5)
         expected.pop(5)

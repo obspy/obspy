@@ -4,7 +4,6 @@
 The gse2.core test suite.
 """
 import copy
-import os
 import warnings
 
 import numpy as np
@@ -19,16 +18,11 @@ class TestCore():
     """
     Test cases for libgse2 core interface
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-
-    def test_read_via_obspy(self):
+    def test_read_via_obspy(self, testdata):
         """
         Read files via L{obspy.Trace}
         """
-        gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        gse2file = testdata['loc_RJOB20050831023349.z']
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         # read
         st = read(gse2file, verify_checksum=True)
@@ -46,11 +40,11 @@ class TestCore():
         assert round(abs(tr.stats.starttime.timestamp-1125455629.850), 6) == 0
         assert tr.data[0:13].tolist() == testdata
 
-    def test_read_head_via_obspy(self):
+    def test_read_head_via_obspy(self, testdata):
         """
         Read header of files via L{obspy.Trace}
         """
-        gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        gse2file = testdata['loc_RJOB20050831023349.z']
         # read
         st = read(gse2file, headonly=True)
         tr = st[0]
@@ -64,11 +58,11 @@ class TestCore():
         assert round(abs(tr.stats.starttime.timestamp-1125455629.850), 6) == 0
         assert str(tr.data) == '[]'
 
-    def test_read_and_write_via_obspy(self):
+    def test_read_and_write_via_obspy(self, testdata):
         """
         Read and Write files via L{obspy.Trace}
         """
-        gse2file = os.path.join(self.path, 'data', 'loc_RNON20040609200559.z')
+        gse2file = testdata['loc_RNON20040609200559.z']
         # read trace
         st1 = read(gse2file)
         st1.verify()
@@ -100,12 +94,12 @@ class TestCore():
         assert tr3.stats.gse2.get('calper') == tr1.stats.gse2.get('calper')
         np.testing.assert_equal(tr3.data, tr1.data)
 
-    def test_read_and_write_streams_via_obspy(self):
+    def test_read_and_write_streams_via_obspy(self, testdata):
         """
         Read and Write files containing multiple GSE2 parts via L{obspy.Trace}
         """
-        files = [os.path.join(self.path, 'data', 'loc_RNON20040609200559.z'),
-                 os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')]
+        files = [testdata['loc_RNON20040609200559.z'],
+                 testdata['loc_RJOB20050831023349.z']]
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         # write test file containing multiple GSE2 parts
         with NamedTemporaryFile() as tf:
@@ -171,11 +165,11 @@ class TestCore():
         assert 1.0 == stream[0].stats.gse2.calper
         assert 1.0 == stream[0].stats.calib
 
-    def test_tab_complete_stats(self):
+    def test_tab_complete_stats(self, testdata):
         """
         Read files via L{obspy.Trace}
         """
-        gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        gse2file = testdata['loc_RJOB20050831023349.z']
         # read
         tr = read(gse2file)[0]
         assert 'station' in dir(tr.stats)
@@ -196,34 +190,32 @@ class TestCore():
             with pytest.raises(Exception):
                 st.write(tmpfile, format="GSE2")
 
-    def test_read_with_wrong_checksum(self):
+    def test_read_with_wrong_checksum(self, testdata):
         """
         Test if additional kwarg verify_chksum can be given
         """
         # read original file
-        gse2file = os.path.join(self.path, 'data',
-                                'loc_RJOB20050831023349.z.wrong_chksum')
+        gse2file = testdata['loc_RJOB20050831023349.z.wrong_chksum']
         # should not fail
         read(gse2file, verify_chksum=False)
         # should fail
         with pytest.raises(ChksumError):
             read(gse2file, verify_chksum=True)
 
-    def test_read_with_wrong_parameters(self):
+    def test_read_with_wrong_parameters(self, testdata):
         """
         Test if additional kwargs can be given
         """
         # read original file
-        gse2file = os.path.join(self.path, 'data',
-                                'loc_RJOB20050831023349.z.wrong_chksum')
+        gse2file = testdata['loc_RJOB20050831023349.z.wrong_chksum']
         # add wrong starttime flag of mseed, should also not fail
         read(gse2file, verify_chksum=False, starttime=None)
 
-    def test_read_gse1_via_obspy(self):
+    def test_read_gse1_via_obspy(self, testdata):
         """
         Read files via L{obspy.Trace}
         """
-        gse1file = os.path.join(self.path, 'data', 'loc_STAU20031119011659.z')
+        gse1file = testdata['loc_STAU20031119011659.z']
         testdata = [-818, -814, -798, -844, -806, -818, -800, -790, -818, -780]
         # read
         st = read(gse1file, verify_checksum=True)
@@ -237,11 +229,11 @@ class TestCore():
         assert str(tr.stats.starttime) == '2003-11-19T01:16:59.990000Z'
         assert tr.data[0:10].tolist() == testdata
 
-    def test_read_gse1_head_via_obspy(self):
+    def test_read_gse1_head_via_obspy(self, testdata):
         """
         Read header via L{obspy.Trace}
         """
-        gse1file = os.path.join(self.path, 'data', 'loc_STAU20031119011659.z')
+        gse1file = testdata['loc_STAU20031119011659.z']
         # read
         st = read(gse1file, headonly=True)
         tr = st[0]
@@ -252,12 +244,11 @@ class TestCore():
         assert round(abs(tr.stats.get('calib')-16.0000001), 7) == 0
         assert str(tr.stats.starttime) == '2003-11-19T01:16:59.990000Z'
 
-    def test_read_intv_gse1_via_obspy(self):
+    def test_read_intv_gse1_via_obspy(self, testdata):
         """
         Read file via L{obspy.Trace}
         """
-        gse1file = os.path.join(self.path, 'data',
-                                'GRF_031102_0225.GSE.wrong_chksum')
+        gse1file = testdata['GRF_031102_0225.GSE.wrong_chksum']
         data1 = [-334, -302, -291, -286, -266, -252, -240, -214]
         data2 = [-468, -480, -458, -481, -481, -435, -432, -389]
 
@@ -293,25 +284,24 @@ class TestCore():
         # check last 8 samples
         assert st[1].data[-8:].tolist() == data2
 
-    def test_read_dos(self):
+    def test_read_dos(self, testdata):
         """
         Read file with dos newlines / encoding, that is
         Line Feed (LF) and Carriage Return (CR)
         see #355
         """
-        filedos = os.path.join(self.path, 'data',
-                               'loc_RJOB20050831023349_first100_dos.z')
-        fileunix = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        filedos = testdata['loc_RJOB20050831023349_first100_dos.z']
+        fileunix = testdata['loc_RJOB20050831023349.z']
         st = read(filedos, verify_chksum=True)
         st2 = read(fileunix, verify_chksum=True)
         np.testing.assert_equal(st[0].data, st2[0].data[:100])
         assert st[0].stats['station'] == 'RJOB'
 
-    def test_read_apply_calib(self):
+    def test_read_apply_calib(self, testdata):
         """
         Tests apply_calib parameter in read method.
         """
-        gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        gse2file = testdata['loc_RJOB20050831023349.z']
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         # read w/ apply_calib = False
         st = read(gse2file, apply_calib=False)
@@ -337,11 +327,11 @@ class TestCore():
             tr = read(tmpfile)[0]
         assert tr.stats.network == "BW"
 
-    def test_read_gse2_int_datatype(self):
+    def test_read_gse2_int_datatype(self, testdata):
         """
         Test reading of GSE2 files with data type INT.
         """
-        gse2file = os.path.join(self.path, 'data', 'boa___00_07a.gse')
+        gse2file = testdata['boa___00_07a.gse']
         testdata = [-4, -4, 1, 3, 2, -3, -6, -4, 2, 5]
         # read
         st = read(gse2file, verify_checksum=True)

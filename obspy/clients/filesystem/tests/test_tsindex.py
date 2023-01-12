@@ -5,6 +5,7 @@ import requests
 import tempfile
 import uuid
 from collections import namedtuple
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -17,6 +18,8 @@ from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler
 
 
+# this one is used on the API frontpage, so guess leave it in for now parallel
+# to the proper fixture used in testing
 def get_test_data_filepath():
     package_dir = os.path.abspath(os.path.dirname(__file__))
     # TODO It perhaps shouldn't be the case, but the string here has to end
@@ -25,13 +28,22 @@ def get_test_data_filepath():
     return filepath
 
 
-def get_test_client():
-    filepath = get_test_data_filepath()
-    db_path = os.path.join(filepath, 'timeseries.sqlite')
+@pytest.fixture(scope="module")
+def filepath(request):
+    """
+    Dictionary with full paths to additional tsindex test files in
+    subdirectory of "/data" for convenience.
+    """
+    module_path = Path(request.module.__file__)
+    datapath = module_path.parent / 'data' / 'tsindex_data'
+    return datapath
 
-    client = Client(db_path,
-                    datapath_replace=("^",
-                                      filepath))
+
+@pytest.fixture(scope="function")
+def client(filepath):
+    db_path = filepath / 'timeseries.sqlite'
+
+    client = Client(str(db_path), datapath_replace=("^", str(filepath) + '/'))
     return client
 
 
@@ -45,17 +57,12 @@ class TestClient():
         with pytest.raises(OSError, match="^Database path.*does not exist.$"):
             Client("/some/bad/path/timeseries.sqlite")
 
-    def test_get_waveforms(self):
-        filepath = get_test_data_filepath()
-        client = get_test_client()
-
-        expected_stream = \
-            read(
-                filepath + os.path.join(
-                    'IU', '2018', '001',
-                    'IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
-                starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+    def test_get_waveforms(self, filepath, client):
+        path = (filepath / 'IU' / '2018' / '001' /
+                'IU.ANMO.10.BHZ.2018.001_first_minute.mseed')
+        expected_stream = read(
+            path, starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+            endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         returned_stream = client.get_waveforms(
             "IU", "ANMO", "10", "BHZ",
             starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
@@ -69,23 +76,20 @@ class TestClient():
         # wildcard request spanning multiple files
         expected_stream1 = \
             read(
-                filepath + os.path.join(
-                    'CU', '2018', '001',
-                    'CU.TGUH.00.BHZ.2018.001_first_minute.mseed'),
+                filepath / 'CU' / '2018' / '001' /
+                'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
                 starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                 endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream2 = \
             read(
-                filepath + os.path.join(
-                    'IU', '2018', '001',
-                    'IU.ANMO.10.BHZ.2018.001_first_minute.mseed'),
+                filepath / 'IU' / '2018' / '001' /
+                'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
                 starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                 endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream3 = \
             read(
-                filepath + os.path.join(
-                    'IU', '2018', '001',
-                    'IU.COLA.10.BHZ.2018.001_first_minute.mseed'),
+                filepath / 'IU' / '2018' / '001' /
+                'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
                 starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                 endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream = \
@@ -108,19 +112,16 @@ class TestClient():
                                   endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         assert returned_stream.traces == []
 
-    def test_get_waveforms_bulk(self):
-        filepath = get_test_data_filepath()
-        client = get_test_client()
-
+    def test_get_waveforms_bulk(self, filepath, client):
         expected_stream1 = \
             read(
-                filepath +
+                filepath /
                 'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
                 starttime=UTCDateTime(2018, 1, 1, 0, 0, 1),
                 endtime=UTCDateTime(2018, 1, 1, 0, 0, 7))
         expected_stream2 = \
             read(
-                filepath +
+                filepath /
                 'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
                 starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                 endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
@@ -163,8 +164,7 @@ class TestClient():
                                   endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         assert returned_stream.traces == []
 
-    def test_get_nslc(self):
-        client = get_test_client()
+    def test_get_nslc(self, client):
         # test using actual sqlite3 test database
         expected_nslc = [(u'CU', u'TGUH', u'00', u'BHZ')]
 
@@ -216,8 +216,7 @@ class TestClient():
             "2018-08-10T21:09:39.000000",
             "2018-08-10T22:09:28.890415") == expected_nslc
 
-    def test_get_availability_extent(self):
-        client = get_test_client()
+    def test_get_availability_extent(self, client):
         # test using actual sqlite test database
         expected_nslc = [(u'IU', u'ANMO', u'10', u'BHZ',
                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
@@ -288,9 +287,7 @@ class TestClient():
             "2018-08-10T21:09:39.000000",
             "2018-08-10T22:09:28.890415") == expected_avail_extents
 
-    def test__are_timespans_adjacent(self):
-        client = get_test_client()
-
+    def test__are_timespans_adjacent(self, client):
         sample_rate = 40
         # sample_period = 1/40 = 0.025 sec = 25000 ms
         # and tolerance = 0.5 so an adjacent sample is +/-0.0125 sec = 12500 ms
@@ -358,8 +355,7 @@ class TestClient():
                                     UTCDateTime(2018, 8, 10, 22, 0, 0, 100000))
         assert client._are_timespans_adjacent(ts1, ts2, sample_rate)
 
-    def test_get_availability(self):
-        client = get_test_client()
+    def test_get_availability(self, client):
         # test using actual sqlite test database
         expected_avail = [(u'IU', u'ANMO', u'10', u'BHZ',
                            UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
@@ -483,8 +479,7 @@ class TestClient():
             merge_overlap=True,
             include_sample_rate=True) == expected_incl_sr_avail
 
-    def test_get_availability_percentage(self):
-        client = get_test_client()
+    def test_get_availability_percentage(self, client):
         mock_availability_output = [("AK", "BAGL", "", "LCC",
                                      UTCDateTime(2018, 8, 10, 22, 0, 54),
                                      UTCDateTime(2018, 8, 12, 22, 20, 53)),
@@ -546,8 +541,7 @@ class TestClient():
         assert avail_percentage[1] == expected_avail_percentage[1]
         assert isinstance(avail_percentage, tuple)
 
-    def test_has_data(self):
-        client = get_test_client()
+    def test_has_data(self, client):
         assert client.has_data()
         assert client.has_data(starttime=UTCDateTime(2017, 12, 31),
                                endtime=UTCDateTime(2018, 1, 7))
@@ -566,12 +560,11 @@ def purge(dir, pattern):
 
 class TestIndexer():
 
-    def test_bad_rootpath(self):
+    def test_bad_rootpath(self, filepath):
         """
         Checks that an error is raised when an invalid path is provided to
         a data
         """
-        filepath = get_test_data_filepath()
         database = os.path.join(filepath,
                                 'timeseries.sqlite')
 
@@ -580,23 +573,21 @@ class TestIndexer():
             Indexer("/some/bad/path", database=database,
                     filename_pattern="*.mseed", parallel=2)
 
-    def test_bad_sqlitdb_filepath(self):
+    def test_bad_sqlitdb_filepath(self, filepath):
         """
         Checks that an error is raised when an invalid path is provided to
         a SQLite database
         """
-        filepath = get_test_data_filepath()
         with pytest.raises(OSError, match="^Database path.*does not exist.$"):
             Indexer(filepath, database='/some/bad/path/',
                     filename_pattern="*.mseed")
 
-    def test_bad_database(self):
+    def test_bad_database(self, filepath):
         """
         Checks that an error is raised when an invalid database is provided.
         The database must be a TSIndexDatabaseHandler or a str, otherwise
         a ValueError is raised.
         """
-        filepath = get_test_data_filepath()
         match = "^Database must be a string or TSIndexDatabaseHandler object.$"
         with pytest.raises(ValueError, match=match):
             Indexer(filepath, database=None, filename_pattern="*.mseed")
@@ -638,8 +629,7 @@ class TestIndexer():
             # sqlite db
             assert os.path.isfile(file_path)
 
-    def test__get_leap_seconds_file(self):
-        filepath = get_test_data_filepath()
+    def test__get_leap_seconds_file(self, filepath):
         database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
                           database=database)
@@ -666,8 +656,7 @@ class TestIndexer():
                 indexer._get_leap_seconds_file("SEARCH"))
             assert file_path == test_file
 
-    def test_build_file_list(self):
-        filepath = get_test_data_filepath()
+    def test_build_file_list(self, filepath):
         database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
                           database=database,
@@ -747,12 +736,11 @@ class TestIndexer():
         assert indexer.build_file_list(
             reindex=False, relative_paths=False) == ['data.mseed']
 
-    def test_run_bad_index_cmd(self):
+    def test_run_bad_index_cmd(self, filepath):
         """
         Checks that an OSError is raised when there is an error running a
         index_cmd. (such as no command found.)
         """
-        filepath = get_test_data_filepath()
         indexer = Indexer(filepath, filename_pattern="*.mseed",
                           index_cmd="some_bad_command")
 
@@ -760,10 +748,9 @@ class TestIndexer():
         with pytest.raises(OSError, match=match):
             indexer.run()
 
-    def test_run(self):
+    def test_run(self, filepath):
         my_uuid = uuid.uuid4().hex
         fname = 'test_timeseries_{}'.format(my_uuid)
-        filepath = get_test_data_filepath()
         database = '{}{}.sqlite'.format(filepath, fname)
         try:
             indexer = Indexer(filepath,
@@ -826,20 +813,18 @@ class TestIndexer():
 
 class TestTSIndexDatabaseHandler():
 
-    def test_bad_sqlitdb_filepath(self):
+    def test_bad_sqlitdb_filepath(self, filepath):
         """
         Checks that an error is raised when an invalid path is provided to
         a SQLite database
         """
-        filepath = get_test_data_filepath()
         with pytest.raises(OSError, match="^Database path.*does not exist.$"):
             Indexer(filepath, database='/some/bad/path/',
                     filename_pattern="*.mseed", parallel=2)
 
-    def test__fetch_summary_rows(self):
+    def test__fetch_summary_rows(self, filepath):
         # test with actual sqlite3 database that is missing a summary table
         # a temporary summary table gets created at runtime
-        filepath = get_test_data_filepath()
         db_path = os.path.join(filepath, 'timeseries.sqlite')
         request_handler = TSIndexDatabaseHandler(db_path)
 
@@ -878,10 +863,9 @@ class TestTSIndexDatabaseHandler():
               "2018-12-31T00:00:00.000000")])
         assert ts_summary_data == []
 
-    def test_get_tsindex_summary_cte(self):
+    def test_get_tsindex_summary_cte(self, filepath):
         # test with actual sqlite3 database that is missing a summary table
         # a tsindex summary CTE gets created using the tsindex at runtime
-        filepath = get_test_data_filepath()
         db_path = os.path.join(filepath, 'timeseries.sqlite')
         # supply an existing session
         engine = sa.create_engine("sqlite:///{}".format(db_path))

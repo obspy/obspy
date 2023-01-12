@@ -3,8 +3,6 @@
 """
 The obspy.io.win.core test suite.
 """
-import os
-
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.win.core import _read_win
@@ -14,16 +12,11 @@ class TestCore():
     """
     Test cases for win core interface
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_read_via_obspy(self):
+    def test_read_via_obspy(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '10030302.00')
+        filename = testdata['10030302.00']
         # 1
         st = read(filename)
         st.verify()
@@ -39,11 +32,11 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
         assert st[0].stats.channel == 'a100'
 
-    def test_read_via_module(self):
+    def test_read_via_module(self, testdata):
         """
         Read files via obspy.io.win.core._read_win function.
         """
-        filename = os.path.join(self.path, '10030302.00')
+        filename = testdata['10030302.00']
         # 1
         st = _read_win(filename)
         st.verify()

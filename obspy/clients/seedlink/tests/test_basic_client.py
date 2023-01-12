@@ -13,7 +13,8 @@ from obspy.clients.seedlink.basic_client import Client
 @pytest.mark.network
 class TestClient():
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
         self.client = Client("rtserver.ipgp.fr")
 
     def test_get_waveform(self):

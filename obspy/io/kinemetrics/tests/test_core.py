@@ -17,23 +17,16 @@ class TestCore():
     """
     Test cases for kinemetrics core interface
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_is_evt(self):
+    def test_is_evt(self, testdata, datapath):
         """
         Test for the is_evt() function.
         """
-        valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
-                       os.path.join(self.path, "BX456_MOLA-02351.evt")]
-        invalid_files = [os.path.join(self.path, "NOUTF8.evt")]
-        py_dir = os.path.join(self.path, os.pardir, os.pardir)
-        for filename in os.listdir(py_dir):
-            if filename.endswith(".py"):
-                invalid_files.append(
-                    os.path.abspath(os.path.join(py_dir, filename)))
+        valid_files = [testdata["BI008_MEMA-04823.evt"],
+                       testdata["BX456_MOLA-02351.evt"]]
+        invalid_files = [testdata["NOUTF8.evt"]]
+        py_dir = datapath.parent.parent
+        for path in py_dir.glob('*.py'):
+            invalid_files.append(path)
         assert len(invalid_files) > 0
 
         for filename in valid_files:
@@ -41,18 +34,16 @@ class TestCore():
         for filename in invalid_files:
             assert not is_evt(filename)
 
-    def test_is_evt_from_bytesio(self):
+    def test_is_evt_from_bytesio(self, testdata, datapath):
         """
         Test for the is_evt() function from BytesIO objects.
         """
-        valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
-                       os.path.join(self.path, "BX456_MOLA-02351.evt")]
-        invalid_files = [os.path.join(self.path, "NOUTF8.evt")]
-        py_dir = os.path.join(self.path, os.pardir, os.pardir)
-        for filename in os.listdir(py_dir):
-            if filename.endswith(".py"):
-                invalid_files.append(
-                    os.path.abspath(os.path.join(py_dir, filename)))
+        valid_files = [testdata["BI008_MEMA-04823.evt"],
+                       testdata["BX456_MOLA-02351.evt"]]
+        invalid_files = [testdata["NOUTF8.evt"]]
+        py_dir = datapath.parent.parent
+        for path in py_dir.glob('*.py'):
+            invalid_files.append(path)
 
         for filename in valid_files:
             with open(filename, "rb") as fh:
@@ -69,11 +60,11 @@ class TestCore():
             # The is_evt() method should not change the file pointer.
             assert buf.tell() == 0
 
-    def test_read_via_obspy(self):
+    def test_read_via_obspy(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
+        filename = testdata['BI008_MEMA-04823.evt']
         # 1
         st = read(filename, apply_calib=True)
         st.verify()
@@ -94,7 +85,7 @@ class TestCore():
         self.verify_data_evt2(st[2].data)
 
         # 2
-        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
+        filename = testdata['BX456_MOLA-02351.evt']
         st = read(filename, apply_calib=True)
         st.verify()
         assert len(st) == 6
@@ -115,12 +106,12 @@ class TestCore():
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
 
-    def test_reading_via_obspy_and_bytesio(self):
+    def test_reading_via_obspy_and_bytesio(self, testdata):
         """
         Test the reading of Evt files from BytesIO objects.
         """
         # 1
-        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
+        filename = testdata['BI008_MEMA-04823.evt']
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
@@ -143,7 +134,7 @@ class TestCore():
         self.verify_data_evt2(st[2].data)
 
         # 2
-        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
+        filename = testdata['BX456_MOLA-02351.evt']
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
@@ -167,11 +158,11 @@ class TestCore():
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
 
-    def test_read_via_module(self):
+    def test_read_via_module(self, testdata):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function.
         """
-        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
+        filename = testdata['BI008_MEMA-04823.evt']
         # 1
         st = read_evt(filename, apply_calib=True)
         st.verify()
@@ -192,7 +183,7 @@ class TestCore():
         self.verify_data_evt2(st[2].data)
 
         # 2
-        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
+        filename = testdata['BX456_MOLA-02351.evt']
         st = read_evt(filename, apply_calib=True)
         st.verify()
         assert len(st) == 6
@@ -213,13 +204,13 @@ class TestCore():
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
 
-    def test_read_via_module_and_bytesio(self):
+    def test_read_via_module_and_bytesio(self, testdata):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function from BytesIO
         objects.
         """
         # 1
-        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
+        filename = testdata['BI008_MEMA-04823.evt']
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
@@ -242,7 +233,7 @@ class TestCore():
         self.verify_data_evt2(st[2].data)
 
         # 2
-        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
+        filename = testdata['BX456_MOLA-02351.evt']
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
@@ -321,11 +312,11 @@ class TestCore():
         assert np.allclose(valuesdeb, data[:len(valuesdeb)])
         assert np.allclose(valuesend, data[-len(valuesend):])
 
-    def test_read_via_module_raw(self):
+    def test_read_via_module_raw(self, testdata):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function.
         """
-        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
+        filename = testdata['BI008_MEMA-04823.evt']
         # 1
         st = read_evt(filename, apply_calib=False)
         st.verify()

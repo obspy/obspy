@@ -11,8 +11,6 @@ seiscomp.core test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import os
-
 from obspy.io.seiscomp.core import _is_sc3ml, validate
 import pytest
 
@@ -21,24 +19,20 @@ class TestCore():
     """
     Test suite for obspy.io.seiscomp.event
     """
-    @classmethod
-    def setup_class(cls):
-        cls.data_dir = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_sc3ml_versions(self):
+    def test_sc3ml_versions(self, testdata):
         """
         Test multiple schema versions
         """
         for version in ['0.10', '0.11', '0.12']:
-            filename = os.path.join(self.data_dir, 'version%s' % version)
+            filename = testdata['version%s' % version]
             assert _is_sc3ml(filename)
 
-    def test_sc3ml_no_version_attribute(self):
-        filename = os.path.join(self.data_dir, 'no_version_attribute.sc3ml')
+    def test_sc3ml_no_version_attribute(self, testdata):
+        filename = testdata['no_version_attribute.sc3ml']
         assert _is_sc3ml(filename)
 
-    def test_validate(self):
-        filename = os.path.join(self.data_dir, 'qml-example-1.2-RC3.sc3ml')
+    def test_validate(self, testdata):
+        filename = testdata['qml-example-1.2-RC3.sc3ml']
         assert validate(filename)
         assert not validate(filename, version='0.8')
 

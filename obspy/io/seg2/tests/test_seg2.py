@@ -3,7 +3,6 @@
 The obspy.io.seg2 test suite.
 """
 import gzip
-import os
 import warnings
 
 import numpy as np
@@ -81,18 +80,11 @@ class TestSEG2():
     """
     Test cases for SEG2 reading.
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.dir = os.path.dirname(__file__)
-        cls.path = os.path.join(cls.dir, 'data')
-
-    def test_read_data_format_2(self):
+    def test_read_data_format_2(self, datapath):
         """
         Test reading a SEG2 data format code 2 file (int32).
         """
-        basename = os.path.join(self.path,
-                                '20130107_103041000.CET.3c.cont.0')
+        basename = str(datapath / '20130107_103041000.CET.3c.cont.0')
         # read SEG2 data (in counts, int32)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
@@ -111,12 +103,11 @@ class TestSEG2():
         # (trace headers include SEG2 file header)
         assert st[0].stats.seg2 == TRACE2_HEADER
 
-    def test_read_data_format_3(self):
+    def test_read_data_format_3(self, datapath):
         """
         Test reading a SEG2 data format code 3 file (20-bit floating point).
         """
-        basename = os.path.join(self.path,
-                                '20180307_031245000.0')
+        basename = str(datapath / '20180307_031245000.0')
         # read SEG2 data (in counts, int32)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')

@@ -3,9 +3,8 @@
 """
 The hoctavbands.core test suite.
 """
-import os
-
 import numpy as np
+import pytest
 from scipy import signal
 
 from obspy.signal import hoctavbands, util
@@ -17,20 +16,10 @@ class TestHoctavbands():
     """
     Test cases for half octav bands
     """
-    @classmethod
-    def setup_class(cls):
-        # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def setup_method(self):
-        file = os.path.join(self.path, '3cssan.hy.1.MBGA_Z')
-        f = open(file)
-        self.res = np.loadtxt(f)
-        f.close()
-        file = os.path.join(self.path, 'MBGA_Z.ASC')
-        f = open(file)
-        data = np.loadtxt(f)
-        f.close()
+    @pytest.fixture(scope="function", autouse=True)
+    def setup_data(self, testdata):
+        self.res = np.loadtxt(testdata['3cssan.hy.1.MBGA_Z'])
+        data = np.loadtxt(testdata['MBGA_Z.ASC'])
         # self.path = os.path.dirname(__file__)
         # self.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
         # data = np.loadtxt("MBGA_Z.ASC")

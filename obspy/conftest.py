@@ -16,6 +16,9 @@ import pytest
 
 import obspy
 from obspy.core.util import NETWORK_MODULES
+# import some fixtures for reuse in imaging tests
+from obspy.signal.tests.test_spectral_estimation import (   # NOQA
+    _ppsd, _sample_data, _internal_sample_data)
 
 
 OBSPY_PATH = os.path.dirname(obspy.__file__)
