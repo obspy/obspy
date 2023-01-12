@@ -43,12 +43,11 @@ class TestSC3ML():
         for version in ['0.5', '0.99']:
             filename = testdata['version%s' % version]
 
-            with pytest.raises(ValueError) as e:
+            msg = "Schema version not supported."
+            with pytest.raises(ValueError, match=msg):
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     read_inventory(filename)
-
-            assert str(e.value) == "Schema version not supported."
 
     @pytest.mark.filterwarnings('ignore:.*rate of 0')
     def test_channel_level(self, testdata):

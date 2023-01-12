@@ -117,9 +117,8 @@ class TestClient():
         msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
                "of all available data")
         for bad_input in [[], '', None]:
-            with pytest.raises(FDSNInvalidRequestException) as e:
+            with pytest.raises(FDSNInvalidRequestException, match=msg):
                 get_bulk_string(bulk=bad_input, arguments={})
-            assert str(e.value) == msg
 
     def test_validate_base_url(self):
         """
@@ -339,33 +338,31 @@ class TestClient():
         This will have to be adjusted once IRIS changes their implementation.
         """
         client = self.client
-        assert set(client.services.keys()) == \
-            set(("dataselect", "event", "station",
-                 "available_event_contributors", "available_event_catalogs"))
+        assert {*client.services.keys()} == \
+            {"dataselect", "event", "station", "available_event_contributors",
+             "available_event_catalogs"}
 
         # The test sets are copied from the IRIS webpage.
-        assert set(client.services["dataselect"].keys()) == \
-            set(("starttime", "endtime", "network", "station", "location",
-                 "channel", "quality", "minimumlength", "longestonly"))
-        assert set(client.services["station"].keys()) == \
-            set(("starttime", "endtime", "startbefore", "startafter",
-                 "endbefore", "endafter", "network", "station", "location",
-                 "channel", "minlatitude", "maxlatitude", "minlongitude",
-                 "maxlongitude", "latitude", "longitude", "minradius",
-                 "maxradius", "level", "includerestricted", "format",
-                 "includeavailability", "updatedafter", "matchtimeseries"))
-        assert set(client.services["event"].keys()) == \
-            set(("starttime", "endtime", "minlatitude", "maxlatitude",
-                 "minlongitude", "maxlongitude", "latitude", "longitude",
-                 "maxradius", "minradius", "mindepth", "maxdepth",
-                 "minmagnitude", "maxmagnitude",
-                 "magnitudetype", "format",
-                 "catalog", "contributor", "limit", "offset", "orderby",
-                 "updatedafter", "includeallorigins", "includeallmagnitudes",
-                 "includearrivals", "eventid",
-                 "originid"  # XXX: This is currently just specified in the
-                             #      WADL.
-                 ))
+        assert {*client.services["dataselect"].keys()} == \
+            {"starttime", "endtime", "network", "station", "location",
+             "channel", "quality", "minimumlength", "longestonly"}
+        assert {*client.services["station"].keys()} == \
+            {"starttime", "endtime", "startbefore", "startafter",
+             "endbefore", "endafter", "network", "station", "location",
+             "channel", "minlatitude", "maxlatitude", "minlongitude",
+             "maxlongitude", "latitude", "longitude", "minradius",
+             "maxradius", "level", "includerestricted", "format",
+             "includeavailability", "updatedafter", "matchtimeseries"}
+        assert {*client.services["event"].keys()} == \
+            {"starttime", "endtime", "minlatitude", "maxlatitude",
+             "minlongitude", "maxlongitude", "latitude", "longitude",
+             "maxradius", "minradius", "mindepth", "maxdepth",
+             "minmagnitude", "maxmagnitude",
+             "magnitudetype", "format",
+             "catalog", "contributor", "limit", "offset", "orderby",
+             "updatedafter", "includeallorigins", "includeallmagnitudes",
+             "includearrivals", "eventid",
+             "originid"}  # XXX: This is currently just specified in the WADL
 
         # Also check an exemplary value in more detail.
         minradius = client.services["event"]["minradius"]
@@ -382,8 +379,8 @@ class TestClient():
         """
         Tests the parsing of the available event catalogs.
         """
-        assert set(self.client.services["available_event_catalogs"]) == \
-            set(("GCMT", "ISC", "NEIC PDE"))
+        assert {*self.client.services["available_event_catalogs"]} == \
+            {"GCMT", "ISC", "NEIC PDE"}
 
     def test_iris_event_contributors_availability(self):
         """
@@ -396,7 +393,7 @@ class TestClient():
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
         # check that we have some values in there
         assert len(expected) > 5
-        assert set(self.client.services["available_event_contributors"]) == \
+        assert {*self.client.services["available_event_contributors"]} == \
             expected
 
     def test_discover_services_defaults(self):
@@ -1593,11 +1590,10 @@ class TestClient():
         _assert_credentials(client, user, password)
 
         # Raise if token and user/pw are given.
-        with pytest.raises(FDSNException) as e:
+        msg = "EIDA authentication token provided, but user and password " \
+              "are also given."
+        with pytest.raises(FDSNException, match=msg):
             Client('GFZ', eida_token=token, user="foo", password="bar")
-        assert str(e.value) == \
-            "EIDA authentication token provided, but user and password are " \
-            "also given."
 
         # now lets test the RoutingClient with credentials..
         credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}

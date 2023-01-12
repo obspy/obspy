@@ -3,6 +3,7 @@
 The obspy.clients.syngine test suite.
 """
 import io
+import re
 from unittest import mock
 
 import numpy as np
@@ -249,14 +250,12 @@ class TestClient():
         syngine and rely on the service for the error detection.
         """
         # Wrong components.
-        with pytest.raises(ClientHTTPException) as e:
+        msg = re.compile("HTTP code 400 when.*Unrecognized component",
+                         re.DOTALL)
+        with pytest.raises(ClientHTTPException, match=msg):
             self.c.get_waveforms(
                 model="ak135f_5s", eventid="GCMT:C201002270634A",
                 station="ANMO", network="IU", components="ABC")
-
-        msg = str(e.value)
-        assert "HTTP code 400 when" in msg
-        assert "Unrecognized component" in msg
 
     def test_bulk_waveform_download_mock(self):
         """

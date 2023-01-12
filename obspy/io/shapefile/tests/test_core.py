@@ -225,20 +225,20 @@ class TestShapefile():
             with warnings.catch_warnings(record=True) as w:
                 warnings.filterwarnings('always')
                 # test some bad calls that should raise an Exception
-                with pytest.raises(ValueError) as e:
+                msg = (
+                    "list of values for each item in "
+                    "'extra_fields' must have same length as Catalog object")
+                with pytest.raises(ValueError, match=msg):
                     _write_shapefile(
                         cat, "catalog.shp",
                         extra_fields=bad_extra_fields_wrong_length)
-                assert str(e.value) == (
-                    "list of values for each item in "
-                    "'extra_fields' must have same length as Catalog object")
-                with pytest.raises(ValueError) as e:
+                msg = (
+                    "Conflict with existing field named "
+                    "'Magnitude'.")
+                with pytest.raises(ValueError, match=msg):
                     _write_shapefile(
                         cat, "catalog.shp",
                         extra_fields=bad_extra_fields_name_clash)
-                assert str(e.value) == (
-                    "Conflict with existing field named "
-                    "'Magnitude'.")
                 # now test a good call that should work
                 _write_shapefile(cat, "catalog.shp", extra_fields=extra_fields)
             for w_ in w:
@@ -285,19 +285,19 @@ class TestShapefile():
 
         with TemporaryWorkingDirectory():
             # test some bad calls that should raise an Exception
-            with pytest.raises(ValueError) as e:
+            msg = "list of values for each item in " \
+                "'extra_fields' must have same length as the count of all " \
+                "Stations combined across all Networks."
+            with pytest.raises(ValueError, match=msg):
                 _write_shapefile(
                     inv, "inventory.shp",
                     extra_fields=bad_extra_fields_wrong_length)
-            assert str(e.value) == "list of values for each item in " \
-                "'extra_fields' must have same length as the count of all " \
-                "Stations combined across all Networks."
-            with pytest.raises(ValueError) as e:
+            msg = "Conflict with existing field named " \
+                "'Station'."
+            with pytest.raises(ValueError, match=msg):
                 _write_shapefile(
                     inv, "inventory.shp",
                     extra_fields=bad_extra_fields_name_clash)
-            assert str(e.value) == "Conflict with existing field named " \
-                "'Station'."
             # now test a good call that should work
             _write_shapefile(inv, "inventory.shp", extra_fields=extra_fields)
             for suffix in SHAPEFILE_SUFFIXES:

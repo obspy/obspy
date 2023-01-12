@@ -146,11 +146,10 @@ class TestTrigger():
 
         # All three arrays must have the same length, otherwise an error is
         # raised.
-        with pytest.raises(ValueError) as e:
+        msg = "All three data arrays must have the same length."
+        with pytest.raises(ValueError, match=msg):
             ar_pick(data[0], data[1], np.zeros(1), samp_rate, f1, f2, lta_p,
                     sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
-        assert str(e.value) == \
-            "All three data arrays must have the same length."
 
     def test_ar_pick_low_amplitude(self, testdata):
         """

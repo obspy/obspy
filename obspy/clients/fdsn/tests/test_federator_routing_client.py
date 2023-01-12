@@ -68,10 +68,9 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
                     "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00")}
 
         # Error handling.
-        with pytest.raises(ValueError) as e:
+        msg = "Service must be 'dataselect' or 'station'."
+        with pytest.raises(ValueError, match=msg):
             FederatorRoutingClient._split_routing_response(data, "random")
-        assert str(e.value) == \
-            "Service must be 'dataselect' or 'station'."
 
     def test_response_splitting_fdsnws_subdomain(self):
         data = """
@@ -184,13 +183,12 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
     def test_get_waveforms_error_handling(self):
         # Some parameters should not be passed explicitly.
-        with pytest.raises(ValueError) as e:
+        msg = ("`network` must not be part of the optional parameters in a "
+               "bulk request.")
+        with pytest.raises(ValueError, match=msg):
             self.client.get_waveforms_bulk([[
                 "AA", "BB", "", "LHZ", obspy.UTCDateTime(2016, 1, 1),
                 obspy.UTCDateTime(2016, 1, 2)]], network="BB")
-        assert str(e.value) == (
-            "`network` must not be part of the optional parameters in a bulk "
-            "request.")
 
     def test_get_stations(self):
         """
@@ -284,13 +282,12 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
     def test_get_stations_error_handling(self):
         # Some parameters should not be passed explicitly.
-        with pytest.raises(ValueError) as e:
+        msg = ("`network` must not be part of the optional parameters in a "
+               "bulk request.")
+        with pytest.raises(ValueError, match=msg):
             self.client.get_stations_bulk([[
                 "AA", "BB", "", "LHZ", obspy.UTCDateTime(2016, 1, 1),
                 obspy.UTCDateTime(2016, 1, 2)]], network="BB")
-        assert str(e.value) == \
-            ("`network` must not be part of the optional parameters in a bulk "
-             "request.")
 
     def test_get_waveforms_integration_test(self):
         """

@@ -11,8 +11,11 @@ seiscomp.core test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from obspy.io.seiscomp.core import _is_sc3ml, validate
+import re
+
 import pytest
+
+from obspy.io.seiscomp.core import _is_sc3ml, validate
 
 
 class TestCore():
@@ -36,9 +39,8 @@ class TestCore():
         assert validate(filename)
         assert not validate(filename, version='0.8')
 
-        with pytest.raises(ValueError) as e:
+        expected_error = re.escape(
+            "0.99 is not a supported version. Use one of these "
+            "versions: [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12].")
+        with pytest.raises(ValueError, match=expected_error):
             validate(filename, version='0.99')
-
-        expected_error = ("0.99 is not a supported version. Use one of these "
-                          "versions: [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12].")
-        assert str(e.value) == expected_error

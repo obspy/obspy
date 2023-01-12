@@ -507,12 +507,12 @@ class TestCore():
     def test_warning_when_blockette_54_is_not_followed_by_57(self, testdata):
         filename = testdata["RESP.SG.ST..LDO"]
         # Fail if responses are explicitly not skipped.
-        with CatchAndAssertWarnings():
-            with pytest.raises(InvalidResponseError) as e:
-                obspy.read_inventory(filename, skip_invalid_responses=False)
-        assert str(e.value) == \
+        msg = \
             "Stage 2: Invalid response specification. A blockette 54 " \
             "must always be followed by a blockette 57 which is missing."
+        with CatchAndAssertWarnings():
+            with pytest.raises(InvalidResponseError, match=msg):
+                obspy.read_inventory(filename, skip_invalid_responses=False)
 
         # Delete warning registry to reliably trigger the warning.
         if hasattr(obspy.io.xseed.parser, "__warningregistry__"):
@@ -540,12 +540,12 @@ class TestCore():
     def test_warning_when_blockette_57_is_not_followed_by_58(self, testdata):
         filename = testdata["RESP.decimation_without_gain"]
         # Fail if responses are explicitly not skipped.
-        with CatchAndAssertWarnings():
-            with pytest.raises(InvalidResponseError) as e:
-                obspy.read_inventory(filename, skip_invalid_responses=False)
-        assert str(e.value) == \
+        msg = \
             "Stage 1: A decimation stage with blockette 57 must be followed " \
             "by a blockette 58 which is missing here."
+        with CatchAndAssertWarnings():
+            with pytest.raises(InvalidResponseError, match=msg):
+                obspy.read_inventory(filename, skip_invalid_responses=False)
         # Otherwise continue, but raise a warning.
         msg = ("Failed to calculate response for XX.ABC..BHX with epoch "
                "1999-12-16T02:14:00.000000Z - 1999-12-21T19:10:59.000000Z "
@@ -566,7 +566,8 @@ class TestCore():
         with CatchAndAssertWarnings(expected=[(Warning, msg)]):
             obspy.read_inventory(filename)
 
-    def test_warning_with_multiple_differing_blockettes_58_in_stage_0(self, testdata):
+    def test_warning_with_multiple_differing_blockettes_58_in_stage_0(self,
+            testdata):
         filename = testdata["RESP.repeated_differing_stage_0"]
         msg = (r"Epoch BN.WR0..SHZ "
                r"\[1996-03-01T00:00:00.000000Z - "
@@ -582,10 +583,10 @@ class TestCore():
         This should naturally raise.
         """
         filename = testdata["RESP.blkt53_and_54_in_one_stage"]
-        with pytest.raises(InvalidResponseError) as e:
-            obspy.read_inventory(filename, skip_invalid_responses=False)
-        assert str(e.value) == \
+        msg = \
             "Stage 1 has both, blockette 53 and 54. This is not valid."
+        with pytest.raises(InvalidResponseError, match=msg):
+            obspy.read_inventory(filename, skip_invalid_responses=False)
         # If invalid responses are skipped, check the warning.
         msg = (
             r"Failed to calculate response for BN.WR0..SHZ with epoch "

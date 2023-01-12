@@ -154,22 +154,18 @@ class TestEvent():
             read_events(filename)
 
         filename = testdata['version0.5']
-        with pytest.raises(ValueError) as e:
+        expected_message = re.escape(
+            "Can't read SCXML version 0.5, ObsPy can deal "
+            "with versions [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12].")
+        with pytest.raises(ValueError, match=expected_message):
             read_events(filename)
-
-        expected_message = ("Can't read SCXML version 0.5, ObsPy can deal "
-                            "with versions [0.6, 0.7, 0.8, 0.9, 0.10, "
-                            "0.11, 0.12].")
-        assert str(e.value) == expected_message
 
         filename = testdata['version0.13']
-        with pytest.raises(ValueError) as e:
+        expected_message = re.escape(
+            "Can't read SCXML version 0.13, ObsPy can deal "
+            "with versions [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12].")
+        with pytest.raises(ValueError, match=expected_message):
             read_events(filename)
-
-        expected_message = ("Can't read SCXML version 0.13, ObsPy can deal "
-                            "with versions [0.6, 0.7, 0.8, 0.9, 0.10, "
-                            "0.11, 0.12].")
-        assert str(e.value) == expected_message
 
     def test_read_xslt_event(self):
         self.cmp_read_xslt_file('quakeml_1.2_event.sc3ml',
@@ -272,11 +268,9 @@ class TestEvent():
         Test reading a QuakeML file via read_events.
         """
         filename = testdata['qml-example-1.2-RC3.xml']
-        with pytest.raises(ValueError) as e:
-            read_events(filename, format='SC3ML')
-
         expected_message = "Not a SCXML compatible file or string."
-        assert str(e.value) == expected_message
+        with pytest.raises(ValueError, match=expected_message):
+            read_events(filename, format='SC3ML')
 
     def test_read_sc3ml_fields(self, testdata):
         """

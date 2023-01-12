@@ -54,11 +54,10 @@ class TestBaseRoutingClient():
         c = RoutingClient("iris-federator")
         assert isinstance(c, FederatorRoutingClient)
 
-        with pytest.raises(NotImplementedError) as e:
+        msg = "Routing type 'random' is not implemented. Available types: " \
+              "`iris-federator`, `eida-routing`"
+        with pytest.raises(NotImplementedError, match=msg):
             RoutingClient("random")
-        assert str(e.value) == \
-            "Routing type 'random' is not implemented. Available types: " \
-            "`iris-federator`, `eida-routing`"
 
     def test_expansion_of_include_and_exclude_providers(self):
         c = self._cls_object(
@@ -129,15 +128,14 @@ class TestBaseRoutingClient():
         assert len(st) == 12
         # Test initialization.
         assert p.call_count == 4
-        assert set(_i[0][0] for _i in p.call_args_list) == set(split.keys())
-        assert set(_i[1]["debug"] for _i in p.call_args_list) == set([False])
-        assert set(_i[1]["timeout"] for _i in p.call_args_list) == set([240])
+        assert {_i[0][0] for _i in p.call_args_list} == {*split.keys()}
+        assert {_i[1]["debug"] for _i in p.call_args_list} == {False}
+        assert {_i[1]["timeout"] for _i in p.call_args_list} == {240}
 
         # Waveform download.
         wf_bulk = mock_instance.get_waveforms_bulk
         assert wf_bulk.call_count == 4
-        assert set(_i[0][0] for _i in wf_bulk.call_args_list) == \
-            set(["test1=a\n1234"])
+        assert {_i[0][0] for _i in wf_bulk.call_args_list} == {"test1=a\n1234"}
         for _i in wf_bulk.call_args_list:
             assert _i[1] == {}
 
@@ -156,11 +154,10 @@ class TestBaseRoutingClient():
 
         # Provider filtering might result in no data left.
         c.include_providers = "http://random.com"
-        with pytest.raises(FDSNNoDataException) as e:
+        msg = "Nothing remains to download after the provider " \
+              "inclusion/exclusion filters have been applied."
+        with pytest.raises(FDSNNoDataException, match=msg):
             c._download_waveforms(split=split, test1="a", test2="b")
-        assert str(e.value) == \
-            "Nothing remains to download after the provider " \
-            "inclusion/exclusion filters have been applied."
 
     def test_downloading_stations(self):
         split = {
@@ -181,15 +178,14 @@ class TestBaseRoutingClient():
 
         # Test initialization.
         assert p.call_count == 4
-        assert set(_i[0][0] for _i in p.call_args_list) == set(split.keys())
-        assert set(_i[1]["debug"] for _i in p.call_args_list) == set([False])
-        assert set(_i[1]["timeout"] for _i in p.call_args_list) == set([240])
+        assert {_i[0][0] for _i in p.call_args_list} == {*split.keys()}
+        assert {_i[1]["debug"] for _i in p.call_args_list} == {False}
+        assert {_i[1]["timeout"] for _i in p.call_args_list} == {240}
 
         # Station download.
         wf_bulk = mock_instance.get_stations_bulk
         assert wf_bulk.call_count == 4
-        assert set(_i[0][0] for _i in wf_bulk.call_args_list) == \
-            set(["test1=a\n1234"])
+        assert {_i[0][0] for _i in wf_bulk.call_args_list} == {"test1=a\n1234"}
         for _i in wf_bulk.call_args_list:
             assert _i[1] == {}
 

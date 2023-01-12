@@ -381,6 +381,9 @@ class TestReftek():
         """
         Test error messages when reading a file without any EH/ET packet.
         """
+        msg = \
+            "Reftek data contains data packets without corresponding header " \
+            "or trailer packet."
         with NamedTemporaryFile() as fh:
             with open(self.reftek_file, 'rb') as fh2:
                 # write packages to the file and omit first and last (EH/ET)
@@ -389,14 +392,11 @@ class TestReftek():
                 tmp = fh2.read()
             fh.write(tmp[1024:-1024])
             fh.seek(0)
-            with pytest.raises(Reftek130Exception) as e:
+            with pytest.raises(Reftek130Exception, match=msg):
                 _read_reftek130(
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        assert str(e.value) == \
-            "Reftek data contains data packets without corresponding header " \
-            "or trailer packet."
 
     def test_data_unpacking_steim1(self, testdata):
         """

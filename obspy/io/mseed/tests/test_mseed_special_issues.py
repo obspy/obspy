@@ -5,6 +5,7 @@ import multiprocessing
 import os
 import platform
 import random
+import re
 import signal
 import sys
 import warnings
@@ -1124,12 +1125,11 @@ class TestMSEEDSpecialIssue():
             "the file will not be read.")
 
         # Reading anything less result in an exception.
-        with pytest.raises(ObsPyMSEEDFilesizeTooSmallError) as e:
+        msg = ("The smallest possible mini-SEED record is made up of 128 "
+               "bytes. The passed buffer or file contains only 127.")
+        with pytest.raises(ObsPyMSEEDFilesizeTooSmallError, match=msg):
             with io.BytesIO(data[:127]) as buf:
                 _read_mseed(buf)
-        assert str(e.value) == \
-            ("The smallest possible mini-SEED record is made up of 128 bytes. "
-             "The passed buffer or file contains only 127.")
 
     @mock.patch("os.path.getsize")
     def test_reading_file_larger_than_2048_mib(self, getsize_mock, testdata):
@@ -1140,13 +1140,14 @@ class TestMSEEDSpecialIssue():
         """
         getsize_mock.return_value = 2 ** 31 + 1
         filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
-        with pytest.raises(ObsPyMSEEDFilesizeTooLargeError) as e:
+        msg = (
+            "ObsPy can currently not directly read mini-SEED files that are "
+            "larger than 2^31 bytes (2048 MiB). To still read it, please "
+            "read the file in chunks as documented here: "
+            "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369")
+        msg = re.escape(msg)
+        with pytest.raises(ObsPyMSEEDFilesizeTooLargeError, match=msg):
             _read_mseed(filename)
-        assert str(e.value) == \
-            "ObsPy can currently not directly read mini-SEED files that are " \
-            "larger than 2^31 bytes (2048 MiB). To still read it, please " \
-            "read the file in chunks as documented here: " \
-            "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369"
 
     def test_read_file_with_non_valid_blocks_in_between(self, testdata):
         """

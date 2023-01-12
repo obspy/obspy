@@ -664,9 +664,9 @@ class TestSEGYCore():
         tr.stats.sampling_rate = 100
         st = Stream([tr])
         bio = io.BytesIO()
-        with pytest.raises(ValueError) as e:
-            _write_segy(st, bio, data_encoding=2)
-        assert str(e.value) == \
+        msg = \
             "Can not write traces with more than 32767 samples (trace at " \
             "index 0):\n... | 1970-01-01T00:00:00.000000Z - " \
             "1970-01-01T00:05:27.670000Z | 100.0 Hz, 32768 samples"
+        with pytest.raises(ValueError, match=msg):
+            _write_segy(st, bio, data_encoding=2)

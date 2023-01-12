@@ -3,6 +3,7 @@
 The obspy.io.segy test suite.
 """
 import io
+import re
 import warnings
 from unittest import mock
 
@@ -746,19 +747,19 @@ class TestSEGY():
         # trigger error message. we have a more meaningful message for number
         # of samples now, so we can't use that anymore for testing any
         # arbitrary invalid binary header value
+        msg = re.escape(
+            "Failed to pack header value `number_of_data_traces_per_ensemble` "
+            "(100000) with format `>h` due to: `'h' format requires -32768 <="
+            " number <= 32767`")
         with mock.patch.object(
                 SEGYBinaryFileHeader, 'number_of_data_traces_per_ensemble',
                 create=True, new_callable=mock.PropertyMock,
                 return_value=100000):
             with io.BytesIO() as buf:
-                with pytest.raises(ValueError) as e:
+                with pytest.raises(ValueError, match=msg):
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
                         tr.write(buf, format="segy")
-        assert str(e.value) == (
-            "Failed to pack header value `number_of_data_traces_per_ensemble` "
-            "(100000) with format `>h` due to: `'h' format requires -32768 <="
-            " number <= 32767`")
 
 
 def rms(x, y):

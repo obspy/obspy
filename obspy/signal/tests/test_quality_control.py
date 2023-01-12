@@ -30,11 +30,9 @@ class TestQualityControl():
         """
         Tests the raised exception if no file is given.
         """
-        with pytest.raises(ValueError) as e:
+        msg = "No data within the temporal constraints."
+        with pytest.raises(ValueError, match=msg):
             MSEEDMetadata(files=[])
-
-        assert str(e.value) == \
-            "No data within the temporal constraints."
 
     def test_gaps_and_overlaps(self):
         """
@@ -126,11 +124,9 @@ class TestQualityControl():
                                 "channel": "EHE"}).write(
                 tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
 
-            with pytest.raises(ValueError) as e:
+            msg = "All traces must have the same SEED id and quality."
+            with pytest.raises(ValueError, match=msg):
                 MSEEDMetadata([tf1.name, tf2.name])
-
-        assert str(e.value) == \
-            "All traces must have the same SEED id and quality."
 
     def test_gaps_between_multiple_files(self):
         """

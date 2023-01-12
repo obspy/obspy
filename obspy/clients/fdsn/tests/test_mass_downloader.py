@@ -126,54 +126,54 @@ class TestRestrictions():
         end = start + 10
 
         # Test for the channel_priorities key.
-        with pytest.raises(TypeError) as e:
+        msg = ("'channel_priorities' must be a list or other iterable "
+               "container.")
+        with pytest.raises(TypeError, match=msg):
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
-        assert str(e.value) == \
-            "'channel_priorities' must be a list or other iterable container."
 
-        with pytest.raises(TypeError) as e:
+        msg = ("'channel_priorities' must be a list or other iterable "
+               "container.")
+        with pytest.raises(TypeError, match=msg):
             Restrictions(starttime=start, endtime=end,
                          channel_priorities=("HHE"))
-        assert str(e.value) == \
-            "'channel_priorities' must be a list or other iterable container."
 
-        with pytest.raises(TypeError) as e:
+        msg = ("'channel_priorities' must be a list or other iterable "
+               "container.")
+        with pytest.raises(TypeError, match=msg):
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
-        assert str(e.value) == \
-            "'channel_priorities' must be a list or other iterable container."
 
-        with pytest.raises(TypeError) as e:
+        msg = ("'channel_priorities' must be a list or other iterable "
+               "container.")
+        with pytest.raises(TypeError, match=msg):
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
-        assert str(e.value) == \
-            "'channel_priorities' must be a list or other iterable container."
 
         # And for the location priorities key.
-        with pytest.raises(TypeError) as e:
+        msg = ("'location_priorities' must be a list or other iterable "
+               "container.")
+        with pytest.raises(TypeError, match=msg):
             Restrictions(starttime=start, endtime=end,
                          location_priorities="00")
-        assert str(e.value) == \
-            "'location_priorities' must be a list or other iterable container."
 
-        with pytest.raises(TypeError) as e:
+        msg = ("'location_priorities' must be a list or other iterable "
+               "container.")
+        with pytest.raises(TypeError, match=msg):
             Restrictions(starttime=start, endtime=end,
                          location_priorities=("00"))
-        assert str(e.value) == \
-            "'location_priorities' must be a list or other iterable container."
 
-        with pytest.raises(TypeError) as e:
+        msg = ("'location_priorities' must be a list or other iterable "
+               "container.")
+        with pytest.raises(TypeError, match=msg):
             Restrictions(starttime=start, endtime=end,
                          location_priorities="00")
-        assert str(e.value) == \
-            "'location_priorities' must be a list or other iterable container."
 
-        with pytest.raises(TypeError) as e:
+        msg = ("'location_priorities' must be a list or other iterable "
+               "container.")
+        with pytest.raises(TypeError, match=msg):
             Restrictions(starttime=start, endtime=end,
                          location_priorities=("00"))
-        assert str(e.value) == \
-            "'location_priorities' must be a list or other iterable container."
 
         # All other valid things should of course still work.
         Restrictions(starttime=start, endtime=end,

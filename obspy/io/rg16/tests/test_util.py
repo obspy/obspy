@@ -25,9 +25,8 @@ class TestRG16Util():
         for byte, length, left_part, answer in bcd:
             out = _read_bcd(BytesIO(byte), length, left_part)
             assert out == answer
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError, match='invalid bcd values'):
             _read_bcd(BytesIO(b'\xFF'), 1, True)
-            assert 'invalid bcd values' in str(e.exception)
 
     def test_read_binary(self):
         """

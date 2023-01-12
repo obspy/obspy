@@ -13,9 +13,12 @@ from obspy.clients.seedlink.basic_client import Client
 @pytest.mark.network
 class TestClient():
 
+    def init_client(self):
+        self.client = Client("rtserver.ipgp.fr")
+
     @pytest.fixture(autouse=True, scope="function")
     def setup(self):
-        self.client = Client("rtserver.ipgp.fr")
+        self.init_client()
 
     def test_get_waveform(self):
         def _test_offset_from_realtime(offset):
@@ -68,7 +71,7 @@ class TestClient():
         """
         def _test_offset_from_realtime(offset):
             # need to reinit to clean out any caches
-            self.setup_method()
+            self.init_client()
             t = UTCDateTime() - offset
             # first do a request that needs an info request on station level
             # only

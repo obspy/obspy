@@ -97,52 +97,45 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
                 "AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59"}
 
     def test_non_allowed_parameters(self):
-        with pytest.raises(ValueError) as e:
+        msg = 'The `filename` argument is not supported'
+        with pytest.raises(ValueError, match=msg):
             self.client.get_waveforms(
                 network="BW", station="ALTM", location="", channel="LHZ",
                 starttime=obspy.UTCDateTime(2017, 1, 1),
                 endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
                 filename="out.mseed")
-        assert str(e.value) == \
-            'The `filename` argument is not supported'
 
-        with pytest.raises(ValueError) as e:
+        msg = 'The `attach_response` argument is not supported'
+        with pytest.raises(ValueError, match=msg):
             self.client.get_waveforms(
                 network="BW", station="ALTM", location="", channel="LHZ",
                 starttime=obspy.UTCDateTime(2017, 1, 1),
                 endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
                 attach_response=True)
-        assert str(e.value) == \
-            'The `attach_response` argument is not supported'
 
-        with pytest.raises(ValueError) as e:
+        msg = 'The `filename` argument is not supported'
+        with pytest.raises(ValueError, match=msg):
             self.client.get_waveforms_bulk([], filename="out.mseed")
-        assert str(e.value) == \
-            'The `filename` argument is not supported'
 
-        with pytest.raises(ValueError) as e:
+        msg = 'The `attach_response` argument is not supported'
+        with pytest.raises(ValueError, match=msg):
             self.client.get_waveforms_bulk([], attach_response=True)
-        assert str(e.value) == \
-            'The `attach_response` argument is not supported'
 
-        with pytest.raises(ValueError) as e:
+        msg = 'The `filename` argument is not supported'
+        with pytest.raises(ValueError, match=msg):
             self.client.get_stations(filename="out.xml")
-        assert str(e.value) == \
-            'The `filename` argument is not supported'
 
-        with pytest.raises(ValueError) as e:
+        msg = 'The `filename` argument is not supported'
+        with pytest.raises(ValueError, match=msg):
             self.client.get_stations_bulk([], filename="out.xml")
-        assert str(e.value) == \
-            'The `filename` argument is not supported'
 
     def test_error_handling(self):
-        with pytest.raises(FDSNNoDataException) as e:
+        msg = "No data available for request."
+        with pytest.raises(FDSNNoDataException, match=msg):
             self.client.get_waveforms(
                 network="XX", station="XXXXX", location="XX", channel="XXX",
                 starttime=obspy.UTCDateTime(2017, 1, 1),
                 endtime=obspy.UTCDateTime(2017, 1, 2))
-        assert str(e.value).startswith(
-            "No data available for request.")
 
     def test_get_waveforms(self):
         """
@@ -363,8 +356,7 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         # this time window is before the requested station was installed
         t1 = obspy.UTCDateTime('2012-01-01')
         t2 = t1 + 2
-        with pytest.raises(FDSNNoDataException) as e:
+        with pytest.raises(FDSNNoDataException, match='No data'):
             self.client.get_waveforms(
                 network='OE', station='UNNA', channel='HHZ', location='*',
                 starttime=t1, endtime=t2)
-        assert 'No data' in str(e.value)

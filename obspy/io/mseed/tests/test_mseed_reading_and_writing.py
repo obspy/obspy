@@ -1404,7 +1404,11 @@ class TestMSEEDReadingAndWriting():
                 # There is only one file that uses this so far so special
                 # handling is okay I guess.
                 assert "invalid-blockette-offset" in filename
-                with pytest.raises(InternalMSEEDError) as e:
+                with io.open(reference, "rt") as fh:
+                    err_msg = fh.readlines()[-1]
+                err_msg = re.escape(re.sub(r"^Error:\s", "", err_msg).strip())
+                err_msg = '.*' + err_msg
+                with pytest.raises(InternalMSEEDError, match=err_msg):
                     # The file has a couple other issues as well and the
                     # data cannot be unpacked. Unpacking it would raises an
                     # earlier error than the one we are testing here
@@ -1413,10 +1417,6 @@ class TestMSEEDReadingAndWriting():
                         warnings.simplefilter('ignore', InternalMSEEDWarning)
                         read(filename, headonly=True)
 
-                with io.open(reference, "rt") as fh:
-                    err_msg = fh.readlines()[-1]
-                err_msg = re.sub(r"^Error:\s", "", err_msg).strip()
-                assert err_msg == str(e.value).splitlines()[1]
             elif test_type == "summary":
                 st = read(filename)
                 # This is mainly used for a test with chunks in arbitrary
