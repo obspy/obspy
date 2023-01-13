@@ -938,6 +938,14 @@ class SlownessModel(object):
         top_velocity = np.where(nonzero, below, above)
         bot_velocity = np.where(nonzero, above, below)
 
+        if not is_p_wave:
+            is_fluid = (top_velocity == 0.0)
+            # use P vel structure in for S in fluid
+            above = self.v_mod.evaluate_above(layers['bot_depth'], 'P')
+            below = self.v_mod.evaluate_below(layers['top_depth'], 'P')
+            top_velocity[is_fluid] = np.where(nonzero, below, above)[is_fluid]
+            bot_velocity[is_fluid] = np.where(nonzero, above, below)[is_fluid]
+
         mask = ((layers['top_p'] - p) * (p - layers['bot_p'])) > 0
         # Don't need to check for S waves in a fluid or in inner core if
         # allow_inner_core_s is False.
