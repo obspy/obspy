@@ -947,14 +947,6 @@ class SlownessModel(object):
             bot_velocity[is_fluid] = np.where(nonzero, above, below)[is_fluid]
 
         mask = ((layers['top_p'] - p) * (p - layers['bot_p'])) > 0
-        # Don't need to check for S waves in a fluid or in inner core if
-        # allow_inner_core_s is False.
-        if not is_p_wave:
-            mask &= top_velocity != 0
-            if not self.allow_inner_core_s:
-                iocb_mask = layers['bot_depth'] > self.v_mod.iocb_depth
-                mask &= ~iocb_mask
-
         index = np.where(mask)[0]
 
         bot_depth = np.copy(layers['bot_depth'])
