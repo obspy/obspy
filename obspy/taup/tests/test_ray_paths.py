@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
-
 import numpy as np
 import pytest
 
@@ -14,14 +12,6 @@ class TestRayPathCalculations:
     """
     Test suite for obspy.taup.ray_paths
     """
-    def setUp(self):
-        # load an inventory and an event catalog to test
-        # the ray path routines. Careful, the full catalog
-        # test is quite long and is therefore commented out
-        # by default
-        self.path = os.path.join(os.path.dirname(__file__), 'images')
-        pass
-
     @pytest.mark.skipif(
         not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
         reason='test needs geographiclib >= 1.34')

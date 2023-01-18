@@ -10,10 +10,8 @@ The obspy.clients.fdsn.client test suite.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
-import os
 import re
 import sys
-import unittest
 import warnings
 from difflib import Differ
 from unittest import mock
@@ -100,15 +98,12 @@ def normalize_version_number(string):
     return [line.strip() for line in repl.splitlines()]
 
 
-class ClientTestCase(unittest.TestCase):
+class TestClient():
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """
     @classmethod
-    def setUpClass(cls):
-        # directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-        cls.datapath = os.path.join(cls.path, "data")
+    def setup_class(cls):
         cls.client = Client(base_url="IRIS", user_agent=USER_AGENT)
         cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
@@ -122,9 +117,8 @@ class ClientTestCase(unittest.TestCase):
         msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
                "of all available data")
         for bad_input in [[], '', None]:
-            with self.assertRaises(FDSNInvalidRequestException) as e:
+            with pytest.raises(FDSNInvalidRequestException, match=msg):
                 get_bulk_string(bulk=bad_input, arguments={})
-            self.assertEqual(e.exception.args[0], msg)
 
     def test_validate_base_url(self):
         """
@@ -164,52 +158,44 @@ class ClientTestCase(unittest.TestCase):
             "http://[1:2:2:4:5:6:7]"]
 
         for url in test_urls_valid:
-            self.assertTrue(
-                self.client._validate_base_url(url),
-                msg='%s should be valid' % url)
+            assert self.client._validate_base_url(url), \
+                '%s should be valid' % url
 
         for url in test_urls_fails:
-            self.assertFalse(
-                self.client._validate_base_url(url),
-                msg='%s should be invalid' % url)
+            assert not self.client._validate_base_url(url), \
+                '%s should be invalid' % url
 
     def test_url_building(self):
         """
         Tests the build_url() functions.
         """
         # Application WADL
-        self.assertEqual(
-            build_url("http://service.iris.edu", "dataselect", 1,
-                      "application.wadl"),
-            "http://service.iris.edu/fdsnws/dataselect/1/application.wadl")
-        self.assertEqual(
-            build_url("http://service.iris.edu", "event", 1,
-                      "application.wadl"),
-            "http://service.iris.edu/fdsnws/event/1/application.wadl")
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "application.wadl"),
-            "http://service.iris.edu/fdsnws/station/1/application.wadl")
+        assert build_url("http://service.iris.edu", "dataselect", 1,
+                         "application.wadl") == \
+            "http://service.iris.edu/fdsnws/dataselect/1/application.wadl"
+        assert build_url("http://service.iris.edu", "event", 1,
+                         "application.wadl") == \
+            "http://service.iris.edu/fdsnws/event/1/application.wadl"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "application.wadl") == \
+            "http://service.iris.edu/fdsnws/station/1/application.wadl"
 
         # Test one parameter.
-        self.assertEqual(
-            build_url("http://service.iris.edu", "dataselect", 1,
-                      "query", {"network": "BW"}),
-            "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW")
-        self.assertEqual(
-            build_url("http://service.iris.edu", "dataselect", 1,
-                      "queryauth", {"network": "BW"}),
-            "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW")
+        assert build_url("http://service.iris.edu", "dataselect", 1,
+                         "query", {"network": "BW"}) == \
+            "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW"
+        assert build_url("http://service.iris.edu", "dataselect", 1,
+                         "queryauth", {"network": "BW"}) == \
+            "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW"
         # Test two parameters. Note random order, two possible results.
-        self.assertTrue(
-            build_url("http://service.iris.edu", "dataselect", 1,
-                      "query", {"net": "A", "sta": "BC"}) in
+        assert build_url("http://service.iris.edu", "dataselect", 1,
+                         "query", {"net": "A", "sta": "BC"}) in \
             ("http://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
-             "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A"))
+             "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A")
 
         # A wrong service raises a ValueError
-        self.assertRaises(ValueError, build_url, "http://service.iris.edu",
-                          "obspy", 1, "query")
+        with pytest.raises(ValueError):
+            build_url("http://service.iris.edu", "obspy", 1, "query")
 
     def test_location_parameters(self):
         """
@@ -225,54 +211,45 @@ class ClientTestCase(unittest.TestCase):
         <space><space>"
         """
         # requests with no specified location should be treated as a wildcard
-        self.assertFalse(
-            "--" in build_url("http://service.iris.edu", "station", 1,
-                              "query", {"network": "IU", "station": "ANMO",
-                                        "starttime": "2013-01-01"}))
+        assert not ("--" in build_url(
+            "http://service.iris.edu", "station", 1, "query",
+            {"network": "IU", "station": "ANMO", "starttime": "2013-01-01"}))
         # location of "  " is the same as "--"
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "  "}),
-            "http://service.iris.edu/fdsnws/station/1/query?location=--")
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "  "}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?location=--"
         # wildcard locations are valid. Will be encoded.
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "*"}),
-            "http://service.iris.edu/fdsnws/station/1/query?location=%2A")
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "A?"}),
-            "http://service.iris.edu/fdsnws/station/1/query?location=A%3F")
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "*"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?location=%2A"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "A?"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?location=A%3F"
 
         # lists are valid, including <space><space> lists. Again encoded
         # result.
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "  ,1?,?0"}),
-            "http://service.iris.edu/fdsnws/station/1/query?"
-            "location=--%2C1%3F%2C%3F0")
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "1?,--,?0"}),
-            "http://service.iris.edu/fdsnws/station/1/query?"
-            "location=1%3F%2C--%2C%3F0")
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "  ,1?,?0"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=--%2C1%3F%2C%3F0"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "1?,--,?0"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=1%3F%2C--%2C%3F0"
 
         # Test all three special cases with empty parameters into lists.
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "  ,AA,BB"}),
-            "http://service.iris.edu/fdsnws/station/1/query?"
-            "location=--%2CAA%2CBB")
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "AA,  ,BB"}),
-            "http://service.iris.edu/fdsnws/station/1/query?"
-            "location=AA%2C--%2CBB")
-        self.assertEqual(
-            build_url("http://service.iris.edu", "station", 1,
-                      "query", {"location": "AA,BB,  "}),
-            "http://service.iris.edu/fdsnws/station/1/query?"
-            "location=AA%2CBB%2C--")
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "  ,AA,BB"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=--%2CAA%2CBB"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "AA,  ,BB"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=AA%2C--%2CBB"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "AA,BB,  "}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=AA%2CBB%2C--"
 
         # The location parameter is also passed through the
         # _create_url_from_parameters() method and thus has to survive it!
@@ -281,11 +258,10 @@ class ClientTestCase(unittest.TestCase):
         for service in ["station", "dataselect"]:
             for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
                         u"", u" ", u"  ", u"--"]:
-                self.assertIn(
-                    "location=--",
+                assert "location=--" in \
                     self.client._create_url_from_parameters(
                         service, [],
-                        {"location": loc, "starttime": 0, "endtime": 1}))
+                        {"location": loc, "starttime": 0, "endtime": 1})
 
         # Also check the full call with a mock test.
         for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
@@ -293,13 +269,13 @@ class ClientTestCase(unittest.TestCase):
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 self.client.get_stations(0, 0, location=loc,
                                          filename=mock.Mock())
-            self.assertEqual(p.call_count, 1)
-            self.assertIn("location=--", p.call_args[0][0])
+            assert p.call_count == 1
+            assert "location=--" in p.call_args[0][0]
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 self.client.get_waveforms(1, 2, loc, 4, 0, 0,
                                           filename=mock.Mock())
-            self.assertEqual(p.call_count, 1)
-            self.assertIn("location=--", p.call_args[0][0])
+            assert p.call_count == 1
+            assert "location=--" in p.call_args[0][0]
 
     def test_url_building_with_auth(self):
         """
@@ -311,12 +287,12 @@ class ClientTestCase(unittest.TestCase):
         # no authentication
         got = self.client._build_url("dataselect", "query", {'net': "BW"})
         expected = "http://service.iris.edu/fdsnws/dataselect/1/query?net=BW"
-        self.assertEqual(got, expected)
+        assert got == expected
         # with authentication
         got = self.client_auth._build_url("dataselect", "query", {'net': "BW"})
         expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
                     "queryauth?net=BW")
-        self.assertEqual(got, expected)
+        assert got == expected
 
     def test_set_credentials(self):
         """
@@ -333,11 +309,11 @@ class ClientTestCase(unittest.TestCase):
         got = client._build_url("dataselect", "query", {'net': "BW"})
         expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
                     "queryauth?net=BW")
-        self.assertEqual(got, expected)
+        assert got == expected
         # more basic test: check that set_credentials has set Client.user
         # (which is tested when checking which endpoint to use, query or
         # queryauth)
-        self.assertEqual(client.user, user)
+        assert client.user == user
 
     @pytest.mark.skip(reason='data no longer available')
     def test_trim_stream_after_get_waveform(self):
@@ -351,8 +327,8 @@ class ClientTestCase(unittest.TestCase):
         starttime = UTCDateTime('2016-11-01T00:00:00')
         endtime = UTCDateTime('2016-11-01T00:00:10')
         stream = c.get_waveforms('G', 'PEL', '*', 'LHZ', starttime, endtime)
-        self.assertEqual(starttime, stream[0].stats.starttime)
-        self.assertEqual(endtime, stream[0].stats.endtime)
+        assert starttime == stream[0].stats.starttime
+        assert endtime == stream[0].stats.endtime
 
     def test_service_discovery_iris(self):
         """
@@ -362,55 +338,49 @@ class ClientTestCase(unittest.TestCase):
         This will have to be adjusted once IRIS changes their implementation.
         """
         client = self.client
-        self.assertEqual(set(client.services.keys()),
-                         set(("dataselect", "event", "station",
-                              "available_event_contributors",
-                              "available_event_catalogs")))
+        assert {*client.services.keys()} == \
+            {"dataselect", "event", "station", "available_event_contributors",
+             "available_event_catalogs"}
 
         # The test sets are copied from the IRIS webpage.
-        self.assertEqual(
-            set(client.services["dataselect"].keys()),
-            set(("starttime", "endtime", "network", "station", "location",
-                 "channel", "quality", "minimumlength", "longestonly")))
-        self.assertEqual(
-            set(client.services["station"].keys()),
-            set(("starttime", "endtime", "startbefore", "startafter",
-                 "endbefore", "endafter", "network", "station", "location",
-                 "channel", "minlatitude", "maxlatitude", "minlongitude",
-                 "maxlongitude", "latitude", "longitude", "minradius",
-                 "maxradius", "level", "includerestricted", "format",
-                 "includeavailability", "updatedafter", "matchtimeseries")))
-        self.assertEqual(
-            set(client.services["event"].keys()),
-            set(("starttime", "endtime", "minlatitude", "maxlatitude",
-                 "minlongitude", "maxlongitude", "latitude", "longitude",
-                 "maxradius", "minradius", "mindepth", "maxdepth",
-                 "minmagnitude", "maxmagnitude",
-                 "magnitudetype", "format",
-                 "catalog", "contributor", "limit", "offset", "orderby",
-                 "updatedafter", "includeallorigins", "includeallmagnitudes",
-                 "includearrivals", "eventid",
-                 "originid"  # XXX: This is currently just specified in the
-                             #      WADL.
-                 )))
+        assert {*client.services["dataselect"].keys()} == \
+            {"starttime", "endtime", "network", "station", "location",
+             "channel", "quality", "minimumlength", "longestonly"}
+        assert {*client.services["station"].keys()} == \
+            {"starttime", "endtime", "startbefore", "startafter",
+             "endbefore", "endafter", "network", "station", "location",
+             "channel", "minlatitude", "maxlatitude", "minlongitude",
+             "maxlongitude", "latitude", "longitude", "minradius",
+             "maxradius", "level", "includerestricted", "format",
+             "includeavailability", "updatedafter", "matchtimeseries"}
+        assert {*client.services["event"].keys()} == \
+            {"starttime", "endtime", "minlatitude", "maxlatitude",
+             "minlongitude", "maxlongitude", "latitude", "longitude",
+             "maxradius", "minradius", "mindepth", "maxdepth",
+             "minmagnitude", "maxmagnitude",
+             "magnitudetype", "format",
+             "catalog", "contributor", "limit", "offset", "orderby",
+             "updatedafter", "includeallorigins", "includeallmagnitudes",
+             "includearrivals", "eventid",
+             "originid"}  # XXX: This is currently just specified in the WADL
 
         # Also check an exemplary value in more detail.
         minradius = client.services["event"]["minradius"]
-        self.assertEqual(minradius["default_value"], 0.0)
-        self.assertEqual(minradius["required"], False)
-        self.assertEqual(minradius["doc"], "")
-        self.assertEqual(minradius["doc_title"], "Specify minimum distance "
-                         "from the geographic point defined by latitude and "
-                         "longitude")
-        self.assertEqual(minradius["type"], float)
-        self.assertEqual(minradius["options"], [])
+        assert minradius["default_value"] == 0.0
+        assert not minradius["required"]
+        assert minradius["doc"] == ""
+        assert minradius["doc_title"] == (
+            "Specify minimum distance from the geographic point defined by "
+            "latitude and longitude")
+        assert minradius["type"] == float
+        assert minradius["options"] == []
 
     def test_iris_event_catalog_availability(self):
         """
         Tests the parsing of the available event catalogs.
         """
-        self.assertEqual(set(self.client.services["available_event_catalogs"]),
-                         set(("GCMT", "ISC", "NEIC PDE")))
+        assert {*self.client.services["available_event_catalogs"]} == \
+            {"GCMT", "ISC", "NEIC PDE"}
 
     def test_iris_event_contributors_availability(self):
         """
@@ -422,10 +392,9 @@ class ClientTestCase(unittest.TestCase):
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
         # check that we have some values in there
-        self.assertTrue(len(expected) > 5)
-        self.assertEqual(
-            set(self.client.services["available_event_contributors"]),
-            expected)
+        assert len(expected) > 5
+        assert {*self.client.services["available_event_contributors"]} == \
+            expected
 
     def test_discover_services_defaults(self):
         """
@@ -435,7 +404,7 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
                         _discover_services=False)
-        self.assertEqual(client.services, DEFAULT_SERVICES)
+        assert client.services == DEFAULT_SERVICES
 
     def test_simple_xml_parser(self):
         """
@@ -452,9 +421,8 @@ class ClientTestCase(unittest.TestCase):
               <Catalog>UofW</Catalog>
               <Catalog>NEIC PDE</Catalog>
             </Catalogs>""")
-        self.assertEqual(catalogs, {"catalogs": set(("ANF", "GCMT", "TEST",
-                                                     "ISC", "UofW",
-                                                     "NEIC PDE"))})
+        assert catalogs == {"catalogs": set(
+            ("ANF", "GCMT", "TEST", "ISC", "UofW", "NEIC PDE"))}
 
     def test_iris_example_queries_event(self):
         """
@@ -468,20 +436,18 @@ class ClientTestCase(unittest.TestCase):
 
         # Event id query.
         cat = client.get_events(eventid=609301)
-        self.assertEqual(len(cat), 1)
-        self.assertIn("609301", cat[0].resource_id.id)
+        assert len(cat) == 1
+        assert "609301" in cat[0].resource_id.id
 
         # Temporal query.
         cat = client.get_events(
             starttime=UTCDateTime("2001-01-07T01:00:00"),
             endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
-        self.assertGreater(len(cat), 0)
+        assert len(cat) > 0
         for event in cat:
-            self.assertEqual(event.origins[0].extra.catalog.value, "ISC")
-            self.assertGreater(event.origins[0].time,
-                               UTCDateTime("2001-01-07T01:00:00"))
-            self.assertGreater(UTCDateTime("2001-01-07T01:05:00"),
-                               event.origins[0].time)
+            assert event.origins[0].extra.catalog.value == "ISC"
+            assert event.origins[0].time > UTCDateTime("2001-01-07T01:00:00")
+            assert UTCDateTime("2001-01-07T01:05:00") > event.origins[0].time
 
         # Misc query.
         cat = client.get_events(
@@ -489,21 +455,20 @@ class ClientTestCase(unittest.TestCase):
             endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
             maxlatitude=40, minlongitude=-170, maxlongitude=170,
             includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
-        self.assertGreater(len(cat), 0)
+        assert len(cat) > 0
         for event in cat:
-            self.assertGreater(event.origins[0].time,
-                               UTCDateTime("2001-01-07T14:00:00"))
-            self.assertGreater(UTCDateTime("2001-01-08T00:00:00"),
-                               event.origins[0].time)
-            self.assertGreater(event.origins[0].latitude, 14.9)
-            self.assertGreater(40.1, event.origins[0].latitude)
-            self.assertGreater(event.origins[0].latitude, -170.1)
-            self.assertGreater(170.1, event.origins[0].latitude)
+            assert event.origins[0].time > \
+                               UTCDateTime("2001-01-07T14:00:00")
+            assert UTCDateTime("2001-01-08T00:00:00") > event.origins[0].time
+            assert event.origins[0].latitude > 14.9
+            assert 40.1 > event.origins[0].latitude
+            assert event.origins[0].latitude > -170.1
+            assert 170.1 > event.origins[0].latitude
             # events returned by FDSNWS can contain many magnitudes with a wide
             # range, and currently (at least for IRIS) the magnitude threshold
             # sent to the server checks if at least one magnitude matches, it
             # does not only check the preferred magnitude..
-            self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
+            assert any(m.mag >= 3.999 for m in event.magnitudes)
 
     @pytest.mark.filterwarnings('ignore:.*cannot deal with')
     def test_irisph5_event(self):
@@ -515,8 +480,8 @@ class ClientTestCase(unittest.TestCase):
 
         # Event id query.
         cat = client.get_events(catalog='8A')
-        self.assertEqual(len(cat), 19)
-        self.assertEqual(cat[0].event_type, 'controlled explosion')
+        assert len(cat) == 19
+        assert cat[0].event_type == 'controlled explosion'
 
     def test_iris_example_queries_station(self):
         """
@@ -531,66 +496,64 @@ class ClientTestCase(unittest.TestCase):
         # Radial query.
         inv = client.get_stations(latitude=-56.1, longitude=-26.7,
                                   maxradius=15)
-        self.assertGreater(len(inv.networks), 0)  # at least one network
+        assert len(inv.networks) > 0  # at least one network
         for net in inv:
-            self.assertGreater(len(net.stations), 0)  # at least one station
+            assert len(net.stations) > 0  # at least one station
             for sta in net:
                 dist = locations2degrees(sta.latitude, sta.longitude,
                                          -56.1, -26.7)
                 # small tolerance for WGS84.
-                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
-                                                          sta.code))
+                assert 15.1 > dist, "%s.%s" % (net.code, sta.code)
 
         # Misc query.
         inv = client.get_stations(
             startafter=UTCDateTime("2003-01-07"),
             endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
             maxlatitude=55, minlongitude=170, maxlongitude=-170, network="IM")
-        self.assertGreater(len(inv.networks), 0)  # at least one network
+        assert len(inv.networks) > 0  # at least one network
         for net in inv:
-            self.assertGreater(len(net.stations), 0)  # at least one station
+            assert len(net.stations) > 0  # at least one station
             for sta in net:
                 msg = "%s.%s" % (net.code, sta.code)
-                self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
-                                   msg)
+                assert sta.start_date > UTCDateTime("2003-01-07"), msg
                 if sta.end_date is not None:
-                    self.assertGreater(UTCDateTime("2011-02-07"), sta.end_date,
-                                       msg)
-                self.assertGreater(sta.latitude, 14.9, msg)
-                self.assertGreater(55.1, sta.latitude, msg)
-                self.assertFalse(-170.1 <= sta.longitude <= 170.1, msg)
-                self.assertEqual(net.code, "IM", msg)
+                    assert UTCDateTime("2011-02-07") > sta.end_date, \
+                                       msg
+                assert sta.latitude > 14.9, msg
+                assert 55.1 > sta.latitude, msg
+                assert not (-170.1 <= sta.longitude <= 170.1), msg
+                assert net.code == "IM", msg
 
         # Simple query
         inv = client.get_stations(
             starttime=UTCDateTime("2000-01-01"),
             endtime=UTCDateTime("2001-01-01"), net="IU", sta="ANMO")
-        self.assertGreater(len(inv.networks), 0)  # at least one network
+        assert len(inv.networks) > 0  # at least one network
         for net in inv:
-            self.assertGreater(len(net.stations), 0)  # at least one station
+            assert len(net.stations) > 0  # at least one station
             for sta in net:
-                self.assertGreater(UTCDateTime("2001-01-01"), sta.start_date)
+                assert UTCDateTime("2001-01-01") > sta.start_date
                 if sta.end_date is not None:
-                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
-                self.assertEqual(net.code, "IU")
-                self.assertEqual(sta.code, "ANMO")
+                    assert sta.end_date > UTCDateTime("2000-01-01")
+                assert net.code == "IU"
+                assert sta.code == "ANMO"
 
         # Station wildcard query.
         inv = client.get_stations(
             starttime=UTCDateTime("2000-01-01"),
             endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
             location="00")
-        self.assertGreater(len(inv.networks), 0)  # at least one network
+        assert len(inv.networks) > 0  # at least one network
         for net in inv:
-            self.assertGreater(len(net.stations), 0)  # at least one station
+            assert len(net.stations) > 0  # at least one station
             for sta in net:
-                self.assertGreater(UTCDateTime("2002-01-01"), sta.start_date)
+                assert UTCDateTime("2002-01-01") > sta.start_date
                 if sta.end_date is not None:
-                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
-                self.assertEqual(net.code, "IU")
-                self.assertTrue(sta.code.startswith("A"))
+                    assert sta.end_date > UTCDateTime("2000-01-01")
+                assert net.code == "IU"
+                assert sta.code.startswith("A")
 
-    def test_iris_example_queries_dataselect(self):
+    def test_iris_example_queries_dataselect(self, testdata):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
@@ -616,29 +579,27 @@ class ClientTestCase(unittest.TestCase):
             got = client.get_waveforms(*query)
             # Assert that the meta-information about the provider is stored.
             for tr in got:
-                self.assertEqual(
-                    tr.stats._fdsnws_dataselect_url,
-                    client.base_url + "/fdsnws/dataselect/1/query")
+                assert tr.stats._fdsnws_dataselect_url == \
+                    client.base_url + "/fdsnws/dataselect/1/query"
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
-            file_ = os.path.join(self.datapath, filename)
-            expected = read(file_)
+            expected = read(testdata[filename])
             # The client trims by default.
             _normalize_stats(got)
-            self.assertEqual(got, expected, "Dataselect failed for query %s" %
-                             repr(query))
+            assert got == expected, \
+                "Dataselect failed for query %s" % repr(query)
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_waveforms(*query, filename=tf.name)
                 with open(tf.name, 'rb') as fh:
                     got = fh.read()
-                with open(file_, 'rb') as fh:
+                with open(testdata[filename], 'rb') as fh:
                     expected = fh.read()
-            self.assertEqual(got, expected, "Dataselect failed for query %s" %
-                             repr(query))
+            assert got == expected, \
+                "Dataselect failed for query %s" % repr(query)
 
-    def test_authentication(self):
+    def test_authentication(self, testdata):
         """
         Test dataselect with authentication.
         """
@@ -647,12 +608,10 @@ class ClientTestCase(unittest.TestCase):
         query = ("IU", "ANMO", "00", "BHZ",
                  UTCDateTime("2010-02-27T06:30:00.000"),
                  UTCDateTime("2010-02-27T06:40:00.000"))
-        filename = "dataselect_example.mseed"
         got = client.get_waveforms(*query)
-        file_ = os.path.join(self.datapath, filename)
-        expected = read(file_)
+        expected = read(testdata["dataselect_example.mseed"])
         _normalize_stats(got)
-        self.assertEqual(got, expected, failmsg(got, expected))
+        assert got == expected, failmsg(got, expected)
 
     def test_iris_example_queries_event_discover_services_false(self):
         """
@@ -667,20 +626,18 @@ class ClientTestCase(unittest.TestCase):
 
         # Event id query.
         cat = client.get_events(eventid=609301)
-        self.assertEqual(len(cat), 1)
-        self.assertIn("609301", cat[0].resource_id.id)
+        assert len(cat) == 1
+        assert "609301" in cat[0].resource_id.id
 
         # Temporal query.
         cat = client.get_events(
             starttime=UTCDateTime("2001-01-07T01:00:00"),
             endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
-        self.assertGreater(len(cat), 0)
+        assert len(cat) > 0
         for event in cat:
-            self.assertEqual(event.origins[0].extra.catalog.value, "ISC")
-            self.assertGreater(event.origins[0].time,
-                               UTCDateTime("2001-01-07T01:00:00"))
-            self.assertGreater(UTCDateTime("2001-01-07T01:05:00"),
-                               event.origins[0].time)
+            assert event.origins[0].extra.catalog.value == "ISC"
+            assert event.origins[0].time > UTCDateTime("2001-01-07T01:00:00")
+            assert UTCDateTime("2001-01-07T01:05:00") > event.origins[0].time
 
         # Misc query.
         cat = client.get_events(
@@ -688,21 +645,20 @@ class ClientTestCase(unittest.TestCase):
             endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
             maxlatitude=40, minlongitude=-170, maxlongitude=170,
             includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
-        self.assertGreater(len(cat), 0)
+        assert len(cat) > 0
         for event in cat:
-            self.assertGreater(event.origins[0].time,
-                               UTCDateTime("2001-01-07T14:00:00"))
-            self.assertGreater(UTCDateTime("2001-01-08T00:00:00"),
-                               event.origins[0].time)
-            self.assertGreater(event.origins[0].latitude, 14.9)
-            self.assertGreater(40.1, event.origins[0].latitude)
-            self.assertGreater(event.origins[0].latitude, -170.1)
-            self.assertGreater(170.1, event.origins[0].latitude)
+            assert event.origins[0].time > \
+                               UTCDateTime("2001-01-07T14:00:00")
+            assert UTCDateTime("2001-01-08T00:00:00") > event.origins[0].time
+            assert event.origins[0].latitude > 14.9
+            assert 40.1 > event.origins[0].latitude
+            assert event.origins[0].latitude > -170.1
+            assert 170.1 > event.origins[0].latitude
             # events returned by FDSNWS can contain many magnitudes with a wide
             # range, and currently (at least for IRIS) the magnitude threshold
             # sent to the server checks if at least one magnitude matches, it
             # does not only check the preferred magnitude..
-            self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
+            assert any(m.mag >= 3.999 for m in event.magnitudes)
 
     def test_iris_example_queries_station_discover_services_false(self):
         """
@@ -719,66 +675,65 @@ class ClientTestCase(unittest.TestCase):
         # Radial query.
         inv = client.get_stations(latitude=-56.1, longitude=-26.7,
                                   maxradius=15)
-        self.assertGreater(len(inv.networks), 0)  # at least one network
+        assert len(inv.networks) > 0  # at least one network
         for net in inv:
-            self.assertGreater(len(net.stations), 0)  # at least one station
+            assert len(net.stations) > 0  # at least one station
             for sta in net:
                 dist = locations2degrees(sta.latitude, sta.longitude,
                                          -56.1, -26.7)
                 # small tolerance for WGS84.
-                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
-                                                          sta.code))
+                assert 15.1 > dist, "%s.%s" % (net.code, sta.code)
 
         # Misc query.
         inv = client.get_stations(
             startafter=UTCDateTime("2003-01-07"),
             endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
             maxlatitude=55, minlongitude=170, maxlongitude=-170, network="IM")
-        self.assertGreater(len(inv.networks), 0)  # at least one network
+        assert len(inv.networks) > 0  # at least one network
         for net in inv:
-            self.assertGreater(len(net.stations), 0)  # at least one station
+            assert len(net.stations) > 0  # at least one station
             for sta in net:
                 msg = "%s.%s" % (net.code, sta.code)
-                self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
-                                   msg)
+                assert sta.start_date > UTCDateTime("2003-01-07"), msg
                 if sta.end_date is not None:
-                    self.assertGreater(UTCDateTime("2011-02-07"), sta.end_date,
-                                       msg)
-                self.assertGreater(sta.latitude, 14.9, msg)
-                self.assertGreater(55.1, sta.latitude, msg)
-                self.assertFalse(-170.1 <= sta.longitude <= 170.1, msg)
-                self.assertEqual(net.code, "IM", msg)
+                    assert UTCDateTime("2011-02-07") > sta.end_date, \
+                                       msg
+                assert sta.latitude > 14.9, msg
+                assert 55.1 > sta.latitude, msg
+                assert not (-170.1 <= sta.longitude <= 170.1), msg
+                assert net.code == "IM", msg
 
         # Simple query
         inv = client.get_stations(
             starttime=UTCDateTime("2000-01-01"),
             endtime=UTCDateTime("2001-01-01"), net="IU", sta="ANMO")
-        self.assertGreater(len(inv.networks), 0)  # at least one network
+        assert len(inv.networks) > 0  # at least one network
         for net in inv:
-            self.assertGreater(len(net.stations), 0)  # at least one station
+            assert len(net.stations) > 0  # at least one station
             for sta in net:
-                self.assertGreater(UTCDateTime("2001-01-01"), sta.start_date)
+                assert UTCDateTime("2001-01-01") > sta.start_date
                 if sta.end_date is not None:
-                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
-                self.assertEqual(net.code, "IU")
-                self.assertEqual(sta.code, "ANMO")
+                    assert sta.end_date > UTCDateTime("2000-01-01")
+                assert net.code == "IU"
+                assert sta.code == "ANMO"
 
         # Station wildcard query.
         inv = client.get_stations(
             starttime=UTCDateTime("2000-01-01"),
             endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
             location="00")
-        self.assertGreater(len(inv.networks), 0)  # at least one network
+        assert len(inv.networks) > 0  # at least one network
         for net in inv:
-            self.assertGreater(len(net.stations), 0)  # at least one station
+            assert len(net.stations) > 0  # at least one station
             for sta in net:
-                self.assertGreater(UTCDateTime("2002-01-01"), sta.start_date)
+                assert UTCDateTime("2002-01-01") > sta.start_date
                 if sta.end_date is not None:
-                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
-                self.assertEqual(net.code, "IU")
-                self.assertTrue(sta.code.startswith("A"))
+                    assert sta.end_date > UTCDateTime("2000-01-01")
+                assert net.code == "IU"
+                assert sta.code.startswith("A")
 
-    def test_iris_example_queries_dataselect_discover_services_false(self):
+    def test_iris_example_queries_dataselect_discover_services_false(
+            self, testdata):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage,
         without discovering services first.
@@ -806,35 +761,32 @@ class ClientTestCase(unittest.TestCase):
             got = client.get_waveforms(*query)
             # Assert that the meta-information about the provider is stored.
             for tr in got:
-                self.assertEqual(
-                    tr.stats._fdsnws_dataselect_url,
-                    client.base_url + "/fdsnws/dataselect/1/query")
+                assert tr.stats._fdsnws_dataselect_url == \
+                    client.base_url + "/fdsnws/dataselect/1/query"
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
-            file_ = os.path.join(self.datapath, filename)
-            expected = read(file_)
+            expected = read(testdata[filename])
             _normalize_stats(got)
-            self.assertEqual(got, expected, "Dataselect failed for query %s" %
-                             repr(query))
+            assert got == expected, \
+                "Dataselect failed for query %s" % repr(query)
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_waveforms(*query, filename=tf.name)
                 with open(tf.name, 'rb') as fh:
                     got = fh.read()
-                with open(file_, 'rb') as fh:
+                with open(testdata[filename], 'rb') as fh:
                     expected = fh.read()
-            self.assertEqual(got, expected, "Dataselect failed for query %s" %
-                             repr(query))
+            assert got == expected, \
+                "Dataselect failed for query %s" % repr(query)
 
     def test_conflicting_params(self):
         """
         """
-        self.assertRaises(FDSNInvalidRequestException,
-                          self.client.get_stations,
-                          network="IU", net="IU")
+        with pytest.raises(FDSNInvalidRequestException):
+            self.client.get_stations(network="IU", net="IU")
 
-    def test_help_function_with_iris(self):
+    def test_help_function_with_iris(self, testdata):
         """
         Tests the help function with the IRIS example.
 
@@ -853,18 +805,18 @@ class ClientTestCase(unittest.TestCase):
             sys.stdout = sys.__stdout__
             tmp.close()
             filename = "event_helpstring.txt"
-            with open(os.path.join(self.datapath, filename)) as fh:
+            with open(testdata[filename]) as fh:
                 expected = fh.read()
             # allow for changes in version number..
             got = normalize_version_number(got)
             expected = normalize_version_number(expected)
             # catalogs/contributors are checked in separate tests
-            self.assertTrue(got[-2].startswith('Available catalogs:'))
-            self.assertTrue(got[-1].startswith('Available contributors:'))
+            assert got[-2].startswith('Available catalogs:')
+            assert got[-1].startswith('Available contributors:')
             got = got[:-2]
             expected = expected[:-2]
             for line_got, line_expected in zip(got, expected):
-                self.assertEqual(line_got, line_expected)
+                assert line_got == line_expected
 
             # Reset. Creating a new one is faster then clearing the old one.
             tmp = io.StringIO()
@@ -876,11 +828,11 @@ class ClientTestCase(unittest.TestCase):
             tmp.close()
 
             filename = "station_helpstring.txt"
-            with open(os.path.join(self.datapath, filename)) as fh:
+            with open(testdata[filename]) as fh:
                 expected = fh.read()
             got = normalize_version_number(got)
             expected = normalize_version_number(expected)
-            self.assertEqual(got, expected, failmsg(got, expected))
+            assert got == expected, failmsg(got, expected)
 
             # Reset.
             tmp = io.StringIO()
@@ -892,11 +844,11 @@ class ClientTestCase(unittest.TestCase):
             tmp.close()
 
             filename = "dataselect_helpstring.txt"
-            with open(os.path.join(self.datapath, filename)) as fh:
+            with open(testdata[filename]) as fh:
                 expected = fh.read()
             got = normalize_version_number(got)
             expected = normalize_version_number(expected)
-            self.assertEqual(got, expected, failmsg(got, expected))
+            assert got == expected, failmsg(got, expected)
 
         finally:
             sys.stdout = sys.__stdout__
@@ -914,16 +866,15 @@ class ClientTestCase(unittest.TestCase):
             "all webservices.")
         got = normalize_version_number(got)
         expected = normalize_version_number(expected)
-        self.assertEqual(got, expected, failmsg(got, expected))
+        assert got == expected, failmsg(got, expected)
 
-    def test_dataselect_bulk(self):
+    def test_dataselect_bulk(self, testdata):
         """
         Test bulk dataselect requests, POSTing data to server. Also tests
         authenticated bulk request.
         """
         clients = [self.client, self.client_auth]
-        file = os.path.join(self.datapath, "bulk.mseed")
-        expected = read(file)
+        expected = read(testdata["bulk.mseed"])
         # test cases for providing lists of lists
         # Deliberately requesting data that overlap the end-time of a channel.
         # TA.A25A..BHZ ends at 2011-07-22T14:50:25.5
@@ -944,12 +895,12 @@ class ClientTestCase(unittest.TestCase):
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
-            self.assertEqual(got, expected, failmsg(got, expected))
+            assert got == expected, failmsg(got, expected)
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_waveforms_bulk(bulk, filename=tf.name, **params)
                 got = read(tf.name)
-            self.assertEqual(got, expected, failmsg(got, expected))
+            assert got == expected, failmsg(got, expected)
         # test cases for providing a request string
         bulk = ("quality=B\n"
                 "longestonly=false\n"
@@ -963,22 +914,20 @@ class ClientTestCase(unittest.TestCase):
             # Assert that the meta-information about the provider is stored.
             for tr in got:
                 if client.user:
-                    self.assertEqual(
-                        tr.stats._fdsnws_dataselect_url,
-                        client.base_url + "/fdsnws/dataselect/1/queryauth")
+                    assert tr.stats._fdsnws_dataselect_url == \
+                        client.base_url + "/fdsnws/dataselect/1/queryauth"
                 else:
-                    self.assertEqual(
-                        tr.stats._fdsnws_dataselect_url,
-                        client.base_url + "/fdsnws/dataselect/1/query")
+                    assert tr.stats._fdsnws_dataselect_url == \
+                        client.base_url + "/fdsnws/dataselect/1/query"
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
-            self.assertEqual(got, expected, failmsg(got, expected))
+            assert got == expected, failmsg(got, expected)
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_waveforms_bulk(bulk, filename=tf.name)
                 got = read(tf.name)
-            self.assertEqual(got, expected, failmsg(got, expected))
+            assert got == expected, failmsg(got, expected)
         # test cases for providing a file name
         for client in clients:
             with NamedTemporaryFile() as tf:
@@ -988,14 +937,14 @@ class ClientTestCase(unittest.TestCase):
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
-            self.assertEqual(got, expected, failmsg(got, expected))
+            assert got == expected, failmsg(got, expected)
         # test cases for providing a file-like object
         for client in clients:
             got = client.get_waveforms_bulk(io.StringIO(bulk))
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
-            self.assertEqual(got, expected, failmsg(got, expected))
+            assert got == expected, failmsg(got, expected)
 
     def test_station_bulk(self):
         """
@@ -1025,13 +974,12 @@ class ClientTestCase(unittest.TestCase):
                     bulk, filename=tf.name, level="station")
                 inv2 = read_inventory(tf.name, format="stationxml")
 
-            self.assertEqual(inv.networks, inv2.networks)
-            self.assertEqual(len(inv.networks), 1)
-            self.assertEqual(inv[0].code, "IU")
-            self.assertEqual(len(inv.networks[0].stations), 4)
-            self.assertEqual(
-                sorted([_i.code for _i in inv.networks[0].stations]),
-                sorted(["ANMO", "CCM", "COR", "HRV"]))
+            assert inv.networks == inv2.networks
+            assert len(inv.networks) == 1
+            assert inv[0].code == "IU"
+            assert len(inv.networks[0].stations) == 4
+            assert sorted([_i.code for _i in inv.networks[0].stations]) == \
+                sorted(["ANMO", "CCM", "COR", "HRV"])
 
             # Test with channel level.
             inv = client.get_stations_bulk(bulk, level="channel")
@@ -1041,23 +989,21 @@ class ClientTestCase(unittest.TestCase):
                     bulk, filename=tf.name, level="channel")
                 inv2 = read_inventory(tf.name, format="stationxml")
 
-            self.assertEqual(inv.networks, inv2.networks)
-            self.assertEqual(len(inv.networks), 1)
-            self.assertEqual(inv[0].code, "IU")
-            self.assertEqual(len(inv.networks[0].stations), 4)
-            self.assertEqual(
-                sorted([_i.code for _i in inv.networks[0].stations]),
-                sorted(["ANMO", "CCM", "COR", "HRV"]))
+            assert inv.networks == inv2.networks
+            assert len(inv.networks) == 1
+            assert inv[0].code == "IU"
+            assert len(inv.networks[0].stations) == 4
+            assert sorted([_i.code for _i in inv.networks[0].stations]) == \
+                sorted(["ANMO", "CCM", "COR", "HRV"])
             channels = []
             for station in inv[0]:
                 for channel in station:
                     channels.append("IU.%s.%s.%s" % (
                         station.code, channel.location_code,
                         channel.code))
-            self.assertEqual(
-                sorted(channels),
+            assert sorted(channels) == \
                 sorted(["IU.ANMO..BHE", "IU.CCM..BHZ", "IU.COR..UHZ",
-                        "IU.HRV..LHN"]))
+                        "IU.HRV..LHN"])
         return
 
     def test_get_waveform_attach_response(self):
@@ -1069,14 +1015,14 @@ class ClientTestCase(unittest.TestCase):
         bulk = ("IU ANMO 00 BHZ 2000-03-25T00:00:00 2000-03-25T00:00:04\n")
         st = client.get_waveforms_bulk(bulk, attach_response=True)
         for tr in st:
-            self.assertTrue(isinstance(tr.stats.get("response"), Response))
+            assert isinstance(tr.stats.get("response"), Response)
 
         st = client.get_waveforms("IU", "ANMO", "00", "BHZ",
                                   UTCDateTime("2000-02-27T06:00:00.000"),
                                   UTCDateTime("2000-02-27T06:00:05.000"),
                                   attach_response=True)
         for tr in st:
-            self.assertTrue(isinstance(tr.stats.get("response"), Response))
+            assert isinstance(tr.stats.get("response"), Response)
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_default_requested_urls(self, download_url_mock):
@@ -1102,7 +1048,7 @@ class ClientTestCase(unittest.TestCase):
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
 
-        self.assertEqual(expected_urls, got_urls)
+        assert expected_urls == got_urls
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_setting_service_major_version(self, download_url_mock):
@@ -1128,7 +1074,7 @@ class ClientTestCase(unittest.TestCase):
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
-        self.assertEqual(expected_urls, got_urls)
+        assert expected_urls == got_urls
 
         # Replace all
         download_url_mock.reset_mock()
@@ -1148,7 +1094,7 @@ class ClientTestCase(unittest.TestCase):
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
-        self.assertEqual(expected_urls, got_urls)
+        assert expected_urls == got_urls
 
         # Replace only some
         download_url_mock.reset_mock()
@@ -1168,7 +1114,7 @@ class ClientTestCase(unittest.TestCase):
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
-        self.assertEqual(expected_urls, got_urls)
+        assert expected_urls == got_urls
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_setting_service_provider_mappings(self, download_url_mock):
@@ -1201,7 +1147,7 @@ class ClientTestCase(unittest.TestCase):
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
-        self.assertEqual(expected_urls, got_urls)
+        assert expected_urls == got_urls
 
         # Replace only two. The others keep the default mapping.
         download_url_mock.reset_mock()
@@ -1226,7 +1172,7 @@ class ClientTestCase(unittest.TestCase):
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
-        self.assertEqual(expected_urls, got_urls)
+        assert expected_urls == got_urls
 
     def test_manually_deactivate_single_service(self):
         """
@@ -1234,11 +1180,11 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
                         service_mappings={"event": None})
-        self.assertEqual(sorted(client.services.keys()),
-                         ['dataselect', 'station'])
+        assert sorted(client.services.keys()) == ['dataselect', 'station']
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_download_urls_for_custom_mapping(self, download_url_mock):
+    def test_download_urls_for_custom_mapping(
+            self, download_url_mock, testdata):
         """
         Tests the downloading of data with custom mappings.
         """
@@ -1249,19 +1195,15 @@ class ClientTestCase(unittest.TestCase):
             if "version" in args[0]:
                 return 200, "1.0.200"
             elif "event" in args[0]:
-                with open(os.path.join(
-                        self.datapath, "2014-01-07_iris_event.wadl"),
-                        "rb") as fh:
+                with open(testdata["2014-01-07_iris_event.wadl"], "rb") as fh:
                     return 200, fh.read()
             elif "station" in args[0]:
-                with open(os.path.join(
-                        self.datapath,
-                        "2014-01-07_iris_station.wadl"), "rb") as fh:
+                with open(testdata["2014-01-07_iris_station.wadl"],
+                          "rb") as fh:
                     return 200, fh.read()
             elif "dataselect" in args[0]:
-                with open(os.path.join(
-                        self.datapath,
-                        "2014-01-07_iris_dataselect.wadl"), "rb") as fh:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
                     return 200, fh.read()
             return 404, None
 
@@ -1282,8 +1224,8 @@ class ClientTestCase(unittest.TestCase):
                 "dataselect": base_url_ds,
             })
         for warning in w:
-            self.assertTrue("Could not parse" in str(warning) or
-                            "cannot deal with" in str(warning))
+            assert "Could not parse" in str(warning) or \
+                            "cannot deal with" in str(warning)
 
         # Test the dataselect downloading.
         download_url_mock.reset_mock()
@@ -1294,8 +1236,7 @@ class ClientTestCase(unittest.TestCase):
                             UTCDateTime())
         except Exception:
             pass
-        self.assertTrue(
-            base_url_ds in download_url_mock.call_args_list[0][0][0])
+        assert base_url_ds in download_url_mock.call_args_list[0][0][0]
 
         # Test the station downloading.
         download_url_mock.reset_mock()
@@ -1305,8 +1246,7 @@ class ClientTestCase(unittest.TestCase):
             c.get_stations()
         except Exception:
             pass
-        self.assertTrue(
-            base_url_station in download_url_mock.call_args_list[0][0][0])
+        assert base_url_station in download_url_mock.call_args_list[0][0][0]
 
         # Test the event downloading.
         download_url_mock.reset_mock()
@@ -1316,8 +1256,7 @@ class ClientTestCase(unittest.TestCase):
             c.get_events()
         except Exception:
             pass
-        self.assertTrue(
-            base_url_event in download_url_mock.call_args_list[0][0][0])
+        assert base_url_event in download_url_mock.call_args_list[0][0][0]
 
     def test_redirection(self):
         """
@@ -1343,20 +1282,20 @@ class ClientTestCase(unittest.TestCase):
             starttime=UTCDateTime("2010-02-27T06:30:00.000"),
             endtime=UTCDateTime("2010-02-27T06:30:01.000"))
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(st)))
+        assert bool(len(st))
 
         inv = c.get_stations(
             starttime=UTCDateTime("2000-01-01"),
             endtime=UTCDateTime("2001-01-01"),
             network="IU", station="ANMO", level="network")
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(inv.networks)))
+        assert bool(len(inv.networks))
 
         cat = c.get_events(starttime=UTCDateTime("2001-01-07T01:00:00"),
                            endtime=UTCDateTime("2001-01-07T01:05:00"),
                            catalog="ISC")
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(cat)))
+        assert bool(len(cat))
 
         # Also test the bulk requests which are done using POST requests.
         bulk = (("TA", "A25A", "", "BHZ",
@@ -1367,7 +1306,7 @@ class ClientTestCase(unittest.TestCase):
                  UTCDateTime("2010-03-25T00:00:01")))
         st = c.get_waveforms_bulk(bulk, quality="B", longestonly=False)
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(st)))
+        assert bool(len(st))
 
         starttime = UTCDateTime(1990, 1, 1)
         endtime = UTCDateTime(1990, 1, 1) + 10
@@ -1377,7 +1316,7 @@ class ClientTestCase(unittest.TestCase):
         ]
         inv = c.get_stations_bulk(bulk, level="network")
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(inv.networks)))
+        assert bool(len(inv.networks))
 
     def test_redirection_auth(self):
         """
@@ -1399,11 +1338,10 @@ class ClientTestCase(unittest.TestCase):
             # These occur when rasing the FDSNRedirectException, but
             # I was not able to fix in the code
             warnings.filterwarnings('ignore', 'unclosed')
-            self.assertRaises(
-                FDSNRedirectException,
-                Client, "IRIS", service_mappings=service_mappings,
-                user="nobody@iris.edu", password="anonymous",
-                user_agent=USER_AGENT)
+            with pytest.raises(FDSNRedirectException):
+                Client("IRIS", service_mappings=service_mappings,
+                       user="nobody@iris.edu", password="anonymous",
+                       user_agent=USER_AGENT)
             # The force_redirect flag overwrites that behaviour.
             c_auth = Client("IRIS", service_mappings=service_mappings,
                             user="nobody@iris.edu", password="anonymous",
@@ -1413,20 +1351,20 @@ class ClientTestCase(unittest.TestCase):
             starttime=UTCDateTime("2010-02-27T06:30:00.000"),
             endtime=UTCDateTime("2010-02-27T06:30:01.000"))
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(st)))
+        assert bool(len(st))
 
         inv = c_auth.get_stations(
             starttime=UTCDateTime("2000-01-01"),
             endtime=UTCDateTime("2001-01-01"),
             network="IU", station="ANMO", level="network")
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(inv.networks)))
+        assert bool(len(inv.networks))
 
         cat = c_auth.get_events(starttime=UTCDateTime("2001-01-07T01:00:00"),
                                 endtime=UTCDateTime("2001-01-07T01:05:00"),
                                 catalog="ISC")
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(cat)))
+        assert bool(len(cat))
 
         # Also test the bulk requests which are done using POST requests.
         bulk = (("TA", "A25A", "", "BHZ",
@@ -1437,7 +1375,7 @@ class ClientTestCase(unittest.TestCase):
                  UTCDateTime("2010-03-25T00:00:01")))
         st = c_auth.get_waveforms_bulk(bulk, quality="B", longestonly=False)
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(st)))
+        assert bool(len(st))
 
         starttime = UTCDateTime(1990, 1, 1)
         endtime = UTCDateTime(1990, 1, 1) + 10
@@ -1447,7 +1385,7 @@ class ClientTestCase(unittest.TestCase):
         ]
         inv = c_auth.get_stations_bulk(bulk, level="network")
         # Just make sure something is being downloaded.
-        self.assertTrue(bool(len(inv.networks)))
+        assert bool(len(inv.networks))
 
     def test_get_waveforms_empty_seed_codes(self):
         """
@@ -1477,7 +1415,7 @@ class ClientTestCase(unittest.TestCase):
                 # URL downloading comes before the error and can be checked now
                 url = m.call_args[0][0]
             url_parts = url.replace(url_base, '').split("&")
-            self.assertIn('{}='.format(key), url_parts)
+            assert '{}='.format(key) in url_parts
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_no_data_exception(self, download_url_mock):
@@ -1486,7 +1424,8 @@ class ClientTestCase(unittest.TestCase):
         exception
         """
         download_url_mock.return_value = (204, None)
-        self.assertRaises(FDSNNoDataException, self.client.get_stations)
+        with pytest.raises(FDSNNoDataException):
+            self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_request_too_large_exception(self, download_url_mock):
@@ -1495,8 +1434,8 @@ class ClientTestCase(unittest.TestCase):
         exception
         """
         download_url_mock.return_value = (413, None)
-        self.assertRaises(FDSNRequestTooLargeException,
-                          self.client.get_stations)
+        with pytest.raises(FDSNRequestTooLargeException):
+            self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_authentication_exceptions(self, download_url_mock):
@@ -1507,19 +1446,19 @@ class ClientTestCase(unittest.TestCase):
         with mock.patch("obspy.clients.fdsn.client.Client._has_eida_auth",
                         new_callable=mock.PropertyMock,
                         return_value=False):
-            self.assertRaises(FDSNNoAuthenticationServiceException, Client,
-                              eida_token="TEST")
+            with pytest.raises(FDSNNoAuthenticationServiceException):
+                Client(eida_token="TEST")
 
-        self.assertRaises(FDSNDoubleAuthenticationException, Client, "IRIS",
-                          eida_token="TEST", user="TEST")
+        with pytest.raises(FDSNDoubleAuthenticationException):
+            Client("IRIS", eida_token="TEST", user="TEST")
 
         download_url_mock.return_value = (401, None)
-        self.assertRaises(FDSNUnauthorizedException,
-                          self.client.get_stations)
+        with pytest.raises(FDSNUnauthorizedException):
+            self.client.get_stations()
 
         download_url_mock.return_value = (403, None)
-        self.assertRaises(FDSNForbiddenException,
-                          self.client.get_stations)
+        with pytest.raises(FDSNForbiddenException):
+            self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_timeout_exception(self, download_url_mock):
@@ -1527,15 +1466,16 @@ class ClientTestCase(unittest.TestCase):
         Verify that a request timing out raises an identifiable exception
         """
         download_url_mock.return_value = (None, "timeout")
-        self.assertRaises(FDSNTimeoutException, self.client.get_stations)
+        with pytest.raises(FDSNTimeoutException):
+            self.client.get_stations()
 
     def test_no_service_exception(self):
         """
         Verify that opening a client to a provider without FDSN service raises
         an identifiable exception
         """
-        self.assertRaises(FDSNNoServiceException, Client,
-                          "http://nofdsnservice.org")
+        with pytest.raises(FDSNNoServiceException):
+            Client("http://nofdsnservice.org")
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_not_implemented_exception(self, download_url_mock):
@@ -1544,8 +1484,8 @@ class ClientTestCase(unittest.TestCase):
         raises an identifiable exception
         """
         download_url_mock.return_value = (501, None)
-        self.assertRaises(FDSNNotImplementedException,
-                          self.client.get_stations)
+        with pytest.raises(FDSNNotImplementedException):
+            self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_bad_gateway_exception(self, download_url_mock):
@@ -1554,8 +1494,8 @@ class ClientTestCase(unittest.TestCase):
         raises an identifiable exception
         """
         download_url_mock.return_value = (502, None)
-        self.assertRaises(FDSNBadGatewayException,
-                          self.client.get_stations)
+        with pytest.raises(FDSNBadGatewayException):
+            self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_service_unavailable_exception(self, download_url_mock):
@@ -1564,8 +1504,8 @@ class ClientTestCase(unittest.TestCase):
         raises an identifiable exception
         """
         download_url_mock.return_value = (503, None)
-        self.assertRaises(FDSNServiceUnavailableException,
-                          self.client.get_stations)
+        with pytest.raises(FDSNServiceUnavailableException):
+            self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_bad_request_exception(self, download_url_mock):
@@ -1573,7 +1513,8 @@ class ClientTestCase(unittest.TestCase):
         Verify that a bad request raises an identifiable exception
         """
         download_url_mock.return_value = (400, io.BytesIO(b""))
-        self.assertRaises(FDSNBadRequestException, self.client.get_stations)
+        with pytest.raises(FDSNBadRequestException):
+            self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_server_exception(self, download_url_mock):
@@ -1581,8 +1522,8 @@ class ClientTestCase(unittest.TestCase):
         Verify that a server error raises an identifiable exception
         """
         download_url_mock.return_value = (500, None)
-        self.assertRaises(FDSNInternalServerException,
-                          self.client.get_stations)
+        with pytest.raises(FDSNInternalServerException):
+            self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_too_many_requests_exception(self, download_url_mock):
@@ -1590,16 +1531,16 @@ class ClientTestCase(unittest.TestCase):
         Verify that too many requests raise an identifiable exception
         """
         download_url_mock.return_value = (429, None)
-        self.assertRaises(FDSNTooManyRequestsException,
-                          self.client.get_stations)
+        with pytest.raises(FDSNTooManyRequestsException):
+            self.client.get_stations()
 
     @pytest.mark.skip(reason='Token is expired')
-    def test_eida_token_resolution(self):
+    def test_eida_token_resolution(self, testdata):
         """
         Tests that EIDA tokens are resolved correctly and new credentials get
         installed with the opener of the Client.
         """
-        token = os.path.join(self.datapath, 'eida_token.txt')
+        token = testdata['eida_token.txt']
         with open(token, 'rb') as fh:
             token_data = fh.read().decode()
 
@@ -1615,20 +1556,19 @@ class ClientTestCase(unittest.TestCase):
         def _get_http_digest_auth_handler(client):
             handlers = [h for h in client._url_opener.handlers
                         if isinstance(h, urllib_request.HTTPDigestAuthHandler)]
-            self.assertLessEqual(len(handlers), 1)
+            assert len(handlers) <= 1
             return handlers and handlers[0] or None
 
         def _assert_credentials(client, user, password):
             handler = _get_http_digest_auth_handler(client)
-            self.assertIsInstance(handler,
-                                  urllib_request.HTTPDigestAuthHandler)
+            assert isinstance(handler, urllib_request.HTTPDigestAuthHandler)
             for user_, password_ in handler.passwd.passwd[None].values():
-                self.assertEqual(user, user_)
-                self.assertEqual(password, password_)
+                assert user == user_
+                assert password == password_
 
         client = Client('GFZ')
         # this is a plain client, so it should not have http digest auth
-        self.assertEqual(_get_http_digest_auth_handler(client), None)
+        assert _get_http_digest_auth_handler(client) is None
         # now, if we set new user/password, we should get a http digest auth
         # handler
         user, password = ("spam", "eggs")
@@ -1650,12 +1590,10 @@ class ClientTestCase(unittest.TestCase):
         _assert_credentials(client, user, password)
 
         # Raise if token and user/pw are given.
-        with self.assertRaises(FDSNException) as err:
+        msg = "EIDA authentication token provided, but user and password " \
+              "are also given."
+        with pytest.raises(FDSNException, match=msg):
             Client('GFZ', eida_token=token, user="foo", password="bar")
-        self.assertEqual(
-            err.exception.args[0],
-            "EIDA authentication token provided, but user and password are "
-            "also given.")
 
         # now lets test the RoutingClient with credentials..
         credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}
@@ -1671,11 +1609,10 @@ class ClientTestCase(unittest.TestCase):
                 a dummy stream.
                 """
                 # check that we're at the expected FDSN WS server
-                self.assertEqual('http://geofon.gfz-potsdam.de',
-                                 self_.base_url)
+                assert 'http://geofon.gfz-potsdam.de' == self_.base_url
                 # check if credentials were used
                 # eida auth availability should be positive in all cases
-                self.assertTrue(self_._has_eida_auth)
+                assert self_._has_eida_auth
                 # depending on whether we specified credentials, the
                 # underlying FDSN client should have EIDA authentication
                 # flag and should also have a HTTP digest handler with
@@ -1685,7 +1622,7 @@ class ClientTestCase(unittest.TestCase):
                     for user, password in handler.passwd.passwd[None].values():
                         _assert_eida_user_and_password(user, password)
                 else:
-                    self.assertEqual(handler, None)
+                    assert handler is None
                 # just always return some dummy stream, we're not
                 # interested in checking the data downloading which
                 # succeeds regardless if auth is used or not as it's public
@@ -1711,14 +1648,11 @@ class ClientTestCase(unittest.TestCase):
                     endtime=UTCDateTime("2010-02-27T06:40:00.000"))
 
         # test invalid token/token file
-        with self.assertRaisesRegex(
+        with pytest.raises(
                 ValueError,
-                'EIDA token does not seem to be a valid PGP message'):
+                match='EIDA token does not seem to be a valid PGP message'):
             client = Client('GFZ', eida_token="spam")
-        with self.assertRaisesRegex(
-                ValueError,
-                "Read EIDA token from file '[^']*event_helpstring.txt' but it "
-                "does not seem to contain a valid PGP message."):
-            client = Client(
-                'GFZ', eida_token=os.path.join(self.datapath,
-                                               'event_helpstring.txt'))
+        msg = ("Read EIDA token from file '[^']*event_helpstring.txt' but it "
+               "does not seem to contain a valid PGP message.")
+        with pytest.raises(ValueError, match=msg):
+            client = Client('GFZ', eida_token=testdata['event_helpstring.txt'])

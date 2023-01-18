@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-import inspect
 import io
-import os
 import pickle
 import platform
 import warnings
 from copy import deepcopy
-from os.path import dirname, join, abspath
-from pathlib import Path
 from unittest import mock
 
 import numpy as np
@@ -27,8 +23,9 @@ class TestStream:
     """
     Test suite for obspy.core.stream.Stream.
     """
-    _current_file = inspect.getfile(inspect.currentframe())
-    data_path = join(dirname(abspath(_current_file)), "data")
+    @pytest.fixture(scope="package")
+    def ascii_path(self, root):
+        return root / "io" / "ascii" / "tests" / "data"
 
     @pytest.fixture()
     def mseed_stream(self):
@@ -1887,7 +1884,7 @@ class TestStream:
         np.testing.assert_array_almost_equal(
             st1[0].data[:-1], st2[0].data[:-1], decimal=5)
 
-    def test_read(self):
+    def test_read(self, ascii_path):
         """
         Testing read function.
         """
@@ -1929,14 +1926,11 @@ class TestStream:
             read('/path/to/UNKNOWN')
 
         # 4 - file patterns
-        path = os.path.dirname(__file__)
-        ascii_path = os.path.join(path, "..", "..", "io", "ascii", "tests",
-                                  "data")
-        filename = os.path.join(ascii_path, 'slist.*')
+        filename = ascii_path / 'slist.*'
         st = read(filename)
         assert len(st) == 2
         # exception if no file matches file pattern
-        filename = path + os.sep + 'data' + os.sep + 'NOTEXISTING.*'
+        filename = ascii_path / 'NOTEXISTING.*'
         with pytest.raises(Exception):
             read(filename)
 
@@ -1967,12 +1961,11 @@ class TestStream:
         tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
         assert tr.data.size == 0
 
-    def test_read_path(self):
+    def test_read_path(self, datapath):
         """
         Test for reading a pathlib object.
         """
-        base_path = Path(__file__).parent / 'data'
-        data_path = base_path / 'IU_ULN_00_LH1_2015-07-18T02.mseed'
+        data_path = datapath / 'IU_ULN_00_LH1_2015-07-18T02.mseed'
         assert data_path.exists()
         st = read(data_path)
         assert isinstance(st, Stream)

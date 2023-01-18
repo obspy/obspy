@@ -5,7 +5,6 @@ The psd test suite.
 """
 import gzip
 import io
-import os
 import re
 import warnings
 from copy import deepcopy
@@ -16,7 +15,7 @@ import pytest
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
 from obspy.core.inventory import Response
-from obspy.core.util import AttribDict, CatchAndAssertWarnings
+from obspy.core.util import CatchAndAssertWarnings
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.xseed import Parser
@@ -26,10 +25,8 @@ from obspy.signal.spectral_estimation import get_idc_infra_low_noise
 from obspy.signal.spectral_estimation import get_idc_infra_hi_noise
 
 
-PATH = os.path.join(os.path.dirname(__file__), 'data')
-
-
-def _internal_get_sample_data():
+@pytest.fixture(scope="module")
+def _internal_sample_data(root):
     """
     Returns some real data (trace and poles and zeroes) for PPSD testing.
 
@@ -37,8 +34,10 @@ def _internal_get_sample_data():
     not matter for the purpose of testing.
     """
     # load test file
-    file_data = os.path.join(
-        PATH, 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
+    # we reuse this fixture in imaging, so we can't use "testdata" fixture to
+    # lookup the path
+    file_data = (root / "signal" / "tests" / "data" /
+                 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
     # parameters for the test
     with gzip.open(file_data) as f:
         data = np.loadtxt(f)
@@ -67,19 +66,18 @@ def _internal_get_sample_data():
     return tr, paz
 
 
-_sample_data = _internal_get_sample_data()
-
-
-def _get_sample_data():
-    tr, paz = _sample_data
+@pytest.fixture(scope="function")
+def _sample_data(_internal_sample_data):
+    tr, paz = _internal_sample_data
     return tr.copy(), deepcopy(paz)
 
 
-def _internal_get_ppsd():
+@pytest.fixture(scope="function")
+def _ppsd(_sample_data):
     """
     Returns ready computed ppsd for testing purposes.
     """
-    tr, paz = _get_sample_data()
+    tr, paz = _sample_data
     st = Stream([tr])
     ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
     ppsd.add(st)
@@ -87,31 +85,12 @@ def _internal_get_ppsd():
     return ppsd
 
 
-_ppsd = _internal_get_ppsd()
-
-
-def _get_ppsd():
-    return deepcopy(_ppsd)
-
-
 @pytest.mark.usefixtures('ignore_numpy_errors')
 class TestPsd:
     """
     Test cases for psd.
     """
-    @pytest.fixture()
-    def state(self):
-        # directory where the test files are located
-        out = AttribDict()
-        out.path = PATH
-        out.path_images = os.path.join(PATH, os.pardir, "images")
-        # some pre-computed ppsd used for plotting tests:
-        # (ppsd._psd_periods was downcast to np.float16 to save space)
-        out.example_ppsd_npz = os.path.join(PATH, "ppsd_kw1_ehz.npz")
-        # ignore some "RuntimeWarning: underflow encountered in multiply"
-        return out
-
-    def test_obspy_psd_vs_pitsa(self, state):
+    def test_obspy_psd_vs_pitsa(self, testdata):
         """
         Test to compare results of PITSA's psd routine to the
         :func:`matplotlib.mlab.psd` routine wrapped in
@@ -130,9 +109,9 @@ class TestPsd:
         sampling_rate = 100.0
         nfft = 512
         noverlap = 0
-        file_noise = os.path.join(state.path, "pitsa_noise.npy")
-        fn_psd_pitsa = "pitsa_noise_psd_samprate_100_nfft_512_noverlap_0.npy"
-        file_psd_pitsa = os.path.join(state.path, fn_psd_pitsa)
+        file_noise = testdata['pitsa_noise.npy']
+        file_psd_pitsa = testdata[
+            "pitsa_noise_psd_samprate_100_nfft_512_noverlap_0.npy"]
         noise = np.load(file_noise, allow_pickle=True)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
@@ -155,37 +134,35 @@ class TestPsd:
         np.testing.assert_array_almost_equal(psd_obspy[5:], psd_pitsa[5:],
                                              decimal=6)
 
-    def test_welch_window_vs_pitsa(self, state):
+    def test_welch_window_vs_pitsa(self, testdata):
         """
         Test that the helper function to generate the welch window delivers the
         same results as PITSA's routine.
         Testing both even and odd values for length of window.
         Not testing strange cases like length <5, though.
         """
-        welch_even = os.path.join(state.path, "pitsa_welch_window_512.npy")
-        welch_odd = os.path.join(state.path, "pitsa_welch_window_513.npy")
+        welch_even = testdata['pitsa_welch_window_512.npy']
+        welch_odd = testdata['pitsa_welch_window_513.npy']
 
         for file, n in zip((welch_even, welch_odd), (512, 513)):
             window_pitsa = np.load(file)
             window_obspy = welch_window(n)
             np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
 
-    def test_ppsd(self, state):
+    def test_ppsd(self, testdata, _sample_data, _ppsd):
         """
         Test PPSD routine with some real data.
         """
         # paths of the expected result data
-        file_histogram = os.path.join(
-            state.path,
-            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
-        file_binning = os.path.join(
-            state.path, 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
-        file_mode_mean = os.path.join(
-            state.path,
-            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mode_mean.npz')
-        tr, _paz = _get_sample_data()
+        file_histogram = testdata[
+            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy']
+        file_binning = testdata[
+            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz']
+        file_mode_mean = testdata[
+            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mode_mean.npz']
+        tr, _paz = _sample_data
         st = Stream([tr])
-        ppsd = _get_ppsd()
+        ppsd = _ppsd
         # read results and compare
         result_hist = np.load(file_histogram)
         assert len(ppsd.times_processed) == 4
@@ -230,14 +207,20 @@ class TestPsd:
             np.testing.assert_array_equal(ppsd_loaded.period_bin_centers,
                                           binning['period_bins'])
 
-    def test_ppsd_warnings(self):
+    def test_ppsd_warnings(self, _ppsd, _sample_data):
         """
         Test some warning messages shown by PPSD routine
         """
-        ppsd = _get_ppsd()
+        # fixture to get data can not refresh on a lower scope than "function",
+        # so need to copy ourselves for reusing multiple times inside a
+        # function
+        def get_trace():
+            return deepcopy(_sample_data[0])
+
+        ppsd = _ppsd
         # test warning message if SEED ID is mismatched
         for key in ('network', 'station', 'location', 'channel'):
-            tr, _ = _get_sample_data()
+            tr = get_trace()
             # change starttime, data could then be added if ID and sampling
             # rate match
             tr.stats.starttime += 24 * 3600
@@ -249,7 +232,7 @@ class TestPsd:
             assert str(w[0].message) == \
                 'No traces with matching SEED ID in provided stream object.'
         # test warning message if sampling rate is mismatched
-        tr, _ = _get_sample_data()
+        tr = get_trace()
         # change starttime, data could then be added if ID and sampling
         # rate match
         tr.stats.starttime += 24 * 3600
@@ -262,11 +245,11 @@ class TestPsd:
         assert len(w) == 1
         assert str(w[0].message) == expected
 
-    def test_ppsd_w_iris(self, state):
+    def test_ppsd_w_iris(self, testdata):
         # Bands to be used this is the upper and lower frequency band pairs
         fres = zip([0.1, 0.05], [0.2, 0.1])
 
-        file_data_anmo = os.path.join(state.path, 'IUANMO.seed')
+        file_data_anmo = testdata['IUANMO.seed']
         # Read in ANMO data for one day
         st = read(file_data_anmo)
 
@@ -289,7 +272,7 @@ class TestPsd:
         perinv = 1 / per
 
         # Read in the results obtained from a Mustang flat file
-        file_data_iris = os.path.join(state.path, 'IRISpdfExample')
+        file_data_iris = testdata['IRISpdfExample']
         data = np.genfromtxt(
             file_data_iris, comments='#', delimiter=',',
             dtype=[("freq", np.float64),
@@ -328,28 +311,27 @@ class TestPsd:
             np.testing.assert_allclose(np.mean(per_val_good_obspy),
                                        np.mean(percenlist), rtol=0.0, atol=1.2)
 
-    def test_ppsd_w_iris_against_obspy_results(self, state):
+    def test_ppsd_w_iris_against_obspy_results(self, testdata):
         """
         Test against results obtained after merging of #1108.
         """
         # Read in ANMO data for one day
-        st = read(os.path.join(state.path, 'IUANMO.seed'))
+        st = read(testdata['IUANMO.seed'])
 
         # Read in metadata in various different formats
         paz = {'gain': 86298.5, 'zeros': [0, 0],
                'poles': [-59.4313, -22.7121 + 27.1065j, -22.7121 + 27.1065j,
                          -0.0048004, -0.073199],
                'sensitivity': 3.3554 * 10 ** 9}
-        resp = os.path.join(state.path, 'IUANMO.resp')
-        parser = Parser(os.path.join(state.path, 'IUANMO.dataless'))
-        inv = read_inventory(os.path.join(state.path, 'IUANMO.xml'))
+        resp = testdata['IUANMO.resp']
+        parser = Parser(testdata['IUANMO.dataless'])
+        inv = read_inventory(testdata['IUANMO.xml'])
 
         # load expected results, for both only PAZ and full response
-        filename_paz = os.path.join(state.path, 'IUANMO_ppsd_paz.npz')
+        filename_paz = testdata['IUANMO_ppsd_paz.npz']
         results_paz = PPSD.load_npz(filename_paz, metadata=None,
                                     allow_pickle=True)
-        filename_full = os.path.join(state.path,
-                                     'IUANMO_ppsd_fullresponse.npz')
+        filename_full = testdata['IUANMO_ppsd_fullresponse.npz']
         results_full = PPSD.load_npz(filename_full, metadata=None,
                                      allow_pickle=True)
 
@@ -393,12 +375,12 @@ class TestPsd:
                     continue
                 assert getattr(ppsd, key) == getattr(results_full, key)
 
-    def test_ppsd_save_and_load_npz(self):
+    def test_ppsd_save_and_load_npz(self, _sample_data, _ppsd):
         """
         Test PPSD.load_npz() and PPSD.save_npz()
         """
-        _, paz = _get_sample_data()
-        ppsd = _get_ppsd()
+        _, paz = _sample_data
+        ppsd = _ppsd
 
         # save results to npz file
         with NamedTemporaryFile(suffix=".npz") as tf:
@@ -415,7 +397,7 @@ class TestPsd:
             else:
                 assert getattr(ppsd, key) == getattr(ppsd_loaded, key)
 
-    def test_ppsd_restricted_stacks(self, state, image_path):
+    def test_ppsd_restricted_stacks(self, testdata, image_path):
         """
         Test PPSD.calculate_histogram() with restrictions to what data should
         be stacked. Also includes image tests.
@@ -427,7 +409,7 @@ class TestPsd:
         # change data to nowadays used nanoseconds POSIX timestamp
         ppsd._times_processed = [
             UTCDateTime(t)._ns for t in np.load(
-                os.path.join(state.path, "ppsd_times_processed.npy")).tolist()]
+                testdata['ppsd_times_processed.npy']).tolist()]
         np.random.seed(1234)
         ppsd._binned_psds = [
             arr for arr in np.random.uniform(
@@ -458,7 +440,7 @@ class TestPsd:
             dict(callback=callback, month=[1, 3, 5, 7]),
             dict(callback=callback)]
         expected_selections = np.load(
-            os.path.join(state.path, "ppsd_stack_selections.npy"))
+            testdata['ppsd_stack_selections.npy'])
 
         # test every set of criteria
         for stack_criteria, expected_selection in zip(
@@ -491,11 +473,11 @@ class TestPsd:
         with np.errstate(under='ignore'):
             fig.savefig(image_path_3)
 
-    def test_earthquake_models(self):
+    def test_earthquake_models(self, _ppsd):
         """
         Test earthquake models
         """
-        ppsd = _get_ppsd()
+        ppsd = _ppsd
         test_magnitudes = [3.5, 2.5, 1.5]
         distance = 10
         for magnitude in test_magnitudes:
@@ -515,14 +497,12 @@ class TestPsd:
             caption = 'M%.1f\n%dkm' % (magnitude, distance)
             assert ax.texts[0].get_text() == caption
 
-    def test_ppsd_infrasound(self):
+    def test_ppsd_infrasound(self, testdata):
         """
         Test plotting psds on infrasound data
         """
-        wf = os.path.join(
-            PATH, 'IM.I59H1..BDF_2020_10_31.mseed')
-        md = os.path.join(
-            PATH, 'IM.I59H1..BDF_2020_10_31.xml')
+        wf = testdata['IM.I59H1..BDF_2020_10_31.mseed']
+        md = testdata['IM.I59H1..BDF_2020_10_31.xml']
         st = read(wf)
         inv = read_inventory(md)
         tr = st[0]
@@ -557,7 +537,7 @@ class TestPsd:
             dtype=np.float32)
         np.testing.assert_array_almost_equal(psd, expected, decimal=2)
 
-    def test_ppsd_add_npz(self, state):
+    def test_ppsd_add_npz(self, testdata):
         """
         Test PPSD.add_npz().
         """
@@ -566,7 +546,7 @@ class TestPsd:
         ppsd = PPSD(stats=Stats(dict(sampling_rate=150)), metadata=None,
                     db_bins=(-200, -50, 20.), period_step_octaves=1.4)
         _times_processed = np.load(
-            os.path.join(state.path, "ppsd_times_processed.npy")).tolist()
+            testdata['ppsd_times_processed.npy']).tolist()
         # change data to nowadays used nanoseconds POSIX timestamp
         _times_processed = [UTCDateTime(t)._ns for t in _times_processed]
         np.random.seed(1234)
@@ -665,8 +645,8 @@ class TestPsd:
             # be added to the PPSD data
             assert ppsd._PPSD__check_time_present(t)
 
-    def test_issue1216(self):
-        tr, paz = _get_sample_data()
+    def test_issue1216(self, _sample_data):
+        tr, paz = _sample_data
         st = Stream([tr])
         ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
         ppsd.add(st)
@@ -699,13 +679,13 @@ class TestPsd:
         assert ppsd.current_histogram is not None
         assert ppsd._current_hist_stack is not None
 
-    def test_wrong_trace_id_message(self, state):
+    def test_wrong_trace_id_message(self, _sample_data, testdata):
         """
         Test that we get the expected warning message on waveform/metadata
         mismatch.
         """
-        tr, _paz = _get_sample_data()
-        inv = read_inventory(os.path.join(state.path, 'IUANMO.xml'))
+        tr, _paz = _sample_data
+        inv = read_inventory(testdata['IUANMO.xml'])
         st = Stream([tr])
         ppsd = PPSD(tr.stats, inv)
         # metadata doesn't fit the trace ID specified via stats
@@ -722,11 +702,11 @@ class TestPsd:
         # should not add the data to the ppsd
         assert not ret
 
-    def test_ppsd_psd_values(self):
+    def test_ppsd_psd_values(self, _ppsd):
         """
         Test property psd values
         """
-        ppsd = _get_ppsd()
+        ppsd = _ppsd
         # just test against existing low level data access
         assert ppsd.psd_values == ppsd._binned_psds
         np.testing.assert_array_equal(ppsd.psd_values, ppsd._binned_psds)
@@ -734,11 +714,11 @@ class TestPsd:
         with pytest.raises(AttributeError):
             ppsd.psd_values = 123
 
-    def test_ppsd_temporal_plot(self, state, image_path):
+    def test_ppsd_temporal_plot(self, testdata, image_path):
         """
         Test plot of several period bins over time
         """
-        ppsd = PPSD.load_npz(state.example_ppsd_npz, allow_pickle=True)
+        ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
 
         restrictions = {'starttime': UTCDateTime(2011, 2, 6, 1, 1),
                         'endtime': UTCDateTime(2011, 2, 7, 21, 12),
@@ -773,11 +753,11 @@ class TestPsd:
             current = start.ns + (i * 30 * 60) * 1e9
             assert time == current
 
-    def test_ppsd_spectrogram_plot(self, state, image_path):
+    def test_ppsd_spectrogram_plot(self, testdata, image_path):
         """
         Test spectrogram type plot of PPSD
         """
-        ppsd = PPSD.load_npz(state.example_ppsd_npz, allow_pickle=True)
+        ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
 
         # add some gaps in the middle
         for i in sorted(list(range(30, 40)) + list(range(8, 18)) + [4])[::-1]:
@@ -786,7 +766,7 @@ class TestPsd:
 
         ppsd.plot_spectrogram(filename=image_path, show=False)
 
-    def test_exception_reading_newer_npz(self, state):
+    def test_exception_reading_newer_npz(self, testdata):
         """
         Checks that an exception is properly raised when trying to read a npz
         that was written on a more recent ObsPy version (specifically that has
@@ -801,7 +781,7 @@ class TestPsd:
                "consider updating your ObsPy installation.".format(
                    PPSD(stats=Stats(), metadata=None).ppsd_version))
         # 1 - loading a npz
-        data = np.load(state.example_ppsd_npz, allow_pickle=True)
+        data = np.load(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
         # we have to load, modify 'ppsd_version' and save the npz file for the
         # test..
         items = {key: data[key] for key in data.files}
@@ -815,7 +795,7 @@ class TestPsd:
             with pytest.raises(ObsPyException, match=re.escape(msg)):
                 PPSD.load_npz(filename)
         # 2 - adding a npz
-        ppsd = PPSD.load_npz(state.example_ppsd_npz, allow_pickle=True)
+        ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
         for method in (ppsd.add_npz, ppsd._add_npz):
             with NamedTemporaryFile() as tf:
                 filename = tf.name
@@ -840,14 +820,14 @@ class TestPsd:
             out[key] = getattr(ppsd, key)
         np.savez_compressed(filename, **out)
 
-    def test_can_read_npz_without_pickle(self, state):
+    def test_can_read_npz_without_pickle(self, testdata, _ppsd):
         """
         Ensures that a default PPSD can be written and read without having to
         allow np.load the use of pickle, or that a helpful error message is
         raised if allow_pickle is required. See #2409.
         """
         # Init a test PPSD and empty byte stream.
-        ppsd = PPSD.load_npz(state.example_ppsd_npz, allow_pickle=True)
+        ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
         byte_me = io.BytesIO()
         # Save PPSD to byte stream and rewind to 0.
         ppsd.save_npz(byte_me)
@@ -857,9 +837,9 @@ class TestPsd:
         assert isinstance(loaded_dict, dict)
         # A helpful error message is issued when allow_pickle is needed.
         with pytest.raises(ValueError, match='Loading PPSD results'):
-            PPSD.load_npz(state.example_ppsd_npz)
+            PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'])
 
-        ppsd = _internal_get_ppsd()
+        ppsd = _ppsd
         # save PPSD in such a way to mock old versions.
         with NamedTemporaryFile(suffix='.npz') as ntemp:
             temp_path = ntemp.name
@@ -871,14 +851,13 @@ class TestPsd:
                 PPSD.load_npz(temp_path)
 
     @pytest.mark.filterwarnings('ignore:.*time ranges already covered.*')
-    def test_can_add_npz_without_pickle(self):
+    def test_can_add_npz_without_pickle(self, _ppsd):
         """
         Ensure PPSD can be added without using the pickle protocol, or
         that a helpful error message is raised if allow_pickle is required.
         See #2409.
         """
-
-        ppsd = _internal_get_ppsd()
+        ppsd = _ppsd
         # save PPSD in such a way to mock old versions.
         with NamedTemporaryFile(suffix='.npz') as ntemp:
             temp_path = ntemp.name
@@ -889,12 +868,12 @@ class TestPsd:
             with pytest.raises(ValueError, match='Loading PPSD results'):
                 ppsd.add_npz(temp_path)
 
-    def test_short_trace_warning(self):
+    def test_short_trace_warning(self, _sample_data):
         """
         Makes sure a warning is shown if a trace shorter than ppsd length is
         added which is doing nothing. see #2386
         """
-        tr, paz = _get_sample_data()
+        tr, paz = _sample_data
         ppsd = PPSD(stats=tr.stats, metadata=paz)
         tr.data = tr.data[:4]  # shorten trace
         msg = (f"Trace is shorter than this PPSD's 'ppsd_length' "

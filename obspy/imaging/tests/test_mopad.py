@@ -2,8 +2,6 @@
 """
 The obspy.imaging.mopad test suite.
 """
-import os
-
 import matplotlib.pyplot as plt
 import pytest
 
@@ -15,8 +13,6 @@ class TestMopad:
     """
     Test cases for mopad.
     """
-    path = os.path.join(os.path.dirname(__file__), 'images')
-
     def test_mopad_collection(self, image_path):
         """
         Tests to plot mopad beachballs as collection into an existing axis

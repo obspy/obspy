@@ -3,25 +3,25 @@
 """
 The array_analysis test suite.
 """
-import unittest
-
 import numpy as np
+import pytest
 
 from obspy.signal.array_analysis import array_rotation_strain, get_geometry
 
 
-class ArrayTestCase(unittest.TestCase):
+class TestArray():
     """
     Test cases for array_analysis functions.
     """
-    def setUp(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
         self.array_coords = np.array([[0.0, 0.0, 0.0],
-                                      [-5.0, 7.0, 0.0],
-                                      [5.0, 7.0, 0.0],
-                                      [10.0, 0.0, 0.0],
-                                      [5.0, -7.0, 0.0],
-                                      [-5.0, -7.0, 0.0],
-                                      [-10.0, 0.0, 0.0]])
+                                     [-5.0, 7.0, 0.0],
+                                     [5.0, 7.0, 0.0],
+                                     [10.0, 0.0, 0.0],
+                                     [5.0, -7.0, 0.0],
+                                     [-5.0, -7.0, 0.0],
+                                     [-10.0, 0.0, 0.0]])
         self.subarray = np.array([0, 1, 2, 3, 4, 5, 6])
         self.ts1 = np.empty((1000, 7))
         self.ts2 = np.empty((1000, 7))
@@ -32,9 +32,6 @@ class ArrayTestCase(unittest.TestCase):
         self.sigmau = 0.0001
         self.Vp = 1.93
         self.Vs = 0.326
-
-    def tearDown(self):
-        pass
 
     def test_array_rotation(self):
         # tests function array_rotation_strain with synthetic data with pure

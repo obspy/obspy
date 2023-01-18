@@ -2,7 +2,6 @@
 """
 The obspy.imaging.beachball test suite.
 """
-import os
 import warnings
 
 import matplotlib.pyplot as plt
@@ -19,8 +18,6 @@ class TestBeachballPlot:
     """
     Test cases for beachball generation.
     """
-    path = os.path.join(os.path.dirname(__file__), 'images')
-
     def test_beachball(self, image_path):
         """
         Create beachball examples in tests/output directory.
