@@ -17,7 +17,6 @@ from obspy.signal.trigger import (
     recursive_sta_lta, recursive_sta_lta_py, trigger_onset, aic_simple,
     energy_ratio, modified_energy_ratio)
 from obspy.signal.util import clibsignal
-import pytest
 
 
 def aic_simple_python(a):
