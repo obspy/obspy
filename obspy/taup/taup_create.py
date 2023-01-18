@@ -124,7 +124,7 @@ class TauPCreate(object):
                 os.makedirs(dirname)
             self.tau_model.serialize(self.output_filename)
             if self.debug:
-                print("Done Saving " + self.output_filename)
+                print("Done Saving " + str(self.output_filename))
         except IOError as e:
             print("Tried to write!\n Caught IOError. Do you have write "
                   "permission in this directory?", e)
