@@ -364,11 +364,13 @@ class VelocityModel(object):
         Java!).
 
         :param filename: The name of the file to read.
-        :type filename: str
+        :type filename: str or :class:`~pathlib.Path`
 
         :raises NotImplementedError: If the file extension is ``.nd``.
         :raises ValueError: If the file extension is not ``.tvel``.
         """
+        if isinstance(filename, Path):
+            filename = str(filename)
         if filename.endswith(".nd"):
             v_mod = cls.read_nd_file(filename)
         elif filename.endswith(".tvel"):
@@ -405,10 +407,12 @@ class VelocityModel(object):
         Comments using ``#`` are also allowed.
 
         :param filename: The name of the file to read.
-        :type filename: str
+        :type filename: str or :class:`~pathlib.Path`
 
         :raises ValueError: If model file is in error.
         """
+        if isinstance(filename, Path):
+            filename = str(filename)
         # Read all lines in the file. Each Layer needs top and bottom values,
         # i.e. info from two lines.
         data = np.genfromtxt(filename, skip_header=2, comments='#')

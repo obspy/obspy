@@ -6,6 +6,7 @@ import ctypes as C  # NOQA
 import io
 import os
 import warnings
+from pathlib import Path
 from struct import pack
 
 import numpy as np
@@ -223,6 +224,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     >>> print(len(st))
     101
     """
+    if isinstance(mseed_object, Path):
+        mseed_object = str(mseed_object)
     # Parse the headonly and reclen flags.
     if headonly is True:
         unpack_data = 0

@@ -3,8 +3,7 @@
 """
 Tests the SeismicPhase class.
 """
-import inspect
-import os
+from pathlib import Path
 
 import pytest
 
@@ -14,10 +13,6 @@ from obspy.taup.tau_model import TauModel
 from obspy.taup.seismic_phase import SeismicPhase
 from obspy.taup.taup_create import build_taup_model
 from obspy.taup.helper_classes import TauModelError
-
-# Most generic way to get the data folder path.
-DATA = os.path.join(os.path.dirname(os.path.abspath(
-    inspect.getfile(inspect.currentframe()))), "data")
 
 
 class TestTauPySeismicPhase:
@@ -64,18 +59,18 @@ class TestTauPySeismicPhase:
             assert abs(phase.dist[i + 1]-max_rp_arrival.purist_dist) < 0.1
             assert abs(phase.time[i + 1]-max_rp_arrival.time) < time_tol
 
-    def test_many_identically_named_phases(self):
+    def test_many_identically_named_phases(self, testdata):
         """
         Regression test to make sure obspy.taup works with models that
         produce many identically names seismic phases.
         """
         with TemporaryWorkingDirectory():
-            folder = os.path.abspath(os.curdir)
+            folder = Path()
             model_name = "smooth_geodynamic_model"
             build_taup_model(
-                filename=os.path.join(DATA, model_name + ".tvel"),
+                filename=testdata[model_name + ".tvel"],
                 output_folder=folder, verbose=False)
-            m = TauPyModel(os.path.join(folder, model_name + ".npz"))
+            m = TauPyModel(str(folder / (model_name + ".npz")))
         arr = m.get_ray_paths(172.8000, 46.762440693494824, ["SS"])
         assert len(arr) > 10
 

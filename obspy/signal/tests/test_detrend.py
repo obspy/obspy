@@ -3,8 +3,6 @@
 """
 Tests for data detrending.
 """
-import os
-
 import numpy as np
 
 import obspy
@@ -15,9 +13,6 @@ class TestDetrend:
     """
     Test cases for the detrend methods.
     """
-    path = os.path.join(os.path.dirname(__file__), 'data')
-    path_images = os.path.join(os.path.dirname(__file__), 'images')
-
     def test_polynomial_detrend(self):
         """
         Simple test removing polynomial detrends.

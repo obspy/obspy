@@ -50,7 +50,7 @@ def get_runs(event=None, time=0):
 def deploy_artifact(run, other_path=None, overwrite=False):
     if run['event'] == 'pull_request':
         # if len(run['pull_requests']) != 1:
-        #    raise DeployError(f"found {len(run['pull_requests'])} PRs")
+        #     raise DeployError(f"found {len(run['pull_requests'])} PRs")
         # pr = run['pull_requests'][0]['number']
         pr = run['head_branch']
         if pr == 'master':
