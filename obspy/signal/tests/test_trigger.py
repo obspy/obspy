@@ -568,96 +568,92 @@ class TestTrigger():
         assert np.allclose(ref, c2[99:103])
 
 
-class EnergyRatioTestCase(unittest.TestCase):
+class TestEnergyRatio():
+    # parameterize ranges are based on chosen value of "a" with length 10
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
+        self.a = np.empty(10)
 
-    def test_all_zero(self):
-        a = np.zeros(10)
-        for nsta in range(1, len(a) // 2):
-            with self.subTest(nsta=nsta):
-                er = energy_ratio(a, nsta=nsta)
-                assert_array_equal(er, 0)
+    @pytest.mark.parametrize('nsta', (1, 2, 3, 4))
+    def test_all_zero(self, nsta):
+        self.a.fill(0)
+        er = energy_ratio(self.a, nsta=nsta)
+        assert_array_equal(er, 0)
 
     def test_arange(self):
-        a = np.arange(10)
-        er = energy_ratio(a, nsta=3)
+        self.a = np.arange(10)
+        er = energy_ratio(self.a, nsta=3)
         # Taken as the function output to keep track of regression bugs
         er_expected = [0., 0., 0., 10., 5.5, 3.793103, 2.98, 2.519481, 0., 0.]
         assert_array_almost_equal(er, er_expected)
 
-    def test_all_ones(self):
-        a = np.ones(10, dtype=np.float32)
+    @pytest.mark.parametrize('nsta', (1, 2, 3, 4, 5))
+    def test_all_ones(self, nsta):
+        self.a.fill(1)
         # Forward and backward entries are symmetric -> expecting output '1'
         # Fill nsta on both sides with zero to return same length
-        for nsta in range(1, len(a) // 2 + 1):
-            with self.subTest(nsta=nsta):
-                er = energy_ratio(a, nsta=nsta)
-                er_exp = np.zeros_like(a)
-                er_exp[nsta: len(a) - nsta + 1] = 1
-                assert_array_equal(er, er_exp)
+        er = energy_ratio(self.a, nsta=nsta)
+        er_exp = np.zeros_like(self.a)
+        er_exp[nsta: len(self.a) - nsta + 1] = 1
+        assert_array_equal(er, er_exp)
 
-    def test_nsta_too_large(self):
-        a = np.empty(10)
-        nsta = 6
-        for nsta in (6, 10, 20):
-            expected_msg = re.escape(
-                f'nsta ({nsta}) must not be larger than half the length of '
-                f'the data (10 samples).')
-            with pytest.raises(ValueError, match=expected_msg):
-                energy_ratio(a, nsta)
+    @pytest.mark.parametrize('nsta', (6, 10, 20))
+    def test_nsta_too_large(self, nsta):
+        expected_msg = re.escape(
+            f'nsta ({nsta}) must not be larger than half the length of '
+            f'the data (10 samples).')
+        with pytest.raises(ValueError, match=expected_msg):
+            energy_ratio(self.a, nsta)
 
-    def test_nsta_zero_or_less(self):
-        a = np.empty(10)
-        nsta = 6
-        for nsta in (0, -1, -10):
-            expected_msg = re.escape(
-                f'nsta ({nsta}) must not be equal to or less than zero.')
-            with pytest.raises(ValueError, match=expected_msg):
-                energy_ratio(a, nsta)
+    @pytest.mark.parametrize('nsta', (0, -1, -10))
+    def test_nsta_zero_or_less(self, nsta):
+        expected_msg = re.escape(
+            f'nsta ({nsta}) must not be equal to or less than zero.')
+        with pytest.raises(ValueError, match=expected_msg):
+            energy_ratio(self.a, nsta)
 
 
-class ModifiedEnergyRatioTestCase(unittest.TestCase):
+class TestModifiedEnergyRatio():
+    # parameterize ranges are based on chosen value of "a" with length 10
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
+        self.a = np.empty(10)
 
-    def test_all_zero(self):
-        a = np.zeros(10)
-        for nsta in range(1, len(a) // 2):
-            with self.subTest(nsta=nsta):
-                er = modified_energy_ratio(a, nsta=nsta)
-                assert_array_equal(er, 0)
+    @pytest.mark.parametrize('nsta', (1, 2, 3, 4))
+    def test_all_zero(self, nsta):
+        self.a.fill(0)
+        er = modified_energy_ratio(self.a, nsta=nsta)
+        assert_array_equal(er, 0)
 
     def test_arange(self):
-        a = np.arange(10)
-        er = modified_energy_ratio(a, nsta=3)
+        self.a = np.arange(10)
+        er = modified_energy_ratio(self.a, nsta=3)
         # Taken as the function output to keep track of regression bugs
         er_expected = [0., 0., 0., 27000., 10648., 6821.722908, 5716.135872,
                        5485.637866, 0., 0.]
         assert_array_almost_equal(er, er_expected)
 
-    def test_all_ones(self):
-        a = np.ones(10, dtype=np.float32)
+    @pytest.mark.parametrize('nsta', (1, 2, 3, 4, 5))
+    def test_all_ones(self, nsta):
+        self.a.fill(1)
         # Forward and backward entries are symmetric -> expecting output '1'
         # Fill nsta on both sides with zero to return same length
-        for nsta in range(1, len(a) // 2 + 1):
-            with self.subTest(nsta=nsta):
-                er = modified_energy_ratio(a, nsta=nsta)
-                er_exp = np.zeros_like(a)
-                er_exp[nsta: len(a) - nsta + 1] = 1
-                assert_array_equal(er, er_exp)
+        er = modified_energy_ratio(self.a, nsta=nsta)
+        er_exp = np.zeros_like(self.a)
+        er_exp[nsta: len(self.a) - nsta + 1] = 1
+        assert_array_equal(er, er_exp)
 
-    def test_nsta_too_large(self):
-        a = np.empty(10)
-        nsta = 6
-        for nsta in (6, 10, 20):
-            expected_msg = re.escape(
-                f'nsta ({nsta}) must not be larger than half the length of '
-                f'the data (10 samples).')
-            with pytest.raises(ValueError, match=expected_msg):
-                energy_ratio(a, nsta)
+    @pytest.mark.parametrize('nsta', (6, 10, 20))
+    def test_nsta_too_large(self, nsta):
+        expected_msg = re.escape(
+            f'nsta ({nsta}) must not be larger than half the length of '
+            f'the data (10 samples).')
+        with pytest.raises(ValueError, match=expected_msg):
+            energy_ratio(self.a, nsta)
 
-    def test_nsta_zero_or_less(self):
-        a = np.empty(10)
-        nsta = 6
-        for nsta in (0, -1, -10):
-            expected_msg = re.escape(
-                f'nsta ({nsta}) must not be equal to or less than zero.')
-            with pytest.raises(ValueError, match=expected_msg):
-                energy_ratio(a, nsta)
+    @pytest.mark.parametrize('nsta', (0, -1, -10))
+    def test_nsta_zero_or_less(self, nsta):
+        expected_msg = re.escape(
+            f'nsta ({nsta}) must not be equal to or less than zero.')
+        with pytest.raises(ValueError, match=expected_msg):
+            energy_ratio(self.a, nsta)
