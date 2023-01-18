@@ -538,12 +538,12 @@ class TestResponse:
         assert resp.instrument_sensitivity.value == overall_sensitivity
         assert np.abs(data).tolist() == [overall_sensitivity] * len(freqs)
 
-    def test_unkown_units_PA_recalculate_sensitivity(self):
+    def test_unkown_units_PA_recalculate_sensitivity(self, testdata):
         """
         Test recalculating overall sensitivity in presence of unusual units, in
         this case Pascal.
         """
-        inv = read_inventory(self.data_dir / 'hydrophone_response_PA.xml',
+        inv = read_inventory(testdata['hydrophone_response_PA.xml'],
                              format="STATIONXML")
         resp = inv[0][0][0].response
         msg = ("ObsPy can not map unit 'PA' to "

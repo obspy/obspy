@@ -352,14 +352,14 @@ class TestNLLOC():
         # compare test_rejected_origin test case
         assert cat[0].origins[0].evaluation_status is None
 
-    def test_rejected_origin(self):
+    def test_rejected_origin(self, testdata):
         """
         Tests that we are marking rejected event/origin as such.
         Also tests that NLLOC header line is written into comment.
         (testing that evaluation status is left empty on "LOCATED" reported by
         nonlinloc is tested in other test case.
         """
-        path = str(self.datapath / 'nlloc_rejected.hyp')
+        path = testdata['nlloc_rejected.hyp']
         cat = read_nlloc_hyp(path)
         expected_comment = (
             'NLLOC "./locs/20211214_2020-12-09_manual_loc/20211214_2020-12-09_'
