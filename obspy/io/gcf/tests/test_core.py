@@ -324,7 +324,7 @@ class TestCore():
                     'FIC': 0,
                     'RIC': 718,
                     'stat': 0})}
-        data = np.array([i for i in range(719)])
+        data = np.arange(719)
         tr = Trace(data=data, header=head)
         with NamedTemporaryFile() as tf:
             filename = tf.name
