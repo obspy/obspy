@@ -538,7 +538,7 @@ class TestResponse:
         assert resp.instrument_sensitivity.value == overall_sensitivity
         assert np.abs(data).tolist() == [overall_sensitivity] * len(freqs)
 
-    def test_unkown_units_PA_recalculate_sensitivity(self, testdata):
+    def test_unknown_units_PA_recalculate_sensitivity(self, testdata):
         """
         Test recalculating overall sensitivity in presence of unusual units, in
         this case Pascal.
