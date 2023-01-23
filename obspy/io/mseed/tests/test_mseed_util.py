@@ -59,24 +59,24 @@ def _create_mseed_file(filename, record_count, sampling_rate=1.0,
     if seed is not None:
         np.random.seed(seed)
 
-    data = np.fromfile(filename, dtype=np.int8)
+    data = np.fromfile(filename, dtype=np.uint8)
 
     # Modify the flags to get the required statistics.
     for key, value in all_flags.items():
         if key not in flags:
             continue
         _f = value["flags"]
-        _flag_values = np.zeros(record_count - skiprecords, dtype=np.int8)
+        _flag_values = np.zeros(record_count - skiprecords, dtype=np.uint8)
         for _i, name in enumerate(_f):
             if name not in flags[key]:
                 continue
             # Create array with the correct number of flags set.
-            arr = np.zeros(record_count - skiprecords, dtype=np.int8)
+            arr = np.zeros(record_count - skiprecords, dtype=np.uint8)
             arr[:flags[key][name]] = 1 << _i
             np.random.shuffle(arr)
             _flag_values |= arr
         data[value["offset"]:: 256] = np.concatenate([
-            np.zeros(skiprecords, dtype=np.int8), _flag_values])
+            np.zeros(skiprecords, dtype=np.uint8), _flag_values])
 
     # Write again.
     data.tofile(filename)

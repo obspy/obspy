@@ -629,6 +629,13 @@ class VelocityModel(object):
             above['bot_p_velocity'] != below['top_p_velocity'],
             above['bot_s_velocity'] != below['top_s_velocity'])
 
+        if len(mask) == 0:
+            # Special case where have no discontinuities
+            self.moho_depth = temp_moho_depth
+            self.cmb_depth = temp_cmb_depth
+            self.iocb_depth = temp_iocb_depth
+            return
+
         # Find discontinuity closest to current Moho
         moho_diff = np.abs(self.moho_depth - above['bot_depth'])
         moho_diff[~mask] = moho_min

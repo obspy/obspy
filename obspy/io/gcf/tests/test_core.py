@@ -301,3 +301,33 @@ class TestCore():
 
                 # compare
                 assert out_stream == in_stream
+
+    def test_split_last_block(self):
+        """
+        test writing a file where number of data would fit into a
+        single block but number of data will not be properly
+        set due to high compression level
+        """
+        head = {'starttime': UTCDateTime("2020-10-01 00:00:00"),
+                'sampling_rate': 100,
+                'station': 'XXXX',
+                'channel': 'HHZ',
+                'gcf': AttribDict({
+                    'system_id': 'XXXXZ0',
+                    'stream_id': 'XXXXZ0',
+                    'sys_type': 0,
+                    't_leap': False,
+                    'gain': -1,
+                    'digi': 0,
+                    'ttl': 0,
+                    'blk': 0,
+                    'FIC': 0,
+                    'RIC': 718,
+                    'stat': 0})}
+        data = np.arange(719)
+        tr = Trace(data=data, header=head)
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            _write_gcf(tr, filename)
+            st = _read_gcf(filename)
+        assert tr == st[0]
