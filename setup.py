@@ -83,13 +83,16 @@ EXTERNAL_LIBMSEED = False
 # Hard dependencies needed to install/run ObsPy.
 # Backwards compatibility hacks to be removed later:
 #  - matplotlib 3.3 (/3.4?): imaging (see #3242)
+# sqlalchemy pinned to <2.0 for now because of API changes that break
+# clients.filesystem.db. We suppress warnings in that module and also see
+# pytest.ini for some rules to ignore related warnings
 INSTALL_REQUIRES = [
     'numpy>=1.20',
     'scipy>=1.7',
     'matplotlib>=3.3',
     'lxml',
     'setuptools',
-    'sqlalchemy',
+    'sqlalchemy<2',
     'decorator',
     'requests',
 ]
