@@ -1003,7 +1003,7 @@ def _unified_content_strings_expanded(contents):
             end_str = "    "  # or "None" ?
         if item[5]:
             items.append("{l: >5s}.{c: <9s}{sr: 6.1f} Hz  {start: <.15s}"
-                         " - {end: <15.15s}  Depth {ldepth: <.1f} m"
+                         " - {end: <15.15s}  Depth {ldepth: >5.1f} m"
                          .format(l=item[0], c=item[1], sr=item[2],
                                  start=start_str, end=end_str,
                                  ldepth=item[5]))
