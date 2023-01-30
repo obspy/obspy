@@ -215,6 +215,8 @@ def _read_segy(filename, headonly=False, byteorder=None,
             #skip the remaining corrupt traces
             if(not skip_corrupt_traces):
                 raise e
+            #otherwise stop at the current trace
+            break
             
     return stream
 
