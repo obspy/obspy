@@ -969,8 +969,8 @@ def _unified_content_strings_expanded(contents):
                   item.depth]
                  for item in contents]
 
-    # sorts by sample rate, startdate, and channel code (ZNE321)
-    contents2 = sorted(contents2, key=lambda x: (x[2], x[1], x[3]),
+    # sorts by startdate, sample rate, and channel code (ZNE321)
+    contents2 = sorted(contents2, key=lambda x: (x[1], x[2], x[3]),
                        reverse=True)
 
     uniques = []
@@ -989,7 +989,7 @@ def _unified_content_strings_expanded(contents):
             c[0][1] = mergedch
         contents3.append(c[0])
 
-    contents3 = sorted(contents3, key=lambda x: (x[2], x[3], x[5]),
+    contents3 = sorted(contents3, key=lambda x: (x[3], x[2], x[5]),
                        reverse=True)
 
     items = []
