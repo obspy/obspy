@@ -114,7 +114,7 @@ class SEGYFile(object):
         :type skip_corrupt_traces: bool
         :param skip_corrupt_traces: Large segy files often have corrup traces, setting this parameter to True
                                     Causes them to be skipped instead of raising a SEGYTraceReadingError.
-                                    Defaulted to False so as not to upset any exsisting workflows which use this.
+                                    Defaulted to True 
         """
         if file is None:
             self._create_empty_segy_file_object()
@@ -418,7 +418,8 @@ class SEGYFile(object):
             try:
                 trace = SEGYTrace(self.file, self.data_encoding, self.endian,
                                   unpack_headers=unpack_headers,
-                                  filesize=filesize, headonly=headonly)
+                                  filesize=filesize, headonly=headonly,
+                                  skip_corrupt_traces=skip_corrupt_traces)
                 if yield_each_trace:
                     yield trace
                 else:
@@ -427,6 +428,7 @@ class SEGYFile(object):
                 break
             except SEGYTraceReadingError:
                 if(not skip_corrupt_traces):raise SEGYTraceReadingError
+                
 
 
 class SEGYBinaryFileHeader(object):
@@ -533,7 +535,8 @@ class SEGYTrace(object):
     Convenience class that internally handles a single SEG Y trace.
     """
     def __init__(self, file=None, data_encoding=4, endian='>',
-                 unpack_headers=False, filesize=None, headonly=False):
+                 unpack_headers=False, filesize=None, headonly=False,
+                 skip_corrupt_traces=False):
         """
         Convenience class that internally handles a single SEG Y trace.
 
@@ -593,9 +596,9 @@ class SEGYTrace(object):
             else:
                 self.filesize = os.fstat(self.file.fileno())[6]
         # Otherwise read the file.
-        self._read_trace(unpack_headers=unpack_headers, headonly=headonly)
+        self._read_trace(unpack_headers=unpack_headers, headonly=headonly,skip_corrupt_traces=skip_corrupt_traces)
 
-    def _read_trace(self, unpack_headers=False, headonly=False):
+    def _read_trace(self, unpack_headers=False, headonly=False,skip_corrupt_traces=False):
         """
         Reads the complete next header starting at the file pointer at
         self.file.
@@ -633,6 +636,10 @@ class SEGYTrace(object):
                   its trace header. This is most likely either due to a wrong
                   byte order or a corrupt file.
                   """.strip()
+            if(skip_corrupt_traces):
+                #seek until I reach the next segy header
+                
+                pass
             raise SEGYTraceReadingError(msg)
         if headonly:
             # skip reading the data, but still advance the file
@@ -984,7 +991,7 @@ def _internal_read_segy(file, endian=None, textual_header_encoding=None,
     :type skip_corrupt_traces: bool
     :param skip_corrupt_traces: Large segy files often have corrup traces, setting this parameter to True
                             Causes them to be skipped instead of raising a SEGYTraceReadingError.
-                            Defaulted to False so as not to upset any exsisting workflows which use this.
+                            Defaulted to True 
                             
     """
     return SEGYFile(file, endian=endian,

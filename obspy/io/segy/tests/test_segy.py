@@ -786,7 +786,24 @@ class SEGYTestCase(unittest.TestCase):
             "(100000) with format `>h` due to: `'h' format requires -32768 <="
             " number <= 32767`")
 
-
+    def test_reading_segy_file_with_corrupt_header(self):
+        """
+        This tests reading a segy file with a corrupt header using the skip_corrupt_traces=True option
+        """
+        goodSegy=obspy.core.stream.read(os.path.join(self.path, "good_sin_wave.sgy"))
+        corruptSegy=obspy.core.stream.read(os.path.join(self.path,"corrupt_sin_wave.sgy"),skip_corrupt_traces=True)
+        #headers should be the same (where not corrupt)
+        self.assertEqual(corruptSegy[0].stats.__str__(),goodSegy[0].stats.__str__())
+        self.assertEqual(corruptSegy[1].stats.__str__(),goodSegy[1].stats.__str__())
+        #data should be the same (where not corrupt)
+        np.testing.assert_array_equal(corruptSegy[0].data, goodSegy[0].data)
+        np.testing.assert_array_equal(corruptSegy[1].data, goodSegy[1].data)
+        #good segy file should return three traces while bad segy file 
+        #should only return two traces (since the third header is corrupt)
+        self.assertEqual(len(goodSegy),3)
+        self.assertEqual(len(corruptSegy),2)
+        
+        
 def rms(x, y):
     """
     Normalized RMS
