@@ -80,16 +80,16 @@ STATIONSERVICE=http://eida.gein.noa.gr/fdsnws/station/1/
 HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59
 
 DATACENTER=RASPISHAKE,http://raspberryshake.net/
-DATASELECTSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/dataselect/1/
-STATIONSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/station/1/
-EVENTSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/event/1/
+DATASELECTSERVICE=https://data.raspberryshake.org/fdsnws/dataselect/1/
+STATIONSERVICE=https://data.raspberryshake.org/fdsnws/station/1/
+EVENTSERVICE=https://data.raspberryshake.org/fdsnws/event/1/
 AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
         """
         assert FederatorRoutingClient._split_routing_response(
             data, "station") == \
             {"http://eida.gein.noa.gr":
                 "HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59",
-             "http://fdsnws.raspberryshakedata.com":
+             "https://data.raspberryshake.org":
                  "AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59"}
 
     def test_get_waveforms(self):
