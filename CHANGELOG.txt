@@ -12,6 +12,9 @@ Changes:
    * set origin evaluation status to "rejected" if nonlinloc reports the
      location run as "ABORTED", "IGNORED" or "REJECTED" (see #3230)
    * store "NLLOC" info header line in event and origin comments (see #3230)
+ - obspy.io.mseed.spread_time_over_file:
+   * new routine to spread a time interval progressively across all mseed
+     blockettes in a file
 
 maintenance_1.4.x
 =================
