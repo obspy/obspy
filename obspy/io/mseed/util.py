@@ -1676,9 +1676,10 @@ def shift_time_of_file(input_file, output_file, timeshift):
     # Write to the output file.
     data.tofile(output_file)
 
+
 def spread_time_over_file(input_file, output_file, timeshift):
     """
-    Takes a MiniSEED file and a time shift and changes every record to gradually
+    Takes a MiniSEED file and a time shift and changes each record to gradually
     spread the given time shift across all of the blockettes.  The intended use
     is to correct apparent gaps or overlaps less than a sample interval in
     continuous data that could arise due to hardware (clock drift) or
@@ -1713,7 +1714,7 @@ def spread_time_over_file(input_file, output_file, timeshift):
     .. rubric:: Technical details
 
     The function will loop over every record and change the "Time correction"
-    field in the fixed section of the MiniSEED data header by I*timeshift/(N-1),
+    field in the fixed section of the MiniSEED header by I*timeshift/(N-1),
     where N is the number of blockettes in the file and I is the blockette
     number (starting with zero).  Thus the start time of the file will be
     unchanged, but the end time will be later or earlier.  Unfortunately
@@ -1750,7 +1751,7 @@ def spread_time_over_file(input_file, output_file, timeshift):
     shift = timeshift / N
 
     # Loop over every record after the first.
-    for i in range(1,N+1):
+    for i in range(1, N+1):
         remaining_bytes = array_length - i*record_length
         if remaining_bytes < 48:
             if remaining_bytes > 0:
@@ -1782,8 +1783,8 @@ def spread_time_over_file(input_file, output_file, timeshift):
         # requires some more work by changing both, the actual time and the
         # time correction field.
         elif is_time_correction_applied:
-            msg = "The time shift can only be applied by actually changing the "
-            msg += "time. This is experimental. Please make sure the output "
+            msg = "The time shift can only be applied by actually changing the"
+            msg += " time. This is experimental. Please make sure the output "
             msg += "file is correct."
             warnings.warn(msg)
             # The whole process is not particularly fast or optimized but
