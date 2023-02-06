@@ -660,12 +660,14 @@ class TestMSEEDUtil():
             # Check individual data blockette offsets
             info = util.get_record_information(filename)
             rl = info["record_length"]
-            for i in range(0,10):
-               # Each blockette should be progressively shifted by 0.1 s
-               i_bef = util.get_record_information(filename,offset=i*rl)
-               i_aft = util.get_record_information(output_filename,offset=i*rl)
-               diff = int((i_aft['starttime'] - i_bef['starttime'])*10 + 0.5)
-               assert diff == i
+            for i in range(0, 10):
+                # Each blockette should be progressively shifted by 0.1 s
+                o = i*rl
+                i_bef = util.get_record_information(filename, offset=o)
+                i_aft = util.get_record_information(output_filename, offset=o)
+                diff = int((i_aft['starttime'] - i_bef['starttime'])*10 + 0.5)
+                assert diff == i
+
 
     def test_time_shifting_special_case(self, testdata):
         """
