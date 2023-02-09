@@ -15,7 +15,8 @@ dependencies:
   - scipy
   - requests  
   - setuptools
-  - sqlalchemy
+  # see #3258
+  - sqlalchemy < 2.0
   # docs
   - cartopy>=0.20
   - pip
