@@ -1065,9 +1065,9 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime, **kwargs):
                                    period=_float_conv(line[41:45]),
                                    pick_id=pick.resource_id,
                                    waveform_id=pick.waveform_id)
-            if pick.phase_hint == 'IAML':
-                # Amplitude for local magnitude
-                _amplitude.type = 'AML'
+            if 'AML' in pick.phase_hint:
+                # Amplitude for local magnitude - can be IAML, IAMLHF, AML
+                _amplitude.type = pick.phase_hint.removeprefix('I')  # 'AML'
                 # Set to be evaluating a point in the trace
                 _amplitude.category = 'point'
                 # Default AML unit in seisan is nm (Page 139 of seisan
@@ -1075,6 +1075,8 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime, **kwargs):
                 _amplitude.generic_amplitude /= 1e9
                 _amplitude.unit = 'm'
                 _amplitude.magnitude_hint = 'ML'
+            elif pick.phase_hint.startswith('A'):
+                _amplitude.type = pick.phase_hint
             else:
                 # Generic amplitude type
                 _amplitude.type = 'A'
@@ -1224,9 +1226,9 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                                    period=_float_conv(line[44:50]),
                                    pick_id=pick.resource_id,
                                    waveform_id=pick.waveform_id)
-            if pick.phase_hint == 'IAML':
-                # Amplitude for local magnitude
-                _amplitude.type = 'AML'
+            if 'AML' in pick.phase_hint:
+                # Amplitude for local magnitude - can be IAML, IAMLHF, AML
+                _amplitude.type = pick.phase_hint.removeprefix('I')  # 'AML'
                 # Set to be evaluating a point in the trace
                 _amplitude.category = 'point'
                 # Default AML unit in seisan is nm (Page 139 of seisan
@@ -1234,6 +1236,8 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                 _amplitude.generic_amplitude /= 1e9
                 _amplitude.unit = 'm'
                 _amplitude.magnitude_hint = 'ML'
+            elif pick.phase_hint.startswith('A'):
+                _amplitude.type = pick.phase_hint
             else:
                 # Generic amplitude type
                 _amplitude.type = 'A'
@@ -2272,10 +2276,14 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     else:
                         amp = None
                     coda = ' '
-                    mag_hint = (amplitude.magnitude_hint or amplitude.type)
+                    mag_hint = (amplitude.type or amplitude.magnitude_hint)
                     if (mag_hint is not None and
                             mag_hint.upper() in ['AML', 'ML']):
-                        phase_hint = 'IAML'
+                        if nordic_format == 'OLD':
+                            phase_hint = 'IAML'
+                            impulsivity = ' '
+                    if mag_hint.startswith('AML'):
+                        phase_hint = 'I' + mag_hint
                         impulsivity = ' '
                 else:
                     coda = str(int(amplitude.generic_amplitude))
@@ -2435,10 +2443,12 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                             and _is_iasp_ampl_phase(pick.phase_hint)):
                         is_amp_pick = True
                     mag_hint = (
-                        amplitudes[j].magnitude_hint or amplitudes[j].type)
+                        amplitudes[j].type or amplitudes[j].magnitude_hint)
                     if (mag_hint is not None and
                             mag_hint.upper() in ['AML', 'ML']):
                         amp_phase_hints.append('IAML')
+                    elif mag_hint.startswith('AML'):
+                        amp_phase_hints.append('I' + mag_hint)
                     else:
                         if amplitudes[j].type is not None:
                             amp_phase_hints.append(amplitudes[j].type)
@@ -2447,7 +2457,9 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     amp_eval_modes.append(' ' or INV_EVALUTATION_MAPPING.get(
                         amplitude.evaluation_mode, None))
                     amp_finalweights.append('  ')
-                    amp_par1s.append(_str_conv(amp, rounded=1).rjust(7)[0:7])
+                    # Amplitudes can be written with exponent; gives better
+                    # precision for small and large numbers.
+                    amp_par1s.append(str("{:7.2g}".format(amp)))
                     amp_par2s.append(
                         _str_conv(peri, rounded=peri_round).rjust(6)[0:6])
                     # Get StationMagnitude that corresponds to the amplitude to
