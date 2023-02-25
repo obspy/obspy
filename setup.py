@@ -92,7 +92,7 @@ INSTALL_REQUIRES = [
     'matplotlib>=3.3',
     'lxml',
     'setuptools',
-    'sqlalchemy<2',
+    'sqlalchemy>=1.4',
     'decorator',
     'requests',
 ]

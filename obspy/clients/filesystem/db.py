@@ -11,21 +11,8 @@ SQLAlchemy ORM definitions (database layout) for tsindex.db.
 import datetime
 
 from sqlalchemy import Column, String, Integer, Float
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.schema import PrimaryKeyConstraint
-
-
-# we pinned our dependency to sqlalchemy <2.0 for now, so these warnings are
-# irrelevant. eventually code should be migrated to work with sqlalchemy >=2.0
-# as well
-try:
-    from sqlalchemy.exc import MovedIn20Warning
-except ImportError:
-    pass
-else:
-    import warnings
-    warnings.filterwarnings('ignore', category=MovedIn20Warning)
-
 
 Base = declarative_base()
 
