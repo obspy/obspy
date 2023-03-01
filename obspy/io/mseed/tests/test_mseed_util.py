@@ -668,7 +668,6 @@ class TestMSEEDUtil():
                 diff = int((i_aft['starttime'] - i_bef['starttime'])*10 + 0.5)
                 assert diff == i
 
-
     def test_time_shifting_special_case(self, testdata):
         """
         Sometimes actually changing the time value is necessary. This works but
