@@ -18,7 +18,6 @@ import warnings
 import zipfile
 
 import numpy as np
-import pytest
 from decorator import decorator
 
 from obspy.core.util import get_example_file
@@ -114,6 +113,8 @@ def skip_on_network_error(func, *args, **kwargs):
     Decorator to mark test routines that fail with certain network
     errors (e.g. timeouts) as "skipped" rather than "Error".
     """
+    import pytest  # NOQA
+
     try:
         return func(*args, **kwargs)
     ###################################################
