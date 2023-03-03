@@ -83,8 +83,7 @@ Station RJOB (Jochberg, Bavaria, BW-Net)
     Access: None
     Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m
     Available Channels:
-     ..EH[ZNE]   200.0 Hz  2007-12-17 to None
-
+        ..EH[ZNE]   200.0 Hz  2007-12-17(351) -
 
 >>> cha = sta[0]
 >>> print(cha)  # doctest: +NORMALIZE_WHITESPACE
