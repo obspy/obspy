@@ -1586,9 +1586,25 @@ class Parser(object):
                     34, b55.stage_input_units)
                 o_u = self.resolve_abbreviation(
                     34, b55.stage_output_units)
-                response_list = [
-                    ResponseListElement(f, a, p) for f, a, p in
-                    zip(b55.frequency, b55.amplitude, b55.phase_angle)]
+                if len([_i for _i in blkts if _i.id == 55]) == 1 :
+                    response_list = [
+                        ResponseListElement(f, a, p) for f, a, p in
+                        zip(b55.frequency, b55.amplitude, b55.phase_angle)]
+                # mutiple blockette 55 are allowed according to SEED manual:
+                # combine to single response stage
+                else :
+                    _freq = []
+                    _amp = []
+                    _phase = []
+                    for  _i in blkts :
+                        if _i.id == 55 :
+                            _freq += _i.frequency
+                            _amp += _i.amplitude
+                            _phase += _i.phase_angle
+                    response_list = [
+                        ResponseListElement(f, a, p) for f, a, p in
+                        zip(_freq, _amp, _phase)]
+
                 response_stages.append(ResponseListResponseStage(
                     stage_sequence_number=b55.stage_sequence_number,
                     stage_gain=b58.sensitivity_gain if b58 else None,
