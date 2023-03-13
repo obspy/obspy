@@ -1704,17 +1704,17 @@ def spread_time_over_file(input_file, output_file, timeshift):
     :param output_file: The output filename.
     :type timeshift: int
     :param timeshift: The cumulative time shift to be progressively applied in
-        units of 0.0001 s.  Use an integer number.
+        units of 0.0001 s.  Use an integer number, e.g. ``10`` for a total
+        cumulative time shift of one millisecond.
 
-    Wise users will refrain from using this procedure to rewrite original
-    data files.  Using copies of those files will prevent catastrophic
-    corruption/destruction of data if something goes wrong.  Also always check
+    It is strongly recommended to not work directly on the original data to
+    avoid data loss in case anything goes wrong. Also always check
     the resulting output file.
 
     .. rubric:: Technical details
 
     The function will loop over every record and change the "Time correction"
-    field in the fixed section of the MiniSEED header by I*timeshift/(N-1),
+    field in the fixed section of the MiniSEED header by ``I*timeshift/(N-1)``,
     where N is the number of blockettes in the file and I is the blockette
     number (starting with zero).  Thus the start time of the file will be
     unchanged, but the end time will be later or earlier.  Unfortunately
