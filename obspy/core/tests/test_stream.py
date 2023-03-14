@@ -758,7 +758,7 @@ class TestStream:
                     latitude=0.0, longitude=0.0, elevation=0.0, depth=0.0,
                     start_date=UTCDateTime(1990, 1, 1),
                     end_date=UTCDateTime(1998, 1, 1)),
-            Channel(code='EHZ', location_code='00',
+            Channel(code='EHN', location_code='00',
                     latitude=0.0, longitude=0.0, elevation=0.0, depth=0.0,
                     start_date=UTCDateTime(1999, 1, 1))
         ]
