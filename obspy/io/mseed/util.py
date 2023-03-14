@@ -1729,6 +1729,10 @@ def spread_time_over_file(input_file, output_file, timeshift):
     record start time which is preferable.
     """
 
+    if timeshift != int(timeshift):
+        msg = "The time shift must be an integer."
+        raise ValueError(msg)
+
     timeshift = int(timeshift)
     # A timeshift of zero makes no sense.
     if timeshift == 0:

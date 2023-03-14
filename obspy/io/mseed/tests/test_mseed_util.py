@@ -606,7 +606,7 @@ class TestMSEEDUtil():
 
     def test_time_shifting(self, testdata):
         """
-        Tests the shift_time_of_file() and spread_time_over_file() functions.
+        Tests the shift_time_of_file() function.
         """
         with NamedTemporaryFile() as tf:
             output_filename = tf.name
@@ -648,14 +648,19 @@ class TestMSEEDUtil():
             st_before[0].stats.starttime -= 33.3
             assert st_before == st_after
 
-            # Test spread_time_over_file().
+    def test_time_spreading(self, testdata):
+        """
+        Tests spread_time_over_file() function.
+        """
+        with NamedTemporaryFile() as tf:
+            output_filename = tf.name
             filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
             # Shift by 0.9 seconds (0.1 s gap between each blockette in file)
             util.spread_time_over_file(filename, output_filename, 9000)
             st_before = _read_mseed(filename)
             st_after = _read_mseed(output_filename)
             st_before_et = st_before[0].stats.endtime + 0.9
-            st_after_et = st_after[len(st_after)-1].stats.endtime
+            st_after_et = st_after[-1].stats.endtime
             assert st_before_et - st_after_et == 0
             # Check individual data blockette offsets
             info = util.get_record_information(filename)
