@@ -8,6 +8,9 @@ Changes:
    * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility
+ - obspy.io.mseed.spread_time_over_file:
+   * new routine to spread a time interval progressively across all mseed
+     blockettes in a file (see #3271)
  - obspy.io.nlloc:
    * set origin evaluation status to "rejected" if nonlinloc reports the
      location run as "ABORTED", "IGNORED" or "REJECTED" (see #3230)

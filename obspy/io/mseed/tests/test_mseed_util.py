@@ -648,6 +648,31 @@ class TestMSEEDUtil():
             st_before[0].stats.starttime -= 33.3
             assert st_before == st_after
 
+    def test_time_spreading(self, testdata):
+        """
+        Tests spread_time_over_file() function.
+        """
+        with NamedTemporaryFile() as tf:
+            output_filename = tf.name
+            filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
+            # Shift by 0.9 seconds (0.1 s gap between each blockette in file)
+            util.spread_time_over_file(filename, output_filename, 9000)
+            st_before = _read_mseed(filename)
+            st_after = _read_mseed(output_filename)
+            st_before_et = st_before[0].stats.endtime + 0.9
+            st_after_et = st_after[-1].stats.endtime
+            assert st_before_et - st_after_et == 0
+            # Check individual data blockette offsets
+            info = util.get_record_information(filename)
+            rl = info["record_length"]
+            for i in range(0, 10):
+                # Each blockette should be progressively shifted by 0.1 s
+                o = i*rl
+                i_bef = util.get_record_information(filename, offset=o)
+                i_aft = util.get_record_information(output_filename, offset=o)
+                diff = int((i_aft['starttime'] - i_bef['starttime'])*10 + 0.5)
+                assert diff == i
+
     def test_time_shifting_special_case(self, testdata):
         """
         Sometimes actually changing the time value is necessary. This works but
