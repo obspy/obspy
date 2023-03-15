@@ -6,6 +6,8 @@ Changes:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
    * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
+   * inventory: additional formatting tweaks to expanded channel information
+     (see #3261)
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility
  - obspy.io.mseed.spread_time_over_file:

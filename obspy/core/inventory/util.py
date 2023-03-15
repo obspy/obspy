@@ -969,8 +969,8 @@ def _unified_content_strings_expanded(contents):
                   item.depth]
                  for item in contents]
 
-    # sorts by sample rate, startdate, and channel code (ZNE321)
-    contents2 = sorted(contents2, key=lambda x: (x[2], x[1], x[3]),
+    # sorts by startdate, sample rate, and channel code (ZNE321)
+    contents2 = sorted(contents2, key=lambda x: (x[1], x[2], x[3]),
                        reverse=True)
 
     uniques = []
@@ -989,23 +989,29 @@ def _unified_content_strings_expanded(contents):
             c[0][1] = mergedch
         contents3.append(c[0])
 
-    contents3 = sorted(contents3, key=lambda x: (x[2], x[3], x[5]),
+    contents3 = sorted(contents3, key=lambda x: (x[3], x[2], x[5]),
                        reverse=True)
 
     items = []
     for item in contents3:
-        if item[5] != 0:
-            items.append("{l: >5s}.{c: <9s}{sr: 6.1f} Hz  {start: <.10s}"
-                         " to {end: <.10s}  Depth {ldepth: <.1f} m"
+        start_str = "%.10s(%03d)" % (str(item[3]),
+                                     UTCDateTime(item[3]).julday)
+        if item[4]:
+            end_str = "%.10s(%03d)" % (str(item[4]),
+                                       UTCDateTime(item[4]).julday)
+        else:
+            end_str = "    "  # or "None" ?
+        if item[5]:
+            items.append("{l: >5s}.{c: <9s}{sr: 6.1f} Hz  {start: <.15s}"
+                         " - {end: <15.15s}  Depth {ldepth: >5.1f} m"
                          .format(l=item[0], c=item[1], sr=item[2],
-                                 start=str(item[3]), end=str(item[4]),
+                                 start=start_str, end=end_str,
                                  ldepth=item[5]))
         else:
-            items.append("{l: >5s}.{c: <9s}{sr: 6.1f} Hz  {start: <.10s}"
-                         " to {end: <.10s}".format(l=item[0], c=item[1],
-                                                   sr=item[2],
-                                                   start=str(item[3]),
-                                                   end=str(item[4])))
+            items.append("{l: >5s}.{c: <9s}{sr: 6.1f} Hz  {start: <.15s}"
+                         " - {end: <.15s}"
+                         .format(l=item[0], c=item[1], sr=item[2],
+                                 start=start_str, end=end_str))
 
     return items
 
