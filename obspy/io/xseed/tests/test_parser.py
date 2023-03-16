@@ -844,3 +844,19 @@ class TestParser():
         evresp = evalresp_for_frequencies(0.01, [0.0, 1.0, 10.0], filename,
                                           obspy.UTCDateTime(2015, 1, 2))
         np.testing.assert_allclose(obs_r, evresp)
+
+    def test_parsing_resp_file_with_mutiple_blockette55(self, testdata):
+        """
+        Test case for issue #3275. Allow reading mutiple blockette 55.
+        """
+        inv_xml = obspy.read_inventory(testdata['issue3275.xml'])
+        with warnings.catch_warnings(record=True):
+            warnings.filterwarnings("ignore", "Date is required")
+            inv_seed = obspy.read_inventory(testdata['issue3275.seed'])
+        freq_xml = [f.frequency for f in inv_xml[0][0][0].response
+                     .response_stages[0].response_list_elements]
+        # test file with two blockettes 55
+        freq_seed = [f.frequency for f in inv_seed[0][0][0].response
+                     .response_stages[0].response_list_elements]
+        assert len(freq_xml) == len(freq_seed)
+        assert freq_xml == freq_seed
