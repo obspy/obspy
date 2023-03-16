@@ -849,8 +849,8 @@ class TestParser():
         """
         Test case for issue #3275. Allow reading mutiple blockette 55.
         """
-        inv_xml = obspy.read_inventory('issue3275.xml')
-        inv_seed = obspy.read_inventory('issue3275.seed')
+        inv_xml = obspy.read_inventory(testdata['issue3275.xml'])
+        inv_seed = obspy.read_inventory(testdata['issue3275.seed'])
         freq_xml = [f.frequency for f in inv_xml[0][0][0].response
                      .response_stages[0].response_list_elements]
         # test file with two blockettes 55
