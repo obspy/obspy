@@ -340,6 +340,9 @@ def _parse_date_and_time(date, time):
         day, month, year = int(
             date[0]), MONTHS[date[1].lower()], int(date[2])
     else:
+        msg = (f"Unable to parse date string '{date_raw}' into year, month "
+               f"and day. Using 1970-01-01.")
+        warnings.warn(msg)
         return UTCDateTime(0)
 
     if len(time) == 3:
