@@ -18,6 +18,8 @@ Changes:
    * set origin evaluation status to "rejected" if nonlinloc reports the
      location run as "ABORTED", "IGNORED" or "REJECTED" (see #3230)
    * store "NLLOC" info header line in event and origin comments (see #3230)
+ - obspy.io.seg2:
+   * Less strict date/time parsing (#3283).
 
 maintenance_1.4.x
 =================
@@ -616,7 +618,6 @@ Changes:
    * Improve parsing of free-form entries (#2385).
    * Fix non-native endian data loading (#2385).
    * Regex date/time separator support (#2923).
-   * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
    * Adding support for SC3ML 0.10 (see #2024).
    * Update xsl to allow conversion of amplitude picks not associated with
