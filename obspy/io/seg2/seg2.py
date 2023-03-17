@@ -173,17 +173,9 @@ class SEG2(object):
         # XXX: Need some more generic date/time parsers.
         if "ACQUISITION_TIME" in self.stream.stats.seg2 \
                 and "ACQUISITION_DATE" in self.stream.stats.seg2:
-            time = self.stream.stats.seg2.ACQUISITION_TIME
-            date = self.stream.stats.seg2.ACQUISITION_DATE
-            # Split on any non numeric character
-            time = list(filter(None, re.split(r'\D+', time)))
-            # Split on space, dot (.), slash (/), and dash (-)
-            date = list(filter(None, re.split("[, ./-]+", date)))
-            hour, minute, second = int(time[0]), int(time[1]), float(time[2])
-            day, month, year = int(date[0]), MONTHS[date[1].lower()], \
-                int(date[2])
-            self.starttime = UTCDateTime(year, month, day, hour, minute,
-                                         second)
+            self.starttime = self.parse_date_and_time(
+                self.stream.stats.seg2.ACQUISITION_DATE,
+                self.stream.stats.seg2.ACQUISITION_TIME)
         else:
             self.starttime = UTCDateTime(0)
 
@@ -331,6 +323,37 @@ class SEG2(object):
             else:
                 value = cleanup_and_decode_string(value)
             setattr(attrib_dict, key, value)
+
+    def parse_date_and_time(self, date, time):
+        """
+        Parse the date and time into a UTCDateTime object
+        """
+        # Split on any non numeric character
+        time = list(filter(None, re.split(r'\D+', time)))
+        # Split on space, dot (.), slash (/), and dash (-)
+        date = list(filter(None, re.split("[, ./-]+", date)))
+
+        # We need the full date to process time
+        if len(date) > 2:
+            day, month, year = int(
+                date[0]), MONTHS[date[1].lower()], int(date[2])
+        else:
+            return UTCDateTime(0)
+
+        if len(time) == 3:
+            hour = int(time[0])
+            minute = int(time[1])
+            second = float(time[2])
+            return UTCDateTime(year, month, day, hour, minute, second)
+        elif len(time) == 2:
+            hour = int(time[0])
+            minute = int(time[1])
+            return UTCDateTime(year, month, day, hour, minute)
+        elif len(time) == 1:
+            hour = int(time[0])
+            return UTCDateTime(year, month, day, hour)
+        else:
+            return UTCDateTime(year, month, day)
 
 
 def _is_seg2(filename):
