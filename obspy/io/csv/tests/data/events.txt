@@ -1,0 +1,3 @@
+#EventID | Time | Latitude | Longitude | Depth/km | Author | Catalog | Contributor | ContributorID | MagType | Magnitude | MagAuthor | EventLocationName
+3337497|2012-04-11T08:38:37.00000|2.237600|93.014400|26.300|ISC||ISC||MW|8.60|GCMT|SUMATRA
+2413|1960-05-22T19:11:14.00000|-38.170000|-72.570000|0.000||||||8.50||
