@@ -1,4 +1,3 @@
-## Copyright 2022 Tom Eulenfeld, MIT license
 """
 CSV and CSZ read/write support for ObsPy earthquake catalogs
 
@@ -50,10 +49,10 @@ FIELDS = {
     'eventtxt': (
         '{id},{time!s:.25},{lat:.6f},{lon:.6f},{dep:.3f},{author},,{contrib},,'
         '{magtype},{mag:.2f},{magauthor},{region}').split(',')
-    }
+}
 PFIELDS = {
     'basic': '{seedid} {phase} {time:.5f} {weight:.3f}'
-    }
+}
 CSZ_COMMENT = f'CSZ format v{__version__} obspy_no_uncompress'.encode('utf-8')
 # for load_csv
 DTYPE = {
@@ -64,7 +63,7 @@ DTYPE = {
     'mag': float,
     'magtype': 'U10',
     'id': 'U50'
-    }
+}
 
 # catalog and contribid are not used
 EVENTTXT_NAMES = (  # for reading
@@ -79,14 +78,14 @@ EVENTTXT_HEADER = (  # for writing
 def _is_csv(fname, **kwargs):
     try:
         return _read_csv(fname, format_check=True)
-    except:
+    except Exception:
         return False
 
 
 def _is_eventtxt(fname, **kwargs):
     try:
         return _read_eventtxt(fname, format_check=True)
-    except:
+    except Exception:
         return False
 
 
@@ -97,7 +96,7 @@ def _is_csz(fname, **kwargs):
             assert (zipf.comment.startswith(b'CSZ') and
                     zipf.comment.endswith(b'obspy_no_uncompress'))
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -160,7 +159,7 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
         catalog = read_events('external.csv', 'CSV', skipheader=1, names=names)
     """
     if default is None:
-        default= DEFAULT
+        default = DEFAULT
     events = []
     with _open(fname) as f:
         for _ in range(skipheader):
@@ -195,7 +194,7 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
                 longitude=row['lon'],
                 depth=dep,
                 creation_info=info
-                )
+            )
             try:
                 # add zero to eliminate negative zeros in magnitudes
                 mag = float(row['mag']) + 0
@@ -227,7 +226,7 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
                 origins=[origin],
                 resource_id=id_,
                 event_descriptions=descs
-                )
+            )
             events.append(event)
             if format_check:
                 return True
@@ -306,7 +305,7 @@ def _write_csv(events, fname, fields='basic', depth_in_km=True, delimiter=',',
             d = {'time': origin.time,
                  'lat': origin.latitude,
                  'lon': origin.longitude,
-                 'dep' if depth_in_km else 'depm' : dep,
+                 'dep' if depth_in_km else 'depm': dep,
                  'mag': mag,
                  'magtype': magtype,
                  'id': evid,
@@ -340,9 +339,9 @@ def load_csv(fname, skipheader=0, only=None, names=None,
             names = f.readline().strip().split(',')
         names = _names_sequence(names)
         dtype = [(n, DTYPE[n]) for n in names if n in DTYPE and
-                        (only is None or n in only)]
+                 (only is None or n in only)]
         usecols = [i for i, n in enumerate(names) if n in DTYPE and
-                        (only is None or n in only)]
+                   (only is None or n in only)]
         kw.setdefault('usecols', usecols)
         kw.setdefault('dtype', dtype)
         return np.genfromtxt(f, delimiter=delimiter, **kw)
@@ -410,7 +409,7 @@ def _write_picks(event, fname, fields_picks='basic', delimiter=','):
     weights = {str(arrival.pick_id): arrival.time_weight
                for arrival in origin.arrivals if arrival.time_weight}
     phases = {str(arrival.pick_id): arrival.phase
-               for arrival in origin.arrivals if arrival.phase}
+              for arrival in origin.arrivals if arrival.phase}
     with _open(fname, 'w') as f:
         f.write(delimiter.join(fieldnames) + '\n')
         for pick in event.picks:

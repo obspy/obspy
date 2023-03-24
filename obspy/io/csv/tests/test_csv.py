@@ -1,4 +1,3 @@
-# Copyright 2022 Tom Eulenfeld, MIT license
 import io
 import os.path
 from tempfile import gettempdir
@@ -11,7 +10,6 @@ import obspycsv
 from packaging import version
 import pytest
 from obspy.core.util import get_example_file
-
 
 
 def test_csv():
@@ -94,6 +92,7 @@ def test_csz(check_compression=False):
     fname = os.path.join(tempdir, 'obbspycsv_testfile.csz')
     with NamedTemporaryFile(suffix='.csz') as ft:
         fname = ft.name
+
         def _test_write_read(events, **kw):
             events.write(fname, 'CSZ', **kw)
             assert obspycsv._is_csz(fname)
@@ -101,9 +100,9 @@ def test_csz(check_compression=False):
             assert len(events2) == len(events)
             for ev1, ev2 in zip(events, events2):
                 assert len(ev2.origins[0].arrivals) == \
-                                  len(ev1.origins[0].arrivals)
+                    len(ev1.origins[0].arrivals)
                 assert len(ev2.picks) == \
-                                 len(ev1.picks)
+                    len(ev1.picks)
         _test_write_read(events)
         _test_write_read(events, compression=False)
         try:
