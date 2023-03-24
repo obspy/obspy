@@ -180,7 +180,7 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
                     dep = float(row['dep']) * 1000
                 if math.isnan(dep):
                     raise
-            except:
+            except Exception:
                 dep = None
             author = _string(row, 'author')
             contrib = _string(row, 'contrib')
@@ -200,14 +200,14 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
                 mag = float(row['mag']) + 0
                 if math.isnan(mag):
                     raise
-            except:
+            except Exception:
                 magnitudes = []
             else:
                 try:
                     magtype = row['magtype']
                     if magtype.lower() in ('', 'none', 'null', 'nan'):
                         raise
-                except:
+                except Exception:
                     magtype = default.get('magtype')
                 magauthor = _string(row, 'magauthor')
                 info = (evmod.CreationInfo(author=magauthor) if magauthor
@@ -216,7 +216,7 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
                     mag=mag, magnitude_type=magtype, creation_info=info)]
             try:
                 id_ = evmod.ResourceIdentifier(row['id'].strip())
-            except:
+            except Exception:
                 id_ = None
             region = _string(row, 'region')
             descs = ([evmod.EventDescription(region, 'region name')]
@@ -266,7 +266,7 @@ def _write_csv(events, fname, fields='basic', depth_in_km=True, delimiter=',',
             evid = str(event.resource_id).split('/')[-1]
             try:
                 origin = _origin(event)
-            except:
+            except Exception:
                 warn(f'No origin found -> do not write event {evid}')
                 continue
             try:
@@ -279,7 +279,7 @@ def _write_csv(events, fname, fields='basic', depth_in_km=True, delimiter=',',
                 contrib = ''
             try:
                 magnitude = event.preferred_magnitude() or event.magnitudes[0]
-            except:
+            except Exception:
                 warn(f'No magnitude found for event {evid}')
                 mag = float('nan')
                 magtype = ''
@@ -289,11 +289,11 @@ def _write_csv(events, fname, fields='basic', depth_in_km=True, delimiter=',',
                 magtype = magnitude.magnitude_type or ''
                 try:
                     magauthor = magnitude.creation_info.author
-                except:
+                except AttributeError:
                     magauthor = ''
             try:
                 dep = origin.depth / (1000 if depth_in_km else 1)
-            except:
+            except Exception:
                 warn(f'No depth set for event {evid}')
                 dep = float('nan')
             for description in event.event_descriptions:
@@ -416,7 +416,7 @@ def _write_picks(event, fname, fields_picks='basic', delimiter=','):
             pick_id = str(pick.resource_id)
             try:
                 seedid = pick.waveform_id.id
-            except:
+            except AttributeError:
                 warn(f'No waveform id found for pick {pick_id}')
                 seedid = ''
             d = {'time': pick.time - origin.time,
@@ -477,7 +477,7 @@ def _write_csz(events, fname, fields='basic', fields_picks='basic', **kwargs):
             evid = str(event.resource_id).split('/')[-1]
             try:
                 _origin(event)
-            except:
+            except Exception:
                 continue
             with io.StringIO() as f:
                 _write_picks(event, f, fields_picks=fields_picks)
