@@ -205,8 +205,8 @@ def test_eventtxt():
     assert events[0].magnitudes[0].creation_info.author == 'GCMT'
     assert events[0].event_descriptions[0].text == 'SUMATRA'
     assert len(events[0].magnitudes) == 1
-    assert events[1].origins[0].creation_info == None
-    assert events[1].magnitudes[0].creation_info == None
+    assert events[1].origins[0].creation_info is None
+    assert events[1].magnitudes[0].creation_info is None
     assert list(arr['mag']) == [8.6, 8.5]
     with open(fname) as f:
         eventtxt = f.read()
