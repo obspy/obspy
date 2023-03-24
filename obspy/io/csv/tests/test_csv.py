@@ -106,7 +106,7 @@ def test_csz(check_compression=False):
         _test_write_read(events)
         _test_write_read(events, compression=False)
         try:
-            import zlib  # flake8: noqa
+            import zlib  # noqa: F401
         except ImportError:
             pass
         else:
