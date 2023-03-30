@@ -415,6 +415,8 @@ def _write_picks(event, fname, fields_picks='basic', delimiter=','):
             pick_id = str(pick.resource_id)
             try:
                 seedid = pick.waveform_id.id
+                if seedid is None:
+                    raise AttributeError
             except AttributeError:
                 warn(f'No waveform id found for pick {pick_id}')
                 seedid = ''

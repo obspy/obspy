@@ -120,6 +120,7 @@ def test_csz(check_compression=False):
         assert (len(events2[0].origins[0].arrivals) ==
                 len(events[0].origins[0].arrivals))
         assert len(events2[0].picks) == len(events[0].picks)
+        assert events2[0].picks[0].waveform_id is None
 
 
 def test_csz_without_picks(check_compression=False):
