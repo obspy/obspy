@@ -50,7 +50,7 @@ def test_csv_incomplete_catalog():
     events[2].origins = []
     events[2].preferred_origin_id = None
     with NamedTemporaryFile(suffix='.csv') as ft:
-        with pytest.warns(Warning):
+        with pytest.warns(Warning, match='.*event 2012'):
             events.write(ft.name, 'CSV')
         events2 = read_events(ft.name, 'CSV')
     assert len(events2) == 2
@@ -114,7 +114,7 @@ def test_csz(check_compression=False):
         # test with missing origin and waveformid
         events[1].origins = []
         events[0].picks[0].waveform_id = None
-        with pytest.warns(Warning):
+        with pytest.warns(Warning, match='No.*found'):
             events.write(fname, 'CSZ')
         assert iocsv._is_csz(fname)
         events2 = read_events(fname, check_compression=check_compression)
@@ -164,7 +164,7 @@ def test_load_csv_incomplete_catalog():
     events[2].origins = []
     events[2].preferred_origin_id = None
     with NamedTemporaryFile(suffix='.csv') as ft:
-        with pytest.warns(Warning):
+        with pytest.warns(Warning, match='No.*found.*for event'):
             events.write(ft.name, 'CSV')
         t = iocsv.load_csv(ft.name)
     assert len(t) == 2
