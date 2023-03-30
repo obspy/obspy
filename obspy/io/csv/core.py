@@ -51,7 +51,8 @@ FIELDS = {
 PFIELDS = {
     'basic': '{seedid} {phase} {time:.5f} {weight:.3f}'
 }
-CSZ_COMMENT = f'CSZ format ObsPy v{__version__} obspy_no_uncompress'.encode('utf-8')
+CSZ_COMMENT = f'CSZ format ObsPy v{__version__} obspy_no_uncompress'.encode(
+    'utf-8')
 # for load_csv
 DTYPE = {
     'time': 'datetime64[ms]',
@@ -152,7 +153,8 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
 
     >>> from obspy import read_events
     >>> names = 'year mon day hour minu sec _ lat lon dep mag id'
-    >>> events = read_events('/path/to/external.csv', 'CSV', skipheader=1, names=names)
+    >>> events = read_events(
+    ...     '/path/to/external.csv', 'CSV', skipheader=1, names=names)
     >>> print(events)  # doctest: +NORMALIZE_WHITESPACE
     1 Event(s) in Catalog:
     2023-05-06T19:55:01.300000Z | +10.194, +124.830 | 0.2
