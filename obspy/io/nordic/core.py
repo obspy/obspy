@@ -2464,7 +2464,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     amp_finalweights.append('  ')
                     # Amplitudes can be written with exponent; gives better
                     # precision for small and large numbers.
-                    amp_par1s.append(str("{:7.2g}".format(amp)))
+                    amp_par1s.append(str("{:7.6g}".format(amp)))
                     amp_par2s.append(
                         _str_conv(peri, rounded=peri_round).rjust(6)[0:6])
                     # Get StationMagnitude that corresponds to the amplitude to
