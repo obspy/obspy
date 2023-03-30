@@ -6,7 +6,7 @@ time or year, mon, day, hour, minu, sec
 lat, lon, dep, mag, magtype, id
 (see also global FIELDS variable and help of read_csv)
 
-Note: This plugin can be easily extended to write and read more event
+Note: This module can be easily extended to write and read more event
 information.
 If you are interested, please send a PR to the github repository.
   1. Add 'extended' or similar key to FIELDS dict, e.g. as a start use
