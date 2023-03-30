@@ -228,6 +228,9 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
             if header['npts'] != len(data):
                 msg = "Mismatching byte size %d != %d"
                 warnings.warn(msg % (header['npts'], len(data)))
+                # Fix number of points manually so that it correctly describes
+                # data array. (see file 1990/01/90010319.1320J90)
+                header['npts'] = len(data)
             stream.append(Trace(data=data, header=header))
     fh.close()
     return stream
