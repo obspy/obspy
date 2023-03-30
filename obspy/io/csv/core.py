@@ -150,10 +150,12 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
     You can read csv files created by this module or external csv files.
     Example reading an external csv file:
 
-        from obspy import read_events
-        names = ('year mon day hour minu sec _ '
-                 'lat lon dep _ _ mag _ _ _ _ _ _ id')
-        catalog = read_events('external.csv', 'CSV', skipheader=1, names=names)
+    >>> from obspy import read_events
+    >>> names = 'year mon day hour minu sec _ lat lon dep mag id'
+    >>> events = read_events('/path/to/external.csv', 'CSV', skipheader=1, names=names)
+    >>> print(events)  # doctest: +NORMALIZE_WHITESPACE
+    1 Event(s) in Catalog:
+    2023-05-06T19:55:01.300000Z | +10.194, +124.830 | 0.2
     """
     if default is None:
         default = DEFAULT
