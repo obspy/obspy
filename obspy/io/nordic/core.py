@@ -2110,7 +2110,7 @@ def _write_comment(comment):
 
 def _write_event_id_line(event, userid=''):
     """
-    Write type-I line from value in event.extra.nordic_event_id.value if
+    Write type-I line from value in event.extra['nordic_event_id']['value'] if
     available, otherwise define event-ID from origin time.
     """
     id_line_str = (
