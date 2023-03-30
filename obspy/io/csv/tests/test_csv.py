@@ -149,7 +149,7 @@ def test_load_csv():
         events.write(ft.name, 'CSZ')
         t = iocsv.load_csv(ft.name)
     assert t['mag'][0] == 4.4
-    t = iocsv.events2array(events)
+    t = iocsv._events2array(events)
     assert t['mag'][0] == 4.4
 
 
@@ -187,7 +187,7 @@ def test_load_csv_some_cols():
 
 def test_events2array():
     events = read_events()
-    t = iocsv.events2array(events)
+    t = iocsv._events2array(events)
     assert t['mag'][0] == 4.4
 
 

@@ -348,7 +348,7 @@ def load_csv(fname, skipheader=0, only=None, names=None,
         return np.genfromtxt(f, delimiter=delimiter, **kw)
 
 
-def events2array(events, **kw):
+def _events2array(events, **kw):
     """
     Convert ObsPy catalog to numpy array
 

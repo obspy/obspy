@@ -128,4 +128,4 @@ Code example creating event plots::
     plt.show()
 """
 
-from obspy.io.csv.core import events2array, load_csv, load_eventtxt
+from obspy.io.csv.core import _events2array, load_csv, load_eventtxt
