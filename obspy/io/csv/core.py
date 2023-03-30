@@ -33,11 +33,8 @@ import zipfile
 
 
 import numpy as np
-from obspy import UTCDateTime as UTC
+from obspy import UTCDateTime as UTC, __version__
 from obspy.core import event as evmod
-
-
-__version__ = '0.8.1-dev'
 
 # for reading
 DEFAULT = {'magtype': ''}
@@ -53,7 +50,7 @@ FIELDS = {
 PFIELDS = {
     'basic': '{seedid} {phase} {time:.5f} {weight:.3f}'
 }
-CSZ_COMMENT = f'CSZ format v{__version__} obspy_no_uncompress'.encode('utf-8')
+CSZ_COMMENT = f'CSZ format ObsPy v{__version__} obspy_no_uncompress'.encode('utf-8')
 # for load_csv
 DTYPE = {
     'time': 'datetime64[ms]',
