@@ -171,6 +171,15 @@ class TestNordicMethods:
                 _assert_similarity(event_1=event_1, event_2=event_2,
                                    strict=False)
 
+    def test_read_compact_file(self, testdata):
+        """
+        Test reading of a compact Nordic file with only header lines.
+        """
+        cat = read_nordic(testdata['collect.out'])
+        assert len(cat) == 3
+        for event in cat:
+            assert len(event.picks) == 0
+
     def test_fail_writing(self):
         """
         Test a deliberate fail.
