@@ -132,20 +132,17 @@ def _string(row, key):
 
 
 def _read_csv(fname, skipheader=0, default=None, names=None,
-              check_compression=None, format_check=False,
-              **kwargs):
+              format_check=False, **kwargs):
     """
     Read a CSV file and return ObsPy Catalog
 
+    :param fname: file name
     :param skipheader: skip first rows of file
-    :param depth_in_kim: depth is given in kilometer (default: True) or
-        meter (False)
     :param default: dictionary with default values, at the moment only
          magtype is supported,
          i.e. to set magtypes use `default={'magtype': 'Ml'}`
     :param names: determined automatically from header line of file,
         otherwise can be specified as string, sequence or dict
-    :param check_compression: not used by read_csv
     :param format_check: Read only the first event
     :param **kargs: all other kwargs are passed to csv.DictReader,
         important additional arguments are fieldnames, dialect, delimiter, etc
@@ -430,17 +427,13 @@ def _write_picks(event, fname, fields_picks='basic', delimiter=','):
             f.write(fmtstr.format(**d) + '\n')
 
 
-def _read_csz(fname, default=None, check_compression=None):
+def _read_csz(fname, default=None):
     """
     Read a CSZ file and return ObsPy Catalog with picks
 
     :param default: dictionary with default values, at the moment only
          magtype is supported,
          i.e. to set magtypes use `default={'magtype': 'Ml'}`
-    :param check_compression: Has to be set to False, when using
-        ObsPy's read_events() function, otherwise ObsPy will automatically
-        unpack the zip file and reading it with obspycsv will not work.
-        The option is not used by read_csz.
     """
     with zipfile.ZipFile(fname) as zipf:
         with io.TextIOWrapper(zipf.open('events.csv'), encoding='utf-8') as f:
