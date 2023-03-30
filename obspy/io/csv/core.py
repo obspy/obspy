@@ -88,10 +88,12 @@ def _is_eventtxt(fname, **kwargs):
 
 def _is_csz(fname, **kwargs):
     try:
-        assert zipfile.is_zipfile(fname)
+        if not zipfile.is_zipfile(fname):
+            return False
         with zipfile.ZipFile(fname) as zipf:
-            assert (zipf.comment.startswith(b'CSZ') and
-                    zipf.comment.endswith(b'obspy_no_uncompress'))
+            if not (zipf.comment.startswith(b'CSZ') and
+                    zipf.comment.endswith(b'obspy_no_uncompress')):
+                return False
         return True
     except Exception:
         return False
