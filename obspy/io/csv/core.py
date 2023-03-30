@@ -27,6 +27,7 @@ import csv
 from contextlib import contextmanager
 import io
 import math
+import pathlib
 from string import Formatter
 from warnings import warn
 import zipfile
@@ -109,8 +110,8 @@ def _origin(event):
 
 @contextmanager
 def _open(filein, *args, **kwargs):
-    """Accept both files or file names"""
-    if isinstance(filein, str):  # filename
+    """Accept files or file names or pathlib objects"""
+    if isinstance(filein, (str, pathlib.PurePath)):  # filename
         with open(filein, *args, **kwargs) as f:
             yield f
     else:  # file-like object
