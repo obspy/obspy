@@ -925,9 +925,11 @@ def check_nordic_format_version(pickline):
         if line.isspace():
             return nordic_format, is_phase
 
-        old_format_secs = line[23:28].strip(' ')
+        old_format_secs = line[24:28].strip(' ')
         # Check whether the old-formatted seconds are a float rather than int.
         # If they are int, then it is probably new nordic format.
+        # (Compare only from char 24 to avoid letters from phase hint in new
+        # format)
         try:
             comp_str = old_format_secs.replace(' ', '').replace('A', '')
             if str(int(comp_str)) == old_format_secs:
@@ -1888,7 +1890,10 @@ def _write_high_accuracy_origin(origin):
         depth = ''
     evtime = origin.time
     if not evtime:
-        return
+        return ''
+    # Don't write high-accuracy line if there is no location at all
+    if not lat and not lon and not depth:
+        return ''
 
     # Cope with differences in event uncertainty naming
     if origin.quality and origin.quality['standard_error']:
