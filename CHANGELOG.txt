@@ -11,6 +11,8 @@ Changes:
      (see #3261)
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
+ - obspy.io:
+   * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
  - obspy.io.mseed.spread_time_over_file:
    * new routine to spread a time interval progressively across all mseed
      blockettes in a file (see #3271)
@@ -33,7 +35,7 @@ Changes:
      routine "beach" with providing an existing axes instance (for proper
      scaling) and saving to vector graphics as pdf/eps (see #2887)
  - obspy.io.gcf:
-   * Fixed an issue in algorithm to split and encode last few data into GCF 
+   * Fixed an issue in algorithm to split and encode last few data into GCF
      blocks (see #3252)
  - obspy.taup:
    * bugfix to allow calculations for a model with no discontinuities

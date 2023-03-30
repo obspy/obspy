@@ -334,7 +334,10 @@ ENTRY_POINTS = {
         'IMS10BULLETIN = obspy.io.iaspei.core',
         'EVT = obspy.io.sh.evt',
         'FOCMEC = obspy.io.focmec.core',
-        'HYPODDPHA = obspy.io.hypodd.pha'
+        'HYPODDPHA = obspy.io.hypodd.pha',
+        'CSV = obspy.io.csv.core',
+        'CSZ = obspy.io.csv.core',
+        'EVENTTXT = obspy.io.csv.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -417,6 +420,21 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.hypodd.pha:_is_pha',
         'readFormat = obspy.io.hypodd.pha:_read_pha',
         'writeFormat = obspy.io.hypodd.pha:_write_pha',
+        ],
+    'obspy.plugin.event.CSV': [
+        'isFormat = obspy.io.csv.core:_is_csv',
+        'readFormat = obspy.io.csv.core:_read_csv',
+        'writeFormat = obspy.io.csv.core:_write_csv',
+        ],
+    'obspy.plugin.event.CSZ': [
+        'isFormat = obspy.io.csv.core:_is_csz',
+        'readFormat = obspy.io.csv.core:_read_csz',
+        'writeFormat = obspy.io.csv.core:_write_csz',
+        ],
+    'obspy.plugin.event.EVENTTXT': [
+        'isFormat = obspy.io.csv.core:_is_eventtxt',
+        'readFormat = obspy.io.csv.core:_read_eventtxt',
+        'writeFormat = obspy.io.csv.core:_write_eventtxt',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
