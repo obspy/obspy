@@ -2464,7 +2464,15 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     amp_finalweights.append('  ')
                     # Amplitudes can be written with exponent; gives better
                     # precision for small and large numbers.
-                    amp_par1s.append(str("{:7.6g}".format(amp)))
+                    amp_str = str("{:7.6g}".format(amp))
+                    # With scientific e-notation, check if there is a decimal
+                    # point. Otherwise Fortran may read the value incorrectly
+                    # (e.g., for valye 100, Python writes '1e+02', but Fortran
+                    # reads value as 10. Fortran would understand 1.0e+02
+                    # correctly)
+                    if 'e' in amp_str and '.' not in amp_str:
+                        amp_str = str("{:#7.2g}".format(amp))
+                    amp_par1s.append(amp_str)
                     amp_par2s.append(
                         _str_conv(peri, rounded=peri_round).rjust(6)[0:6])
                     # Get StationMagnitude that corresponds to the amplitude to
