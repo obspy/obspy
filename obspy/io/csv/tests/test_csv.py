@@ -3,11 +3,9 @@ import os.path
 from tempfile import gettempdir
 
 import numpy as np
-import obspy
 from obspy import read_events
 from obspy.core.util import NamedTemporaryFile
 import obspy.io.csv.core as iocsv
-from packaging import version
 import pytest
 from obspy.core.util import get_example_file
 
@@ -135,8 +133,6 @@ def test_csz_without_picks(check_compression=False):
         assert len(events2) == len(events)
 
 
-@pytest.mark.skipif(version.parse(obspy.__version__) < version.parse('1.4'),
-                    reason='only supported for ObsPy>=1.4')
 def test_csz_without_check_compression_parameters():
     test_csz(check_compression=True)
     test_csz_without_picks(check_compression=True)
