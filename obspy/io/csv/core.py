@@ -30,6 +30,8 @@ import zipfile
 import numpy as np
 from obspy import UTCDateTime as UTC, __version__
 from obspy.core import event as evmod
+from obspy.core.util.decorator import map_example_filename
+
 
 # for reading
 DEFAULT = {'magtype': ''}
@@ -345,6 +347,7 @@ def _write_csv(events, fname, fields='basic', depth_in_km=True, delimiter=',',
             f.write(fmtstr.format(**d).replace('nan', '') + '\n')
 
 
+@map_example_filename('fname')
 def load_csv(fname, skipheader=0, only=None, names=None,
              delimiter=',', **kw):
     """
@@ -436,6 +439,7 @@ def _write_eventtxt(events, fname):
                       delimiter='|')
 
 
+@map_example_filename('fname')
 def load_eventtxt(fname, **kw):
     """
     Load EVENTTXT file into numpy array
