@@ -131,13 +131,13 @@ def _string(row, key):
 def _read_csv(fname, skipheader=0, default=None, names=None,
               format_check=False, **kwargs):
     """
-    Read a CSV file and return ObsPy Catalog
+    Read a CSV file and return ObsPy catalog
 
     :param fname: filename or file-like object to read from
     :param skipheader: skip first rows of file
     :param default: dictionary with default values, at the moment only
          magtype is supported,
-         i.e. to set magtypes use `default={'magtype': 'Ml'}`
+         i.e. to set magtypes use ``default={'magtype': 'Ml'}``
     :param names: determined automatically from header line of file,
         otherwise can be specified as string, sequence or dict
     :param format_check: Check if the first event can be read
@@ -416,7 +416,7 @@ def _read_eventtxt(fname, default=None, format_check=False):
     :param fname: filename or file-like object to read from
     :param default: dictionary with default values, at the moment only
          magtype is supported,
-         i.e. to set magtypes use `default={'magtype': 'Ml'}`
+         i.e. to set magtypes use ``default={'magtype': 'Ml'}``
     :param format_check: Check if the first event can be read
 
     For an example see :mod:`obspy.io.csv`.
@@ -516,7 +516,7 @@ def _read_csz(fname, default=None):
     :param fname: filename or file-like object to read from
     :param default: dictionary with default values, at the moment only
          magtype is supported,
-         i.e. to set magtypes use `default={'magtype': 'Ml'}`
+         i.e. to set magtypes use ``default={'magtype': 'Ml'}``
 
     For an example see :mod:`obspy.io.csv`.
     """
@@ -545,8 +545,9 @@ def _write_csz(events, fname, fields='basic', fields_picks='basic', **kwargs):
     :param fields_picks: set format and header names of CSV pick files, see
        :const:`obspy.io.csv.PFIELDS`, you can use your own format string here,
        just make sure to use the pre-defined header names
-    :param **kwargs: compression and compression level can be specified see
-        https://docs.python.org/library/zipfile.html#zipfile.ZipFile
+    :param **kwargs:
+ compression and compression level can be specified see
+ `zipfile doc <https://docs.python.org/library/zipfile.html#zipfile.ZipFile>`_:
         ```
         events.write('CSZ', compression=True, compresslevel=9)
         ```

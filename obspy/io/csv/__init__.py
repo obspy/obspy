@@ -27,10 +27,10 @@ id,time,lat,lon,dep,magtype,mag
 It is possible to load arbitrary CSV files. Define the field names in the code
 or use the first line in the file to define the field names.
 The following field names have to be used to read the origin time:
-`time` (UTC time string) or `year, mon, day, hour, minu, sec`.
+`time` (UTC time string) or ``'year, mon, day, hour, minu, sec'``.
 The following additional field names have to be used:
-`lat, lon, dep, mag`. `magtype`, `id` and some other fields are optional.
-For external CSV files, the format `'CSV'` has to be explicitly specified.
+``lat, lon, dep, mag``. ``magtype``, ``id`` and some other fields are optional.
+For external CSV files, the format ``'CSV'`` has to be explicitly specified.
 
 >>> from obspy.core.util import get_example_file
 >>> with open(get_example_file('external.csv')) as f: print(f.read())
@@ -51,6 +51,10 @@ The EVENTTXT format is a flavour of CSV, reading and writing is directly
 supported.
 
 >>> from obspy import read_events
+>>> print(read_events('/path/to/events.txt'))  # doctest: +NORMALIZE_WHITESPACE
+2 Event(s) in Catalog:
+2012-04-11T08:38:37.000000Z |  +2.238,  +93.014 | 8.6  MW
+1960-05-22T19:11:14.000000Z | -38.170,  -72.570 | 8.5
 >>> print(read_events('https://service.iris.edu/fdsnws/event/1/query?minmagnitude=8.5&format=text&endtime=2020-01-01'))  # doctest: +NORMALIZE_WHITESPACE
 7 Event(s) in Catalog:
 2012-04-11T08:38:37.000000Z |  +2.238,  +93.014 | 8.6  MW
@@ -69,7 +73,7 @@ Usage CSZ
 CSZ format can be used to store a catalog with picks in a set of csv files
 zipped into a single file.
 It works similar to NumPy's npz format.
-Compression may be used with `compression` and `compresslevel` parameters
+Compression may be used with ``compression`` and ``compresslevel`` parameters
 (see `zipfile doc <https://docs.python.org/library/zipfile.html#zipfile.ZipFile>`_).
 
 >>> events = read_events('/path/to/example.pha')
@@ -93,8 +97,8 @@ Load CSV/CSZ/EVENTTXT file into numpy array
 
 For plotting, e.t.c, it is useful to represent the event paramters with a numpy
 array.
-The `load_csv` function can be used to load a CSV or CSZ file as numpy array.
-The `load_eventtxt` function ca be used to load an EVENTTXT file as numpy array.
+The :func:`load_csv` function can be used to load a CSV or CSZ file as numpy array.
+The :func:`load_eventtxt` function ca be used to load an EVENTTXT file as numpy array.
 
 >>> from obspy.io.csv import load_csv, load_eventtxt
 >>> t = load_csv('/path/to/catalog.csv')
@@ -112,7 +116,7 @@ The `load_eventtxt` function ca be used to load an EVENTTXT file as numpy array.
 Convert ObsPy catalog into numpy array
 --------------------------------------
 
-The `_events2array` function  can be used to convert an ObsPy catalog to numpy array.
+The :func:`_events2array` function  can be used to convert an ObsPy catalog to numpy array.
 Code example creating event plots::
 
     import matplotlib.pyplot as plt
