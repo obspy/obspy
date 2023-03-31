@@ -96,7 +96,7 @@ array.
 The `load_csv` function can be used to load a CSV or CSZ file as numpy array.
 The `load_eventtxt` function ca be used to load an EVENTTXT file as numpy array.
 
->>> from obspy.io.csv import load_csv
+>>> from obspy.io.csv import load_csv, load_eventtxt
 >>> t = load_csv('/path/to/catalog.csv')
 >>> print(t)  # doctest: +NORMALIZE_WHITESPACE
 [ ('20120404_0000041', '2012-04-04T14:21:42.300',  41.818,  79.689,   1. , 'mb',  4.4)
@@ -104,6 +104,10 @@ The `load_eventtxt` function ca be used to load an EVENTTXT file as numpy array.
   ('20120404_0000039', '2012-04-04T14:08:46.000',  38.017,  37.736,   7. , 'ML',  3. )]
  >>> print(t['mag'])
  [ 4.4  4.3  3. ]
+ >>> t2 = load_eventtxt('/path/to/events.txt')
+ >>> print(t2)  # doctest: +NORMALIZE_WHITESPACE
+ [ ('3337497', '2012-04-11T08:38:37.000', 2.2376, 93.0144,  26.3, 'MW',  8.6)
+   ('2413', '1960-05-22T19:11:14.000', -38.17  , -72.57  ,   0. , '',  8.5)]
 
 Convert ObsPy catalog into numpy array
 --------------------------------------
