@@ -10,32 +10,27 @@ CSV format can be used to store a catalog with basic origin properties.
 Picks cannot be stored.
 
 >>> from obspy import read_events
->>> events = read_events()  # load example events
->>> print(events)
-3 Event(s) in Catalog:
-2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  mb | manual
-2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
-2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0  ML | manual
->>> events.write('catalog.csv', 'CSV')  # declare 'CSV' as format
->>> print(read_events('catalog.csv'))  # doctest: +NORMALIZE_WHITESPACE
+>>> events = read_events('/path/to/catalog.csv')
+>>> print(events)  # doctest: +NORMALIZE_WHITESPACE
 3 Event(s) in Catalog:
 2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  mb
 2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML
 2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0  ML
->>> with open('catalog.csv') as f: print(f.read())
+>>> events.write('local_catalog.csv', 'CSV')  # declare 'CSV' as format
+>>> with open('local_catalog.csv') as f: print(f.read())
 id,time,lat,lon,dep,magtype,mag
 20120404_0000041,2012-04-04T14:21:42.30000,41.818000,79.689000,1.000,mb,4.40
 20120404_0000038,2012-04-04T14:18:37.00000,39.342000,41.044000,14.400,ML,4.30
 20120404_0000039,2012-04-04T14:08:46.00000,38.017000,37.736000,7.000,ML,3.00
 <BLANKLINE>
 
-It is possible to load arbitrary csv files. Define the field names in the code
+It is possible to load arbitrary CSV files. Define the field names in the code
 or use the first line in the file to define the field names.
 The following field names have to be used to read the origin time:
 `time` (UTC time string) or `year, mon, day, hour, minu, sec`.
 The following additional field names have to be used:
 `lat, lon, dep, mag`. `magtype`, `id` and some other fields are optional.
-For external csv files, the format `'CSV'` has to be explicitly specified.
+For external CSV files, the format `'CSV'` has to be explicitly specified.
 
 >>> from obspy.core.util import get_example_file
 >>> with open(get_example_file('external.csv')) as f: print(f.read())
@@ -113,14 +108,14 @@ The `load_eventtxt` function ca be used to load an EVENTTXT file as numpy array.
 Convert ObsPy catalog into numpy array
 --------------------------------------
 
-The `events2array` function  can be used to convert an ObsPy catalog to numpy array.
+The `_events2array` function  can be used to convert an ObsPy catalog to numpy array.
 Code example creating event plots::
 
     import matplotlib.pyplot as plt
     from obspy import read_events
-    from obspy.io.csv import events2array
+    from obspy.io.csv import _events2array
     events = read_events()
-    t = events2array(events)
+    t = _events2array(events)
     plt.subplot(121)
     plt.scatter(t['lon'], t['lat'], 4*t['mag']**2)
     plt.subplot(122)
