@@ -2462,9 +2462,12 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     amp_eval_modes.append(' ' or INV_EVALUTATION_MAPPING.get(
                         amplitude.evaluation_mode, None))
                     amp_finalweights.append('  ')
-                    # Amplitudes can be written with exponent; gives better
-                    # precision for small and large numbers.
+                    # Amplitudes can be written without exponent; gives better
+                    # precision for small numbers.
                     amp_str = str("{:7.6g}".format(amp))
+                    # If exponent is needed, limit width:
+                    if 'e' in amp_str:
+                        amp_str = str("{:7.2g}".format(amp))
                     # With scientific e-notation, check if there is a decimal
                     # point. Otherwise Fortran may read the value incorrectly
                     # (e.g., for valye 100, Python writes '1e+02', but Fortran
