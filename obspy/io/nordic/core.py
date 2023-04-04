@@ -2464,7 +2464,7 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     amp_finalweights.append('  ')
                     # Amplitudes can be written without exponent; gives better
                     # precision for small numbers.
-                    amp_str = str("{:7.6g}".format(amp))
+                    amp_str = str("{:7.5g}".format(amp))
                     # If exponent is needed, limit width:
                     if 'e' in amp_str:
                         amp_str = str("{:7.2g}".format(amp))
