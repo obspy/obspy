@@ -31,9 +31,8 @@ def _filter(data, freqs, df, btype='band', ftype='butter',
     sos = iirfilter(corners, normalized_freqs, btype=btype,
                     ftype=ftype, output='sos')
     if zerophase:
-        firstpass = sosfilt(sos, data, axis=axis)
-        return np.flip(sosfilt(sos, np.flip(firstpass, axis=axis), axis=axis),
-                       axis=axis)
+        firstpass = np.flip(sosfilt(sos, data, axis=axis), axis=axis)
+        return np.flip(sosfilt(sos, firstpass, axis=axis), axis=axis)
     else:
         return sosfilt(sos, data, axis=axis)
 
