@@ -10,14 +10,15 @@ import numpy as np
 import scipy.signal as sg
 
 from obspy import read
-from obspy.signal.filter import (bandpass, highpass, lowpass, envelope,
-                                 lowpass_cheby_2)
+from obspy.signal.filter import (bandpass, bandstop, highpass, lowpass,
+                                 envelope, lowpass_cheby_2)
 
 
 class TestFilter():
     """
     Test cases for Filter.
     """
+
     def test_bandpass_vs_pitsa(self, testdata):
         """
         Test Butterworth bandpass filter against Butterworth bandpass filter
@@ -264,3 +265,21 @@ class TestFilter():
                 for got in (got1, got2, got3):
                     np.testing.assert_allclose(got, expected, rtol=1e-3,
                                                atol=0.9)
+
+    def test_filterarr2d_axis_and_zerophase(self):
+        """
+        See #2805
+        """
+        stream = read()
+        df = stream[0].stats.sampling_rate
+        arr = np.array([tr.data for tr in stream[:3]])
+        for filterf, args in [(bandpass, (1, 5)),
+                              (bandstop, (1, 5)),
+                              (lowpass, (5,)),
+                              (highpass, (5,))]:
+            for zerophase in (False, True):
+                farray = filterf(arr, *args, df=df, zerophase=zerophase)
+                fseries = [filterf(arr[i, :], *args,
+                                   df=df, zerophase=zerophase)
+                           for i in range(3)]
+                assert np.all(np.isclose(farray, fseries))
