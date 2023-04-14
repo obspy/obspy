@@ -21,14 +21,20 @@ import warnings
 import numpy as np
 from scipy.fftpack import hilbert
 from scipy.signal import (cheb2ord, cheby2, convolve, get_window, iirfilter,
-                          remez)
+                          remez, sosfilt)
 
-try:
-    from scipy.signal import sosfilt
-    from scipy.signal import zpk2sos
-except ImportError:
-    from ._sosfilt import _sosfilt as sosfilt
-    from ._sosfilt import _zpk2sos as zpk2sos
+
+def _filter(data, freqs, df, btype='band', ftype='butter',
+            corners=4, zerophase=False):
+    fe = 0.5 * df
+    normalized_freqs = [f/fe for f in freqs]
+    sos = iirfilter(corners, normalized_freqs, btype=btype,
+                    ftype=ftype, output='sos')
+    if zerophase:
+        firstpass = sosfilt(sos, data)
+        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
+    else:
+        return sosfilt(sos, data)
 
 
 def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
@@ -65,14 +71,8 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     if low > 1:
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
-    z, p, k = iirfilter(corners, [low, high], btype='band',
-                        ftype='butter', output='zpk')
-    sos = zpk2sos(z, p, k)
-    if zerophase:
-        firstpass = sosfilt(sos, data)
-        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
-    else:
-        return sosfilt(sos, data)
+    return _filter(data, (freqmin, freqmax), df, btype='band',
+                   corners=corners, zerophase=zerophase)
 
 
 def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
@@ -107,14 +107,8 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     if low > 1:
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
-    z, p, k = iirfilter(corners, [low, high],
-                        btype='bandstop', ftype='butter', output='zpk')
-    sos = zpk2sos(z, p, k)
-    if zerophase:
-        firstpass = sosfilt(sos, data)
-        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
-    else:
-        return sosfilt(sos, data)
+    return _filter(data, (freqmin, freqmax), df, btype='bandstop',
+                   corners=corners, zerophase=zerophase)
 
 
 def lowpass(data, freq, df, corners=4, zerophase=False):
@@ -144,14 +138,8 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
         msg = "Selected corner frequency is above Nyquist. " + \
               "Setting Nyquist as high corner."
         warnings.warn(msg)
-    z, p, k = iirfilter(corners, f, btype='lowpass', ftype='butter',
-                        output='zpk')
-    sos = zpk2sos(z, p, k)
-    if zerophase:
-        firstpass = sosfilt(sos, data)
-        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
-    else:
-        return sosfilt(sos, data)
+    return _filter(data, (freq,), df, btype='lowpass',
+                   corners=corners, zerophase=zerophase)
 
 
 def highpass(data, freq, df, corners=4, zerophase=False):
@@ -179,14 +167,8 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     if f > 1:
         msg = "Selected corner frequency is above Nyquist."
         raise ValueError(msg)
-    z, p, k = iirfilter(corners, f, btype='highpass', ftype='butter',
-                        output='zpk')
-    sos = zpk2sos(z, p, k)
-    if zerophase:
-        firstpass = sosfilt(sos, data)
-        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
-    else:
-        return sosfilt(sos, data)
+    return _filter(data, (freq,), df, btype='highpass',
+                   corners=corners, zerophase=zerophase)
 
 
 def envelope(data):
@@ -388,8 +370,7 @@ def lowpass_cheby_2(data, freq, df, maxorder=12, ba=False,
         order, wn = cheb2ord(wp, ws, rp, rs, analog=0)
     if ba:
         return cheby2(order, rs, wn, btype='low', analog=0, output='ba')
-    z, p, k = cheby2(order, rs, wn, btype='low', analog=0, output='zpk')
-    sos = zpk2sos(z, p, k)
+    sos = cheby2(order, rs, wn, btype='low', analog=0, output='sos')
     if freq_passband:
         return sosfilt(sos, data), wp * nyquist
     return sosfilt(sos, data)
