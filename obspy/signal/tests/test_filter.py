@@ -283,3 +283,7 @@ class TestFilter():
                                    df=df, zerophase=zerophase)
                            for i in range(3)]
                 assert np.all(np.isclose(farray, fseries))
+                # test filter along axis=0
+                farray2 = filterf(np.transpose(arr), *args, df=df,
+                                  zerophase=zerophase, axis=0)
+                assert np.all(np.isclose(farray2, np.transpose(farray)))

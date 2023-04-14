@@ -25,19 +25,21 @@ from scipy.signal import (cheb2ord, cheby2, convolve, get_window, iirfilter,
 
 
 def _filter(data, freqs, df, btype='band', ftype='butter',
-            corners=4, zerophase=False):
+            corners=4, zerophase=False, axis=-1):
     fe = 0.5 * df
     normalized_freqs = [f/fe for f in freqs]
     sos = iirfilter(corners, normalized_freqs, btype=btype,
                     ftype=ftype, output='sos')
     if zerophase:
-        firstpass = sosfilt(sos, data)
-        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
+        firstpass = sosfilt(sos, data, axis=axis)
+        return np.flip(sosfilt(sos, np.flip(firstpass, axis=axis), axis=axis),
+                       axis=axis)
     else:
-        return sosfilt(sos, data)
+        return sosfilt(sos, data, axis=axis)
 
 
-def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
+def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False,
+             axis=-1):
     """
     Butterworth-Bandpass Filter.
 
@@ -55,6 +57,9 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the filter order but zero phase shift in
         the resulting filtered trace.
+    :param axis: The axis of the input data array along which to apply the
+        linear filter. The filter is applied to each subarray along this axis.
+        Default is -1.
     :return: Filtered data.
     """
     fe = 0.5 * df
@@ -72,10 +77,11 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
     return _filter(data, (freqmin, freqmax), df, btype='band',
-                   corners=corners, zerophase=zerophase)
+                   corners=corners, zerophase=zerophase, axis=axis)
 
 
-def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
+def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False,
+             axis=-1):
     """
     Butterworth-Bandstop Filter.
 
@@ -93,6 +99,9 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
+    :param axis: The axis of the input data array along which to apply the
+        linear filter. The filter is applied to each subarray along this axis.
+        Default is -1.
     :return: Filtered data.
     """
     fe = 0.5 * df
@@ -108,10 +117,11 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
     return _filter(data, (freqmin, freqmax), df, btype='bandstop',
-                   corners=corners, zerophase=zerophase)
+                   corners=corners, zerophase=zerophase, axis=axis)
 
 
-def lowpass(data, freq, df, corners=4, zerophase=False):
+def lowpass(data, freq, df, corners=4, zerophase=False,
+            axis=-1):
     """
     Butterworth-Lowpass Filter.
 
@@ -128,6 +138,9 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
+    :param axis: The axis of the input data array along which to apply the
+        linear filter. The filter is applied to each subarray along this axis.
+        Default is -1.
     :return: Filtered data.
     """
     fe = 0.5 * df
@@ -139,10 +152,11 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
               "Setting Nyquist as high corner."
         warnings.warn(msg)
     return _filter(data, (freq,), df, btype='lowpass',
-                   corners=corners, zerophase=zerophase)
+                   corners=corners, zerophase=zerophase, axis=axis)
 
 
-def highpass(data, freq, df, corners=4, zerophase=False):
+def highpass(data, freq, df, corners=4, zerophase=False,
+             axis=-1):
     """
     Butterworth-Highpass Filter.
 
@@ -159,6 +173,9 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
+    :param axis: The axis of the input data array along which to apply the
+        linear filter. The filter is applied to each subarray along this axis.
+        Default is -1.
     :return: Filtered data.
     """
     fe = 0.5 * df
@@ -168,7 +185,7 @@ def highpass(data, freq, df, corners=4, zerophase=False):
         msg = "Selected corner frequency is above Nyquist."
         raise ValueError(msg)
     return _filter(data, (freq,), df, btype='highpass',
-                   corners=corners, zerophase=zerophase)
+                   corners=corners, zerophase=zerophase, axis=axis)
 
 
 def envelope(data):
