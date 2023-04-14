@@ -70,7 +70,7 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     sos = zpk2sos(z, p, k)
     if zerophase:
         firstpass = sosfilt(sos, data)
-        return sosfilt(sos, firstpass[::-1])[::-1]
+        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
     else:
         return sosfilt(sos, data)
 
@@ -112,7 +112,7 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     sos = zpk2sos(z, p, k)
     if zerophase:
         firstpass = sosfilt(sos, data)
-        return sosfilt(sos, firstpass[::-1])[::-1]
+        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
     else:
         return sosfilt(sos, data)
 
@@ -149,7 +149,7 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
     sos = zpk2sos(z, p, k)
     if zerophase:
         firstpass = sosfilt(sos, data)
-        return sosfilt(sos, firstpass[::-1])[::-1]
+        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
     else:
         return sosfilt(sos, data)
 
@@ -184,7 +184,7 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     sos = zpk2sos(z, p, k)
     if zerophase:
         firstpass = sosfilt(sos, data)
-        return sosfilt(sos, firstpass[::-1])[::-1]
+        return np.flip(sosfilt(sos, np.flip(firstpass, axis=-1)), axis=-1)
     else:
         return sosfilt(sos, data)
 
