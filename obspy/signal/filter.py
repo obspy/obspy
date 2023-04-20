@@ -24,11 +24,11 @@ from scipy.signal import (cheb2ord, cheby2, convolve, get_window, iirfilter,
                           remez, sosfilt)
 
 
-def _filter(data, freqs, df, btype='band', ftype='butter',
-            corners=4, zerophase=False, axis=-1):
+def _filter(data, freqs, df, rp=None, rs=None, btype='band', ftype='butter',
+            corners=4, zerophase=False, axis=-1, **kwargs):
     fe = 0.5 * df
     normalized_freqs = [f/fe for f in freqs]
-    sos = iirfilter(corners, normalized_freqs, btype=btype,
+    sos = iirfilter(corners, normalized_freqs, rp=rp, rs=rs, btype=btype,
                     ftype=ftype, output='sos')
     if zerophase:
         firstpass = np.flip(sosfilt(sos, data, axis=axis), axis=axis)
@@ -38,7 +38,7 @@ def _filter(data, freqs, df, btype='band', ftype='butter',
 
 
 def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False,
-             axis=-1):
+             rp=None, rs=None, ftype='butter', axis=-1):
     """
     Butterworth-Bandpass Filter.
 
@@ -71,16 +71,17 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False,
             freqmax, fe)
         warnings.warn(msg)
         return highpass(data, freq=freqmin, df=df, corners=corners,
-                        zerophase=zerophase)
+                        ftype=ftype, zerophase=zerophase)
     if low > 1:
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
-    return _filter(data, (freqmin, freqmax), df, btype='band',
+    return _filter(data, (freqmin, freqmax), df, rp=rp, rs=rs,
+                   btype='band', ftype=ftype,
                    corners=corners, zerophase=zerophase, axis=axis)
 
 
 def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False,
-             axis=-1):
+             rp=None, rs=None, ftype='butter', axis=-1):
     """
     Butterworth-Bandstop Filter.
 
@@ -115,12 +116,13 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False,
     if low > 1:
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
-    return _filter(data, (freqmin, freqmax), df, btype='bandstop',
+    return _filter(data, (freqmin, freqmax), df, rp=rp, rs=rs,
+                   btype='bandstop', ftype=ftype,
                    corners=corners, zerophase=zerophase, axis=axis)
 
 
 def lowpass(data, freq, df, corners=4, zerophase=False,
-            axis=-1):
+            rp=None, rs=None, ftype='butter', axis=-1):
     """
     Butterworth-Lowpass Filter.
 
@@ -150,12 +152,13 @@ def lowpass(data, freq, df, corners=4, zerophase=False,
         msg = "Selected corner frequency is above Nyquist. " + \
               "Setting Nyquist as high corner."
         warnings.warn(msg)
-    return _filter(data, (freq,), df, btype='lowpass',
+    return _filter(data, (freq,), df, rp=rp, rs=rs,
+                   btype='lowpass', ftype=ftype,
                    corners=corners, zerophase=zerophase, axis=axis)
 
 
 def highpass(data, freq, df, corners=4, zerophase=False,
-             axis=-1):
+             rp=None, rs=None, ftype='butter', axis=-1):
     """
     Butterworth-Highpass Filter.
 
@@ -183,7 +186,8 @@ def highpass(data, freq, df, corners=4, zerophase=False,
     if f > 1:
         msg = "Selected corner frequency is above Nyquist."
         raise ValueError(msg)
-    return _filter(data, (freq,), df, btype='highpass',
+    return _filter(data, (freq,), df, rp=rp, rs=rs,
+                   btype='highpass', ftype=ftype,
                    corners=corners, zerophase=zerophase, axis=axis)
 
 
