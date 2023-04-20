@@ -2835,3 +2835,16 @@ class TestStream:
         n1 = len(st.slice(None, utc)[0])
         n2 = len(st.trim(None, utc)[0])
         assert n1 == n2
+
+    def test_filter_freq_args(self):
+        st = read()
+        for filtert, freq in [('lowpass', 5,),
+                              ('highpass', 5)]:
+            stf1 = st.copy().filter(filtert, freq=freq)
+            stf2 = st.copy().filter(filtert, freq)
+            assert streams_almost_equal(stf2, stf1)
+        for filtert, freqmin, freqmax in [('bandpass', 1, 5),
+                                          ('bandstop', 1, 5)]:
+            stf1 = st.copy().filter(filtert, freqmin=freqmin, freqmax=freqmax)
+            stf2 = st.copy().filter(filtert, freqmin, freqmax)
+            assert streams_almost_equal(stf2, stf1)

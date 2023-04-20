@@ -1481,7 +1481,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @_add_processing_info
     @raise_if_masked
-    def filter(self, type, **options):
+    def filter(self, type, *freqs, **options):
         """
         Filter the data of the current trace.
 
@@ -1549,7 +1549,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # filtering
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
-        self.data = func(self.data, df=self.stats.sampling_rate, **options)
+        self.data = func(self.data, *freqs,
+                         df=self.stats.sampling_rate, **options)
         return self
 
     @_add_processing_info

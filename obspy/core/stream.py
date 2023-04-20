@@ -2181,7 +2181,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @raise_if_masked
-    def filter(self, type, **options):
+    def filter(self, type, *freqs, **options):
         """
         Filter the data of all traces in the Stream.
 
@@ -2242,7 +2242,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.plot()
         """
         for tr in self:
-            tr.filter(type, **options)
+            tr.filter(type, *freqs, **options)
         return self
 
     def trigger(self, type, **options):
