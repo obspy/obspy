@@ -554,7 +554,7 @@ class Inventory(ComparingObject):
             The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
             also modify the original object
-            (see https://docs.python.org/2/library/copy.html).
+            (see https://docs.python.org/3/library/copy.html).
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
@@ -687,7 +687,7 @@ class Inventory(ComparingObject):
             The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
             also modify the original object
-            (see https://docs.python.org/2/library/copy.html).
+            (see https://docs.python.org/3/library/copy.html).
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 

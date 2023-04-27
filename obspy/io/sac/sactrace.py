@@ -351,7 +351,7 @@ from . import arrayio as _io
 # class or on an instance.  This looks like "if instance is None" on methods.
 #
 # See:
-# https://docs.python.org/3.5/howto/descriptor.html
+# https://docs.python.org/3/howto/descriptor.html
 # https://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
 #   5758381/raw/descriptor_writeup.ipynb
 
