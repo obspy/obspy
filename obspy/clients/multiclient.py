@@ -28,12 +28,12 @@ class MultiClient(object):
     requested waveforms and a configuration that the user has to set up
     beforehand. In configuration the user can define which SEED ID should be
     fetched using what client. This can happend in the simplemost case just
-    based on the network code but also more fine grained controlled by the full
-    SEED ID and on in between levels of the SEED ID (station code etc.).
-    The MultiClient can be extended by arbitrary user defined clients as well
-    by adding to ``supported_client_types`` and ``supported_client_kwargs`` as
-    long as the client has a ``get_waveforms()`` method with the same call
-    syntax as obspy clients.
+    based on the network code but also more fine grained based on network and
+    station code.
+    The MultiClient can be extended by arbitrary user defined clients by adding
+    to ``supported_client_types`` and ``supported_client_kwargs`` as long as
+    the client has a ``get_waveforms()`` method with the same call syntax as
+    obspy clients.
 
     :param config: Path to a local file with the textual config or file-like
         object containing the config.
@@ -81,13 +81,20 @@ class MultiClient(object):
         # make all config keys case sensitive
         config.optionxform = str
         config.read(str(path))
-        # group lookup dictionary by lookup level, key for the grouping will
-        # simply be the number of '.' found in the key
-        self._lookup = {0: {}, 1: {}, 2: {}, 3: {}}
+        # group lookups for network only and network+station
+        self._lookup_net = {}
+        self._lookup_netsta = {}
         # go through all SEED ID lookup keys
         for lookup_key, client_key in config.items('lookup'):
             level = lookup_key.count('.')
-            self._lookup[level][lookup_key] = client_key
+            if level == 0:
+                self._lookup_net[lookup_key] = client_key
+            elif level == 1:
+                self._lookup_netsta[lookup_key] = client_key
+            else:
+                msg = (f"Invalid lookup key '{lookup_key}', should contain "
+                       f"at most one dot ('.').")
+                raise ValueError(msg)
 
     def _get_or_initialize_client(self, client_key):
         """
@@ -125,7 +132,7 @@ class MultiClient(object):
         self._clients[client_key] = client
         return client
 
-    def _lookup_client_key(self, network, station, location, channel):
+    def _lookup_client_key(self, network, station):
         """
         Lookup and return the client key that should be used to fetch the data
 
@@ -135,44 +142,34 @@ class MultiClient(object):
         if any(wildcard in network + station for wildcard in '?*'):
             msg = 'No wildcard characters allowed in network or station field'
             raise ValueError(msg)
-        if any(special_character in network + station + location + channel for
-               special_character in '[]'):
-            msg = "Characters '[' and ']' are not allowed in any field"
-            raise ValueError(msg)
-        lookup = self._lookup
-        nslc = '.'.join((network, station, location, channel))
-        nsl = '.'.join((network, station, location))
-        ns = '.'.join((network, station))
-        n = network
         msg_multiple_matches = (
-            "Requested SEED ID '{}' matches multiple lookup keys of the same "
-            "level defined in config ('{}'), using first matching lookup key "
-            "'{}'")
-        # try to match starting on full SEED level and succesively falling back
-        # to network level
-        for level, seed_id in zip((3, 2, 1, 0), (nslc, nsl, ns, n)):
+            f"Requested data '{network}.{station}' matches multiple lookup "
+            f"keys of the same level defined in config ('{{}}'), using first "
+            f"matching lookup key '{{}}' resolving to client key '{{}}'")
+        # try to match starting on network+station level and then if no match
+        # is found move to just network
+        for lookup, seed_id in zip((self._lookup_netsta, self._lookup_net),
+                                   (f'{network}.{station}', network)):
             # check for an exact match
-            if seed_id in lookup[level]:
-                return lookup[level][seed_id]
-            # if there are wildcards on location/channel level, skip to higher
-            # level if no exact match is found
-            if any(wildcard in network + station for wildcard in '?*'):
-                continue
+            if seed_id in lookup:
+                return lookup[seed_id]
             # if no direct match, go through and check also allowing for
             # wildcards
             matches = []
-            for lookup_key in self._lookup[level].keys():
+            for lookup_key in lookup:
                 if fnmatch.fnmatch(seed_id, lookup_key):
                     matches.append(lookup_key)
-            if len(matches) > 1:
-                msg = msg_multiple_matches.format(
-                    nslc, "', '".join(matches), matches[0])
-                warnings.warn(msg)
             # no match found on this level, go to more general level
             if not matches:
                 continue
-            return lookup[level][matches[0]]
-        msg = f"Found no matching lookup keys for requested SEED ID: '{nslc}'"
+            client_key = lookup[matches[0]]
+            if len(matches) > 1:
+                msg = msg_multiple_matches.format(
+                    "', '".join(matches), matches[0], client_key)
+                warnings.warn(msg)
+            return client_key
+        msg = (f"Found no matching lookup keys for requested data "
+               f"'{network}.{station}'")
         raise Exception(msg)
 
     def get_waveforms(self, network, station, location, channel, starttime,
@@ -189,31 +186,22 @@ class MultiClient(object):
         :type location: str
         :param location: Location code of requested data. Wildcards '?' and '*'
             are allowed (if the specific client that is eventually used for the
-            request supports them). However, if wildcards are used the 
-            requested (wildcarded) SEED ID has to either be matched in exactly
-            the same way in the config file as a lookup key down to location or
-            channel level (e.g. requesting 'Z3.A100A.*.H*' there has to be a
-            lookup key `Z3.A100A.*.H* = ...` in the configuration) or the
-            lookup has to be specified on a higher level (e.g. `Z3.A100A = ...`
-            or `Z3 = ...`)
+            request supports them). Unix shell-style wildcards (``[]``) are
+            possible in principle, but most underlying client types might not
+            support them in their ``get_waveforms()`` methods.
         :type channel: str
         :param channel: Channel code of requested data. Wildcards '?' and '*'
             are allowed (if the specific client that is eventually used for the
-            request supports them). However, if wildcards are used the
-            requested (wildcarded) SEED ID has to either be matched in exactly
-            the same way in the config file as a lookup key down to location or
-            channel level (e.g. requesting 'Z3.A100A.*.H*' there has to be a
-            lookup key `Z3.A100A.*.H* = ...` in the configuration) or the
-            lookup has to be specified on a higher level (e.g. `Z3.A100A = ...`
-            or `Z3 = ...`)
+            request supports them). Unix shell-style wildcards (``[]``) are
+            possible in principle, but most underlying client types might not
+            support them in their ``get_waveforms()`` methods.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start time of requested waveforms data.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End time of requested waveforms data.
         :rtype: :class:`~obspy.core.stream.Stream`
         """
-        client_key = self._lookup_client_key(
-            network, station, location, channel)
+        client_key = self._lookup_client_key(network, station)
         client = self._get_or_initialize_client(client_key)
         return client.get_waveforms(network, station, location, channel,
                                     starttime, endtime)
