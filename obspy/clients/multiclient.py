@@ -11,8 +11,7 @@ submodules based on the requested SEED IDs and a given configuration.
 """
 import fnmatch
 import warnings
-from configparser import SafeConfigParser, NoOptionError, NoSectionError
-from pathlib import Path
+from configparser import SafeConfigParser, NoOptionError
 
 from obspy.clients.fdsn import Client as FDSNClient
 from obspy.clients.filesystem.sds import Client as SDSClient
@@ -24,12 +23,12 @@ class MultiClient(object):
     Client for fetching waveform data from multiple sources
 
     MultiClient can be used to fetch waveform data in automated workflows from
-    different clients from various submodules based on the SEED ID of the
-    requested waveforms and a configuration that the user has to set up
-    beforehand. In configuration the user can define which SEED ID should be
-    fetched using what client. This can happend in the simplemost case just
-    based on the network code but also more fine grained based on network and
-    station code.
+    different clients from various submodules (or user defined clients) based
+    on the SEED ID of the requested waveforms and a configuration that the user
+    has to set up beforehand. In the configuration the user can define which
+    SEED ID should be fetched using what client. This can happend in the
+    simplemost case just based on the network code but also more fine grained
+    based on network and station code.
     The MultiClient can be extended by arbitrary user defined clients by adding
     to ``supported_client_types`` and ``supported_client_kwargs`` as long as
     the client has a ``get_waveforms()`` method with the same call syntax as
@@ -175,7 +174,7 @@ class MultiClient(object):
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime):
         """
-        Get waveforms for given SEED ID
+        Make a waveform request to an underlying client as defined in config
 
         :type network: str
         :param network: Network code of requested data. Wildcards are not
