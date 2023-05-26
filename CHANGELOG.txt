@@ -11,6 +11,8 @@ Changes:
    * fix a bug in Stream.select(inventory=...) (see #3282)
  - obspy.clients.fdsn:
    * update URL for raspberryshake FDSN web service (see #3264)
+   * properly include server response in error messages on bad requests (see
+     #3306)
  - obspy.clients.seedlink:
    * avoid unnecessary calls to "get_info()" on waveform requests without
      wildcards (see #3232)
