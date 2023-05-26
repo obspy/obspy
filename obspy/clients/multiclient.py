@@ -11,7 +11,8 @@ submodules based on the requested SEED IDs and a given configuration.
 """
 import fnmatch
 import warnings
-from configparser import SafeConfigParser, NoOptionError
+import configparser
+from configparser import ConfigParser, NoOptionError
 
 from obspy.clients.fdsn import Client as FDSNClient
 from obspy.clients.filesystem.sds import Client as SDSClient
@@ -34,9 +35,8 @@ class MultiClient(object):
     the client has a ``get_waveforms()`` method with the same call syntax as
     obspy clients.
 
-    :param config: Path to a local file with the textual config or file-like
-        object containing the config.
-    :type config: :class:`~pathlib.Path`, str or file-like object
+    :param config: Path to a local file with the textual config
+    :type config: :class:`~pathlib.Path` or str
     :param debug: Can be set to ``True`` to pass down the debug flag to all
         used clients. This might lead to a lot of printed debug output. The
         debug flag can also be set just for certain individual clients through
@@ -75,7 +75,7 @@ class MultiClient(object):
 
         :type path: :class:`pathlib.Path` or str
         """
-        config = SafeConfigParser(allow_no_value=True)
+        config = ConfigParser()
         self._config = config
         # make all config keys case sensitive
         config.optionxform = str
@@ -169,7 +169,7 @@ class MultiClient(object):
             return client_key
         msg = (f"Found no matching lookup keys for requested data "
                f"'{network}.{station}'")
-        raise Exception(msg)
+        raise configparser.Error(msg)
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime):
