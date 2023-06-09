@@ -132,9 +132,9 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                 if datawide == 0.5:
                     for i in range(xlen):
                         idata2 = output[chanum][-1] +\
-                            (from_buffer(sdata[i:i + 1], np.int8)[0] >> 4)                            
+                            (from_buffer(sdata[i:i + 1], np.int8)[0] >> 4)
                         output[chanum].append(idata2)
-                        lower4 = (from_buffer(sdata[i:i + 1], np.int8)[0] & 0xF)
+                        lower4 = from_buffer(sdata[i:i + 1], np.int8)[0] & 0xF
                         if lower4 & 0x8:
                             lower4 -= 0x10
                         idata2 = idata2 + lower4
