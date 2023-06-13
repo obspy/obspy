@@ -138,7 +138,7 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                         if lower4 & 0x8:
                             lower4 -= 0x10
                         idata2 = idata2 + lower4
-                        if i == xlen and srate % 2 == 0:
+                        if i == xlen-1 and srate % 2 == 0:
                             break
                         output[chanum].append(idata2)
                 elif datawide == 1:
