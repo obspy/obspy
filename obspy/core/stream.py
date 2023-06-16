@@ -3172,6 +3172,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         To subsequently deconvolve the instrument response use
         :meth:`Stream.remove_response`.
 
+        .. note::
+
+            It is recommended to rather just provide the metadata information
+            directly whenever needed so that the lookup of appropriate response
+            is done right at the time when it is used, e.g.
+            ``stream.remove_response(inventory=inv, ...)``
+
         >>> from obspy import read, read_inventory
         >>> st = read()
         >>> inv = read_inventory()
