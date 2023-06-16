@@ -23,17 +23,21 @@ class MultiClient(object):
     """
     Client for fetching waveform data from multiple sources
 
-    MultiClient can be used to fetch waveform data in automated workflows from
-    different clients from various submodules (or user defined clients) based
-    on the SEED ID of the requested waveforms and a configuration that the user
-    has to set up beforehand. In the configuration the user can define which
-    SEED ID should be fetched using what client. This can happend in the
+    ``MultiClient`` can be used to fetch waveform data in automated workflows
+    requesting data from different clients from various submodules (or user
+    defined clients) based on the SEED ID of the requested waveforms and a
+    configuration that the user has to set up once beforehand. The
+    ``MultiClient`` works based on a configuration file and provides a
+    :meth:`~MultiClient.get_waveforms()` method that can be used to make
+    waveform requests with the usual call syntax (network, station, location,
+    channel, starttime, endtime).  In the configuration the user can define
+    which SEED ID should be fetched using what client. This can happend in the
     simplemost case just based on the network code but also more fine grained
     based on network and station code.
     The MultiClient can be extended by arbitrary user defined clients by adding
     to ``supported_client_types`` and ``supported_client_kwargs`` as long as
-    the client has a ``get_waveforms()`` method with the same call syntax as
-    obspy clients.
+    the provided client has a ``get_waveforms()`` method with the same call
+    logic as obspy clients.
 
     :param config: Path to a local file with the textual config
     :type config: :class:`~pathlib.Path` or str
@@ -41,6 +45,26 @@ class MultiClient(object):
         used clients. This might lead to a lot of printed debug output. The
         debug flag can also be set just for certain individual clients through
         the configuration like any other client parameter.
+
+    .. rubric:: Usage Example
+
+    The configuration needs to be set up in a local file in ``ini`` style
+    syntax used by :class:`~configparser.ConfigParser`. First of all, it has
+    to contain a section ``[lookup]`` that determines which client type will be
+    used and what server node to connect to depending on the SEED ID of the
+    waveforms the user requests from the ``MultiClient``. Each option consists
+    of the key which can be a network code or a network code and a station code
+    (separated by a dot, like in usual SEED conventions) and a value string
+    identifying a client definition. When waveforms are requested the lookup
+    will be resolved in the following order (for this example the user waveform
+    request is for ``GR.FUR..HH?``):
+
+        - exact match of network and station code, i.e. check for an option
+          ``GR.FUR``
+        - wildcarded match of network and station code, i.e. would match e.g.
+          an option ``GR.F*``
+        - exact match of just the network code, i.e. would match an option
+          ``GR``
     """
     # supported clients, can be extended by the user if needed as long as the
     # client class has a get_waveforms() method with the usual call syntax
