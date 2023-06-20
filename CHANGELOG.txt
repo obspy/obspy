@@ -22,6 +22,9 @@ Changes:
    * store "NLLOC" info header line in event and origin comments (see #3230)
  - obspy.io.seg2:
    * Less strict date/time parsing (#3283).
+ - obspy.io.xseed:
+   * Improve error message when trying to read a local path to a file that does
+     not exist with XSEED Parser (see #2686)
  - obspy.signal:
    * all butterworth filters: correct zero-phase filtering of 2-d arrays and
      filtering along non-default axis of 2-d arrays (see #3291)
