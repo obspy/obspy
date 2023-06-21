@@ -23,6 +23,8 @@ Changes:
  - obspy.io.gcf:
    * Fixed an issue in algorithm to split and encode last few data into GCF 
      blocks (see #3252)
+ - obspy.io.win:
+   * Fixed three bugs when reading 0.5 byte datawide (see #3310)
  - obspy.io.xseed:
    * Fixed reading SEED frequency-amplitude-phase response lists that are
      spread out over multiple blockettes (see #3277)
