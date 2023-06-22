@@ -239,6 +239,7 @@ class NRL(object):
             Stage 10: Coefficients... from COUNTS to COUNTS, gain: 1
         """
         dl_resp = self.get_datalogger_response(datalogger_keys)
+        dl_first_stage = dl_resp.response_stages[0]
         sensor_resp = self.get_sensor_response(sensor_keys)
         sensor_stage0 = sensor_resp.response_stages[0]
 
@@ -250,6 +251,16 @@ class NRL(object):
             dl_resp.response_stages.pop(0)
             dl_resp.response_stages.insert(0, sensor_stage0)
         elif self._nrl_version == 2:
+            # in principal we would simply want to avoid trying to fix units of
+            # gain-only stages at this point in the get_datalogger_response()
+            # call, because it would fix it half way and then trying to fix it
+            # later would get skipped with the current implementation of
+            # Response._attempt_to_fix_units().  However we would have to pass
+            # an option through around seven function calls during reading
+            # StationXML to get it down to io.stationxml.core._read_response()
+            # so it would mean cluttering that module some, so for now it seems
+            # less invasive to correct this problem later on, see below long
+            # comment
             for stage in dl_resp.response_stages:
                 stage.stage_sequence_number += len(sensor_resp.response_stages)
             dl_resp.response_stages = (
@@ -259,6 +270,38 @@ class NRL(object):
         dl_resp.instrument_sensitivity.input_units = sensor_stage0.input_units
         dl_resp.instrument_sensitivity.input_units_description = \
             sensor_stage0.input_units_description
+
+        # NRLv2 seems to have the majority of datalogger responses with a
+        # stage-gain-only minimal response stage without units as first stage
+        # and also the instrument sensitivity object lacking input units (which
+        # should be "V" for "volts"). The instrument sensitivity input units
+        # are fixed above already but for most cases we still have to fix the
+        # input/output units for the aforementioned first datalogger stage.
+        # Unfortunately they are halfway fixed during the read operation for
+        # the datalogger-only response part (at least in the NRLv2 StationXML
+        # variant), so calling that helper again would not do anything, unless
+        # we set both input and output for that stage to None again.
+        # In principle the cleaner solution would be to avoid calling
+        # `Response._attempt_to_fix_units()` at the end of the read operation
+        # on the datalogger-only response part, but that would mean adding a
+        # lot of clutter by having to pass that option through a long chain of
+        # function calls in io.stationxml.core only because of this edge case
+        # of reading NRL responses, so the following seems overall cleaner and
+        # should be safe anyway assuming the surrounding stages have valid
+        # information on units, which they seem to have in NRLv2 database
+        # In general this gain-only stage happens only as the first stage of
+        # the datalogger-only response, but some few dataloggers also have a
+        # gain-only stage without units in the middle of the response. But the
+        # current approach is able to fill in the units and fix the unit chain
+        # from the neighboring stages (e.g. the case for
+        # 'datalogger/SeismicSource/Sigma4_PG1_FR250_DF0.1.xml')
+        if self._nrl_version == 2:
+            dl_first_stage.input_units = None
+            dl_first_stage.input_units_description = None
+            dl_first_stage.output_units = None
+            dl_first_stage.output_units_description = None
+            dl_resp._attempt_to_fix_units()
+
         try:
             dl_resp.recalculate_overall_sensitivity()
         except ValueError:
