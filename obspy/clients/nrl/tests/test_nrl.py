@@ -20,7 +20,7 @@ class TestNRLRemote():
 
 class TestNRLLocal():
     """
-	NRL test suite for test cases common to v1 and v2 of NRL without network
+    NRL test suite for test cases common to v1 and v2 of NRL without network
     usage.
     """
     def test_error_handling_invalid_path(self):
