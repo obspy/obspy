@@ -178,16 +178,7 @@ class NRL(object):
         :type datalogger_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        datalogger = self.dataloggers
-        for key in datalogger_keys:
-            datalogger = datalogger[key]
-
-        # Parse to an inventory object and return a response object.
-        description, path, resp_type = datalogger
-        with io.BytesIO(self._read_resp(path).encode()) as buf:
-            buf.seek(0, 0)
-            return obspy.read_inventory(
-                buf, format=resp_type)[0][0][0].response
+        return self._get_response('dataloggers', keys=datalogger_keys)
 
     def get_sensor_response(self, sensor_keys):
         """
@@ -196,12 +187,26 @@ class NRL(object):
         :type sensor_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        sensor = self.sensors
-        for key in sensor_keys:
-            sensor = sensor[key]
+        return self._get_response('sensors', keys=sensor_keys)
+
+    def _get_response(self, base, keys):
+        """
+        Internal helper method to fetch a response
+
+        This circumvents the warning message that is shown for NRL v2 when a
+        datalogger-only response is fetched
+
+        :type base: str
+        :param base: either "sensors" or "dataloggers"
+        :type keys: list of str
+        :param keys: list of lookup keys
+        """
+        node = getattr(self, base)
+        for key in keys:
+            node = node[key]
 
         # Parse to an inventory object and return a response object.
-        description, path, resp_type = sensor
+        description, path, resp_type = node
         with io.BytesIO(self._read_resp(path).encode()) as buf:
             buf.seek(0, 0)
             return obspy.read_inventory(
@@ -238,9 +243,9 @@ class NRL(object):
             Stage 9: Coefficients... from COUNTS to COUNTS, gain: 1
             Stage 10: Coefficients... from COUNTS to COUNTS, gain: 1
         """
-        dl_resp = self.get_datalogger_response(datalogger_keys)
+        dl_resp = self._get_response("dataloggers", keys=datalogger_keys)
         dl_first_stage = dl_resp.response_stages[0]
-        sensor_resp = self.get_sensor_response(sensor_keys)
+        sensor_resp = self._get_response("sensors", keys=sensor_keys)
         sensor_stage0 = sensor_resp.response_stages[0]
 
         # information on changes between NRL v1 and v2:
