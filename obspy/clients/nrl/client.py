@@ -178,7 +178,29 @@ class NRL(object):
         :type datalogger_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        return self._get_response('dataloggers', keys=datalogger_keys)
+        response = self._get_response('dataloggers', keys=datalogger_keys)
+        first_stage = response.response_stages[0]
+
+        if self._nrl_version == 2 and not first_stage.input_units:
+            msg = ("Undefined input units in stage one. Most datalogger-only "
+                   "responses in NRL v2 have a gain-only stage without units "
+                   "specified as first stage. This has to be fixed manually "
+                   "if necessary (first stage input units would usually be "
+                   "'V' for volt). Also input units in overall instrument "
+                   "sensitivity might have to be fixed manually.")
+            warnings.warn(msg)
+        if self._nrl_version == 2 \
+                and first_stage.input_units.lower() in ("count", "counts"):
+            msg = (f"First stage input units are '{first_stage.input_units}'. "
+                   "When requesting a datalogger-only response from NRL v2, "
+                   "for many cases the units of the first stage and also the "
+                   "instrument overall sensitivity have to be fixed manually. "
+                   "In general for these, input units should be 'V' for volt "
+                   "and output units should be the same as second stage input "
+                   "units, which usually are set correctly (either volt or "
+                   "counts).")
+            warnings.warn(msg)
+        return response
 
     def get_sensor_response(self, sensor_keys):
         """
