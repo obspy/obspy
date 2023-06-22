@@ -1,0 +1,67 @@
+[Main]
+question = "What is the final sample rate?"
+
+[500 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 500 Hz"
+resp = "130-01_PG1_FR500.resp"
+
+
+[50 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 50 Hz"
+resp = "130-01_PG1_FR50.resp"
+
+
+[5 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 5 Hz"
+resp = "130-01_PG1_FR5.resp"
+
+
+[40 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 40 Hz"
+resp = "130-01_PG1_FR40.resp"
+
+
+[250 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 250 Hz"
+resp = "130-01_PG1_FR250.resp"
+
+
+[25 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 25 Hz"
+resp = "130-01_PG1_FR25.resp"
+
+
+[200 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 200 Hz"
+resp = "130-01_PG1_FR200.resp"
+
+
+[20 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 20 Hz"
+resp = "130-01_PG1_FR20.resp"
+
+
+[125 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 125 Hz"
+resp = "130-01_PG1_FR125.resp"
+
+
+[1000 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 1000 Hz"
+resp = "130-01_PG1_FR1000.resp"
+
+
+[100 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 100 Hz"
+resp = "130-01_PG1_FR100.resp"
+
+
+[10 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 10 Hz"
+resp = "130-01_PG1_FR10.resp"
+
+
+[1 Hz]
+description = "REFTEK; 130-01; Preamp_Gain 1; Final_Sample_Rate 1 Hz"
+resp = "130-01_PG1_FR1.resp"
+
