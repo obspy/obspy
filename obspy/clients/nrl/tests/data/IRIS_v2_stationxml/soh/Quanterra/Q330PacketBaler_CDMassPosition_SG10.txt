@@ -1,0 +1,7 @@
+[Main]
+question = "What is the final sample rate?"
+
+[0.1 Hz]
+description = "Quanterra; Q330PacketBaler; Channel_Description MassPosition; Sensitivity 10; Final_Sample_Rate 0.1 Hz"
+xml = "Q330PacketBaler_CDMassPosition_SG10_FR0.1.xml"
+

@@ -372,3 +372,23 @@ Select the sensor manufacturer (38 items):
   'MagseisFairfield', 'Nanometrics', 'REFTEK', 'RSensors', 'RTClark',
   'SARA', 'SeismoWave', 'SensorNederland', 'Sercel', 'SiliconAudio',
   'SolGeo', 'Sprengnether', 'Streckeisen', 'Sunfull', 'iTem'""".strip()
+
+    def test_get_integrated_response(self):
+        # Get an integrated response
+        resp = self.nrl_local.get_integrated_response(
+            ['GeoSIG', 'ela-GMSseries', '0 Hz', '1000 Hz', '100 Hz', '1'])
+
+        assert len(resp.response_stages) == 5
+        assert resp.instrument_sensitivity.value == 778678
+        assert resp.instrument_sensitivity.input_units == 'm/s**2'
+        assert resp.instrument_sensitivity.output_units == 'counts'
+
+    def test_get_soh_response(self):
+        # Get an integrated response
+        resp = self.nrl_local.get_soh_response(
+            ['Quanterra', 'Q330PacketBaler', 'MassPosition', '10', '0.1 Hz'])
+
+        assert len(resp.response_stages) == 1
+        assert resp.instrument_sensitivity.value == 0.0
+        assert resp.instrument_sensitivity.input_units == 'V'
+        assert resp.instrument_sensitivity.output_units == 'counts'

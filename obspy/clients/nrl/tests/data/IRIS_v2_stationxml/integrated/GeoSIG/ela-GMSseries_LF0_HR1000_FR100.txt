@@ -1,0 +1,12 @@
+[Main]
+question = "What is the accelerometer clip level in +/-g?"
+
+[4]
+description = "GeoSIG; ela-GMSseries; Low-Frequency_Corner 0 Hz; Highest_Configured_Sample_Rate 1000 Hz; Final_Sample_Rate 100 Hz; Clip_Level 4"
+xml = "ela-GMSseries_LF0_HR1000_FR100_CG4.xml"
+
+
+[1]
+description = "GeoSIG; ela-GMSseries; Low-Frequency_Corner 0 Hz; Highest_Configured_Sample_Rate 1000 Hz; Final_Sample_Rate 100 Hz; Clip_Level 1"
+xml = "ela-GMSseries_LF0_HR1000_FR100_CG1.xml"
+

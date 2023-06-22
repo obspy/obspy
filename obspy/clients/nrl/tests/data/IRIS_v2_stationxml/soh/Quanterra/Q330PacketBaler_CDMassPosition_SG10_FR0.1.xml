@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.1">
+  <Source>IRIS-DMC</Source>
+  <Module>IRIS NRL service | version: 1</Module>
+  <ModuleURI>https://service.iris.edu/irisws/nrl/1/</ModuleURI>
+  <Created>2023-06-20T01:00:04.032449Z</Created>
+  <Network code="XX" startDate="1970-01-01T00:00:00Z">
+    <Station code="YY" startDate="1970-01-01T00:00:00Z">
+      <Comment>
+        <Value>This is a comment.</Value>
+      </Comment>
+      <Latitude>0.0</Latitude>
+      <Longitude>0.0</Longitude>
+      <Elevation>0.0</Elevation>
+      <Site>
+        <Name>Long site name</Name>
+      </Site>
+      <Channel code="ZZZ" locationCode="00" startDate="1970-01-01T00:00:00Z">
+        <Latitude>0.0</Latitude>
+        <Longitude>0.0</Longitude>
+        <Elevation>0.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth>0.0</Azimuth>
+        <Dip>0.0</Dip>
+        <Sensor>
+          <Description>The sensor name</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>+0.00000E+00</Value>
+            <Frequency>0.025</Frequency>
+            <InputUnits>
+              <Name>V</Name>
+              <Description>Volts</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+          <Stage number="1" resourceId="NRL:ADC_SF10_IR0_ED0">
+            <Coefficients>
+              <InputUnits>
+                <Name>V</Name>
+                <Description>Volts</Description>
+              </InputUnits>
+              <OutputUnits>
+                <Name>counts</Name>
+                <Description>Digital Counts</Description>
+              </OutputUnits>
+              <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+              <Numerator number="0">1.00000e+00</Numerator>
+            </Coefficients>
+            <Decimation>
+              <InputSampleRate>0</InputSampleRate>
+              <Factor>1</Factor>
+              <Offset>0</Offset>
+              <Delay>0</Delay>
+              <Correction>0</Correction>
+            </Decimation>
+            <StageGain>
+              <Value>10</Value>
+              <Frequency>0</Frequency>
+            </StageGain>
+          </Stage>
+        </Response>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>
+

@@ -69,6 +69,10 @@ class NRL(object):
             datalogger_index = self._join(self.root, 'dataloggers',
                                           self._index)
             self.dataloggers = self._parse_ini(datalogger_index)
+            # add empty dummies for integrated and soh which do not exist in
+            # old NRL v1 just to be a little bit more consistent
+            self.integrated = NRLDict(self)
+            self.soh = NRLDict(self)
             self._nrl_version = 1
         except FileNotFoundError:
             sensor_index = self._join(self.root, 'sensor', self._index)
@@ -77,6 +81,10 @@ class NRL(object):
             datalogger_index = self._join(self.root, 'datalogger', self._index)
             self.dataloggers = self._parse_ini(datalogger_index)
             # version 2 also has additional base nodes "integrated" and "soh"
+            integrated_index = self._join(self.root, 'integrated', self._index)
+            self.integrated = self._parse_ini(integrated_index)
+            soh_index = self._join(self.root, 'soh', self._index)
+            self.soh = self._parse_ini(soh_index)
             self._nrl_version = 2
 
     def __str__(self):
@@ -210,6 +218,32 @@ class NRL(object):
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
         return self._get_response('sensors', keys=sensor_keys)
+
+    def get_integrated_response(self, keys):
+        """
+        Get an integrated response.
+
+        :type keys: list[str]
+        :rtype: :class:`~obspy.core.inventory.response.Response`
+        """
+        if self._nrl_version == 1:
+            msg = ('Integrated responses are only available in the new NRL v2 '
+                   '(https://ds.iris.edu/ds/nrl/)')
+            raise Exception(msg)
+        return self._get_response('integrated', keys=keys)
+
+    def get_soh_response(self, keys):
+        """
+        Get a SOH response.
+
+        :type keys: list[str]
+        :rtype: :class:`~obspy.core.inventory.response.Response`
+        """
+        if self._nrl_version == 1:
+            msg = ('SOH responses are only available in the new NRL v2 '
+                   '(https://ds.iris.edu/ds/nrl/)')
+            raise Exception(msg)
+        return self._get_response('soh', keys=keys)
 
     def _get_response(self, base, keys):
         """
