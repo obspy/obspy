@@ -256,7 +256,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     else:
         try:
             values = calc_vincenty_inverse(lat1, lon1, lat2, lon2, a, f)
-            if np.alltrue(np.isnan(values)):
+            if np.all(np.isnan(values)):
                 raise StopIteration
             return values
         except StopIteration:
