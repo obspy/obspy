@@ -9,6 +9,9 @@ maintenance_1.4.x
 Changes:
  - obspy.core:
    * fix a bug in Stream.select(inventory=...) (see #3282)
+   * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
+     warning" when interactively zooming into and then again out of a plot with
+     reduced number of points plotted with matplotlib >=3.6 (see #3318)
  - obspy.clients.fdsn:
    * update URL for raspberryshake FDSN web service (see #3264)
    * properly include server response in error messages on bad requests (see
@@ -20,6 +23,9 @@ Changes:
    * fix a bug that raised an error when plotting beachball patches with
      routine "beach" with providing an existing axes instance (for proper
      scaling) and saving to vector graphics as pdf/eps (see #2887)
+   * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
+     warning" when interactively zooming into and then again out of a plot with
+     reduced number of points plotted with matplotlib >=3.6 (see #3318)
  - obspy.io.gcf:
    * Fixed an issue in algorithm to split and encode last few data into GCF 
      blocks (see #3252)
