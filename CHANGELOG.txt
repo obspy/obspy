@@ -16,6 +16,12 @@ Changes:
    * update URL for raspberryshake FDSN web service (see #3264)
    * properly include server response in error messages on bad requests (see
      #3306)
+ - obspy.clients.nrl:
+   * better handling of individual stages units when combining sensor and
+     datalogger response from a full downloaded offline version of the new NRL
+     v2 (see #3315)
+   * add support to use new categories "integrated" and "soh" in new NRL v2
+     (see #3315)
  - obspy.clients.seedlink:
    * avoid unnecessary calls to "get_info()" on waveform requests without
      wildcards (see #3232)
