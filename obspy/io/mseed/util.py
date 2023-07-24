@@ -1659,9 +1659,9 @@ def shift_time_of_file(input_file, output_file, timeshift):
             # Write to current record.
             time[0:2] = year[:]
             time[2:4] = julday[:]
-            time[4] = hour[:]
-            time[5] = minute[:]
-            time[6] = second[:]
+            time[4] = hour[0]
+            time[5] = minute[0]
+            time[6] = second[0]
             time[8:10] = msecs[:]
             current_record[20:30] = time[:]
 
