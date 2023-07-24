@@ -15,6 +15,7 @@ from .slowness_layer import (bullen_depth_for,
                              evaluate_at_bullen)
 from .velocity_layer import (VelocityLayer, evaluate_velocity_at_bottom,
                              evaluate_velocity_at_top)
+from .utils import _flat
 
 
 def _fix_critical_depths(critical_depths, layer_num, is_p_wave):
@@ -1815,7 +1816,7 @@ class SlownessModel(object):
                     dtype=SlownessLayer)
                 bot_layer = (p, top_layer['bot_depth'],
                              s_layer['bot_p'], s_layer['bot_depth'])
-                out[other_layer_num+number_added] = bot_layer
+                out[other_layer_num+number_added] = _flat(bot_layer)
                 out = np.insert(out, other_layer_num+number_added, top_layer)
                 # Fix critical layers since we have added a slowness layer.
                 _fix_critical_depths(critical_depths,
