@@ -422,7 +422,6 @@ class Scanner(object):
             height = len(labels) * 0.5
             height = max(4, height)
             fig.set_figheight(height)
-            plt.tight_layout()
 
             if not starttime or not endtime:
                 days = ax.get_xlim()
