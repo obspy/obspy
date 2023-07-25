@@ -34,7 +34,6 @@ import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import create_empty_data_chunk
-from obspy.core.util.base import MATPLOTLIB_VERSION
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
 from obspy.imaging.util import (_set_xaxis_obspy_dates, _id_key, _timestring)
 
@@ -1455,10 +1454,7 @@ class WaveformPlotting(object):
     def _remove_zoomlevel_warning_text(self):
         ax = self.fig.axes[0]
         if self._minmax_warning_text in ax.texts:
-            if MATPLOTLIB_VERSION < [3, 6]:
-                ax.texts.remove(self._minmax_warning_text)
-            else:
-                self._minmax_warning_text.remove()
+            self._minmax_warning_text.remove()
         self._minmax_warning_text = None
 
     def _draw_overlap_axvspans(self, st, ax):
