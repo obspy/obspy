@@ -1454,7 +1454,7 @@ class WaveformPlotting(object):
     def _remove_zoomlevel_warning_text(self):
         ax = self.fig.axes[0]
         if self._minmax_warning_text in ax.texts:
-            ax.texts.remove(self._minmax_warning_text)
+            self._minmax_warning_text.remove()
         self._minmax_warning_text = None
 
     def _draw_overlap_axvspans(self, st, ax):

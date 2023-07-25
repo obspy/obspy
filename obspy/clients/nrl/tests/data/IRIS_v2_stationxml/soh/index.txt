@@ -1,0 +1,9 @@
+[Main]
+question = "Select the soh manufacturer"
+
+[Quanterra]
+path="Quanterra/index.txt"
+
+[GenericUnity]
+path="GenericUnity/index.txt"
+

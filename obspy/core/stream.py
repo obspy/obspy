@@ -1851,9 +1851,9 @@ class Stream(object):
             for net in inventory.networks:
                 for sta in net.stations:
                     for chan in sta.channels:
-                        id = '.'.join((net.code, sta.code,
-                                       chan.location_code, chan.code))
-                        trace_ids.append(id)
+                        _id = '.'.join((net.code, sta.code,
+                                        chan.location_code, chan.code))
+                        trace_ids.append(_id)
                         start_dates.append(chan.start_date)
                         end_dates.append(chan.end_date)
             traces = []

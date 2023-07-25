@@ -1,0 +1,12 @@
+[Main]
+question = "Select the integrated manufacturer"
+
+[TDG]
+path="TDG/index.txt"
+
+[GeoSIG]
+path="GeoSIG/index.txt"
+
+[Gem]
+path="Gem/index.txt"
+

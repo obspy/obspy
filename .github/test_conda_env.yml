@@ -8,10 +8,13 @@ dependencies:
   - lxml
   - matplotlib
   - numpy
-  - scipy
+  # see #3330 and SciTools/cartopy#2199
+  # unpin again later on when this is fixed
+  - scipy < 1.11
   - requests
   - setuptools
-  - sqlalchemy
+  # see #3258
+  - sqlalchemy < 2.0
   # soft dependencies
   - cartopy
   - geographiclib

@@ -1799,12 +1799,7 @@ def raise_on_error(code, data):
     """
     # get detailed server response message
     if code != 200:
-        try:
-            server_info = data.read()
-        except Exception:
-            server_info = None
-        else:
-            server_info = server_info.decode('ASCII', errors='ignore')
+        server_info = data.decode('ASCII', errors='ignore')
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
@@ -1890,14 +1885,12 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib_request.HTTPError as e:
+        error_data = e.read()
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
-                  (e.code, str(e.reason), url, e.read())
+                  (e.code, str(e.reason), url, error_data)
             print(msg)
-        else:
-            # Without this line we will get unclosed sockets
-            e.read()
-        return e.code, e
+        return e.code, error_data
     except Exception as e:
         if debug is True:
             print("Error while downloading: %s" % url)
