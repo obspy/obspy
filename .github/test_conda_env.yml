@@ -8,7 +8,9 @@ dependencies:
   - lxml
   - matplotlib
   - numpy
-  - scipy
+  # see #3330 and SciTools/cartopy#2199
+  # unpin again later on when this is fixed
+  - scipy < 1.11
   - requests
   - setuptools
   # see #3258
