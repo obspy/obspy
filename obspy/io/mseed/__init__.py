@@ -136,8 +136,6 @@ some purposes. Refer to the documentation of each for details.
 +----------------------------------------------------------+--------------------------------------------------------------------------+
 | :func:`~obspy.io.mseed.util.shift_time_of_file`          | Shifts the time of a file preserving all blockettes and flags.           |
 +----------------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.io.mseed.util.spread_time_over_file`       | Progressively spreads a time shift over all blockettes in a file.        |
-+----------------------------------------------------------+--------------------------------------------------------------------------+
 | :func:`~obspy.io.mseed.util.get_record_information`      | Returns record information about given files and file-like object.       |
 +----------------------------------------------------------+--------------------------------------------------------------------------+
 | :func:`~obspy.io.mseed.util.set_flags_in_fixed_headers`  | Updates a given miniSEED file with some fixed header flags.              |

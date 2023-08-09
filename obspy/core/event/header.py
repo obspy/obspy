@@ -108,6 +108,7 @@ Evaluation status. Allowed values are:
 * ``"reviewed"``
 * ``"final"``
 * ``"rejected"``
+* ``"reported"``
 """
 
 EventDescriptionType = Enum([

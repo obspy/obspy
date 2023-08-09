@@ -347,8 +347,7 @@ class PPSD(object):
         :type stats: :class:`~obspy.core.trace.Stats`
         :param stats: Stats of the station/instrument to process
         :type metadata: :class:`~obspy.core.inventory.inventory.Inventory` or
-            :class:`~obspy.io.xseed.parser.Parser` or :class:`~pathlib.Path` or
-            str or dict
+            :class:`~obspy.io.xseed.parser.Parser` or str or dict
         :param metadata: Response information of instrument. See above notes
             for details.
         :type skip_on_gaps: bool, optional
@@ -401,8 +400,6 @@ class PPSD(object):
         # save things related to args
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.sampling_rate = stats.sampling_rate
-        if isinstance(metadata, Path):
-            metadata = str(metadata)
         self.metadata = metadata
 
         # save things related to kwargs

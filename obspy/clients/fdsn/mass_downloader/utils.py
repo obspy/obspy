@@ -21,6 +21,7 @@ from lxml import etree
 from scipy.spatial import cKDTree
 
 import obspy
+from obspy.core import compatibility
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn.client import FDSNException
 from obspy.io.mseed.util import get_record_information
@@ -480,7 +481,7 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     if isinstance(path, (str, bytes)):
         return path
 
-    elif isinstance(path, collections.abc.Container):
+    elif isinstance(path, compatibility.collections_abc.Container):
         if "available_channels" not in path or \
                 "missing_channels" not in path or \
                 "filename" not in path:
@@ -489,9 +490,9 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
                 "must contain the following keys: 'available_channels', "
                 "'missing_channels', and 'filename'.")
         if not isinstance(path["available_channels"],
-                          collections.abc.Iterable) or\
+                          compatibility.collections_abc.Iterable) or\
                 not isinstance(path["missing_channels"],
-                               collections.abc.Iterable) or \
+                               compatibility.collections_abc.Iterable) or \
                 not isinstance(path["filename"], (str, bytes)):
             raise ValueError("Return types must be two lists of channels and "
                              "a string for the filename.")

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import pytest
+import os
+import unittest
 
 from obspy.core.event import read_events
 from obspy.core.utcdatetime import UTCDateTime
@@ -15,23 +16,32 @@ _ORIGIN_FIELDS = ('lon', 'lat', 'year', 'month', 'day', 'depth', 'hour',
 _MAGNITUDE_FIELDS = ('mag', 'm_err')
 
 
-class TestZMAP():
+class ZMAPTestCase(unittest.TestCase):
     """
     Test suite for obspy.io.zmap.core
     """
-    @pytest.fixture(autouse=True, scope="function")
-    def setup(self, testdata):
+    def setUp(self):
+        data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        self.data_dir = data_dir
+        path_to_catalog = os.path.join(data_dir, 'neries_events.xml')
+        self.catalog = read_events(path_to_catalog)
         self.zmap_fields = _STD_ZMAP_FIELDS
+        # Extract our favorite test event from the catalog
+        test_event_id = 'quakeml:eu.emsc/event/20120404_0000041'
+        self.test_event = next(e for e in self.catalog.events
+                               if e.resource_id.id == test_event_id)
         self.test_data = {
             'lon': '79.689000', 'lat': '41.818000', 'month': '4',
             'year': '2012.258465590847', 'day': '4', 'hour': '14',
             'minute': '21', 'second': '42.3', 'depth': '1.000000',
             'mag': '4.400000'
         }
-        path_to_catalog = testdata['neries_events.xml']
-        self.catalog = read_events(path_to_catalog)
-        # Extract our favorite test event from the catalog
-        self.test_event = self.catalog.events[0]
+
+    def tearDown(self):
+        # Make sure events are deleted before the next test to prevent
+        # resource identifier warnings
+        self.catalog = None
+        self.test_event = None
 
     def test_serialize(self):
         """
@@ -40,19 +50,19 @@ class TestZMAP():
         pickler = zmap.Pickler()
         # test full event (including origin/magnitude)
         dump = pickler.dumps(self.catalog)
-        assert self._expected_string(self.test_data) in dump
-        assert dump.count('\n') == 3
+        self.assertIn(self._expected_string(self.test_data), dump)
+        self.assertEqual(dump.count('\n'), 3)
         # no preferred origin -- still dump first origin
         oid = self.test_event.preferred_origin_id
         self.test_event.preferred_origin_id = None
         dump = pickler.dumps(self.catalog)
-        assert self._expected_string(self.test_data) in dump
+        self.assertIn(self._expected_string(self.test_data), dump)
         self.test_event.preferred_origin_id = oid
         # no preferred magnitude -- still dump first magnitude
         mid = self.test_event.preferred_origin_id
         self.test_event.preferred_magnitude_id = None
         dump = pickler.dumps(self.catalog)
-        assert self._expected_string(self.test_data) in dump
+        self.assertIn(self._expected_string(self.test_data), dump)
         self.test_event.preferred_magnitude_id = mid
 
     def test_plugin_interface(self):
@@ -63,7 +73,7 @@ class TestZMAP():
             self.catalog.write(f, format='ZMAP')
             f.seek(0)
             file_content = f.read().decode('utf-8')
-        assert self._expected_string(self.test_data) in file_content
+        self.assertIn(self._expected_string(self.test_data), file_content)
 
     def test_dump_to_file(self):
         """
@@ -73,7 +83,7 @@ class TestZMAP():
             zmap._write_zmap(self.catalog, f)
             f.seek(0)
             file_content = f.read().decode('utf-8')
-        assert self._expected_string(self.test_data) in file_content
+        self.assertIn(self._expected_string(self.test_data), file_content)
 
     def test_dump_to_filename(self):
         """
@@ -83,7 +93,7 @@ class TestZMAP():
             zmap._write_zmap(self.catalog, f.name)
             f.seek(0)
             file_content = f.read().decode('utf-8')
-        assert self._expected_string(self.test_data) in file_content
+        self.assertIn(self._expected_string(self.test_data), file_content)
 
     def test_dump_with_uncertainty(self):
         """
@@ -94,7 +104,7 @@ class TestZMAP():
                                'm_err': '0.000000'})
         pickler = zmap.Pickler(with_uncertainties=True)
         dump = pickler.dumps(self.catalog)
-        assert self._expected_string(self.test_data) in dump
+        self.assertIn(self._expected_string(self.test_data), dump)
 
     def test_ou_hz_error(self):
         """
@@ -108,13 +118,13 @@ class TestZMAP():
         o.origin_uncertainty.preferred_description = 'horizontal uncertainty'
         o.origin_uncertainty.horizontal_uncertainty = 1.0
         dump = pickler.dumps(self.catalog)
-        assert self._expected_string(self.test_data) in dump
+        self.assertIn(self._expected_string(self.test_data), dump)
         # with unsupported preferred_description
         self.test_data.update({'h_err': 'NaN', 'z_err': '0.000000',
                                'm_err': '0.000000'})
         o.origin_uncertainty.preferred_description = 'uncertainty ellipse'
         dump = pickler.dumps(self.catalog)
-        assert self._expected_string(self.test_data) in dump
+        self.assertIn(self._expected_string(self.test_data), dump)
 
     def test_lat_lon_hz_error(self):
         """
@@ -128,7 +138,7 @@ class TestZMAP():
         o.latitude_errors.uncertainty = .001
         o.longitude_errors.uncertainty = .001
         dump = pickler.dumps(self.catalog)
-        assert self._expected_string(self.test_data) in dump
+        self.assertIn(self._expected_string(self.test_data), dump)
 
     def test_is_zmap(self):
         """
@@ -138,10 +148,10 @@ class TestZMAP():
         test_events = [self.test_data, dict(self.test_data, mag='5.1')]
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
-            assert zmap._is_zmap(f.name)
+            self.assertTrue(zmap._is_zmap(f.name))
             # Pre-opened file
             f.seek(0)
-            assert zmap._is_zmap(f)
+            self.assertTrue(zmap._is_zmap(f))
         # Extended ZMAP (13 columns)
         self.zmap_fields += _EXT_ZMAP_FIELDS
         self.test_data.update({'h_err': '0.138679', 'z_err': '0.000000',
@@ -149,27 +159,27 @@ class TestZMAP():
         test_events = [self.test_data, dict(self.test_data, mag='5.1')]
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
-            assert zmap._is_zmap(f.name)
+            self.assertTrue(zmap._is_zmap(f.name))
         # ZMAP string
         test_string = self._serialize(test_events)
-        assert zmap._is_zmap(test_string)
+        self.assertTrue(zmap._is_zmap(test_string))
         # Non-ZMAP string
         test_string = '0.000000\t' + test_string
-        assert not zmap._is_zmap(test_string + '\n')
+        self.assertFalse(zmap._is_zmap(test_string + '\n'))
         # Non-ZMAP file (14 columns)
         self.zmap_fields += ('dummy',)
         self.test_data.update({'dummy': '0'})
         test_events = [self.test_data, dict(self.test_data, mag='5.1')]
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
-            assert not zmap._is_zmap(f.name)
+            self.assertFalse(zmap._is_zmap(f.name))
         # Non-ZMAP file (non-numeric columns)
         self.zmap_fields = _STD_ZMAP_FIELDS + _EXT_ZMAP_FIELDS
         self.test_data.update({'mag': 'bad'})
         test_events = [self.test_data]
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
-            assert not zmap._is_zmap(f.name)
+            self.assertFalse(zmap._is_zmap(f.name))
 
     def test_is_zmap_binary_files(self):
         """
@@ -178,7 +188,7 @@ class TestZMAP():
         # Non-ZMAP file, binary
         for filename in ["test.mseed", "test.sac"]:
             file_ = get_example_file(filename)
-            assert not zmap._is_zmap(file_)
+            self.assertFalse(zmap._is_zmap(file_))
 
     def test_deserialize(self):
         """
@@ -225,44 +235,44 @@ class TestZMAP():
         catalog = zmap._read_zmap(zmap_str)
         self._assert_zmap_equal(catalog, test_events)
 
-    def test_read_float_seconds(self, testdata):
+    def test_read_float_seconds(self):
         """
         Test that floating point part of seconds is parsed correctly.
         """
-        catalog = zmap._read_zmap(testdata["templates.txt"])
-        assert catalog[0].origins[0].time.microsecond == 840000
-        assert catalog[1].origins[0].time.microsecond == 880000
-        assert catalog[2].origins[0].time.microsecond == 550000
-        assert catalog[3].origins[0].time.microsecond == 450000
+        catalog = zmap._read_zmap(os.path.join(self.data_dir, "templates.txt"))
+        self.assertEqual(catalog[0].origins[0].time.microsecond, 840000)
+        self.assertEqual(catalog[1].origins[0].time.microsecond, 880000)
+        self.assertEqual(catalog[2].origins[0].time.microsecond, 550000)
+        self.assertEqual(catalog[3].origins[0].time.microsecond, 450000)
 
     def _assert_zmap_equal(self, catalog, dicts):
         """
         Compares a zmap imported catalog with test event dictionaries
         """
-        assert len(catalog) == len(dicts)
+        self.assertEqual(len(catalog), len(dicts))
         for event, test_dict in zip(catalog, dicts):
             origin = event.preferred_origin()
             if any(k in test_dict for k in _ORIGIN_FIELDS):
-                assert origin is not None
+                self.assertNotEqual(None, origin)
             magnitude = event.preferred_magnitude()
             if any(k in test_dict for k in _MAGNITUDE_FIELDS):
-                assert magnitude is not None
+                self.assertNotEqual(None, magnitude)
             d = dict((k, float(v) if v != 'NaN' else None)
                      for (k, v) in test_dict.items())
             if 'lon' in d:
-                assert d['lon'] == origin.longitude
+                self.assertEqual(d['lon'], origin.longitude)
             if 'lat' in d:
-                assert d['lat'] == origin.latitude
+                self.assertEqual(d['lat'], origin.latitude)
             if 'depth' in d:
-                assert d['depth'] * 1000 == origin.depth
+                self.assertEqual(d['depth'] * 1000, origin.depth)
             if 'z_err' in d:
-                assert d['z_err'] * 1000 == \
-                    origin.depth_errors.uncertainty
+                self.assertEqual(d['z_err'] * 1000, origin.depth_errors.
+                                 uncertainty)
             if 'h_err' in d:
-                assert d['h_err'] == \
-                    origin.origin_uncertainty.horizontal_uncertainty
-                assert 'horizontal uncertainty' == \
-                    origin.origin_uncertainty.preferred_description
+                self.assertEqual(d['h_err'], origin.origin_uncertainty
+                                 .horizontal_uncertainty)
+                self.assertEqual('horizontal uncertainty', origin
+                                 .origin_uncertainty.preferred_description)
             if 'year' in d:
                 year = d['year']
                 comps = ['year', 'month', 'day', 'hour', 'minute', 'second']
@@ -274,11 +284,11 @@ class TestZMAP():
                     utc = UTCDateTime(*[
                         k == 'second' and d.get(k) or int(d.get(k))
                         for k in comps])
-                assert utc == event.preferred_origin().time
+                self.assertEqual(utc, event.preferred_origin().time)
             if 'mag' in d:
-                assert d['mag'] == magnitude.mag
+                self.assertEqual(d['mag'], magnitude.mag)
             if 'm_err' in d:
-                assert d['m_err'] == magnitude.mag_errors.uncertainty
+                self.assertEqual(d['m_err'], magnitude.mag_errors.uncertainty)
 
     def _serialize(self, test_dicts, fill_nans=True):
         zmap_str = ''

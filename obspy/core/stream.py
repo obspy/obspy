@@ -208,8 +208,6 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         st = _generic_reader(pathname_or_url, _read, **kwargs)
 
     if len(st) == 0:
-        if isinstance(pathname_or_url, Path):
-            pathname_or_url = str(pathname_or_url)
         # try to give more specific information why the stream is empty
         if has_magic(pathname_or_url) and not glob(pathname_or_url):
             raise Exception("No file matching file pattern: %s" %
@@ -1851,9 +1849,9 @@ class Stream(object):
             for net in inventory.networks:
                 for sta in net.stations:
                     for chan in sta.channels:
-                        _id = '.'.join((net.code, sta.code,
-                                        chan.location_code, chan.code))
-                        trace_ids.append(_id)
+                        id = '.'.join((net.code, sta.code,
+                                       chan.location_code, chan.code))
+                        trace_ids.append(id)
                         start_dates.append(chan.start_date)
                         end_dates.append(chan.end_date)
             traces = []
@@ -2289,14 +2287,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'carlstatrig'``
             Computes the carl_sta_trig characteristic function (uses
             :func:`obspy.signal.trigger.carl_sta_trig`).
-
-        ``'energyratio'``
-            Computes the energy ratio characteristic function (uses
-            :func:`obspy.signal.trigger.energy_ratio`).
-
-        ``'modifiedenergyratio'``
-            Computes the modified energy ratio characteristic function (uses
-            :func:`obspy.signal.trigger.modified_energy_ratio`).
 
         ``'zdetect'``
             Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
@@ -3171,13 +3161,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         list of traces for which no response could be found.
         To subsequently deconvolve the instrument response use
         :meth:`Stream.remove_response`.
-
-        .. note::
-
-            It is recommended to rather just provide the metadata information
-            directly whenever needed so that the lookup of appropriate response
-            is done right at the time when it is used, e.g.
-            ``stream.remove_response(inventory=inv, ...)``
 
         >>> from obspy import read, read_inventory
         >>> st = read()

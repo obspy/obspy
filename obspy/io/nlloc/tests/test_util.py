@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import inspect
+import os
+import unittest
+
 import numpy as np
-import pytest
 try:
     import pyproj
     HAS_PYPROJ = True
@@ -25,31 +28,36 @@ def _coordinate_conversion(x, y, z):
     return x, y, z
 
 
-class TestNLLOC():
+class NLLOCTestCase(unittest.TestCase):
     """
     Test suite for obspy.io.nlloc
     """
-    def test_read_nlloc_scatter_plain(self, testdata):
+    def setUp(self):
+        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe())))
+        self.datapath = os.path.join(self.path, "data")
+
+    def test_read_nlloc_scatter_plain(self):
         """
         Test reading NLLoc scatter file without coordinate conversion.
         """
         # test without coordinate manipulation
-        filename = testdata['nlloc.scat']
+        filename = os.path.join(self.datapath, "nlloc.scat")
         got = read_nlloc_scatter(filename)
-        filename = testdata['nlloc_scat.npy']
+        filename = os.path.join(self.datapath, "nlloc_scat.npy")
         expected = np.load(filename)
         np.testing.assert_array_equal(got, expected)
 
-    @pytest.mark.skipif(not HAS_PYPROJ, reason='pyproj not installed')
-    def test_read_nlloc_scatter_coordinate_conversion(self, testdata):
+    @unittest.skipIf(not HAS_PYPROJ, 'pyproj not installed')
+    def test_read_nlloc_scatter_coordinate_conversion(self):
         """
         Test reading NLLoc scatter file including coordinate conversion.
         """
         # test including coordinate manipulation
-        filename = testdata['nlloc.scat']
+        filename = os.path.join(self.datapath, "nlloc.scat")
         got = read_nlloc_scatter(
             filename, coordinate_converter=_coordinate_conversion)
-        filename = testdata['nlloc_scat_converted.npy']
+        filename = os.path.join(self.datapath, "nlloc_scat_converted.npy")
         expected = np.load(filename)
         for field in expected.dtype.fields:
             np.testing.assert_allclose(got[field], expected[field], rtol=1e-5)

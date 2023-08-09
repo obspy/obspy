@@ -771,7 +771,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             numerator=numerator, denominator=denominator, **kwargs)
 
     elif elem_type == 'responsePolynomial':
-        raise NotImplementedError("responsePolynomial not "
+        raise NotImplementedError("responsePolynomial not"
                                   "implemented. Contact the ObsPy developers")
         # Polynomial response (UNTESTED)
         # Currently not implemented in ObsPy (20-11-2015)

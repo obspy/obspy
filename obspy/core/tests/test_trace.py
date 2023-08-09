@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import math
+import os
 import pickle
-import warnings
 from copy import deepcopy
+import warnings
 from unittest import mock
 
 from packaging.version import parse as parse_version
@@ -92,9 +93,9 @@ class TestTrace:
         with pytest.raises(TypeError):
             tr.__mul__('1234')
 
-    def test_truediv(self):
+    def test_div(self):
         """
-        Tests the __truediv__ method of the Trace class.
+        Tests the __div__ method of the Trace class.
         """
         tr = Trace(data=np.arange(1000))
         st = tr / 5
@@ -102,9 +103,9 @@ class TestTrace:
         assert len(st[0]) == 200
         # you may only multiply using an integer
         with pytest.raises(TypeError):
-            tr.__truediv__(2.5)
+            tr.__div__(2.5)
         with pytest.raises(TypeError):
-            tr.__truediv__('1234')
+            tr.__div__('1234')
 
     def test_ltrim(self):
         """
@@ -1741,9 +1742,12 @@ class TestTrace:
         tr2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
         np.testing.assert_array_almost_equal(tr1.data, tr2.data)
 
-    def test_remove_polynomial_response(self, testdata):
+    def test_remove_polynomial_response(self):
         """
         """
+        from obspy import read_inventory
+        path = os.path.dirname(__file__)
+
         # blockette 62, stage 0
         tr = read()[0]
         tr.stats.network = 'IU'
@@ -1753,8 +1757,8 @@ class TestTrace:
         tr.stats.starttime = UTC("2010-07-23T00:00:00")
         # remove response
         del tr.stats.response
-        inv = read_inventory(
-            testdata['stationxml_IU.ANTO.30.LDO.xml'], format='StationXML')
+        filename = os.path.join(path, 'data', 'stationxml_IU.ANTO.30.LDO.xml')
+        inv = read_inventory(filename, format='StationXML')
         tr.attach_response(inv)
         tr.remove_response()
 
@@ -1767,8 +1771,8 @@ class TestTrace:
         tr.stats.starttime = UTC("2004-06-16T00:00:00")
         # remove response
         del tr.stats.response
-        inv = read_inventory(
-            testdata['stationxml_BK.CMB.__.LKS.xml'], format='StationXML')
+        filename = os.path.join(path, 'data', 'stationxml_BK.CMB.__.LKS.xml')
+        inv = read_inventory(filename, format='StationXML')
         tr.attach_response(inv)
 
         # raises UserWarning: Stage gain not defined - ignoring

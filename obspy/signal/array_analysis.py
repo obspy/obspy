@@ -795,9 +795,9 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     :type fmin: float
     :param fmin: minimum frequency in signal
     :type fmax: float
-    :param fmax: maximum frequency in signal
+    :param fmin: maximum frequency in signal
     :type fstep: float
-    :param fstep: frequency sample distance
+    :param fmin: frequency sample distance
     """
     coords = get_geometry(coords, coordsys)
     if isinstance(slim, float):

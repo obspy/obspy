@@ -20,6 +20,7 @@ import traceback
 import warnings
 from urllib.parse import urlparse
 
+from obspy.core.compatibility import get_reason_from_response
 import obspy
 
 from ...base import HTTPClient
@@ -297,9 +298,14 @@ class BaseRoutingClient(HTTPClient):
 
         Please overwrite this method in a child class if necessary.
         """
-        reason = r.reason.encode()
+        reason = get_reason_from_response(r)
         if hasattr(r, "content"):
-            reason += b" -- " + r.content
+            c = r.content
+            try:
+                c = c.encode()
+            except Exception:
+                pass
+            reason += b" -- " + c
         with io.BytesIO(reason) as buf:
             raise_on_error(r.status_code, buf)
 

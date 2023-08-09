@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import os
 import io
+import unittest
 
 import numpy as np
 
@@ -7,12 +9,16 @@ from obspy import read
 from obspy.io.nied.knet import _is_knet_ascii
 
 
-class TestKnetReading():
+class KnetReadingTestCase(unittest.TestCase):
     """
     Test reading of K-NET and KiK-net ASCII format files from a file.
     """
-    def test_read_knet_ascii(self, testdata):
-        testfile = testdata['test.knet']
+    def setUp(self):
+        # Directory where the test files are located
+        self.path = os.path.dirname(__file__)
+
+    def test_read_knet_ascii(self):
+        testfile = os.path.join(self.path, 'data', 'test.knet')
         tr = read(testfile)[0]
         tr.data *= tr.stats.calib
         tr.data -= tr.data.mean()
@@ -20,13 +26,13 @@ class TestKnetReading():
         np.testing.assert_array_almost_equal(max, tr.stats.knet.accmax,
                                              decimal=3)
         duration = int(tr.stats.endtime - tr.stats.starttime + 0.5)
-        assert duration == int(tr.stats.knet.duration)
+        self.assertEqual(duration, int(tr.stats.knet.duration))
 
-    def test_read_knet_ascii_from_open_files(self, testdata):
+    def test_read_knet_ascii_from_open_files(self):
         """
         Test reading of K-NET and KiK-net ASCII format files from an open file.
         """
-        testfile = testdata['test.knet']
+        testfile = os.path.join(self.path, 'data', 'test.knet')
         with open(testfile, "rb") as fh:
             tr = read(fh)[0]
             tr.data *= tr.stats.calib
@@ -35,14 +41,14 @@ class TestKnetReading():
             np.testing.assert_array_almost_equal(max, tr.stats.knet.accmax,
                                                  decimal=3)
             duration = int(tr.stats.endtime - tr.stats.starttime + 0.5)
-            assert duration == int(tr.stats.knet.duration)
+            self.assertEqual(duration, int(tr.stats.knet.duration))
 
-    def test_read_knet_ascii_from_bytes_io(self, testdata):
+    def test_read_knet_ascii_from_bytes_io(self):
         """
         Tests that reading of K-NET and KiK-net ASCII format files from a
         BytesIO object works.
         """
-        testfile = testdata['test.knet']
+        testfile = os.path.join(self.path, 'data', 'test.knet')
         with open(testfile, "rb") as fh:
             buf = io.BytesIO(fh.read())
 
@@ -54,19 +60,19 @@ class TestKnetReading():
             np.testing.assert_array_almost_equal(max, tr.stats.knet.accmax,
                                                  decimal=3)
             duration = int(tr.stats.endtime - tr.stats.starttime + 0.5)
-            assert duration == int(tr.stats.knet.duration)
+            self.assertEqual(duration, int(tr.stats.knet.duration))
 
-    def test_station_name_hack(self, testdata):
+    def test_station_name_hack(self):
         """
         Station names in K-NET and KiK-net are 6 characters long which does not
         conform with the SEED standard. Test hack to write the last 2
         characters of the station name into the location field.
         """
-        testfile = testdata['test.knet']
+        testfile = os.path.join(self.path, 'data', 'test.knet')
         tr = read(testfile, convert_stnm=True)[0]
-        assert tr.stats.location == '13'
+        self.assertEqual(tr.stats.location, '13')
 
-    def test_is_knet_ascii(self, testdata, datapath):
+    def test_is_knet_ascii(self):
         """
         This tests the _is_knet_ascii method by just validating that each file
         in the data directory is a K-NET ascii file and each file in the
@@ -83,11 +89,11 @@ class TestKnetReading():
                               '__init__.py']
         # Loop over K-NET files
         for _i in knet_filenames:
-            filename = testdata[_i]
+            filename = os.path.join(self.path, 'data', _i)
             is_knet = _is_knet_ascii(filename)
-            assert is_knet
+            self.assertTrue(is_knet)
         # Loop over non K-NET files
         for _i in non_knet_filenames:
-            filename = datapath.parent / _i
+            filename = os.path.join(self.path, _i)
             is_knet = _is_knet_ascii(filename)
-            assert not is_knet
+            self.assertFalse(is_knet)

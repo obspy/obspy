@@ -1,26 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import inspect
 import io
 import os
+import unittest
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.cmtsolution.core import _is_cmtsolution
 
 
-class TestCmtsolution():
+class CmtsolutionTestCase(unittest.TestCase):
     """
     Test suite for obspy.io.cmtsolution.
 
     The tests usually directly utilize the registered function with the
     read_events() to also test the integration.
     """
-    def test_read_and_write_cmtsolution_from_files(self, testdata):
+    def setUp(self):
+        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe())))
+        self.datapath = os.path.join(self.path, "data")
+
+    def test_read_and_write_cmtsolution_from_files(self):
         """
         Tests that reading and writing a CMTSOLUTION file does not change
         anything.
         """
-        filename = testdata['CMTSOLUTION']
+        filename = os.path.join(self.datapath, "CMTSOLUTION")
         with open(filename, "rb") as fh:
             data = fh.read()
 
@@ -39,14 +46,15 @@ class TestCmtsolution():
             except Exception:
                 pass
 
-        assert data.decode().splitlines() == new_data.decode().splitlines()
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
 
-    def test_write_no_preferred_focal_mechanism(self, testdata):
+    def test_write_no_preferred_focal_mechanism(self):
         """
         Tests that writing a CMTSOLUTION file with no preferred (but at least
         one) focal mechanism works, see #1303.
         """
-        filename = testdata['CMTSOLUTION']
+        filename = os.path.join(self.datapath, "CMTSOLUTION")
         with open(filename, "rb") as fh:
             data = fh.read()
 
@@ -66,16 +74,17 @@ class TestCmtsolution():
             except Exception:
                 pass
 
-        assert data.decode().splitlines() == new_data.decode().splitlines()
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
 
-    def test_read_and_write_cmtsolution_from_open_files(self, testdata):
+    def test_read_and_write_cmtsolution_from_open_files(self):
         """
         Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         This time it tests reading from and writing to open files.
         """
-        filename = testdata['CMTSOLUTION']
+        filename = os.path.join(self.datapath, "CMTSOLUTION")
         with open(filename, "rb") as fh:
             data = fh.read()
             fh.seek(0, 0)
@@ -86,16 +95,17 @@ class TestCmtsolution():
             tf.seek(0, 0)
             new_data = tf.read()
 
-        assert data.decode().splitlines() == new_data.decode().splitlines()
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
 
-    def test_read_and_write_cmtsolution_from_bytes_io(self, testdata):
+    def test_read_and_write_cmtsolution_from_bytes_io(self):
         """
         Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         This time it tests reading from and writing to BytesIO objects.
         """
-        filename = testdata['CMTSOLUTION']
+        filename = os.path.join(self.datapath, "CMTSOLUTION")
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
             data = buf.read()
@@ -110,16 +120,17 @@ class TestCmtsolution():
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        assert data.decode().splitlines() == new_data.decode().splitlines()
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
 
-    def test_read_and_write_cmtsolution_explosion(self, testdata):
+    def test_read_and_write_cmtsolution_explosion(self):
         """
         Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         Tests another file.
         """
-        filename = testdata['CMTSOLUTION_EXPLOSION']
+        filename = os.path.join(self.datapath, "CMTSOLUTION_EXPLOSION")
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
 
@@ -134,35 +145,37 @@ class TestCmtsolution():
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        assert data.decode().splitlines() == new_data.decode().splitlines()
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
 
-    def test_is_cmtsolution(self, testdata, datapath):
+    def test_is_cmtsolution(self):
         """
         Tests the is_cmtsolution function.
         """
-        good_files = [testdata['CMTSOLUTION'],
-                      testdata['CMTSOLUTION_EXPLOSION']]
+        good_files = [os.path.join(self.datapath, "CMTSOLUTION"),
+                      os.path.join(self.datapath, "CMTSOLUTION_EXPLOSION")]
 
-        bad_files = [datapath.parent / "test_core.py",
-                     datapath.parent / "__init__.py"]
+        bad_files = [
+            os.path.join(self.datapath, os.path.pardir, "test_core.py"),
+            os.path.join(self.datapath, os.path.pardir, "__init__.py")]
 
         for filename in good_files:
-            assert _is_cmtsolution(filename)
+            self.assertTrue(_is_cmtsolution(filename))
         for filename in bad_files:
-            assert not _is_cmtsolution(filename)
+            self.assertFalse(_is_cmtsolution(filename))
 
-    def test_read_and_write_multiple_cmtsolution_from_files(self, testdata):
+    def test_read_and_write_multiple_cmtsolution_from_files(self):
         """
         Tests that reading and writing a CMTSOLUTION file with multiple
         events does not change anything.
         """
-        filename = testdata['MULTIPLE_EVENTS']
+        filename = os.path.join(self.datapath, "MULTIPLE_EVENTS")
         with open(filename, "rb") as fh:
             data = fh.read()
 
         cat = obspy.read_events(filename)
 
-        assert len(cat) == 4
+        self.assertEqual(len(cat), 4)
 
         with NamedTemporaryFile() as tf:
             temp_filename = tf.name
@@ -177,16 +190,17 @@ class TestCmtsolution():
             except Exception:
                 pass
 
-        assert data.decode().splitlines() == new_data.decode().splitlines()
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
 
-    def test_read_and_write_multiple_events_from_bytes_io(self, testdata):
+    def test_read_and_write_multiple_events_from_bytes_io(self):
         """
         Tests that reading and writing a CMTSOLUTION file with multiple
         events does not change anything.
 
         This time it tests reading from and writing to BytesIO objects.
         """
-        filename = testdata['MULTIPLE_EVENTS']
+        filename = os.path.join(self.datapath, "MULTIPLE_EVENTS")
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
             data = buf.read()
@@ -196,31 +210,32 @@ class TestCmtsolution():
             buf.seek(0, 0)
             cat = obspy.read_events(buf)
 
-            assert len(cat) == 4
+            self.assertEqual(len(cat), 4)
 
             with io.BytesIO() as buf2:
                 cat.write(buf2, format="CMTSOLUTION")
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        assert data.decode().splitlines() == new_data.decode().splitlines()
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
 
-    def test_reading_newer_cmtsolution_files(self, testdata):
+    def test_reading_newer_cmtsolution_files(self):
         """
         The format changed a bit. Make sure these files can also be read.
         """
-        filename = testdata['CMTSOLUTION_NEW']
+        filename = os.path.join(self.datapath, "CMTSOLUTION_NEW")
         cat = obspy.read_events(filename)
 
-        assert len(cat) == 3
+        self.assertEqual(len(cat), 3)
 
         # Test the hypocentral origins as the "change" to the format only
         # affected the first line.
-        assert cat[0].origins[1].latitude == 55.29
-        assert cat[0].origins[1].longitude == 163.06
+        self.assertEqual(cat[0].origins[1].latitude, 55.29)
+        self.assertEqual(cat[0].origins[1].longitude, 163.06)
 
-        assert cat[1].origins[1].latitude == -13.75
-        assert cat[1].origins[1].longitude == -111.75
+        self.assertEqual(cat[1].origins[1].latitude, -13.75)
+        self.assertEqual(cat[1].origins[1].longitude, -111.75)
 
-        assert cat[2].origins[1].latitude == -13.68
-        assert cat[2].origins[1].longitude == -111.93
+        self.assertEqual(cat[2].origins[1].latitude, -13.68)
+        self.assertEqual(cat[2].origins[1].longitude, -111.93)

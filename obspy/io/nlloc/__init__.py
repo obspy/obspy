@@ -35,7 +35,7 @@ Event:	2006-07-15T17:21:20.195670Z | +51.658,   +7.737
                                    version='NLLoc:v6.02.07')
  preferred_origin_id: ResourceIdentifier(id="smi:local/...")
                 ---------
-            comments: 2 Elements
+            comments: 1 Elements
                picks: 5 Elements
              origins: 1 Elements
 
@@ -54,7 +54,7 @@ Origin
                                    creation_time=UTCDateTime(2013, 6, 21, ...),
                                    version='NLLoc:v6.02.07')
                 ---------
-            comments: 2 Elements
+            comments: 1 Elements
             arrivals: 5 Elements
 
 
@@ -113,19 +113,8 @@ Origin
      creation_info: CreationInfo(creation_time=UTCDateTime(2014, 10, 17,
 16, 30, 8), version='NLLoc:v6.00.0')
     ---------
-          comments: 2 Elements
+          comments: 1 Elements
           arrivals: 8 Elements
-
-If NonLinLoc reports the location run as "ABORTED", "IGNORED" or "REJECTED",
-the evaluation status of the origin will be set to "rejected" (which otherwise
-is unset, i.e. ``None``). Further information might be found in the "NLLOC"
-info header line of the hyp file that gets stored in event and origin comments:
-
->>> cat = read_events("/path/to/nlloc_rejected.hyp", format="NLLOC_HYP")
->>> print(cat[0].origins[0].evaluation_status)
-rejected
->>> print(cat[0].comments[1].text)  # doctest: +ELLIPSIS
-NLLOC ... "REJECTED" ... max prob location on grid boundary 10, rejecting ...
 """
 if __name__ == '__main__':
     import doctest

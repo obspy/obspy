@@ -11,7 +11,6 @@ SAC bindings to ObsPy core module.
 import io
 import os
 import struct
-from pathlib import Path
 
 from obspy import Stream
 
@@ -176,7 +175,7 @@ def _read_sac_xy(filename, headonly=False, debug_headers=False,
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param filename: Alphanumeric SAC file to be read.
-    :type filename: str, :class:`~pathlib.Path`, open file, or file-like object
+    :type filename: str, open file, or file-like object
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
     :type headonly: bool
@@ -313,7 +312,7 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param filename: SAC file to be read.
-    :type filename: str, :class:`~pathlib.Path`, open file, or file-like object
+    :type filename: str, open file, or file-like object
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
     :type headonly: bool
@@ -340,7 +339,7 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
         return _internal_read_sac(buf=filename, headonly=headonly,
                                   debug_headers=debug_headers, fsize=fsize,
                                   **kwargs)
-    elif isinstance(filename, (str, bytes, Path)):
+    elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
             return _internal_read_sac(buf=fh, headonly=headonly,
                                       debug_headers=debug_headers, fsize=fsize,

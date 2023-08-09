@@ -2,6 +2,7 @@
 """
 The sac.sacpz test suite.
 """
+import os
 import io
 import warnings
 
@@ -17,20 +18,20 @@ from obspy.io.sac import attach_paz, attach_resp
 class TestSACPZ:
     """
     """
-    @pytest.fixture(autouse=True, scope="function")
-    def setup(self, testdata):
-        # these files were checked against data given by IRIS SACPZ web service
-        # http://service.iris.edu/irisws/sacpz/1/
-        #                                query?net=IU&loc=*&cha=BH?&sta=ANMO
-        # DIP seems to be systematically different in SACPZ output compared to
-        # StationXML served by IRIS...
-        self.file1 = testdata['IU_ANMO_00_BHZ.sacpz']
-        self.file2 = testdata['IU_ANMO_BH.sacpz']
+    # directory where the test files are located
+    path = os.path.dirname(__file__)
+    # these files were checked against data given by IRIS SACPZ web service
+    # http://service.iris.edu/irisws/sacpz/1/
+    #                                query?net=IU&loc=*&cha=BH?&sta=ANMO
+    # DIP seems to be systematically different in SACPZ output compared to
+    # StationXML served by IRIS...
+    file1 = os.path.join(path, 'data', 'IU_ANMO_00_BHZ.sacpz')
+    file2 = os.path.join(path, 'data', 'IU_ANMO_BH.sacpz')
 
     @pytest.fixture(scope="class")
-    def sacpz_with_no_sensors(self, testdata):
+    def sacpz_with_no_sensors(self):
         expected = []
-        with open(testdata['IU_ANMO_00_BHZ.sacpz']) as fh:
+        with open(self.file1) as fh:
             for line in fh:
                 if "INSTTYPE" in line:
                     line = "* INSTTYPE    : "
@@ -39,11 +40,10 @@ class TestSACPZ:
 
         return expected
 
-    def test_write_sacpz_single_channel(self, root):
+    def test_write_sacpz_single_channel(self):
         """
         """
-        path = root / 'core' / 'tests' / 'data' / 'IU_ANMO_00_BHZ.xml'
-        inv = read_inventory(path)
+        inv = read_inventory("/path/to/IU_ANMO_00_BHZ.xml")
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             inv.write(tempfile, format='SACPZ')
@@ -57,11 +57,10 @@ class TestSACPZ:
                     if "CREATED" not in line]
         assert got == expected
 
-    def test_write_sacpz_multiple_channels(self, root):
+    def test_write_sacpz_multiple_channels(self):
         """
         """
-        path = root / 'core' / 'tests' / 'data' / 'IU_ANMO_BH.xml'
-        inv = read_inventory(path)
+        inv = read_inventory("/path/to/IU_ANMO_BH.xml")
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             inv.write(tempfile, format='SACPZ')
@@ -75,9 +74,9 @@ class TestSACPZ:
                     if "CREATED" not in line]
         assert got == expected
 
-    def test_write_sacpz_soh(self, datapath):
-        path = (datapath.parent.parent.parent /
-                'stationxml' / 'tests' / 'data' / 'only_soh.xml')
+    def test_write_sacpz_soh(self):
+        path = os.path.join(self.path, '..', '..', 'stationxml', 'tests',
+                            'data', 'only_soh.xml')
         inv = read_inventory(path)
         f = io.StringIO()
         with warnings.catch_warnings(record=True) as w:
@@ -124,8 +123,9 @@ class TestSACPZ:
                                              - 31.616988, decimal=6)
         assert len(tr.stats.paz['zeros']) == 4
 
-    def test_attach_paz_diff_order(self, testdata):
-        pazfile = testdata['NZCRLZ_HHZ10.pz']
+    def test_attach_paz_diff_order(self):
+        pazfile = os.path.join(os.path.dirname(__file__),
+                               'data', 'NZCRLZ_HHZ10.pz')
         tr = Trace()
         attach_paz(tr, pazfile)
         np.testing.assert_array_almost_equal(tr.stats.paz['gain'],
@@ -133,7 +133,7 @@ class TestSACPZ:
         assert len(tr.stats.paz['zeros']) == 5
         assert len(tr.stats.paz['poles']) == 4
 
-    def test_sacpaz_from_dataless(self, testdata):
+    def test_sacpaz_from_dataless(self):
         # The following dictionary is extracted from a datalessSEED
         # file
         pazdict = {'sensitivity': 2516580000.0,
@@ -146,7 +146,8 @@ class TestSACPZ:
                              (-251.30000000000001 + 0j)]}
         tr = Trace()
         # This file was extracted from the datalessSEED file using rdseed
-        pazfile = testdata['SAC_PZs_NZ_HHZ_10']
+        pazfile = os.path.join(os.path.dirname(__file__),
+                               'data', 'SAC_PZs_NZ_HHZ_10')
         attach_paz(tr, pazfile, todisp=False)
         sacconstant = pazdict['digitizer_gain'] * \
             pazdict['seismometer_gain'] * pazdict['gain']
@@ -155,11 +156,13 @@ class TestSACPZ:
         # pole-zero files according to the SAC convention are in displacement
         assert len(tr.stats.paz['zeros']) == 3
 
-    def test_sacpaz_from_resp(self, testdata):
+    def test_sacpaz_from_resp(self):
         # The following two files were both extracted from a dataless
         # seed file using rdseed
-        respfile = testdata['RESP.NZ.CRLZ.10.HHZ']
-        sacpzfile = testdata['SAC_PZs_NZ_CRLZ_HHZ']
+        respfile = os.path.join(os.path.dirname(__file__),
+                                'data', 'RESP.NZ.CRLZ.10.HHZ')
+        sacpzfile = os.path.join(os.path.dirname(__file__),
+                                 'data', 'SAC_PZs_NZ_CRLZ_HHZ')
         # This is a rather lengthy test, in which the
         # poles, zeros and the gain of each instrument response file
         # are converted into the corresponding velocity frequency response

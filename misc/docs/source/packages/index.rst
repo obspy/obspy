@@ -132,7 +132,6 @@ categories.*
 
     obspy.io.cmtsolution
     obspy.io.cnv
-    obspy.io.csv
     obspy.io.focmec
     obspy.io.gse2
     obspy.io.hypodd

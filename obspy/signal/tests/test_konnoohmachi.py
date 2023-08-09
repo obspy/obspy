@@ -3,6 +3,7 @@
 """
 The polarization.core test suite.
 """
+import unittest
 import warnings
 
 import numpy as np
@@ -11,16 +12,17 @@ from obspy.signal.konnoohmachismoothing import (calculate_smoothing_matrix,
                                                 apply_smoothing_matrix,
                                                 konno_ohmachi_smoothing_window,
                                                 konno_ohmachi_smoothing)
-import pytest
 
 
-class TestKonnoOhmachi():
+class KonnoOhmachiTestCase(unittest.TestCase):
     """
     Test cases for the Konno Ohmachi Smoothing.
     """
-    @classmethod
-    def setup_class(cls):
-        cls.frequencies = np.logspace(-3.0, 2.0, 100)
+    def setUp(self):
+        self.frequencies = np.logspace(-3.0, 2.0, 100)
+
+    def tearDown(self):
+        pass
 
     def test_smoothing_window(self):
         """
@@ -33,8 +35,8 @@ class TestKonnoOhmachi():
         np.testing.assert_array_equal(window, np.array([1, 0, 1, 0],
                                                        dtype=np.float32))
         # Wrong dtypes raises.
-        with pytest.raises(ValueError):
-            konno_ohmachi_smoothing_window(np.arange(10, dtype=np.int32), 10)
+        self.assertRaises(ValueError, konno_ohmachi_smoothing_window,
+                          np.arange(10, dtype=np.int32), 10)
         # If frequency=center frequency, log results in infinity. Limit of
         # whole formulae is 1.
         window = konno_ohmachi_smoothing_window(
@@ -42,23 +44,23 @@ class TestKonnoOhmachi():
         np.testing.assert_array_equal(
             window[[0, 2]], np.array([1.0, 1.0], dtype=np.float32))
         # Output dtype should be the dtype of frequencies.
-        assert konno_ohmachi_smoothing_window(
-            np.array([1, 6, 12], dtype=np.float32), 5).dtype == np.float32
-        assert konno_ohmachi_smoothing_window(
-            np.array([1, 6, 12], dtype=np.float64), 5).dtype == np.float64
+        self.assertEqual(konno_ohmachi_smoothing_window(
+            np.array([1, 6, 12], dtype=np.float32), 5).dtype, np.float32)
+        self.assertEqual(konno_ohmachi_smoothing_window(
+            np.array([1, 6, 12], dtype=np.float64), 5).dtype, np.float64)
         # Check if normalizing works.
         window = konno_ohmachi_smoothing_window(self.frequencies, 20)
-        assert window.sum() > 1.0
+        self.assertGreater(window.sum(), 1.0)
         window = konno_ohmachi_smoothing_window(self.frequencies, 20,
                                                 normalize=True)
-        assert round(abs(window.sum()-1.0), 5) == 0
+        self.assertAlmostEqual(window.sum(), 1.0, 5)
         # Just one more to test if there are no invalid values and the
         # range if ok.
         window = konno_ohmachi_smoothing_window(self.frequencies, 20)
-        assert not np.any(np.isnan(window))
-        assert not np.any(np.isinf(window))
-        assert np.all(window <= 1.0)
-        assert np.all(window >= 0.0)
+        self.assertEqual(np.any(np.isnan(window)), False)
+        self.assertEqual(np.any(np.isinf(window)), False)
+        self.assertTrue(np.all(window <= 1.0))
+        self.assertTrue(np.all(window >= 0.0))
 
     def test_smoothing_matrix(self):
         """
@@ -67,7 +69,7 @@ class TestKonnoOhmachi():
         frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
                                dtype=np.float32)
         matrix = calculate_smoothing_matrix(frequencies, 20.0)
-        assert matrix.dtype == np.float32
+        self.assertEqual(matrix.dtype, np.float32)
         for _i, freq in enumerate(frequencies):
             np.testing.assert_array_equal(
                 matrix[_i],
@@ -75,20 +77,20 @@ class TestKonnoOhmachi():
             # Should not be normalized. Test only for larger frequencies
             # because smaller ones have a smaller window.
             if freq >= 10.0:
-                assert matrix[_i].sum() > 1.0
+                self.assertGreater(matrix[_i].sum(), 1.0)
         # Input should be output dtype.
         frequencies = np.array(
             [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
             dtype=np.float64)
         matrix = calculate_smoothing_matrix(frequencies, 20.0)
-        assert matrix.dtype == np.float64
+        self.assertEqual(matrix.dtype, np.float64)
         # Check normalization.
         frequencies = np.array(
             [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
             dtype=np.float32)
         matrix = calculate_smoothing_matrix(frequencies, 20.0,
                                             normalize=True)
-        assert matrix.dtype == np.float32
+        self.assertEqual(matrix.dtype, np.float32)
         for _i, freq in enumerate(frequencies):
             np.testing.assert_array_equal(
                 matrix[_i],
@@ -96,7 +98,7 @@ class TestKonnoOhmachi():
                     frequencies, freq, 20.0, normalize=True))
             # Should not be normalized. Test only for larger frequencies
             # because smaller ones have a smaller window.
-            assert round(abs(matrix[_i].sum()-1.0), 5) == 0
+            self.assertAlmostEqual(matrix[_i].sum(), 1.0, 5)
 
     def test_konno_ohmachi_smoothing(self):
         """
@@ -109,13 +111,13 @@ class TestKonnoOhmachi():
         spectra = np.require(spectra, dtype=np.float32)
         frequencies = np.require(frequencies, dtype=np.float64)
         # Wrong dtype raises.
-        with pytest.raises(ValueError):
-            konno_ohmachi_smoothing(spectra, np.arange(200))
+        self.assertRaises(ValueError, konno_ohmachi_smoothing, spectra,
+                          np.arange(200))
         # Differing float dtypes raise a warning.
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
-            with pytest.raises(UserWarning):
-                konno_ohmachi_smoothing(spectra, frequencies)
+            self.assertRaises(UserWarning, konno_ohmachi_smoothing, spectra,
+                              frequencies)
         # Correct the dtype.
         frequencies = np.require(frequencies, dtype=np.float32)
         # The first one uses the matrix method, the second one the non matrix
@@ -139,6 +141,6 @@ class TestKonnoOhmachi():
             normalize=True)
         # The normalized and not normalized should not be the same. That the
         # normalizing works has been tested before.
-        assert not np.all(smoothed_4 == smoothed_5)
+        self.assertFalse(np.all(smoothed_4 == smoothed_5))
         # Input dtype should be output dtype.
-        assert smoothed_4.dtype == np.float64
+        self.assertEqual(smoothed_4.dtype, np.float64)

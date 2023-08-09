@@ -2,6 +2,7 @@
 """
 The obspy.imaging.spectrogram test suite.
 """
+import os
 import warnings
 
 import numpy as np
@@ -16,6 +17,8 @@ class TestSpectrogram:
     """
     Test cases for spectrogram plotting.
     """
+    path = os.path.join(os.path.dirname(__file__), 'images')
+
     def test_spectrogram(self, image_path):
         """
         Create spectrogram plotting examples in tests/output directory.
@@ -68,19 +71,21 @@ class TestSpectrogram:
         # so we dont even have enough data for a single window. This used to
         # fail inside mlab specgram with ugly error message about the input
         data = np.ones(20)
-        msg = (r'Input signal too short \(20 samples, window length 6.4 '
-               r'seconds, nfft 128 samples, sampling rate 20.0 Hz\)')
-        with pytest.raises(ValueError, match=msg):
+        msg = ('Input signal too short (20 samples, window length 6.4 '
+               'seconds, nfft 128 samples, sampling rate 20.0 Hz)')
+        with pytest.raises(ValueError) as e:
             spectrogram.spectrogram(data, samp_rate=20.0, show=False)
+        assert str(e.value) == msg
         # Only 130 samples at 1 Hz and our default tries to window 128 samples,
         # so we dont have enough data for two windows. In principle we could
         # still plot that but our code currently relies on having at least two
         # windows for plotting. It does not seem worthwhile to change the code
         # to do so, so just show a nice error
         data = np.ones(130)
-        msg = (r'Input signal too short \(130 samples, window length 6.4 '
-               r'seconds, nfft 128 samples, 115 samples window overlap, '
-               r'sampling rate 20.0 Hz\)')
-        with pytest.raises(ValueError, match=msg):
+        msg = ('Input signal too short (130 samples, window length 6.4 '
+               'seconds, nfft 128 samples, 115 samples window overlap, '
+               'sampling rate 20.0 Hz)')
+        with pytest.raises(ValueError) as e:
             spectrogram.spectrogram(data, samp_rate=20.0, show=False)
+        assert str(e.value) == msg
         plt.close('all')

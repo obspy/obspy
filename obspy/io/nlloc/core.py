@@ -241,8 +241,6 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     hor_unc, min_hor_unc, max_hor_unc, hor_unc_azim = \
         map(float, line.split()[1:9:2])
 
-    nlloc_info_line = 'NLLOC ' + lines['NLLOC']
-
     # assign origin info
     event = Event()
     o = Origin()
@@ -253,10 +251,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     ou = o.origin_uncertainty
     oq = o.quality
     o.comments.append(Comment(text=stats_info_string, force_resource_id=False))
-    o.comments.append(Comment(text=nlloc_info_line, force_resource_id=False))
     event.comments.append(Comment(text=comment, force_resource_id=False))
-    event.comments.append(Comment(text=nlloc_info_line,
-                                  force_resource_id=False))
 
     # SIGNATURE field's first item is LOCSIG, which is supposed to be
     # 'Identification of an individual, institiution or other entity'
@@ -269,13 +264,6 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     o.creation_info = CreationInfo(creation_time=creation_time,
                                    version=version,
                                    author=signature)
-
-    # nlloc writes location status in "NLLOC" line
-    # char location status LOCATED, ABORTED, IGNORED, REJECTED
-    # set evaluation status to "rejected" if it is anything but LOCATED
-    nlloc_location_status = lines['NLLOC'].split()[1].strip('\'"')
-    if nlloc_location_status in ('ABORTED', 'IGNORED', 'REJECTED'):
-        o.evaluation_status = 'rejected'
 
     # negative values can appear on diagonal of covariance matrix due to a
     # precision problem in NLLoc implementation when location coordinates are

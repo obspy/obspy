@@ -40,6 +40,11 @@ class TestInventory:
     """
     Tests the for :class:`~obspy.core.inventory.inventory.Inventory` class.
     """
+    # TODO put these into fixtures
+    path = os.path.join(os.path.dirname(__file__), 'data')
+    station_xml1 = os.path.join(path, 'IU_ANMO_00_BHZ.xml')
+    station_xml2 = os.path.join(path, 'IU_ULN_00_LH1.xml')
+
     def test_initialization(self):
         """
         Some simple sanity tests.
@@ -657,24 +662,24 @@ class TestInventory:
         assert inv1.source == 'S1,S2'
         assert inv1.sender == 'T1,T2'
 
-    def test_read_inventory_with_wildcard(self, testdata, datapath):
+    def test_read_inventory_with_wildcard(self):
         """
         Tests the read_inventory() function with a filename wild card.
         """
         # without wildcard..
-        expected = read_inventory(testdata['IU_ANMO_00_BHZ.xml'])
-        expected += read_inventory(testdata['IU_ULN_00_LH1.xml'])
+        expected = read_inventory(self.station_xml1)
+        expected += read_inventory(self.station_xml2)
         # with wildcard
-        got = read_inventory(datapath / 'IU_*_00*.xml')
+        got = read_inventory(os.path.join(self.path, "IU_*_00*.xml"))
         assert expected == got
 
-    def test_read_inventory_with_path(self, testdata):
+    def test_read_inventory_with_path(self):
         """
         Tests that pathlib.Path objects works for input to read_inventory().
         """
-        path1 = Path(testdata['IU_ANMO_00_BHZ.xml'])
+        path1 = Path(self.station_xml1)
         inv1 = read_inventory(path1)
-        assert inv1 == read_inventory(testdata['IU_ANMO_00_BHZ.xml'])
+        assert inv1 == read_inventory(self.station_xml1)
 
 
 @pytest.mark.usefixtures('ignore_numpy_errors')
@@ -683,6 +688,8 @@ class TestInventoryCartopy:
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Cartopy.
     """
+    image_dir = os.path.join(os.path.dirname(__file__), 'images')
+
     def test_location_plot_global(self, image_path):
         """
         Tests the inventory location preview plot, default parameters, using

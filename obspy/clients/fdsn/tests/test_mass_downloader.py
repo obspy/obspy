@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The obspy.clients.fdsn.download_helpers test suite.
@@ -13,9 +14,10 @@ import copy
 import logging
 import os
 import shutil
+from socket import timeout as socket_timeout
 import sys
 import tempfile
-from socket import timeout as socket_timeout
+import unittest
 from unittest import mock
 
 import pytest
@@ -44,7 +46,7 @@ from obspy.clients.fdsn.mass_downloader.download_helpers import (
 pytestmark = pytest.mark.network
 
 
-class TestDomain():
+class DomainTestCase(unittest.TestCase):
     """
     Test case for the domain definitions.
     """
@@ -54,15 +56,14 @@ class TestDomain():
         """
         dom = domain.RectangularDomain(-10, 10, -20, 20)
         query_params = dom.get_query_parameters()
-        assert query_params == {
+        self.assertEqual(query_params, {
             "minlatitude": -10,
             "maxlatitude": 10,
             "minlongitude": -20,
-            "maxlongitude": 20}
+            "maxlongitude": 20})
 
         # The rectangular domain is completely defined by the query parameters.
-        with pytest.raises(NotImplementedError):
-            dom.is_in_domain(0, 0)
+        self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
 
     def test_circular_domain(self):
         """
@@ -70,15 +71,14 @@ class TestDomain():
         """
         dom = domain.CircularDomain(10, 20, 30, 40)
         query_params = dom.get_query_parameters()
-        assert query_params == {
+        self.assertEqual(query_params, {
             "latitude": 10,
             "longitude": 20,
             "minradius": 30,
-            "maxradius": 40}
+            "maxradius": 40})
 
         # The circular domain is completely defined by the query parameters.
-        with pytest.raises(NotImplementedError):
-            dom.is_in_domain(0, 0)
+        self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
 
     def test_global_domain(self):
         """
@@ -86,11 +86,10 @@ class TestDomain():
         """
         dom = domain.GlobalDomain()
         query_params = dom.get_query_parameters()
-        assert query_params == {}
+        self.assertEqual(query_params, {})
 
         # Obviously every point is in the domain.
-        with pytest.raises(NotImplementedError):
-            dom.is_in_domain(0, 0)
+        self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
 
     def test_subclassing_without_abstract_method(self):
         """
@@ -100,21 +99,24 @@ class TestDomain():
         class NewDom(domain.Domain):
             pass
 
-        with pytest.raises(TypeError):
-            NewDom()
+        self.assertRaises(TypeError, NewDom)
 
     def test_instantiating_root_domain_object_fails(self):
         """
         Trying to create a root domain object should fail.
         """
-        with pytest.raises(TypeError):
-            domain.Domain()
+        self.assertRaises(TypeError, domain.Domain)
 
 
-class TestRestrictions():
+class RestrictionsTestCase(unittest.TestCase):
     """
     Test case for the restrictions object.
     """
+    def __init__(self, *args, **kwargs):
+        super(RestrictionsTestCase, self).__init__(*args, **kwargs)
+        self.path = os.path.dirname(__file__)
+        self.data = os.path.join(self.path, "data")
+
     def test_passing_string_as_priority_list_raises(self):
         """
         Users reported errors as they used "tuples" with single items as
@@ -126,54 +128,62 @@ class TestRestrictions():
         end = start + 10
 
         # Test for the channel_priorities key.
-        msg = ("'channel_priorities' must be a list or other iterable "
-               "container.")
-        with pytest.raises(TypeError, match=msg):
+        with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
+        self.assertEqual(e.exception.args[0],
+                         "'channel_priorities' must be a list or other "
+                         "iterable container.")
 
-        msg = ("'channel_priorities' must be a list or other iterable "
-               "container.")
-        with pytest.raises(TypeError, match=msg):
+        with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities=("HHE"))
+        self.assertEqual(e.exception.args[0],
+                         "'channel_priorities' must be a list or other "
+                         "iterable container.")
 
-        msg = ("'channel_priorities' must be a list or other iterable "
-               "container.")
-        with pytest.raises(TypeError, match=msg):
+        with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
+        self.assertEqual(e.exception.args[0],
+                         "'channel_priorities' must be a list or other "
+                         "iterable container.")
 
-        msg = ("'channel_priorities' must be a list or other iterable "
-               "container.")
-        with pytest.raises(TypeError, match=msg):
+        with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          channel_priorities="HHE")
+        self.assertEqual(e.exception.args[0],
+                         "'channel_priorities' must be a list or other "
+                         "iterable container.")
 
         # And for the location priorities key.
-        msg = ("'location_priorities' must be a list or other iterable "
-               "container.")
-        with pytest.raises(TypeError, match=msg):
+        with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities="00")
+        self.assertEqual(e.exception.args[0],
+                         "'location_priorities' must be a list or other "
+                         "iterable container.")
 
-        msg = ("'location_priorities' must be a list or other iterable "
-               "container.")
-        with pytest.raises(TypeError, match=msg):
+        with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities=("00"))
+        self.assertEqual(e.exception.args[0],
+                         "'location_priorities' must be a list or other "
+                         "iterable container.")
 
-        msg = ("'location_priorities' must be a list or other iterable "
-               "container.")
-        with pytest.raises(TypeError, match=msg):
+        with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities="00")
+        self.assertEqual(e.exception.args[0],
+                         "'location_priorities' must be a list or other "
+                         "iterable container.")
 
-        msg = ("'location_priorities' must be a list or other iterable "
-               "container.")
-        with pytest.raises(TypeError, match=msg):
+        with self.assertRaises(TypeError) as e:
             Restrictions(starttime=start, endtime=end,
                          location_priorities=("00"))
+        self.assertEqual(e.exception.args[0],
+                         "'location_priorities' must be a list or other "
+                         "iterable container.")
 
         # All other valid things should of course still work.
         Restrictions(starttime=start, endtime=end,
@@ -222,20 +232,22 @@ class TestRestrictions():
 
         # No chunklength means it should just return one item.
         chunks = list(res)
-        assert len(chunks) == 1
-        assert chunks[0] == (start, start + 10)
+        self.assertEqual(len(chunks), 1)
+        self.assertEqual(chunks[0], (start, start + 10))
 
         # One with chunklength should return the chunked pieces.
         res = Restrictions(starttime=start, endtime=start + 10,
                            chunklength_in_sec=1)
         chunks = list(res)
-        assert len(chunks) == 10
-        assert [_i[0] for _i in chunks] == \
-            [start + _i * 1 for _i in range(10)]
-        assert [_i[1] for _i in chunks] == \
-            [start + _i * 1 for _i in range(1, 11)]
-        assert chunks[0][0] == start
-        assert chunks[-1][1] == start + 10
+        self.assertEqual(len(chunks), 10)
+        self.assertEqual(
+            [_i[0] for _i in chunks],
+            [start + _i * 1 for _i in range(10)])
+        self.assertEqual(
+            [_i[1] for _i in chunks],
+            [start + _i * 1 for _i in range(1, 11)])
+        self.assertEqual(chunks[0][0], start)
+        self.assertEqual(chunks[-1][1], start + 10)
 
         # Make sure the last piece is cut if it needs to be.
         start = obspy.UTCDateTime(2012, 1, 1)
@@ -243,64 +255,68 @@ class TestRestrictions():
         res = Restrictions(starttime=start, endtime=end,
                            chunklength_in_sec=86400 * 10)
         chunks = list(res)
-        assert chunks == [
+        self.assertEqual(chunks, [
             (start, start + 86400 * 10),
             (start + 86400 * 10, start + 86400 * 20),
             (start + 86400 * 20, start + 86400 * 30),
-            (start + 86400 * 30, end)]
+            (start + 86400 * 30, end)])
 
         # No station start-and endtime by default
         res = Restrictions(starttime=start, endtime=start + 10)
-        assert res.station_starttime is None
-        assert res.station_endtime is None
+        self.assertEqual(res.station_starttime, None)
+        self.assertEqual(res.station_endtime, None)
 
         # One can only set one of the two.
         res = Restrictions(starttime=start, endtime=start + 10,
                            station_starttime=start - 10)
-        assert res.station_starttime == start - 10
-        assert res.station_endtime is None
+        self.assertEqual(res.station_starttime, start - 10)
+        self.assertEqual(res.station_endtime, None)
 
         res = Restrictions(starttime=start, endtime=start + 10,
                            station_endtime=start + 20)
-        assert res.station_starttime is None
-        assert res.station_endtime == start + 20
+        self.assertEqual(res.station_starttime, None)
+        self.assertEqual(res.station_endtime, start + 20)
 
         # Will raise a ValueError if either within the time interval of the
         # normal start- and endtime.
-        with pytest.raises(ValueError):
-            Restrictions(starttime=start,
-                         endtime=start + 10, station_starttime=start + 1)
+        self.assertRaises(ValueError, Restrictions, starttime=start,
+                          endtime=start + 10, station_starttime=start + 1)
 
-        with pytest.raises(ValueError):
-            Restrictions(starttime=start,
-                         endtime=start + 10, station_endtime=start + 9)
+        self.assertRaises(ValueError, Restrictions, starttime=start,
+                          endtime=start + 10, station_endtime=start + 9)
 
         # Fine if they are equal with both.
         Restrictions(starttime=start, endtime=start + 10,
                      station_starttime=start, station_endtime=start + 10)
 
-    def test_inventory_parsing(self, testdata):
+    def test_inventory_parsing(self):
         """
         Test the inventory parsing if an inventory is given.
         """
         # Nothing is given.
         r = Restrictions(starttime=obspy.UTCDateTime(2011, 1, 1),
                          endtime=obspy.UTCDateTime(2011, 2, 1))
-        assert r.limit_stations_to_inventory is None
+        self.assertIs(r.limit_stations_to_inventory, None)
 
         # An inventory object is given.
-        inv = obspy.read_inventory(testdata["channel_level_fdsn.txt"])
+        inv = obspy.read_inventory(os.path.join(
+            self.data, "channel_level_fdsn.txt"))
         r = Restrictions(starttime=obspy.UTCDateTime(2011, 1, 1),
                          endtime=obspy.UTCDateTime(2011, 2, 1),
                          limit_stations_to_inventory=inv)
-        assert {("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")} == \
-            r.limit_stations_to_inventory
+        self.assertEqual({("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")},
+                         r.limit_stations_to_inventory)
 
 
-class TestDownloadHelpersUtil():
+class DownloadHelpersUtilTestCase(unittest.TestCase):
     """
     Test cases for utility functionality for the download helpers.
     """
+    def __init__(self, *args, **kwargs):
+        super(DownloadHelpersUtilTestCase, self).__init__(*args, **kwargs)
+        self.path = os.path.dirname(__file__)
+        self.data = os.path.join(self.path, "data")
+
     def test_channel_priority_filtering(self):
         """
         Tests the channel priority filtering.
@@ -320,43 +336,43 @@ class TestDownloadHelpersUtil():
             channels, key="channel", priorities=[
                 "HH[ZNE]", "BH[ZNE]", "MH[ZNE]", "EH[ZNE]",
                 "LH[ZNE]"])
-        assert filtered_channels == [c4]
+        self.assertEqual(filtered_channels, [c4])
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[
                 "BH[ZNE]", "MH[ZNE]", "EH[ZNE]", "LH[ZNE]"])
-        assert filtered_channels == [c1, c3]
+        self.assertEqual(filtered_channels, [c1, c3])
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=["LH[ZNE]"])
-        assert filtered_channels == []
+        self.assertEqual(filtered_channels, [])
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=["*"])
-        assert filtered_channels == channels
+        self.assertEqual(filtered_channels, channels)
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[
                 "BH*", "MH[ZNE]", "EH[ZNE]", "LH[ZNE]"])
-        assert filtered_channels == [c1, c3]
+        self.assertEqual(filtered_channels, [c1, c3])
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[
                 "BH[NZ]", "MH[ZNE]", "EH[ZNE]", "LH[ZNE]"])
-        assert filtered_channels == [c3]
+        self.assertEqual(filtered_channels, [c3])
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=["S*", "BH*"])
-        assert filtered_channels == [c2]
+        self.assertEqual(filtered_channels, [c2])
 
         # Different ways to not filter.
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=["*"])
-        assert filtered_channels == channels
+        self.assertEqual(filtered_channels, channels)
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=None)
-        assert filtered_channels == channels
+        self.assertEqual(filtered_channels, channels)
 
     def test_location_priority_filtering(self):
         """
@@ -374,36 +390,36 @@ class TestDownloadHelpersUtil():
 
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=["*0"])
-        assert filtered_channels == [c2, c3]
+        self.assertEqual(filtered_channels, [c2, c3])
 
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=["00"])
-        assert filtered_channels == [c3]
+        self.assertEqual(filtered_channels, [c3])
 
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=[""])
-        assert filtered_channels == [c1, c4]
+        self.assertEqual(filtered_channels, [c1, c4])
 
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=["1?"])
-        assert filtered_channels == [c2]
+        self.assertEqual(filtered_channels, [c2])
 
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=["", "*0"])
-        assert filtered_channels == [c1, c4]
+        self.assertEqual(filtered_channels, [c1, c4])
 
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=["*0", ""])
-        assert filtered_channels == [c2, c3]
+        self.assertEqual(filtered_channels, [c2, c3])
 
         # Different ways to not filter.
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=["*"])
-        assert filtered_channels == channels
+        self.assertEqual(filtered_channels, channels)
 
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=None)
-        assert filtered_channels == channels
+        self.assertEqual(filtered_channels, channels)
 
     def test_spherical_nearest_neighbour(self):
         """
@@ -434,7 +450,7 @@ class TestDownloadHelpersUtil():
         point_c = Station("", "", 0.0, 0.0, [])
         tree = SphericalNearestNeighbour(data=[point_a, point_b, point_c])
         # 100 km apart. Only contains points a and c.
-        assert tree.query_pairs(100000) == {(0, 2)}
+        self.assertEqual(tree.query_pairs(100000), {(0, 2)})
 
     def test_safe_delete(self):
         """
@@ -447,15 +463,14 @@ class TestDownloadHelpersUtil():
             # If not a file, an error will be raised.
             name = os.path.join(dir, "tmpdir")
             os.makedirs(name)
-            with pytest.raises(ValueError):
-                safe_delete(name)
+            self.assertRaises(ValueError, safe_delete, name)
             # Otherwise it can delete a file just fine.
             name = os.path.join(dir, "tmpfile")
             with open(name, "wt") as fh:
                 fh.write("0")
-            assert os.path.exists(name)
+            self.assertTrue(os.path.exists(name))
             safe_delete(name)
-            assert not os.path.exists(name)
+            self.assertFalse(os.path.exists(name))
 
         finally:
             shutil.rmtree(dir)
@@ -480,15 +495,18 @@ class TestDownloadHelpersUtil():
         # Normal call.
         ret_val = download_stationxml(client, client_name, bulk, filename,
                                       logger)
-        assert ret_val == (("BW", "ALTM"), filename)
+        self.assertEqual(ret_val, (("BW", "ALTM"), filename))
 
-        assert logger.info.call_count == 1
-        assert logger.info.call_args[0][0] == \
-            "Client 'mock' - Successfully downloaded 'temp.xml'."
-        assert client.get_stations_bulk.call_count == 1
-        assert client.get_stations_bulk.call_args[1]["bulk"] == bulk
-        assert client.get_stations_bulk.call_args[1]["level"] == "response"
-        assert client.get_stations_bulk.call_args[1]["filename"] == filename
+        self.assertEqual(logger.info.call_count, 1)
+        self.assertEqual(logger.info.call_args[0][0],
+                         "Client 'mock' - Successfully downloaded 'temp.xml'.")
+        self.assertEqual(client.get_stations_bulk.call_count, 1)
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["bulk"], bulk)
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["level"], "response")
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["filename"], filename)
 
         # Call that raises.
         client.reset_mock()
@@ -500,15 +518,19 @@ class TestDownloadHelpersUtil():
 
         ret_val = download_stationxml(client, client_name, bulk, filename,
                                       logger)
-        assert ret_val is None
+        self.assertEqual(ret_val, None)
 
-        assert logger.info.call_count == 1
-        assert logger.info.call_args[0][0] == \
-            "Failed to download StationXML from 'mock' for station 'BW.ALTM'."
-        assert client.get_stations_bulk.call_count == 1
-        assert client.get_stations_bulk.call_args[1]["bulk"] == bulk
-        assert client.get_stations_bulk.call_args[1]["level"] == "response"
-        assert client.get_stations_bulk.call_args[1]["filename"] == filename
+        self.assertEqual(logger.info.call_count, 1)
+        self.assertEqual(
+            logger.info.call_args[0][0],
+            "Failed to download StationXML from 'mock' for station 'BW.ALTM'.")
+        self.assertEqual(client.get_stations_bulk.call_count, 1)
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["bulk"], bulk)
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["level"], "response")
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["filename"], filename)
 
     def test_download_and_split_mseed(self):
         """
@@ -558,20 +580,21 @@ class TestDownloadHelpersUtil():
                         ("file_2.mseed", "BW.ALTM..EHN"),
                         ("file_3.mseed", "BW.ALTM..EHZ")]
 
-            assert ret_val == sorted([os.path.join(tmpdir, _i[0])
-                                      for _i in contents])
+            self.assertEqual(ret_val,
+                             sorted([os.path.join(tmpdir, _i[0])
+                                     for _i in contents]))
 
             # Make sure all files have been written.
-            assert sorted(os.listdir(tmpdir)) == \
-                ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
+            self.assertEqual(sorted(os.listdir(tmpdir)),
+                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"])
             # Check the actual files.
             for filename, id, in contents:
                 st = obspy.read(os.path.join(tmpdir, filename))
-                assert len(st) == 1
+                self.assertEqual(len(st), 1)
                 tr = st[0]
-                assert tr.id == id
-                assert tr.stats.starttime == obspy.UTCDateTime(0)
-                assert tr.stats.endtime == obspy.UTCDateTime(10)
+                self.assertEqual(tr.id, id)
+                self.assertEqual(tr.stats.starttime, obspy.UTCDateTime(0))
+                self.assertEqual(tr.stats.endtime, obspy.UTCDateTime(10))
 
         finally:
             shutil.rmtree(tmpdir)
@@ -643,20 +666,21 @@ class TestDownloadHelpersUtil():
                         ("file_2.mseed", "BW.ALTM..EHN"),
                         ("file_3.mseed", "BW.ALTM..EHZ")]
 
-            assert ret_val == sorted([os.path.join(tmpdir, _i[0])
-                                      for _i in contents])
+            self.assertEqual(ret_val,
+                             sorted([os.path.join(tmpdir, _i[0])
+                                     for _i in contents]))
 
             # Make sure all files have been written.
-            assert sorted(os.listdir(tmpdir)) == \
-                ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
+            self.assertEqual(sorted(os.listdir(tmpdir)),
+                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"])
             # Check the actual files.
             for filename, id, in contents:
                 st = obspy.read(os.path.join(tmpdir, filename))
-                assert len(st) == 1
+                self.assertEqual(len(st), 1)
                 tr = st[0]
-                assert tr.id == id
-                assert tr.stats.starttime == obspy.UTCDateTime(0)
-                assert tr.stats.endtime == obspy.UTCDateTime(10)
+                self.assertEqual(tr.id, id)
+                self.assertEqual(tr.stats.starttime, obspy.UTCDateTime(0))
+                self.assertEqual(tr.stats.endtime, obspy.UTCDateTime(10))
 
         finally:
             shutil.rmtree(tmpdir)
@@ -714,22 +738,25 @@ class TestDownloadHelpersUtil():
                         ("file_5.mseed", "BW.ALTM..EHE"),
                         ("file_6.mseed", "BW.ALTM..EHE")]
 
-            assert ret_val == sorted([os.path.join(tmpdir, _i[0])
-                                      for _i in contents])
+            self.assertEqual(ret_val,
+                             sorted([os.path.join(tmpdir, _i[0])
+                                     for _i in contents]))
 
             # Make sure all files have been written.
-            assert sorted(os.listdir(tmpdir)) == [_i[0] for _i in contents]
+            self.assertEqual(sorted(os.listdir(tmpdir)),
+                             [_i[0] for _i in contents])
 
             # The interesting thing here is that it should only send a
             # request for single time span and then split again on the
             # client side. Here is two time spans as one segment is further
             # away.
             call_args = client.get_waveforms_bulk.call_args[0][0]
-            assert call_args == [
+            self.assertEqual(
+                call_args, [
                     ['BW', 'ALTM', '', 'EHE', obspy.UTCDateTime(0),
                      obspy.UTCDateTime(5E5)],
                     ['BW', 'ALTM', '', 'EHE', obspy.UTCDateTime(6E5),
-                     obspy.UTCDateTime(7E5)]]
+                     obspy.UTCDateTime(7E5)]])
 
         finally:
             shutil.rmtree(tmpdir)
@@ -778,39 +805,44 @@ class TestDownloadHelpersUtil():
                         ("file_2.mseed", "BW.ALTM..EHE"),
                         ("file_3.mseed", "BW.ALTM..EHE")]
 
-            assert ret_val == sorted([os.path.join(tmpdir, _i[0])
-                                      for _i in contents])
+            self.assertEqual(ret_val,
+                             sorted([os.path.join(tmpdir, _i[0])
+                                     for _i in contents]))
 
             # Make sure all files have been written.
-            assert sorted(os.listdir(tmpdir)) == \
-                ["file_1.mseed", "file_2.mseed", "file_3.mseed"]
+            self.assertEqual(sorted(os.listdir(tmpdir)),
+                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"])
             # Check the actual files. There will be no overlap of data in
             # the files but the data should be distributed across
             # files according to some heuristics.
             st = obspy.read(os.path.join(tmpdir, "file_1.mseed"))
-            assert len(st) == 1
+            self.assertEqual(len(st), 1)
             tr = st[0]
-            assert tr.id == "BW.ALTM..EHE"
-            assert tr.stats.starttime == obspy.UTCDateTime(0)
+            self.assertEqual(tr.id, "BW.ALTM..EHE")
+            self.assertEqual(tr.stats.starttime, obspy.UTCDateTime(0))
             # Record length of 512.
-            assert abs(tr.stats.endtime - obspy.UTCDateTime(1E5)) < 512
+            self.assertTrue(
+                abs(tr.stats.endtime - obspy.UTCDateTime(1E5)) < 512)
 
             st = obspy.read(os.path.join(tmpdir, "file_2.mseed"))
-            assert len(st) == 1
+            self.assertEqual(len(st), 1)
             tr = st[0]
-            assert tr.id == "BW.ALTM..EHE"
+            self.assertEqual(tr.id, "BW.ALTM..EHE")
             # Record length of 512.
-            assert abs(tr.stats.starttime - obspy.UTCDateTime(1E5)) < 512
-            assert abs(tr.stats.endtime - obspy.UTCDateTime(1.6E5)) < 512
+            self.assertTrue(
+                abs(tr.stats.starttime - obspy.UTCDateTime(1E5)) < 512)
+            self.assertTrue(
+                abs(tr.stats.endtime - obspy.UTCDateTime(1.6E5)) < 512)
 
             st = obspy.read(os.path.join(tmpdir, "file_3.mseed"))
-            assert len(st) == 1
+            self.assertEqual(len(st), 1)
             tr = st[0]
-            assert tr.id == "BW.ALTM..EHE"
+            self.assertEqual(tr.id, "BW.ALTM..EHE")
             # Record length of 512.
-            assert abs(tr.stats.starttime - obspy.UTCDateTime(1.6E5)) < 512
+            self.assertTrue(
+                abs(tr.stats.starttime - obspy.UTCDateTime(1.6E5)) < 512)
             # End time is exact again as no more overlaps occur.
-            assert tr.stats.endtime == obspy.UTCDateTime(2.2E5)
+            self.assertEqual(tr.stats.endtime, obspy.UTCDateTime(2.2E5))
 
         finally:
             shutil.rmtree(tmpdir)
@@ -826,80 +858,76 @@ class TestDownloadHelpersUtil():
         channels = [c1, c2]
 
         # A normal string is considered a path.
-        assert get_stationxml_filename(
+        self.assertEqual(get_stationxml_filename(
             "FOLDER", network="BW", station="FURT", channels=channels,
-            starttime=starttime, endtime=endtime) == \
-            os.path.join("FOLDER", "BW.FURT.xml")
-        assert get_stationxml_filename(
+            starttime=starttime, endtime=endtime),
+            os.path.join("FOLDER", "BW.FURT.xml"))
+        self.assertEqual(get_stationxml_filename(
             "stations", network="BW", station="FURT", channels=channels,
-            starttime=starttime, endtime=endtime) == \
-            os.path.join("stations", "BW.FURT.xml")
+            starttime=starttime, endtime=endtime),
+            os.path.join("stations", "BW.FURT.xml"))
 
         # Passing a format string causes it to be used.
-        assert get_stationxml_filename(
+        self.assertEqual(get_stationxml_filename(
             "{network}_{station}.xml", network="BW", station="FURT",
-            channels=channels, starttime=starttime, endtime=endtime) == \
-            "BW_FURT.xml"
-        assert get_stationxml_filename(
+            channels=channels, starttime=starttime, endtime=endtime),
+            "BW_FURT.xml")
+        self.assertEqual(get_stationxml_filename(
             "TEMP/{network}/{station}.xml", network="BW", station="FURT",
-            channels=channels, starttime=starttime, endtime=endtime) == \
-            "TEMP/BW/FURT.xml"
+            channels=channels, starttime=starttime, endtime=endtime),
+            "TEMP/BW/FURT.xml")
 
         # A passed function will be executed. A string should just be returned.
         def get_name(network, station, channels, starttime, endtime):
             return "network" + "__" + station
-        assert get_stationxml_filename(
+        self.assertEqual(get_stationxml_filename(
             get_name, network="BW", station="FURT", channels=channels,
-            starttime=starttime, endtime=endtime) == "network__FURT"
+            starttime=starttime, endtime=endtime), "network__FURT")
 
         # A dictionary with certain keys is also acceptable.
         def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": [c2],
                     "filename": "test.xml"}
-        assert get_stationxml_filename(
+        self.assertEqual(get_stationxml_filename(
             get_name, network="BW", station="FURT", channels=channels,
-            starttime=starttime, endtime=endtime) == \
+            starttime=starttime, endtime=endtime),
             {"missing_channels": [c1], "available_channels": [c2],
-             "filename": "test.xml"}
+             "filename": "test.xml"})
 
         # Missing keys raise.
         def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": [c2]}
-        with pytest.raises(ValueError):
-            get_stationxml_filename(
-                get_name, "BW", "FURT", channels, starttime, endtime)
+        self.assertRaises(ValueError, get_stationxml_filename, get_name,
+                          "BW", "FURT", channels, starttime, endtime)
 
         # Wrong value types should also raise.
         def get_name(network, station, channels, starttime, endtime):
-            return {"missing_channels": [c1], "available_channels": [c2],
+            return {"missing_channels": [c1],
+                    "available_channels": [c2],
                     "filename": True}
-        with pytest.raises(ValueError):
-            get_stationxml_filename(
-                get_name, "BW", "FURT", channels, starttime, endtime)
+        self.assertRaises(ValueError, get_stationxml_filename, get_name,
+                          "BW", "FURT", channels, starttime, endtime)
 
         def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": True,
                     "available_channels": [c2],
                     "filename": "test.xml"}
-        with pytest.raises(ValueError):
-            get_stationxml_filename(
-                get_name, "BW", "FURT", channels, starttime, endtime)
+        self.assertRaises(ValueError, get_stationxml_filename, get_name,
+                          "BW", "FURT", channels, starttime, endtime)
 
         def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": True,
                     "filename": "test.xml"}
-        with pytest.raises(ValueError):
-            get_stationxml_filename(
-                get_name, "BW", "FURT", channels, starttime, endtime)
+        self.assertRaises(ValueError, get_stationxml_filename, get_name,
+                          "BW", "FURT", channels, starttime, endtime)
 
         # It will raise a type error, if the function does not return the
         # proper type.
-        with pytest.raises(TypeError):
-            get_stationxml_filename(
-                lambda x: 1, "BW", "FURT", starttime, endtime)
+        self.assertRaises(TypeError, get_stationxml_filename, lambda x: 1,
+                          "BW", "FURT", starttime, endtime)
 
     def test_mseed_filename_helper(self):
         """
@@ -909,31 +937,32 @@ class TestDownloadHelpersUtil():
         endtime = obspy.UTCDateTime(2014, 2, 3, 4, 5, 6)
 
         # A normal string is considered a path.
-        assert get_mseed_filename(
-            "FOLDER", network="BW", station="FURT", location="", channel="BHE",
-            starttime=starttime, endtime=endtime) == \
+        self.assertEqual(
+            get_mseed_filename("FOLDER", network="BW", station="FURT",
+                               location="", channel="BHE",
+                               starttime=starttime, endtime=endtime),
             os.path.join(
                 "FOLDER", "BW.FURT..BHE__20140102T030405Z__"
-                "20140203T040506Z.mseed")
-        assert get_mseed_filename(
-            "waveforms", network="BW", station="FURT", location="00",
-            channel="BHE", starttime=starttime, endtime=endtime) == \
+                "20140203T040506Z.mseed"))
+        self.assertEqual(
+            get_mseed_filename("waveforms", network="BW", station="FURT",
+                               location="00", channel="BHE",
+                               starttime=starttime, endtime=endtime),
             os.path.join("waveforms", "BW.FURT.00.BHE__20140102T030405Z__"
-                         "20140203T040506Z.mseed")
+                         "20140203T040506Z.mseed"))
 
         # Passing a format string causes it to be used.
-        assert get_mseed_filename(
+        self.assertEqual(get_mseed_filename(
             "{network}_{station}_{location}_{channel}_"
             "{starttime}_{endtime}.ms", network="BW", station="FURT",
-            location="", channel="BHE", starttime=starttime,
-            endtime=endtime) == \
-            "BW_FURT__BHE_20140102T030405Z_20140203T040506Z.ms"
-        assert get_mseed_filename(
+            location="", channel="BHE", starttime=starttime, endtime=endtime),
+            "BW_FURT__BHE_20140102T030405Z_20140203T040506Z.ms")
+        self.assertEqual(get_mseed_filename(
             "{network}_{station}_{location}_{channel}_"
             "{starttime}_{endtime}.ms", network="BW", station="FURT",
             location="00", channel="BHE", starttime=starttime,
-            endtime=endtime) == \
-            "BW_FURT_00_BHE_20140102T030405Z_20140203T040506Z.ms"
+            endtime=endtime),
+            "BW_FURT_00_BHE_20140102T030405Z_20140203T040506Z.ms")
 
         # A passed function will be executed.
         def get_name(network, station, location, channel, starttime, endtime):
@@ -942,21 +971,24 @@ class TestDownloadHelpersUtil():
             return "network" + "__" + station + location + channel
 
         # Returning a filename is possible.
-        assert get_mseed_filename(
-            get_name, network="BW", station="FURT", location="", channel="BHE",
-            starttime=starttime, endtime=endtime) == "network__FURTBHE"
+        self.assertEqual(
+            get_mseed_filename(get_name, network="BW", station="FURT",
+                               location="", channel="BHE",
+                               starttime=starttime, endtime=endtime),
+            "network__FURTBHE")
         # 'True' can also be returned. This indicates that the file already
         # exists.
-        assert get_mseed_filename(
-            get_name, network="AH", station="FURT", location="", channel="BHE",
-            starttime=starttime, endtime=endtime) is True
+        self.assertEqual(
+            get_mseed_filename(get_name, network="AH", station="FURT",
+                               location="", channel="BHE",
+                               starttime=starttime, endtime=endtime), True)
 
         # It will raise a type error, if the function does not return the
         # proper type.
-        with pytest.raises(TypeError):
-            get_mseed_filename(lambda x: 1, "BW", "FURT", "", "BHE")
+        self.assertRaises(TypeError, get_mseed_filename, lambda x: 1,
+                          "BW", "FURT", "", "BHE")
 
-    def test_get_stationxml_contents(self, testdata):
+    def test_get_stationxml_contents(self):
         """
         Tests the fast get_stationxml_contents() function.
         """
@@ -965,28 +997,31 @@ class TestDownloadHelpersUtil():
             ["network", "station", "location", "channel", "starttime",
              "endtime", "filename"])
 
+        filename = os.path.join(self.data, "AU.MEEK.xml")
         # Read with ObsPy and the fast variant.
-        inv = obspy.read_inventory(testdata["AU.MEEK.xml"])
+        inv = obspy.read_inventory(filename)
         # Consistency test.
-        assert len(inv.networks) == 1
-        contents = get_stationxml_contents(testdata["AU.MEEK.xml"])
+        self.assertEqual(len(inv.networks), 1)
+        contents = get_stationxml_contents(filename)
         net = inv[0]
         sta = net[0]
         cha = sta[0]
-        assert contents == \
+        self.assertEqual(
+            contents,
             [ChannelAvailability(net.code, sta.code, cha.location_code,
                                  cha.code, cha.start_date, cha.end_date,
-                                 testdata["AU.MEEK.xml"])]
+                                 filename)])
 
-    def test_fast_vs_slow_get_stationxml_contents(self, testdata):
+    def test_fast_vs_slow_get_stationxml_contents(self):
         """
         Both should of course return the same result.
 
         For some old lxml versions both will be using the same function,
         but this is still a useful test.
         """
-        assert get_stationxml_contents(testdata["AU.MEEK.xml"]) == \
-            _get_stationxml_contents_slow(testdata["AU.MEEK.xml"])
+        filename = os.path.join(self.data, "AU.MEEK.xml")
+        self.assertEqual(get_stationxml_contents(filename),
+                         _get_stationxml_contents_slow(filename))
 
     def test_channel_str_representation(self):
         """
@@ -997,14 +1032,14 @@ class TestDownloadHelpersUtil():
             obspy.UTCDateTime(2012, 1, 1), obspy.UTCDateTime(2012, 2, 1),
             filename=None, status=None)]
         c = Channel(location="", channel="BHE", intervals=intervals)
-        assert str(c) == (
+        self.assertEqual(str(c), (
             "Channel '.BHE':\n"
             "\tTimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
             "end=UTCDateTime(2012, 2, 1, 0, 0), filename=None, "
-            "status='none')")
+            "status='none')"))
 
 
-class TestTimeInterval():
+class TimeIntervalTestCase(unittest.TestCase):
     """
     Test cases for the TimeInterval class.
     """
@@ -1012,28 +1047,31 @@ class TestTimeInterval():
         st = obspy.UTCDateTime(2012, 1, 1)
         et = obspy.UTCDateTime(2012, 1, 2)
         ti = TimeInterval(st, et)
-        assert repr(ti) == \
-            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), " \
-            "end=UTCDateTime(2012, 1, 2, 0, 0), filename=None, status='none')"
+        self.assertEqual(
+            repr(ti),
+            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
+            "end=UTCDateTime(2012, 1, 2, 0, 0), filename=None, status='none')")
 
         st = obspy.UTCDateTime(2012, 1, 1)
         et = obspy.UTCDateTime(2012, 1, 2)
         ti = TimeInterval(st, et, filename="dummy.txt")
-        assert repr(ti) == \
-            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), " \
-            "end=UTCDateTime(2012, 1, 2, 0, 0), filename='dummy.txt', " \
-            "status='none')"
+        self.assertEqual(
+            repr(ti),
+            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
+            "end=UTCDateTime(2012, 1, 2, 0, 0), filename='dummy.txt', "
+            "status='none')")
 
         st = obspy.UTCDateTime(2012, 1, 1)
         et = obspy.UTCDateTime(2012, 1, 2)
         ti = TimeInterval(st, et, filename="dummy.txt", status=STATUS.IGNORE)
-        assert repr(ti) == \
-            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), " \
-            "end=UTCDateTime(2012, 1, 2, 0, 0), filename='dummy.txt', " \
-            "status='ignore')"
+        self.assertEqual(
+            repr(ti),
+            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
+            "end=UTCDateTime(2012, 1, 2, 0, 0), filename='dummy.txt', "
+            "status='ignore')")
 
 
-class TestChannel():
+class ChannelTestCase(unittest.TestCase):
     """
     Test cases for the Channel class.
     """
@@ -1045,7 +1083,7 @@ class TestChannel():
         time_intervals = [
             TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
         c = Channel(location="", channel="BHZ", intervals=time_intervals)
-        assert c.temporal_bounds == (st, st + 10 * 60)
+        self.assertEqual(c.temporal_bounds, (st, st + 10 * 60))
 
     def test_wants_station_information(self):
         """
@@ -1057,21 +1095,21 @@ class TestChannel():
         c = Channel(location="", channel="BHZ", intervals=time_intervals)
 
         # Right now all intervals have status NONE.
-        assert not c.needs_station_file
+        self.assertFalse(c.needs_station_file)
 
         # As soon as at least one interval has status DOWNLOADED or EXISTS,
         # a station file is required.
         c.intervals[1].status = STATUS.EXISTS
-        assert c.needs_station_file
+        self.assertTrue(c.needs_station_file)
         c.intervals[1].status = STATUS.DOWNLOADED
-        assert c.needs_station_file
+        self.assertTrue(c.needs_station_file)
 
         # Any other status does not trigger the need to download.
         c.intervals[1].status = STATUS.DOWNLOAD_REJECTED
-        assert not c.needs_station_file
+        self.assertFalse(c.needs_station_file)
 
 
-class TestStation():
+class StationTestCase(unittest.TestCase):
     """
     Test cases for the Station class.
     """
@@ -1092,19 +1130,19 @@ class TestStation():
         # False per default.
         station = Station(network="TA", station="A001", latitude=1,
                           longitude=2, channels=channels)
-        assert not station.has_existing_or_downloaded_time_intervals
+        self.assertFalse(station.has_existing_or_downloaded_time_intervals)
 
         # Changing one interval to DOWNLOADED affects the whole station.
         station.channels[0].intervals[0].status = STATUS.DOWNLOADED
-        assert station.has_existing_or_downloaded_time_intervals
+        self.assertTrue(station.has_existing_or_downloaded_time_intervals)
 
         # Same with EXISTS.
         station.channels[0].intervals[0].status = STATUS.EXISTS
-        assert station.has_existing_or_downloaded_time_intervals
+        self.assertTrue(station.has_existing_or_downloaded_time_intervals)
 
         # Changing back.
         station.channels[0].intervals[0].status = STATUS.NONE
-        assert not station.has_existing_or_downloaded_time_intervals
+        self.assertFalse(station.has_existing_or_downloaded_time_intervals)
 
     def test_has_existing_time_intervals(self):
         """
@@ -1122,19 +1160,19 @@ class TestStation():
         # False by default.
         station = Station(network="TA", station="A001", latitude=1,
                           longitude=2, channels=channels)
-        assert not station.has_existing_time_intervals
+        self.assertFalse(station.has_existing_time_intervals)
 
         # Changing one interval to DOWNLOADED does not do anything
         station.channels[0].intervals[0].status = STATUS.DOWNLOADED
-        assert not station.has_existing_time_intervals
+        self.assertFalse(station.has_existing_time_intervals)
 
         # EXISTS on the other hand does.
         station.channels[0].intervals[0].status = STATUS.EXISTS
-        assert station.has_existing_time_intervals
+        self.assertTrue(station.has_existing_time_intervals)
 
         # Changing back.
         station.channels[0].intervals[0].status = STATUS.NONE
-        assert not station.has_existing_time_intervals
+        self.assertFalse(station.has_existing_time_intervals)
 
     def test_remove_files(self):
         """
@@ -1165,24 +1203,24 @@ class TestStation():
                             ".utils.safe_delete") as p:
                 # All status are NONE thus nothing should be deleted.
                 station.remove_files(logger, reason="testing")
-                assert p.call_count == 0
-                assert exists_mock.call_count == 0
+                self.assertEqual(p.call_count, 0)
+                self.assertEqual(exists_mock.call_count, 0)
 
                 # Set a random filename.
                 filename = "/tmp/random.xml"
                 station.stationxml_filename = filename
                 # The setter of the stationxml_filename attribute should
                 # check if the directory of the file already exists.
-                assert exists_mock.call_count == 1
+                self.assertEqual(exists_mock.call_count, 1)
                 exists_mock.reset_mock()
 
                 # Set the status of the file to DOWNLOADED. It should now be
                 # downloaded.
                 station.stationxml_status = STATUS.DOWNLOADED
                 station.remove_files(logger, reason="testing")
-                assert p.call_count == 1
-                assert p.call_args[0][0] == filename
-                assert exists_mock.call_args[0][0] == filename
+                self.assertEqual(p.call_count, 1)
+                self.assertEqual(p.call_args[0][0], filename)
+                self.assertEqual(exists_mock.call_args[0][0], filename)
                 exists_mock.reset_mock()
                 p.reset_mock()
 
@@ -1192,10 +1230,10 @@ class TestStation():
                 c1.intervals[0].filename = filename
                 c1.intervals[0].status = STATUS.DOWNLOADED
                 station.remove_files(logger, reason="testing")
-                assert exists_mock.call_count == 1
-                assert p.call_count == 1
-                assert p.call_args[0][0] == filename
-                assert exists_mock.call_args[0][0] == filename
+                self.assertEqual(exists_mock.call_count, 1)
+                self.assertEqual(p.call_count, 1)
+                self.assertEqual(p.call_args[0][0], filename)
+                self.assertEqual(exists_mock.call_args[0][0], filename)
 
     def test_temporal_bounds(self):
         """
@@ -1212,7 +1250,7 @@ class TestStation():
         station = Station(network="TA", station="A001", latitude=1,
                           longitude=2, channels=channels)
 
-        assert station.temporal_bounds == (st, st + 10 * 60)
+        self.assertEqual(station.temporal_bounds, (st, st + 10 * 60))
 
     def test_sanitize_downloads(self):
         """
@@ -1239,7 +1277,7 @@ class TestStation():
             p2.return_value = (obspy.UTCDateTime(1), obspy.UTCDateTime(2))
             # By default, nothing will happen.
             station.sanitize_downloads(logger)
-            assert p1.call_count == 0
+            self.assertEqual(p1.call_count, 0)
             p1.reset_mock()
 
             # The whole purpose of the method is to make sure that each
@@ -1255,7 +1293,7 @@ class TestStation():
             # Right now no channel has been marked missing, thus nothing should
             # happen.
             station.sanitize_downloads(logger)
-            assert p1.call_count == 0
+            self.assertEqual(p1.call_count, 0)
             p1.reset_mock()
 
             # Mark one as missing and the corresponding information should
@@ -1263,10 +1301,10 @@ class TestStation():
             station.miss_station_information[("", "BHZ")] = (
                 obspy.UTCDateTime(1), obspy.UTCDateTime(2))
             station.sanitize_downloads(logger)
-            assert p1.call_count == 2
+            self.assertEqual(p1.call_count, 2)
             # The status of the channel should be adjusted
-            assert c1.intervals[0].status == STATUS.DOWNLOAD_REJECTED
-            assert c1.intervals[1].status == STATUS.DOWNLOAD_REJECTED
+            self.assertEqual(c1.intervals[0].status, STATUS.DOWNLOAD_REJECTED)
+            self.assertEqual(c1.intervals[1].status, STATUS.DOWNLOAD_REJECTED)
             p1.reset_mock()
 
     def test_prepare_mseed_download(self):
@@ -1295,9 +1333,9 @@ class TestStation():
             # ignored.
             station.prepare_mseed_download(
                 mseed_storage=lambda *args, **kwargs: True)
-            assert p.call_count == 0
+            self.assertEqual(p.call_count, 0)
             for i in all_tis:
-                assert i.status == STATUS.IGNORE
+                self.assertEqual(i.status, STATUS.IGNORE)
             p.reset_mock()
 
             # Now if we just pass a string, it will be interpreted as a
@@ -1308,12 +1346,12 @@ class TestStation():
                 station.prepare_mseed_download(
                     mseed_storage="/some/super/random/FJSD34J0J/path")
             # There are 20 time intervals.
-            assert p.call_count == 20
+            self.assertEqual(p.call_count, 20)
             # Once for each file, once for each folder.
-            assert p_ex.call_count == 40
+            self.assertEqual(p_ex.call_count, 40)
             p.reset_mock()
             for i in all_tis:
-                assert i.status == STATUS.NEEDS_DOWNLOADING
+                self.assertEqual(i.status, STATUS.NEEDS_DOWNLOADING)
 
             # Last but not least, if the files already exist, they will be
             # marked as that.
@@ -1322,12 +1360,12 @@ class TestStation():
                 station.prepare_mseed_download(
                     mseed_storage="/some/super/random/FJSD34J0J/path")
             # No folder should be created.
-            assert p.call_count == 0
+            self.assertEqual(p.call_count, 0)
             # Once for each file.
-            assert p_ex.call_count == 20
+            self.assertEqual(p_ex.call_count, 20)
             p.reset_mock()
             for i in all_tis:
-                assert i.status == STATUS.EXISTS
+                self.assertEqual(i.status, STATUS.EXISTS)
 
     def test_prepare_stationxml_download_simple_cases(self):
         """
@@ -1366,11 +1404,11 @@ class TestStation():
             station = _create_station()
             station.prepare_stationxml_download(stationxml_storage="random",
                                                 logger=logger)
-            assert p.call_count == 0
-            assert station.stationxml_status == STATUS.NONE
-            assert station.want_station_information == {}
-            assert station.miss_station_information == {}
-            assert station.have_station_information == {}
+            self.assertEqual(p.call_count, 0)
+            self.assertEqual(station.stationxml_status, STATUS.NONE)
+            self.assertEqual(station.want_station_information, {})
+            self.assertEqual(station.miss_station_information, {})
+            self.assertEqual(station.have_station_information, {})
             p.reset_mock()
 
             # Now the get_stationxml_filename() function will return a
@@ -1384,24 +1422,25 @@ class TestStation():
                 exists_p.return_value = False
                 station.prepare_stationxml_download(
                     stationxml_storage="random", logger=logger)
-            assert p.call_count == 1
+            self.assertEqual(p.call_count, 1)
             # Called twice, once for the directory, once for the file. Both
             # return False as enforced with the mock.
-            assert exists_p.call_count == 2
-            assert exists_p.call_args_list[0][0][0] == "random"
-            assert exists_p.call_args_list[1][0][0] == \
-                os.path.join("random", "TA.A001.xml")
+            self.assertEqual(exists_p.call_count, 2)
+            self.assertEqual(exists_p.call_args_list[0][0][0], "random")
+            self.assertEqual(exists_p.call_args_list[1][0][0],
+                             os.path.join("random", "TA.A001.xml"))
             # Thus it should attempt to download everything
-            assert station.stationxml_filename == \
-                os.path.join("random", "TA.A001.xml")
-            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
-            assert station.have_station_information == {}
-            assert station.want_station_information == \
-                station.miss_station_information
-            assert station.want_station_information == {
+            self.assertEqual(station.stationxml_filename,
+                             os.path.join("random", "TA.A001.xml"))
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.have_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.miss_station_information)
+            self.assertEqual(station.want_station_information, {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
-            }
+            })
             p.reset_mock()
 
             # Now it returns a filename, the filename exists, and it
@@ -1427,17 +1466,17 @@ class TestStation():
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
                         stationxml_storage="random", logger=logger)
-                    assert p.call_count == 0
+                    self.assertEqual(p.call_count, 0)
             # It then should not attempt to download anything as everything
             # that's needed is already available.
-            assert station.stationxml_status == STATUS.EXISTS
-            assert station.miss_station_information == {}
-            assert station.want_station_information == \
-                station.have_station_information
-            assert station.want_station_information == {
+            self.assertEqual(station.stationxml_status, STATUS.EXISTS)
+            self.assertEqual(station.miss_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.have_station_information)
+            self.assertEqual(station.want_station_information, {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
-            }
+            })
             p.reset_mock()
 
             # The last option for the simple case is that the file exists,
@@ -1457,17 +1496,18 @@ class TestStation():
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
                         stationxml_storage="random", logger=logger)
-                    assert p.call_count == 0
+                    self.assertEqual(p.call_count, 0)
             # It then should not attempt to download anything as everything
             # that's needed is already available.
-            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
-            assert station.have_station_information == {}
-            assert station.want_station_information == \
-                station.miss_station_information
-            assert station.want_station_information == {
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.have_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.miss_station_information)
+            self.assertEqual(station.want_station_information, {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
-            }
+            })
             p.reset_mock()
 
             # Now a combination that barely lacks the required time range.
@@ -1489,17 +1529,18 @@ class TestStation():
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
                         stationxml_storage="random", logger=logger)
-                    assert p.call_count == 0
+                    self.assertEqual(p.call_count, 0)
             # It then should not attempt to download anything as everything
             # that's needed is already available.
-            assert STATUS.NEEDS_DOWNLOADING == station.stationxml_status
-            assert {} == station.have_station_information
-            assert station.want_station_information == \
-                station.miss_station_information
-            assert station.want_station_information == {
+            self.assertEqual(STATUS.NEEDS_DOWNLOADING,
+                             station.stationxml_status)
+            self.assertEqual({}, station.have_station_information)
+            self.assertEqual(station.want_station_information,
+                             station.miss_station_information)
+            self.assertEqual(station.want_station_information, {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
-            }
+            })
             p.reset_mock()
 
     def test_prepare_stationxml_download_dictionary_case(self):
@@ -1546,16 +1587,17 @@ class TestStation():
             station.prepare_stationxml_download(
                 stationxml_storage=stationxml_storage, logger=logger)
             # The directory should have been created if it does not exists.
-            assert p.call_count == 1
-            assert p.call_args[0][0] == "random"
-            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
-            assert station.have_station_information == {}
-            assert station.want_station_information == \
-                station.miss_station_information
-            assert station.want_station_information == {
+            self.assertEqual(p.call_count, 1)
+            self.assertEqual(p.call_args[0][0], "random")
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.have_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.miss_station_information)
+            self.assertEqual(station.want_station_information, {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
-            }
+            })
             p.reset_mock()
 
             # Case 2: All channels are existing and thus nothing happens.
@@ -1574,16 +1616,17 @@ class TestStation():
             station.prepare_stationxml_download(
                 stationxml_storage=stationxml_storage, logger=logger)
             # The directory should have been created if it does not exists.
-            assert p.call_count == 1
-            assert p.call_args[0][0] == "random"
-            assert station.stationxml_status == STATUS.EXISTS
-            assert station.miss_station_information == {}
-            assert station.want_station_information == \
-                station.have_station_information
-            assert station.have_station_information == {
+            self.assertEqual(p.call_count, 1)
+            self.assertEqual(p.call_args[0][0], "random")
+            self.assertEqual(station.stationxml_status,
+                             STATUS.EXISTS)
+            self.assertEqual(station.miss_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.have_station_information)
+            self.assertEqual(station.have_station_information, {
                 ("", "BHZ"): temporal_bounds,
                 ("00", "EHE"): temporal_bounds
-            }
+            })
             p.reset_mock()
 
             # Case 3: Mixed case.
@@ -1604,19 +1647,20 @@ class TestStation():
             station.prepare_stationxml_download(
                 stationxml_storage=stationxml_storage, logger=logger)
             # The directory should have been created if it does not exist.
-            assert p.call_count == 1
-            assert p.call_args[0][0] == "random"
-            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
-            assert station.miss_station_information == {
+            self.assertEqual(p.call_count, 1)
+            self.assertEqual(p.call_args[0][0], "random")
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.miss_station_information, {
                 ("00", "EHE"): temporal_bounds
-            }
-            assert station.have_station_information == {
+            })
+            self.assertEqual(station.have_station_information, {
                 ("", "BHZ"): temporal_bounds
-            }
-            assert station.want_station_information == {
+            })
+            self.assertEqual(station.want_station_information, {
                 ("00", "EHE"): temporal_bounds,
                 ("", "BHZ"): temporal_bounds
-            }
+            })
             p.reset_mock()
 
             # Case 4: The stationxml_storage() function does not return all
@@ -1639,22 +1683,25 @@ class TestStation():
             station.prepare_stationxml_download(
                 stationxml_storage=stationxml_storage, logger=logger)
             # The directory should have been created if it does not exist.
-            assert p.call_count == 1
-            assert p.call_args[0][0] == "random"
-            assert station.stationxml_status == STATUS.NEEDS_DOWNLOADING
-            assert station.miss_station_information == {
+            self.assertEqual(p.call_count, 1)
+            self.assertEqual(p.call_args[0][0], "random")
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.miss_station_information, {
                 ("00", "EHE"): temporal_bounds
-            }
-            assert station.have_station_information == {}
-            assert station.want_station_information == {
+            })
+            self.assertEqual(station.have_station_information, {})
+            self.assertEqual(station.want_station_information, {
                 ("00", "EHE"): temporal_bounds,
                 ("", "BHZ"): temporal_bounds
-            }
-            assert logger.method_calls[0][0] == "warning"
-            assert "did not return information about channels" in \
-                logger.method_calls[0][1][0]
-            assert "BHZ" in \
-                logger.method_calls[0][1][0]
+            })
+            self.assertEqual(logger.method_calls[0][0], "warning")
+            self.assertTrue(
+                "did not return information about channels" in
+                logger.method_calls[0][1][0])
+            self.assertTrue(
+                "BHZ" in
+                logger.method_calls[0][1][0])
 
     def test_str_method(self):
         """
@@ -1662,12 +1709,12 @@ class TestStation():
         """
         # Minimal information.
         st = Station("BW", "ALTM", 10, 20, [])
-        assert str(st) == (
+        self.assertEqual(str(st), (
             "Station 'BW.ALTM' [Lat: 10.00, Lng: 20.00]\n"
             "\t-> Filename: None (does not yet exist)\n"
             "\t-> Wants station information for channels:  \n"
             "\t-> Has station information for channels:    \n"
-            "\t-> Misses station information for channels: \n\t")
+            "\t-> Misses station information for channels: \n\t"))
 
         # A bit more information.
         channels = [Channel("", "BHE", [TimeInterval(obspy.UTCDateTime(0),
@@ -1676,7 +1723,7 @@ class TestStation():
                                                      obspy.UTCDateTime(20))])]
         st = Station("BW", "ALTM", 10, 20, channels=channels,
                      stationxml_status=STATUS.ignore)
-        assert str(st) == (
+        self.assertEqual(str(st), (
             "Station 'BW.ALTM' [Lat: 10.00, Lng: 20.00]\n"
             "\t-> Filename: None (does not yet exist)\n"
             "\t-> Wants station information for channels:  \n"
@@ -1689,15 +1736,17 @@ class TestStation():
             "\tChannel '.BHZ':\n"
             "\t\tTimeInterval(start=UTCDateTime(1970, 1, 1, 0, 0, 10), "
             "end=UTCDateTime(1970, 1, 1, 0, 0, 20), filename=None, "
-            "status='none')")
+            "status='none')"))
 
 
-class TestClientDownloadHelper():
+class ClientDownloadHelperTestCase(unittest.TestCase):
     """
     Test cases for the ClientDownloadHelper class.
     """
-    @pytest.fixture(autouse=True, scope="function")
-    def setup(self):
+    def setUp(self):
+        self.path = os.path.dirname(__file__)
+        self.data = os.path.join(self.path, "data")
+
         self.client = mock.MagicMock()
         self.client.base_url = "http://example.com"
         self.client_name = "Test"
@@ -1731,26 +1780,28 @@ class TestClientDownloadHelper():
         c.stations["BW.RJOB"] = sta2
 
         c.prepare_mseed_download()
-        assert sta1.prepare_mseed_download.call_count == 1
-        assert sta2.prepare_mseed_download.call_count == 1
-        assert sta1.prepare_mseed_download.call_args[1]["mseed_storage"] == \
-            self.mseed_storage
-        assert sta2.prepare_mseed_download.call_args[1]["mseed_storage"] == \
-            self.mseed_storage
+        self.assertEqual(sta1.prepare_mseed_download.call_count, 1)
+        self.assertEqual(sta2.prepare_mseed_download.call_count, 1)
+        self.assertEqual(
+            sta1.prepare_mseed_download.call_args[1]["mseed_storage"],
+            self.mseed_storage)
+        self.assertEqual(
+            sta2.prepare_mseed_download.call_args[1]["mseed_storage"],
+            self.mseed_storage)
 
         sta1.reset_mock()
         sta2.reset_mock()
 
         c.prepare_stationxml_download()
-        assert sta1.prepare_stationxml_download.call_count == 1
-        assert sta2.prepare_stationxml_download.call_count == 1
+        self.assertEqual(sta1.prepare_stationxml_download.call_count, 1)
+        self.assertEqual(sta2.prepare_stationxml_download.call_count, 1)
 
         sta1.reset_mock()
         sta2.reset_mock()
 
         c.sanitize_downloads()
-        assert sta1.sanitize_downloads.call_count == 1
-        assert sta2.sanitize_downloads.call_count == 1
+        self.assertEqual(sta1.sanitize_downloads.call_count, 1)
+        self.assertEqual(sta2.sanitize_downloads.call_count, 1)
 
     def test_basic_object_methods(self):
         """
@@ -1758,8 +1809,8 @@ class TestClientDownloadHelper():
         """
         c = self._init_client()
 
-        assert not bool(c)
-        assert len(c) == 0
+        self.assertFalse(bool(c))
+        self.assertEqual(len(c), 0)
 
         # Only the one at depth 200 should be removed as it is the only one
         # that has two neighbours inside the filter radius.
@@ -1770,16 +1821,16 @@ class TestClientDownloadHelper():
             ("D", "D"): Station("D", "D", 0, 2000, [])
         }
 
-        assert len(c) == 4
-        assert bool(c)
+        self.assertEqual(len(c), 4)
+        self.assertTrue(bool(c))
 
-        assert str(c).startswith(
+        self.assertTrue(str(c).startswith(
             "ClientDownloadHelper object for client 'Test' "
             "(http://example.com)\n"
             "-> Unknown reliability of availability information\n"
             "-> Manages 4 stations.\n"
             "Station "
-        )
+        ))
 
     def test_station_list_nearest_neighbour_filter(self):
         """
@@ -1804,9 +1855,10 @@ class TestClientDownloadHelper():
         # It should always filter out the one with 200 m longitude as if
         # that one is picked "A" and "C" can both be no longer picked.
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert [("A", "A"), ("C", "C"), ("D", "D")] == \
-            sorted(c.stations.keys())
-        assert [("B", "B")] == sorted(rej.keys())
+        self.assertEqual([("A", "A"), ("C", "C"), ("D", "D")],
+                         sorted(c.stations.keys()))
+        self.assertEqual([("B", "B")],
+                         sorted(rej.keys()))
 
         # The two at 200 and 250 m longitude should be removed.
         c.stations = {
@@ -1816,9 +1868,10 @@ class TestClientDownloadHelper():
             ("D", "D"): Station("D", "D", 0, _m_to_deg(400), []),
             ("E", "E"): Station("E", "E", 0, _m_to_deg(2000), [])}
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert [("A", "A"), ("D", "D"), ("E", "E")] == \
-            sorted(c.stations.keys())
-        assert [("B", "B"), ("C", "C")] == sorted(rej.keys())
+        self.assertEqual([("A", "A"), ("D", "D"), ("E", "E")],
+                         sorted(c.stations.keys()))
+        self.assertEqual([("B", "B"), ("C", "C")],
+                         sorted(rej.keys()))
 
         # Set the distance to 1 degree and check the longitude behaviour at
         # the longitude wraparound point.
@@ -1837,12 +1890,13 @@ class TestClientDownloadHelper():
 
         # Only 4 stations should remain and either the one at 0,180 or the
         # one at 0, -180 should have been removed as they are equal.
-        assert len(c.stations) == 4
-        assert sorted(c.stations.keys()) == \
-            [("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")] or \
-            sorted(c.stations.keys()) == \
-            [("A", "A"), ("B", "B"), ("D", "D"), ("E", "E")]
-        assert len(rej) == 1
+        self.assertEqual(len(c.stations), 4)
+        self.assertTrue(
+            sorted(c.stations.keys()) == [("A", "A"), ("B", "B"), ("C", "C"),
+                                          ("D", "D")] or
+            sorted(c.stations.keys()) == [("A", "A"), ("B", "B"), ("D", "D"),
+                                          ("E", "E")])
+        self.assertEqual(len(rej), 1)
 
         # Test filtering around the longitude wraparound.
         stations = {
@@ -1852,8 +1906,10 @@ class TestClientDownloadHelper():
         # The middle one should be removed as then the other two can be kept.
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert [("B", "B"), ("C", "C")] == sorted(c.stations.keys())
-        assert [("A", "A")] == sorted(rej.keys())
+        self.assertEqual([("B", "B"), ("C", "C")],
+                         sorted(c.stations.keys()))
+        self.assertEqual([("A", "A")],
+                         sorted(rej.keys()))
         # Same but longitude defined the other way around.
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
@@ -1861,8 +1917,10 @@ class TestClientDownloadHelper():
             ("C", "C"): Station("C", "C", 0, -179.2, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert [("B", "B"), ("C", "C")] == sorted(c.stations.keys())
-        assert [("A", "A")] == sorted(rej.keys())
+        self.assertEqual([("B", "B"), ("C", "C")],
+                         sorted(c.stations.keys()))
+        self.assertEqual([("A", "A")],
+                         sorted(rej.keys()))
 
         # Test the conversion of lat/lng to meter distances.
         stations = {
@@ -1870,32 +1928,32 @@ class TestClientDownloadHelper():
             ("B", "B"): Station("B", "B", 0, -180, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 1
-        assert len(rej) == 1
+        self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
             ("B", "B"): Station("B", "B", 0, -179.5, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 1
-        assert len(rej) == 1
+        self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
             ("B", "B"): Station("B", "B", 0, -179.1, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 1
-        assert len(rej) == 1
+        self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
             ("B", "B"): Station("B", "B", 0, 178.9, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 2
-        assert len(rej) == 0
+        self.assertEqual(len(c.stations), 2)
+        self.assertEqual(len(rej), 0)
 
         # Also test the latitude settings.
         stations = {
@@ -1903,32 +1961,32 @@ class TestClientDownloadHelper():
             ("B", "B"): Station("B", "B", 0, -90, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 1
-        assert len(rej) == 1
+        self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, -90, []),
             ("B", "B"): Station("B", "B", 0, -89.5, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 1
-        assert len(rej) == 1
+        self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, -90, []),
             ("B", "B"): Station("B", "B", 0, -89.1, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 1
-        assert len(rej) == 1
+        self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, -90, []),
             ("B", "B"): Station("B", "B", 0, -88.9, [])}
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 2
-        assert len(rej) == 0
+        self.assertEqual(len(c.stations), 2)
+        self.assertEqual(len(rej), 0)
 
         # Does not do anything if the minimum distance is not set.
         stations = {
@@ -1943,8 +2001,8 @@ class TestClientDownloadHelper():
         c = self._init_client()
         c.stations = stations
         rej = c.filter_stations_based_on_minimum_distance([])
-        assert len(c.stations) == 5
-        assert len(rej) == 0
+        self.assertEqual(len(c.stations), 5)
+        self.assertEqual(len(rej), 0)
 
         # Test with already existing stations. In that case the remaining
         # stations will be added to the existing one.
@@ -1977,8 +2035,10 @@ class TestClientDownloadHelper():
         # to the existing stations.
         rej = c.filter_stations_based_on_minimum_distance(
             existing_client_dl_helpers=ex_clients)
-        assert [("C", "C")] == sorted(c.stations.keys())
-        assert [("B", "B"), ("X", "X"), ("Y", "Y")] == sorted(rej.keys())
+        self.assertEqual([("C", "C")],
+                         sorted(c.stations.keys()))
+        self.assertEqual([("B", "B"), ("X", "X"), ("Y", "Y")],
+                         sorted(rej.keys()))
 
     @mock.patch("obspy.clients.fdsn.mass_downloader."
                 "utils.download_and_split_mseed_bulk")
@@ -2016,13 +2076,13 @@ class TestClientDownloadHelper():
 
         # Check data should be called once, and download mseed at least once
         # with each chunk all in all.
-        assert patch_check_data.call_count == 1
-        assert patch_download_mseed.call_count >= 1
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertTrue(patch_download_mseed.call_count >= 1)
 
         # 6 stations with 2 channels with 10 time intervals each.
         bulk_count = sum([
             len(_i[0][2]) for _i in patch_download_mseed.call_args_list])
-        assert bulk_count == 120
+        self.assertEqual(bulk_count, 120)
 
         # Exotic band codes to trigger some rarer code paths.
         patch_check_data.reset_mock()
@@ -2055,22 +2115,22 @@ class TestClientDownloadHelper():
 
         # Check data should be called once, and download mseed at least once
         # with each chunk all in all.
-        assert patch_check_data.call_count == 1
-        assert patch_download_mseed.call_count >= 1
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertTrue(patch_download_mseed.call_count >= 1)
 
         # 6 stations with 2 channels with 10 time intervals each. But only 5
         # intervals require downloading for each.
         bulk_count = sum([
             len(_i[0][2]) for _i in patch_download_mseed.call_args_list])
-        assert bulk_count == 60
+        self.assertEqual(bulk_count, 60)
 
         # Nothing to do when no stations exist.
         patch_check_data.reset_mock()
         patch_download_mseed.reset_mock()
         c = self._init_client()
         c.download_mseed()
-        assert patch_check_data.call_count == 0
-        assert patch_download_mseed.call_count == 0
+        self.assertEqual(patch_check_data.call_count, 0)
+        self.assertEqual(patch_download_mseed.call_count, 0)
 
         # Last one to trigger a bit of exception handling.
         patch_check_data.reset_mock()
@@ -2083,10 +2143,10 @@ class TestClientDownloadHelper():
         patch_download_mseed.side_effect = socket_timeout("Nooooo")
 
         c.download_mseed()
-        assert patch_check_data.call_count == 1
-        assert patch_download_mseed.call_count == 1
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertEqual(patch_download_mseed.call_count, 1)
         # The error logger should have been called once
-        assert c.logger.error.call_count == 1
+        self.assertEqual(c.logger.error.call_count, 1)
 
         patch_check_data.reset_mock()
         patch_download_mseed.reset_mock()
@@ -2099,11 +2159,11 @@ class TestClientDownloadHelper():
         patch_download_mseed.side_effect = socket_timeout("no data available")
 
         c.download_mseed()
-        assert patch_check_data.call_count == 1
-        assert patch_download_mseed.call_count == 1
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertEqual(patch_download_mseed.call_count, 1)
         # The error logger should not have been called  as no data available
         # is just an info message.
-        assert c.logger.error.call_count == 0
+        self.assertEqual(c.logger.error.call_count, 0)
 
         patch_check_data.reset_mock()
         patch_download_mseed.reset_mock()
@@ -2115,10 +2175,10 @@ class TestClientDownloadHelper():
         patch_download_mseed.side_effect = HTTPException("disconnected")
 
         c.download_mseed()
-        assert patch_check_data.call_count == 1
-        assert patch_download_mseed.call_count == 1
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertEqual(patch_download_mseed.call_count, 1)
         # The error logger should have been called once
-        assert c.logger.error.call_count == 1
+        self.assertEqual(c.logger.error.call_count, 1)
 
     @mock.patch("obspy.clients.fdsn.mass_downloader."
                 "utils.download_stationxml")
@@ -2185,108 +2245,143 @@ class TestClientDownloadHelper():
 
         c.download_stationxml()
 
-    def test_get_availability(self, testdata):
+    def test_get_availability(self):
         """
         Tests the get_availability function.
         """
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn.txt"])
+            os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
 
-    def test_get_availability_with_multiple_channel_epochs(self, testdata):
+    def test_get_availability_with_multiple_channel_epochs(self):
         """
         Make sure to get rid of du
         """
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn_with_multiple_epochs.txt"])
+            os.path.join(self.data,
+                         "channel_level_fdsn_with_multiple_epochs.txt"))
         c.get_availability()
-        assert list(c.stations.keys()) == [("TA", "857A")]
-        assert len(c.stations[("TA", "857A")].channels) == 1
+        self.assertEqual(list(c.stations.keys()), [("TA", "857A")])
+        self.assertEqual(len(c.stations[("TA", "857A")].channels), 1)
         chan = c.stations[("TA", "857A")].channels[0]
-        assert chan.intervals[0].start == c.restrictions.starttime
-        assert chan.intervals[0].end == c.restrictions.endtime
+        self.assertEqual(chan.intervals[0].start, c.restrictions.starttime)
+        self.assertEqual(chan.intervals[0].end, c.restrictions.endtime)
 
-    def test_excluding_networks_and_stations(self, testdata):
+    def test_excluding_networks_and_stations(self):
         """
         Tests the excluding of networks and stations.
         """
-        restrictions_list = [
-            # Default
-            Restrictions(
-                starttime=obspy.UTCDateTime(2001, 1, 1),
-                endtime=obspy.UTCDateTime(2015, 1, 1),
-                station_starttime=obspy.UTCDateTime(2000, 1, 1),
-                station_endtime=obspy.UTCDateTime(2015, 1, 1)),
-            # Excluding things that don't exists does not do anything.
-            Restrictions(
-                starttime=obspy.UTCDateTime(2001, 1, 1),
-                endtime=obspy.UTCDateTime(2015, 1, 1),
-                station_starttime=obspy.UTCDateTime(2000, 1, 1),
-                station_endtime=obspy.UTCDateTime(2015, 1, 1),
-                exclude_networks=["Z*", "ZNB", "[XYZ]?"],
-                exclude_stations=["A*", "[CD]?", "ZNF"]),
-            # Simple network exclude.
-            Restrictions(
-                starttime=obspy.UTCDateTime(2001, 1, 1),
-                endtime=obspy.UTCDateTime(2015, 1, 1),
-                station_starttime=obspy.UTCDateTime(2000, 1, 1),
-                station_endtime=obspy.UTCDateTime(2015, 1, 1),
-                exclude_networks=["AK"]),
-            # Wildcarded network exclude.
-            Restrictions(
-                starttime=obspy.UTCDateTime(2001, 1, 1),
-                endtime=obspy.UTCDateTime(2015, 1, 1),
-                station_starttime=obspy.UTCDateTime(2000, 1, 1),
-                station_endtime=obspy.UTCDateTime(2015, 1, 1),
-                exclude_networks=["?K"]),
-            # Multiple network excludes
-            Restrictions(
-                starttime=obspy.UTCDateTime(2001, 1, 1),
-                endtime=obspy.UTCDateTime(2015, 1, 1),
-                station_starttime=obspy.UTCDateTime(2000, 1, 1),
-                station_endtime=obspy.UTCDateTime(2015, 1, 1),
-                exclude_networks=["AK", "AZ"]),
-            # Simple station exclude.
-            Restrictions(
-                starttime=obspy.UTCDateTime(2001, 1, 1),
-                endtime=obspy.UTCDateTime(2015, 1, 1),
-                station_starttime=obspy.UTCDateTime(2000, 1, 1),
-                station_endtime=obspy.UTCDateTime(2015, 1, 1),
-                exclude_stations=["BAGL"]),
-            # Wildcarded station exclude.
-            Restrictions(
-                starttime=obspy.UTCDateTime(2001, 1, 1),
-                endtime=obspy.UTCDateTime(2015, 1, 1),
-                station_starttime=obspy.UTCDateTime(2000, 1, 1),
-                station_endtime=obspy.UTCDateTime(2015, 1, 1),
-                exclude_stations=["[AB]?N"]),
-            # Multiple excludes.
-            Restrictions(
-                starttime=obspy.UTCDateTime(2001, 1, 1),
-                endtime=obspy.UTCDateTime(2015, 1, 1),
-                station_starttime=obspy.UTCDateTime(2000, 1, 1),
-                station_endtime=obspy.UTCDateTime(2015, 1, 1),
-                exclude_stations=["BWN", "BZN"]),
-            ]
-        results_list = [
-            [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
-            [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
-            [("AZ", "BZN")],
-            [("AZ", "BZN")],
-            [],
-            [("AK", "BWN"), ("AZ", "BZN")],
-            [("AK", "BAGL")],
-            [("AK", "BAGL")],
-            ]
-        for restrictions, expected in zip(restrictions_list, results_list):
-            self.restrictions = restrictions
-            c = self._init_client()
-            c.client.get_stations.return_value = \
-                obspy.read_inventory(testdata["channel_level_fdsn.txt"])
-            c.get_availability()
-            assert sorted(c.stations.keys()) == expected
+        # Default
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
+                         sorted(c.stations.keys()))
+
+        # Excluding things that don't exists does not do anything.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            exclude_networks=["Z*", "ZNB", "[XYZ]?"],
+            exclude_stations=["A*", "[CD]?", "ZNF"]
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
+                         sorted(c.stations.keys()))
+
+        # Simple network exclude.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            exclude_networks=["AK"])
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AZ", "BZN")],
+                         sorted(c.stations.keys()))
+
+        # Wildcarded network exclude.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            exclude_networks=["?K"])
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AZ", "BZN")],
+                         sorted(c.stations.keys()))
+
+        # Multiple network excludes
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            exclude_networks=["AK", "AZ"])
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([], sorted(c.stations.keys()))
+
+        # Simple station exclude.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            exclude_stations=["BAGL"]
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BWN"), ("AZ", "BZN")],
+                         sorted(c.stations.keys()))
+
+        # Wildcarded station exclude.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            exclude_stations=["[AB]?N"]
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGL")],
+                         sorted(c.stations.keys()))
+
+        # Multiple excludes.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            exclude_stations=["BWN", "BZN"]
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGL")],
+                         sorted(c.stations.keys()))
 
         # When 'channel' or 'location' are set they should override
         # 'channel_priorities' and 'location_priorities'. If this isn't
@@ -2310,9 +2405,9 @@ class TestClientDownloadHelper():
             location_priorities=["", "01"])
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["uncommon_channel_location.txt"])
+            os.path.join(self.data, "uncommon_channel_location.txt"))
         c.get_availability()
-        assert [("AK", "BAGLD")] == sorted(c.stations.keys())
+        self.assertEqual([("AK", "BAGLD")], sorted(c.stations.keys()))
 
         # With a set location, the channel priorities are still active.
         self.restrictions = Restrictions(
@@ -2323,9 +2418,10 @@ class TestClientDownloadHelper():
             location="31")
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["uncommon_channel_location.txt"])
+            os.path.join(self.data, "uncommon_channel_location.txt"))
         c.get_availability()
-        assert [("AK", "BAGLC"), ("AK", "BAGLD")] == sorted(c.stations.keys())
+        self.assertEqual([("AK", "BAGLC"), ("AK", "BAGLD")],
+                         sorted(c.stations.keys()))
 
         # Same with the set channel.
         self.restrictions = Restrictions(
@@ -2336,9 +2432,10 @@ class TestClientDownloadHelper():
             channel="RST")
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["uncommon_channel_location.txt"])
+            os.path.join(self.data, "uncommon_channel_location.txt"))
         c.get_availability()
-        assert [("AK", "BAGLB"), ("AK", "BAGLD")] == sorted(c.stations.keys())
+        self.assertEqual([("AK", "BAGLB"), ("AK", "BAGLD")],
+                         sorted(c.stations.keys()))
 
         # If both are set, the priorities are properly ignored.
         self.restrictions = Restrictions(
@@ -2350,26 +2447,27 @@ class TestClientDownloadHelper():
             channel="RST")
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["uncommon_channel_location.txt"])
+            os.path.join(self.data, "uncommon_channel_location.txt"))
         c.get_availability()
-        assert [("AK", "BAGLA"), ("AK", "BAGLB"), ("AK", "BAGLC"),
-                ("AK", "BAGLD")] == sorted(c.stations.keys())
+        self.assertEqual([("AK", "BAGLA"), ("AK", "BAGLB"), ("AK", "BAGLC"),
+                          ("AK", "BAGLD")],
+                         sorted(c.stations.keys()))
 
-    def test_excluding_networks_and_stations_with_an_inventory_object(
-            self, testdata):
+    def test_excluding_networks_and_stations_with_an_inventory_object(self):
         """
         Tests the excluding of networks and stations with the help of an
         inventory object.
         """
-        full_inv = obspy.read_inventory(testdata["channel_level_fdsn.txt"])
+        full_inv = obspy.read_inventory(os.path.join(
+            self.data, "channel_level_fdsn.txt"))
 
         # Default
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn.txt"])
+            os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
-            sorted(c.stations.keys())
+        self.assertEqual([("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
+                         sorted(c.stations.keys()))
 
         # Keep everything.
         self.restrictions = Restrictions(
@@ -2381,10 +2479,10 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn.txt"])
+            os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")] == \
-            sorted(c.stations.keys())
+        self.assertEqual([("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
+                         sorted(c.stations.keys()))
 
         # Exclude one station.
         self.restrictions = Restrictions(
@@ -2397,9 +2495,10 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn.txt"])
+            os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AK", "BAGL"), ("AK", "BWN")] == sorted(c.stations.keys())
+        self.assertEqual([("AK", "BAGL"), ("AK", "BWN")],
+                         sorted(c.stations.keys()))
 
         # Keep only one station.
         self.restrictions = Restrictions(
@@ -2412,9 +2511,9 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn.txt"])
+            os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AZ", "BZN")] == sorted(c.stations.keys())
+        self.assertEqual([("AZ", "BZN")], sorted(c.stations.keys()))
 
         # Keep only one station.
         self.restrictions = Restrictions(
@@ -2426,9 +2525,9 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn.txt"])
+            os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [("AZ", "BZN")] == sorted(c.stations.keys())
+        self.assertEqual([("AZ", "BZN")], sorted(c.stations.keys()))
 
         # Keep nothing.
         self.restrictions = Restrictions(
@@ -2440,9 +2539,9 @@ class TestClientDownloadHelper():
         )
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn.txt"])
+            os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
-        assert [] == sorted(c.stations.keys())
+        self.assertEqual([], sorted(c.stations.keys()))
 
     def test_parse_miniseed_filenames(self):
         """
@@ -2456,22 +2555,22 @@ class TestClientDownloadHelper():
             tr = obspy.read()[0]
             tr.write(filename, format="mseed")
             result = c._parse_miniseed_filenames([filename], self.restrictions)
-            assert result == []
+            self.assertEqual(result, [])
 
             # No minimum length restrictions. Now it should pass.
             self.restrictions.minimum_length = 0
             tr.write(filename, format="mseed")
             result = c._parse_miniseed_filenames([filename], self.restrictions)
-            assert len(result) == 1
-            assert result[0].network == "BW"
-            assert result[0].station == "RJOB"
-            assert result[0].location == ""
-            assert result[0].channel == "EHZ"
-            assert result[0].starttime == \
-                obspy.UTCDateTime(2009, 8, 24, 0, 20, 3)
-            assert result[0].endtime == \
-                obspy.UTCDateTime(2009, 8, 24, 0, 20, 32, 990000)
-            assert result[0].filename == filename
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0].network, "BW")
+            self.assertEqual(result[0].station, "RJOB")
+            self.assertEqual(result[0].location, "")
+            self.assertEqual(result[0].channel, "EHZ")
+            self.assertEqual(result[0].starttime,
+                             obspy.UTCDateTime(2009, 8, 24, 0, 20, 3))
+            self.assertEqual(result[0].endtime,
+                             obspy.UTCDateTime(2009, 8, 24, 0, 20, 32, 990000))
+            self.assertEqual(result[0].filename, filename)
 
             # Add a gap.
             self.restrictions.minimum_length = 0
@@ -2480,7 +2579,7 @@ class TestClientDownloadHelper():
             st[1].stats.starttime += 10
             st.write(filename, format="mseed")
             result = c._parse_miniseed_filenames([filename], self.restrictions)
-            assert len(result) == 0
+            self.assertEqual(len(result), 0)
 
             # File no longer exists.
             assert os.path.exists(filename) is False
@@ -2489,37 +2588,39 @@ class TestClientDownloadHelper():
             with open(filename, "w") as buf:
                 buf.write("obspy")
 
-    def test_warning_when_location_prios_excludes_all_channels(self, testdata):
+    def test_warning_when_location_prios_excludes_all_channels(self):
         """
         Tests that the logger raises a warning when the location_priorities
         settings excludes all channels.
         """
         # No warning should have been raised yet.
-        assert self.logger.warning.call_count == 0
+        self.assertEqual(self.logger.warning.call_count, 0)
         c = self._init_client()
         c.client.get_stations.return_value = obspy.read_inventory(
-            testdata["channel_level_fdsn_obscure_location_code.txt"])
+            os.path.join(self.data,
+                         "channel_level_fdsn_obscure_location_code.txt"))
         c.get_availability()
         # Nothing should have been selected.
-        assert c.stations == {}
+        self.assertEqual(c.stations, {})
         # But a warning should have been raised.
-        assert self.logger.warning.call_count == 1
-        assert self.logger.warning.call_args[0][0] == (
+        self.assertEqual(self.logger.warning.call_count, 1)
+        self.assertEqual(
+            self.logger.warning.call_args[0][0],
             "Client 'Test' - No channel at station AK.BAGL has been selected "
             "due to the `location_priorities` settings.")
 
         self.logger.warning.reset_mock()
-        assert self.logger.warning.call_count == 0
+        self.assertEqual(self.logger.warning.call_count, 0)
         # Having non-default location priorities should not warn.
         self.restrictions = Restrictions(
             starttime=obspy.UTCDateTime(2001, 1, 1),
             endtime=obspy.UTCDateTime(2015, 1, 1),
             location_priorities=["00"])
-        assert c.stations == {}
-        assert self.logger.warning.call_count == 0
+        self.assertEqual(c.stations, {})
+        self.assertEqual(self.logger.warning.call_count, 0)
 
 
-class TestDownloadHelper():
+class DownloadHelperTestCase(unittest.TestCase):
     """
     Test cases for the MassDownloader class.
     """
@@ -2530,17 +2631,17 @@ class TestDownloadHelper():
         Tests the initialization of the MassDownloader object.
         """
         d = MassDownloader()
-        assert patch.call_count == 1
+        self.assertEqual(patch.call_count, 1)
         # The amount of services is variable and more and more get added.
         # Assert it's larger then 8 and contains a couple stable ones.
-        assert len(d.providers) > 8
-        assert "IRIS" in d.providers
-        assert "ORFEUS" in d.providers
+        self.assertTrue(len(d.providers) > 8)
+        self.assertTrue("IRIS" in d.providers)
+        self.assertTrue("ORFEUS" in d.providers)
         patch.reset_mock()
 
         d = MassDownloader(providers=["A", "B", "IRIS"])
-        assert patch.call_count == 1
-        assert d.providers == ("A", "B", "IRIS")
+        self.assertEqual(patch.call_count, 1)
+        self.assertEqual(d.providers, ("A", "B", "IRIS"))
         patch.reset_mock()
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
@@ -2570,11 +2671,11 @@ class TestDownloadHelper():
             # Make sure to not change the log-level.
             logger.setLevel(_l)
 
-        assert len(d._initialized_clients) > 10
-        assert not ("IRIS" in d._initialized_clients)
-        assert not ("RESIF" in d._initialized_clients)
-        assert not ("GFZ" in d._initialized_clients)
-        assert "ORFEUS" in d._initialized_clients
+        self.assertTrue(len(d._initialized_clients) > 10)
+        self.assertFalse("IRIS" in d._initialized_clients)
+        self.assertFalse("RESIF" in d._initialized_clients)
+        self.assertFalse("GFZ" in d._initialized_clients)
+        self.assertTrue("ORFEUS" in d._initialized_clients)
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
                 autospec=True)
@@ -2587,9 +2688,9 @@ class TestDownloadHelper():
 
         client = Client("IRIS", user="random", password="something")
 
-        assert patch.call_count == 1
+        self.assertEqual(patch.call_count, 1)
         patch.reset_mock()
-        assert patch.call_count == 0
+        self.assertEqual(patch.call_count, 0)
 
         # Make sure to not change the log-level but also to hide the log
         # output for the tests.
@@ -2602,12 +2703,14 @@ class TestDownloadHelper():
             logger.setLevel(_l)
 
         # Should have been called twice.
-        assert patch.call_count == 2
+        self.assertEqual(patch.call_count, 2)
 
-        assert list(d._initialized_clients.keys()) == \
-            ['GFZ', 'http://service.iris.edu', 'ORFEUS']
+        self.assertEqual(
+            list(d._initialized_clients.keys()),
+            ['GFZ', 'http://service.iris.edu', 'ORFEUS'])
         # Make sure it is the same object.
-        assert d._initialized_clients["http://service.iris.edu"] is client
+        self.assertIs(d._initialized_clients["http://service.iris.edu"],
+                      client)
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
                 autospec=True)

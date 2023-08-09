@@ -95,8 +95,7 @@ class TestUtilGeodetics:
     def test_calc_vincenty_inverse_2(self):
         """
         Test calc_vincenty_inverse() method with test data from Geocentric
-        Datum of Australia.
-        see https://www.icsm.gov.au/publications/gda2020-technical-manual-v16
+        Datum of Australia. (see http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf)
         """
         # test data:
         # Point 1: Flinders Peak, Point 2: Buninyong

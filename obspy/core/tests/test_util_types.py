@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import pytest
-
 from obspy import UTCDateTime
 from obspy.core.inventory import Comment
 from obspy.core.util import (ComplexWithUncertainties, Enum,
                              FloatWithUncertainties)
 from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit)
+import pytest
 
 
 class TestUtilTypes:

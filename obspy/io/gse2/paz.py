@@ -19,8 +19,6 @@ The read in PAZ information can be used with
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from pathlib import Path
-
 import numpy as np
 
 from obspy.core import AttribDict
@@ -53,7 +51,7 @@ def read_paz(paz_file):
     poles = []
     zeros = []
 
-    if isinstance(paz_file, (str, Path)):
+    if isinstance(paz_file, str):
         with open(paz_file, 'rt') as fh:
             paz = fh.readlines()
     else:

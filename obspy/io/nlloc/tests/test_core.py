@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import inspect
 import io
+import os
 import re
+import unittest
 import warnings
+from pathlib import Path
 
 from obspy import UTCDateTime, read_events
 from obspy.core.inventory import Inventory, Network, Station, Channel
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, get_example_file
 from obspy.core.util.testing import compare_xml_strings, remove_unique_ids
 from obspy.io.nlloc.core import is_nlloc_hyp, read_nlloc_hyp, write_nlloc_obs
 
@@ -29,16 +33,21 @@ def _mock_coordinate_converter(x, y, z):
         raise Exception("Unexpected values during test run.")
 
 
-class TestNLLOC():
+class NLLOCTestCase(unittest.TestCase):
     """
     Test suite for obspy.io.nlloc
     """
-    def test_write_nlloc_obs(self, testdata):
+    def setUp(self):
+        self.path = Path(os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe()))))
+        self.datapath = self.path / "data"
+
+    def test_write_nlloc_obs(self):
         """
         Test writing nonlinloc observations phase file.
         """
         # load nlloc_custom.qml QuakeML file to generate OBS file from it
-        filename = testdata["nlloc_custom.qml"]
+        filename = get_example_file("nlloc_custom.qml")
         cat = read_events(filename, "QUAKEML")
         # adjust one pick time that got cropped by nonlinloc in NLLOC HYP file
         # due to less precision in hypocenter file (that we used to create the
@@ -49,7 +58,7 @@ class TestNLLOC():
                 pick.time -= 0.005
 
         # read expected OBS file output
-        filename = testdata["nlloc.obs"]
+        filename = get_example_file("nlloc.obs")
         with open(filename, "rb") as fh:
             expected = fh.read().decode()
 
@@ -59,7 +68,7 @@ class TestNLLOC():
             tf.seek(0)
             got = tf.read().decode()
 
-        assert expected == got
+        self.assertEqual(expected, got)
 
         # write manually
         with NamedTemporaryFile() as tf:
@@ -67,19 +76,19 @@ class TestNLLOC():
             tf.seek(0)
             got = tf.read().decode()
 
-        assert expected == got
+        self.assertEqual(expected, got)
 
-    def test_read_nlloc_hyp(self, testdata):
+    def test_read_nlloc_hyp(self):
         """
         Test reading nonlinloc hypocenter phase file.
         """
-        filename = testdata["nlloc_custom.hyp"]
+        filename = get_example_file("nlloc_custom.hyp")
         cat = read_nlloc_hyp(filename,
                              coordinate_converter=_mock_coordinate_converter)
         # reset pick channel codes, these got automatically mapped upon reading
         for pick in cat[0].picks:
             pick.waveform_id.channel_code = None
-        with open(testdata["nlloc_custom.qml"], 'rb') as tf:
+        with open(get_example_file("nlloc_custom.qml"), 'rb') as tf:
             quakeml_expected = tf.read().decode()
         with NamedTemporaryFile() as tf:
             cat.write(tf, format="QUAKEML")
@@ -88,8 +97,9 @@ class TestNLLOC():
 
         # test creation times manually as they get omitted in the overall test
         creation_time = UTCDateTime("2014-10-17T16:30:08.000000Z")
-        assert cat[0].creation_info.creation_time == creation_time
-        assert cat[0].origins[0].creation_info.creation_time == creation_time
+        self.assertEqual(cat[0].creation_info.creation_time, creation_time)
+        self.assertEqual(cat[0].origins[0].creation_info.creation_time,
+                         creation_time)
 
         quakeml_expected = remove_unique_ids(quakeml_expected,
                                              remove_creation_time=True)
@@ -107,124 +117,112 @@ class TestNLLOC():
         quakeml_expected = re.sub(re_pattern, '', quakeml_expected, 1)
         quakeml_got = re.sub(re_pattern, '', quakeml_got, 1)
 
-        compare_xml_strings(quakeml_expected.encode(), quakeml_got.encode())
+        compare_xml_strings(quakeml_expected, quakeml_got)
 
-    def test_read_nlloc_hyp_with_builtin_projection(self, testdata):
+    def test_read_nlloc_hyp_with_builtin_projection(self):
         """
         Test reading nonlinloc hyp file without a coordinate_converter.
         """
-        cat = read_nlloc_hyp(testdata["nlloc.hyp"])
-        cat_expected = read_events(testdata["nlloc.qml"])
+        cat = read_nlloc_hyp(get_example_file("nlloc.hyp"))
+        cat_expected = read_events(get_example_file("nlloc.qml"))
 
         # test event
         ev = cat[0]
         ev_expected = cat_expected[0]
-        assert round(abs(
-            ev.creation_info.creation_time -
-            ev_expected.creation_info.creation_time), 7) == 0
+        self.assertAlmostEqual(ev.creation_info.creation_time,
+                               ev_expected.creation_info.creation_time)
 
         # test origin
         orig = ev.origins[0]
         orig_expected = ev_expected.origins[0]
-        assert round(abs(orig.time-orig_expected.time), 7) == 0
-        assert round(abs(orig.longitude-orig_expected.longitude), 7) == 0
-        assert round(abs(
-            orig.longitude_errors.uncertainty -
-            orig_expected.longitude_errors.uncertainty), 7) == 0
-        assert round(abs(orig.latitude-orig_expected.latitude), 7) == 0
-        assert round(abs(
-            orig.latitude_errors.uncertainty -
-            orig_expected.latitude_errors.uncertainty), 7) == 0
-        assert round(abs(orig.depth-orig_expected.depth), 7) == 0
-        assert round(abs(
-            orig.depth_errors.uncertainty -
-            orig_expected.depth_errors.uncertainty), 7) == 0
-        assert round(abs(
-            orig.depth_errors.confidence_level -
-            orig_expected.depth_errors.confidence_level), 7) == 0
-        assert orig.depth_type == orig_expected.depth_type
-        assert orig.quality.associated_phase_count == \
-            orig_expected.quality.associated_phase_count
-        assert orig.quality.used_phase_count == \
-            orig_expected.quality.used_phase_count
-        assert orig.quality.associated_station_count == \
-            orig_expected.quality.associated_station_count
-        assert orig.quality.used_station_count == \
-            orig_expected.quality.used_station_count
-        assert round(abs(
-            orig.quality.standard_error -
-            orig_expected.quality.standard_error), 7) == 0
-        assert round(abs(
-            orig.quality.azimuthal_gap -
-            orig_expected.quality.azimuthal_gap), 7) == 0
-        assert round(abs(
-            orig.quality.secondary_azimuthal_gap -
-            orig_expected.quality.secondary_azimuthal_gap), 7) == 0
-        assert orig.quality.ground_truth_level == \
-            orig_expected.quality.ground_truth_level
-        assert round(abs(
-            orig.quality.minimum_distance -
-            orig_expected.quality.minimum_distance), 7) == 0
-        assert round(abs(
-            orig.quality.maximum_distance -
-            orig_expected.quality.maximum_distance), 7) == 0
-        assert round(abs(
-            orig.quality.median_distance -
-            orig_expected.quality.median_distance), 7) == 0
-        assert round(abs(
-            orig.origin_uncertainty.min_horizontal_uncertainty -
-            orig_expected.origin_uncertainty.min_horizontal_uncertainty), 7) \
-            == 0
-        assert round(abs(
-            orig.origin_uncertainty.max_horizontal_uncertainty -
-            orig_expected.origin_uncertainty.max_horizontal_uncertainty), 7) \
-            == 0
-        assert round(abs(
-            orig.origin_uncertainty.azimuth_max_horizontal_uncertainty -
-            getattr(orig_expected.origin_uncertainty,
-                    "azimuth_max_horizontal_uncertainty")), 7) == 0
-        assert orig.origin_uncertainty.preferred_description == \
-            orig_expected.origin_uncertainty.preferred_description
-        assert round(abs(
-            orig.origin_uncertainty.confidence_level -
-            orig_expected.origin_uncertainty.confidence_level), 7) == 0
-        assert orig.creation_info.creation_time == \
-            orig_expected.creation_info.creation_time
-        assert orig.comments[0].text == orig_expected.comments[0].text
+        self.assertAlmostEqual(orig.time, orig_expected.time)
+        self.assertAlmostEqual(orig.longitude, orig_expected.longitude)
+        self.assertAlmostEqual(orig.longitude_errors.uncertainty,
+                               orig_expected.longitude_errors.uncertainty)
+        self.assertAlmostEqual(orig.latitude, orig_expected.latitude)
+        self.assertAlmostEqual(orig.latitude_errors.uncertainty,
+                               orig_expected.latitude_errors.uncertainty)
+        self.assertAlmostEqual(orig.depth, orig_expected.depth)
+        self.assertAlmostEqual(orig.depth_errors.uncertainty,
+                               orig_expected.depth_errors.uncertainty)
+        self.assertAlmostEqual(orig.depth_errors.confidence_level,
+                               orig_expected.depth_errors.confidence_level)
+        self.assertEqual(orig.depth_type, orig_expected.depth_type)
+        self.assertEqual(orig.quality.associated_phase_count,
+                         orig_expected.quality.associated_phase_count)
+        self.assertEqual(orig.quality.used_phase_count,
+                         orig_expected.quality.used_phase_count)
+        self.assertEqual(orig.quality.associated_station_count,
+                         orig_expected.quality.associated_station_count)
+        self.assertEqual(orig.quality.used_station_count,
+                         orig_expected.quality.used_station_count)
+        self.assertAlmostEqual(orig.quality.standard_error,
+                               orig_expected.quality.standard_error)
+        self.assertAlmostEqual(orig.quality.azimuthal_gap,
+                               orig_expected.quality.azimuthal_gap)
+        self.assertAlmostEqual(orig.quality.secondary_azimuthal_gap,
+                               orig_expected.quality.secondary_azimuthal_gap)
+        self.assertEqual(orig.quality.ground_truth_level,
+                         orig_expected.quality.ground_truth_level)
+        self.assertAlmostEqual(orig.quality.minimum_distance,
+                               orig_expected.quality.minimum_distance)
+        self.assertAlmostEqual(orig.quality.maximum_distance,
+                               orig_expected.quality.maximum_distance)
+        self.assertAlmostEqual(orig.quality.median_distance,
+                               orig_expected.quality.median_distance)
+        self.assertAlmostEqual(
+            orig.origin_uncertainty.min_horizontal_uncertainty,
+            orig_expected.origin_uncertainty.min_horizontal_uncertainty)
+        self.assertAlmostEqual(
+            orig.origin_uncertainty.max_horizontal_uncertainty,
+            orig_expected.origin_uncertainty.max_horizontal_uncertainty)
+        self.assertAlmostEqual(
+            orig.origin_uncertainty.azimuth_max_horizontal_uncertainty,
+            orig_expected.origin_uncertainty.
+            azimuth_max_horizontal_uncertainty)
+        self.assertEqual(
+            orig.origin_uncertainty.preferred_description,
+            orig_expected.origin_uncertainty.preferred_description)
+        self.assertAlmostEqual(
+            orig.origin_uncertainty.confidence_level,
+            orig_expected.origin_uncertainty.confidence_level)
+        self.assertEqual(orig.creation_info.creation_time,
+                         orig_expected.creation_info.creation_time)
+        self.assertEqual(orig.comments[0].text, orig_expected.comments[0].text)
 
         # test a couple of arrivals
         for n in range(2):
             arriv = orig.arrivals[n]
             arriv_expected = orig_expected.arrivals[n]
-            assert arriv.phase == arriv_expected.phase
-            assert round(abs(arriv.azimuth-arriv_expected.azimuth), 7) == 0
-            assert round(abs(arriv.distance-arriv_expected.distance), 7) == 0
+            self.assertEqual(arriv.phase, arriv_expected.phase)
+            self.assertAlmostEqual(arriv.azimuth, arriv_expected.azimuth)
+            self.assertAlmostEqual(arriv.distance, arriv_expected.distance)
             assert arriv.takeoff_angle is None
             assert arriv_expected.takeoff_angle is None
-            assert round(
-                abs(arriv.time_residual-arriv_expected.time_residual), 7) == 0
-            assert round(
-                abs(arriv.time_weight-arriv_expected.time_weight), 7) == 0
+            self.assertAlmostEqual(arriv.time_residual,
+                                   arriv_expected.time_residual)
+            self.assertAlmostEqual(arriv.time_weight,
+                                   arriv_expected.time_weight)
 
         # test a couple of picks
         for n in range(2):
             pick = ev.picks[n]
             pick_expected = ev_expected.picks[n]
-            assert round(abs(pick.time-pick_expected.time), 7) == 0
-            assert pick.waveform_id.station_code == \
-                pick_expected.waveform_id.station_code
-            assert pick.onset == pick_expected.onset
-            assert pick.phase_hint == pick_expected.phase_hint
-            assert pick.polarity == pick_expected.polarity
+            self.assertAlmostEqual(pick.time, pick_expected.time)
+            self.assertEqual(pick.waveform_id.station_code,
+                             pick_expected.waveform_id.station_code)
+            self.assertEqual(pick.onset, pick_expected.onset)
+            self.assertEqual(pick.phase_hint, pick_expected.phase_hint)
+            self.assertEqual(pick.polarity, pick_expected.polarity)
 
-    def test_read_nlloc_hyp_via_plugin(self, testdata):
-        filename = testdata["nlloc_custom.hyp"]
+    def test_read_nlloc_hyp_via_plugin(self):
+        filename = get_example_file("nlloc_custom.hyp")
         cat = read_events(filename)
-        assert len(cat) == 1
+        self.assertEqual(len(cat), 1)
         cat = read_events(filename, format="NLLOC_HYP")
-        assert len(cat) == 1
+        self.assertEqual(len(cat), 1)
 
-    def test_read_nlloc_with_pick_seed_id_lookup(self, testdata):
+    def test_read_nlloc_with_pick_seed_id_lookup(self):
         # create some bogus metadata for lookup
         cha = Channel('HHZ', '00', 0, 0, 0, 0)
         sta = Station('HM02', 0, 0, 0, channels=[cha])
@@ -240,65 +238,65 @@ class TestNLLOC():
 
         inv = Inventory(networks=[net, net2], source='')
 
-        filename = testdata["nlloc_custom.hyp"]
+        filename = get_example_file("nlloc_custom.hyp")
         # we get some warnings since we only provide sufficient metadata for
         # one pick
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             cat = read_events(filename, format="NLLOC_HYP", inventory=inv)
-        assert len(cat) == 1
+        self.assertEqual(len(cat), 1)
         for pick in cat[0].picks:
             wid = pick.waveform_id
             if wid.station_code == 'HM02':
-                assert wid.network_code == 'XX'
-                assert wid.location_code == ''
+                self.assertEqual(wid.network_code, 'XX')
+                self.assertEqual(wid.location_code, '')
             else:
-                assert wid.network_code == ''
-                assert wid.location_code is None
+                self.assertEqual(wid.network_code, '')
+                self.assertEqual(wid.location_code, None)
 
-    def test_is_nlloc_hyp(self, testdata):
+    def test_is_nlloc_hyp(self):
         # test positive
-        filename = testdata["nlloc_custom.hyp"]
-        assert is_nlloc_hyp(filename)
+        filename = get_example_file("nlloc_custom.hyp")
+        self.assertEqual(is_nlloc_hyp(filename), True)
         # test some negatives
         for filenames in ["nlloc_custom.qml", "nlloc.obs", "gaps.mseed",
                           "BW_RJOB.xml", "QFILE-TEST-ASC.ASC", "LMOW.BHE.SAC"]:
-            filename = testdata["nlloc_custom.qml"]
-            assert not is_nlloc_hyp(filename)
+            filename = get_example_file("nlloc_custom.qml")
+            self.assertEqual(is_nlloc_hyp(filename), False)
 
-    def test_read_nlloc_with_picks(self, testdata):
+    def test_read_nlloc_with_picks(self):
         """
         Test correct resource ID linking when reading NLLOC_HYP file with
         providing original picks.
         """
-        picks = read_events(testdata["nlloc_custom.qml"])[0].picks
+        picks = read_events(get_example_file("nlloc_custom.qml"))[0].picks
         arrivals = read_events(
-            testdata["nlloc_custom.hyp"], format="NLLOC_HYP",
+            get_example_file("nlloc_custom.hyp"), format="NLLOC_HYP",
             picks=picks)[0].origins[0].arrivals
         expected = [p.resource_id for p in picks]
         got = [a.pick_id for a in arrivals]
-        assert expected == got
+        self.assertEqual(expected, got)
 
-    def test_read_nlloc_with_multiple_events(self, testdata):
+    def test_read_nlloc_with_multiple_events(self):
         """
         Test reading a NLLOC_HYP file with multiple hypocenters in it.
         """
-        got = read_events(testdata["vanua.sum.grid0.loc.hyp"],
+        got = read_events(get_example_file("vanua.sum.grid0.loc.hyp"),
                           format="NLLOC_HYP")
-        assert len(got) == 3
-        assert got[0].origins[0].longitude == 167.049
-        assert got[1].origins[0].longitude == 166.905
-        assert got[2].origins[0].longitude == 166.858
-        assert got[0].origins[0].latitude == -14.4937
-        assert got[1].origins[0].latitude == -15.0823
-        assert got[2].origins[0].latitude == -15.1529
+        self.assertEqual(len(got), 3)
+        self.assertEqual(got[0].origins[0].longitude, 167.049)
+        self.assertEqual(got[1].origins[0].longitude, 166.905)
+        self.assertEqual(got[2].origins[0].longitude, 166.858)
+        self.assertEqual(got[0].origins[0].latitude, -14.4937)
+        self.assertEqual(got[1].origins[0].latitude, -15.0823)
+        self.assertEqual(got[2].origins[0].latitude, -15.1529)
         for item in got.events + [e.origins[0] for e in got.events]:
-            assert item.creation_info.author == u'Océane Foix'
+            self.assertEqual(item.creation_info.author, u'Océane Foix')
         for event in got.events:
-            assert event.comments[0].text == \
-                             "Central Vanuatu (3D tomo 2016)"
+            self.assertEqual(event.comments[0].text,
+                             "Central Vanuatu (3D tomo 2016)")
 
-    def test_read_nlloc_6_beta_signature(self, testdata):
+    def test_read_nlloc_6_beta_signature(self):
         """
         SIGNATURE field of nlloc hypocenter output file was somehow changed at
         some point after version 6.0 (it appears in 6.0.3 beta release for
@@ -306,20 +304,21 @@ class TestNLLOC():
         Date is now seemingly always prepended with 'run:' without a space
         afterwards.
         """
-        filename = testdata['nlloc_post_version_6.hyp']
+        filename = os.path.join(self.datapath, 'nlloc_post_version_6.hyp')
         cat = read_nlloc_hyp(filename)
         # check that signature time-of-run part is correctly read
         # (actually before the fix the above reading already fails..)
-        assert cat[0].creation_info.creation_time == \
-            UTCDateTime(2017, 5, 9, 11, 0, 22)
+        self.assertEqual(
+            cat[0].creation_info.creation_time,
+            UTCDateTime(2017, 5, 9, 11, 0, 22))
 
-    def test_issue_2222(self, testdata):
+    def test_issue_2222(self):
         """
         Test that hour values of 24 don't break parser.
         """
 
         # modify the example file to contain an hour 24 and second 60
-        with open(testdata['nlloc.hyp']) as f:
+        with open(get_example_file('nlloc.hyp')) as f:
             nll_str = f.read().splitlines()
         # first add a line with hour 24
         str_list = list(nll_str[-3])
@@ -335,36 +334,17 @@ class TestNLLOC():
         str_io.seek(0)
         cat = read_nlloc_hyp(str_io)
         # check catalog is populated and pick times are right
-        assert len(cat) == 1
+        self.assertEqual(len(cat), 1)
         pick1, pick2 = cat[0].picks[-1], cat[0].picks[-2]
-        assert pick1.time.hour == 0
-        assert pick2.time.second == 0
+        self.assertEqual(pick1.time.hour, 0)
+        self.assertEqual(pick2.time.second, 0)
 
-    def test_reading_nlloc_v7_hyp_file(self, testdata):
+    def test_reading_nlloc_v7_hyp_file(self):
         """
         Tests that we are getting the positioning of items in phase lines
         right. Values for arrivals are shifted by one index to the right in hyp
         files written by newer nonlinloc versions, see #3223
         """
-        path = testdata['nlloc_v7.hyp']
+        path = str(self.datapath / 'nlloc_v7.hyp')
         cat = read_nlloc_hyp(path)
         assert cat[0].origins[0].arrivals[0].azimuth == 107.42
-        # compare test_rejected_origin test case
-        assert cat[0].origins[0].evaluation_status is None
-
-    def test_rejected_origin(self, testdata):
-        """
-        Tests that we are marking rejected event/origin as such.
-        Also tests that NLLOC header line is written into comment.
-        (testing that evaluation status is left empty on "LOCATED" reported by
-        nonlinloc is tested in other test case.
-        """
-        path = testdata['nlloc_rejected.hyp']
-        cat = read_nlloc_hyp(path)
-        expected_comment = (
-            'NLLOC "./locs/20211214_2020-12-09_manual_loc/20211214_2020-12-09_'
-            'manual.20201209.163708.grid0" "REJECTED" "WARNING: max prob '
-            'location on grid boundary 10, rejecting location."')
-        assert cat[0].origins[0].evaluation_status == "rejected"
-        assert cat[0].origins[0].comments[1].text == expected_comment
-        assert cat[0].comments[1].text == expected_comment

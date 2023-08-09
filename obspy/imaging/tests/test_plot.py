@@ -2,8 +2,9 @@
 """
 The obspy.imaging.scripts.plot / obspy-plot test suite.
 """
+import os
 import shutil
-from pathlib import Path
+from os.path import abspath, basename, dirname, join, pardir
 
 import pytest
 
@@ -15,11 +16,16 @@ class TestPlot:
     """
     Test cases for obspy-plot
     """
+    root = abspath(join(dirname(__file__), pardir, pardir))
+    path = join(root, 'imaging', 'tests', 'images')
+
     @pytest.fixture(scope='class')
-    def all_files(self, root):
+    def all_files(self):
         """Collect all files. """
-        all_files = [root / 'io' / 'ascii' / 'tests' / 'data' / i
-                     for i in ['slist.ascii', 'slist_2_traces.ascii']]
+        all_files = [
+            join(self.root, 'io', 'ascii', 'tests', 'data', i)
+            for i in ['slist.ascii', 'slist_2_traces.ascii']
+        ]
         return all_files
 
     def test_plot(self, image_path, all_files):
@@ -30,9 +36,9 @@ class TestPlot:
         with TemporaryWorkingDirectory():
             all_files_list = []
             for filename in all_files:
-                newname = Path('.') / filename.name
+                newname = join(os.curdir, basename(filename))
                 shutil.copy(filename, newname)
-                all_files_list.append(str(newname))
+                all_files_list += [newname]
 
             obspy_plot(['--outfile', str(image_path)] + all_files_list)
 
@@ -44,9 +50,9 @@ class TestPlot:
         with TemporaryWorkingDirectory():
             all_files_list = []
             for filename in all_files:
-                newname = Path('.') / filename.name
+                newname = join(os.curdir, basename(filename))
                 shutil.copy(filename, newname)
-                all_files_list.append(str(newname))
+                all_files_list += [newname]
 
             obspy_plot(['--no-automerge', '--outfile', str(image_path)] +
                        all_files_list)

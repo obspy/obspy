@@ -1,6 +1,0 @@
-[Main]
-question = "What is the sensitivity?"
-
-[10]
-path = "Q330PacketBaler_CDMassPosition_SG10.txt"
-

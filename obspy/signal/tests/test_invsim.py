@@ -6,6 +6,8 @@ The InvSim test suite.
 import ctypes as C  # NOQA
 import gzip
 import io
+import os
+import unittest
 import platform
 
 import numpy as np
@@ -19,7 +21,6 @@ from obspy.signal.headers import clibevresp
 from obspy.signal.invsim import (
     cosine_taper, estimate_magnitude, evalresp, simulate_seismometer,
     evalresp_for_frequencies)
-import pytest
 
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
@@ -62,17 +63,21 @@ INSTRUMENTS = {'None': None,
                'wwssn_sp': PAZ_WWSSN_SP}
 
 
-class TestInvSim():
+class InvSimTestCase(unittest.TestCase):
     """
     Test cases for InvSim.
     """
-    def test_seis_sim_vs_pitsa1(self, testdata):
+    def setUp(self):
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+
+    def test_seis_sim_vs_pitsa1(self):
         """
         Test simulate_seismometer seismometer simulation against seismometer
         simulation of Pitsa - LE3D seismometer.
         """
         # load test file
-        filename = testdata['rjob_20051006.gz']
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
 
@@ -91,21 +96,21 @@ class TestInvSim():
                 data, samp_rate, paz_remove=paz_le3d, paz_simulate=paz,
                 water_level=600.0, zero_mean=False, nfft_pow2=True)
             # load pitsa file
-            filename = testdata['rjob_20051006_%s.gz' % id]
+            filename = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
             with gzip.open(filename) as f:
                 data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
-            assert rms < 1.1e-05
+            self.assertTrue(rms < 1.1e-05)
 
-    def test_seis_sim_vs_pitsa_2(self, testdata):
+    def test_seis_sim_vs_pitsa_2(self):
         """
         Test simulate_seismometer seismometer simulation against seismometer
         simulation of Pitsa - STS-2 seismometer.
         """
         # load test file
-        file = testdata['rotz_20081028.gz']
+        file = os.path.join(self.path, 'rotz_20081028.gz')
         with gzip.open(file) as f:
             data = np.loadtxt(f)
 
@@ -123,15 +128,15 @@ class TestInvSim():
                 data, samp_rate, paz_remove=paz_sts2, paz_simulate=paz,
                 water_level=600.0, zero_mean=False, nfft_pow2=True)
             # load pitsa file
-            filename = testdata['rotz_20081028_%s.gz' % id]
+            filename = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
             with gzip.open(filename) as f:
                 data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
-            assert rms < 1e-04
+            self.assertTrue(rms < 1e-04)
 
-    def test_estimate_magnitude(self, testdata):
+    def test_estimate_magnitude(self):
         """
         Tests against PITSA. Note that PITSA displays microvolt, that is
         the amplitude values must be computed back into counts (for this
@@ -152,25 +157,25 @@ class TestInvSim():
                'gain': 1.0,
                'sensitivity': 671140000.0}
         mag_rtsh = estimate_magnitude(paz, 3.34e6, 0.065, 0.255)
-        assert round(abs(mag_rtsh-2.1328727151723488), 7) == 0
+        self.assertAlmostEqual(mag_rtsh, 2.1328727151723488)
         mag_rtbe = estimate_magnitude(paz, 3.61e4, 0.08, 2.197)
-        assert round(abs(mag_rtbe-1.1962687721890191), 7) == 0
+        self.assertAlmostEqual(mag_rtbe, 1.1962687721890191)
         mag_rnon = estimate_magnitude(paz, 6.78e4, 0.125, 1.538)
-        assert round(abs(mag_rnon-1.4995311686507182), 7) == 0
+        self.assertAlmostEqual(mag_rnon, 1.4995311686507182)
 
         # now also test using Response object to calculate amplitude
         # (use RTSH response for all three measurements, see above comment)
         # response calculated using all stages is slightly different from the
         # PAZ + overall sensitivity used above, so we get slightly different
         # values here..
-        response = read_inventory(testdata['BW_RTSH.xml'],
+        response = read_inventory(os.path.join(self.path, 'BW_RTSH.xml'),
                                   format='STATIONXML')[0][0][0].response
         mag_rtsh = estimate_magnitude(response, 3.34e6, 0.065, 0.255)
-        assert round(abs(mag_rtsh-2.1179529876187635), 7) == 0
+        self.assertAlmostEqual(mag_rtsh, 2.1179529876187635)
         mag_rtbe = estimate_magnitude(response, 3.61e4, 0.08, 2.197)
-        assert round(abs(mag_rtbe-1.1832677953138184), 7) == 0
+        self.assertAlmostEqual(mag_rtbe, 1.1832677953138184)
         mag_rnon = estimate_magnitude(response, 6.78e4, 0.125, 1.538)
-        assert round(abs(mag_rnon-1.4895395665022975), 7) == 0
+        self.assertAlmostEqual(mag_rnon, 1.4895395665022975)
 
     # XXX: Test for really big signal is missing, where the water level is
     # actually acting
@@ -183,7 +188,7 @@ class TestInvSim():
     #    # paz of test file
     #    samp_rate = 200.0
 
-    def test_sac_instrument_correction(self, testdata):
+    def test_sac_instrument_correction(self):
         # SAC recommends to taper the transfer function if a pure
         # deconvolution is done instead of simulating a different
         # instrument. This test checks the difference between the
@@ -194,9 +199,9 @@ class TestInvSim():
         # floating point arithmetic of SAC vs. the double precision
         # arithmetic of Python. However differences still seem to be
         # too big for that.
-        pzf = testdata['SAC_PZs_KARC_BHZ']
-        sacf = testdata['KARC.LHZ.SAC.asc.gz']
-        testsacf = testdata['KARC_corrected.sac.asc.gz']
+        pzf = os.path.join(self.path, 'SAC_PZs_KARC_BHZ')
+        sacf = os.path.join(self.path, 'KARC.LHZ.SAC.asc.gz')
+        testsacf = os.path.join(self.path, 'KARC_corrected.sac.asc.gz')
         plow = 160.
         phigh = 4.
         fl1 = 1.0 / (plow + 0.0625 * plow)
@@ -241,18 +246,18 @@ class TestInvSim():
         # plt.show()
         rms = np.sqrt(np.sum((tr.data - data) ** 2) /
                       np.sum(tr.data ** 2))
-        assert rms < 0.0421
+        self.assertTrue(rms < 0.0421)
 
-    def test_evalresp_vs_obspy(self, testdata):
+    def test_evalresp_vs_obspy(self):
         """
         Compare results from removing instrument response using
         evalresp in SAC and ObsPy. Visual inspection shows that the traces are
         pretty much identical but differences remain (rms ~ 0.042). Haven't
         found the cause for those, yet.
         """
-        evalrespf = testdata['CRLZ.HHZ.10.NZ.SAC_resp']
-        rawf = testdata['CRLZ.HHZ.10.NZ.SAC']
-        respf = testdata['RESP.NZ.CRLZ.10.HHZ']
+        evalrespf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC_resp')
+        rawf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC')
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
         fl1 = 0.00588
         fl2 = 0.00625
         fl3 = 30.
@@ -287,7 +292,7 @@ class TestInvSim():
         tr.data *= 1e9
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) /
                       np.sum(trtest.data ** 2))
-        assert rms < 0.0094
+        self.assertTrue(rms < 0.0094)
         # import matplotlib.pyplot as plt #plt.plot(tr.data-trtest.data,'b')
         # plt.plot(trtest.data,'g')
         # plt.figure()
@@ -297,11 +302,12 @@ class TestInvSim():
         # plt.psd(tr.data - trtest.data, Fs=100., NFFT=32768)
         # plt.show()
 
-    def test_cosine_taper(self, testdata):
+    def test_cosine_taper(self):
         # SAC trace was generated with:
         # taper type cosine width 0.05
         for i in [99, 100]:
-            sac_taper = testdata['ones_trace_%d_tapered.sac' % i]
+            sac_taper = os.path.join(self.path,
+                                     'ones_trace_%d_tapered.sac' % i)
             tr = read(sac_taper)[0]
             tap = cosine_taper(i, p=0.1, halfcosine=False, sactaper=True)
             np.testing.assert_array_almost_equal(tap, tr.data, decimal=6)
@@ -323,7 +329,7 @@ class TestInvSim():
         # plt.plot(tap2,'g--')
         # plt.show()
 
-    def test_evalresp_using_different_line_separator(self, testdata):
+    def test_evalresp_using_different_line_separator(self):
         """
         The evalresp needs a file with correct line separator, so '\n' for
         POSIX, '\r' for Mac OS, or '\r\n' for Windows. Here we check that
@@ -336,20 +342,20 @@ class TestInvSim():
         dt = UTCDateTime(2003, 11, 1, 0, 0, 0)
         nfft = 8
         # Linux
-        respf = testdata['RESP.NZ.CRLZ.10.HHZ']
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
         evalresp(0.01, nfft, respf, dt)
         # Mac
-        respf = testdata['RESP.NZ.CRLZ.10.HHZ.mac']
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.mac')
         evalresp(0.01, nfft, respf, dt)
         # Windows
-        respf = testdata['RESP.NZ.CRLZ.10.HHZ.windows']
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.windows')
         evalresp(0.01, nfft, respf, dt)
 
-    def test_evalresp_bug_395(self, testdata):
+    def test_evalresp_bug_395(self):
         """
         Was a bug due to inconstistent numerical range
         """
-        resp = testdata['RESP.CH._.HHZ.gz']
+        resp = os.path.join(self.path, 'RESP.CH._.HHZ.gz')
         with NamedTemporaryFile() as fh:
             tmpfile = fh.name
             with gzip.open(resp) as f:
@@ -360,13 +366,13 @@ class TestInvSim():
                     UTCDateTime(2012, 9, 4, 5, 12, 15, 863300)]
             kwargs = {'units': 'VEL', 'freq': True}
             _h, f = evalresp(*args, **kwargs)
-            assert len(f) == nfft // 2 + 1
+            self.assertEqual(len(f), nfft // 2 + 1)
 
-    def test_evalresp_specific_frequencies(self, testdata):
+    def test_evalresp_specific_frequencies(self):
         """
         Test getting response for specific frequencies from evalresp
         """
-        resp = testdata['RESP.CH._.HHZ.gz']
+        resp = os.path.join(self.path, 'RESP.CH._.HHZ.gz')
         # test some frequencies (results taken from routine
         # test_evalresp_bug_395)
         freqs = [0.0, 0.0021303792075, 0.21303792075, 0.63911376225,
@@ -393,15 +399,15 @@ class TestInvSim():
     # differences on Appveyor and we could not reproduce it on a local
     # machine.. so skip on windows.. (e.g. http://tests.obspy.org/101648/#1,
     # https://ci.appveyor.com/project/obspy/obspy/build/1.0.6561-master)
-    @pytest.mark.skipif(
-        platform.system() == "Windows",
-        reason='unreproducible test fail encountered on Appveyor sometimes.')
-    def test_evalresp_file_like_object(self, testdata):
+    @unittest.skipIf(platform.system() == "Windows",
+                     'unreproducible test fail encountered on Appveyor '
+                     'sometimes.')
+    def test_evalresp_file_like_object(self):
         """
         Test evalresp with file like object
         """
-        rawf = testdata['CRLZ.HHZ.10.NZ.SAC']
-        respf = testdata['RESP.NZ.CRLZ.10.HHZ']
+        rawf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC')
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
 
         tr1 = read(rawf)[0]
         tr2 = read(rawf)[0]
@@ -418,30 +424,31 @@ class TestInvSim():
         seedresp['filename'] = stringio
         tr2.data = simulate_seismometer(tr2.data, tr2.stats.sampling_rate,
                                         seedresp=seedresp)
-        assert traces_almost_equal(tr1, tr2)
+        self.assertTrue(traces_almost_equal(tr1, tr2))
 
-    def test_segfaulting_resp_file(self, testdata):
+    def test_segfaulting_resp_file(self):
         """
         Test case for a file that segfaults when compiled with clang and
         active optimization.
 
         As long as the test does not segfault it is ok.
         """
-        filename = testdata["segfaulting_RESPs"] / "RESP.IE.LLRI..EHZ"
+        filename = os.path.join(self.path, "segfaulting_RESPs",
+                                "RESP.IE.LLRI..EHZ")
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
         # raises C-level EVRESP ERROR
         with SuppressOutput():
-            with pytest.raises(ValueError):
-                evalresp(t_samp=10.0, nfft=256, filename=filename, date=date,
-                         station="LLRI", channel="EHZ", network="IE",
-                         locid="*", units="VEL")
+            self.assertRaises(ValueError, evalresp, t_samp=10.0, nfft=256,
+                              filename=filename, date=date, station="LLRI",
+                              channel="EHZ", network="IE", locid="*",
+                              units="VEL")
 
-    def test_evalresp_seed_identifiers_work(self, testdata):
+    def test_evalresp_seed_identifiers_work(self):
         """
         Asserts that the network, station, location and channel identifiers can
         be used to select difference responses.
         """
-        kwargs = {"filename": str(testdata['RESP.OB.AAA._.BH_']),
+        kwargs = {"filename": os.path.join(self.path, "RESP.OB.AAA._.BH_"),
                   "t_samp": 0.1, "nfft": 1024, "units": "VEL",
                   "date": UTCDateTime(2013, 1, 1), "network": "OP",
                   "station": "AAA", "locid": "", "freq": False, "debug": False}
@@ -458,14 +465,13 @@ class TestInvSim():
         # the response.
         rel_diff = np.abs(response_2 - response_1).ptp() / \
             max(np.abs(response_1).ptp(), np.abs(response_2).ptp())
-        assert rel_diff > 1E-3
+        self.assertGreater(rel_diff, 1E-3)
 
         # The RESP file only contains two channels.
         kwargs["channel"] = "BHZ"
         # suppress a C-level "no response found" warning
         with SuppressOutput():
-            with pytest.raises(ValueError):
-                evalresp(**kwargs)
+            self.assertRaises(ValueError, evalresp, **kwargs)
 
     def test_evalresp_spline(self):
         """
@@ -504,8 +510,8 @@ class TestInvSim():
         res = clibevresp.evr_spline(n, x, y, 0.0, 1.0, xi, ni,
                                     C.byref(p_retvals_arr),
                                     C.byref(p_num_retvals))
-        assert res is None
-        assert ni == p_num_retvals.value
+        self.assertEqual(res, None)
+        self.assertEqual(ni, p_num_retvals.value)
         yi = np.array([p_retvals_arr[i] for i in range(ni)])
 
         if False:  # visually verify
@@ -517,4 +523,4 @@ class TestInvSim():
 
         yi_ref = [0.94899576, 0.97572004, 0.9927136, 0.99978309, 0.99686554,
                   0.98398301, 0.96128491]
-        assert np.allclose(yi, yi_ref, rtol=1e-7, atol=0)
+        self.assertTrue(np.allclose(yi, yi_ref, rtol=1e-7, atol=0))

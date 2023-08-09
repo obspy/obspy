@@ -518,7 +518,7 @@ class Trace(object):
             st += self.copy()
         return st
 
-    def __truediv__(self, num):
+    def __div__(self, num):
         """
         Split Trace into new Stream containing num Traces of the same size.
 
@@ -561,6 +561,9 @@ class Trace(object):
             tstart = tend + self.stats.delta
             tend = tstart + (self.stats.delta * packet_length)
         return st
+
+    # Py3k: '/' does not map to __div__ anymore in Python 3
+    __truediv__ = __div__
 
     def __mod__(self, num):
         """
@@ -872,8 +875,8 @@ class Trace(object):
         >>> print(tr.id)
         BW.MANZ..EHZ
         """
-        return '.'.join((self.stats.network, self.stats.station,
-                         self.stats.location, self.stats.channel))
+        out = "%(network)s.%(station)s.%(location)s.%(channel)s"
+        return out % (self.stats)
 
     id = property(get_id)
 
@@ -1598,14 +1601,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'carlstatrig'``
             Computes the carl_sta_trig characteristic function (uses
             :func:`obspy.signal.trigger.carl_sta_trig`).
-
-        ``'energyratio'``
-            Computes the energy ratio characteristic function (uses
-            :func:`obspy.signal.trigger.energy_ratio`).
-
-        ``'modifiedenergyratio'``
-            Computes the modified energy ratio characteristic function (uses
-            :func:`obspy.signal.trigger.modified_energy_ratio`).
 
         ``'zdetect'``
             Z-detector (uses :func:`obspy.signal.trigger.z_detect`).

@@ -125,7 +125,7 @@ URL_MAPPINGS = {
     "ORFEUS": "http://www.orfeus-eu.org",
     "RESIF": "http://ws.resif.fr",
     "RESIFPH5": "http://ph5ws.resif.fr",
-    "RASPISHAKE": "https://data.raspberryshake.org",
+    "RASPISHAKE": "https://fdsnws.raspberryshakedata.com",
     "SCEDC": "http://service.scedc.caltech.edu",
     "TEXNET": "http://rtserve.beg.utexas.edu",
     "UIB-NORSAR": "http://eida.geo.uib.no",

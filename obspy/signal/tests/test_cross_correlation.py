@@ -4,6 +4,7 @@ The cross correlation test suite.
 """
 import ctypes as C  # NOQA
 import numpy as np
+import os
 import warnings
 
 import pytest
@@ -28,6 +29,8 @@ class TestCrossCorrelation:
     def state(self):
         """Return test state."""
         out = AttribDict()
+        out.path = os.path.join(os.path.dirname(__file__), 'data')
+        out.path_images = os.path.join(os.path.dirname(__file__), 'images')
         out.a = np.sin(np.linspace(0, 10, 101))
         out.b = 5 * np.roll(out.a, 5)
         out.c = 5 * np.roll(out.a[:81], 5)
@@ -192,13 +195,15 @@ class TestCrossCorrelation:
         assert shift == -50
         assert round(abs(value--0.998), 3) == 0
 
-    def test_xcorr_pick_correction(self, state, testdata):
+    def test_xcorr_pick_correction(self, state):
         """
         Test cross correlation pick correction on a set of two small local
         earthquakes.
         """
-        st1 = read(testdata['BW.UH1._.EHZ.D.2010.147.a.slist.gz'])
-        st2 = read(testdata['BW.UH1._.EHZ.D.2010.147.b.slist.gz'])
+        st1 = read(os.path.join(state.path,
+                                'BW.UH1._.EHZ.D.2010.147.a.slist.gz'))
+        st2 = read(os.path.join(state.path,
+                                'BW.UH1._.EHZ.D.2010.147.b.slist.gz'))
 
         tr1 = st1.select(component="Z")[0]
         tr2 = st2.select(component="Z")[0]
@@ -221,13 +226,15 @@ class TestCrossCorrelation:
         assert tr1 == tr1_copy
         assert tr2 == tr2_copy
 
-    def test_xcorr_pick_correction_images(self, state, image_path, testdata):
+    def test_xcorr_pick_correction_images(self, state, image_path):
         """
         Test cross correlation pick correction on a set of two small local
         earthquakes.
         """
-        st1 = read(testdata['BW.UH1._.EHZ.D.2010.147.a.slist.gz'])
-        st2 = read(testdata['BW.UH1._.EHZ.D.2010.147.b.slist.gz'])
+        st1 = read(os.path.join(state.path,
+                                'BW.UH1._.EHZ.D.2010.147.a.slist.gz'))
+        st2 = read(os.path.join(state.path,
+                                'BW.UH1._.EHZ.D.2010.147.b.slist.gz'))
 
         tr1 = st1.select(component="Z")[0]
         tr2 = st2.select(component="Z")[0]

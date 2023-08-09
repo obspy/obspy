@@ -24,11 +24,17 @@ MODULE_TEST_SKIP_CHECKS = {}
 
 def compare_xml_strings(doc1, doc2):
     """
-    Simple helper function to compare two XML byte strings.
+    Simple helper function to compare two XML strings.
 
-    :type doc1: bytes
-    :type doc2: bytes
+    :type doc1: str
+    :type doc2: str
     """
+    # Compat py2k and py3k
+    try:
+        doc1 = doc1.encode()
+        doc2 = doc2.encode()
+    except Exception:
+        pass
     obj1 = etree.fromstring(doc1).getroottree()
     obj2 = etree.fromstring(doc2).getroottree()
 
@@ -421,6 +427,23 @@ def create_diverse_catalog():
 
     events = [_create_event()]
     return Catalog(events=events)
+
+
+def setup_context_testcase(test_case, cm):
+    """
+    Use a contextmanager to set up a unittest test case.
+
+    Inspired by Ned Batchelder's recipe found here: goo.gl/8TBJ7s.
+
+    :param test_case:
+        An instance of unittest.TestCase
+    :param cm:
+        Any instances which implements the context manager protocol,
+        ie its class definition implements __enter__ and __exit__ methods.
+    """
+    val = cm.__enter__()
+    test_case.addCleanup(cm.__exit__, None, None, None)
+    return val
 
 
 def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,

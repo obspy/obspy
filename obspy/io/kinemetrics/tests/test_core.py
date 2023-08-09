@@ -4,6 +4,8 @@
 The obspy.io.kinemetrics.core test suite.
 """
 import io
+import os
+import unittest
 
 import numpy as np
 
@@ -12,249 +14,257 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.kinemetrics.core import is_evt, read_evt
 
 
-class TestCore():
+class CoreTestCase(unittest.TestCase):
     """
     Test cases for kinemetrics core interface
     """
-    def test_is_evt(self, testdata, datapath):
+    def setUp(self):
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+
+    def test_is_evt(self):
         """
         Test for the is_evt() function.
         """
-        valid_files = [testdata["BI008_MEMA-04823.evt"],
-                       testdata["BX456_MOLA-02351.evt"]]
-        invalid_files = [testdata["NOUTF8.evt"]]
-        py_dir = datapath.parent.parent
-        for path in py_dir.glob('*.py'):
-            invalid_files.append(path)
-        assert len(invalid_files) > 0
+        valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
+                       os.path.join(self.path, "BX456_MOLA-02351.evt")]
+        invalid_files = [os.path.join(self.path, "NOUTF8.evt")]
+        py_dir = os.path.join(self.path, os.pardir, os.pardir)
+        for filename in os.listdir(py_dir):
+            if filename.endswith(".py"):
+                invalid_files.append(
+                    os.path.abspath(os.path.join(py_dir, filename)))
+        self.assertGreater(len(invalid_files), 0)
 
         for filename in valid_files:
-            assert is_evt(filename)
+            self.assertTrue(is_evt(filename))
         for filename in invalid_files:
-            assert not is_evt(filename)
+            self.assertFalse(is_evt(filename))
 
-    def test_is_evt_from_bytesio(self, testdata, datapath):
+    def test_is_evt_from_bytesio(self):
         """
         Test for the is_evt() function from BytesIO objects.
         """
-        valid_files = [testdata["BI008_MEMA-04823.evt"],
-                       testdata["BX456_MOLA-02351.evt"]]
-        invalid_files = [testdata["NOUTF8.evt"]]
-        py_dir = datapath.parent.parent
-        for path in py_dir.glob('*.py'):
-            invalid_files.append(path)
+        valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
+                       os.path.join(self.path, "BX456_MOLA-02351.evt")]
+        invalid_files = [os.path.join(self.path, "NOUTF8.evt")]
+        py_dir = os.path.join(self.path, os.pardir, os.pardir)
+        for filename in os.listdir(py_dir):
+            if filename.endswith(".py"):
+                invalid_files.append(
+                    os.path.abspath(os.path.join(py_dir, filename)))
 
         for filename in valid_files:
             with open(filename, "rb") as fh:
                 buf = io.BytesIO(fh.read())
             buf.seek(0, 0)
-            assert is_evt(buf)
+            self.assertTrue(is_evt(buf))
             # The is_evt() method should not change the file pointer.
-            assert buf.tell() == 0
+            self.assertEqual(buf.tell(), 0)
         for filename in invalid_files:
             with open(filename, "rb") as fh:
                 buf = io.BytesIO(fh.read())
             buf.seek(0, 0)
-            assert not is_evt(buf)
+            self.assertFalse(is_evt(buf))
             # The is_evt() method should not change the file pointer.
-            assert buf.tell() == 0
+            self.assertEqual(buf.tell(), 0)
 
-    def test_read_via_obspy(self, testdata):
+    def test_read_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = testdata['BI008_MEMA-04823.evt']
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
         st = read(filename, apply_calib=True)
         st.verify()
-        assert len(st) == 3
-        assert st[0].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert len(st[0]) == 230 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MEMA'
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(len(st[0]), 230 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MEMA')
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
         # 2
-        filename = testdata['BX456_MOLA-02351.evt']
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         st = read(filename, apply_calib=True)
         st.verify()
-        assert len(st) == 6
-        assert st[0].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[3].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[4].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[5].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert len(st[0]) == 390 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MOLA'
+        self.assertEqual(len(st), 6)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[3].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[4].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[5].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(len(st[0]), 390 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MOLA')
 
-    def test_reading_via_obspy_and_bytesio(self, testdata):
+    def test_reading_via_obspy_and_bytesio(self):
         """
         Test the reading of Evt files from BytesIO objects.
         """
         # 1
-        filename = testdata['BI008_MEMA-04823.evt']
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
         st = read(buf, apply_calib=True)
         st.verify()
-        assert len(st) == 3
-        assert st[0].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert len(st[0]) == 230 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MEMA'
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(len(st[0]), 230 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MEMA')
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
         # 2
-        filename = testdata['BX456_MOLA-02351.evt']
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
         st = read(buf, apply_calib=True)
         st.verify()
-        assert len(st) == 6
-        assert st[0].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[3].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[4].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[5].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert len(st[0]) == 390 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MOLA'
+        self.assertEqual(len(st), 6)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[3].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[4].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[5].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(len(st[0]), 390 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MOLA')
 
-    def test_read_via_module(self, testdata):
+    def test_read_via_module(self):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function.
         """
-        filename = testdata['BI008_MEMA-04823.evt']
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
         st = read_evt(filename, apply_calib=True)
         st.verify()
-        assert len(st) == 3
-        assert st[0].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert len(st[0]) == 230 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MEMA'
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(len(st[0]), 230 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MEMA')
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
         # 2
-        filename = testdata['BX456_MOLA-02351.evt']
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         st = read_evt(filename, apply_calib=True)
         st.verify()
-        assert len(st) == 6
-        assert st[0].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[3].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[4].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[5].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert len(st[0]) == 390 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MOLA'
+        self.assertEqual(len(st), 6)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[3].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[4].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[5].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(len(st[0]), 390 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MOLA')
 
-    def test_read_via_module_and_bytesio(self, testdata):
+    def test_read_via_module_and_bytesio(self):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function from BytesIO
         objects.
         """
         # 1
-        filename = testdata['BI008_MEMA-04823.evt']
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
         st = read_evt(buf, apply_calib=True)
         st.verify()
-        assert len(st) == 3
-        assert st[0].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert len(st[0]) == 230 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MEMA'
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(len(st[0]), 230 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MEMA')
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
         # 2
-        filename = testdata['BX456_MOLA-02351.evt']
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
         st = read_evt(buf, apply_calib=True)
         st.verify()
-        assert len(st) == 6
-        assert st[0].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[3].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[4].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert st[5].stats.starttime == \
-            UTCDateTime('2012-01-17T09:54:36.000000Z')
-        assert len(st[0]) == 390 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MOLA'
+        self.assertEqual(len(st), 6)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[3].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[4].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[5].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(len(st[0]), 390 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MOLA')
 
     def verify_stats_evt(self, evt_stats):
         dico = {'chan_fullscale': 2.5, 'chan_sensorgain': 1,
@@ -265,9 +275,10 @@ class TestCore():
         # Values from Kinemetrics QLWin program for BI008_MEMA-04823.evt
 
         for key in dico:
-            assert round(abs(dico[key]-evt_stats[key]), 6) == 0
+            self.assertAlmostEqual(dico[key], evt_stats[key], 6)
 
-        assert UTCDateTime(2013, 8, 15, 9, 20, 28) == evt_stats['starttime']
+        self.assertEqual(UTCDateTime(2013, 8, 15, 9, 20, 28),
+                         evt_stats['starttime'])
 
     def verify_data_evt0(self, data):
         valuesdeb = np.array([-2.4464752525e-002, -2.4534918368e-002,
@@ -285,9 +296,9 @@ class TestCore():
                               -2.4424990639e-002])
         # Data values from Tsoft Program
 
-        assert len(data) == 5750
-        assert np.allclose(valuesdeb, data[:len(valuesdeb)])
-        assert np.allclose(valuesend, data[-len(valuesend):])
+        self.assertEqual(len(data), 5750)
+        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
+        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
 
     def verify_data_evt2(self, data):
         valuesdeb = np.array([-4.4351171702e-002, -4.4479820877e-002,
@@ -307,29 +318,29 @@ class TestCore():
         # Data values from Tsoft Program
         # length is 5750
 
-        assert len(data) == 5750
-        assert np.allclose(valuesdeb, data[:len(valuesdeb)])
-        assert np.allclose(valuesend, data[-len(valuesend):])
+        self.assertEqual(len(data), 5750)
+        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
+        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
 
-    def test_read_via_module_raw(self, testdata):
+    def test_read_via_module_raw(self):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function.
         """
-        filename = testdata['BI008_MEMA-04823.evt']
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
         st = read_evt(filename, apply_calib=False)
         st.verify()
-        assert len(st) == 3
-        assert st[0].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[1].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert st[2].stats.starttime == \
-            UTCDateTime('2013-08-15T09:20:28.000000Z')
-        assert len(st[0]) == 230 * 25
-        assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
-        assert st[0].stats.channel == '0'
-        assert st[0].stats.station == 'MEMA'
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(len(st[0]), 230 * 25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MEMA')
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0_raw(st[0].data)
@@ -348,9 +359,9 @@ class TestCore():
                               -20976., -20972., -20956., -20886.])
         # Data values from Tsoft Program
 
-        assert len(data) == 5750
-        assert np.allclose(valuesdeb, data[:len(valuesdeb)])
-        assert np.allclose(valuesend, data[-len(valuesend):])
+        self.assertEqual(len(data), 5750)
+        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
+        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
 
     def verify_data_evt2_raw(self, data):
         valuesdeb = np.array([-37922., -38032., -38004., -37936.,
@@ -367,6 +378,6 @@ class TestCore():
         # Data values from Tsoft Program
         # length is 5750
 
-        assert len(data) == 5750
-        assert np.allclose(valuesdeb, data[:len(valuesdeb)])
-        assert np.allclose(valuesend, data[-len(valuesend):])
+        self.assertEqual(len(data), 5750)
+        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
+        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))

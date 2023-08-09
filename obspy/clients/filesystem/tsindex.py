@@ -1544,22 +1544,18 @@ class TSIndexDatabaseHandler(object):
         # Create a CTE that contains the request
         try:
             stmts = [
-                sa.select(
+                sa.select([
                     sa.literal(a).label("network"),
                     sa.literal(b).label("station"),
                     sa.literal(c).label("location"),
                     sa.literal(d).label("channel"),
-                    sa.case(
-                        (sa.literal(e) == '*',
-                            sa.literal('0000-00-00T00:00:00')),
-                        (sa.literal(e) != '*', sa.literal(e))
-                        ).label("starttime"),
-                    sa.case(
-                        (sa.literal(f) == '*',
-                            sa.literal('5000-00-00T00:00:00')),
-                        (sa.literal(f) != '*', sa.literal(f))
-                        ).label("endtime")
-                )
+                    sa.literal(e).label("starttime")
+                    if e != '*' else
+                    sa.literal('0000-00-00T00:00:00').label("starttime"),
+                    sa.literal(f).label("endtime")
+                    if f != '*' else
+                    sa.literal('5000-00-00T00:00:00').label("endtime")
+                ])
                 for idx, (a, b, c, d, e, f) in enumerate(query_rows)
             ]
             requests = sa.union_all(*stmts)
@@ -1728,22 +1724,18 @@ class TSIndexDatabaseHandler(object):
         try:
             request_cte_name = "request_cte"
             stmts = [
-                sa.select(
+                sa.select([
                     sa.literal(a).label("network"),
                     sa.literal(b).label("station"),
                     sa.literal(c).label("location"),
                     sa.literal(d).label("channel"),
-                    sa.case(
-                        (sa.literal(e) == '*',
-                            sa.literal('0000-00-00T00:00:00')),
-                        (sa.literal(e) != '*', sa.literal(e))
-                        ).label("starttime"),
-                    sa.case(
-                        (sa.literal(f) == '*',
-                            sa.literal('5000-00-00T00:00:00')),
-                        (sa.literal(f) != '*', sa.literal(f))
-                        ).label("endtime")
-                    )
+                    sa.literal(e).label("starttime")
+                    if e != '*' else
+                    sa.literal('0000-00-00T00:00:00').label("starttime"),
+                    sa.literal(f).label("endtime")
+                    if f != '*' else
+                    sa.literal('5000-00-00T00:00:00').label("endtime")
+                ])
                 for idx, (a, b, c, d, e, f) in enumerate(query_rows)
             ]
             requests = sa.union_all(*stmts)

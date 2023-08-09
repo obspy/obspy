@@ -5,6 +5,7 @@ The obspy.imaging.scripts.scan / obspy-scan test suite.
 import os
 import shutil
 import warnings
+from os.path import abspath, dirname, join, pardir
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,8 +22,11 @@ class TestScan:
     """
     Test cases for obspy-scan
     """
+    root = abspath(join(dirname(__file__), pardir, pardir))
+    path = join(root, 'imaging', 'tests', 'images')
+
     @pytest.fixture(scope='class')
-    def all_files(self, root):
+    def all_files(self):
         """return a list of all waveform files in the test suite."""
         sac_files = ['LMOW.BHE.SAC', 'seism.sac', 'dis.G.SCZ.__.BHE_short',
                      'null_terminated.sac', 'test.sac', 'seism-longer.sac',
@@ -32,9 +36,9 @@ class TestScan:
                       'loc_RJOB20050831023349_first100_dos.z',
                       'loc_RNON20040609200559.z', 'loc_STAU20031119011659.z',
                       'sta2.gse2', 'twiceCHK2.gse2', 'y2000.gse']
-        all_files = [root / 'io' / 'sac' / 'tests' / 'data' / i
+        all_files = [join(self.root, 'io', 'sac', 'tests', 'data', i)
                      for i in sac_files]
-        all_files.extend([root / 'io' / 'gse2' / 'tests' / 'data' / i
+        all_files.extend([join(self.root, 'io', 'gse2', 'tests', 'data', i)
                           for i in gse2_files])
         return all_files
 

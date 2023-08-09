@@ -1616,7 +1616,7 @@ class SeismicPhase(object):
             raise RuntimeError(msg) from e
 
         takeoff_angle = np.degrees(math.asin(np.clip(
-            takeoff_velocity.item() * ray_param /
+            takeoff_velocity * ray_param /
             (self.tau_model.radius_of_planet - self.source_depth), -1.0, 1.0)))
         if not self.down_going[0]:
             # upgoing, so angle is in 90-180 range
@@ -1643,7 +1643,7 @@ class SeismicPhase(object):
             raise RuntimeError(msg) from e
 
         incident_angle = np.degrees(math.asin(np.clip(
-            incident_velocity.item() * ray_param /
+            incident_velocity * ray_param /
             (self.tau_model.radius_of_planet - self.receiver_depth),
             -1.0, 1.0)))
         if self.down_going[-1]:

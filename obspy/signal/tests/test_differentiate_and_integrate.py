@@ -3,6 +3,7 @@
 """
 Tests for differentiation and integration functions.
 """
+import unittest
 
 import numpy as np
 
@@ -10,7 +11,7 @@ from obspy.signal.differentiate_and_integrate import (
     integrate_cumtrapz, integrate_spline)
 
 
-class TestIntegrate():
+class IntegrateTestCase(unittest.TestCase):
     """
     Test cases for the integration methods.
     """

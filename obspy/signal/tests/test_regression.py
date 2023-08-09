@@ -3,18 +3,18 @@
 """
 Tests for linear regression.
 """
+import unittest
+
 import numpy as np
-import pytest
 
 from obspy.signal.regression import linear_regression
 
 
-class TestRegression():
+class RegressionTestCase(unittest.TestCase):
     """
     Test cases for the regression method.
     """
-    @pytest.fixture(autouse=True, scope="function")
-    def setup(self):
+    def setUp(self):
         # seed a random sequence and add some noise
         np.random.seed(0)
         n = 10

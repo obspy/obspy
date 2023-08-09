@@ -364,13 +364,11 @@ class VelocityModel(object):
         Java!).
 
         :param filename: The name of the file to read.
-        :type filename: str or :class:`~pathlib.Path`
+        :type filename: str
 
         :raises NotImplementedError: If the file extension is ``.nd``.
         :raises ValueError: If the file extension is not ``.tvel``.
         """
-        if isinstance(filename, Path):
-            filename = str(filename)
         if filename.endswith(".nd"):
             v_mod = cls.read_nd_file(filename)
         elif filename.endswith(".tvel"):
@@ -407,12 +405,10 @@ class VelocityModel(object):
         Comments using ``#`` are also allowed.
 
         :param filename: The name of the file to read.
-        :type filename: str or :class:`~pathlib.Path`
+        :type filename: str
 
         :raises ValueError: If model file is in error.
         """
-        if isinstance(filename, Path):
-            filename = str(filename)
         # Read all lines in the file. Each Layer needs top and bottom values,
         # i.e. info from two lines.
         data = np.genfromtxt(filename, skip_header=2, comments='#')
@@ -628,13 +624,6 @@ class VelocityModel(object):
         mask = np.logical_or(
             above['bot_p_velocity'] != below['top_p_velocity'],
             above['bot_s_velocity'] != below['top_s_velocity'])
-
-        if len(mask) == 0:
-            # Special case where have no discontinuities
-            self.moho_depth = temp_moho_depth
-            self.cmb_depth = temp_cmb_depth
-            self.iocb_depth = temp_iocb_depth
-            return
 
         # Find discontinuity closest to current Moho
         moho_diff = np.abs(self.moho_depth - above['bot_depth'])

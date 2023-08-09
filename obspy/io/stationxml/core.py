@@ -8,7 +8,6 @@ Functions dealing with reading and writing StationXML.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import collections.abc
 import copy
 import inspect
 import io
@@ -20,6 +19,7 @@ import warnings
 from lxml import etree
 
 import obspy
+from obspy.core import compatibility
 from obspy.core.util import AttribDict
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
@@ -1573,7 +1573,7 @@ def _write_element(parent, element, name):
         sub = etree.SubElement(parent, custom_name, attrib=attrib)
         if isinstance(
                 element['value'],
-                collections.abc.Mapping):  # nested extra tags
+                compatibility.collections_abc.Mapping):  # nested extra tags
             for tagname, tag_element in element['value'].items():
                 _write_element(sub, tag_element, tagname)
         else:

@@ -32,8 +32,7 @@ from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'geodetics', 'imaging',
                    'io.ah', 'io.alsep', 'io.arclink', 'io.ascii',
-                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.csv', 'io.dmx',
-                   'io.focmec',
+                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.dmx', 'io.focmec',
                    'io.hypodd', 'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
                    'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk', 'io.nied',
                    'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde', 'io.quakeml',
@@ -64,11 +63,11 @@ NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 # Define Obspy hard and soft dependencies
 HARD_DEPENDENCIES = [
-    "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
     "sqlalchemy", "decorator", "requests"]
 OPTIONAL_DEPENDENCIES = [
-    "packaging", "pyproj", "pytest", "pytest-json-report", "pyshp",
-    "geographiclib", "cartopy"]
+    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "shapefile",
+    "mock", "pyflakes", "geographiclib", "cartopy"]
 DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
 

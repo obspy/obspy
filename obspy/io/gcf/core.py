@@ -7,7 +7,6 @@ import ctypes
 import math
 import os
 import warnings
-from pathlib import Path
 
 import numpy as np
 
@@ -309,7 +308,7 @@ def _read_gcf(filename, headonly=False, network='', station='',
         >>> from obspy import read
         >>> st = read("/path/to/20160603_1955n.gcf", format="GCF")
 
-    :type filename: str or :class:`~pathlib.Path`
+    :type filename: str
     :param filename: path to GCF file to read
     :type headonly: bool, optional
     :param headonly: if True only read block headers
@@ -339,8 +338,6 @@ def _read_gcf(filename, headonly=False, network='', station='',
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream object
     """
-    if isinstance(filename, Path):
-        filename = str(filename)
     if not os.path.exists(filename):
         raise IOError("file %s could not be located (erroneous path?)"
                       % (filename))

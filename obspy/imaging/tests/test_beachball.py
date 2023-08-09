@@ -2,10 +2,10 @@
 """
 The obspy.imaging.beachball test suite.
 """
+import os
 import warnings
 
 import matplotlib.pyplot as plt
-import pytest
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.testing import WarningsCapture
@@ -18,6 +18,8 @@ class TestBeachballPlot:
     """
     Test cases for beachball generation.
     """
+    path = os.path.join(os.path.dirname(__file__), 'images')
+
     def test_beachball(self, image_path):
         """
         Create beachball examples in tests/output directory.
@@ -308,21 +310,3 @@ class TestBeachballPlot:
         w = [_i for _i in w
              if "falling back to the mopad wrapper" in _i.lower()]
         assert w
-
-    @pytest.mark.image_path_suffix('pdf')
-    def test_beach_with_axes_to_pdf(self, image_path):
-        """
-        Regression test for #2887
-
-        Tests using `beach` with passing in an `Axes` object and saving to pdf
-        """
-        fig = plt.figure(figsize=(6, 4))
-        ax = fig.add_subplot(111, aspect='equal')
-
-        bb = beach((0, 45, 90), facecolor='k', width=120, axes=ax, xy=(0, 0))
-        ax.add_collection(bb)
-        ax.set_xlim(-2, 4)
-        ax.set_ylim(-1, 2)
-        ax.grid()
-
-        fig.savefig(image_path)

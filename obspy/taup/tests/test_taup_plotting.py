@@ -3,6 +3,7 @@
 """
 Tests the high level obspy.taup.tau interface.
 """
+import os
 import warnings
 
 import matplotlib as mpl
@@ -18,6 +19,8 @@ class TestTauPyPlotting:
     """
     TauPy plotting tests.
     """
+    image_dir = os.path.join(os.path.dirname(__file__), 'images')
+
     @pytest.fixture(scope='class')
     def model(self):
         """return a model for testing."""

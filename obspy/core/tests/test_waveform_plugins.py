@@ -11,6 +11,7 @@ from unittest import mock
 import numpy as np
 import pytest
 
+import obspy
 from obspy import Trace, read
 from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
@@ -31,10 +32,6 @@ class TestWaveformPlugins:
     Test suite for all waveform plug-ins.
     """
     longMessage = True
-
-    @pytest.fixture(scope="package")
-    def ascii_path(self, root):
-        return root / "io" / "ascii" / "tests" / "data"
 
     def test_raise_on_empty_file(self):
         """
@@ -189,7 +186,7 @@ class TestWaveformPlugins:
                     elif format not in ['WAV']:
                         assert st[0].id == "BW.MANZ1.00.EHE"
 
-    def test_is_format(self, root):
+    def test_is_format(self):
         """
         Tests all isFormat methods against all data test files from the other
         modules for false positives.
@@ -231,9 +228,11 @@ class TestWaveformPlugins:
         # recently not be able to follow a pip editable install correctly. this
         # seems safe unless custom installed plugins come into play, but we can
         # not test these here properly anyway
+        install_dir = Path(obspy.__file__).parent.parent
         for f in formats:
-            path = Path(root, *f.module_name.split('.')[1:-1])
-            path = path / 'tests' / 'data'
+            path = os.path.join(install_dir,
+                                *f.module_name.split('.')[:-1])
+            path = os.path.join(path, 'tests', 'data')
             all_paths.append(path)
             if os.path.exists(path):
                 paths[f.name] = path
@@ -382,49 +381,61 @@ class TestWaveformPlugins:
                     os.remove(tempfile[:-4] + '.QHD')
             np.testing.assert_array_equal(tr.data, tr_test.data)
 
-    def test_read_gzip2_file(self, ascii_path):
+    def test_read_gzip2_file(self):
         """
         Tests reading gzip compressed waveforms.
         """
-        st1 = read(ascii_path / 'tspair.ascii.gz')
-        st2 = read(ascii_path / 'tspair.ascii')
+        path = os.path.dirname(__file__)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
+        st1 = read(os.path.join(ascii_path, 'tspair.ascii.gz'))
+        st2 = read(os.path.join(ascii_path, 'tspair.ascii'))
         assert st1 == st2
 
-    def test_read_bzip2_file(self, ascii_path):
+    def test_read_bzip2_file(self):
         """
         Tests reading bzip2 compressed waveforms.
         """
-        st1 = read(ascii_path / 'slist.ascii.bz2')
-        st2 = read(ascii_path / 'slist.ascii')
+        path = os.path.dirname(__file__)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
+        st1 = read(os.path.join(ascii_path, 'slist.ascii.bz2'))
+        st2 = read(os.path.join(ascii_path, 'slist.ascii'))
         assert st1 == st2
 
-    def test_read_tar_archive(self, ascii_path, datapath):
+    def test_read_tar_archive(self):
         """
         Tests reading tar compressed waveforms.
         """
+        path = os.path.dirname(__file__)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
         # tar
-        st1 = read(datapath / "test.tar")
-        st2 = read(ascii_path / "slist.ascii")
+        st1 = read(os.path.join(path, "data", "test.tar"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
         assert st1 == st2
         # tar.gz
-        st1 = read(datapath / "test.tar.gz")
-        st2 = read(ascii_path / "slist.ascii")
+        st1 = read(os.path.join(path, "data", "test.tar.gz"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
         assert st1 == st2
         # tar.bz2
-        st1 = read(datapath / "test.tar.bz2")
-        st2 = read(ascii_path / "slist.ascii")
+        st1 = read(os.path.join(path, "data", "test.tar.bz2"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
         assert st1 == st2
         # tgz
-        st1 = read(datapath / "test.tgz")
-        st2 = read(ascii_path / "slist.ascii")
+        st1 = read(os.path.join(path, "data", "test.tgz"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
         assert st1 == st2
 
-    def test_read_zip_archive(self, datapath, ascii_path):
+    def test_read_zip_archive(self):
         """
         Tests reading zip compressed waveforms.
         """
-        st1 = read(datapath / 'test.zip')
-        st2 = read(ascii_path / 'slist.ascii')
+        path = os.path.dirname(__file__)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
+        st1 = read(os.path.join(path, 'data', 'test.zip'))
+        st2 = read(os.path.join(ascii_path, 'slist.ascii'))
         assert st1 == st2
 
     def test_raise_on_unknown_format(self):

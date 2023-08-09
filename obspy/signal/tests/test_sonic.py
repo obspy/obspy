@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import io
+import unittest
 
 import numpy as np
 
@@ -12,7 +13,7 @@ from obspy.signal.array_analysis import (array_processing,
 from obspy.signal.util import util_lon_lat
 
 
-class TestSonic():
+class SonicTestCase(unittest.TestCase):
     """
     Test fk analysis, main function is sonic() in array_analysis.py
     """
@@ -101,7 +102,7 @@ class TestSonic():
 9.49584782e-01 9.67131311e-06 1.84349488e+01 1.26491106e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        assert np.allclose(ref, out[:, 1:], rtol=1e-6)
+        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=1e-6))
 
     def test_sonic_bf_prew(self):
         out = self.array_processing(prewhiten=1, method=0)
@@ -114,7 +115,7 @@ class TestSonic():
 1.32638966e-01 9.67131311e-06 1.84349488e+01 1.26491106e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        assert np.allclose(ref, out[:, 1:])
+        self.assertTrue(np.allclose(ref, out[:, 1:]))
 
     def test_sonic_capon(self):
         out = self.array_processing(prewhiten=0, method=1)
@@ -128,7 +129,7 @@ class TestSonic():
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         # XXX relative tolerance should be lower!
-        assert np.allclose(ref, out[:, 1:], rtol=5e-3)
+        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=5e-3))
 
     def test_sonic_capon_prew(self):
         out = self.array_processing(prewhiten=1, method=1)
@@ -142,7 +143,7 @@ class TestSonic():
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         # XXX relative tolerance should be lower!
-        assert np.allclose(ref, out[:, 1:], rtol=4e-5)
+        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=4e-5))
 
     def test_get_spoint(self):
         stime = UTCDateTime(1970, 1, 1, 0, 0)
@@ -155,8 +156,8 @@ class TestSonic():
             Trace(data, {'starttime': stime - 2}),
         ])
         spoint, epoint = get_spoint(st, stime, etime)
-        assert np.allclose([1, 4, 2], spoint)
-        assert np.allclose([8, 5, 7], epoint)
+        self.assertTrue(np.allclose([1, 4, 2], spoint))
+        self.assertTrue(np.allclose([8, 5, 7], epoint))
 
     def test_array_transff_freqslowness(self):
         coords = np.array([[10., 60., 0.],

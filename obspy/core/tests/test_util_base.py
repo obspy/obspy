@@ -4,8 +4,8 @@ import copy
 from unittest import mock
 
 import numpy as np
-import pytest
 from requests import HTTPError
+import pytest
 
 from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
                                   download_to_file, sanitize_filename,

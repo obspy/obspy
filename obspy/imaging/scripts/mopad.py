@@ -837,7 +837,7 @@ class MomentTensor:
         if np.linalg.norm(enodes) < 1e-10:
             enodes = exs
         enodess = rotmat @ enodes
-        cos_alpha = float((ez.T @ ezs)[0][0])
+        cos_alpha = float((ez.T @ ezs))
         if cos_alpha > 1.:
             cos_alpha = 1.
         if cos_alpha < -1.:

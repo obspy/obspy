@@ -8,13 +8,10 @@ dependencies:
   - lxml
   - matplotlib
   - numpy
-  # see #3330 and SciTools/cartopy#2199
-  # unpin again later on when this is fixed
-  - scipy < 1.11
+  - scipy
   - requests
   - setuptools
-  # see #3258
-  - sqlalchemy < 2.0
+  - sqlalchemy
   # tests
   - pytest
   - pytest-cov

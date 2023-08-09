@@ -1,6 +1,0 @@
-[Main]
-question = "Select the GeoSIG integrated model"
-
-[ela-GMSseries]
-path="ela-GMSseries.txt"
-

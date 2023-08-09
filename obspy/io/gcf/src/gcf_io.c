@@ -44,8 +44,6 @@
 //    2022-03-10  Removed use of time.h by changing use of time_t to derrived arithmetic type gtime
 //                 moved inclusion of unistd.h and to header file
 //    2022-03-15  Added sampling rate 800 Hz as an allowed sampling rate
-//    2022-12-20  Added check in write_gcf that number of samples in last block is compatible with
-//                 compression, else split into two blocks
 //    
 //  TODO:
 //  
@@ -318,6 +316,7 @@ void merge_GcfFile(GcfFile *obj, int mode, double tol) {
       Ord = (int *)malloc(obj->n_seg*sizeof(int));
       NewOrd = (int *)malloc(obj->n_seg*sizeof(int)); 
       ord = (double *)malloc(obj->n_seg*sizeof(double));
+      
       
       // chunks to use when reallocating 
       chunk = MAX_DATA_BLOCK*10;
@@ -1236,13 +1235,8 @@ int write_gcf(const char *f, GcfFile *obj) {
                   d1++;     // last data point
                   // find the compression level
                   d32 = obj->seg[i].data[d1]-obj->seg[i].data[d0];
-                  if (d32 < -32768 || d32 > 32767 || obj->seg[i].n_data - d1 <= 250) {
+                  if (d32 < -32768 || d32 > 32767) {
                      // need 4 byte for each difference, maximum number of data points are 250
-                     //  if number of data points left are <= 250 just use 4 bytes for each difference
-                     //  this will not alter the size of the file but guarantees that we can write all
-                     //  samples, e.g. if there are only 3 samples left this can not be represented 
-                     //  if compression code is 2 or 4 as number of samples is evaluated as number of
-                     //  four-byte records.
                      c = 4;
                      d1 = d0+249;  // 249 here to prevent compression to get swaped to 2 later
                   } else {                        
@@ -1269,19 +1263,6 @@ int write_gcf(const char *f, GcfFile *obj) {
                               c = cprev; 
                               break;
                            }
-                        }
-                     }
-                     // check if all data is covered, if so check that number of data points in block 
-                     //  is compatible with compression 
-                     if (d1+1 >= obj->seg[i].n_data && c != 4) {
-                        n = d1-d0+1;
-                        if (c == 1) {
-                           // number of data points must be an integer multiple of 4
-                           d1 -= n-(n/4)*4;
-                        }
-                        if (c == 2) {
-                           // number of data points must be an integer multiple of 2
-                           d1 -= n-(n/2)*2;
                         }
                      }
                   }

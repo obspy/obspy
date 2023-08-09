@@ -9,7 +9,6 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import collections.abc
 import copy
 import gzip
 import io
@@ -27,6 +26,7 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.compatibility import collections_abc
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
                      URL_DEFAULT_SUBPATH, URL_MAPPINGS, URL_MAPPING_SUBPATHS,
@@ -1799,7 +1799,12 @@ def raise_on_error(code, data):
     """
     # get detailed server response message
     if code != 200:
-        server_info = data.decode('ASCII', errors='ignore')
+        try:
+            server_info = data.read()
+        except Exception:
+            server_info = None
+        else:
+            server_info = server_info.decode('ASCII', errors='ignore')
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
@@ -1885,12 +1890,14 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib_request.HTTPError as e:
-        error_data = e.read()
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
-                  (e.code, str(e.reason), url, error_data)
+                  (e.code, str(e.reason), url, e.read())
             print(msg)
-        return e.code, error_data
+        else:
+            # Without this line we will get unclosed sockets
+            e.read()
+        return e.code, e
     except Exception as e:
         if debug is True:
             print("Error while downloading: %s" % url)
@@ -1989,7 +1996,7 @@ def get_bulk_string(bulk, arguments):
         raise FDSNInvalidRequestException(msg)
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
-    if isinstance(bulk, collections.abc.Iterable) \
+    if isinstance(bulk, collections_abc.Iterable) \
             and not hasattr(bulk, "read") \
             and not isinstance(bulk, str):
         tmp = ["%s=%s" % (key, convert_to_string(value))

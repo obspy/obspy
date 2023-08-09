@@ -8,11 +8,12 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import collections.abc
 import copy
 import warnings
 
 import numpy as np
+
+from .. import compatibility
 
 
 def _attribdict_equal(v1, v2, depth=5):
@@ -38,7 +39,7 @@ def _attribdict_equal(v1, v2, depth=5):
             return False
 
 
-class AttribDict(collections.abc.MutableMapping):
+class AttribDict(compatibility.collections_abc.MutableMapping):
     """
     A class which behaves like a dictionary.
 
@@ -121,7 +122,8 @@ class AttribDict(collections.abc.MutableMapping):
         if key in self._types and not isinstance(value, self._types[key]):
             value = self._cast_type(key, value)
 
-        mapping_instance = isinstance(value, collections.abc.Mapping)
+        mapping_instance = isinstance(value,
+                                      compatibility.collections_abc.Mapping)
         attr_dict_instance = isinstance(value, AttribDict)
         if mapping_instance and not attr_dict_instance:
             self.__dict__[key] = AttribDict(value)
@@ -192,7 +194,7 @@ class AttribDict(collections.abc.MutableMapping):
         """
         typ = self._types[key]
         new_type = (
-            typ[0] if isinstance(typ, collections.abc.Sequence)
+            typ[0] if isinstance(typ, compatibility.collections_abc.Sequence)
             else typ)
         msg = ('Attribute "%s" must be of type %s, not %s. Attempting to '
                'cast %s to %s') % (key, typ, type(value), value, new_type)

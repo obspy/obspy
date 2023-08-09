@@ -475,7 +475,7 @@ Logging
 -------
 
 The download helpers utilizes Python's `logging facilities
-<https://docs.python.org/3/library/logging.html>`__. By default it will log to
+<https://docs.python.org/2/library/logging.html>`__. By default it will log to
 stdout at the ``logging.INFO`` level which provides a fair amount of detail. If
 you want to change the log level or setup a different stream handler, just get
 the corresponding logger after you import the download helpers module:

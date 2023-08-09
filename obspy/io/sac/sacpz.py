@@ -12,7 +12,6 @@ Module for SAC poles and zero (SACPZ) file I/O.
 """
 import numpy as np
 import warnings
-from pathlib import Path
 
 from obspy import UTCDateTime
 from obspy.core import AttribDict
@@ -170,7 +169,7 @@ seisuk_instrument_resp_removal.pdf
     poles = []
     zeros = []
 
-    if isinstance(paz_file, (str, Path)):
+    if isinstance(paz_file, str):
         paz_file = open(paz_file, 'r')
         is_filename = True
     else:

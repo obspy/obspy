@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import sys
 import tempfile
 import warnings
@@ -74,13 +75,15 @@ class TestUtilMisc:
         except OSError as e:
             pytest.fail('CatchOutput has broken file I/O!\n' + str(e))
 
-    def test_no_obspy_imports(self, root):
+    def test_no_obspy_imports(self):
         """
         Check files that are used at install time for obspy imports.
         """
-        files = [root / "core" / "util" / "version.py"]
+        from obspy.core import util
+        files = ["version.py"]
 
         for file_ in files:
+            file_ = os.path.join(os.path.dirname(util.__file__), file_)
             msg = ("File %s seems to contain an import 'from obspy' "
                    "(line %%i: '%%s').") % file_
             with open(file_, "rb") as fh:

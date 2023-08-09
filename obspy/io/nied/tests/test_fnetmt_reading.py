@@ -1,43 +1,49 @@
 # -*- coding: utf-8 -*-
+import os
 import io
+import unittest
 
 from obspy.core.event import read_events
 from obspy.io.nied.fnetmt import _is_fnetmt_catalog
 
 
-class TestFNETMTCatalogReading():
+class FNETMTCatalogReadingTestCase(unittest.TestCase):
     """
     Test everything related to reading an F-net moment tensor catalog.
     """
-    def test_read_fnetmt_catalog(self, testdata):
-        testfile = testdata['FNETMTCATALOG']
-        cat = read_events(testfile, 'FNETMT')
-        assert len(cat) == 1
-        ev = cat[0]
-        assert len(ev.origins) == 2
-        assert len(ev.magnitudes) == 2
+    def setUp(self):
+        # Directory where the test files are located
+        self.path = os.path.dirname(__file__)
 
-    def test_read_fnetmt_catalog_from_open_files(self, testdata):
+    def test_read_fnetmt_catalog(self):
+        testfile = os.path.join(self.path, 'data', 'FNETMTCATALOG')
+        cat = read_events(testfile, 'FNETMT')
+        self.assertEqual(len(cat), 1)
+        ev = cat[0]
+        self.assertEqual(len(ev.origins), 2)
+        self.assertEqual(len(ev.magnitudes), 2)
+
+    def test_read_fnetmt_catalog_from_open_files(self):
         """
         Tests that reading an F-net moment tensor file from an open file works.
         """
-        testfile = testdata['FNETMTCATALOG']
+        testfile = os.path.join(self.path, 'data', 'FNETMTCATALOG')
         with open(testfile, "rb") as fh:
             read_events(fh)
 
-    def test_read_fnetmt_catalog_from_bytes_io(self, testdata):
+    def test_read_fnetmt_catalog_from_bytes_io(self):
         """
         Tests that reading an F-net moment tensor file from a BytesIO objects
         works.
         """
-        testfile = testdata['FNETMTCATALOG']
+        testfile = os.path.join(self.path, 'data', 'FNETMTCATALOG')
         with open(testfile, "rb") as fh:
             buf = io.BytesIO(fh.read())
 
         with buf:
             read_events(buf)
 
-    def test_is_fnetmt_catalog(self, testdata, datapath):
+    def test_is_fnetmt_catalog(self):
         """
         This tests the _is_fnetmt_catalog method by validating that each file
         in the data directory is an F-net catalog file and each file in the
@@ -54,11 +60,11 @@ class TestFNETMTCatalogReading():
                                 '__init__.py']
         # Loop over F-net files
         for _i in fnetmt_filenames:
-            filename = testdata[_i]
+            filename = os.path.join(self.path, 'data', _i)
             is_fnetmt = _is_fnetmt_catalog(filename)
-            assert is_fnetmt
+            self.assertTrue(is_fnetmt)
         # Loop over non F-net files
         for _i in non_fnetmt_filenames:
-            filename = datapath.parent / _i
+            filename = os.path.join(self.path, _i)
             is_fnetmt = _is_fnetmt_catalog(filename)
-            assert not is_fnetmt
+            self.assertFalse(is_fnetmt)

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import unittest
 from copy import deepcopy
 
 import numpy as np
@@ -7,10 +8,9 @@ from obspy import Trace, UTCDateTime, read
 from obspy.signal.filter import (bandpass, bandstop, highpass, lowpass,
                                  lowpass_cheby_2)
 from obspy.signal.invsim import simulate_seismometer
-import pytest
 
 
-class TestTrace():
+class TraceTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.trace.Trace.
     """
@@ -88,27 +88,27 @@ class TestTrace():
                     traces_bkp[i].data,
                     df=traces_bkp[i].stats.sampling_rate, **filt_ops)
                 np.testing.assert_array_equal(tr.data, data_filt)
-                assert 'processing' in tr.stats
-                assert len(tr.stats.processing) == 1
-                assert "filter" in tr.stats.processing[0]
-                assert filt_type in tr.stats.processing[0]
+                self.assertIn('processing', tr.stats)
+                self.assertEqual(len(tr.stats.processing), 1)
+                self.assertIn("filter", tr.stats.processing[0])
+                self.assertIn(filt_type, tr.stats.processing[0])
                 for key, value in filt_ops.items():
-                    assert "'%s': %s" % (key, value) \
-                                    in tr.stats.processing[0]
+                    self.assertTrue("'%s': %s" % (key, value)
+                                    in tr.stats.processing[0])
                 # another filter run
                 tr.filter(filt_type, **filt_ops)
                 data_filt = filter_map[filt_type](
                     data_filt,
                     df=traces_bkp[i].stats.sampling_rate, **filt_ops)
                 np.testing.assert_array_equal(tr.data, data_filt)
-                assert 'processing' in tr.stats
-                assert len(tr.stats.processing) == 2
+                self.assertIn('processing', tr.stats)
+                self.assertEqual(len(tr.stats.processing), 2)
                 for proc_info in tr.stats.processing:
-                    assert "filter" in proc_info
-                    assert filt_type in proc_info
+                    self.assertIn("filter", proc_info)
+                    self.assertIn(filt_type, proc_info)
                     for key, value in filt_ops.items():
-                        assert "'%s': %s" % (key, value) \
-                                        in proc_info
+                        self.assertTrue("'%s': %s" % (key, value)
+                                        in proc_info)
 
         # some tests that should raise an Exception
         tr = traces[0]
@@ -123,15 +123,13 @@ class TestTrace():
             ['bandpass', {'freqmin': 5, 'corners': 6}],
             ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
         for filt_type, filt_ops in bad_filters:
-            with pytest.raises(TypeError):
-                tr.filter(filt_type, filt_ops)
+            self.assertRaises(TypeError, tr.filter, filt_type, filt_ops)
         bad_filters = [['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}]]
         for filt_type, filt_ops in bad_filters:
-            with pytest.raises(ValueError):
-                tr.filter(filt_type, **filt_ops)
+            self.assertRaises(ValueError, tr.filter, filt_type, **filt_ops)
         # test if trace is unchanged after all these bad tests
         np.testing.assert_array_equal(tr.data, traces_bkp[0].data)
-        assert tr.stats == traces_bkp[0].stats
+        self.assertEqual(tr.stats, traces_bkp[0].stats)
 
     def test_decimate(self):
         """
@@ -141,26 +139,23 @@ class TestTrace():
         tr = Trace(data=np.arange(20))
         tr_bkp = deepcopy(tr)
         # some test that should fail and leave the original trace alone
-        with pytest.raises(ValueError):
-            tr.decimate(7, strict_length=True)
-        with pytest.raises(ValueError):
-            tr.decimate(9, strict_length=True)
-        with pytest.raises(ArithmeticError):
-            tr.decimate(18)
+        self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
+        self.assertRaises(ValueError, tr.decimate, 9, strict_length=True)
+        self.assertRaises(ArithmeticError, tr.decimate, 18)
         # some tests in place
         tr.decimate(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 4))
-        assert tr.stats.npts == 5
-        assert tr.stats.sampling_rate == 0.25
-        assert "decimate" in tr.stats.processing[0]
-        assert "factor=4" in tr.stats.processing[0]
+        self.assertEqual(tr.stats.npts, 5)
+        self.assertEqual(tr.stats.sampling_rate, 0.25)
+        self.assertIn("decimate", tr.stats.processing[0])
+        self.assertIn("factor=4", tr.stats.processing[0])
         tr = tr_bkp.copy()
         tr.decimate(10, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 10))
-        assert tr.stats.npts == 2
-        assert tr.stats.sampling_rate == 0.1
-        assert "decimate" in tr.stats.processing[0]
-        assert "factor=10" in tr.stats.processing[0]
+        self.assertEqual(tr.stats.npts, 2)
+        self.assertEqual(tr.stats.sampling_rate, 0.1)
+        self.assertIn("decimate", tr.stats.processing[0])
+        self.assertIn("factor=10", tr.stats.processing[0])
         # some tests with automatic prefiltering
         tr = tr_bkp.copy()
         tr2 = tr_bkp.copy()
@@ -170,6 +165,6 @@ class TestTrace():
                                        df=df, maxorder=12, ba=False,
                                        freq_passband=True)
         # check that iteratively determined pass band frequency is correct
-        assert round(abs(0.0811378285461-fp), 7) == 0
+        self.assertAlmostEqual(0.0811378285461, fp, places=7)
         tr2.decimate(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, tr2.data)

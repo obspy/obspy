@@ -975,7 +975,13 @@ def _plot_detections(detections, similarities, stream=None, heights=None,
                 'similarity' if num2 == 1 else
                 'similarity template {}'.format(i))
         ax[num1 + i].annotate(text, **akw)
-    _set_xaxis_obspy_dates(ax[-1])
+    try:
+        _set_xaxis_obspy_dates(ax[-1])
+    except ValueError:
+        # work-around for python 2.7, minimum dependencies, see
+        # https://travis-ci.org/obspy/obspy/jobs/508313177
+        # can be safely removed later
+        pass
     plt.show()
 
 

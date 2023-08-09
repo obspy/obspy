@@ -1,13 +1,13 @@
 """
 Tests for rg16 utilities.
 """
+import unittest
 from io import BytesIO
 
 from obspy.io.rg16.util import _read, _read_bcd, _read_binary
-import pytest
 
 
-class TestRG16Util():
+class TestRG16Util(unittest.TestCase):
 
     def byte_io(self, byte_str):
         """
@@ -24,9 +24,10 @@ class TestRG16Util():
                (b'\x99\01', 1.5, True, 990), (b'\x99\01', 1.5, False, 901)]
         for byte, length, left_part, answer in bcd:
             out = _read_bcd(BytesIO(byte), length, left_part)
-            assert out == answer
-        with pytest.raises(ValueError, match='invalid bcd values'):
+            self.assertEqual(out, answer)
+        with self.assertRaises(ValueError) as e:
             _read_bcd(BytesIO(b'\xFF'), 1, True)
+        self.assertIn('invalid bcd values', str(e.exception))
 
     def test_read_binary(self):
         """
@@ -40,7 +41,7 @@ class TestRG16Util():
                   True, 1219770716358969536)]
         for byte, length, left_part, answer in binary:
             out = _read_binary(BytesIO(byte), length, left_part)
-            assert out == answer
+            self.assertEqual(out, answer)
 
     def test_read(self):
         """
@@ -48,4 +49,4 @@ class TestRG16Util():
         """
         ieee = b'\x40\x48\xf5\xc3'
         out = _read(BytesIO(ieee), 0, 4, 'IEEE')
-        assert abs(out-3.14) < 1e-6
+        self.assertAlmostEqual(out, 3.14, delta=1e-6)

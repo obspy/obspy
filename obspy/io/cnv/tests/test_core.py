@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import inspect
+import os
+import unittest
 import warnings
 
 from obspy import read_events
@@ -7,20 +10,25 @@ from obspy.io.cnv.core import _write_cnv
 from obspy.core.util import NamedTemporaryFile
 
 
-class TestCNV():
+class CNVTestCase(unittest.TestCase):
     """
     Test suite for obspy.io.cnv
     """
-    def test_write_cnv(self, testdata):
+    def setUp(self):
+        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe())))
+        self.datapath = os.path.join(self.path, "data")
+
+    def test_write_cnv(self):
         """
         Test writing CNV catalog summary file.
         """
         # load QuakeML file to generate CNV file from it
-        filename = testdata['obspyck_20141020150701.xml']
+        filename = os.path.join(self.datapath, "obspyck_20141020150701.xml")
         cat = read_events(filename, format="QUAKEML")
 
         # read expected OBS file output
-        filename = testdata['obspyck_20141020150701.cnv']
+        filename = os.path.join(self.datapath, "obspyck_20141020150701.cnv")
         with open(filename, "rb") as fh:
             expected = fh.read().decode()
 
@@ -30,7 +38,7 @@ class TestCNV():
             tf.seek(0)
             got = tf.read().decode()
 
-        assert expected.splitlines() == got.splitlines()
+        self.assertEqual(expected.splitlines(), got.splitlines())
 
         # write manually
         with NamedTemporaryFile() as tf:
@@ -38,7 +46,7 @@ class TestCNV():
             tf.seek(0)
             got = tf.read().decode()
 
-        assert expected.splitlines() == got.splitlines()
+        self.assertEqual(expected.splitlines(), got.splitlines())
 
         # write via plugin and with phase_mapping
         with NamedTemporaryFile() as tf:
@@ -46,11 +54,11 @@ class TestCNV():
             tf.seek(0)
             got = tf.read().decode()
 
-        assert expected.splitlines() == got.splitlines()
+        self.assertEqual(expected.splitlines(), got.splitlines())
 
         # write via plugin and with phase_mapping with only P
         # read expected OBS file output
-        filename = testdata['obspyck_20141020150701_P.cnv']
+        filename = os.path.join(self.datapath, "obspyck_20141020150701_P.cnv")
         with open(filename, "rb") as fh:
             expected = fh.read().decode()
 
@@ -62,7 +70,7 @@ class TestCNV():
                 tf.seek(0)
                 got = tf.read().decode()
                 # There should be 4 S warnings for the 4 S phases:
-                assert len(w) == 4
+                self.assertEqual(len(w), 4)
                 assert "with unmapped phase hint: S" in str(w[-1].message)
 
-        assert expected.splitlines() == got.splitlines()
+        self.assertEqual(expected.splitlines(), got.splitlines())

@@ -1,6 +1,0 @@
-[Main]
-question = "What is the low-frequency corner?"
-
-[0 Hz]
-path = "ela-GMSseries_LF0.txt"
-

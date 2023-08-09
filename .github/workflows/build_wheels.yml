@@ -40,6 +40,9 @@ jobs:
             exclude-flag: true
           - build: cp310
             exclude-flag: true
+          # lxml wheel not yet present so build fails
+          - build: cp311
+            os: windows-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -59,7 +62,7 @@ jobs:
           echo "CIBW_TEST_COMMAND: $CIBW_TEST_COMMAND"
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v2.14.1
+        uses: pypa/cibuildwheel@v2.11.2
 
       - uses: actions/upload-artifact@v3
         with:
@@ -93,7 +96,7 @@ jobs:
           name: artifact
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@v1.8.8
+      - uses: pypa/gh-action-pypi-publish@v1.5.1
         with:
           user: __token__
           password: ${{ secrets.TESTPYPI }}
@@ -109,7 +112,7 @@ jobs:
         with:
           name: artifact
           path: dist
-      - uses: pypa/gh-action-pypi-publish@v1.8.8
+      - uses: pypa/gh-action-pypi-publish@v1.5.1
         with:
           user: __token__
           password: ${{ secrets.PYPI }}

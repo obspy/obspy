@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import inspect
+import os
+
 import numpy as np
 
 from obspy.taup.velocity_model import VelocityModel
 
 
+# Most generic way to get the data folder path.
+DATA = os.path.join(os.path.dirname(os.path.abspath(
+    inspect.getfile(inspect.currentframe()))), "data")
+
+
 class TestTauPyVelocityModel:
-    def test_read_velocity_model(self, testdata):
+    def test_read_velocity_model(self):
         for filename in ['iasp91.tvel', 'iasp91_w_comment.tvel', 'iasp91.nd',
                          'iasp91_w_comment.nd']:
-            velocity_model = testdata[filename]
+            velocity_model = os.path.join(DATA, filename)
             test2 = VelocityModel.read_velocity_file(velocity_model)
 
             assert len(test2.layers) == 129

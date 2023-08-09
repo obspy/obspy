@@ -3,6 +3,7 @@ import io
 import os
 import pickle
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -193,6 +194,11 @@ class TestCatalog:
     """
     Test suite for obspy.core.event.Catalog
     """
+    path = os.path.join(os.path.dirname(__file__), 'data')
+    image_dir = os.path.join(os.path.dirname(__file__), 'images')
+    iris_xml = os.path.join(path, 'iris_events.xml')
+    neries_xml = os.path.join(path, 'neries_events.xml')
+
     def test_read_invalid_filename(self):
         """
         Tests that we get a sane error message when calling read_events()
@@ -240,31 +246,31 @@ class TestCatalog:
         assert catalog.__str__().endswith(
             "37.736 | 3.0  ML | manual")
 
-    def test_read_events(self, testdata):
+    def test_read_events(self):
         """
         Tests the read_events() function using entry points.
         """
         # iris
-        catalog = read_events(testdata['iris_events.xml'])
+        catalog = read_events(self.iris_xml)
         assert len(catalog) == 2
         assert catalog[0]._format == 'QUAKEML'
         assert catalog[1]._format == 'QUAKEML'
         # neries
-        catalog = read_events(testdata['neries_events.xml'])
+        catalog = read_events(self.neries_xml)
         assert len(catalog) == 3
         assert catalog[0]._format == 'QUAKEML'
         assert catalog[1]._format == 'QUAKEML'
         assert catalog[2]._format == 'QUAKEML'
 
-    def test_read_events_with_wildcard(self, datapath, testdata):
+    def test_read_events_with_wildcard(self):
         """
         Tests the read_events() function with a filename wild card.
         """
         # without wildcard..
-        expected = read_events(testdata['iris_events.xml'])
-        expected += read_events(testdata['neries_events.xml'])
+        expected = read_events(self.iris_xml)
+        expected += read_events(self.neries_xml)
         # with wildcard
-        got = read_events(datapath / "*_events.xml")
+        got = read_events(os.path.join(self.path, "*_events.xml"))
         assert expected == got
 
     def test_append(self):
@@ -454,11 +460,11 @@ class TestCatalog:
                 '%s >= %s' % (attr_filter, value), inverse=True)
             assert all(event in cat_smaller for event in cat_bigger_inverse)
 
-    def test_catalog_resource_id(self, testdata):
+    def test_catalog_resource_id(self):
         """
         See #662
         """
-        cat = read_events(testdata['neries_events.xml'])
+        cat = read_events(self.neries_xml)
         assert str(cat.resource_id) == r"smi://eu.emsc/unid"
 
     def test_can_pickle(self):
@@ -488,12 +494,13 @@ class TestCatalog:
         # saved and loaded event should be equal
         assert event1 == event2
 
-    def test_read_path(self, testdata):
+    def test_read_path(self):
         """
         Ensure read_events works with pathlib.Path objects.
         """
-        assert read_events(str(testdata['iris_events.xml'])) == \
-            read_events(testdata['iris_events.xml'])
+        path = Path(self.iris_xml)
+        cat = read_events(path)
+        assert cat == read_events(self.iris_xml)
 
 
 @pytest.mark.skipif(not HAS_CARTOPY,

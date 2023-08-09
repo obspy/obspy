@@ -11,7 +11,6 @@ Classes related to instrument responses.
 """
 import copy
 import ctypes as C  # NOQA
-import collections.abc
 from collections import defaultdict
 from copy import deepcopy
 import itertools
@@ -20,6 +19,7 @@ import warnings
 
 import numpy as np
 
+from .. import compatibility
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
@@ -400,7 +400,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._numerator = []
             return
         value = list(value) if isinstance(
-            value, collections.abc.Iterable) else [value]
+            value, compatibility.collections_abc.Iterable) else [value]
         if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
@@ -419,7 +419,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._denominator = []
             return
         value = list(value) if isinstance(
-            value, collections.abc.Iterable) else [value]
+            value, compatibility.collections_abc.Iterable) else [value]
         if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
@@ -992,20 +992,15 @@ class Response(ComparingObject):
             "VEL": ["M/S", "M/SEC"],
             "ACC": ["M/S**2", "M/(S**2)", "M/SEC**2", "M/(SEC**2)",
                     "M/S/S"]}
-
+        unit = None
         for key, value in unit_map.items():
             if i_u and i_u.upper() in value:
                 unit = key
-                break
-        else:
-            unit = "DEF"
-            msg = (f"ObsPy can not map unit '{i_u}' to "
-                   f"displacement, velocity, or acceleration - "
-                   f"evalresp should still work and just use the response as "
-                   f"is. This might not be covered by tests, though, so "
-                   f"proceed with caution and report any unexpected "
-                   f"behavior.")
-            warnings.warn(msg)
+        if not unit:
+            msg = ("ObsPy does not know how to map unit '%s' to "
+                   "displacement, velocity, or acceleration - overall "
+                   "sensitivity will not be recalculated.") % i_u
+            raise ValueError(msg)
 
         # Determine frequency if not given.
         if frequency is None:

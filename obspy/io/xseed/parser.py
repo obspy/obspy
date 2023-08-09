@@ -18,7 +18,6 @@ import os
 import re
 import warnings
 import zipfile
-from pathlib import Path
 
 from lxml import etree
 from lxml.etree import parse as xmlparse
@@ -172,11 +171,7 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into BytesIO object
-        potential_filename_provided = None
-        if isinstance(data, (str, Path)):
-            if isinstance(data, Path):
-                data = str(data)
-            potential_filename_provided = data
+        if isinstance(data, str):
             if re.search(r"://", data) is not None:
                 url = data
                 data = io.BytesIO()
@@ -234,11 +229,7 @@ class Parser(object):
                 raise
             self._format = 'XSEED'
         else:
-            msg = "First byte of data must be in [0-9<]"
-            if potential_filename_provided is not None \
-                    and not os.path.exists(potential_filename_provided):
-                msg += '. If a filename was provided, the file does not exist.'
-            raise IOError(msg)
+            raise IOError("First byte of data must be in [0-9<]")
 
     def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
@@ -1592,24 +1583,9 @@ class Parser(object):
                     34, b55.stage_input_units)
                 o_u = self.resolve_abbreviation(
                     34, b55.stage_output_units)
-                if len([_i for _i in blkts if _i.id == 55]) == 1:
-                    response_list = [
-                        ResponseListElement(f, a, p) for f, a, p in
-                        zip(b55.frequency, b55.amplitude, b55.phase_angle)]
-                # allow mutiple blockette 55
-                else:
-                    _freq = []
-                    _amp = []
-                    _phase = []
-                    for _i in blkts:
-                        if _i.id == 55:
-                            _freq += _i.frequency
-                            _amp += _i.amplitude
-                            _phase += _i.phase_angle
-                    response_list = [
-                        ResponseListElement(f, a, p) for f, a, p in
-                        zip(_freq, _amp, _phase)]
-
+                response_list = [
+                    ResponseListElement(f, a, p) for f, a, p in
+                    zip(b55.frequency, b55.amplitude, b55.phase_angle)]
                 response_stages.append(ResponseListResponseStage(
                     stage_sequence_number=b55.stage_sequence_number,
                     stage_gain=b58.sensitivity_gain if b58 else None,

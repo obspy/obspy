@@ -4,6 +4,8 @@
 The obspy.io.css.core test suite.
 """
 import gzip
+import os
+import unittest
 
 import numpy as np
 
@@ -12,19 +14,19 @@ from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.css.core import (_is_css, _read_css, _is_nnsa_kb_core,
                                _read_nnsa_kb_core)
-import pytest
 
 
-class TestCore():
+class CoreTestCase(unittest.TestCase):
     """
     Test cases for css core interface
     """
-    @pytest.fixture(autouse=True, scope="function")
-    def setup(self, testdata):
-        self.filename_css = testdata['test_css.wfdisc']
-        self.filename_nnsa = testdata['test_nnsa.wfdisc']
-        self.filename_css_2 = testdata['test_css_2.wfdisc']
-        self.filename_css_3 = testdata['test_css_3.wfdisc']
+    def setUp(self):
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        self.filename_css = os.path.join(self.path, 'test_css.wfdisc')
+        self.filename_nnsa = os.path.join(self.path, 'test_nnsa.wfdisc')
+        self.filename_css_2 = os.path.join(self.path, 'test_css_2.wfdisc')
+        self.filename_css_3 = os.path.join(self.path, 'test_css_3.wfdisc')
         # set up stream for validation
         header = {}
         header['station'] = 'TEST'
@@ -33,7 +35,7 @@ class TestCore():
         header['calib'] = 1.0
         header['calper'] = 1.0
         header['_format'] = 'CSS'
-        filename = testdata['201101311155.10.ascii.gz']
+        filename = os.path.join(self.path, '201101311155.10.ascii.gz')
         with gzip.open(filename, 'rb') as fp:
             data = np.loadtxt(fp, dtype=np.int_)
         # traces in the test files are sorted ZEN
@@ -92,7 +94,7 @@ class TestCore():
         """
         # 1
         st = read(self.filename_css)
-        assert st == self.st_result_css
+        self.assertEqual(st, self.st_result_css)
 
     def test_css_read_via_module(self):
         """
@@ -103,7 +105,7 @@ class TestCore():
         # _format entry is not present when using low-level function
         for tr in self.st_result_css:
             tr.stats.pop('_format')
-        assert st == self.st_result_css
+        self.assertEqual(st, self.st_result_css)
 
     def test_nnsa_kb_core_read_via_obspy(self):
         """
@@ -111,7 +113,7 @@ class TestCore():
         """
         # 1
         st = read(self.filename_nnsa)
-        assert st == self.st_result_nnsa
+        self.assertEqual(st, self.st_result_nnsa)
 
     def test_nnsa_kb_core_read_via_module(self):
         """
@@ -122,7 +124,7 @@ class TestCore():
         # _format entry is not present when using low-level function
         for tr in self.st_result_nnsa:
             tr.stats.pop('_format')
-        assert st == self.st_result_nnsa
+        self.assertEqual(st, self.st_result_nnsa)
 
     def test_css_2_read_via_module(self):
         """
@@ -134,7 +136,7 @@ class TestCore():
         # _format entry is not present when using low-level function
         for tr in self.st_result_css:
             tr.stats.pop('_format')
-        assert st == self.st_result_css
+        self.assertEqual(st, self.st_result_css)
 
     def test_css_3_read_via_module(self):
         """
@@ -142,5 +144,4 @@ class TestCore():
         Exception if waveform file is missing.
         """
         # 1
-        with pytest.raises(FileNotFoundError):
-            _read_css(self.filename_css_3)
+        self.assertRaises(FileNotFoundError, _read_css, self.filename_css_3)

@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
+import os
+import unittest
+
 from obspy import read_inventory, read_events
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.testing import compare_xml_strings
 
 
-class TestKML():
+class KMLTestCase(unittest.TestCase):
     """
     Test KML output of Inventory/Catalog.
     """
-    def test_write_inventory(self, testdata):
+    def setUp(self):
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+
+    def test_write_inventory(self):
         """
         Test writing Inventory to KML.
         """
@@ -19,13 +26,13 @@ class TestKML():
             with open(tf.name, "rb") as fh:
                 got = fh.read()
         # read expected result into string
-        filename = testdata['inventory.kml']
+        filename = os.path.join(self.path, 'inventory.kml')
         with open(filename, "rb") as fh:
             expected = fh.read()
         # compare the two
         compare_xml_strings(expected, got)
 
-    def test_write_catalog(self, testdata):
+    def test_write_catalog(self):
         """
         Test writing Catalog to KML.
         """
@@ -36,7 +43,7 @@ class TestKML():
             with open(tf.name, "rb") as fh:
                 got = fh.read()
         # read expected result into string
-        filename = testdata['catalog.kml']
+        filename = os.path.join(self.path, 'catalog.kml')
         with open(filename, "rb") as fh:
             expected = fh.read()
         # compare the two

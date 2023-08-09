@@ -81,18 +81,13 @@ EXTERNAL_EVALRESP = False
 EXTERNAL_LIBMSEED = False
 
 # Hard dependencies needed to install/run ObsPy.
-# Backwards compatibility hacks to be removed later:
-#  - matplotlib 3.3 (/3.4?): imaging (see #3242)
-# sqlalchemy pinned to <2.0 for now because of API changes that break
-# clients.filesystem.db. We suppress warnings in that module and also see
-# pytest.ini for some rules to ignore related warnings
 INSTALL_REQUIRES = [
     'numpy>=1.20',
     'scipy>=1.7',
     'matplotlib>=3.3',
     'lxml',
     'setuptools',
-    'sqlalchemy>=1.4',
+    'sqlalchemy',
     'decorator',
     'requests',
 ]
@@ -334,10 +329,7 @@ ENTRY_POINTS = {
         'IMS10BULLETIN = obspy.io.iaspei.core',
         'EVT = obspy.io.sh.evt',
         'FOCMEC = obspy.io.focmec.core',
-        'HYPODDPHA = obspy.io.hypodd.pha',
-        'CSV = obspy.io.csv.core',
-        'CSZ = obspy.io.csv.core',
-        'EVENTTXT = obspy.io.csv.core',
+        'HYPODDPHA = obspy.io.hypodd.pha'
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -420,21 +412,6 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.hypodd.pha:_is_pha',
         'readFormat = obspy.io.hypodd.pha:_read_pha',
         'writeFormat = obspy.io.hypodd.pha:_write_pha',
-        ],
-    'obspy.plugin.event.CSV': [
-        'isFormat = obspy.io.csv.core:_is_csv',
-        'readFormat = obspy.io.csv.core:_read_csv',
-        'writeFormat = obspy.io.csv.core:_write_csv',
-        ],
-    'obspy.plugin.event.CSZ': [
-        'isFormat = obspy.io.csv.core:_is_csz',
-        'readFormat = obspy.io.csv.core:_read_csz',
-        'writeFormat = obspy.io.csv.core:_write_csz',
-        ],
-    'obspy.plugin.event.EVENTTXT': [
-        'isFormat = obspy.io.csv.core:_is_eventtxt',
-        'readFormat = obspy.io.csv.core:_read_eventtxt',
-        'writeFormat = obspy.io.csv.core:_write_eventtxt',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
@@ -532,26 +509,23 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosine_taper',
-        'barthann = scipy.signal.windows:barthann',
-        'bartlett = scipy.signal.windows:bartlett',
-        'blackman = scipy.signal.windows:blackman',
-        'blackmanharris = scipy.signal.windows:blackmanharris',
-        'bohman = scipy.signal.windows:bohman',
-        'boxcar = scipy.signal.windows:boxcar',
-        'chebwin = scipy.signal.windows:chebwin',
-        'flattop = scipy.signal.windows:flattop',
-        'gaussian = scipy.signal.windows:gaussian',
-        'general_gaussian = scipy.signal.windows:general_gaussian',
-        'hamming = scipy.signal.windows:hamming',
-        'hann = scipy.signal.windows:hann',
-        'kaiser = scipy.signal.windows:kaiser',
-        'nuttall = scipy.signal.windows:nuttall',
-        'parzen = scipy.signal.windows:parzen',
-        # TODO slepian has been removed from scipy with version 1.6.0
-        # see https://docs.scipy.org/doc/scipy/release/1.1.0-notes.html
-        # see https://docs.scipy.org/doc/scipy/release/1.6.0-notes.html
-        'slepian = scipy.signal.windows:slepian',
-        'triang = scipy.signal.windows:triang',
+        'barthann = scipy.signal:barthann',
+        'bartlett = scipy.signal:bartlett',
+        'blackman = scipy.signal:blackman',
+        'blackmanharris = scipy.signal:blackmanharris',
+        'bohman = scipy.signal:bohman',
+        'boxcar = scipy.signal:boxcar',
+        'chebwin = scipy.signal:chebwin',
+        'flattop = scipy.signal:flattop',
+        'gaussian = scipy.signal:gaussian',
+        'general_gaussian = scipy.signal:general_gaussian',
+        'hamming = scipy.signal:hamming',
+        'hann = scipy.signal:hann',
+        'kaiser = scipy.signal:kaiser',
+        'nuttall = scipy.signal:nuttall',
+        'parzen = scipy.signal:parzen',
+        'slepian = scipy.signal:slepian',
+        'triang = scipy.signal:triang',
         ],
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recursive_sta_lta',
@@ -561,8 +535,6 @@ ENTRY_POINTS = {
         'zdetect = obspy.signal.trigger:z_detect',
         'recstaltapy = obspy.signal.trigger:recursive_sta_lta_py',
         'classicstaltapy = obspy.signal.trigger:classic_sta_lta_py',
-        'energyratio = obspy.signal.trigger:energy_ratio',
-        'modifiedenergyratio = obspy.signal.trigger:modified_energy_ratio',
         ],
     }
 
@@ -822,7 +794,7 @@ def setupPackage():
             'obspy.io.css': ['contrib/*'],
             # NOTE: If the libmseed test data wasn't used in our tests, we
             # could just ignore src/* everywhere.
-            'obspy.io.gcf': ['src/*'],
+            'obspy.io.gcf':['src/*'],
             'obspy.io.gse2': ['src/*'],
             'obspy.io.mseed': [
                 # Only keep src/libmseed/test/* except for the C files.

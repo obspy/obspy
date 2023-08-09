@@ -9,21 +9,24 @@ Test suite for the CSS station writer.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import fnmatch
+import inspect
 import os
-import pytest
 import shutil
 import tempfile
+import unittest
 
 import obspy
 
 
-class TestCSSStation():
+class CSSStationTestCase(unittest.TestCase):
     """
     Test cases for css station interface
     """
-    @pytest.fixture(autouse=True, scope="function")
-    def setup(self, datapath):
-        self.data_dir = datapath / 'station'
+    def setUp(self):
+        # Most generic way to get the actual data directory.
+        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
+            inspect.getfile(inspect.currentframe()))), 'data', 'station')
 
     def _run_test(self, inv, fname):
         tempdir = tempfile.mkdtemp(prefix='obspy-')
@@ -31,10 +34,10 @@ class TestCSSStation():
         try:
             inv.write(os.path.join(tempdir, fname), format='CSS')
 
-            expected_files = sorted(
-                path.name for path in self.data_dir.glob(fname + '.*'))
+            expected_files = sorted(name for name in os.listdir(self.data_dir)
+                                    if fnmatch.fnmatch(name, fname + '.*'))
             actual_files = sorted(os.listdir(tempdir))
-            assert expected_files == actual_files
+            self.assertEqual(expected_files, actual_files)
 
             for expected, actual in zip(expected_files, actual_files):
                 with open(os.path.join(self.data_dir, expected), 'rt') as f:
@@ -42,7 +45,7 @@ class TestCSSStation():
                 with open(os.path.join(tempdir, actual), 'rt') as f:
                     actual_text = f.readlines()
 
-                assert expected_text == actual_text
+                self.assertEqual(expected_text, actual_text)
 
         finally:
             shutil.rmtree(tempdir)

@@ -16,12 +16,13 @@ import codecs
 import io
 import os
 import warnings
-from configparser import ConfigParser
+from configparser import ConfigParser, DuplicateSectionError
 from urllib.parse import urlparse
 
 import requests
 
 import obspy
+from obspy.core.compatibility import get_text_from_response
 from obspy.core.inventory.util import _textwrap
 from obspy.core.util.decorator import deprecated
 
@@ -69,10 +70,6 @@ class NRL(object):
             datalogger_index = self._join(self.root, 'dataloggers',
                                           self._index)
             self.dataloggers = self._parse_ini(datalogger_index)
-            # add empty dummies for integrated and soh which do not exist in
-            # old NRL v1 just to be a little bit more consistent
-            self.integrated = NRLDict(self)
-            self.soh = NRLDict(self)
             self._nrl_version = 1
         except FileNotFoundError:
             sensor_index = self._join(self.root, 'sensor', self._index)
@@ -81,10 +78,6 @@ class NRL(object):
             datalogger_index = self._join(self.root, 'datalogger', self._index)
             self.dataloggers = self._parse_ini(datalogger_index)
             # version 2 also has additional base nodes "integrated" and "soh"
-            integrated_index = self._join(self.root, 'integrated', self._index)
-            self.integrated = self._parse_ini(integrated_index)
-            soh_index = self._join(self.root, 'soh', self._index)
-            self.soh = self._parse_ini(soh_index)
             self._nrl_version = 2
 
     def __str__(self):
@@ -186,29 +179,16 @@ class NRL(object):
         :type datalogger_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        response = self._get_response('dataloggers', keys=datalogger_keys)
-        first_stage = response.response_stages[0]
+        datalogger = self.dataloggers
+        for key in datalogger_keys:
+            datalogger = datalogger[key]
 
-        if self._nrl_version == 2 and not first_stage.input_units:
-            msg = ("Undefined input units in stage one. Most datalogger-only "
-                   "responses in NRL v2 have a gain-only stage without units "
-                   "specified as first stage. This has to be fixed manually "
-                   "if necessary (first stage input units would usually be "
-                   "'V' for volt). Also input units in overall instrument "
-                   "sensitivity might have to be fixed manually.")
-            warnings.warn(msg)
-        if self._nrl_version == 2 \
-                and first_stage.input_units.lower() in ("count", "counts"):
-            msg = (f"First stage input units are '{first_stage.input_units}'. "
-                   "When requesting a datalogger-only response from NRL v2, "
-                   "for many cases the units of the first stage and also the "
-                   "instrument overall sensitivity have to be fixed manually. "
-                   "In general for these, input units should be 'V' for volt "
-                   "and output units should be the same as second stage input "
-                   "units, which usually are set correctly (either volt or "
-                   "counts).")
-            warnings.warn(msg)
-        return response
+        # Parse to an inventory object and return a response object.
+        description, path, resp_type = datalogger
+        with io.BytesIO(self._read_resp(path).encode()) as buf:
+            buf.seek(0, 0)
+            return obspy.read_inventory(
+                buf, format=resp_type)[0][0][0].response
 
     def get_sensor_response(self, sensor_keys):
         """
@@ -217,52 +197,12 @@ class NRL(object):
         :type sensor_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        return self._get_response('sensors', keys=sensor_keys)
-
-    def get_integrated_response(self, keys):
-        """
-        Get an integrated response.
-
-        :type keys: list[str]
-        :rtype: :class:`~obspy.core.inventory.response.Response`
-        """
-        if self._nrl_version == 1:
-            msg = ('Integrated responses are only available in the new NRL v2 '
-                   '(https://ds.iris.edu/ds/nrl/)')
-            raise Exception(msg)
-        return self._get_response('integrated', keys=keys)
-
-    def get_soh_response(self, keys):
-        """
-        Get a SOH response.
-
-        :type keys: list[str]
-        :rtype: :class:`~obspy.core.inventory.response.Response`
-        """
-        if self._nrl_version == 1:
-            msg = ('SOH responses are only available in the new NRL v2 '
-                   '(https://ds.iris.edu/ds/nrl/)')
-            raise Exception(msg)
-        return self._get_response('soh', keys=keys)
-
-    def _get_response(self, base, keys):
-        """
-        Internal helper method to fetch a response
-
-        This circumvents the warning message that is shown for NRL v2 when a
-        datalogger-only response is fetched
-
-        :type base: str
-        :param base: either "sensors" or "dataloggers"
-        :type keys: list of str
-        :param keys: list of lookup keys
-        """
-        node = getattr(self, base)
-        for key in keys:
-            node = node[key]
+        sensor = self.sensors
+        for key in sensor_keys:
+            sensor = sensor[key]
 
         # Parse to an inventory object and return a response object.
-        description, path, resp_type = node
+        description, path, resp_type = sensor
         with io.BytesIO(self._read_resp(path).encode()) as buf:
             buf.seek(0, 0)
             return obspy.read_inventory(
@@ -299,9 +239,8 @@ class NRL(object):
             Stage 9: Coefficients... from COUNTS to COUNTS, gain: 1
             Stage 10: Coefficients... from COUNTS to COUNTS, gain: 1
         """
-        dl_resp = self._get_response("dataloggers", keys=datalogger_keys)
-        dl_first_stage = dl_resp.response_stages[0]
-        sensor_resp = self._get_response("sensors", keys=sensor_keys)
+        dl_resp = self.get_datalogger_response(datalogger_keys)
+        sensor_resp = self.get_sensor_response(sensor_keys)
         sensor_stage0 = sensor_resp.response_stages[0]
 
         # information on changes between NRL v1 and v2:
@@ -312,16 +251,6 @@ class NRL(object):
             dl_resp.response_stages.pop(0)
             dl_resp.response_stages.insert(0, sensor_stage0)
         elif self._nrl_version == 2:
-            # in principal we would simply want to avoid trying to fix units of
-            # gain-only stages at this point in the get_datalogger_response()
-            # call, because it would fix it half way and then trying to fix it
-            # later would get skipped with the current implementation of
-            # Response._attempt_to_fix_units().  However we would have to pass
-            # an option through around seven function calls during reading
-            # StationXML to get it down to io.stationxml.core._read_response()
-            # so it would mean cluttering that module some, so for now it seems
-            # less invasive to correct this problem later on, see below long
-            # comment
             for stage in dl_resp.response_stages:
                 stage.stage_sequence_number += len(sensor_resp.response_stages)
             dl_resp.response_stages = (
@@ -331,38 +260,6 @@ class NRL(object):
         dl_resp.instrument_sensitivity.input_units = sensor_stage0.input_units
         dl_resp.instrument_sensitivity.input_units_description = \
             sensor_stage0.input_units_description
-
-        # NRLv2 seems to have the majority of datalogger responses with a
-        # stage-gain-only minimal response stage without units as first stage
-        # and also the instrument sensitivity object lacking input units (which
-        # should be "V" for "volts"). The instrument sensitivity input units
-        # are fixed above already but for most cases we still have to fix the
-        # input/output units for the aforementioned first datalogger stage.
-        # Unfortunately they are halfway fixed during the read operation for
-        # the datalogger-only response part (at least in the NRLv2 StationXML
-        # variant), so calling that helper again would not do anything, unless
-        # we set both input and output for that stage to None again.
-        # In principle the cleaner solution would be to avoid calling
-        # `Response._attempt_to_fix_units()` at the end of the read operation
-        # on the datalogger-only response part, but that would mean adding a
-        # lot of clutter by having to pass that option through a long chain of
-        # function calls in io.stationxml.core only because of this edge case
-        # of reading NRL responses, so the following seems overall cleaner and
-        # should be safe anyway assuming the surrounding stages have valid
-        # information on units, which they seem to have in NRLv2 database
-        # In general this gain-only stage happens only as the first stage of
-        # the datalogger-only response, but some few dataloggers also have a
-        # gain-only stage without units in the middle of the response. But the
-        # current approach is able to fill in the units and fix the unit chain
-        # from the neighboring stages (e.g. the case for
-        # 'datalogger/SeismicSource/Sigma4_PG1_FR250_DF0.1.xml')
-        if self._nrl_version == 2:
-            dl_first_stage.input_units = None
-            dl_first_stage.input_units_description = None
-            dl_first_stage.output_units = None
-            dl_first_stage.output_units_description = None
-            dl_resp._attempt_to_fix_units()
-
         try:
             dl_resp.recalculate_overall_sensitivity()
         except ValueError:
@@ -418,9 +315,17 @@ class LocalNRL(NRL):
         """
         Returns a configparser from a path to an index.txt
         """
-        cp = ConfigParser()
-        with codecs.open(path, mode='r', encoding='UTF-8') as f:
-            cp.read_file(f)
+        try:
+            cp = ConfigParser()
+            with codecs.open(path, mode='r', encoding='UTF-8') as f:
+                cp.read_file(f)
+        # it seems requesting a full RESP archive of NRL version 2 has all
+        # items duplicated in the index.txt files. expecting this to be fixed
+        # upstream so this is just for now
+        except DuplicateSectionError:
+            cp = ConfigParser(strict=False)
+            with codecs.open(path, mode='r', encoding='UTF-8') as f:
+                cp.read_file(f)
         return cp
 
     def _read_resp(self, path):
@@ -461,7 +366,7 @@ class RemoteNRL(NRL):
         """
         if url not in _remote_nrl_cache:
             r = requests.get(url)
-            _remote_nrl_cache[url] = r.text
+            _remote_nrl_cache[url] = get_text_from_response(r)
         return _remote_nrl_cache[url]
 
     def _join(self, *paths):

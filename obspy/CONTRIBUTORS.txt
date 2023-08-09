@@ -25,7 +25,6 @@ Chambers, Derrick
 Chen, Zhao
 Clark, Adam
 Crawford, Wayne
-Crotwell, Philip
 Danecek, Peter
 van Driel, Martin
 Egdorf, Sven
@@ -106,14 +105,12 @@ Scheingraber, Chris
 Schmidt, Peter
 Schneider, Felix M.
 Schneider, Simon
-Shimizu, Toshiya
 Sippl, Christian
 Snoke, Arthur
 Stähler, Simon C.
 Stange, Stefan
 Strutz, Dominik
 Sullivan, Benjamin
-Tazawa, Kota
 Tian, Dongdong
 Toney, Liam
 Trabant, Chad
@@ -122,7 +119,6 @@ Uieda, Leonardo
 Ulianych, Danylo
 Walker, Andrew
 Walther, Marcus
-Wang, Sheng
 Wang, Yinzhi
 Wassermann, Joachim
 van Wijk, Kasper

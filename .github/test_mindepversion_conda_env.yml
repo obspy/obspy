@@ -11,8 +11,7 @@ dependencies:
   - lxml
   - requests
   - setuptools
-  # see #3258
-  - sqlalchemy < 2.0
+  - sqlalchemy
   # soft dependencies
   - cartopy
   - geographiclib

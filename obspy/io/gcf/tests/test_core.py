@@ -3,6 +3,9 @@
 """
 The obspy.io.gcf.core test suite.
 """
+import os
+import unittest
+
 import numpy as np
 import pytest
 
@@ -19,104 +22,108 @@ EXPECTED = np.array([-49378, -49213, -49273, -49277, -49341, -49415, -49289,
                     dtype=np.int32)
 
 
-class TestCore():
+class CoreTestCase(unittest.TestCase):
     """
     Test cases for gcf core interface
     """
-    def test_read_via_obspy(self, testdata):
+    def setUp(self):
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+
+    def test_read_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = testdata['20160603_1955n.gcf']
+        filename = os.path.join(self.path, '20160603_1955n.gcf')
         # 1
         st = read(filename)
         st.verify()
-        assert len(st) == 1
-        assert st[0].stats.starttime == \
-            UTCDateTime('2016-06-03T19:55:00.000000Z')
-        assert st[0].stats.endtime == \
-            UTCDateTime('2016-06-03T19:55:02.990000Z')
-        assert len(st[0]) == 300
-        assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
-        assert st[0].stats.channel == 'HHN'
-        assert st[0].stats.station == '6018'
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2016-06-03T19:55:00.000000Z'))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime('2016-06-03T19:55:02.990000Z'))
+        self.assertEqual(len(st[0]), 300)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.channel, 'HHN')
+        self.assertEqual(st[0].stats.station, '6018')
         np.testing.assert_array_equal(EXPECTED, st[0].data[:20])
 
-    def test_read_head_via_obspy(self, testdata):
+    def test_read_head_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = testdata['20160603_1955n.gcf']
+        filename = os.path.join(self.path, '20160603_1955n.gcf')
         # 1
         st = read(filename, headonly=True)
-        assert len(st) == 1
-        assert st[0].stats.starttime == \
-            UTCDateTime('2016-06-03T19:55:00.000000Z')
-        assert st[0].stats.endtime == \
-            UTCDateTime('2016-06-03T19:55:02.990000Z')
-        assert st[0].stats.npts == 300
-        assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
-        assert st[0].stats.channel == 'HHN'
-        assert st[0].stats.station == '6018'
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2016-06-03T19:55:00.000000Z'))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime('2016-06-03T19:55:02.990000Z'))
+        self.assertEqual(st[0].stats.npts, 300)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.channel, 'HHN')
+        self.assertEqual(st[0].stats.station, '6018')
 
-    def test_read_via_module(self, testdata):
+    def test_read_via_module(self):
         """
         Read files via obspy.io.gcf.core._read_gcf function.
         """
-        filename = testdata['20160603_1955n.gcf']
+        filename = os.path.join(self.path, '20160603_1955n.gcf')
         # 1
         st = _read_gcf(filename)
         st.verify()
-        assert len(st) == 1
-        assert st[0].stats.starttime == \
-            UTCDateTime('2016-06-03T19:55:00.000000Z')
-        assert st[0].stats.endtime == \
-            UTCDateTime('2016-06-03T19:55:02.990000Z')
-        assert len(st[0]) == 300
-        assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
-        assert st[0].stats.channel == 'HHN'
-        assert st[0].stats.station == '6018'
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2016-06-03T19:55:00.000000Z'))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime('2016-06-03T19:55:02.990000Z'))
+        self.assertEqual(len(st[0]), 300)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.channel, 'HHN')
+        self.assertEqual(st[0].stats.station, '6018')
         np.testing.assert_array_equal(EXPECTED, st[0].data[:20])
 
-    def test_read_head_via_module(self, testdata):
+    def test_read_head_via_module(self):
         """
         Read files via obspy.io.gcf.core._read_gcf function.
         """
-        filename = testdata['20160603_1955n.gcf']
+        filename = os.path.join(self.path, '20160603_1955n.gcf')
         # 1
         st = _read_gcf(filename, headonly=True)
-        assert len(st) == 1
-        assert st[0].stats.starttime == \
-            UTCDateTime('2016-06-03T19:55:00.000000Z')
-        assert st[0].stats.endtime == \
-            UTCDateTime('2016-06-03T19:55:02.990000Z')
-        assert st[0].stats.npts == 300
-        assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
-        assert st[0].stats.channel == 'HHN'
-        assert st[0].stats.station == '6018'
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2016-06-03T19:55:00.000000Z'))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime('2016-06-03T19:55:02.990000Z'))
+        self.assertEqual(st[0].stats.npts, 300)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.channel, 'HHN')
+        self.assertEqual(st[0].stats.station, '6018')
 
-    def test_read_channel_prefix_via_obspy(self, testdata):
+    def test_read_channel_prefix_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = testdata['20160603_1955n.gcf']
+        filename = os.path.join(self.path, '20160603_1955n.gcf')
         # 1
         st = read(filename, headonly=True, channel_prefix="HN")
-        assert len(st) == 1
-        assert st[0].stats.starttime == \
-            UTCDateTime('2016-06-03T19:55:00.000000Z')
-        assert st[0].stats.endtime == \
-            UTCDateTime('2016-06-03T19:55:02.990000Z')
-        assert st[0].stats.npts == 300
-        assert round(abs(st[0].stats.sampling_rate-100.0), 7) == 0
-        assert st[0].stats.channel == 'HNN'
-        assert st[0].stats.station == '6018'
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2016-06-03T19:55:00.000000Z'))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime('2016-06-03T19:55:02.990000Z'))
+        self.assertEqual(st[0].stats.npts, 300)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.channel, 'HNN')
+        self.assertEqual(st[0].stats.station, '6018')
 
-    def test_merge_gcf_stream(self, testdata):
+    def test_merge_gcf_stream(self):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = testdata['20160603_1955n.gcf']
+        filename = os.path.join(self.path, '20160603_1955n.gcf')
         # 1
         st1 = read(filename, headonly=True, channel_prefix="HN")
         st2 = st1.copy()
@@ -127,63 +134,63 @@ class TestCore():
         tr2.stats.npts = 200
         st2.traces = [tr1, tr2]
         st2 = merge_gcf_stream(st2)
-        assert len(st1) == len(st2)
-        assert st2[0].stats.starttime == \
-            UTCDateTime('2016-06-03T19:55:00.000000Z')
-        assert st2[0].stats.endtime == \
-            UTCDateTime('2016-06-03T19:55:02.990000Z')
-        assert st2[0].stats.npts == 300
-        assert round(abs(st2[0].stats.sampling_rate-100.0), 7) == 0
-        assert st2[0].stats.channel == 'HNN'
-        assert st2[0].stats.station == '6018'
+        self.assertEqual(len(st1), len(st2))
+        self.assertEqual(st2[0].stats.starttime,
+                         UTCDateTime('2016-06-03T19:55:00.000000Z'))
+        self.assertEqual(st2[0].stats.endtime,
+                         UTCDateTime('2016-06-03T19:55:02.990000Z'))
+        self.assertEqual(st2[0].stats.npts, 300)
+        self.assertAlmostEqual(st2[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st2[0].stats.channel, 'HNN')
+        self.assertEqual(st2[0].stats.station, '6018')
 
-    def test_sps_d(self, testdata):
+    def test_sps_d(self):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = testdata['20160603_1910n.gcf']
+        filename = os.path.join(self.path, '20160603_1910n.gcf')
         # 1
         st = read(filename, headonly=True, channel_prefix="HN")
-        assert len(st) == 1
-        assert st[0].stats.starttime == \
-            UTCDateTime('2016-06-03T19:10:00.000000Z')
-        assert st[0].stats.endtime == \
-            UTCDateTime('2016-06-03T19:10:01.998000Z')
-        assert st[0].stats.npts == 1000
-        assert round(abs(st[0].stats.sampling_rate-500.0), 7) == 0
-        assert st[0].stats.channel == 'HNN'
-        assert st[0].stats.station == '6018'
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2016-06-03T19:10:00.000000Z'))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime('2016-06-03T19:10:01.998000Z'))
+        self.assertEqual(st[0].stats.npts, 1000)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 500.0)
+        self.assertEqual(st[0].stats.channel, 'HNN')
+        self.assertEqual(st[0].stats.station, '6018')
 
-    def test_read_no_merge(self, testdata):
+    def test_read_no_merge(self):
         """
         test preserving individual blocks in file as is, i.e. do not
         merge traces
         """
-        filename = testdata['20160603_1910n.gcf']
+        filename = os.path.join(self.path, '20160603_1910n.gcf')
         st = read(filename, blockmerge=False, channel_prefix="HN")
-        assert len(st) == 2
+        self.assertEqual(len(st), 2)
         # 1
-        assert st[0].stats.starttime == \
-            UTCDateTime('2016-06-03T19:10:00.000000Z')
-        assert st[0].stats.endtime == \
-            UTCDateTime('2016-06-03T19:10:00.998000Z')
-        assert st[0].stats.npts == 500
-        assert round(abs(st[0].stats.sampling_rate-500.0), 7) == 0
-        assert st[0].stats.channel == 'HNN'
-        assert st[0].stats.station == '6018'
-        assert st[0].stats.gcf.FIC == -49345
-        assert st[0].stats.gcf.RIC == -49952
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2016-06-03T19:10:00.000000Z'))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime('2016-06-03T19:10:00.998000Z'))
+        self.assertEqual(st[0].stats.npts, 500)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 500.0)
+        self.assertEqual(st[0].stats.channel, 'HNN')
+        self.assertEqual(st[0].stats.station, '6018')
+        self.assertEqual(st[0].stats.gcf.FIC, -49345)
+        self.assertEqual(st[0].stats.gcf.RIC, -49952)
         # 2
-        assert st[1].stats.starttime == \
-            UTCDateTime('2016-06-03T19:10:01.000000Z')
-        assert st[1].stats.endtime == \
-            UTCDateTime('2016-06-03T19:10:01.998000Z')
-        assert st[1].stats.npts == 500
-        assert round(abs(st[1].stats.sampling_rate-500.0), 7) == 0
-        assert st[1].stats.channel == 'HNN'
-        assert st[1].stats.station == '6018'
-        assert st[1].stats.gcf.FIC == -49519
-        assert st[1].stats.gcf.RIC == -49625
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2016-06-03T19:10:01.000000Z'))
+        self.assertEqual(st[1].stats.endtime,
+                         UTCDateTime('2016-06-03T19:10:01.998000Z'))
+        self.assertEqual(st[1].stats.npts, 500)
+        self.assertAlmostEqual(st[1].stats.sampling_rate, 500.0)
+        self.assertEqual(st[1].stats.channel, 'HNN')
+        self.assertEqual(st[1].stats.station, '6018')
+        self.assertEqual(st[1].stats.gcf.FIC, -49519)
+        self.assertEqual(st[1].stats.gcf.RIC, -49625)
 
     def test_write_read_fractional_start(self):
         """
@@ -229,7 +236,7 @@ class TestCore():
             in_stream = _read_gcf(filename, network='XY',
                                   station="ABCD", errorret=True)
         # compare
-        assert out_stream == in_stream
+        self.assertEqual(out_stream, in_stream)
 
         # 2
         # adjust start time in stream object to be miss-aligned more
@@ -300,34 +307,4 @@ class TestCore():
                                           station="ABCD", errorret=True)
 
                 # compare
-                assert out_stream == in_stream
-
-    def test_split_last_block(self):
-        """
-        test writing a file where number of data would fit into a
-        single block but number of data will not be properly
-        set due to high compression level
-        """
-        head = {'starttime': UTCDateTime("2020-10-01 00:00:00"),
-                'sampling_rate': 100,
-                'station': 'XXXX',
-                'channel': 'HHZ',
-                'gcf': AttribDict({
-                    'system_id': 'XXXXZ0',
-                    'stream_id': 'XXXXZ0',
-                    'sys_type': 0,
-                    't_leap': False,
-                    'gain': -1,
-                    'digi': 0,
-                    'ttl': 0,
-                    'blk': 0,
-                    'FIC': 0,
-                    'RIC': 718,
-                    'stat': 0})}
-        data = np.arange(719)
-        tr = Trace(data=data, header=head)
-        with NamedTemporaryFile() as tf:
-            filename = tf.name
-            _write_gcf(tr, filename)
-            st = _read_gcf(filename)
-        assert tr == st[0]
+                self.assertEqual(out_stream, in_stream)

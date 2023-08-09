@@ -1,75 +1,3 @@
-master
-======
-
-Changes:
- - obspy.core:
-   * response: allow recalculating overall sensitivity even if unit type is not
-     one of VEL/ACC/DISP (see #3235)
-   * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
-     (see #3251)
-   * inventory: additional formatting tweaks to expanded channel information
-     (see #3261)
- - obspy.clients.filesystem:
-   * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
- - obspy.io:
-   * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
- - obspy.io.mseed.spread_time_over_file:
-   * new routine to spread a time interval progressively across all mseed
-     blockettes in a file (see #3271)
- - obspy.io.nlloc:
-   * set origin evaluation status to "rejected" if nonlinloc reports the
-     location run as "ABORTED", "IGNORED" or "REJECTED" (see #3230)
-   * store "NLLOC" info header line in event and origin comments (see #3230)
- - obspy.io.seg2:
-   * Less strict date/time parsing (#3283).
- - obspy.io.xseed:
-   * Improve error message when trying to read a local path to a file that does
-     not exist with XSEED Parser (see #2686)
- - obspy.signal:
-   * all butterworth filters: correct zero-phase filtering of 2-d arrays and
-     filtering along non-default axis of 2-d arrays (see #3291)
-
-maintenance_1.4.x
-=================
-
-Changes:
- - obspy.core:
-   * fix a bug in Stream.select(inventory=...) (see #3282)
-   * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
-     warning" when interactively zooming into and then again out of a plot with
-     reduced number of points plotted with matplotlib >=3.6 (see #3318)
- - obspy.clients.fdsn:
-   * update URL for raspberryshake FDSN web service (see #3264)
-   * properly include server response in error messages on bad requests (see
-     #3306)
- - obspy.clients.nrl:
-   * better handling of individual stages units when combining sensor and
-     datalogger response from a full downloaded offline version of the new NRL
-     v2 (see #3315)
-   * add support to use new categories "integrated" and "soh" in new NRL v2
-     (see #3315)
- - obspy.clients.seedlink:
-   * avoid unnecessary calls to "get_info()" on waveform requests without
-     wildcards (see #3232)
- - obspy.imaging:
-   * fix a bug that raised an error when plotting beachball patches with
-     routine "beach" with providing an existing axes instance (for proper
-     scaling) and saving to vector graphics as pdf/eps (see #2887)
-   * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
-     warning" when interactively zooming into and then again out of a plot with
-     reduced number of points plotted with matplotlib >=3.6 (see #3318)
- - obspy.io.gcf:
-   * Fixed an issue in algorithm to split and encode last few data into GCF
-     blocks (see #3252)
- - obspy.io.win:
-   * Fixed three bugs when reading 0.5 byte datawide (see #3310)
- - obspy.io.xseed:
-   * Fixed reading SEED frequency-amplitude-phase response lists that are
-     spread out over multiple blockettes (see #3277)
- - obspy.taup:
-   * bugfix to allow calculations for a model with no discontinuities
-     (see #3070, #3244)
-
 1.4.0 (doi: 10.5281/zenodo.6645832)
 ===================================
 
@@ -152,7 +80,6 @@ Changes:
  - obspy.signal:
    * coincidence trigger: improve speed of template matching and less memory
      usage (see #3104)
-   * added energy_ratio and modified_energy_ratio trigger methods (see #3161)
    * Baer picker: fix a bug that could cause crashes on certain versions of
      libffi (see #3183)
    * polarization analysis: fix calculation of timestamps of the resulting
