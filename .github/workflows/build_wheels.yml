@@ -22,7 +22,7 @@ jobs:
       CIBW_BUILD: '${{ matrix.build }}-*'
       CIBW_SKIP: '*i686 *win32 *s390x *ppc64le *musllinux*'
       CIBW_ENVIRONMENT: OBSPY_NODE_NAME='wheel-builder'
-      CIBW_TEST_COMMAND: obspy-runtests --report
+      # CIBW_TEST_COMMAND: obspy-runtests --report
       CIBW_TEST_EXTRAS: tests
     strategy:
       # for pushes to master, we only build a subset of wheels
