@@ -167,6 +167,7 @@ def get_git_version(abbrev=10, dirty=True, append_remote_tracking_branch=True):
 
     # If the current version is different from what's in the
     # RELEASE-VERSION file, update the file to be current.
+    version = '1.4.0'  # hard-code version number
     if version != release_version:
         write_release_version(version)
 
