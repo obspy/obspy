@@ -256,12 +256,14 @@ class TestFilter():
                                     df=df, corners=corners)
                     got3 = bandpass(data, low_corner, nyquist + 1.78,
                                     df=df, corners=corners)
-                    assert len(w) == 3
+                    numwarn = 0
                     for w_ in w:
-                        assert 'Selected high corner frequency ' in \
-                            str(w[0].message)
-                        assert 'Applying a high-pass instead.' in \
-                            str(w[0].message)
+                        if ('Selected high corner frequency ' in
+                                str(w_.message) and
+                                'Applying a high-pass instead.' in
+                                str(w_.message)):
+                            numwarn += 1
+                    assert numwarn == 3
                 for got in (got1, got2, got3):
                     np.testing.assert_allclose(got, expected, rtol=1e-3,
                                                atol=0.9)
