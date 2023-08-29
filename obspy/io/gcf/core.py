@@ -4,6 +4,7 @@
 GCF bindings to python
 """
 import ctypes
+
 import math
 import os
 import warnings
@@ -189,9 +190,14 @@ def _is_gcf(filename):
     :rtype: bool
     :return: True if a object pointed to by path is a GCF file.
     """
-    if not os.path.isfile(filename) or os.path.getsize(filename) % 1024:
-        # File either does not point at a file object or file is not of
-        # proper size
+    # Note: to support `filename` as in-memory data (e.g. `BytesIO`), future
+    # implementation should AVOID writing to file for performance reasons
+    try:
+        if not os.path.isfile(filename) or os.path.getsize(filename) % 1024:
+            # File either does not point at a file object or file is not of
+            # proper size
+            return False
+    except TypeError:  # e.g. BytesIO (see note above)
         return False
 
     # Load shared library
@@ -205,6 +211,7 @@ def _is_gcf(filename):
     gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
     gcf_io.free_GcfFile.restype = None
 
+    obj = None
     try:
         # Decode first block
         obj = _GcfFile()
@@ -217,7 +224,8 @@ def _is_gcf(filename):
         return False
     finally:
         # release allocated memory
-        gcf_io.free_GcfFile(obj)
+        if obj is not None:
+            gcf_io.free_GcfFile(obj)
 
     return True
 
