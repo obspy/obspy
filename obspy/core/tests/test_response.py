@@ -159,8 +159,8 @@ class TestResponse:
         zeros = [2 + 3j, 2, 3j]
         stage = PolesZerosResponseStage(
             1, 1, 1, "", "", "LAPLACE (HERTZ)", 1, zeros, poles)
-        assert type(stage.zeros[0]) == ComplexWithUncertainties
-        assert type(stage.poles[0]) == ComplexWithUncertainties
+        assert isinstance(stage.zeros[0], ComplexWithUncertainties)
+        assert isinstance(stage.poles[0], ComplexWithUncertainties)
         assert stage.poles == poles
         assert stage.zeros == zeros
 

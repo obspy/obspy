@@ -43,7 +43,7 @@ class _SlotsEqualityComparisionObject(object):
     __slots__ = []
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
         return all([getattr(self, _i) == getattr(other, _i)
                     for _i in self.__slots__])
