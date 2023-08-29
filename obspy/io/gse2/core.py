@@ -13,7 +13,7 @@ def _is_gse2(filename):
     """
     Checks whether a file is GSE2 or not.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: GSE2 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE2 file.
@@ -38,7 +38,7 @@ def _read_gse2(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only head of GSE2 file.
@@ -112,7 +112,7 @@ def _is_gse1(filename):
     """
     Checks whether a file is GSE1 or not.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: GSE1 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE1 file.
@@ -139,7 +139,7 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only header of GSE1 file.

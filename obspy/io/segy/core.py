@@ -56,7 +56,7 @@ def _is_segy(filename):
     """
     Checks whether or not the given file is a SEG Y file.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: SEG Y file to be checked.
     :rtype: bool
     :return: ``True`` if a SEG Y file.
@@ -404,7 +404,7 @@ def _is_su(filename):
     """
     Checks whether or not the given file is a Seismic Unix (SU) file.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: Seismic Unix file to be checked.
     :rtype: bool
     :return: ``True`` if a Seismic Unix file.

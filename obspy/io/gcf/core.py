@@ -185,13 +185,15 @@ def _is_gcf(filename):
     """
     Checks whether a file is GCF or not.
 
-    :type filename: str
-    :param filename: path to GCF file to be checked.
+    :type filename: str or BytesIO
+    :param filename: path to GCF file to be checked. Note: Passing BytesIO
+        is allowed but will return False
     :rtype: bool
     :return: True if a object pointed to by path is a GCF file.
     """
-    # Note: to support `filename` as in-memory data (e.g. `BytesIO`), future
-    # implementation should AVOID writing to file for performance reasons
+    # Note: to fully support `filename` as in-memory binary data (e.g.
+    # `BytesIO`) some workaround is needed. However, any future implementation
+    # should AVOID to fallback writing to file for performance reasons
     try:
         if not os.path.isfile(filename) or os.path.getsize(filename) % 1024:
             # File either does not point at a file object or file is not of
