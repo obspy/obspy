@@ -20,6 +20,7 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util import open_bytes_stream
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.ah import xdrlib
 
@@ -73,7 +74,7 @@ def _get_ah_version(filename):
     :rtype: str or False
     :return: version string of AH waveform data or ``False`` if unknown.
     """
-    with open(filename, "rb") as fh:
+    with open_bytes_stream(filename) as fh:
         # read first 8 bytes with XDR library
         try:
             data = xdrlib.Unpacker(fh.read(8))
@@ -225,7 +226,7 @@ def _read_ah1(filename):
         return tr
 
     st = Stream()
-    with open(filename, "rb") as fh:
+    with open_bytes_stream(filename) as fh:
         # read with XDR library
         data = xdrlib.Unpacker(fh.read())
         # loop as long we can read records
@@ -573,7 +574,7 @@ def _read_ah2(filename):
         return tr
 
     st = Stream()
-    with open(filename, "rb") as fh:
+    with open_bytes_stream(filename) as fh:
         # loop as long we can read records
         while True:
             try:
