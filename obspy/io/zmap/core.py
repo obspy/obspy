@@ -98,6 +98,8 @@ class Pickler(object):
         """
         # TODO: add option to extract depth error from origin uncertainty
         # when ellipsoid is used
+        if origin.depth_errors is None:
+            return None
         if origin.depth_errors.uncertainty is None:
             return None
         return origin.depth_errors.uncertainty / 1000.0
@@ -133,7 +135,8 @@ class Pickler(object):
             origin = ev.preferred_origin()
             if origin is None and ev.origins:
                 origin = ev.origins[0]
-            if origin:
+            if origin and origin.depth is not None and \
+                    self._depth_error(origin) is not None:
                 dec_year = self._decimal_year(origin.time)
                 dec_second = origin.time.second + \
                     origin.time.microsecond / 1e6
