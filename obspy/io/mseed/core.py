@@ -26,7 +26,7 @@ def _is_mseed(filename):
     """
     Checks whether a file is Mini-SEED/full SEED or not.
 
-    :type filename: str
+    :type filename: str or in-memory binary data (e.g. BytesIO)
     :param filename: Mini-SEED/full SEED file to be checked.
     :rtype: bool
     :return: ``True`` if a Mini-SEED file.
@@ -48,15 +48,17 @@ def _is_mseed(filename):
     else:
         initial_pos = filename.tell()
         try:
-            if hasattr(filename, "getbuffer"):
+            if hasattr(filename, "getbuffer"):  # BytesIO
                 file_size = filename.getbuffer().nbytes
-            try:
-                file_size = os.fstat(filename.fileno()).st_size
-            except Exception:
-                _p = filename.tell()
-                filename.seek(0, 2)
-                file_size = filename.tell()
-                filename.seek(_p, 0)
+            else:
+                # FIXME: better doc. What are we trying to do here?
+                try:
+                    file_size = os.fstat(filename.fileno()).st_size
+                except Exception:
+                    _p = filename.tell()
+                    filename.seek(0, 2)
+                    file_size = filename.tell()
+                    filename.seek(_p, 0)
             return __is_mseed(filename, file_size)
         finally:
             # Reset pointer.
