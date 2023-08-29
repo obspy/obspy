@@ -6,6 +6,7 @@ import numpy as np
 
 from obspy import Stream, Trace
 from . import libgse1, libgse2
+from obspy.core.util import open_bytes_stream
 
 
 def _is_gse2(filename):
@@ -19,7 +20,7 @@ def _is_gse2(filename):
     """
     # Open file.
     try:
-        with open(filename, 'rb') as f:
+        with open_bytes_stream(filename) as f:
             libgse2.is_gse2(f)
     except Exception:
         return False
@@ -53,7 +54,7 @@ def _read_gse2(filename, headonly=False, verify_chksum=True,
     >>> st = read("/path/to/loc_RJOB20050831023349.z")
     """
     traces = []
-    with open(filename, 'rb') as f:
+    with open_bytes_stream(filename) as f:
         # reading multiple gse2 parts
         while True:
             try:
@@ -117,7 +118,7 @@ def _is_gse1(filename):
     :return: ``True`` if a GSE1 file.
     """
     # Open file.
-    with open(filename, 'rb') as f:
+    with open_bytes_stream(filename) as f:
         try:
             data = f.readline()
         except Exception:
@@ -155,7 +156,7 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
     """
     traces = []
     # read GSE1 file
-    with open(filename, 'rb') as fh:
+    with open_bytes_stream(filename) as fh:
         while True:
             try:
                 if headonly:
