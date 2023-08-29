@@ -622,17 +622,7 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
         pathname_or_url = str(pathname_or_url)
     if not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
-        try:
-            # first try reading directly
-            generic = callback_func(pathname_or_url, **kwargs)
-        except TypeError:
-            # if this fails, create a temporary file which is read directly
-            # from the file system
-            pathname_or_url.seek(0)
-            with NamedTemporaryFile() as fh:
-                fh.write(pathname_or_url.read())
-                generic = callback_func(fh.name, **kwargs)
-        return generic
+        return callback_func(pathname_or_url, **kwargs)
     elif isinstance(pathname_or_url, bytes) and \
             pathname_or_url.strip().startswith(b'<'):
         # XML string
@@ -697,16 +687,12 @@ def _uncloseable_bytesio(bytes_io):
     # mock `close` (no-op):
     close = bytes_io.close
     bytes_io.close = lambda *a, **kw: None
-    # move pointer to the beginning of the stream:
-    cur_pos = bytes_io.tell()
-    bytes_io.seek(0, 0)
     # yield the argument:
     try:
         yield bytes_io
     finally:
         # restore:
         bytes_io.close = close
-        bytes_io.seek(cur_pos, 0)
 
 
 def from_bytes_stream(file_or_stream, dtype=float, count=-1, offset=0,
