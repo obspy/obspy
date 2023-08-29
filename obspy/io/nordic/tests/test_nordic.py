@@ -368,10 +368,10 @@ class TestNordicMethods:
             ref_cat = read_events(filename)
             _assert_similarity(cat[0], ref_cat[0], strict=True)
 
-    def test_reading_bytes_io(self, testdata):
+    def test_reading_string_io(self, testdata):
         filename = testdata['01-0411-15L.S201309']
-        with open(filename, "rb") as fh:
-            file_object = io.BytesIO(fh.read())
+        with open(filename, "r", encoding='latin-1') as fh:
+            file_object = io.StringIO(fh.read())
 
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
