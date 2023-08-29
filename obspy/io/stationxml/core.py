@@ -1345,7 +1345,7 @@ def _write_response_stage(parent, stage):
         attr["resourceId"] = stage.resource_id
     sub = etree.SubElement(parent, "Stage", attr)
     # do nothing for gain only response stages
-    if type(stage) == ResponseStage:
+    if isinstance(stage, ResponseStage):
         pass
     else:
         # create tag for stage type
@@ -1370,7 +1370,7 @@ def _write_response_stage(parent, stage):
         _obj2tag(sub__, "Description", stage.output_units_description)
 
         # write custom fields of respective stage type
-        if type(stage) == ResponseStage:
+        if isinstance(stage, ResponseStage):
             pass
         elif isinstance(stage, PolesZerosResponseStage):
             _obj2tag(sub_, "PzTransferFunctionType",

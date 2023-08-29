@@ -77,7 +77,7 @@ class Catalog(object):
     def _set_resource_id(self, value):
         if isinstance(value, dict):
             value = ResourceIdentifier(**value)
-        elif type(value) != ResourceIdentifier:
+        elif not isinstance(value, ResourceIdentifier):
             value = ResourceIdentifier(value)
         value.set_referred_object(self, warn=False)
         self.__dict__['resource_id'] = value
@@ -97,9 +97,9 @@ class Catalog(object):
         return self.__dict__['creation_info']
 
     def _set_creation_info(self, value):
-        if type(value) == dict:
+        if isinstance(value, dict):
             value = CreationInfo(**value)
-        elif type(value) != CreationInfo:
+        elif not isinstance(value, CreationInfo):
             value = CreationInfo(value)
         self.__dict__['creation_info'] = value
 
