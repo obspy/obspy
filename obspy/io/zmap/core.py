@@ -135,14 +135,11 @@ class Pickler(object):
             origin = ev.preferred_origin()
             if origin is None and ev.origins:
                 origin = ev.origins[0]
-            if origin and origin.depth is not None and \
-                    self._depth_error(origin) is not None:
+            if origin:
                 dec_year = self._decimal_year(origin.time)
                 dec_second = origin.time.second + \
                     origin.time.microsecond / 1e6
                 strings.update({
-                    'depth': self._num2str(origin.depth / 1000.0),  # m to km
-                    'z_err': self._num2str(self._depth_error(origin)),
                     'lat': self._num2str(origin.latitude),
                     'lon': self._num2str(origin.longitude),
                     'h_err': self._num2str(self._hz_error(origin)),
@@ -153,6 +150,13 @@ class Pickler(object):
                     'minute': self._num2str(origin.time.minute, 0),
                     'second': str(dec_second)
                 })
+                # origin depth is optional in QuakeML so it can be missing
+                if origin.depth is not None:
+                    # m to km
+                    strings['depth'] = self._num2str(origin.depth / 1000.0)
+                    z_err = self._depth_error(origin)
+                    if z_err is not None:
+                        strings['z_err'] = self._num2str(z_err)
             # magnitude
             magnitude = ev.preferred_magnitude()
             if magnitude is None and ev.magnitudes:
