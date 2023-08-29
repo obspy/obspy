@@ -27,15 +27,14 @@ class TestKnetReading():
         Test reading of K-NET and KiK-net ASCII format files from an open file.
         """
         testfile = testdata['test.knet']
-        with open(testfile, "rb") as fh:
-            tr = read(fh)[0]
-            tr.data *= tr.stats.calib
-            tr.data -= tr.data.mean()
-            max = np.abs(tr.data).max() * 100  # Maximum acc converted to gal
-            np.testing.assert_array_almost_equal(max, tr.stats.knet.accmax,
-                                                 decimal=3)
-            duration = int(tr.stats.endtime - tr.stats.starttime + 0.5)
-            assert duration == int(tr.stats.knet.duration)
+        tr = read(testfile)[0]
+        tr.data *= tr.stats.calib
+        tr.data -= tr.data.mean()
+        max = np.abs(tr.data).max() * 100  # Maximum acc converted to gal
+        np.testing.assert_array_almost_equal(max, tr.stats.knet.accmax,
+                                             decimal=3)
+        duration = int(tr.stats.endtime - tr.stats.starttime + 0.5)
+        assert duration == int(tr.stats.knet.duration)
 
     def test_read_knet_ascii_from_bytes_io(self, testdata):
         """
