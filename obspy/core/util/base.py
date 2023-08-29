@@ -13,6 +13,8 @@ import importlib
 import inspect
 import io
 import os
+from contextlib import contextmanager
+from io import BytesIO
 from pathlib import Path
 import re
 import sys
@@ -661,6 +663,72 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
             for filename in pathnames[1:]:
                 generic.extend(callback_func(filename, **kwargs))
         return generic
+
+
+def open_bytes_stream(file_or_stream):
+    """Convenience function returning a binary stream for reading bytes data
+    from both files on disk or in-memory data. Example:
+    ```
+    with open_bytes_stream(...)
+        # read data here, e.g.:
+        buffer.read()
+    ```
+
+    :param file_or_stream: path to the given file name (str or Path), or
+        in-memory data stream (`BytesIO` object). A `BytesIO`s is basically
+        returned as it is. Note however that it will not be closed
+        automatically when exiting the `with` statement (if needed, call
+        `close` manually on it, but you won't be able to reuse it again with
+        this function)
+    """
+    if isinstance(file_or_stream, BytesIO):
+        return _uncloseable_bytesio(file_or_stream)
+    else:
+        return open(file_or_stream, 'rb')
+
+
+@contextmanager
+def _uncloseable_bytesio(bytes_io):
+    """
+    Context manager which turns the argument's close operation to no-op for
+    the duration of the context, making it reusable in several `with` statements
+    (see e.g. `:ref:`obspy.core.util.misc.buffered_load_entry_point`)
+    """
+    # mock `close` (no-op):
+    close = bytes_io.close
+    bytes_io.close = lambda *a, **kw: None
+    # move pointer to the beginning of the stream:
+    cur_pos = bytes_io.tell()
+    bytes_io.seek(0, 0)
+    # yield the argument:
+    try:
+        yield bytes_io
+    finally:
+        # restore:
+        bytes_io.close = close
+        bytes_io.seek(cur_pos, 0)
+
+
+def from_bytes_stream(file_or_stream, dtype=float, count=-1, offset=0,
+                      **kwargs):
+    """Convenience function behaving as `numpy.fromfile` but accepting both
+    binary data file paths (`str`) and in-memory data (`BytesIO`)
+    as first argument
+
+    :param file: str or BytesIO. If `str`, it must denote a file path
+        containing binary data (no text file)
+    :param dtype: float. Data-type of the returned array; default: float.
+    :param count: int. Number of items to read. -1 means all data
+    :param offset: int. Start reading from this offset (in bytes); default: 0.
+    :param kwargs: optional kwyword arguments. See numpy `fromfile` and numpy
+        `frombuffer` for details
+    """
+    if isinstance(file_or_stream, BytesIO):
+        return np.frombuffer(file_or_stream.getbuffer(), dtype=dtype,
+                             count=count, offset=offset, **kwargs)
+    else:
+        return np.fromfile(file_or_stream, dtype=dtype,
+                           count=count, offset=offset, **kwargs)
 
 
 class CatchAndAssertWarnings(warnings.catch_warnings):
