@@ -21,7 +21,7 @@ def _is_pse(filename):
     """
     Checks whether a file is ALSEP PSE tape or not.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: ALSEP PSE tape file to be checked.
     :rtype: bool
     :return: ``True`` if an ALSEP PSE tape file.
@@ -43,7 +43,7 @@ def _is_wtn(filename):
     """
     Checks whether a file is ALSEP WTN tape or not.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: ALSEP WTN tape file to be checked.
     :rtype: bool
     :return: ``True`` if an ALSEP WTN tape file.
@@ -71,7 +71,7 @@ def _is_wth(filename):
     """
     Checks whether a file is ALSEP WTH tape or not.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: ALSEP WTH tape file to be checked.
     :rtype: bool
     :return: ``True`` if an ALSEP WTH tape file.

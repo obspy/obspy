@@ -459,7 +459,7 @@ def _read_ah2(filename):
     """
     Reads an AH v2 waveform file and returns a Stream object.
 
-    :type filename: str
+    :type filename: str or BytesIO
     :param filename: AH v2 file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
