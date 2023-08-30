@@ -111,16 +111,18 @@ class TestWaveformPlugins:
                         # read in using a BytesIO instances, skip Q files as
                         # it needs multiple files
                         if format not in ['Q']:
-                            # file handler without format
-                            with open(outfile, 'rb') as fp:
-                                st = read(fp)
+                            # file path without format
+                            st = read(outfile)
                             assert len(st) == 1
                             assert st[0].stats._format == format
-                            # file handler with format
-                            with open(outfile, 'rb') as fp:
-                                st = read(fp, format=format)
+                            # file path with format
+                            st = read(outfile, format=format)
                             assert len(st) == 1
                             assert st[0].stats._format == format
+                        # read from BytesIO (in-memory binary data). In this case,
+                        # skip also GCF as it binary data read is currently not
+                        # supported
+                        if format not in ['Q', 'GCF']:
                             # BytesIO without format
                             with open(outfile, 'rb') as fp:
                                 temp = io.BytesIO(fp.read())
