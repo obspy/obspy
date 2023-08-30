@@ -9,12 +9,14 @@ SH bindings to ObsPy core module.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
+from io import IOBase, BytesIO
 from pathlib import Path
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
+from obspy.core.util import open_bytes_stream
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
@@ -80,7 +82,7 @@ def _is_asc(filename):
     """
     # first six chars should contain 'DELTA:'
     try:
-        with open(filename, 'rb') as f:
+        with open_bytes_stream(filename) as f:
             temp = f.read(6)
     except Exception:
         return False
@@ -98,7 +100,7 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
+    :type filename: str or StringIO
     :param filename: ASCII file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
@@ -127,38 +129,39 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
     .TEST..BHE | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
     .WET..HHZ  | 2010-01-01T01:01:05.999000Z - ... | 100.0 Hz, 4001 samples
     """
-    fh = open(filename, 'rt')
     # read file and split text into channels
     channels = []
     headers = {}
     data = io.StringIO()
-    for line in fh.readlines()[skip:]:
-        if line.isspace():
-            # blank line
-            # check if any data fetched yet
-            if len(headers) == 0 and data.tell() == 0:
+    with open_bytes_stream(filename) as fh:
+        for line in fh.readlines()[skip:]:
+            if isinstance(line, bytes):
+                line = line.decode('ascii')
+            if line.isspace():
+                # blank line
+                # check if any data fetched yet
+                if len(headers) == 0 and data.tell() == 0:
+                    continue
+                # append current channel
+                data.seek(0)
+                channels.append((headers, data))
+                # create new channel
+                headers = {}
+                data = io.StringIO()
+                if skip:
+                    # if skip is set only one trace is read, everything else makes
+                    # no sense.
+                    break
                 continue
-            # append current channel
-            data.seek(0)
-            channels.append((headers, data))
-            # create new channel
-            headers = {}
-            data = io.StringIO()
-            if skip:
-                # if skip is set only one trace is read, everything else makes
-                # no sense.
-                break
-            continue
-        elif line[0].isalpha():
-            # header entry
-            key, value = line.split(':', 1)
-            key = key.strip()
-            value = value.strip()
-            headers[key] = value
-        elif not headonly:
-            # data entry - may be written in multiple columns
-            data.write(line.strip() + ' ')
-    fh.close()
+            elif line[0].isalpha():
+                # header entry
+                key, value = line.split(':', 1)
+                key = key.strip()
+                value = value.strip()
+                headers[key] = value
+            elif not headonly:
+                # data entry - may be written in multiple columns
+                data.write(line.strip() + ' ')
     # create ObsPy stream object
     stream = Stream()
     # custom header
