@@ -13,8 +13,7 @@ import importlib
 import inspect
 import io
 import os
-from contextlib import contextmanager
-from io import BytesIO
+from io import BytesIO, IOBase
 from pathlib import Path
 import re
 import sys
@@ -656,43 +655,45 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
 
 
 def open_bytes_stream(file_or_stream):
-    """Convenience function returning a binary stream for reading bytes data
-    from both files on disk or in-memory data. Example:
+    """Convenience function returning a binary stream (file-like object)
+    from both in-memory or on-disk data. Example:
     ```
-    with open_bytes_stream(...)
-        # read data here, e.g.:
-        buffer.read()
+    with open_bytes_stream(file_or_stream) as stream:
+        stream.read()
+        ...
     ```
 
     :param file_or_stream: path to the given file name (str or Path), or
-        in-memory data stream (`BytesIO` object). A `BytesIO`s is basically
-        returned as it is. Note however that it will not be closed
-        automatically when exiting the `with` statement (if needed, call
-        `close` manually on it, but you won't be able to reuse it again with
-        this function)
+        file-like object (e.g. `BytesIO`). If a file-like object is passed,
+        the function essentially returns it, but will not close it when
+        exiting the `with` statement, so that `file_or_stream` can be reused
+    :return: a file-like object (`io.BaseIO` subclass) streaming bytes data
     """
-    if isinstance(file_or_stream, BytesIO):
-        return _uncloseable_bytesio(file_or_stream)
+    if isinstance(file_or_stream, IOBase):
+        return IOBaseWrapper(file_or_stream)
     else:
         return open(file_or_stream, 'rb')
 
 
-@contextmanager
-def _uncloseable_bytesio(bytes_io):
+class IOBaseWrapper:
+    """I/O bytes stream wrapper that behaves exactly as the underlying stream
+    (`IOBase` subclass) but does not close it when exiting a `with` statement,
+    allowing the stream to be reused
     """
-    Context manager which turns the argument's close operation to no-op for
-    the duration of the context, making it reusable in several `with` statements
-    (see e.g. `:ref:`obspy.core.util.misc.buffered_load_entry_point`)
-    """
-    # mock `close` (no-op):
-    close = bytes_io.close
-    bytes_io.close = lambda *a, **kw: None
-    # yield the argument:
-    try:
-        yield bytes_io
-    finally:
-        # restore:
-        bytes_io.close = close
+    def __init__(self, iobase):
+        self._iobase = iobase
+
+    def __enter__(self):
+        self._cur_pos = self._iobase.tell()
+        return self._iobase.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._iobase.seek(self._cur_pos, 0)
+
+    def __getattr__(self, item):
+        # make this class behave exactly as the child stream:
+        return getattr(self._iobase, item)
+
 
 
 def from_bytes_stream(file_or_stream, dtype=float, count=-1, offset=0,
