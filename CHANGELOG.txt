@@ -40,6 +40,9 @@ Changes:
  - obspy.io.xseed:
    * Fixed reading SEED frequency-amplitude-phase response lists that are
      spread out over multiple blockettes (see #3277)
+ - obspy.io.zmap:
+   * Fix writing events with origins that have no depth or depth errors given
+     (see #3343)
  - obspy.taup:
    * bugfix to allow calculations for a model with no discontinuities
      (see #3070, #3244)
