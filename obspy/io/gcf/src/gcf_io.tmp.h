@@ -270,17 +270,6 @@ void add_GcfSeg(GcfFile *obj, GcfSeg seg, int mode, double tol);
 void merge_GcfFile(GcfFile *obj, int mode, double tol);
 
 
-/* function init_GCFSeg_for_read() initializes a GcfSeg for reading from file.
- * The passed uninitialized GcfSeg will be properly preallocated with a
- * number of bytes depending on the passed mode
- *
- *  ARGUMENTS
- *   seg         GcfSeg struct to hold parsed data block
- *   mode        The read mode. See `gcf_read` for details
- */
-void init_GcfSeg_for_read(GcfSeg *seg, int mode);
-
-
 /* function parse_gcf_block() parses a 1024 byte gcf data block
  * 
  *  ARGUMENTS
@@ -336,6 +325,17 @@ int read_gcf_block(GcfFile *obj, unsigned char buffer[1024], GcfSeg *seg, int mo
  *   segments.
  */
 int read_gcf(const char *f, GcfFile *obj, int mode);
+
+
+/* function read_gcf_from_char_array(const char[] content, GcfFile *obj, int mode)
+ * parses gcf data from content in memory (char array)
+ *
+ * ARGUMENTS
+ * content          the content to be parsed
+ * content_length   the length of the bytes sequence pointed by content (multiple of 1024)
+ * For all other arguments and return value see read_gcf for details
+ */
+int read_gcf_from_char_array(unsigned char *content, int content_length, GcfFile *obj, int mode);
 
 
 /* function write_gcf() writes a gcf data file
