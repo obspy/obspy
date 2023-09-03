@@ -1007,16 +1007,10 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
 }
 
 
-void init_GcfSeg_for_read(GcfSeg *seg, int mode){
-   init_GcfSeg(seg,0);
-   if (mode >= 0) realloc_GcfSeg(seg, MAX_DATA_BLOCK);
-}
-
-
+/* function read_gcf_block() reads a 1024 byte gcf data block into a GcfFile */
 int read_gcf_block(GcfFile *obj, unsigned char buffer[1024], GcfSeg *seg, int mode, int endian, double tol) {
+   int err = 0;
    int32 n_alloc=0;
-   int err=0;
-
    obj->n_blk += 1;
    if ((err=parse_gcf_block(buffer,seg,mode,endian)) < 0) {
       // not a data block
@@ -1051,8 +1045,9 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
    unsigned char buffer[1024]; 
    
    // initiate and allocate segment
-   init_GcfSeg_for_read(&seg, mode);
-
+   init_GcfSeg(&seg,0);
+   if (mode >= 0) realloc_GcfSeg(&seg, MAX_DATA_BLOCK);
+   
    // adjust mode if nedded
    if (mode > 2) {
       mode = 2;
@@ -1064,10 +1059,47 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
    if (opengcf(f,&fid)) ret=-1;
    else {
       while(FillBuffer(1024,buffer,&fid)) {
-         d += read_gcf_block(obj, buffer, &seg, mode, endian, tol);
+         d += read_gcf_block(obj,buffer,&seg,mode,endian,tol);
          if (b1) break;
       }
       closegcf(&fid);
+   }
+   // free segment
+   free_GcfSeg(&seg);
+
+   // merge segments if asked for
+   if (abs(mode) < 2) merge_GcfFile(obj,mode,tol);
+   if (!ret && obj->n_blk==d) ret = 1 + endian; // no data blocks in file   
+   return ret;
+}
+
+
+/* function read_gcf_from_char() parses gcf data from char array )in memory data)*/
+int read_gcf_from_char_array(unsigned char *content, int content_length, GcfFile *obj, int mode) {
+   int ret=0, endian, d=0, b1 = 0;
+   GcfSeg seg;
+   double tol = 1.E-3;
+   unsigned char buffer[1024];
+
+   // initiate and allocate segment
+   init_GcfSeg(&seg,0);
+   if (mode >= 0) realloc_GcfSeg(&seg, MAX_DATA_BLOCK);
+
+   // adjust mode if nedded
+   if (mode > 2) {
+      mode = 2;
+      b1 = 1;
+   }
+
+   // get endianess of current machine
+   endian = is_LittleEndian_gcf();
+   int start = 0;
+
+   while(start < content_length) {
+      memcpy(buffer, content + start, 1024);
+      start += 1024;
+      d += read_gcf_block(obj,buffer,&seg,mode,endian,tol);
+      if (b1) break;
    }
    // free segment
    free_GcfSeg(&seg);

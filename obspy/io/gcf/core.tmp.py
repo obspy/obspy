@@ -15,7 +15,6 @@ import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core import Stream, Trace, AttribDict
-from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.libnames import _load_cdll
 
 # supported sampling rates outside range 1-250 Hz
@@ -193,10 +192,29 @@ def _is_gcf(filename):
     :rtype: bool
     :return: True if a object pointed to by path is a GCF file.
     """
+    content = None  # will be populated only if filename is a file-like object
+    if isinstance(filename, IOBase):
+        cur_pos = filename.tell()
+        filename.seek(0, 2)
+        size = filename.tell() - cur_pos
+        if size % 1024:
+            return False
+        filename.seek(cur_pos, 0)
+        content = filename.read()
+        filename.seek(cur_pos, 0)
+    elif not os.path.isfile(filename) or os.path.getsize(filename) % 1024:
+        # File either does not point at a file object or file is not of
+        # proper size
+        return False
+
     # Load shared library
     gcf_io = _load_cdll("gcf")
 
     # declare function argument and return types
+    gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
+                                ctypes.POINTER(_GcfFile),
+                                ctypes.c_int]
+    gcf_io.read_gcf.restype = ctypes.c_int
     gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
     gcf_io.free_GcfFile.restype = None
 
@@ -204,10 +222,13 @@ def _is_gcf(filename):
     try:
         # Decode first block
         obj = _GcfFile()
-        ret = __read_gcf(filename, obj, 3)
-
-        # b_filename = filename.encode('utf-8')
-        # ret = gcf_io.read_gcf(fid, obj, 3)
+        if content is None:
+            b_filename = filename.encode('utf-8')
+            ret = gcf_io.read_gcf(b_filename, obj, 3)
+        else:
+            content = content[:1024]
+            ret = gcf_io.read_gcf_from_char_array(content, len(content),
+                                                  obj, 3)
         if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
                 or obj.n_errData:
             return False
@@ -219,93 +240,6 @@ def _is_gcf(filename):
             gcf_io.free_GcfFile(obj)
 
     return True
-
-
-def __read_gcf(file, obj, mode):
-    """Python conversion of C counterpart `gcf_file.read_gcf` suitable for
-    file and file-like objects, reads Gcf content from file and populates the
-    passed GcfFile `obj`"""
-    # Load shared library
-    gcf_io = _load_cdll("gcf")
-
-    # declare function argument and return types
-    gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
-                                ctypes.POINTER(_GcfFile),
-                                ctypes.c_int]
-    gcf_io.read_gcf.restype = ctypes.c_int
-    gcf_io.init_GcfSeg_for_read.argtypes = [ctypes.POINTER(_GcfSeg),
-                                            ctypes.c_int]
-    gcf_io.init_GcfSeg_for_read.restype = None
-    gcf_io.is_LittleEndian_gcf.argtypes = []
-    gcf_io.is_LittleEndian_gcf.restype = ctypes.c_int
-    gcf_io.read_gcf_block.argtypes = [ctypes.POINTER(_GcfFile),
-                                      ctypes.c_char_p,
-                                      ctypes.POINTER(_GcfSeg),
-                                      ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_double]
-    gcf_io.read_gcf_block.restype = ctypes.c_int
-    gcf_io.free_GcfSeg.argtypes = [ctypes.POINTER(_GcfSeg)]
-    gcf_io.free_GcfSeg.restype = None
-    gcf_io.merge_GcfFile.argtypes = [ctypes.POINTER(_GcfFile),
-                                     ctypes.c_int,
-                                     ctypes.c_double]
-    gcf_io.merge_GcfFile.restype = None
-
-    d = 0  # number of empty blocks
-    cur_pos = None
-    ret = 0
-    fpt = None  # file-like object
-    try:
-        if isinstance(file, IOBase):
-            cur_pos = file.tell()
-            fpt = file
-        else:
-            fpt = open(file, "rb")
-    except Exception:
-        ret = -1
-
-    # get endianess of current machine
-    endian = gcf_io.is_LittleEndian_gcf()
-
-    if not ret:
-        b1 = 0
-        tol = 1.E-3
-        seg = _GcfSeg()
-        # initiate and allocate segment
-        gcf_io.init_GcfSeg_for_read(seg, mode)
-
-        # adjust mode if nedded
-        if mode > 2:
-            mode = 2
-            b1 = 1
-
-        while True:
-            buffer = fpt.read(1024)
-            if not buffer:
-                break
-            d += gcf_io.read_gcf_block(obj, buffer, seg, mode, endian, tol)
-            if b1:
-                break
-
-        # free segment
-        gcf_io.free_GcfSeg(seg)
-
-        # merge segments if asked for
-        if abs(mode) < 2:
-            gcf_io.merge_GcfFile(obj, mode, tol)
-
-    if obj.n_blk == d:
-        ret = 1 + endian  # no data blocks in file
-
-    # close file or restore position:
-    if fpt is not None:
-        if cur_pos is not None:
-            fpt.seek(cur_pos, 0)
-        else:
-            fpt.close()
-
-    return ret
 
 
 def _read_gcf(filename, headonly=False, network='', station='',
@@ -425,12 +359,29 @@ def _read_gcf(filename, headonly=False, network='', station='',
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream object
     """
+    content = None  # will be populated only if filename is a file-like object
+    if isinstance(filename, IOBase):
+        cur_pos = filename.tell()
+        content = filename.read()
+        filename.seek(cur_pos, 0)
+    else:
+        if isinstance(filename, Path):
+            filename = str(filename)
+        if not os.path.exists(filename):
+            raise IOError("file %s could not be located (erroneous path?)"
+                          % (filename))
+
+    stream = None
     # Load shared library
     gcf_io = _load_cdll("gcf")
+
     # declare function argument and return types
+    gcf_io.read_gcf.argtypes = [ctypes.c_char_p,
+                                ctypes.POINTER(_GcfFile),
+                                ctypes.c_int]
+    gcf_io.read_gcf.restype = ctypes.c_int
     gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
     gcf_io.free_GcfFile.restype = None
-
     # set reader mode
     if headonly:
         if not blockmerge:
@@ -447,26 +398,25 @@ def _read_gcf(filename, headonly=False, network='', station='',
 
     # read file
     obj = _GcfFile()
-    # b_filename = filename.encode('utf-8')
-    # ret = gcf_io.read_gcf(fid, obj, mode)
-    ret = __read_gcf(filename, obj, mode)
-
-    if isinstance(filename, IOBase):
-        if ret:
-            raise IOError("failed to read in-memory GCF data (error code %d)"
-                          % ret)
+    if content is None:
+        b_filename = filename.encode('utf-8')
+        ret = gcf_io.read_gcf(b_filename, obj, mode)
     else:
-        if ret == -1:
-            if os.path.isfile(filename):
-                raise IOError("cannot open file %s in read mode (missing "
-                              "read permissions for user?)" % filename)
-            else:
-                raise IOError("%s is not a file" % filename)
-        elif ret == 1:
-            raise IOError("file %s is not a GCF data file" % filename)
-        elif ret:
-            raise IOError("failed to read file %s (unknown error code %d "
-                          "returned)" % (filename, ret))
+        ret = gcf_io.read_gcf_from_char_array(content, obj, mode)
+    if ret and content is not None:
+        raise IOError("failed to read in-memory GCF data (error code %d)"
+                      % ret)
+    elif ret == -1:
+        if os.path.isfile(filename):
+            raise IOError("cannot open file %s in read mode (missing "
+                          "read permissions for user?)" % (filename))
+        else:
+            raise IOError("%s is not a file" % (filename))
+    elif ret == 1:
+        raise IOError("file %s is not a GCF data file" % (filename))
+    elif ret:
+        raise IOError("failed to read file %s (unknown error code %d "
+                      "returned)" % (filename, ret))
 
     err_msg = ""
     # So far so good, set up trace objects
