@@ -681,6 +681,11 @@ class IOBaseWrapper:
     allowing the stream to be reused
     """
     def __init__(self, iobase):
+        """
+        Initialize a new IOBaseWrapper
+
+        :param iobase: any file-like object subclass of `IOBase`
+        """
         self._iobase = iobase
 
     def __enter__(self):
@@ -693,7 +698,6 @@ class IOBaseWrapper:
     def __getattr__(self, item):
         # make this class behave exactly as the child stream:
         return getattr(self._iobase, item)
-
 
 
 def from_bytes_stream(file_or_stream, dtype=float, count=-1, offset=0,

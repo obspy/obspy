@@ -23,11 +23,7 @@ class _WtTape(object):
         self.close()
 
     def open(self, filename):
-        if isinstance(filename, BytesIO):
-            filename.seek(0)
-            return filename
-        else:
-            self._handle = open_bytes_stream(filename)
+        self._handle = open_bytes_stream(filename)
         return self
 
     def close(self):
