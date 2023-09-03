@@ -9,13 +9,11 @@ from io import IOBase
 import math
 import os
 import warnings
-from pathlib import Path
 
 import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core import Stream, Trace, AttribDict
-from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.libnames import _load_cdll
 
 # supported sampling rates outside range 1-250 Hz
@@ -183,12 +181,12 @@ def merge_gcf_stream(st):
     return Stream(traces=traces)
 
 
-def _is_gcf(filename):
+def _is_gcf(file):
     """
     Checks whether a file is GCF or not.
 
-    :type filename: str or BytesIO
-    :param filename: path to GCF file to be checked. Note: Passing BytesIO
+    :type file: str or file-like object (a.g. `BytesIO`)
+    :param file: path to GCF file to be checked. Note: Passing BytesIO
         is allowed but will return False
     :rtype: bool
     :return: True if a object pointed to by path is a GCF file.
@@ -204,7 +202,7 @@ def _is_gcf(filename):
     try:
         # Decode first block
         obj = _GcfFile()
-        ret = __read_gcf(filename, obj, 3)
+        ret = _fill_gcf_from_file(file, obj, 3)
 
         # b_filename = filename.encode('utf-8')
         # ret = gcf_io.read_gcf(fid, obj, 3)
@@ -221,10 +219,17 @@ def _is_gcf(filename):
     return True
 
 
-def __read_gcf(file, obj, mode):
-    """Python conversion of C counterpart `gcf_file.read_gcf` suitable for
-    file and file-like objects, reads Gcf content from file and populates the
-    passed GcfFile `obj`"""
+def _fill_gcf_from_file(file, obj, mode):
+    """Read data from `file` into the given `_GcfFile` object `obj`.
+    This function is the Python implementation of the C function
+    `gcf_io.read_gcf` to allow reading from both file paths
+    and file-like objects, and should not be called directly:
+    see `_read_gcf` and `_is_gcf` for details.
+
+    :param file: str, Path or file-like object( e.g. `BytesIO`)
+    :param obj: an empty instance of a _GcfFile` object
+    :param mode: the read mode. See `_read_gcf` for details
+    """
     # Load shared library
     gcf_io = _load_cdll("gcf")
 
@@ -308,7 +313,7 @@ def __read_gcf(file, obj, mode):
     return ret
 
 
-def _read_gcf(filename, headonly=False, network='', station='',
+def _read_gcf(file, headonly=False, network='', station='',
               location='', channel_prefix='HH', blockmerge=True,
               cleanoverlap=True, errorret=False, **kwargs):
     """
@@ -395,8 +400,9 @@ def _read_gcf(filename, headonly=False, network='', station='',
         >>> from obspy import read
         >>> st = read("/path/to/20160603_1955n.gcf", format="GCF")
 
-    :type filename: str or :class:`~pathlib.Path`
-    :param filename: path to GCF file to read
+    :type file: str or :class:`~pathlib.Path` or
+        file-like object( e.g. `ByesIO`)
+    :param file: path to GCF file to read
     :type headonly: bool, optional
     :param headonly: if True only read block headers
     :type network: str, optional
@@ -449,13 +455,14 @@ def _read_gcf(filename, headonly=False, network='', station='',
     obj = _GcfFile()
     # b_filename = filename.encode('utf-8')
     # ret = gcf_io.read_gcf(fid, obj, mode)
-    ret = __read_gcf(filename, obj, mode)
+    ret = _fill_gcf_from_file(file, obj, mode)
 
-    if isinstance(filename, IOBase):
+    if isinstance(file, IOBase):
         if ret:
             raise IOError("failed to read in-memory GCF data (error code %d)"
                           % ret)
     else:
+        filename = str(file)
         if ret == -1:
             if os.path.isfile(filename):
                 raise IOError("cannot open file %s in read mode (missing "
