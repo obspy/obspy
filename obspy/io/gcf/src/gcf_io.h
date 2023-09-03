@@ -298,7 +298,7 @@ void init_GcfSeg_for_read(GcfSeg *seg, int mode);
 int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endian);
 
 
-/* function read_gcf_block() reads a 1024 byte gcf data block into GcfFile
+/* function read_gcf_block() reads a 1024 byte gcf data block and updates the given GcfFile
  *
  *  ARGUMENTS
  *   obj        the output GcfFile
@@ -307,7 +307,7 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
  *   For all other arguments, see parse_gcf_block
  *
  *  RETURN
- *   function returns 0 if all went well else 1
+ *   function returns 1 if the data in buffer is not a valid data block, 0 otherwise
  */
 int read_gcf_block(GcfFile *obj, unsigned char buffer[1024], GcfSeg *seg, int mode, int endian, double tol);
 
