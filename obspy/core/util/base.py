@@ -13,6 +13,7 @@ import importlib
 import inspect
 import io
 import os
+from contextlib import contextmanager
 from io import BytesIO, IOBase
 from pathlib import Path
 import re
@@ -398,7 +399,10 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             # check format
             is_format = is_format(filename)
             if position is not None:
-                filename.seek(position, 0)
+                try:
+                    filename.seek(position, 0)
+                except Exception as e:
+                    pass
             if is_format:
                 break
         else:
@@ -654,9 +658,26 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
         return generic
 
 
+def get_bytes_stream(file_or_stream):
+    """Return the binary stream (file-like object of bytes data)
+    from the argument
+
+    :param file_or_stream: path to the given file name (str or Path), or
+        file-like object (e.g. `BytesIO`). If a file-like object is passed,
+        the function essentially returns it
+    :return: a stream / file-like object
+        (`io.BaseIO` subclass) of binary data (bytes)
+    """
+    if isinstance(file_or_stream, IOBase):
+        return file_or_stream
+    else:
+        return open(file_or_stream, 'rb')
+
+
+@contextmanager
 def open_bytes_stream(file_or_stream):
-    """Convenience function returning a binary stream (file-like object)
-    from both in-memory or on-disk data. Example:
+    """Context manager to be used in a with statement to read bytes
+    data from the argument
     ```
     with open_bytes_stream(file_or_stream) as stream:
         stream.read()
@@ -664,14 +685,25 @@ def open_bytes_stream(file_or_stream):
     ```
 
     :param file_or_stream: path to the given file name (str or Path), or
-        file-like object (e.g. `BytesIO`). If a file-like object is passed,
-        the function essentially returns it
-    :return: a file-like object (`io.BaseIO` subclass) streaming bytes data
+        file-like object (e.g. `BytesIO`). In the latter case, this
+        context manager behaves similarly to `with file_or_stream:`
+        but `file_or_stream` will not be closed and can thus be reused
+        (the stream position will be reset where it was prior
+        to this function call)
+    :return: a context manager to be used to read bytes data from the
+        argument
     """
-    if isinstance(file_or_stream, IOBase):
-        return file_or_stream
-    else:
-        return open(file_or_stream, 'rb')
+    cur_pos = None
+    if isinstance(file_or_stream, BytesIO):
+        cur_pos = file_or_stream.tell()
+    stream = get_bytes_stream(file_or_stream)
+    try:
+        yield stream
+    finally:
+        if cur_pos is None:
+            stream.close()
+        else:
+            file_or_stream.seek(cur_pos, 0)
 
 
 class CatchAndAssertWarnings(warnings.catch_warnings):

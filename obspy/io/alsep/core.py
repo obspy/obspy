@@ -19,15 +19,15 @@ from .wt.tape import WtnTape, WthTape
 
 def _read_header(file):
     """Reads the header of the given ALSEP file"""
-    stream = open_bytes_stream(file)
-    # np.fromfile accepts file path on-disk file-like
-    # objects. In all other cases, use np.frombuffer:
-    try:
-        return np.fromfile(file, dtype='u1', shape=16)
-    except Exception:
-        # stream does not support fileno
-        buffer = stream.read(16)
-        return np.frombuffer(buffer, dtype='u1')
+    with open_bytes_stream(file) as stream:
+        # np.fromfile accepts file path on-disk file-like
+        # objects. In all other cases, use np.frombuffer:
+        try:
+            return np.fromfile(file, dtype='u1', shape=16)
+        except Exception:
+            # stream does not support fileno
+            buffer = stream.read(16)
+            return np.frombuffer(buffer, dtype='u1')
 
 
 def _is_pse(file):

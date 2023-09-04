@@ -20,17 +20,11 @@ def _is_gse2(file):
     :rtype: bool
     :return: ``True`` if a GSE2 file.
     """
-    # Note: removed "with" statements, as they might
-    # close the stream and make it not reusable
-    is_file_like = isinstance(file, IOBase)
-    stream = open_bytes_stream(file)
-    try:
-        libgse2.is_gse2(stream)
-    except Exception:
-        return False
-    finally:
-        if not is_file_like:
-            stream.close()
+    with open_bytes_stream(file) as stream:
+        try:
+            libgse2.is_gse2(stream)
+        except Exception:
+            return False
     return True
 
 
@@ -124,18 +118,13 @@ def _is_gse1(file):
     :rtype: bool
     :return: ``True`` if a GSE1 file.
     """
-    # Note: removed "with" statements, as they might
-    # close the stream and make it not reusable
-    is_file_like = isinstance(file, IOBase)
-    stream = open_bytes_stream(file)
-    try:
-        data = stream.readline()
-    except Exception:
-        return False
-    finally:
-        if not is_file_like:
-            stream.close()
-    return data.startswith(b'WID1') or data.startswith(b'XW01')
+    with open_bytes_stream(file) as stream:
+        try:
+            data = stream.readline()
+        except Exception:
+            return False
+        return data.startswith(b'WID1') \
+            or data.startswith(b'XW01')
 
 
 def _read_gse1(filename, headonly=False, verify_chksum=True,

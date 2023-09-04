@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from obspy.core.util import open_bytes_stream
+from obspy.core.util import get_bytes_stream
 from .record import WtnRecord, WthRecord
 from .define import SIZE_WT_HEADER
 
@@ -22,7 +22,7 @@ class _WtTape(object):
         self.close()
 
     def open(self, file):
-        self._handle = open_bytes_stream(file)
+        self._handle = get_bytes_stream(file)
         try:
             # Get if fileno is implemented
             # (see self.fromfile)

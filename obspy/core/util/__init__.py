@@ -20,7 +20,7 @@ Various utilities for ObsPy
 # import order matters - NamedTemporaryFile must be one of the first!
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import (ALL_MODULES, DEFAULT_MODULES,
-                                  open_bytes_stream,
+                                  get_bytes_stream, open_bytes_stream,
                                   NATIVE_BYTEORDER, NETWORK_MODULES,
                                   NamedTemporaryFile, _read_from_plugin,
                                   create_empty_data_chunk, get_example_file,
