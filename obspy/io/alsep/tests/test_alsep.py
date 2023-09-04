@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from io import BytesIO
+
 from obspy.io.alsep.core import (_is_pse, _is_wtn, _is_wth,
                                  _read_pse, _read_wtn, _read_wth)
 
@@ -44,6 +46,14 @@ class TestAlsep():
         testfile = testdata['pse.a15.1.2.mini']
         stream = _read_pse(testfile)
         assert 10 == len(stream.traces)
+        with open(testfile, 'rb') as _:
+            stream = _read_pse(_)
+            assert 10 == len(stream.traces)
+        with open(testfile, 'rb') as _:
+            b = BytesIO(_.read())
+            b.seek(0)
+            stream = _read_pse(b)
+            assert 10 == len(stream.traces)
 
     def test_read_alsep_pse_file_with_ignore_error(self, testdata):
         """
@@ -60,6 +70,14 @@ class TestAlsep():
         testfile = testdata['wtn.1.2.mini']
         stream = _read_wtn(testfile)
         assert 27 == len(stream.traces)
+        with open(testfile) as _:
+            stream = _read_wtn(_)
+        assert 27 == len(stream.traces)
+        with open(testfile, 'rb') as _:
+            content = BytesIO(_.read())
+        stream = _read_wtn(content)
+        assert 27 == len(stream.traces)
+
 
     def test_read_alsep_wth_file(self, testdata):
         """
@@ -68,6 +86,13 @@ class TestAlsep():
         testfile = testdata['wth.1.5.mini']
         stream = _read_wth(testfile)
         assert 12 == len(stream.traces)
+        with open(testfile) as _:
+            stream = _read_wth(_)
+        assert 12 == len(stream.traces)
+        with open(testfile, 'rb') as _:
+            content = BytesIO(_.read())
+        stream = _read_wth(content)
+        assert 12 == len(stream.traces)
 
     def test_single_header_wtn(self, testdata):
         """
@@ -75,6 +100,13 @@ class TestAlsep():
         """
         testfile = testdata['wtn.6.30.mini']
         stream = _read_wtn(testfile)
+        assert 18 == len(stream.traces)
+        with open(testfile) as _:
+            stream = _read_wtn(_)
+        assert 18 == len(stream.traces)
+        with open(testfile, 'rb') as _:
+            content = BytesIO(_.read())
+        stream = _read_wtn(content)
         assert 18 == len(stream.traces)
 
     def test_single_header_wth(self, testdata):
