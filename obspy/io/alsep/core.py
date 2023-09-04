@@ -8,13 +8,23 @@ import numpy as np
 
 from obspy import Stream, Trace
 from obspy.core import Stats
-from obspy.core.util import from_bytes_stream
+from obspy.core.util import open_bytes_stream
 
 from .assign import assign_alsep_words
 from .define import channels, package_id_to_apollo_station, FORMAT_ALSEP_WTN
 from .pse.tape import PseTape
 from .util import get_utc, check_date, check_sync_code
 from .wt.tape import WtnTape, WthTape
+
+
+def _read_header(filename):
+    stream = open_bytes_stream(filename)
+    try:
+        return np.fromfile(filename, dtype='u1', shape=16)
+    except Exception:
+        # stream does not support fileno
+        buffer = stream.read(16)
+        return np.frombuffer(buffer, dtype='u1')
 
 
 def _is_pse(filename):
@@ -26,7 +36,7 @@ def _is_pse(filename):
     :rtype: bool
     :return: ``True`` if an ALSEP PSE tape file.
     """
-    header = from_bytes_stream(filename, dtype='u1', count=16)
+    header = _read_header(filename)
     # File has less than 16 characters
     if len(header) != 16:
         return False
@@ -48,7 +58,7 @@ def _is_wtn(filename):
     :rtype: bool
     :return: ``True`` if an ALSEP WTN tape file.
     """
-    header = from_bytes_stream(filename, dtype='u1', count=16)
+    header = _read_header(filename)
     # File has less than 16 characters
     if len(header) != 16:
         return False
@@ -76,7 +86,7 @@ def _is_wth(filename):
     :rtype: bool
     :return: ``True`` if an ALSEP WTH tape file.
     """
-    header = from_bytes_stream(filename, dtype='u1', count=16)
+    header = _read_header(filename)
     # File has less than 16 characters
     if len(header) != 16:
         return False
