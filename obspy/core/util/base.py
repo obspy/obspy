@@ -665,61 +665,13 @@ def open_bytes_stream(file_or_stream):
 
     :param file_or_stream: path to the given file name (str or Path), or
         file-like object (e.g. `BytesIO`). If a file-like object is passed,
-        the function essentially returns it, but will not close it when
-        exiting the `with` statement, so that `file_or_stream` can be reused
+        the function essentially returns it
     :return: a file-like object (`io.BaseIO` subclass) streaming bytes data
     """
     if isinstance(file_or_stream, IOBase):
-        return IOBaseWrapper(file_or_stream)
+        return file_or_stream
     else:
         return open(file_or_stream, 'rb')
-
-
-class IOBaseWrapper:
-    """I/O bytes stream wrapper that behaves exactly as the underlying stream
-    (`IOBase` subclass) but does not close it when exiting a `with` statement,
-    allowing the stream to be reused
-    """
-    def __init__(self, iobase):
-        """
-        Initialize a new IOBaseWrapper
-
-        :param iobase: any file-like object subclass of `IOBase`
-        """
-        self._iobase = iobase
-
-    def __enter__(self):
-        self._cur_pos = self._iobase.tell()
-        return self._iobase.__enter__()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._iobase.seek(self._cur_pos, 0)
-
-    def __getattr__(self, item):
-        # make this class behave exactly as the child stream:
-        return getattr(self._iobase, item)
-
-
-def from_bytes_stream(file_or_stream, dtype=float, count=-1, offset=0,
-                      **kwargs):
-    """Convenience function behaving as `numpy.fromfile` but accepting both
-    binary data file paths (`str`) and in-memory data (`BytesIO`)
-    as first argument
-
-    :param file: str or BytesIO. If `str`, it must denote a file path
-        containing binary data (no text file)
-    :param dtype: float. Data-type of the returned array; default: float.
-    :param count: int. Number of items to read. -1 means all data
-    :param offset: int. Start reading from this offset (in bytes); default: 0.
-    :param kwargs: optional kwyword arguments. See numpy `fromfile` and numpy
-        `frombuffer` for details
-    """
-    if isinstance(file_or_stream, BytesIO):
-        return np.frombuffer(file_or_stream.getbuffer(), dtype=dtype,
-                             count=count, offset=offset, **kwargs)
-    else:
-        return np.fromfile(file_or_stream, dtype=dtype,
-                           count=count, offset=offset, **kwargs)
 
 
 class CatchAndAssertWarnings(warnings.catch_warnings):
