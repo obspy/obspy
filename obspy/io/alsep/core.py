@@ -17,26 +17,29 @@ from .util import get_utc, check_date, check_sync_code
 from .wt.tape import WtnTape, WthTape
 
 
-def _read_header(filename):
-    stream = open_bytes_stream(filename)
+def _read_header(file):
+    """Reads the header of the given ALSEP file"""
+    stream = open_bytes_stream(file)
+    # np.fromfile accepts file path on-disk file-like
+    # objects. In all other cases, use np.frombuffer:
     try:
-        return np.fromfile(filename, dtype='u1', shape=16)
+        return np.fromfile(file, dtype='u1', shape=16)
     except Exception:
         # stream does not support fileno
         buffer = stream.read(16)
         return np.frombuffer(buffer, dtype='u1')
 
 
-def _is_pse(filename):
+def _is_pse(file):
     """
     Checks whether a file is ALSEP PSE tape or not.
 
-    :type filename: str or BytesIO
-    :param filename: ALSEP PSE tape file to be checked.
+    :type file: str or file-like object
+    :param file: ALSEP PSE tape file to be checked.
     :rtype: bool
     :return: ``True`` if an ALSEP PSE tape file.
     """
-    header = _read_header(filename)
+    header = _read_header(file)
     # File has less than 16 characters
     if len(header) != 16:
         return False
@@ -49,16 +52,16 @@ def _is_pse(filename):
     return False
 
 
-def _is_wtn(filename):
+def _is_wtn(file):
     """
     Checks whether a file is ALSEP WTN tape or not.
 
-    :type filename: str or BytesIO
-    :param filename: ALSEP WTN tape file to be checked.
+    :type file: str or file-like object
+    :param file: ALSEP WTN tape file to be checked.
     :rtype: bool
     :return: ``True`` if an ALSEP WTN tape file.
     """
-    header = _read_header(filename)
+    header = _read_header(file)
     # File has less than 16 characters
     if len(header) != 16:
         return False
@@ -77,16 +80,16 @@ def _is_wtn(filename):
         return False
 
 
-def _is_wth(filename):
+def _is_wth(file):
     """
     Checks whether a file is ALSEP WTH tape or not.
 
-    :type filename: str or BytesIO
-    :param filename: ALSEP WTH tape file to be checked.
+    :type file: str or file-like object (e.g., `BytesIO`)
+    :param file: ALSEP WTH tape file to be checked.
     :rtype: bool
     :return: ``True`` if an ALSEP WTH tape file.
     """
-    header = _read_header(filename)
+    header = _read_header(file)
     # File has less than 16 characters
     if len(header) != 16:
         return False
@@ -105,7 +108,7 @@ def _is_wth(filename):
         return False
 
 
-def _read_pse(filename, headonly=False, year=None, ignore_error=False,
+def _read_pse(file, headonly=False, year=None, ignore_error=False,
               **kwargs):
     """
     Reads a PSE file and returns ObsPy Stream object.
@@ -114,8 +117,8 @@ def _read_pse(filename, headonly=False, year=None, ignore_error=False,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
-    :param filename: PSE file to be read.
+    :type file: str or file-like object
+    :param file: PSE file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
@@ -135,7 +138,7 @@ def _read_pse(filename, headonly=False, year=None, ignore_error=False,
     """
     stream = Stream()
     pse_tape = PseTape()
-    with pse_tape.open(filename) as tape:
+    with pse_tape.open(file) as tape:
         prev_msec_of_year = 0
         prev_spz = None
         trace_data = {}
@@ -183,7 +186,7 @@ def _read_pse(filename, headonly=False, year=None, ignore_error=False,
     return stream
 
 
-def _read_wtn(filename, headonly=False, ignore_error=False, **kwargs):
+def _read_wtn(file, headonly=False, ignore_error=False, **kwargs):
     """
     Reads a WTN file and returns ObsPy Stream object.
 
@@ -191,8 +194,8 @@ def _read_wtn(filename, headonly=False, ignore_error=False, **kwargs):
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
-    :param filename: WTN file to be read.
+    :type file: str or file-like object
+    :param file: WTN file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
@@ -209,7 +212,7 @@ def _read_wtn(filename, headonly=False, ignore_error=False, **kwargs):
 
     stream = Stream()
     wtn_tape = WtnTape()
-    with wtn_tape.open(filename) as tape:
+    with wtn_tape.open(file) as tape:
         prev_values = None
         prev_msec_of_year = {12: 0, 14: 0, 15: 0, 16: 0, 17: 0}
         trace_data = {}
@@ -273,7 +276,7 @@ def _read_wtn(filename, headonly=False, ignore_error=False, **kwargs):
     return stream
 
 
-def _read_wth(filename, headonly=False, ignore_error=False, **kwargs):
+def _read_wth(file, headonly=False, ignore_error=False, **kwargs):
     """
     Reads a WTH file and returns ObsPy Stream object.
 
@@ -281,8 +284,8 @@ def _read_wth(filename, headonly=False, ignore_error=False, **kwargs):
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
-    :param filename: WTH file to be read.
+    :type file: str or file-like object
+    :param file: WTH file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
@@ -299,7 +302,7 @@ def _read_wth(filename, headonly=False, ignore_error=False, **kwargs):
 
     stream = Stream()
     wth_tape = WthTape()
-    with wth_tape.open(filename) as tape:
+    with wth_tape.open(file) as tape:
         prev_msec_of_year = {12: 0, 14: 0, 15: 0, 16: 0, 17: 0}
         trace_data = {}
         for record in tape:
