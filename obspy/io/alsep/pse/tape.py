@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from obspy.core.util import open_bytes_stream
+from obspy.core.util import get_bytes_stream
 from .define import SIZE_PSE_RECORD
 from .record import PseRecord
 
@@ -28,7 +28,7 @@ class PseTape(object):
         self.close()
 
     def open(self, file):
-        self._handle = open_bytes_stream(file)
+        self._handle = get_bytes_stream(file)
         try:
             # Get if fileno is implemented
             # (see self.fromfile)
@@ -45,6 +45,8 @@ class PseTape(object):
         # np.fromfile accepts file path or file-like objects
         # with fileno attr. In all other cases, use np.frombuffer:
         if not self._handle_has_fileno:
+            # read SIZE_PSE_RECORD bytes
+            # (we will parse uint8 -> 1 byte per item):
             buffer = self._handle.read(SIZE_PSE_RECORD)
             ret = np.frombuffer(buffer, dtype=np.uint8)
             # assert len(ret) == SIZE_PSE_RECORD
