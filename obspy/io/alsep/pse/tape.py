@@ -30,7 +30,8 @@ class PseTape(object):
     def open(self, file):
         self._handle = open_bytes_stream(file)
         try:
-            # see self.fromfile
+            # Get if fileno is implemented
+            # (see self.fromfile)
             self._handle.fileno()
             self._handle_has_fileno = True
         except Exception:
@@ -41,8 +42,8 @@ class PseTape(object):
         self._handle.close()
 
     def fromfile(self):
-        # np.fromfile accepts file path on-disk file-like
-        # objects. In all other cases, use np.frombuffer:
+        # np.fromfile accepts file path or file-like objects
+        # with fileno attr. In all other cases, use np.frombuffer:
         if not self._handle_has_fileno:
             buffer = self._handle.read(SIZE_PSE_RECORD)
             ret = np.frombuffer(buffer, dtype=np.uint8)
