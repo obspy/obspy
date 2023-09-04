@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from io import BytesIO
 
 import numpy as np
 from obspy.core.util import open_bytes_stream
@@ -22,9 +21,10 @@ class _WtTape(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def open(self, filename):
-        self._handle = open_bytes_stream(filename)
+    def open(self, file):
+        self._handle = open_bytes_stream(file)
         try:
+            # see self.fromfile
             self._handle.fileno()
             self._handle_has_fileno = True
         except Exception:
@@ -34,7 +34,9 @@ class _WtTape(object):
     def close(self):
         self._handle.close()
 
-    def fromfile(self, dtype=None):
+    def fromfile(self):
+        # np.fromfile accepts file path on-disk file-like
+        # objects. In all other cases, use np.frombuffer:
         if not self._handle_has_fileno:
             return np.frombuffer(self._handle.read(), dtype=np.uint8)
         return np.fromfile(self._handle, dtype=np.uint8)
