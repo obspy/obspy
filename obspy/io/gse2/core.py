@@ -2,6 +2,8 @@
 """
 GSE2/GSE1 bindings to ObsPy core module.
 """
+from io import IOBase
+
 import numpy as np
 
 from obspy import Stream, Trace
@@ -9,21 +11,26 @@ from . import libgse1, libgse2
 from obspy.core.util import open_bytes_stream
 
 
-def _is_gse2(filename):
+def _is_gse2(file):
     """
     Checks whether a file is GSE2 or not.
 
-    :type filename: str or BytesIO
-    :param filename: GSE2 file to be checked.
+    :type file: str or file-like object
+    :param file: GSE2 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE2 file.
     """
-    # Open file.
+    # Note: removed "with" statements, as they might
+    # close the stream and make it not reusable
+    is_file_like = isinstance(file, IOBase)
+    stream = open_bytes_stream(file)
     try:
-        with open_bytes_stream(filename) as f:
-            libgse2.is_gse2(f)
+        libgse2.is_gse2(stream)
     except Exception:
         return False
+    finally:
+        if not is_file_like:
+            stream.close()
     return True
 
 
@@ -108,24 +115,27 @@ def _write_gse2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
             libgse2.write(trace.stats, trace.data, f, inplace)
 
 
-def _is_gse1(filename):
+def _is_gse1(file):
     """
     Checks whether a file is GSE1 or not.
 
-    :type filename: str or BytesIO
-    :param filename: GSE1 file to be checked.
+    :type file: str or file-like object
+    :param file: GSE1 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE1 file.
     """
-    # Open file.
-    with open_bytes_stream(filename) as f:
-        try:
-            data = f.readline()
-        except Exception:
-            return False
-    if data.startswith(b'WID1') or data.startswith(b'XW01'):
-        return True
-    return False
+    # Note: removed "with" statements, as they might
+    # close the stream and make it not reusable
+    is_file_like = isinstance(file, IOBase)
+    stream = open_bytes_stream(file)
+    try:
+        data = stream.readline()
+    except Exception:
+        return False
+    finally:
+        if not is_file_like:
+            stream.close()
+    return data.startswith(b'WID1') or data.startswith(b'XW01')
 
 
 def _read_gse1(filename, headonly=False, verify_chksum=True,

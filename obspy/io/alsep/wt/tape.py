@@ -24,7 +24,8 @@ class _WtTape(object):
     def open(self, file):
         self._handle = open_bytes_stream(file)
         try:
-            # see self.fromfile
+            # Get if fileno is implemented
+            # (see self.fromfile)
             self._handle.fileno()
             self._handle_has_fileno = True
         except Exception:
@@ -35,8 +36,8 @@ class _WtTape(object):
         self._handle.close()
 
     def fromfile(self):
-        # np.fromfile accepts file path on-disk file-like
-        # objects. In all other cases, use np.frombuffer:
+        # np.fromfile accepts file path or file-like objects
+        # with fileno attr. In all other cases, use np.frombuffer:
         if not self._handle_has_fileno:
             return np.frombuffer(self._handle.read(), dtype=np.uint8)
         return np.fromfile(self._handle, dtype=np.uint8)
