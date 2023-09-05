@@ -399,10 +399,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             # check format
             is_format = is_format(filename)
             if position is not None:
-                try:
-                    filename.seek(position, 0)
-                except Exception as e:
-                    pass
+                filename.seek(position, 0)
             if is_format:
                 break
         else:
