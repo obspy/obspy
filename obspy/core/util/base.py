@@ -14,7 +14,7 @@ import inspect
 import io
 import os
 from contextlib import contextmanager
-from io import BytesIO, IOBase
+from io import BytesIO, IOBase, TextIOBase, TextIOWrapper
 from pathlib import Path
 import re
 import sys
@@ -659,14 +659,11 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
 
 
 def get_bytes_stream(file_or_stream):
-    """Return the binary stream (file-like object of bytes data)
-    from the argument
+    """Return a file-like object streaming bytes data
+    (`bytes` objects)
 
-    :param file_or_stream: path to the given file name (str or Path), or
-        file-like object (e.g. `BytesIO`). If a file-like object is passed,
-        the function essentially returns it
-    :return: a stream / file-like object
-        (`io.BaseIO` subclass) of binary data (bytes)
+    :param file_or_stream: str, Path or file-like object
+    :return: a file-like object streaming text data
     """
     if isinstance(file_or_stream, IOBase):
         return file_or_stream
@@ -676,33 +673,77 @@ def get_bytes_stream(file_or_stream):
 
 @contextmanager
 def open_bytes_stream(file_or_stream):
-    """Context manager to be used in a with statement to read bytes
-    data from the argument
-    ```
-    with open_bytes_stream(file_or_stream) as stream:
-        stream.read()
-        ...
-    ```
+    """Context manager to read bytes data stream from the argument,
+    e.g.: `with open_bytes_stream(file_or_stream)`
 
-    :param file_or_stream: path to the given file name (str or Path), or
-        file-like object (e.g. `BytesIO`). In the latter case, this
-        context manager behaves similarly to `with file_or_stream:`
-        but `file_or_stream` will not be closed and can thus be reused
-        (the stream position will be reset where it was prior
-        to this function call)
-    :return: a context manager to be used to read bytes data from the
-        argument
+    :param file_or_stream: str, Path or file-like object.
+        If this parameter is already a file-like object,
+        it will not be closed on exit but the stream position
+        will be reset so that the object can be reused
+    :return: a context manager to read bytes data
     """
     cur_pos = None
-    if isinstance(file_or_stream, BytesIO):
+    if isinstance(file_or_stream, IOBase):
         cur_pos = file_or_stream.tell()
     stream = get_bytes_stream(file_or_stream)
     try:
         yield stream
     finally:
-        if cur_pos is None:
+        if cur_pos is None:  # str or Path passed: close stream
             stream.close()
         else:
+            file_or_stream.seek(cur_pos, 0)
+
+
+def get_text_stream(file_or_stream, encoding='utf-8'):
+    """Return a file-like object streaming text data
+    (`str` objects)
+
+    :param file_or_stream: str, Path or file-like object
+    :param encoding: the encoding used. If the passed argument
+        already a file-like object of encoded text data, this
+        argument is ignored
+    :return: a file-like object streaming text data
+    """
+    if isinstance(file_or_stream, TextIOBase):
+        return file_or_stream
+    elif isinstance(file_or_stream, IOBase):
+        return TextIOWrapper(file_or_stream, encoding=encoding)
+    else:
+        return open(file_or_stream, 'rt', encoding=encoding)
+
+
+@contextmanager
+def open_text_stream(file_or_stream, encoding='utf-8'):
+    """Context manager releasing a text data stream from the argument,
+    e.g.: `with open_text_stream(file_or_stream)`
+
+    :param file_or_stream: str, Path or file-like object.
+        If this parameter is already a file-like object,
+        it will not be closed on exit but the stream position
+        will be reset so that the object can be reused
+    :param encoding: the encoding used. If the passed argument
+        already a file-like object of encoded text data, this
+        argument is ignored
+    :return: a context manager to read text data
+    """
+    cur_pos = None
+    if isinstance(file_or_stream, IOBase):
+        cur_pos = file_or_stream.tell()
+    stream = get_text_stream(file_or_stream, encoding=encoding)
+    try:
+        yield stream
+    finally:
+        if cur_pos is None:  # str or Path passed: close stream
+            stream.close()
+        else:
+            # if we wrapped file_or_stream in a TextIOWrapper,
+            # closing the latter would close also the underlying
+            # stream. Simply detach the wrapper in this case:
+            if isinstance(stream, TextIOWrapper) and \
+                    stream is not file_or_stream:
+                stream.detach()
+            # reset position:
             file_or_stream.seek(cur_pos, 0)
 
 
