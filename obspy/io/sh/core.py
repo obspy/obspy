@@ -9,7 +9,6 @@ SH bindings to ObsPy core module.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
-from io import IOBase, BytesIO
 from pathlib import Path
 import numpy as np
 

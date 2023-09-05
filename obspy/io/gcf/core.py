@@ -185,9 +185,8 @@ def _is_gcf(file):
     """
     Checks whether a file is GCF or not.
 
-    :type file: str or file-like object (a.g. `BytesIO`)
-    :param file: path to GCF file to be checked. Note: Passing BytesIO
-        is allowed but will return False
+    :type file: str or file-like object
+    :param file: path to GCF file to be checked
     :rtype: bool
     :return: True if a object pointed to by path is a GCF file.
     """
@@ -226,7 +225,7 @@ def _fill_gcf_from_file(file, obj, mode):
     and file-like objects, and should not be called directly:
     see `_read_gcf` and `_is_gcf` for details.
 
-    :param file: str, Path or file-like object( e.g. `BytesIO`)
+    :param file: str, Path or file-like object
     :param obj: an empty instance of a _GcfFile` object
     :param mode: the read mode. See `_read_gcf` for details
     """
