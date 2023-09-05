@@ -84,7 +84,7 @@ def _is_wth(file):
     """
     Checks whether a file is ALSEP WTH tape or not.
 
-    :type file: str or file-like object (e.g., `BytesIO`)
+    :type file: str or file-like object
     :param file: ALSEP WTH tape file to be checked.
     :rtype: bool
     :return: ``True`` if an ALSEP WTH tape file.

@@ -455,12 +455,12 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
     return packer
 
 
-def _read_ah2(filename):
+def _read_ah2(file):
     """
     Reads an AH v2 waveform file and returns a Stream object.
 
-    :type filename: str or BytesIO
-    :param filename: AH v2 file to be read.
+    :type file: str or file-like object
+    :param file: AH v2 file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
@@ -574,7 +574,7 @@ def _read_ah2(filename):
         return tr
 
     st = Stream()
-    with open_bytes_stream(filename) as fh:
+    with open_bytes_stream(file) as fh:
         # loop as long we can read records
         while True:
             try:

@@ -28,7 +28,7 @@ def _is_gse2(file):
     return True
 
 
-def _read_gse2(filename, headonly=False, verify_chksum=True,
+def _read_gse2(file, headonly=False, verify_chksum=True,
                **kwargs):  # @UnusedVariable
     """
     Reads a GSE2 file and returns a Stream object.
@@ -39,8 +39,8 @@ def _read_gse2(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str or BytesIO
-    :param filename: GSE2 file to be read.
+    :type file: str or file-like object
+    :param file: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only head of GSE2 file.
     :type verify_chksum: bool, optional
@@ -55,7 +55,7 @@ def _read_gse2(filename, headonly=False, verify_chksum=True,
     >>> st = read("/path/to/loc_RJOB20050831023349.z")
     """
     traces = []
-    with open_bytes_stream(filename) as f:
+    with open_bytes_stream(file) as f:
         # reading multiple gse2 parts
         while True:
             try:
@@ -127,7 +127,7 @@ def _is_gse1(file):
             or data.startswith(b'XW01')
 
 
-def _read_gse1(filename, headonly=False, verify_chksum=True,
+def _read_gse1(file, headonly=False, verify_chksum=True,
                **kwargs):  # @UnusedVariable
     """
     Reads a GSE1 file and returns a Stream object.
@@ -138,8 +138,8 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str or BytesIO
-    :param filename: GSE2 file to be read.
+    :type file: str or file-like object
+    :param file: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only header of GSE1 file.
     :type verify_chksum: bool, optional
@@ -155,7 +155,7 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
     """
     traces = []
     # read GSE1 file
-    with open_bytes_stream(filename) as fh:
+    with open_bytes_stream(file) as fh:
         while True:
             try:
                 if headonly:
