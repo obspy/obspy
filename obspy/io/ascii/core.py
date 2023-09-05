@@ -37,7 +37,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
-from obspy.core.util import AttribDict, open_bytes_stream
+from obspy.core.util import AttribDict, open_text_stream
 
 HEADER = ("TIMESERIES {network}_{station}_{location}_{channel}_{dataquality}, "
           "{npts:d} samples, {sampling_rate} sps, {starttime!s:.26s}, "
@@ -71,8 +71,8 @@ def _is_slist(filename):
     True
     """
     try:
-        with open_bytes_stream(filename) as f:
-            temp = f.readline().decode('ascii')
+        with open_text_stream(filename, encoding='ascii') as f:
+            temp = f.readline()
     except Exception:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -97,8 +97,8 @@ def _is_tspair(filename):
     True
     """
     try:
-        with open_bytes_stream(filename) as f:
-            temp = f.readline().decode('ascii')
+        with open_text_stream(filename, encoding='ascii') as f:
+            temp = f.readline()
     except Exception:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -129,12 +129,12 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/slist.ascii')
     """
-    with open_bytes_stream(filename) as fh:
+    with open_text_stream(filename, encoding='ascii') as fh:
         # read file and split text into channels
         buf = []
         key = False
         for line in fh:
-            line = line.decode('ascii')
+            line = line
             if line.isspace():
                 # blank line
                 continue
@@ -198,12 +198,12 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/tspair.ascii')
     """
-    with open_bytes_stream(filename) as fh:
+    with open_text_stream(filename, encoding='ascii') as fh:
         # read file and split text into channels
         buf = []
         key = False
         for line in fh:
-            line = line.decode('ascii')
+            line = line
             if line.isspace():
                 # blank line
                 continue
