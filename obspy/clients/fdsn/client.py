@@ -1799,7 +1799,21 @@ def raise_on_error(code, data):
     """
     # get detailed server response message
     if code != 200:
-        server_info = data.decode('ASCII', errors='ignore')
+        # let's try to resolve all the different types that `data` can sadly
+        # have..
+        # first, if it's `BytesIO` (or should it for whatever reason be
+        # `StringIO` which it shouldn't..) then break it down by reading it
+        try:
+            server_info = data.read()
+        # if there is no `read()` method it should be `bytes`
+        except AttributeError:
+            server_info = data
+        # now decode the bytes (or if for whatever weird reason we ended up
+        # with a string, then do nothing more)
+        try:
+            server_info = server_info.decode('ASCII', errors='ignore')
+        except AttributeError:
+            pass
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
