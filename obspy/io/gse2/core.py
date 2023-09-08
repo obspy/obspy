@@ -2,8 +2,6 @@
 """
 GSE2/GSE1 bindings to ObsPy core module.
 """
-from io import IOBase
-
 import numpy as np
 
 from obspy import Stream, Trace

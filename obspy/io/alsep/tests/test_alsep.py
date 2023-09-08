@@ -78,7 +78,6 @@ class TestAlsep():
         stream = _read_wtn(content)
         assert 27 == len(stream.traces)
 
-
     def test_read_alsep_wth_file(self, testdata):
         """
         Read ALSEP WTH file test via obspy.core.alsep._read.
