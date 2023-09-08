@@ -148,8 +148,8 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
                 headers = {}
                 data = io.StringIO()
                 if skip:
-                    # if skip is set only one trace is read, everything else makes
-                    # no sense.
+                    # if skip is set only one trace is read, everything else
+                    # makes no sense.
                     break
                 continue
             elif line[0].isalpha():

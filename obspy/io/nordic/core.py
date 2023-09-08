@@ -118,8 +118,9 @@ def _is_sfile(sfile, encoding='latin-1'):
                 sfile_seconds = 0
             try:
                 UTCDateTime(
-                    int(head_line[1:5]), int(head_line[6:8]), int(head_line[8:10]),
-                    int(head_line[11:13]), int(head_line[13:15]), sfile_seconds,
+                    int(head_line[1:5]), int(head_line[6:8]),
+                    int(head_line[8:10]), int(head_line[11:13]),
+                    int(head_line[13:15]), sfile_seconds,
                     int(head_line[19:20]) * 100000)
                 return True
             except Exception:
@@ -466,13 +467,15 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
                 event_str.append(line)
             elif len(event_str) > 0:
                 catalog, wav_names = _extract_event(
-                    event_str=event_str, catalog=catalog, wav_names=wav_names,
-                    return_wavnames=return_wavnames, nordic_format=nordic_format,
+                    event_str=event_str, catalog=catalog,
+                    wav_names=wav_names, return_wavnames=return_wavnames,
+                    nordic_format=nordic_format,
                     **kwargs)
                 event_str = []
 
         if len(event_str) > 0:
-            # May occur if the last line of the file is not blank as it should be
+            # May occur if the last line of the file is not blank
+            # as it should be
             catalog, wav_names = _extract_event(
                 event_str=event_str, catalog=catalog, wav_names=wav_names,
                 return_wavnames=return_wavnames, nordic_format=nordic_format,

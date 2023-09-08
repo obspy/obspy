@@ -14,7 +14,7 @@ import inspect
 import io
 import os
 from contextlib import contextmanager
-from io import BytesIO, IOBase, TextIOBase, TextIOWrapper
+from io import IOBase, TextIOBase, TextIOWrapper
 from pathlib import Path
 import re
 import sys

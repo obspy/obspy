@@ -3,7 +3,6 @@
 REFTEK130 read support, core routines.
 """
 import copy
-import io
 import os
 from io import BytesIO
 from pathlib import Path
