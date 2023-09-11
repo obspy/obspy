@@ -1899,7 +1899,10 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib_request.HTTPError as e:
-        error_data = e.read()
+        try:
+            error_data = e.msg
+        except AttributeError:
+            error_data = e.read()
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
                   (e.code, str(e.reason), url, error_data)
