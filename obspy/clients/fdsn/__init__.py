@@ -55,6 +55,7 @@ LMU         http://erde.geophysik.uni-muenchen.de
 NCEDC       http://service.ncedc.org
 NIEP        http://eida-sc3.infp.ro
 NOA         http://eida.gein.noa.gr
+NRCAN       https://earthquakescanada.nrcan.gc.ca
 ODC         http://www.orfeus-eu.org
 ORFEUS      http://www.orfeus-eu.org
 RASPISHAKE  https://data.raspberryshake.org
