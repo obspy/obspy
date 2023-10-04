@@ -2,8 +2,6 @@ master
 ======
 
 Changes:
- - obspy.clients.fdsn
-   * Natural Resources Canada (NRCAN) added to list of known clients
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
@@ -13,6 +11,8 @@ Changes:
      (see #3261)
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
+ - obspy.clients.fdsn
+   * Natural Resources Canada (NRCAN) added to list of known clients
  - obspy.io:
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
  - obspy.io.mseed.spread_time_over_file:
