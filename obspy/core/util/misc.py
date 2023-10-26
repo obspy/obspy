@@ -532,9 +532,13 @@ class MatplotlibBackend(object):
             shows a warning if the backend was not switched successfully.
         """
         import matplotlib
+        # first of all, all figures should be closed, matplotlib is showing a
+        # warning that this will not be done automatically by matplotlib in
+        # newer releases anymore, so do it here
+        import matplotlib.pyplot as plt
+        plt.close("all")
         # sloppy. only do a `plt.switch_backend(..)`
         if sloppy:
-            import matplotlib.pyplot as plt
             plt.switch_backend(backend)
         else:
             # check if `matplotlib.use(..)` is emitting a warning
@@ -544,7 +548,6 @@ class MatplotlibBackend(object):
                     matplotlib.use(backend)
             # if that's the case, follow up with `plt.switch_backend(..)`
             except UserWarning:
-                import matplotlib.pyplot as plt
                 plt.switch_backend(backend)
             # finally check if the switch was successful,
             # show a warning if not
