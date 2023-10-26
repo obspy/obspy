@@ -312,7 +312,8 @@ class UTCDateTime(object):
                     timestamp_seconds = int(value.__dict__['timestamp'])
                     timestamp_microseconds = round(
                         (value.__dict__['timestamp'] % 1.0) * 1e6)
-                    dt_ = datetime.datetime.utcfromtimestamp(timestamp_seconds)
+                    dt_ = datetime.datetime.fromtimestamp(
+                        timestamp_seconds, tz=datetime.timezone.utc)
                     dt_ = dt_.replace(microsecond=timestamp_microseconds)
                     self._from_datetime(dt_)
                 return
@@ -685,7 +686,8 @@ class UTCDateTime(object):
             return TIMESTAMP0 + dt
         except OverflowError:
             # for very large future / past dates
-            return datetime.datetime.utcfromtimestamp(self.timestamp)
+            return datetime.datetime.fromtimestamp(
+                self.timestamp, tz=datetime.timezone.utc)
 
     datetime = property(_get_datetime)
 
