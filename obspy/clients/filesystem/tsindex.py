@@ -1269,8 +1269,9 @@ class Indexer(object):
                     break
 
         if expired is not None:
-            isostring = (datetime.datetime.
-                         utcfromtimestamp(expiration).isoformat())
+            isostring = (
+                datetime.datetime.fromtimestamp(
+                    expiration, tz=datetime.timezone.utc).isoformat())
             logger.debug("Leap seconds file `{}` expires: {}, expired: {}".
                          format(file_path, isostring, expired))
 
