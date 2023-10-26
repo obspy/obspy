@@ -428,13 +428,22 @@ class TestWaveformPlot:
         st.plot(outfile=image_path, type='dayplot',
                 timezone='EST', time_offset=-5)
 
-    @pytest.mark.parametrize('interval', [2, 10, 23, 25])
-    def test_plot_day_plot_interval(self, interval):
+    @pytest.mark.parametrize(
+        'interval,expected_number_of_ticks,expected_all_integer_labels',
+        [(2, 16, True), (10, 11, True), (23, 10, False), (25, 6, True)])
+    def test_plot_day_plot_interval(
+            self, interval, expected_number_of_ticks,
+            expected_all_integer_labels):
         """Plot day plot, with different intervals."""
         start = UTCDateTime(0)
         st = _create_stream(start, start + 3 * 3600, 100)
-        st.plot(type='dayplot', timezone='EST', time_offset=-5,
-                interval=interval)
+        fig = st.plot(type='dayplot', timezone='EST', time_offset=-5,
+                      interval=interval)
+        ax = fig.axes[0]
+        assert len(ax.get_xticks()) == expected_number_of_ticks
+        labels_are_integers = [
+            '.' not in label.get_text() for label in ax.get_xticklabels()]
+        assert all(labels_are_integers) == expected_all_integer_labels
 
     def test_plot_day_plot_explicit_event(self, image_path):
         """
