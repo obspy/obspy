@@ -1011,14 +1011,14 @@ class WaveformPlotting(object):
         if not count:
             # Up to 15 time units and if it's a full number, show every unit.
             if time_value <= 15 and time_value % 1 == 0:
-                count = int(time_value)
+                count = int(time_value) + 1
             # Otherwise determine whether they are divisible for numbers up to
             # 15. If a number is not divisible just show 10 units.
             else:
                 count = 10
                 for _i in range(15, 1, -1):
                     if time_value % _i == 0:
-                        count = _i
+                        count = _i + 1
                         break
             # Show at least 5 ticks.
             if count < 5:
