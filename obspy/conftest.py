@@ -7,6 +7,7 @@ import os
 import platform
 import shutil
 import sys
+import warnings
 from pathlib import Path
 from subprocess import run
 from contextlib import suppress
@@ -17,8 +18,23 @@ import pytest
 import obspy
 from obspy.core.util import NETWORK_MODULES
 # import some fixtures for reuse in imaging tests
-from obspy.signal.tests.test_spectral_estimation import (   # NOQA
-    _ppsd, _sample_data, _internal_sample_data)
+# work around dateutil running into this new DeprecationWarning on Python 3.12
+# This fails our CI runner that fails on any uncaught Warning. In principle we
+# ignore all DeprecationWarnings coming from our dependencies, but as this file
+# is imported during the pytest startup phase the warning ignore rules we have
+# in pytest.ini are not yet in effect at that time.
+# dateutil has this deprecation fixed in it's development branch already with
+# dateutil/dateutil#1285, but it turns out dateutil's last release was done in
+# 2023 0_o
+# Other approach would be to move those helpers here maybe, but that might be
+# quite a bit of work, so this seems fine for now
+with warnings.catch_warnings(record=True) as w:
+    msg = ('datetime.datetime.utcfromtimestamp.. is deprecated and scheduled '
+           'for removal in a future version. Use timezone-aware objects ')
+    warnings.filterwarnings(
+        'ignore', message=msg, category=DeprecationWarning, module='dateutil')
+    from obspy.signal.tests.test_spectral_estimation import (   # NOQA
+        _ppsd, _sample_data, _internal_sample_data)
 
 
 OBSPY_PATH = os.path.dirname(obspy.__file__)
