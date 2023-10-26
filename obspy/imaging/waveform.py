@@ -1015,11 +1015,16 @@ class WaveformPlotting(object):
             # Otherwise determine whether they are divisible for numbers up to
             # 15. If a number is not divisible just show 10 units.
             else:
-                count = 10
                 for _i in range(15, 1, -1):
                     if time_value % _i == 0:
                         count = _i + 1
                         break
+                else:
+                    # these are really weird cases with interval being
+                    # relactively large primes like "interval=17" and will
+                    # likely lead to ugly tick labels, but not much we can do,
+                    # just weird parameter choice
+                    count = 10
             # Show at least 5 ticks.
             if count < 2:
                 msg = 'Number of x ticks ({count:s}) can not be less than two.'
