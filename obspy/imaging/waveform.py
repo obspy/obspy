@@ -1028,7 +1028,18 @@ class WaveformPlotting(object):
             count = self.number_of_ticks
         # Calculate and set ticks.
         ticks = np.linspace(0.0, max_value, count)
-        ticklabels = ['%i' % _i for _i in np.linspace(0.0, time_value, count)]
+        ticklabels = []
+        for _i in np.linspace(0.0, time_value, count):
+            # it is not the responsibility of this tick labeling part to do
+            # anything fancy, if ticks are at points with endless decimals, the
+            # problem is with the selection of the ticks (e.g. weird choice of
+            # "number_of_ticks"). just avoid labeling with '.0' suffix if we
+            # indeed have an integer at hand
+            if int(_i) == _i:
+                _label = f'{_i:.0f}'
+            else:
+                _label = str(_i)
+            ticklabels.append(_label)
         self.axis[0].set_xticks(ticks)
         self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation,
                                      size=self.x_labels_size)
