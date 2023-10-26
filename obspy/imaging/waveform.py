@@ -1021,8 +1021,11 @@ class WaveformPlotting(object):
                         count = _i + 1
                         break
             # Show at least 5 ticks.
-            if count < 5:
-                count = 5
+            if count < 2:
+                msg = 'Number of x ticks ({count:s}) can not be less than two.'
+                raise ValueError(msg)
+            while count < 5:
+                count *= 2
         # Everything can be overwritten by user-specified number of ticks.
         if self.number_of_ticks:
             count = self.number_of_ticks
