@@ -238,17 +238,17 @@ def _get_entry_points(group, subgroup=None):
     {...'SLIST': EntryPoint(name='SLIST', value='obspy.io.ascii.core',
                             group='obspy.plugin.waveform')...}
     """
+    eps = importlib.metadata.entry_points(group=group)
     if subgroup:
         features = {}
-        for ep in importlib.metadata.entry_points(group=group):
+        for ep in eps:
             sub_eps = tuple(importlib.metadata.entry_points(
                 group=f'{group}.{ep.name}', name=subgroup))
             if not sub_eps:
                 continue
             features[ep.name] = ep
     else:
-        features = {
-            ep.name: ep for ep in importlib.metadata.entry_points(group=group)}
+        features = {ep.name: ep for ep in eps}
     # print(group, subgroup)
     # from pprint import pprint
     # pprint(features)
