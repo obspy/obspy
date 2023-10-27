@@ -249,10 +249,6 @@ def _get_entry_points(group, subgroup=None):
             features[ep.name] = ep
     else:
         features = {ep.name: ep for ep in eps}
-    # print(group, subgroup)
-    # from pprint import pprint
-    # pprint(features)
-    # print()
     return features
 
 
