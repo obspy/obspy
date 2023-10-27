@@ -73,7 +73,7 @@ class TestCpxTrace():
         # [42] plan
         # [43] dplan
         self.data_win, self.nwin, self.no_win = \
-            util.enframe(self.data, signal.hamming(self.n), self.inc)
+            util.enframe(self.data, signal.windows.hamming(self.n), self.inc)
         # cls.data_win = data
 
     def test_normenvelope(self):

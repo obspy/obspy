@@ -55,11 +55,11 @@ class TestPolarization():
         fs = 75
         inc = int(0.05 * fs)
         self.data_win_z, self.nwin, self.no_win = \
-            util.enframe(data_z, signal.hamming(n), inc)
+            util.enframe(data_z, signal.windows.hamming(n), inc)
         self.data_win_e, self.nwin, self.no_win = \
-            util.enframe(data_e, signal.hamming(n), inc)
+            util.enframe(data_e, signal.windows.hamming(n), inc)
         self.data_win_n, self.nwin, self.no_win = \
-            util.enframe(data_n, signal.hamming(n), inc)
+            util.enframe(data_n, signal.windows.hamming(n), inc)
         # global test input
         self.fk = [2, 1, 0, -1, -2]
         self.norm = pow(np.max(data_z), 2)
