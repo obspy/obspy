@@ -75,7 +75,7 @@ class TestHoctavbands():
         # [42] plan
         # [43] dplan
         self.data_win, self.nwin, self.no_win = \
-            util.enframe(data, signal.hamming(self.n), self.inc)
+            util.enframe(data, signal.windows.hamming(self.n), self.inc)
 
     def test_hoctavbands(self):
         """
