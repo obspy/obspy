@@ -600,10 +600,22 @@ def buffered_load_entry_point(dist, group, name):
     """
     hash_str = '/'.join([dist, group, name])
     if hash_str not in _ENTRY_POINT_CACHE:
-        eps = list(
-            ep for ep in importlib.metadata.entry_points(
-                group=group, name=name)
-            if ep.dist.name == dist)
+        if sys.version_info.minor < 10:
+            # compatibility workaround for Python 3.8 and 3.9
+            # on these versions, entry points don't have their distribution
+            # information attached to them, so we have to check if any matching
+            # entry point we find is listed in that distribution's entry point
+            # list
+            dist_eps = importlib.metadata.distribution(dist).entry_points
+            eps = list(
+                ep for ep in
+                importlib.metadata.entry_points()[f'{group}.{name}'] if
+                ep in dist_eps)
+        else:
+            eps = list(
+                ep for ep in importlib.metadata.entry_points(
+                    group=group, name=name)
+                if ep.dist.name == dist)
         if len(set(eps)) > 1:
             warnings.warn(f'Multiple entry points matching:\n{eps!s}')
         elif not len(eps):
