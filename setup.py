@@ -42,6 +42,8 @@ from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
+# TODO: when dropping support for Python 3.9 some workarounds can be removed in
+# the entry point lookup routines, see #3333
 MIN_PYTHON_VERSION = (3, 8)
 
 # Fail fast if the user is on an unsupported version of python.
