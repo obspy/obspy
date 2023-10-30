@@ -501,14 +501,15 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
                                     WAVEFORM_PREFERRED_ORDER)
     mod_list = []
     for name, ep in eps.items():
-        module_short = ":mod:`%s`" % ".".join(ep.module.split(".")[:3])
         if sys.version_info.minor < 10:
             # compatibility workaround for Python 3.8 and 3.9
+            module_short = ":mod:`%s`" % ".".join(ep.value.split(".")[:3])
             func_str = list(
                 _ep for _ep in
                 importlib.metadata.entry_points()[f'{ep.group}.{ep.name}'] if
                 _ep.name == method)[0].value
         else:
+            module_short = ":mod:`%s`" % ".".join(ep.module.split(".")[:3])
             func_str = tuple(importlib.metadata.entry_points(
                 group=f'{ep.group}.{ep.name}', name=method))[0].value
         func_str = func_str.replace(':', '.')
