@@ -20,10 +20,7 @@ from unittest import mock
 
 import pytest
 
-if sys.version_info.major == 2:
-    from httplib import HTTPException
-else:
-    from http.client import HTTPException
+from http.client import HTTPException
 
 import numpy as np
 
