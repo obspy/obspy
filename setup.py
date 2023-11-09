@@ -115,7 +115,7 @@ EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
 # package specific settings
 KEYWORDS = [
     'ALSEP', 'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
-    'beamforming', 'cross correlation', 'database', 'dataless',
+    'beamforming', 'cross correlation', 'CYBERSHAKE', 'database', 'dataless',
     'Dataless SEED', 'DMX', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
@@ -179,6 +179,7 @@ ENTRY_POINTS = {
         'ALSEP_PSE = obspy.io.alsep.core',
         'ALSEP_WTN = obspy.io.alsep.core',
         'ALSEP_WTH = obspy.io.alsep.core',
+        'CYBERSHAKE = obspy.io.cybershake.core'
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -313,6 +314,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.ALSEP_WTH': [
         'isFormat = obspy.io.alsep.core:_is_wth',
         'readFormat = obspy.io.alsep.core:_read_wth',
+        ],
+    'obspy.plugin.waveform.CYBERSHAKE': [
+        'isFormat = obspy.io.cybershake.core:_is_cybershake',
+        'readFormat = obspy.io.cybershake.core:_read_cybershake'
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',

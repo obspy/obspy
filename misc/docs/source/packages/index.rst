@@ -90,6 +90,7 @@ categories.*
     obspy.io.alsep
     obspy.io.ascii
     obspy.io.css
+    obspy.io.cybershake
     obspy.io.dmx
     obspy.io.gcf
     obspy.io.gse2

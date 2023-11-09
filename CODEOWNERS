@@ -40,6 +40,7 @@
 /obspy/io/cnv
 /obspy/io/css
 /obspy/io/csv            @trichter
+/obspy/io/cybershake     @jrekoske
 /obspy/io/dmx            @ThomasLecocq
 /obspy/io/focmec         @megies
 /obspy/io/gcf            @paitor
