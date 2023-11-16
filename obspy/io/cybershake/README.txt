@@ -1,5 +1,5 @@
 package obspy.io.cybershake
-======================
+===========================
 
 Copyright
 ---------
