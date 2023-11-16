@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 obspy.io.cybershake - CyberShake read support for ObsPy
-==========================================================
+=======================================================
 This module provides read support for the `CyberShake
-<https://strike.scec.org/scecpedia/Accessing_CyberShake_Seismograms#Seismogram_Format>`
+<https://strike.scec.org/scecpedia/Accessing_CyberShake_Seismograms#Seismogram_Format>`_
 waveform data format.
 
 :copyright:
@@ -39,15 +39,17 @@ CS.USC.00.MXN | 1970-01-01T00:00:00.000000Z - ... | 20.0 Hz, 8000 samples
             npts: 8000
            calib: 1.0
          _format: CYBERSHAKE
-      cybershake: AttribDict({'source_id': 12, 'rupture_id': 0, 'rup_var_id': 144})
+      cybershake: AttribDict({'source_id': 12, ...})
 
 CyberShake specific metadata is stored in ``stats.cybershake``.
 
 >>> for k, v in sorted(st[0].stats.cybershake.items()):
 ...     print("'%s': %s" % (k, str(v))) # doctest: +NORMALIZE_WHITESPACE
+    'det_max_freq': 1.0
     'rup_var_id': 144
     'rupture_id': 0
     'source_id': 12
+    'stoch_max_freq': -1.0
 """
 
 if __name__ == '__main__':
