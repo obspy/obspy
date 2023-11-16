@@ -2,7 +2,6 @@
 """
 The cybershake.core test suite.
 """
-import os
 import numpy as np
 from obspy import read
 from obspy.io.cybershake.core import _is_cybershake, _read_cybershake
