@@ -32,6 +32,8 @@ Changes:
    * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
      warning" when interactively zooming into and then again out of a plot with
      reduced number of points plotted with matplotlib >=3.6 (see #3318)
+   * fix some issues with bad x-tick positioning and labeling in dayplots
+     (see #3361)
  - obspy.io.gcf:
    * Fixed an issue in algorithm to split and encode last few data into GCF 
      blocks (see #3252)
