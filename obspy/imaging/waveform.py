@@ -1021,7 +1021,7 @@ class WaveformPlotting(object):
                         break
                 else:
                     # these are really weird cases with interval being
-                    # relactively large primes like "interval=17" and will
+                    # relatively large primes like "interval=17" and will
                     # likely lead to ugly tick labels, but not much we can do,
                     # just weird parameter choice
                     count = 10
