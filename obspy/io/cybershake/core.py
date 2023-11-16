@@ -20,7 +20,7 @@ def _is_cybershake(filename):
     :type filename: str
     :param filename: File to be checked.
     :rtype: bool
-    :return: ``True`` if a Mini-SEED file.
+    :return: ``True`` if a CyberShake version 12.10 file.
     """
     try:
         fp_in = open(filename, "rb")
