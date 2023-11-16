@@ -38,6 +38,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict
+from fileinput import filename
 
 
 HEADER = ("TIMESERIES {network}_{station}_{location}_{channel}_{dataquality}, "
@@ -62,7 +63,7 @@ def _is_slist(filename):
     Checks whether a file is ASCII SLIST format.
 
     :type filename: str
-    :param filename: Name of the ASCII SLIST file to be checked.
+    :param filename: Name of the ASCII SLIST file to be checked or a file-like object.
     :rtype: bool
     :return: ``True`` if ASCII SLIST file.
 
@@ -72,8 +73,14 @@ def _is_slist(filename):
     True
     """
     try:
-        with open(filename, 'rt') as f:
-            temp = f.readline()
+        if hasattr(filename,'read'):
+            f = filename
+        else:
+            f = open(filename, 'rt')
+        
+        temp = f.readline()
+        if not hasattr(filename,'read'):
+            f.close()
     except Exception:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -88,7 +95,7 @@ def _is_tspair(filename):
     Checks whether a file is ASCII TSPAIR format.
 
     :type filename: str
-    :param filename: Name of the ASCII TSPAIR file to be checked.
+    :param filename: Name of the ASCII TSPAIR file to be checked or a file-like object.
     :rtype: bool
     :return: ``True`` if ASCII TSPAIR file.
 
@@ -98,8 +105,14 @@ def _is_tspair(filename):
     True
     """
     try:
-        with open(filename, 'rt') as f:
-            temp = f.readline()
+        if hasattr(filename,'read'):
+            f = filename
+        else:
+            f = open(filename, 'rt')
+        
+        temp = f.readline()
+        if not hasattr(filename,'read'):
+            f.close()
     except Exception:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -118,7 +131,7 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :type filename: str
-    :param filename: ASCII file to be read.
+    :param filename: ASCII file to be read or a file-like object.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
@@ -130,24 +143,30 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/slist.ascii')
     """
-    with open(filename, 'rt') as fh:
-        # read file and split text into channels
-        buf = []
-        key = False
-        for line in fh:
-            if line.isspace():
-                # blank line
-                continue
-            elif line.startswith('TIMESERIES'):
-                # new header line
-                key = True
-                buf.append((line, io.StringIO()))
-            elif headonly:
-                # skip data for option headonly
-                continue
-            elif key:
-                # data entry - may be written in multiple columns
-                buf[-1][1].write(line.strip() + ' ')
+    if hasattr(filename,'read'):
+        fh = filename
+    else:
+        fh = open(filename, 'rt')
+    
+    # read file and split text into channels
+    buf = []
+    key = False
+    for line in fh:
+        if line.isspace():
+            # blank line
+            continue
+        elif line.startswith('TIMESERIES'):
+            # new header line
+            key = True
+            buf.append((line, io.StringIO()))
+        elif headonly:
+            # skip data for option headonly
+            continue
+        elif key:
+            # data entry - may be written in multiple columns
+            buf[-1][1].write(line.strip() + ' ')
+    if not hasattr(filename,'read'):
+        fh.close()
     # create ObsPy stream object
     stream = Stream()
     for header, data in buf:
@@ -186,7 +205,7 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :type filename: str
-    :param filename: ASCII file to be read.
+    :param filename: ASCII file to be read or a file-like object.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the headers. This is most useful
         for scanning available data in huge (temporary) data sets.
@@ -198,24 +217,30 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/tspair.ascii')
     """
-    with open(filename, 'rt') as fh:
-        # read file and split text into channels
-        buf = []
-        key = False
-        for line in fh:
-            if line.isspace():
-                # blank line
-                continue
-            elif line.startswith('TIMESERIES'):
-                # new header line
-                key = True
-                buf.append((line, io.StringIO()))
-            elif headonly:
-                # skip data for option headonly
-                continue
-            elif key:
-                # data entry - may be written in multiple columns
-                buf[-1][1].write(line.strip().split()[-1] + ' ')
+    if hasattr(filename,'read'):
+        fh = filename
+    else:
+        fh = open(filename, 'rt')
+    
+    # read file and split text into channels
+    buf = []
+    key = False
+    for line in fh:
+        if line.isspace():
+            # blank line
+            continue
+        elif line.startswith('TIMESERIES'):
+            # new header line
+            key = True
+            buf.append((line, io.StringIO()))
+        elif headonly:
+            # skip data for option headonly
+            continue
+        elif key:
+            # data entry - may be written in multiple columns
+            buf[-1][1].write(line.strip().split()[-1] + ' ')
+    if not hasattr(filename,'read'):
+        fh.close()
     # create ObsPy stream object
     stream = Stream()
     for header, data in buf:
@@ -258,7 +283,7 @@ def _write_slist(stream, filename, custom_fmt=None,
     :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: The ObsPy Stream object to write.
     :type filename: str
-    :param filename: Name of file to write.
+    :param filename: Name of file to write or a file-like object.
     :type custom_fmt: str
     :param custom_fmt: formatter for writing sample values. Defaults to None.
         Using this parameter will set ``TYPE`` value in header to ``CUSTOM``
@@ -312,48 +337,54 @@ def _write_slist(stream, filename, custom_fmt=None,
         2776        2766        2759        2760        2765        2767
         ...
     """
-    with open(filename, 'wb') as fh:
-        for trace in stream:
-            stats = trace.stats
-            # quality code
-            try:
-                dataquality = stats.mseed.dataquality
-            except Exception:
-                dataquality = ''
-            # sample type
-            if trace.data.dtype.name.startswith('int'):
-                dtype = 'INTEGER'
-                fmt = '%d'
-            elif trace.data.dtype.name.startswith('float'):
-                dtype = 'FLOAT'
-                fmt = '%+.10e'
+    if hasattr(filename,'write'):
+        fh = filename
+    else:
+        fh = open(filename,'wb')
+        
+    for trace in stream:
+        stats = trace.stats
+        # quality code
+        try:
+            dataquality = stats.mseed.dataquality
+        except Exception:
+            dataquality = ''
+        # sample type
+        if trace.data.dtype.name.startswith('int'):
+            dtype = 'INTEGER'
+            fmt = '%d'
+        elif trace.data.dtype.name.startswith('float'):
+            dtype = 'FLOAT'
+            fmt = '%+.10e'
 
-            else:
-                raise NotImplementedError
-            # fmt
-            if custom_fmt is not None:
-                dtype = _determine_dtype(custom_fmt)
-                fmt = custom_fmt
-            # unit
-            try:
-                unit = stats.ascii.unit
-            except Exception:
-                unit = ''
-            # write trace header
-            header = _format_header(stats, 'SLIST', dataquality, dtype, unit)
-            fh.write(header.encode('ascii', 'strict'))
-            # write data
-            rest = stats.npts % 6
-            if rest:
-                data = trace.data[:-rest]
-            else:
-                data = trace.data
-            data = data.reshape((-1, 6))
-            np.savetxt(fh, data, delimiter=b'\t',
-                       fmt=fmt.encode('ascii', 'strict'))
-            if rest:
-                fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
-                         '\n').encode('ascii', 'strict'))
+        else:
+            raise NotImplementedError
+        # fmt
+        if custom_fmt is not None:
+            dtype = _determine_dtype(custom_fmt)
+            fmt = custom_fmt
+        # unit
+        try:
+            unit = stats.ascii.unit
+        except Exception:
+            unit = ''
+        # write trace header
+        header = _format_header(stats, 'SLIST', dataquality, dtype, unit)
+        fh.write(header.encode('ascii', 'strict'))
+        # write data
+        rest = stats.npts % 6
+        if rest:
+            data = trace.data[:-rest]
+        else:
+            data = trace.data
+        data = data.reshape((-1, 6))
+        np.savetxt(fh, data, delimiter=b'\t',
+                   fmt=fmt.encode('ascii', 'strict'))
+        if rest:
+            fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
+                     '\n').encode('ascii', 'strict'))
+    if not hasattr(filename,'write'):
+        fh.close()
 
 
 def _write_tspair(stream, filename, custom_fmt=None,
@@ -369,7 +400,7 @@ def _write_tspair(stream, filename, custom_fmt=None,
     :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: The ObsPy Stream object to write.
     :type filename: str
-    :param filename: Name of file to write.
+    :param filename: Name of file to write or a file-like object.
     :type custom_fmt: str
     :param custom_fmt: formatter for writing sample values. Defaults to None.
         Using this parameter will set ``TYPE`` value in header to ``CUSTOM``
@@ -430,38 +461,44 @@ def _write_tspair(stream, filename, custom_fmt=None,
         2003-05-29T02:13:22.318400  2767
         ...
     """
-    with open(filename, 'wb') as fh:
-        for trace in stream:
-            stats = trace.stats
-            # quality code
-            try:
-                dataquality = stats.mseed.dataquality
-            except Exception:
-                dataquality = ''
-            # sample type
-            if trace.data.dtype.name.startswith('int'):
-                dtype = 'INTEGER'
-                fmt = '%d'
-            elif trace.data.dtype.name.startswith('float'):
-                dtype = 'FLOAT'
-                fmt = '%+.10e'
-            # fmt
-            if custom_fmt is not None:
-                dtype = _determine_dtype(custom_fmt)
-                fmt = custom_fmt
-            # unit
-            try:
-                unit = stats.ascii.unit
-            except Exception:
-                unit = ''
-            # write trace header
-            header = _format_header(stats, 'TSPAIR', dataquality, dtype, unit)
-            fh.write(header.encode('ascii', 'strict'))
-            # write data
-            for t, d in zip(trace.times(type='utcdatetime'), trace.data):
-                # .26s cuts the Z from the time string
-                line = ('%.26s  ' + fmt + '\n') % (t, d)
-                fh.write(line.encode('ascii', 'strict'))
+    if hasattr(filename,'write'):
+        fh = filename
+    else:
+        fh = open(filename,'wb')
+        
+    for trace in stream:
+        stats = trace.stats
+        # quality code
+        try:
+            dataquality = stats.mseed.dataquality
+        except Exception:
+            dataquality = ''
+        # sample type
+        if trace.data.dtype.name.startswith('int'):
+            dtype = 'INTEGER'
+            fmt = '%d'
+        elif trace.data.dtype.name.startswith('float'):
+            dtype = 'FLOAT'
+            fmt = '%+.10e'
+        # fmt
+        if custom_fmt is not None:
+            dtype = _determine_dtype(custom_fmt)
+            fmt = custom_fmt
+        # unit
+        try:
+            unit = stats.ascii.unit
+        except Exception:
+            unit = ''
+        # write trace header
+        header = _format_header(stats, 'TSPAIR', dataquality, dtype, unit)
+        fh.write(header.encode('ascii', 'strict'))
+        # write data
+        for t, d in zip(trace.times(type='utcdatetime'), trace.data):
+            # .26s cuts the Z from the time string
+            line = ('%.26s  ' + fmt + '\n') % (t, d)
+            fh.write(line.encode('ascii', 'strict'))
+    if not hasattr(filename,'write'):
+        fh.close()
 
 
 def _determine_dtype(custom_fmt):
