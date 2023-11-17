@@ -22,6 +22,12 @@ class TestCybershake():
         assert _is_cybershake(valid_file)
         assert not _is_cybershake(invalid_file)
 
+        # Check that _is_cybershake repositions the pointer correctly
+        # so multiple checks are successful
+        with open(valid_file, 'rb') as f:
+            assert _is_cybershake(f)
+            assert _is_cybershake(f)
+
     def test_read_cybershake(self, testdata):
         """
         Test for reading CyberShake data using _read_cybershake and read
