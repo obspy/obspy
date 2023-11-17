@@ -16,7 +16,7 @@ Changes:
  - obspy.io:
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
  - obspy.io.cybershake:
-   * add read support for CyberShake seismogram format
+   * add read support for CyberShake seismogram format (see #3370)
  - obspy.io.mseed.spread_time_over_file:
    * new routine to spread a time interval progressively across all mseed
      blockettes in a file (see #3271)
