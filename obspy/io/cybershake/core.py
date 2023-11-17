@@ -27,7 +27,10 @@ def _is_cybershake(filename):
     """
 
     if isinstance(filename, io.BufferedIOBase):
-        return _internal_is_cybershake(filename)
+        starting_pos = filename.tell()
+        is_cybershake_result = _internal_is_cybershake(filename)
+        filename.seek(starting_pos, 0)
+        return is_cybershake_result
     elif isinstance(filename, (str, bytes, Path)):
         with open(filename, "rb") as fh:
             return _internal_is_cybershake(fh)
