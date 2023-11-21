@@ -32,8 +32,8 @@ from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'geodetics', 'imaging',
                    'io.ah', 'io.alsep', 'io.arclink', 'io.ascii',
-                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.csv', 'io.dmx',
-                   'io.focmec',
+                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.csv',
+                   'io.cybershake', 'io.dmx', 'io.focmec',
                    'io.hypodd', 'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
                    'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk', 'io.nied',
                    'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde', 'io.quakeml',
@@ -53,7 +53,7 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
                             'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
-                            'ALSEP_WTH']
+                            'ALSEP_WTH', 'CYBERSHAKE']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
 # waveform plugins accepting a byteorder keyword
