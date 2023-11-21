@@ -2003,6 +2003,11 @@ class TestStream:
         Testing the rotate method.
         """
         st = read()
+        # test for #3373
+        # add some weird dots in station/location code
+        for tr in st:
+            tr.stats.station = 'RJ.OB'
+            tr.stats.location = '0.'
         st += st.copy()
         st[3:].normalize()
         st2 = st.copy()
