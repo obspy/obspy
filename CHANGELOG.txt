@@ -12,6 +12,8 @@ Changes:
    * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
      warning" when interactively zooming into and then again out of a plot with
      reduced number of points plotted with matplotlib >=3.6 (see #3318)
+   * fix an issue with Stream.rotate() when there are dots in e.g. station code
+     (see #3373)
  - obspy.clients.fdsn:
    * update URL for raspberryshake FDSN web service (see #3264)
    * properly include server response in error messages on bad requests (see
