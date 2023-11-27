@@ -75,6 +75,7 @@ def _is_slist(filename):
     try:
         if hasattr(filename,'read'):
             f = filename
+            initial_pos = filename.tell()
         else:
             f = open(filename, 'rt')
         
@@ -83,6 +84,9 @@ def _is_slist(filename):
             f.close()
     except Exception:
         return False
+    finally:
+        if hasattr(filename,'read'):
+            filename.seek(initial_pos,0)
     if not temp.startswith('TIMESERIES'):
         return False
     if 'SLIST' not in temp:
@@ -107,6 +111,7 @@ def _is_tspair(filename):
     try:
         if hasattr(filename,'read'):
             f = filename
+            initial_pos = filename.tell()
         else:
             f = open(filename, 'rt')
         
@@ -115,6 +120,9 @@ def _is_tspair(filename):
             f.close()
     except Exception:
         return False
+    finally:
+        if hasattr(filename,'read'):
+            filename.seek(initial_pos,0)
     if not temp.startswith('TIMESERIES'):
         return False
     if 'TSPAIR' not in temp:
