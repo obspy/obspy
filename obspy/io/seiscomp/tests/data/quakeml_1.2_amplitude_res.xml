@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
-  <eventParameters publicID="smi:ca.seismo/catalog/pickfile.npf">
+  <eventParameters publicID="smi:org.gfz-potsdam.de/geofon/NA">
     <event publicID="smi:ca.seismo/event/evid/19521225.0428002">
+      <pick publicID="smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0429001">
+        <time>
+          <value>1952-12-25T04:29:33.000000Z</value>
+          <uncertainty>0.5</uncertainty>
+        </time>
+        <waveformID networkCode="CN" stationCode="OTT" locationCode="" channelCode="SZ"/>
+        <phaseHint>P</phaseHint>
+      </pick>
       <pick publicID="smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0430003">
         <time>
           <value>1952-12-25T04:30:40.000000Z</value>
@@ -24,6 +32,7 @@
         </mag>
         <type>MN</type>
         <amplitudeID>smi:ca.seismo/amplitude/solid/arrid/19521225.0428001/19521225.0430003</amplitudeID>
+        <waveformID networkCode="CN" stationCode="OTT" locationCode="" channelCode="SZ"/>
       </stationMagnitude>
       <magnitude publicID="smi:ca.seismo/magnitude/solid/magcnt/19521225.0428001/1">
         <mag>
@@ -35,14 +44,6 @@
           <stationMagnitudeID>smi:ca.seismo/stn_mag/solid/arrid/19521225.0428001/19521225.0430003</stationMagnitudeID>
         </stationMagnitudeContribution>
       </magnitude>
-      <pick publicID="smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0429001">
-        <time>
-          <value>1952-12-25T04:29:33.000000Z</value>
-          <uncertainty>0.5</uncertainty>
-        </time>
-        <waveformID networkCode="CN" stationCode="OTT" locationCode="" channelCode="SZ"/>
-        <phaseHint>P</phaseHint>
-      </pick>
       <origin publicID="smi:ca.seismo/origin/solid/19521225.0428001">
         <time>
           <value>1952-12-25T04:28:30.000000Z</value>

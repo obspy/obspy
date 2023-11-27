@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
-  <eventParameters publicID="smi:eu.emsc/unid">
+  <eventParameters publicID="smi:org.gfz-potsdam.de/geofon/NA">
     <event publicID="smi:ch.ethz.sed/event/historical/1165">
       <pick publicID="smi:ch.ethz.sed/pick/117634">
         <time>

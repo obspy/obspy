@@ -12,6 +12,7 @@ Changes:
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
  - obspy.io:
+   * add seiscomp scxml 0.13 support
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
  - obspy.io.mseed.spread_time_over_file:
    * new routine to spread a time interval progressively across all mseed

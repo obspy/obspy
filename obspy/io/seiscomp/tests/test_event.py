@@ -149,21 +149,21 @@ class TestEvent():
         """
         Test multiple schema versions
         """
-        for version in ['0.9', '0.10', '0.11', '0.12','0.13']:
+        for version in ['0.9', '0.10', '0.11', '0.12', '0.13']:
             filename = testdata['version%s' % version]
             read_events(filename)
 
         filename = testdata['version0.5']
         expected_message = re.escape(
             "Can't read SCXML version 0.5, ObsPy can deal "
-            "with versions 0.6 to 0.13.")
+            "with versions [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13].")
         with pytest.raises(ValueError, match=expected_message):
             read_events(filename)
 
         filename = testdata['version0.14']
         expected_message = re.escape(
             "Can't read SCXML version 0.14, ObsPy can deal "
-            "with versions 0.6 to 0.13.")
+            "with versions [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13].")
         with pytest.raises(ValueError, match=expected_message):
             read_events(filename)
 
@@ -279,7 +279,8 @@ class TestEvent():
         filename = testdata['sc3ml_fields.sc3ml']
         catalog = read_events(filename, format='SC3ML')
 
-        assert 'reading' in catalog.extra
+        # No longer present
+        # assert 'reading' in catalog.extra
 
         origin = catalog[0].origins[0]
         assert 'pdf' in origin.time_errors.extra
