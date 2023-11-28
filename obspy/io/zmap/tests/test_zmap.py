@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+import io
 import pytest
 
-from obspy.core.event import read_events
+from obspy.core.event import read_events, Catalog, Event, Origin
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, get_example_file
 from obspy.io.zmap import core as zmap
@@ -302,3 +303,31 @@ class TestZMAP():
         full_zmap.update(zmap_dict)
         string = '\t'.join(full_zmap[f] for f in self.zmap_fields)
         return string
+
+    def test_no_origin_depth(self):
+        """
+        Test writing event without origin depth
+        """
+        t = UTCDateTime("2021-08-12T10:11:12")
+        origin = Origin(time=t, latitude=12.34, longitude=23.45)
+        event = Event(origins=[origin])
+        cat = Catalog(events=[event])
+        # test writing an event with origin that has no depth or depth
+        # uncertainties
+        bio = io.BytesIO()
+        cat.write(bio, 'ZMAP')
+        bio.seek(0)
+        got = bio.read()
+        expected = (b'23.450000\t12.340000\t2021.612121765601\t8\t12\t'
+                    b'NaN\tNaN\t10\t11\t12.0\n')
+        assert got == expected
+        # test writing an event with origin that has a depth but no depth
+        # uncertainties
+        origin.depth = 34567
+        bio = io.BytesIO()
+        cat.write(bio, 'ZMAP')
+        bio.seek(0)
+        got = bio.read()
+        expected = (b'23.450000\t12.340000\t2021.612121765601\t8\t12\t'
+                    b'NaN\t34.567000\t10\t11\t12.0\n')
+        assert got == expected

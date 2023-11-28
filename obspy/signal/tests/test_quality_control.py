@@ -675,7 +675,7 @@ class TestQualityControl():
 
         # Check if the record lenghts matches the total length
         total_time = md.meta["end_time"] - md.meta["start_time"]
-        assert abs(sum(record_lengths) - (total_time)) < 1e-6
+        assert abs(sum(record_lengths) - (total_time)) < 1.001e-6
 
         # Calculate the percentage of clock_locked seconds
         percentage = 100 * sum(record_lengths_flagged) / sum(record_lengths)

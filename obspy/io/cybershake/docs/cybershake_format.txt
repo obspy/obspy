@@ -1,0 +1,65 @@
+The seismogram file Seismogram_<site>_<sourceID>_<ruptureID>.grm contains
+the seismograms for all the rupture variations for the given source ID.
+The seismograms are velocity seismograms, with units of cm/s.
+The number of timesteps and dt depends on what frequency the run was
+performed at, as well as whether the run included stochastic high-frequency
+results, and can be determined by reading the header information.
+
+The format is (binary):
+<Rupture Variation 1 56-byte header>
+<Rupture Variation 1, X component - NT 4-byte floats>
+<Rupture Variation 1, Y component - NT 4-byte floats>
+<Rupture Variation 2 56-byte header>
+<Rupture Variation 2, X component - NT 4-byte floats>
+<Rupture Variation 2, Y component - NT 4-byte floats>
+...
+<Rupture Variation n 56-byte header>
+<Rupture Variation n, X component - NT 4-byte floats>
+<Rupture Variation n, Y component - NT 4-byte floats>
+
+However, the rupture variations are not necessarily in order in the file.
+So if you are only interested in a subset of the rupture variations,
+you will have to read the header data to find the rupture variations
+you are interested in. A description of the header structure is given
+in CyberShake_output_data_headers#Seismogram_header. C and Python examples
+to read the header information are provided there.
+Sample Python and C code for reading out the seismogram contents for a
+seismogram with just 1 rupture variation is below. This code prints the 1000th
+timesteps for X and Y components, but obviously you could do whatever is needed
+with the arrays.
+
+The seismogram header is 56 bytes, and is defined (in C) as follows:
+
+struct seisheader {
+ char version[8];
+ char site_name[8];
+ //in case we think of something later
+ char padding[8];
+ int source_id;
+ int rupture_id;
+ int rup_var_id;
+ float dt;
+ int nt;
+ int comps;
+ float det_max_freq;
+ float stoch_max_freq;
+};
+
+Version: The current version is 12.10.
+Site name: The name of the CyberShake site.
+Padding: Empty space in case we have a use for it later.
+Source ID: The source ID of the event this seismogram is for.
+Rupture ID: The rupture ID of the event this seismogram is for.
+Rup Var ID: The rupture variation ID of the event this seismogram is for.
+DT: the timestep size used in the seismogram.
+NT: the number of timesteps in the seismogram.
+Comps: This tracks the components in the seismogram. There are three flags,
+    one for each component (X=1, Y=2, Z=4), and the flags are ORed together
+    to produce the value here.
+Det_max_freq: the maximum frequency of the deterministic part of the
+    seismogram. This was 0.5 for studies before 15.4, and 1.0 for 15.4, 15.12,
+    and 17.3.
+Stoch_max_freq: the maximum frequency of the stochastic part of the seismogram.
+    For studies with no stochastic component this is -1; for studies 1.4
+    and 15.12 it is 10.0.
+This header precedes every two-component seismogram.

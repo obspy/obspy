@@ -11,9 +11,13 @@ Changes:
      (see #3261)
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
+ - obspy.clients.fdsn
+   * Natural Resources Canada (NRCAN) added to list of known clients
  - obspy.io:
    * add seiscomp scxml 0.13 support
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
+ - obspy.io.cybershake:
+   * add read support for CyberShake seismogram format (see #3370)
  - obspy.io.mseed.spread_time_over_file:
    * new routine to spread a time interval progressively across all mseed
      blockettes in a file (see #3271)
@@ -67,6 +71,9 @@ Changes:
  - obspy.io.xseed:
    * Fixed reading SEED frequency-amplitude-phase response lists that are
      spread out over multiple blockettes (see #3277)
+ - obspy.io.zmap:
+   * Fix writing events with origins that have no depth or depth errors given
+     (see #3343)
  - obspy.taup:
    * bugfix to allow calculations for a model with no discontinuities
      (see #3070, #3244)
