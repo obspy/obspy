@@ -2755,7 +2755,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # handled separately
         seed_id_groups = {}
         for tr in self:
-            net, sta, loc, cha = tr.id.split(".")
+            net = tr.stats.network
+            sta = tr.stats.station
+            loc = tr.stats.location
+            cha = tr.stats.channel
             if not len(cha):
                 msg = "Channel code must be at least one character long."
                 raise ValueError(msg)
