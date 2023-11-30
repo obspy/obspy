@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!-- Generated from Seiscomp Schema, do not edit -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:scs="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" targetNamespace="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" elementFormDefault="qualified" attributeFormDefault="unqualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:scs="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.13" targetNamespace="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.13" elementFormDefault="qualified" attributeFormDefault="unqualified">
   <xs:simpleType name="ResourceIdentifier">
     <xs:restriction base="xs:string"/>
   </xs:simpleType>
@@ -155,12 +155,33 @@
       <xs:enumeration value="ice quake"/>
       <xs:enumeration value="slide"/>
       <xs:enumeration value="meteorite"/>
+      <xs:enumeration value="calving"/>
+      <xs:enumeration value="frost quake"/>
+      <xs:enumeration value="tremor pulse"/>
+      <xs:enumeration value="submarine landslide"/>
+      <xs:enumeration value="rocket launch"/>
+      <xs:enumeration value="rocket"/>
+      <xs:enumeration value="rocket impact"/>
+      <xs:enumeration value="artillery strike"/>
+      <xs:enumeration value="bomb detonation"/>
+      <xs:enumeration value="moving aircraft"/>
+      <xs:enumeration value="atmospheric meteor explosion"/>
+      <xs:enumeration value="volcano-tectonic"/>
+      <xs:enumeration value="volcanic long-period"/>
+      <xs:enumeration value="volcanic very-long-period"/>
+      <xs:enumeration value="volcanic hybrid"/>
+      <xs:enumeration value="volcanic rockfall"/>
+      <xs:enumeration value="volcanic tremor"/>
+      <xs:enumeration value="pyroclastic flow"/>
+      <xs:enumeration value="lahar"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="EventTypeCertainty">
     <xs:restriction base="xs:string">
       <xs:enumeration value="known"/>
       <xs:enumeration value="suspected"/>
+      <xs:enumeration value="damaging"/>
+      <xs:enumeration value="felt"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="SourceTimeFunctionType">
@@ -518,6 +539,7 @@
       <xs:element name="amplitudeID" type="scs:ResourceIdentifier" minOccurs="0" maxOccurs="1"/>
       <xs:element name="methodID" type="scs:ResourceIdentifier" minOccurs="0" maxOccurs="1"/>
       <xs:element name="waveformID" type="scs:WaveformStreamID" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="passedQC" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
       <xs:element name="creationInfo" type="scs:CreationInfo" minOccurs="0" maxOccurs="1"/>
       <xs:element name="comment" type="scs:Comment" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
@@ -575,6 +597,7 @@
       <xs:element name="azimuthMaxHorizontalUncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
       <xs:element name="confidenceEllipsoid" type="scs:ConfidenceEllipsoid" minOccurs="0" maxOccurs="1"/>
       <xs:element name="preferredDescription" type="scs:OriginUncertaintyDescription" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="confidenceLevel" type="xs:double" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="Arrival">
@@ -1150,6 +1173,45 @@
     </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
   </xs:complexType>
+  <xs:complexType name="DataSegment">
+    <xs:sequence>
+      <xs:element name="start" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="end" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="updated" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="sampleRate" type="xs:double" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="quality" type="xs:string" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute name="outOfOrder" type="xs:boolean" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="DataAttributeExtent">
+    <xs:sequence>
+      <xs:element name="start" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="end" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="sampleRate" type="xs:double" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="quality" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="updated" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="segmentCount" type="xs:integer" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="DataExtent">
+    <xs:sequence>
+      <xs:element name="waveformID" type="scs:WaveformStreamID" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="start" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="end" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="updated" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="lastScan" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="segment" type="scs:DataSegment" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="attributeExtent" type="scs:DataAttributeExtent" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
+    <xs:attribute name="segmentOverflow" type="xs:boolean" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="DataAvailability">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="extent" type="scs:DataExtent"/>
+    </xs:choice>
+    <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
+  </xs:complexType>
   <xs:element name="seiscomp">
     <xs:complexType>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -1231,6 +1293,10 @@
         <xs:element name="ArclinkRequest" type="scs:ArclinkRequest"/>
         <xs:element name="ArclinkUser" type="scs:ArclinkUser"/>
         <xs:element name="ArclinkLog" type="scs:ArclinkLog"/>
+        <xs:element name="DataSegment" type="scs:DataSegment"/>
+        <xs:element name="DataAttributeExtent" type="scs:DataAttributeExtent"/>
+        <xs:element name="DataExtent" type="scs:DataExtent"/>
+        <xs:element name="DataAvailability" type="scs:DataAvailability"/>
       </xs:choice>
       <xs:attribute name="version" type="xs:string"/>
     </xs:complexType>

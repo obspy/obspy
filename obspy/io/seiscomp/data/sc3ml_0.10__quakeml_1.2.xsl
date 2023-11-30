@@ -95,20 +95,20 @@
  *  - Unmapped nodes: The following nodes can not be mapped to the QuakeML
  *    schema, thus their data is lost:
  *
- *    Parent          Element lost
- *    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
- *    creationInfo    modificationTime
- *    momentTensor    method
- *                    stationMomentTensorContribution
- *                    status
- *                    cmtName
- *                    cmtVersion
- *                    phaseSetting
- *    eventParameters reading
- *    comment         start
- *    comment         end
- *    RealQuantity    pdf
- *    TimeQuality     pdf
+ *    Parent           Element lost
+ *    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ *    creationInfo     modificationTime
+ *    momentTensor     method
+ *                     stationMomentTensorContribution
+ *                     status
+ *                     cmtName
+ *                     cmtVersion
+ *                     phaseSetting
+ *    eventParameters  reading
+ *    comment          start
+ *    comment          end
+ *    RealQuantity     pdf
+ *    TimeQuality      pdf
  *
  *  - Mandatory nodes: The following nodes is mandatory in QuakeML but not in
  *    SC3ML:
@@ -126,7 +126,7 @@
  *
  * ================
  * Change log
- * ===============
+ * ================
  *
  *  * 08.09.2014: Fixed typo in event type conversion (meteo[r] impact)
  *
@@ -171,6 +171,15 @@
  *  * 07.12.2018: Copy picks referenced by amplitudes
  *
  *  * 10.12.2018: Put the non-QuakeML nodes in a custom namespace
+ *
+ *  * 04.04.2022:
+ *    - Skip originUncertaintyDescription if value is set to
+ *      'probability density function' not supported by QuakeML.
+ *
+ *  * 31.10.2022: Improve performance when processing origins with many arrivals.
+ *
+ *  * 24.03.2023:
+ *    - Do not export duplicated picks referenced by different amplitudes.
  *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
@@ -217,51 +226,40 @@
         <xsl:element name="{local-name()}">
             <xsl:apply-templates select="@*"/>
 
-            <!-- search origins referenced by this event -->
-            <xsl:for-each select="scs:originReference">
-                <xsl:for-each select="../../scs:origin[@publicID=current()]">
-                    <xsl:variable name="origin" select="current()" />
+            <!-- collect origins referenced by event/originReference -->
+            <xsl:variable name="origins" select="../scs:origin[@publicID=current()/scs:originReference]" />
 
-                    <!-- stationMagnitudes and referenced amplitudes -->
-                    <xsl:for-each select="scs:stationMagnitude">
-                        <xsl:for-each select="../../scs:amplitude[@publicID=current()/scs:amplitudeID]">
-                            <!-- amplitude/genericAmplitude is mandatory in QuakeML -->
-                            <xsl:if test="scs:amplitude">
-                                <!-- copy picks referenced in amplitudes -->
-                                <xsl:for-each select="../scs:pick[@publicID=current()/scs:pickID]">
-                                    <xsl:call-template name="genericNode" />
-                                </xsl:for-each>
-                                <xsl:call-template name="genericNode"/>
-                            </xsl:if>
-                        </xsl:for-each>
-                        <xsl:apply-templates select="." mode="originMagnitude">
-                            <xsl:with-param name="oID" select="../@publicID"/>
-                        </xsl:apply-templates>
-                    </xsl:for-each>
+            <!-- picks referenced via origin/stationMagnitude/amplitudeID or origin/arrival -->
+            <xsl:variable name="amplitudes" select="../scs:amplitude[@publicID=$origins/scs:stationMagnitude/scs:amplitudeID]" />
+            <xsl:variable name="picks" select="$origins/scs:arrival/scs:pickID | $amplitudes/scs:pickID" />
+            <xsl:for-each select="../scs:pick[@publicID = $picks]">
+                <xsl:call-template name="genericNode" />
+            </xsl:for-each>
 
-                    <!-- magnitudes -->
-                    <xsl:for-each select="scs:magnitude">
-                        <xsl:apply-templates select="." mode="originMagnitude">
-                            <xsl:with-param name="oID" select="../@publicID"/>
-                        </xsl:apply-templates>
-                    </xsl:for-each>
+            <xsl:for-each select="$origins">
 
-                    <!-- picks, referenced by arrivals -->
-                    <xsl:for-each select="scs:arrival">
-                        <!--xsl:value-of select="scs:pickID"/-->
-                        <!-- Don't copy picks already referenced in amplitudes -->
-                        <xsl:for-each select="
-                                ../../scs:pick[
-                                    @publicID=current()/scs:pickID
-                                    and not(@publicID=../scs:amplitude[
-                                        @publicID=$origin/scs:stationMagnitude/scs:amplitudeID]/scs:pickID)]">
+                <!-- stationMagnitudes and referenced amplitudes -->
+                <xsl:for-each select="scs:stationMagnitude">
+                    <xsl:for-each select="../../scs:amplitude[@publicID=current()/scs:amplitudeID]">
+                        <!-- amplitude/genericAmplitude is mandatory in QuakeML -->
+                        <xsl:if test="scs:amplitude">
                             <xsl:call-template name="genericNode"/>
-                        </xsl:for-each>
+                        </xsl:if>
                     </xsl:for-each>
-
-                    <!-- origin -->
-                    <xsl:call-template name="genericNode"/>
+                    <xsl:apply-templates select="." mode="originMagnitude">
+                        <xsl:with-param name="oID" select="../@publicID"/>
+                    </xsl:apply-templates>
                 </xsl:for-each>
+
+                <!-- magnitudes -->
+                <xsl:for-each select="scs:magnitude">
+                    <xsl:apply-templates select="." mode="originMagnitude">
+                        <xsl:with-param name="oID" select="../@publicID"/>
+                    </xsl:apply-templates>
+                </xsl:for-each>
+
+                <!-- origin -->
+                <xsl:call-template name="genericNode"/>
             </xsl:for-each>
 
             <!-- search focalMechanisms referenced by this event -->
@@ -312,10 +310,7 @@
                 </originID>
             </xsl:if>
 
-            <!-- Put the QuakeML nodes at the beginning -->
-            <xsl:apply-templates select="*[not(self::scs:passedQC)]" />
-            <!-- Put the non-QuakeML nodes at the end -->
-            <xsl:apply-templates select="scs:passedQC" mode="scs-only" />
+            <xsl:apply-templates />
         </xsl:element>
     </xsl:template>
 
@@ -373,6 +368,16 @@
                 <xsl:otherwise><xsl:value-of select="$v"/></xsl:otherwise>
             </xsl:choose>
         </xsl:element>
+    </xsl:template>
+
+    <!-- origin uncertainty description, enumeration of QML does not include 'probability density function' -->
+    <xsl:template match="scs:origin/scs:uncertainty/scs:preferredDescription">
+        <xsl:variable name="v" select="current()"/>
+        <xsl:if test="$v!='probability density function'">
+            <xsl:element name="{local-name()}">
+                <xsl:value-of select="$v"/>
+            </xsl:element>
+        </xsl:if>
     </xsl:template>
 
     <!-- origin uncertainty description, enumeration of QML does not include 'probability density function' -->

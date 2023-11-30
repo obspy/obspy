@@ -19,7 +19,7 @@ from obspy.io.quakeml.core import _xml_doc_from_anything
 
 
 # SCXML version for which an XSD file is available
-SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
+SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
 
 
 def _is_sc3ml(path_or_file_object):

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12" version="0.12">
-  <EventParameters publicID="smi:eu.emsc/unid">
-    <reading publicID="smi:test/reading">
-      <pickReference>smi:test/pickReference</pickReference>
-    </reading>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.13" version="0.13">
+  <EventParameters>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:www.iris.edu/ws/event/query?originId=7680412</originReference>
+      <focalMechanismReference>smi:test/focalMechanism</focalMechanismReference>
+    </event>
     <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
       <time>
         <value>2011-03-11T05:46:24.120000Z</value>
@@ -48,9 +49,5 @@
         </stationMomentTensorContribution>
       </momentTensor>
     </focalMechanism>
-    <event publicID="smi:ch.ethz.sed/event/historical/1165">
-      <originReference>smi:www.iris.edu/ws/event/query?originId=7680412</originReference>
-      <focalMechanismReference>smi:test/focalMechanism</focalMechanismReference>
-    </event>
   </EventParameters>
 </seiscomp>
