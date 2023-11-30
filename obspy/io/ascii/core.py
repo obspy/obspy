@@ -63,7 +63,8 @@ def _is_slist(filename):
     Checks whether a file is ASCII SLIST format.
 
     :type filename: str
-    :param filename: Name of the ASCII SLIST file to be checked or a file-like object.
+    :param filename: Name of the ASCII SLIST file to be checked or a
+        file-like object.
     :rtype: bool
     :return: ``True`` if ASCII SLIST file.
 
@@ -73,20 +74,20 @@ def _is_slist(filename):
     True
     """
     try:
-        if hasattr(filename,'read'):
+        if hasattr(filename, 'read'):
             f = filename
             initial_pos = filename.tell()
         else:
             f = open(filename, 'rt')
-        
+
         temp = f.readline()
-        if not hasattr(filename,'read'):
+        if not hasattr(filename, 'read'):
             f.close()
     except Exception:
         return False
     finally:
-        if hasattr(filename,'read'):
-            filename.seek(initial_pos,0)
+        if hasattr(filename, 'read'):
+            filename.seek(initial_pos, 0)
     if not temp.startswith('TIMESERIES'):
         return False
     if 'SLIST' not in temp:
@@ -99,7 +100,8 @@ def _is_tspair(filename):
     Checks whether a file is ASCII TSPAIR format.
 
     :type filename: str
-    :param filename: Name of the ASCII TSPAIR file to be checked or a file-like object.
+    :param filename: Name of the ASCII TSPAIR file to be checked or a
+        file-like object.
     :rtype: bool
     :return: ``True`` if ASCII TSPAIR file.
 
@@ -109,20 +111,20 @@ def _is_tspair(filename):
     True
     """
     try:
-        if hasattr(filename,'read'):
+        if hasattr(filename, 'read'):
             f = filename
             initial_pos = filename.tell()
         else:
             f = open(filename, 'rt')
-        
+
         temp = f.readline()
-        if not hasattr(filename,'read'):
+        if not hasattr(filename, 'read'):
             f.close()
     except Exception:
         return False
     finally:
-        if hasattr(filename,'read'):
-            filename.seek(initial_pos,0)
+        if hasattr(filename, 'read'):
+            filename.seek(initial_pos, 0)
     if not temp.startswith('TIMESERIES'):
         return False
     if 'TSPAIR' not in temp:
@@ -151,11 +153,11 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/slist.ascii')
     """
-    if hasattr(filename,'read'):
+    if hasattr(filename, 'read'):
         fh = filename
     else:
         fh = open(filename, 'rt')
-    
+
     # read file and split text into channels
     buf = []
     key = False
@@ -173,7 +175,7 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
         elif key:
             # data entry - may be written in multiple columns
             buf[-1][1].write(line.strip() + ' ')
-    if not hasattr(filename,'read'):
+    if not hasattr(filename, 'read'):
         fh.close()
     # create ObsPy stream object
     stream = Stream()
@@ -225,11 +227,11 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/tspair.ascii')
     """
-    if hasattr(filename,'read'):
+    if hasattr(filename, 'read'):
         fh = filename
     else:
         fh = open(filename, 'rt')
-    
+
     # read file and split text into channels
     buf = []
     key = False
@@ -247,7 +249,7 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
         elif key:
             # data entry - may be written in multiple columns
             buf[-1][1].write(line.strip().split()[-1] + ' ')
-    if not hasattr(filename,'read'):
+    if not hasattr(filename, 'read'):
         fh.close()
     # create ObsPy stream object
     stream = Stream()
@@ -345,11 +347,11 @@ def _write_slist(stream, filename, custom_fmt=None,
         2776        2766        2759        2760        2765        2767
         ...
     """
-    if hasattr(filename,'write'):
+    if hasattr(filename, 'write'):
         fh = filename
     else:
-        fh = open(filename,'wb')
-        
+        fh = open(filename, 'wb')
+
     for trace in stream:
         stats = trace.stats
         # quality code
@@ -377,7 +379,8 @@ def _write_slist(stream, filename, custom_fmt=None,
         except Exception:
             unit = ''
         # write trace header
-        header = _format_header(stats, 'SLIST', dataquality, dtype, unit)
+        header = _format_header(
+            stats, 'SLIST', dataquality, dtype, unit)
         fh.write(header.encode('ascii', 'strict'))
         # write data
         rest = stats.npts % 6
@@ -391,7 +394,7 @@ def _write_slist(stream, filename, custom_fmt=None,
         if rest:
             fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
                      '\n').encode('ascii', 'strict'))
-    if not hasattr(filename,'write'):
+    if not hasattr(filename, 'write'):
         fh.close()
 
 
@@ -469,11 +472,11 @@ def _write_tspair(stream, filename, custom_fmt=None,
         2003-05-29T02:13:22.318400  2767
         ...
     """
-    if hasattr(filename,'write'):
+    if hasattr(filename, 'write'):
         fh = filename
     else:
-        fh = open(filename,'wb')
-        
+        fh = open(filename, 'wb')
+
     for trace in stream:
         stats = trace.stats
         # quality code
@@ -498,14 +501,15 @@ def _write_tspair(stream, filename, custom_fmt=None,
         except Exception:
             unit = ''
         # write trace header
-        header = _format_header(stats, 'TSPAIR', dataquality, dtype, unit)
+        header = _format_header(
+            stats, 'TSPAIR', dataquality, dtype, unit)
         fh.write(header.encode('ascii', 'strict'))
         # write data
         for t, d in zip(trace.times(type='utcdatetime'), trace.data):
             # .26s cuts the Z from the time string
             line = ('%.26s  ' + fmt + '\n') % (t, d)
             fh.write(line.encode('ascii', 'strict'))
-    if not hasattr(filename,'write'):
+    if not hasattr(filename, 'write'):
         fh.close()
 
 
