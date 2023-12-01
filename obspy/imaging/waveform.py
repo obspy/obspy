@@ -1252,10 +1252,20 @@ class WaveformPlotting(object):
         self._tr_delta = np.empty(self._tr_num)
         # TODO dynamic DATA_MAXLENGTH according to dpi
         for _i, tr in enumerate(self.stream):
-            if len(tr.data) >= self.max_npts:
+            method_ = self.plotting_method
+            if method_ is None:
+                if len(tr.data) >= self.max_npts:
+                    method_ = "fast"
+                else:
+                    method_ = "full"
+            method_ = method_.lower()
+            if method_ == 'fast':
                 tmp_data = signal.resample(tr.data, self.max_npts)
-            else:
+            elif method_ == 'full':
                 tmp_data = tr.data
+            else:
+                msg = "Invalid plot method: '%s'" % method_
+                raise ValueError(msg)
             # Initialising trace stats
             self._tr_data.append(tmp_data)
             self._tr_starttimes.append(tr.stats.starttime)
