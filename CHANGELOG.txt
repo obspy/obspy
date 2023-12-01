@@ -36,6 +36,8 @@ Changes:
      reduced number of points plotted with matplotlib >=3.6 (see #3318)
    * fix some issues with bad x-tick positioning and labeling in dayplots
      (see #3361)
+   * fix a bug in Stream.plot() where the plotting method argument (e.g.,
+     'fast', 'full') was ignored for section-type plots
  - obspy.io.gcf:
    * Fixed an issue in algorithm to split and encode last few data into GCF 
      blocks (see #3252)
