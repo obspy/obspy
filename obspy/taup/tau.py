@@ -846,7 +846,7 @@ class TauPyModel(object):
         :type source_depth_in_km: float
         :param source_latitude_in_deg: Source latitude in degrees
         :type source_latitude_in_deg: float
-        :param source_longitude_in_deg: Source longitue in degrees
+        :param source_longitude_in_deg: Source longitude in degrees
         :type source_longitude_in_deg: float
         :param receiver_latitude_in_deg: Receiver latitude in degrees
         :type receiver_latitude_in_deg: float
@@ -922,7 +922,7 @@ class TauPyModel(object):
         :type source_depth_in_km: float
         :param source_latitude_in_deg: Source latitude in degrees
         :type source_latitude_in_deg: float
-        :param source_longitude_in_deg: Source longitue in degrees
+        :param source_longitude_in_deg: Source longitude in degrees
         :type source_longitude_in_deg: float
         :param receiver_latitude_in_deg: Receiver latitude in degrees
         :type receiver_latitude_in_deg: float
