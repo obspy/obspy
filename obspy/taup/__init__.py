@@ -34,7 +34,7 @@ ObsPy currently ships with the following 1D velocity models:
   http://rses.anu.edu.au/seismology/ak135/ak135f.html (not supported)
 * ``ak135f_no_mud``, ``ak135f`` with ``ak135`` used above the 120-km
   discontinuity; see the SPECFEM3D_GLOBE manual at
-  https://geodynamics.org/cig/software/specfem3d_globe/
+  https://specfem3d-globe.readthedocs.io/en/latest/
 * ``herrin``, see [Herrin1968]_
 * ``iasp91``, see [KennetEngdahl1991]_
 * ``jb``, see [JeffreysBullen1940]_
