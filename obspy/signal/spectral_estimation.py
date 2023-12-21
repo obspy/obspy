@@ -905,7 +905,7 @@ class PPSD(object):
                         if verbose:
                             print(t1)
                         changed = True
-                t1 += (1 - self.overlap) * self.ppsd_length  # advance
+                t1 += self.step  # advance
 
             # enforce time limits, pad zeros if gaps
             # tr.trim(t, t+PPSD_LENGTH, pad=True)
