@@ -300,8 +300,19 @@ class NRL(object):
             Stage 10: Coefficients... from COUNTS to COUNTS, gain: 1
         """
         dl_resp = self._get_response("dataloggers", keys=datalogger_keys)
-        dl_first_stage = dl_resp.response_stages[0]
         sensor_resp = self._get_response("sensors", keys=sensor_keys)
+        return self._combine_sensor_datalogger(sensor_resp, dl_resp)
+
+    def _combine_sensor_datalogger(self, sensor, datalogger):
+        """
+        :type sensor: :class:`~obspy.core.inventory.response.Response`
+        :type datalogger: :class:`~obspy.core.inventory.response.Response`
+        :rtype: :class:`~obspy.core.inventory.response.Response`
+        """
+        sensor_resp = sensor
+        dl_resp = datalogger
+
+        dl_first_stage = dl_resp.response_stages[0]
         sensor_stage0 = sensor_resp.response_stages[0]
 
         # information on changes between NRL v1 and v2:
