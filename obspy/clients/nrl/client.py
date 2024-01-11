@@ -313,7 +313,12 @@ class NRL(object):
         dl_resp = datalogger
 
         dl_first_stage = dl_resp.response_stages[0]
-        sensor_stage0 = sensor_resp.response_stages[0]
+        try:
+            sensor_stage0 = sensor_resp.response_stages[0]
+        except IndexError:
+            msg = ('Sensor response without stages (maybe polynomial only?) '
+                   'not yet implemented. Please contact the developers.')
+            raise NotImplementedError(msg)
 
         # information on changes between NRL v1 and v2:
         # https://ds.iris.edu/files/nrl/NominalResponseLibraryVersions.pdf
