@@ -393,6 +393,12 @@ class NRL(object):
                            f'units and first datalogger stage input units:\n'
                            f'{sensor_last_stage}\n{dl_first_stage}')
                     warnings.warn(msg)
+            # fix empty units that get parsed into an empty string instead of
+            # None
+            if not dl_first_stage.input_units:
+                dl_first_stage.input_units = sensor_last_stage.output_units
+                dl_first_stage.input_units_description = \
+                    sensor_last_stage.output_units_description
             dl_resp._attempt_to_fix_units()
 
         try:
