@@ -304,6 +304,38 @@ class NRL(object):
         sensor_resp = self._get_response("sensors", keys=sensor_keys)
         return self._combine_sensor_datalogger(sensor_resp, dl_resp)
 
+    @staticmethod
+    def _assert_units_ok(response):
+        """
+        Checks the units in the stage chain and overall sensitivity
+
+        Raises an AssertionError if units are set but do not match throughout
+        all stages and the instrument sensitivity. Raises other exceptions like
+        IndexError if the assumptions that response stages are present and that
+        there is an instrument sensitivity object are not met. Currently works
+        case insensitive on unit name strings.
+
+        :type response: :class:`~obspy.core.inventory.response.Response`
+        """
+        overall_input = response.instrument_sensitivity.input_units
+        overall_output = response.instrument_sensitivity.output_units
+        first_stage = response.response_stages[0]
+        last_stage = response.response_stages[-1]
+        if overall_input.lower() != first_stage.input_units.lower():
+            msg = (f'Response has a unit mismatch (instrument sensitivity and '
+                   f'first stage):\n{response}')
+            raise AssertionError(msg)
+        if overall_output.lower() != last_stage.output_units.lower():
+            msg = (f'Response has a unit mismatch (instrument sensitivity and '
+                   f'last stage):\n{response}')
+            raise AssertionError(msg)
+        for stage1, stage2 in zip(
+                response.response_stages, response.response_stages[1:]):
+            if stage1.output_units.lower() != stage2.input_units.lower():
+                msg = (f'Response has a unit mismatch in the response chain:\n'
+                       f'{response}')
+                raise AssertionError(msg)
+
     def _combine_sensor_datalogger(self, sensor, datalogger):
         """
         :type sensor: :class:`~obspy.core.inventory.response.Response`
@@ -405,6 +437,15 @@ class NRL(object):
             dl_resp.recalculate_overall_sensitivity()
         except ValueError:
             msg = "Failed to recalculate overall sensitivity."
+            warnings.warn(msg)
+
+        try:
+            self._assert_units_ok(dl_resp)
+        except AssertionError as e:
+            warnings.warn(str(e))
+        except Exception:
+            msg = (f'Unexpected response (no stages or no instrument '
+                   f'sensitivity?):\n{dl_resp}')
             warnings.warn(msg)
 
         return dl_resp
