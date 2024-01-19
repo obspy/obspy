@@ -22,6 +22,7 @@ from urllib.parse import urlparse
 import requests
 
 import obspy
+from obspy.core.inventory.response import ResponseStage
 from obspy.core.inventory.util import _textwrap
 from obspy.core.util.decorator import deprecated
 
@@ -313,12 +314,14 @@ class NRL(object):
         dl_resp = datalogger
 
         dl_first_stage = dl_resp.response_stages[0]
+        dl_last_stage = dl_resp.response_stages[-1]
         try:
             sensor_stage0 = sensor_resp.response_stages[0]
         except IndexError:
             msg = ('Sensor response without stages (maybe polynomial only?) '
                    'not yet implemented. Please contact the developers.')
             raise NotImplementedError(msg)
+        sensor_last_stage = sensor_resp.response_stages[-1]
 
         # information on changes between NRL v1 and v2:
         # https://ds.iris.edu/files/nrl/NominalResponseLibraryVersions.pdf
@@ -344,9 +347,14 @@ class NRL(object):
                 sensor_resp.response_stages + dl_resp.response_stages)
         else:
             raise NotImplementedError()
+
         dl_resp.instrument_sensitivity.input_units = sensor_stage0.input_units
         dl_resp.instrument_sensitivity.input_units_description = \
             sensor_stage0.input_units_description
+        dl_resp.instrument_sensitivity.output_units = \
+            dl_last_stage.output_units
+        dl_resp.instrument_sensitivity.output_units_description = \
+            dl_last_stage.output_units_description
 
         # NRLv2 seems to have the majority of datalogger responses with a
         # stage-gain-only minimal response stage without units as first stage
@@ -373,10 +381,18 @@ class NRL(object):
         # from the neighboring stages (e.g. the case for
         # 'datalogger/SeismicSource/Sigma4_PG1_FR250_DF0.1.xml')
         if self._nrl_version == 2:
-            dl_first_stage.input_units = None
-            dl_first_stage.input_units_description = None
-            dl_first_stage.output_units = None
-            dl_first_stage.output_units_description = None
+            if sensor_last_stage.output_units.lower() != \
+                    dl_first_stage.input_units.lower():
+                if type(dl_first_stage) is ResponseStage and \
+                        not dl_first_stage.input_units and \
+                        not dl_first_stage.output_units:
+                    # this case can be fixed by Response._attempt_to_fix_units
+                    pass
+                else:
+                    msg = (f'Unit mismatch between last sensor stage output '
+                           f'units and first datalogger stage input units:\n'
+                           f'{sensor_last_stage}\n{dl_first_stage}')
+                    warnings.warn(msg)
             dl_resp._attempt_to_fix_units()
 
         try:
