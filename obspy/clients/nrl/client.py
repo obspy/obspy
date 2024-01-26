@@ -410,15 +410,40 @@ class NRL(object):
         dl_resp.instrument_sensitivity.output_units_description = \
             dl_last_stage.output_units_description
 
-        # NRLv2 seems to have the majority of datalogger responses with a
-        # stage-gain-only minimal response stage without units as first stage
-        # and also the instrument sensitivity object lacking input units (which
-        # should be "V" for "volts"). The instrument sensitivity input units
-        # are fixed above already but for most cases we still have to fix the
-        # input/output units for the aforementioned first datalogger stage.
-        # Unfortunately they are halfway fixed during the read operation for
+        # NRLv2 seems to have two cases in terms of units that we need to take
+        # care of..
+        # - datalogger with a stage-gain-only minimal first stage
+        #   without units and also its instrument sensitivity object lacking
+        #   input units (which should be "V" for "volts")
+        #   e.g. SeismicSource/Sigma4_PG1_FR250_DF0.1.xml
+        #    -> should be fixed with `Response._attempt_to_fix_units()` after
+        #       combining both sensor and datalogger
+        # - datalogger with a stage-gain-only minimal stage without units in
+        #   the middle of its response chain
+        #   e.g. SeismicSource/Sigma4_PG1_FR250_DF0.1.xml
+        #    -> should be fixed already during reading the datalogger only
+        #       response file into an Inventory object due to
+        #       `Response._attempt_to_fix_units()` getting called internally
+        # - datalogger with other type of response stage (e.g. Poles and Zeros
+        #   stage) as first stage
+        #   e.g. WorldSensing/SpiderNano_PG8_FV5Vpp_FR500_FPMinimum.xml
+        #    -> this is not covered in `Response._attempt_to_fix_units()` which
+        #       only works on stage-gain-only stages, so setting the units of
+        #       this kind of first datalogger stage to None and calling that
+        #       method does not work. therefore check first if units are OK and
+        #       only set them to None if really needed and if it is a
+        #       stage-gain-only stage
+        #  - datalogger with first stage as a stage-gain-only stage with tags
+        #    for units but at least one of the units with an empty tag
+        #    "<InputUnits><Name/></InputUnits>" which we currently parse into a
+        #    value of '' (empty string) which the '_attempt_to_fix_units()'
+        #    helper does not act upon.
+        #    e.g. SolGeo/EDAX24_PG10_FR250.xml
+        #     -> need to set units with value of empty string to None before
+        #        calling the helper routine
+        # Unfortunately units are halfway fixed during the read operation for
         # the datalogger-only response part (at least in the NRLv2 StationXML
-        # variant), so calling that helper again would not do anything, unless
+        # variant), so calling that helper again does not do anything, unless
         # we set both input and output for that stage to None again.
         # In principle the cleaner solution would be to avoid calling
         # `Response._attempt_to_fix_units()` at the end of the read operation
@@ -434,6 +459,11 @@ class NRL(object):
         # current approach is able to fill in the units and fix the unit chain
         # from the neighboring stages (e.g. the case for
         # 'datalogger/SeismicSource/Sigma4_PG1_FR250_DF0.1.xml')
+        # Stages without units that are not stage-gain-only minimal stages are
+        # currently not handled by `Response._attempt_to_fix_units()` and have
+        # to be treated separately
+        # Also see helper scripts in:
+        #    https://github.com/megies/NRLv2-check-scripts
         if self._nrl_version == 2:
             if sensor_last_stage.output_units.lower() != \
                     dl_first_stage.input_units.lower():
