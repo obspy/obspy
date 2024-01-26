@@ -373,8 +373,30 @@ class NRL(object):
             # so it would mean cluttering that module some, so for now it seems
             # less invasive to correct this problem later on, see below long
             # comment
-            for stage in dl_resp.response_stages:
-                stage.stage_sequence_number += len(sensor_resp.response_stages)
+
+            # check if stage numbering is sane in sensor response
+            try:
+                for i, stage in enumerate(sensor_resp.response_stages):
+                    assert stage.stage_sequence_number == i + 1
+            except AssertionError:
+                msg = (f'Unexpected stage sequence numbering in sensor '
+                       f'response:\n{str(sensor_resp)}')
+                warnings.warn(msg)
+            # check if stage numbering is sane in datalogger response
+            try:
+                for i, stage in enumerate(dl_resp.response_stages):
+                    assert (
+                        stage.stage_sequence_number ==
+                        dl_resp.response_stages[0].stage_sequence_number + i)
+            except AssertionError:
+                msg = (f'Unexpected stage sequence numbering in datalogger '
+                       f'response:\n{str(sensor_resp)}')
+                warnings.warn(msg)
+
+            # combine stages from sensor and datalogger
+            for i, stage in enumerate(dl_resp.response_stages):
+                stage.stage_sequence_number = \
+                    len(sensor_resp.response_stages) + i + 1
             dl_resp.response_stages = (
                 sensor_resp.response_stages + dl_resp.response_stages)
         else:
