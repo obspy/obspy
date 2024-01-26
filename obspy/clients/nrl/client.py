@@ -489,9 +489,22 @@ class NRL(object):
                            f'units and first datalogger stage input units:\n'
                            f'{sensor_last_stage}\n{dl_first_stage}')
                     warnings.warn(msg)
+            # if reading data from RESP files it looks like the xseed Parser is
+            # also trying to fix the initial stage units on the datalogger only
+            # response.. set first stage input units to None and they should
+            # get fixed later.
+            # In principal we could just set datalogger first stage to "V" as
+            # there are no other units in any sensor response but this should
+            # be more general, just in case
+            if datalogger_resp_type.upper() == 'RESP':
+                dl_first_stage.input_units = None
+                dl_first_stage.input_units_description = None
+                dl_first_stage.output_units = None
+                dl_first_stage.output_units_description = None
             # fix empty units that get parsed into an empty string instead of
             # None
-            if not dl_first_stage.input_units:
+            if dl_first_stage.input_units is not None and \
+                    not dl_first_stage.input_units:
                 dl_first_stage.input_units = sensor_last_stage.output_units
                 dl_first_stage.input_units_description = \
                     sensor_last_stage.output_units_description
