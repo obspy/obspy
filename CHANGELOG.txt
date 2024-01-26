@@ -21,7 +21,7 @@ Changes:
  - obspy.clients.nrl:
    * better handling of individual stages units when combining sensor and
      datalogger response from a full downloaded offline version of the new NRL
-     v2 (see #3315)
+     v2 (see #3315, #3395)
    * add support to use new categories "integrated" and "soh" in new NRL v2
      (see #3315)
  - obspy.clients.seedlink:
