@@ -22,7 +22,6 @@ from urllib.parse import urlparse
 import requests
 
 import obspy
-from obspy.core.inventory.response import ResponseStage
 from obspy.core.inventory.util import _textwrap
 from obspy.core.util.decorator import deprecated
 
@@ -477,18 +476,6 @@ class NRL(object):
         # Also see helper scripts in:
         #    https://github.com/megies/NRLv2-check-scripts
         if self._nrl_version == 2:
-            if sensor_last_stage.output_units.lower() != \
-                    dl_first_stage.input_units.lower():
-                if type(dl_first_stage) is ResponseStage and \
-                        not dl_first_stage.input_units and \
-                        not dl_first_stage.output_units:
-                    # this case can be fixed by Response._attempt_to_fix_units
-                    pass
-                else:
-                    msg = (f'Unit mismatch between last sensor stage output '
-                           f'units and first datalogger stage input units:\n'
-                           f'{sensor_last_stage}\n{dl_first_stage}')
-                    warnings.warn(msg)
             # if reading data from RESP files it looks like the xseed Parser is
             # also trying to fix the initial stage units on the datalogger only
             # response.. set first stage input units to None and they should
