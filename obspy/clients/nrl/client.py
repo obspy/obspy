@@ -187,7 +187,7 @@ class NRL(object):
         :type datalogger_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        response = self._get_response('dataloggers', keys=datalogger_keys)
+        response, _ = self._get_response('dataloggers', keys=datalogger_keys)
         first_stage = response.response_stages[0]
 
         if self._nrl_version == 2 and not first_stage.input_units:
@@ -218,7 +218,8 @@ class NRL(object):
         :type sensor_keys: list[str]
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        return self._get_response('sensors', keys=sensor_keys)
+        response, _ = self._get_response('sensors', keys=sensor_keys)
+        return response
 
     def get_integrated_response(self, keys):
         """
@@ -231,7 +232,8 @@ class NRL(object):
             msg = ('Integrated responses are only available in the new NRL v2 '
                    '(https://ds.iris.edu/ds/nrl/)')
             raise Exception(msg)
-        return self._get_response('integrated', keys=keys)
+        response, _ = self._get_response('integrated', keys=keys)
+        return response
 
     def get_soh_response(self, keys):
         """
@@ -244,7 +246,8 @@ class NRL(object):
             msg = ('SOH responses are only available in the new NRL v2 '
                    '(https://ds.iris.edu/ds/nrl/)')
             raise Exception(msg)
-        return self._get_response('soh', keys=keys)
+        response, _ = self._get_response('soh', keys=keys)
+        return response
 
     def _get_response(self, base, keys):
         """
@@ -267,7 +270,7 @@ class NRL(object):
         with io.BytesIO(self._read_resp(path).encode()) as buf:
             buf.seek(0, 0)
             return obspy.read_inventory(
-                buf, format=resp_type)[0][0][0].response
+                buf, format=resp_type)[0][0][0].response, resp_type
 
     def get_response(self, datalogger_keys, sensor_keys):
         """
@@ -300,9 +303,12 @@ class NRL(object):
             Stage 9: Coefficients... from COUNTS to COUNTS, gain: 1
             Stage 10: Coefficients... from COUNTS to COUNTS, gain: 1
         """
-        dl_resp = self._get_response("dataloggers", keys=datalogger_keys)
-        sensor_resp = self._get_response("sensors", keys=sensor_keys)
-        return self._combine_sensor_datalogger(sensor_resp, dl_resp)
+        dl_resp, dl_resp_type = self._get_response(
+            "dataloggers", keys=datalogger_keys)
+        sensor_resp, sensor_resp_type = self._get_response(
+            "sensors", keys=sensor_keys)
+        return self._combine_sensor_datalogger(
+            sensor_resp, dl_resp, sensor_resp_type, dl_resp_type)
 
     @staticmethod
     def _assert_units_ok(response):
@@ -336,10 +342,16 @@ class NRL(object):
                        f'{response}')
                 raise AssertionError(msg)
 
-    def _combine_sensor_datalogger(self, sensor, datalogger):
+    def _combine_sensor_datalogger(
+            self, sensor, datalogger, sensor_resp_type, datalogger_resp_type):
         """
         :type sensor: :class:`~obspy.core.inventory.response.Response`
         :type datalogger: :class:`~obspy.core.inventory.response.Response`
+        :type sensor_resp_type: str
+        :param sensor_resp_type: file format the sensor response was read from
+        :type datalogger_resp_type: str
+        :param datalogger_resp_type: file format the datalogger response was
+            read from
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
         sensor_resp = sensor
