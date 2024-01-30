@@ -40,7 +40,7 @@ def _filter(data, freqs, df, rp=None, rs=None, btype='band', ftype='butter',
 def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False,
              rp=None, rs=None, ftype='butter', axis=-1):
     """
-    Butterworth-Bandpass Filter.
+    Bandpass Filter.
 
     Filter data from ``freqmin`` to ``freqmax`` using ``corners``
     corners.
@@ -56,6 +56,19 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False,
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the filter order but zero phase shift in
         the resulting filtered trace.
+    :param rp:
+        For Chebyshev and elliptic filters, provides the maximum ripple
+        in the passband. (dB)
+    :param rs:
+        For Chebyshev and elliptic filters, provides the minimum attenuation
+        in the stop band. (dB)
+    :param ftype:
+        The type of filter
+            - Butterworth   : 'butter' (default)
+            - Chebyshev I   : 'cheby1'
+            - Chebyshev II  : 'cheby2'
+            - Cauer/elliptic: 'ellip'
+            - Bessel/Thomson: 'bessel'
     :param axis: The axis of the input data array along which to apply the
         linear filter. The filter is applied to each subarray along this axis.
         Default is -1.
@@ -83,7 +96,7 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False,
 def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False,
              rp=None, rs=None, ftype='butter', axis=-1):
     """
-    Butterworth-Bandstop Filter.
+    Bandstop Filter.
 
     Filter data removing data between frequencies ``freqmin`` and ``freqmax``
     using ``corners`` corners.
@@ -99,6 +112,19 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False,
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
+    :param rp:
+        For Chebyshev and elliptic filters, provides the maximum ripple
+        in the passband. (dB)
+    :param rs:
+        For Chebyshev and elliptic filters, provides the minimum attenuation
+        in the stop band. (dB)
+    :param ftype:
+        The type of filter
+            - Butterworth   : 'butter' (default)
+            - Chebyshev I   : 'cheby1'
+            - Chebyshev II  : 'cheby2'
+            - Cauer/elliptic: 'ellip'
+            - Bessel/Thomson: 'bessel'
     :param axis: The axis of the input data array along which to apply the
         linear filter. The filter is applied to each subarray along this axis.
         Default is -1.
@@ -124,7 +150,7 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False,
 def lowpass(data, freq, df, corners=4, zerophase=False,
             rp=None, rs=None, ftype='butter', axis=-1):
     """
-    Butterworth-Lowpass Filter.
+    Lowpass Filter.
 
     Filter data removing data over certain frequency ``freq`` using ``corners``
     corners.
@@ -139,6 +165,19 @@ def lowpass(data, freq, df, corners=4, zerophase=False,
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
+    :param rp:
+        For Chebyshev and elliptic filters, provides the maximum ripple
+        in the passband. (dB)
+    :param rs:
+        For Chebyshev and elliptic filters, provides the minimum attenuation
+        in the stop band. (dB)
+    :param ftype:
+        The type of filter
+            - Butterworth   : 'butter' (default)
+            - Chebyshev I   : 'cheby1'
+            - Chebyshev II  : 'cheby2'
+            - Cauer/elliptic: 'ellip'
+            - Bessel/Thomson: 'bessel'
     :param axis: The axis of the input data array along which to apply the
         linear filter. The filter is applied to each subarray along this axis.
         Default is -1.
@@ -160,7 +199,7 @@ def lowpass(data, freq, df, corners=4, zerophase=False,
 def highpass(data, freq, df, corners=4, zerophase=False,
              rp=None, rs=None, ftype='butter', axis=-1):
     """
-    Butterworth-Highpass Filter.
+    Highpass Filter.
 
     Filter data removing data below certain frequency ``freq`` using
     ``corners`` corners.
@@ -175,6 +214,19 @@ def highpass(data, freq, df, corners=4, zerophase=False,
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
+    :param rp:
+        For Chebyshev and elliptic filters, provides the maximum ripple
+        in the passband. (dB)
+    :param rs:
+        For Chebyshev and elliptic filters, provides the minimum attenuation
+        in the stop band. (dB)
+    :param ftype:
+        The type of filter
+            - Butterworth   : 'butter' (default)
+            - Chebyshev I   : 'cheby1'
+            - Chebyshev II  : 'cheby2'
+            - Cauer/elliptic: 'ellip'
+            - Bessel/Thomson: 'bessel'
     :param axis: The axis of the input data array along which to apply the
         linear filter. The filter is applied to each subarray along this axis.
         Default is -1.

@@ -2181,7 +2181,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @raise_if_masked
-    def filter(self, type, *freqs, **options):
+    def filter(self, type, *args, **options):
         """
         Filter the data of all traces in the Stream.
 
@@ -2189,7 +2189,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
-        :param options: Necessary keyword arguments for the respective filter
+        :param args: Only filter frequency/frequencies can be specified
+            as argument(s). Alternatively filter frequencies can be specified
+            as keyword arguments.
+        :param options: Keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
@@ -2242,7 +2245,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.plot()
         """
         for tr in self:
-            tr.filter(type, *freqs, **options)
+            tr.filter(type, *args, **options)
         return self
 
     def trigger(self, type, **options):
