@@ -21,6 +21,8 @@ For more information visit https://www.obspy.org.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 
+MTH_SET_VERSION = "1.4.0-dev"
+
 import glob
 import inspect
 import os
@@ -791,7 +793,8 @@ def setupPackage():
     # setup package
     setup(
         name='obspy',
-        version=get_git_version(),
+        #version=get_git_version(),
+        version=MTH_SET_VERSION,
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
         url="https://www.obspy.org",
