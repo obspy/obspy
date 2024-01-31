@@ -17,7 +17,7 @@ Complex Trace Analysis
 """
 import numpy as np
 from scipy import signal
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 
 from . import util
 
@@ -94,7 +94,7 @@ def normalized_envelope(data, fs, smoothie, fk):
             # (dA/dt) / 2*PI*smooth(A)*fs/2
             t_ = t / (2. * np.pi * (a_win_smooth) * (fs / 2.0))
             # Integral within window
-            t_ = cumtrapz(t_, dx=(1. / fs))
+            t_ = cumulative_trapezoid(t_, dx=(1. / fs))
             t_ = np.concatenate((t_[0:1], t_))
             anorm[i] = ((np.exp(np.mean(t_))) - 1) * 100
             i = i + 1
@@ -123,7 +123,7 @@ def normalized_envelope(data, fs, smoothie, fk):
         a_win_smooth[a_win_smooth < 1] = 1
         t_ = t / (2. * np.pi * (a_win_smooth) * (fs / 2.0))
         # Integral within window
-        t_ = cumtrapz(t_, dx=(1.0 / fs))
+        t_ = cumulative_trapezoid(t_, dx=(1.0 / fs))
         t_ = np.concatenate((t_[0:1], t_))
         anorm = ((np.exp(np.mean(t_))) - 1) * 100
         return anorm
