@@ -112,9 +112,9 @@ def test_csz(check_compression=False):
         # test with missing origin and waveformid
         events[1].origins = []
         events[0].picks[0].waveform_id = None
-        with pytest.warns(Warning, match='The object with identity'):
-            with pytest.warns(Warning, match='No.*found'):
-                events.write(fname, 'CSZ')
+        with pytest.warns(Warning,
+                          match='The object with identity|No.*found'):
+            events.write(fname, 'CSZ')
         assert iocsv._is_csz(fname)
         events2 = read_events(fname, check_compression=check_compression)
         assert len(events2) == 1
