@@ -654,7 +654,7 @@ class Client(object):
         containing information found in the tsindex table.
 
         Information about the tsindex schema may be found in the
-        `mseedindex wiki <https://github.com/EarthScope/mseedindex/wiki/\
+        `mseedindex wiki schema <https://github.com/EarthScope/mseedindex/wiki/\
         Database-Schema#sqlite-schema-version-11>`_.
 
         :type network: str
