@@ -1550,16 +1550,14 @@ class TSIndexDatabaseHandler(object):
                     sa.literal(b).label("station"),
                     sa.literal(c).label("location"),
                     sa.literal(d).label("channel"),
-                    sa.case(
-                        (sa.literal(e) == '*',
-                            sa.literal('0000-00-00T00:00:00')),
-                        (sa.literal(e) != '*', sa.literal(e))
-                        ).label("starttime"),
-                    sa.case(
-                        (sa.literal(f) == '*',
-                            sa.literal('5000-00-00T00:00:00')),
-                        (sa.literal(f) != '*', sa.literal(f))
-                        ).label("endtime")
+                    sa.case((sa.literal(e) == '*',
+                             sa.literal('0000-00-00T00:00:00')),
+                            else_=sa.literal(e)
+                           ).label("starttime"),
+                    sa.case((sa.literal(f) == '*',
+                             sa.literal('5000-00-00T00:00:00')),
+                            else_=sa.literal(f)
+                            ).label("endtime")
                 )
                 for idx, (a, b, c, d, e, f) in enumerate(query_rows)
             ]
@@ -1586,21 +1584,14 @@ class TSIndexDatabaseHandler(object):
                            self.TSIndexSummaryTable.station,
                            self.TSIndexSummaryTable.location,
                            self.TSIndexSummaryTable.channel,
-                           self.TSIndexSummaryTable.network,
-                           sa.case([
-                                    (requests_cte.c.starttime == '*',
-                                     self.TSIndexSummaryTable.earliest),
-                                    (requests_cte.c.starttime != '*',
-                                     requests_cte.c.starttime)
-                                   ])
-                           .label('starttime'),
-                           sa.case([
-                                    (requests_cte.c.endtime == '*',
+                           sa.case((requests_cte.c.starttime == '*',
+                                    self.TSIndexSummaryTable.earliest),
+                                   else_=requests_cte.c.starttime
+                                   ).label('starttime'),
+                           sa.case((requests_cte.c.endtime == '*',
                                      self.TSIndexSummaryTable.latest),
-                                    (requests_cte.c.endtime != '*',
-                                     requests_cte.c.endtime)
-                                   ])
-                           .label('endtime'))
+                                    else_=requests_cte.c.endtime
+                                   ).label('endtime'))
                     .filter(self.TSIndexSummaryTable.network.op('GLOB')
                             (requests_cte.c.network))
                     .filter(self.TSIndexSummaryTable.station.op('GLOB')
@@ -1734,16 +1725,14 @@ class TSIndexDatabaseHandler(object):
                     sa.literal(b).label("station"),
                     sa.literal(c).label("location"),
                     sa.literal(d).label("channel"),
-                    sa.case(
-                        (sa.literal(e) == '*',
-                            sa.literal('0000-00-00T00:00:00')),
-                        (sa.literal(e) != '*', sa.literal(e))
-                        ).label("starttime"),
-                    sa.case(
-                        (sa.literal(f) == '*',
-                            sa.literal('5000-00-00T00:00:00')),
-                        (sa.literal(f) != '*', sa.literal(f))
-                        ).label("endtime")
+                    sa.case((sa.literal(e) == '*',
+                             sa.literal('0000-00-00T00:00:00')),
+                            else_=sa.literal(e)
+                            ).label("starttime"),
+                    sa.case((sa.literal(f) == '*',
+                             sa.literal('5000-00-00T00:00:00')),
+                            else_=sa.literal(f)
+                            ).label("endtime")
                     )
                 for idx, (a, b, c, d, e, f) in enumerate(query_rows)
             ]
@@ -1896,11 +1885,11 @@ class TSIndexDatabaseHandler(object):
             # setup the sqlite database
             session = self.session()
             # https://www.sqlite.org/foreignkeys.html
-            session.execute('PRAGMA foreign_keys = ON')
+            session.execute(sa.text('PRAGMA foreign_keys = ON'))
             # as used by mseedindex
-            session.execute('PRAGMA case_sensitive_like = ON')
+            session.execute(sa.text('PRAGMA case_sensitive_like = ON'))
             # enable Write-Ahead Log for better concurrency support
-            session.execute('PRAGMA journal_mode=WAL')
+            session.execute(sa.text('PRAGMA journal_mode=WAL'))
         except Exception:
             raise OSError("Failed to setup SQLite database for indexing.")
 
