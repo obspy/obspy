@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 r"""
-obspy.clients.filesystem.tsindex - IRIS TSIndex Client and Indexer
-==================================================================
+obspy.clients.filesystem.tsindex - EarthScope TSIndex Client and Indexer
+========================================================================
 
 The obspy.clients.filesystem.tsindex module includes a timeseries extraction
-:class:`Client` class for a database created by the IRIS
-`mseedindex <https://github.com/iris-edu/mseedindex/>`_ program, as well as, a
-:class:`Indexer` class for creating a SQLite3 database that follows the IRIS
+:class:`Client` class for a database created by the EarthScope
+`mseedindex <https://github.com/EarthScope/mseedindex/>`_ program, as well as, a
+:class:`Indexer` class for creating a SQLite3 database that follows the EarthScope
 `tsindex database schema
-<https://github.com/iris-edu/mseedindex/wiki/Database-Schema/>`_\.
+<https://github.com/EarthScope/mseedindex/wiki/Database-Schema/>`_\.
 
 :copyright:
-    Nick Falco, Chad Trabant, IRISDMC, 2021
+    Nick Falco, Chad Trabant, IRIS-now-EarthScope Data Services, 2024
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
@@ -119,8 +119,8 @@ Indexer Usage
 -------------
 
 The :class:`~Indexer` provides a high level
-API for indexing a directory tree of miniSEED files using the IRIS
-`mseedindex <https://github.com/iris-edu/mseedindex/>`_ software.
+API for indexing a directory tree of miniSEED files using the EarthScope
+`mseedindex <https://github.com/EarthScope/mseedindex/>`_ software.
 
 An important feature of this module is the ability to index data files
 in parallel, making it convenient for indexing large data sets of many
@@ -193,7 +193,7 @@ copyreg.pickle(types.MethodType, _pickle_method)
 
 class Client(object):
     """
-    Time series extraction client for IRIS tsindex database schema.
+    Time series extraction client for EarthScope tsindex database schema.
     """
     @deprecated_keywords({"loglevel": None})
     def __init__(self, database, datapath_replace=None, loglevel=None):
@@ -573,7 +573,7 @@ class Client(object):
         containing information found in the tsindex_summary table.
 
         Information about the tsindex_summary schema may be found in the
-        `mseedindex wiki <https://github.com/iris-edu/mseedindex/wiki/\
+        `mseedindex wiki <https://github.com/EarthScope/mseedindex/wiki/\
         Database-Schema#suggested-time-series-summary-table>`_.
 
         :type network: str
@@ -654,7 +654,7 @@ class Client(object):
         containing information found in the tsindex table.
 
         Information about the tsindex schema may be found in the
-        `mseedindex wiki schema <https://github.com/iris-edu/mseedindex/wiki/\
+        `mseedindex wiki schema <https://github.com/EarthScope/mseedindex/wiki/\
         Database-Schema#sqlite-schema-version-11>`_.
 
         :type network: str
@@ -890,7 +890,7 @@ class Client(object):
 
 class Indexer(object):
     """
-    Build an index for miniSEED data using IRIS's mseedindex program.
+    Build an index for miniSEED data using EarthScope's mseedindex program.
     Recursively search for files matching ``filename_pattern`` starting
     from ``root_path`` and run ``index_cmd`` for each target file found that
     is not already in the index. After all new files are indexed a summary
@@ -923,7 +923,7 @@ class Indexer(object):
             coverage for records that contain a leap second. Also, leap second
             indicators in the miniSEED headers will be ignored. See the
             `mseedindex wiki leap second
-             <https://github.com/iris-edu/mseedindex/blob/"
+             <https://github.com/EarthScope/mseedindex/blob/"
             "master/doc/mseedindex.md#leap-second-list-file>`_ for more"
             "for more information regarding this file.
         :type index_cmd: str
@@ -980,7 +980,7 @@ class Indexer(object):
         if self._is_index_cmd_installed() is False:
             raise OSError(
                     "Required program '{}' is not installed. Hint: Install "
-                    "mseedindex at https://github.com/iris-edu/mseedindex/."
+                    "mseedindex at https://github.com/EarthScope/mseedindex/."
                     .format(self.index_cmd))
         if self.request_handler.sqlite:
             self.request_handler._set_sqlite_pragma()
