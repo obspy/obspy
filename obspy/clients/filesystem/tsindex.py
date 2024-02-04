@@ -6,7 +6,7 @@ obspy.clients.filesystem.tsindex - EarthScope TSIndex Client and Indexer
 The obspy.clients.filesystem.tsindex module includes a timeseries extraction
 :class:`Client` class for a database created by the EarthScope
 `mseedindex <https://github.com/EarthScope/mseedindex/>`_ program, as well as,
-a :class:`Indexer` class for creating a SQLite3 database that follows the
+a :class:`Indexer` class to create a SQLite3 database, following the
 EarthScope `tsindex database schema
 <https://github.com/EarthScope/mseedindex/wiki/Database-Schema/>`_\.
 
@@ -151,7 +151,6 @@ directory. The name of the index database can be changed by supplying the
 
 import copyreg
 import datetime
-import time
 import logging
 import os
 import sqlalchemy as sa
@@ -653,7 +652,7 @@ class Client(object):
         containing information found in the tsindex table.
 
         Information about the tsindex schema may be found in the
-        `mseedindex wiki schema <https://github.com/EarthScope/mseedindex/wiki/\
+        `mseedindex wiki <https://github.com/EarthScope/mseedindex/wiki/\
         Database-Schema#sqlite-schema-version-11>`_.
 
         :type network: str
@@ -1361,7 +1360,7 @@ class TSIndexDatabaseHandler(object):
                     sa.case((sa.literal(e) == '*',
                              sa.literal('0000-00-00T00:00:00')),
                             else_=sa.literal(e)
-                           ).label("starttime"),
+                            ).label("starttime"),
                     sa.case((sa.literal(f) == '*',
                              sa.literal('5000-00-00T00:00:00')),
                             else_=sa.literal(f)
@@ -1397,8 +1396,8 @@ class TSIndexDatabaseHandler(object):
                                    else_=requests_cte.c.starttime
                                    ).label('starttime'),
                            sa.case((requests_cte.c.endtime == '*',
-                                     self.TSIndexSummaryTable.latest),
-                                    else_=requests_cte.c.endtime
+                                    self.TSIndexSummaryTable.latest),
+                                   else_=requests_cte.c.endtime
                                    ).label('endtime'))
                     .filter(self.TSIndexSummaryTable.network.op('GLOB')
                             (requests_cte.c.network))
