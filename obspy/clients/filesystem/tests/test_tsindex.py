@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import re
-import requests
 import tempfile
 import uuid
 from collections import namedtuple
@@ -13,7 +12,6 @@ import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
 from obspy import read, UTCDateTime
-from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler
 
