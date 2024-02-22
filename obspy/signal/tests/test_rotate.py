@@ -92,8 +92,8 @@ class TestRotate():
         data_n = np.require(data_n, np.float64)
         data_e = np.require(data_e, np.float64)
         ba = 33.3
-        new_n, new_e = rotate_ne_rt(data_n, data_e, ba)
-        new_n, new_e = rotate_rt_ne(new_n, new_e, ba)
+        r, t = rotate_ne_rt(data_n, data_e, ba)
+        new_n, new_e = rotate_rt_ne(r, t, ba)
         assert np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12)
         assert np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12)
 

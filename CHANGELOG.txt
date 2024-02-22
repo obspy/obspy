@@ -34,6 +34,7 @@ Changes:
  - obspy.signal:
    * all butterworth filters: correct zero-phase filtering of 2-d arrays and
      filtering along non-default axis of 2-d arrays (see #3291)
+   * fix naming of input args in function "rotate_rt_ne()" (see #3383)
 
 maintenance_1.4.x
 =================
