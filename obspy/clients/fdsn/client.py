@@ -1799,7 +1799,21 @@ def raise_on_error(code, data):
     """
     # get detailed server response message
     if code != 200:
-        server_info = data.decode('ASCII', errors='ignore')
+        # let's try to resolve all the different types that `data` can sadly
+        # have..
+        # first, if it's `BytesIO` (or should it for whatever reason be
+        # `StringIO` which it shouldn't..) then break it down by reading it
+        try:
+            server_info = data.read()
+        # if there is no `read()` method it should be `bytes`
+        except AttributeError:
+            server_info = data
+        # now decode the bytes (or if for whatever weird reason we ended up
+        # with a string, then do nothing more)
+        try:
+            server_info = server_info.decode('ASCII', errors='ignore')
+        except AttributeError:
+            pass
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
@@ -1885,10 +1899,34 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib_request.HTTPError as e:
-        error_data = e.read()
+        # try hard to assemble the most details on what the problem is from the
+        # exception object
+        try:
+            error_msg = e.msg
+        except AttributeError:
+            error_msg = None
+        try:
+            error_details = e.read()
+        except Exception:
+            error_details = None
+        if error_details:
+            # looks like we get bytes back so let's decode but be robust just
+            # in case
+            try:
+                error_details = error_details.decode('UTF-8', errors='ignore')
+            except AttributeError:
+                pass
+        if error_msg and error_details:
+            error_data = f'{error_msg}\n{error_details}'
+        elif error_msg:
+            error_data = error_msg
+        elif error_details:
+            error_data = error_details
+        else:
+            error_data = None
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
-                  (e.code, str(e.reason), url, error_data)
+                  (e.code, str(e.reason), url, error_data or '')
             print(msg)
         return e.code, error_data
     except Exception as e:
