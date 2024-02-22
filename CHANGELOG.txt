@@ -39,6 +39,8 @@ Changes:
  - obspy.io.gcf:
    * Fixed an issue in algorithm to split and encode last few data into GCF 
      blocks (see #3252)
+ - obspy.io.wav:
+   * Fixed reading of stereo wav files (see #3399)
  - obspy.io.win:
    * Fixed three bugs when reading 0.5 byte datawide (see #3310)
  - obspy.io.xseed:

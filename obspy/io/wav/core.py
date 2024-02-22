@@ -88,20 +88,19 @@ def _read_wav(filename, headonly=False, **kwargs):  # @UnusedVariable
     | 7000.0 Hz, 2599 samples
     """
     # read WAV file
-    fh = wave.open(filename, 'rb')
-    try:
+    with wave.open(filename, 'rb') as fh:
         # header information
-        (_nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
+        (nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
         header = {'sampling_rate': rate, 'npts': length}
         if headonly:
-            return Stream([Trace(header=header)])
+            return Stream([Trace(header=header) for _ in range(nchannel)])
         if width not in WIDTH2DTYPE.keys():
             msg = "Unsupported Format Type, word width %dbytes" % width
             raise TypeError(msg)
         data = from_buffer(fh.readframes(length), dtype=WIDTH2DTYPE[width])
-    finally:
-        fh.close()
-    return Stream([Trace(header=header, data=data)])
+    traces = [Trace(header=header, data=data[i::nchannel])
+              for i in range(nchannel)]
+    return Stream(traces)
 
 
 def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
