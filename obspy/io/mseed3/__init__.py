@@ -62,7 +62,6 @@ stats and stats['eh'] are written with the following command to a file:
 >>> st.write('tmp.ms3', format='MSEED3') #doctest: +SKIP
 
 """
-from .util import mseed3_to_obspy_header
 
 
 if __name__ == '__main__':
