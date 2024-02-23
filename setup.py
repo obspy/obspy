@@ -95,6 +95,7 @@ INSTALL_REQUIRES = [
     'sqlalchemy>=1.4',
     'decorator',
     'requests',
+    'simplemseed'
 ]
 # Extra dependencies
 EXTRAS_REQUIRES = {
