@@ -49,6 +49,9 @@ Changes:
  - obspy.io.zmap:
    * Fix writing events with origins that have no depth or depth errors given
      (see #3343)
+ - obspy.signal:
+   * PPSD: Fix some time slices getting skipped if sampling rate does not align
+     well with the length of one PSD slice. (see #3387)
  - obspy.taup:
    * bugfix to allow calculations for a model with no discontinuities
      (see #3070, #3244)
