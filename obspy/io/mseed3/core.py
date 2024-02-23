@@ -11,6 +11,7 @@ from struct import pack
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
+from obspy import ObsPyException, ObsPyReadingError
 
 from simplemseed import (
     unpackMSeed3FixedHeader,
@@ -82,7 +83,8 @@ def _read_mseed3(
     starttime=None,
     endtime=None,
     headonly=False,
-    sourcename=None,
+    matchsid=None,
+    merge=True,
     verbose=None,
     **kwargs,
 ):
@@ -102,9 +104,9 @@ def _read_mseed3(
     :param endtime: Only read data samples before or at the end time.
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
-    :type sourcename: str
-    :param sourcename: Only read data with matching FDSN Source Id
-        (can be regular expression, e.g. "BW_UH2.*" or ".*_..Z").
+    :type matchsid: str
+    :param matchsid: Only read data with matching FDSN Source Id
+        (can be regular expression, e.g. "BW_UH2.*" or ".*_._._Z").
         Defaults to ``None`` .
 
     .. rubric:: Example
@@ -119,7 +121,7 @@ def _read_mseed3(
     >>> from obspy import UTCDateTime
     >>> st = read("/path/to/casee_two.ms3",
     ...           starttime=UTCDateTime("2010-06-20T00:00:01"),
-    ...           sourcename="*.?HZ")
+    ...           matchsid="_._H_Z")
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
     BW.UH3..EHZ | 2010-06-20T00:00:00.999999Z - ... | 200.0 Hz, 242 samples
@@ -149,7 +151,7 @@ def _read_mseed3(
             f"The smallest possible mseed3 record is made up of {FIXED_HEADER_SIZE} "
             f"bytes. The passed buffer or file contains only {length}."
         )
-        raise ObsPyMSEEDFilesizeTooSmallError(msg)
+        raise ObsPyMSEED3FilesizeTooSmallError(msg)
     elif length > 2**31:
         msg = (
             "ObsPy can currently not directly read mseed3 files that "
@@ -158,20 +160,30 @@ def _read_mseed3(
             "https://github.com/obspy/obspy/pull/1419"
             "#issuecomment-221582369"
         )
-        raise ObsPyMSEEDFilesizeTooLargeError(msg)
+        raise ObsPyMSEED3FilesizeTooLargeError(msg)
 
     if isinstance(mseed_object, io.BufferedIOBase):
-        return _internal_is_mseed3(mseed_object)
+        return _internal_read_mseed3(mseed_object,
+                                   starttime=starttime,
+                                   endtime=endtime,
+                                   matchsid=matchsid)
     elif isinstance(mseed_object, (str, bytes)):
         with open(mseed_object, "rb") as fh:
-            return _internal_is_mseed3(fh)
+            return _internal_read_mseed3(fh,
+                                       starttime=starttime,
+                                       endtime=endtime,
+                                       matchsid=matchsid)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _internal_is_mseed3(fp):
+def _internal_read_mseed3(fp,
+                        starttime=None,
+                        endtime=None,
+                        headonly=False,
+                        matchsid=None):
     traces = []
-    for ms3 in readMSeed3Records(fp):
+    for ms3 in readMSeed3Records(fp, matchsid=matchsid, merge=True):
         if starttime is not None and ms3.endtime < starttime:
             continue
         if endtime is not None and endtime < ms3.starttime:
@@ -276,6 +288,18 @@ def mseed3_to_obspy_header(ms3):
 
     return Stats(stats)
 
+class ObsPyMSEED3Error(ObsPyException):
+    pass
+
+class ObsPyMSEED3ReadingError(ObsPyMSEED3Error, ObsPyReadingError):
+    pass
+
+class ObsPyMSEED3FilesizeTooSmallError(ObsPyMSEED3ReadingError):
+    pass
+
+
+class ObsPyMSEED3FilesizeTooLargeError(ObsPyMSEED3ReadingError):
+    pass
 
 if __name__ == "__main__":
     import doctest
