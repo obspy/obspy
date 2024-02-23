@@ -8,17 +8,19 @@ import warnings
 from pathlib import Path
 from struct import pack
 
-import numpy as np
-
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
-from obspy.core.util import NATIVE_BYTEORDER
-from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
-               ObsPyMSEEDFilesizeTooLargeError, ObsPyMSEEDError)
-from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
-                      SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
-                      VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
-                      SelectTime, Blkt100S, Blkt1001S, clibmseed)
+
+from simplemseed import (
+    unpackMSeed3FixedHeader,
+    FDSNSourceId,
+    FIXED_HEADER_SIZE,
+    readMSeed3Records,
+    FDSNSourceId,
+    MSeed3Record,
+    MSeed3Header,
+)
 
 
 def _is_mseed3(filename):
@@ -30,15 +32,16 @@ def _is_mseed3(filename):
     :rtype: bool
     :return: ``True`` if a mseed3 file.
 
-    This method only reads the first three bytes of the file and checks
-    whether it is 'M' 'S' 3.
+    This method reads the first three bytes of the file and checks
+    whether it is 'M' 'S' 3, then reads the fixed header and performs
+    simple sanity checks on the start time fields.
 
     """
     # Open filehandler or use an existing file like object.
-    if not hasattr(filename, 'read'):
+    if not hasattr(filename, "read"):
         file_size = os.path.getsize(filename)
-        with io.open(filename, 'rb') as fh:
-            return __is_mseed3(fh, file_size=file_size)
+        with io.open(filename, "rb") as fh:
+            return __internal_is_mseed3(fh, file_size=file_size)
     else:
         initial_pos = filename.tell()
         try:
@@ -61,21 +64,28 @@ def __internal_is_mseed3(fp, file_size):
     """
     Internal version of _is_mseed3 working only with open file-like object.
     """
-    if file_size < simplemseed.mseed.FIXED_HEADER_SIZE:
+    if file_size < FIXED_HEADER_SIZE:
         return False
-    headerBytes = fp.read(simplemseed.mseed.FIXED_HEADER_SIZE)
+    headerBytes = fp.read(FIXED_HEADER_SIZE)
     # File has less than FIXED_HEADER_SIZE characters
-    if len(headerBytes) != simplemseed.mseed.FIXED_HEADER_SIZE:
+    if len(headerBytes) != FIXED_HEADER_SIZE:
         return False
-    if headerBytes[0] != b"M" or headerBytes[1] != b"S" or headerBytes[2] != 3:
+    # M is ascii 77 and S is 83
+    if headerBytes[0] != 77 or headerBytes[1] != 83 or headerBytes[2] != 3:
         return False
-    header = simplemseed.unpackMSeed3FixedHeader(headerBytes)
+    header = unpackMSeed3FixedHeader(headerBytes)
     return header.sanityCheck()
 
 
-def _read_mseed3(mseed_object, starttime=None, endtime=None, headonly=False,
-                sourcename=None, reclen=None, details=False,
-                header_byteorder=None, verbose=None, **kwargs):
+def _read_mseed3(
+    mseed_object,
+    starttime=None,
+    endtime=None,
+    headonly=False,
+    sourcename=None,
+    verbose=None,
+    **kwargs,
+):
     """
     Reads a mseed3 file and returns a Stream object.
 
@@ -93,71 +103,29 @@ def _read_mseed3(mseed_object, starttime=None, endtime=None, headonly=False,
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
     :type sourcename: str
-    :param sourcename: Only read data with matching SEED ID (can contain
-        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z").
+    :param sourcename: Only read data with matching FDSN Source Id
+        (can be regular expression, e.g. "BW_UH2.*" or ".*_..Z").
         Defaults to ``None`` .
-    :param reclen: If it is None, it will be automatically determined for every
-        record. If it is known, just set it to the record length in bytes which
-        will increase the reading speed slightly.
-    :type details: bool, optional
-    :param details: If ``True`` read additional information: timing quality
-        and availability of calibration information.
-        Note, that the traces are then also split on these additional
-        information. Thus the number of traces in a stream will change.
-        Details are stored in the mseed stats AttribDict of each trace.
-        ``False`` specifies for both cases, that this information is not
-        available. ``blkt1001.timing_quality`` specifies the timing quality
-        from 0 to 100 [%]. ``calibration_type`` specifies the type of available
-        calibration information blockettes:
-
-        - ``1`` : Step Calibration (Blockette 300)
-        - ``2`` : Sine Calibration (Blockette 310)
-        - ``3`` : Pseudo-random Calibration (Blockette 320)
-        - ``4`` : Generic Calibration  (Blockette 390)
-        - ``-2`` : Calibration Abort (Blockette 395)
-
-    :type header_byteorder: int or str, optional
-    :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
-        little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
-        native byte order. Used to enforce the header byte order. Useful in
-        some rare cases where the automatic byte order detection fails.
 
     .. rubric:: Example
 
     >>> from obspy import read
-    >>> st = read("/path/to/two_channels.mseed")
+    >>> st = read("/path/to/casee_two.ms3")
     >>> print(st)  # doctest: +ELLIPSIS
     2 Trace(s) in Stream:
-    BW.UH3..EHE | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
-    BW.UH3..EHZ | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
+    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.008392Z - 2023-06-17T04:53:50.178392Z | 100.0 Hz, 18 samples
+    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.188392Z - 2023-06-17T04:53:55.498392Z | 100.0 Hz, 532 samples
 
     >>> from obspy import UTCDateTime
-    >>> st = read("/path/to/two_channels.mseed",
+    >>> st = read("/path/to/casee_two.ms3",
     ...           starttime=UTCDateTime("2010-06-20T00:00:01"),
     ...           sourcename="*.?HZ")
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
     BW.UH3..EHZ | 2010-06-20T00:00:00.999999Z - ... | 200.0 Hz, 242 samples
 
-    Read with ``details=True`` to read more details of the file if present.
-
-    >>> st = read("/path/to/timingquality.mseed", details=True)
-    >>> print(st[0].stats.mseed.blkt1001.timing_quality)
-    55
-
-    ``False`` means that the necessary information could not be found in the
-    file.
-
-    >>> print(st[0].stats.mseed.calibration_type)
-    False
-
-    Note that each change in timing quality from record to record may trigger a
-    new Trace object to be created so the Stream object may contain many Trace
-    objects if ``details=True`` is used.
-
-    >>> print(len(st))
-    101
     """
+
     if isinstance(mseed_object, Path):
         mseed_object = str(mseed_object)
     # Parse the headonly and reclen flags.
@@ -176,23 +144,40 @@ def _read_mseed3(mseed_object, starttime=None, endtime=None, headonly=False,
     else:
         length = os.path.getsize(mseed_object)
 
-    if length < simplemseed.mseed.FIXED_HEADER_SIZE:
-        msg = f"The smallest possible mseed3 record is made up of {simplemseed.mseed.FIXED_HEADER_SIZE} " \
-              f"bytes. The passed buffer or file contains only {length}."
+    if length < FIXED_HEADER_SIZE:
+        msg = (
+            f"The smallest possible mseed3 record is made up of {FIXED_HEADER_SIZE} "
+            f"bytes. The passed buffer or file contains only {length}."
+        )
         raise ObsPyMSEEDFilesizeTooSmallError(msg)
-    elif length > 2 ** 31:
-        msg = ("ObsPy can currently not directly read mseed3 files that "
-               "are larger than 2^31 bytes (2048 MiB). To still read it, "
-               "please read the file in chunks as documented here: "
-               "https://github.com/obspy/obspy/pull/1419"
-               "#issuecomment-221582369")
+    elif length > 2**31:
+        msg = (
+            "ObsPy can currently not directly read mseed3 files that "
+            "are larger than 2^31 bytes (2048 MiB). To still read it, "
+            "please read the file in chunks as documented here: "
+            "https://github.com/obspy/obspy/pull/1419"
+            "#issuecomment-221582369"
+        )
         raise ObsPyMSEEDFilesizeTooLargeError(msg)
 
+    if isinstance(mseed_object, io.BufferedIOBase):
+        return _internal_is_mseed3(mseed_object)
+    elif isinstance(mseed_object, (str, bytes)):
+        with open(mseed_object, "rb") as fh:
+            return _internal_is_mseed3(fh)
+    else:
+        raise ValueError("Cannot open '%s'." % filename)
+
+
+def _internal_is_mseed3(fp):
     traces = []
-    for ms3 in simplemseed.readMSeed3Records():
+    for ms3 in readMSeed3Records(fp):
+        if starttime is not None and ms3.endtime < starttime:
+            continue
+        if endtime is not None and endtime < ms3.starttime:
+            continue
         stats = mseed3_to_obspy_header(ms3)
         data = ms3.decompress()
-        assert dtype in data # make sure numpy array
         trace = Trace(data=data, header=stats)
         traces.append(trace)
     return Stream(traces=traces)
@@ -235,38 +220,64 @@ def _write_mseed(stream, filename, encoding=None, flush=True, verbose=0, **_kwar
     """
 
     # Open filehandler or use an existing file like object.
-    if not hasattr(filename, 'write'):
-        f = open(filename, 'wb')
+    if not hasattr(filename, "write"):
+        f = open(filename, "wb")
     else:
         f = filename
 
     for trace in stream:
         ms3Header = MSeed3Header()
-        header.starttime = trace.stats['starttime']
-        header.sampleRatePeriod = trace.stats['sampling_rate']
-        if len(trace.stats['channel']) == 0:
-            identifier = simplemseed.FDSNSourceId.createUnknown(
+        header.starttime = trace.stats["starttime"]
+        header.sampleRatePeriod = trace.stats["sampling_rate"]
+        if len(trace.stats["channel"]) == 0:
+            identifier = FDSNSourceId.createUnknown(
                 header.sampleRate,
-                networkCode=trace.stats['network'],
-                stationCode=trace.stats['station'],
-                locationCode=trace.stats['location'])
+                networkCode=trace.stats["network"],
+                stationCode=trace.stats["station"],
+                locationCode=trace.stats["location"],
+            )
         else:
-            identifier = simplemseed.FDSNSourceId.fromNslc(
-                trace.stats['network'],
-                trace.stats['station'],
-                trace.stats['location'],
-                trace.stats['channel']
-                )
+            identifier = FDSNSourceId.fromNslc(
+                trace.stats["network"],
+                trace.stats["station"],
+                trace.stats["location"],
+                trace.stats["channel"],
+            )
         eh = {}
-        if 'mseed3' in trace.stats:
-            ms3stats = trace.stats['mseed3']
+        if "mseed3" in trace.stats:
+            ms3stats = trace.stats["mseed3"]
             eh = ms3stats
-        ms3 = simplemseed.MSeed3Record(header, data, identifier, eh)
+        ms3 = MSeed3Record(header, data, identifier, eh)
         f.write(ms3.pack())
     # Close if its a file handler.
-    if not hasattr(filename, 'write'):
+    if not hasattr(filename, "write"):
         f.close()
 
-if __name__ == '__main__':
+
+def mseed3_to_obspy_header(ms3):
+    stats = {}
+    h = ms3.header
+    stats["npts"] = h.numSamples
+    stats["sampling_rate"] = h.sampleRate
+    sid = FDSNSourceId.parse(ms3.identifier)
+    nslc = sid.asNslc()
+    stats["network"] = nslc.networkCode
+    stats["station"] = nslc.stationCode
+    stats["location"] = nslc.locationCode
+    stats["channel"] = nslc.channelCode
+
+    # store _all_ provided SAC header values
+    if "bag" in ms3.eh:
+        stats["bag"] = ms3.eh["bag"]
+    if "FDSN" in ms3.eh:
+        stats["FDSN"] = ms3.eh["FDSN"]
+
+    stats["starttime"] = UTCDateTime(ms3.starttime)
+
+    return Stats(stats)
+
+
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod(exclude_empty=True)
