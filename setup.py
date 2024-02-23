@@ -121,7 +121,7 @@ KEYWORDS = [
     'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
     'IASPEI', 'imaging', 'IMS', 'instrument correction',
     'instrument simulation', 'IRIS', 'ISF', 'kinemetrics', 'KML', 'magnitude',
-    'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES',
+    'MiniSEED', 'misfit', 'mopad', 'MSEED', 'MSEED3', 'NDK', 'NERA', 'NERIES',
     'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
@@ -158,6 +158,7 @@ ENTRY_POINTS = {
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
         'MSEED = obspy.io.mseed.core',
+        'MSEED3 = obspy.io.mseed3.core',
         'NNSA_KB_CORE = obspy.io.css.core',
         'PDAS = obspy.io.pdas.core',
         'SAC = obspy.io.sac.core',
@@ -225,6 +226,11 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.mseed.core:_is_mseed',
         'readFormat = obspy.io.mseed.core:_read_mseed',
         'writeFormat = obspy.io.mseed.core:_write_mseed',
+        ],
+    'obspy.plugin.waveform.MSEED3': [
+        'isFormat = obspy.io.mseed3.core:_is_mseed3',
+        'readFormat = obspy.io.mseed3.core:_read_mseed3',
+        'writeFormat = obspy.io.mseed3.core:_write_mseed3',
         ],
     'obspy.plugin.waveform.PDAS': [
         'isFormat = obspy.io.pdas.core:_is_pdas',
