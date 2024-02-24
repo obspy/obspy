@@ -21,6 +21,7 @@ from simplemseed import (
     FDSNSourceId,
     MSeed3Record,
     MSeed3Header,
+    canDecompress,
 )
 
 
@@ -79,7 +80,7 @@ def __internal_is_mseed3(fp, file_size):
 
 
 def _read_mseed3(
-    mseed_object,
+    mseed3_file,
     starttime=None,
     endtime=None,
     headonly=False,
@@ -95,13 +96,13 @@ def _read_mseed3(
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :param mseed_object: Filename or open file like object that contains the
+    :param mseed3_file: Filename or open file like object that contains the
         binary mseed3 data. Any object that provides a read() method will be
         considered to be a file like object.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param starttime: Only read data samples after or at the start time.
+    :param starttime: Only read data records after or at the start time.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param endtime: Only read data samples before or at the end time.
+    :param endtime: Only read data records before or at the end time.
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
     :type matchsid: str
@@ -114,9 +115,8 @@ def _read_mseed3(
     >>> from obspy import read
     >>> st = read("/path/to/casee_two.ms3")
     >>> print(st)  # doctest: +ELLIPSIS
-    2 Trace(s) in Stream:
-    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.008392Z - 2023-06-17T04:53:50.178392Z | 100.0 Hz, 18 samples
-    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.188392Z - 2023-06-17T04:53:55.498392Z | 100.0 Hz, 532 samples
+    1 Trace(s) in Stream:
+    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.008392Z - 2023-06-17T04:53:55.498392Z | 100.0 Hz, 550 samples
 
     >>> from obspy import UTCDateTime
     >>> st = read("/path/to/casee_two.ms3",
@@ -124,12 +124,11 @@ def _read_mseed3(
     ...           matchsid="_._H_Z")
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    BW.UH3..EHZ | 2010-06-20T00:00:00.999999Z - ... | 200.0 Hz, 242 samples
-
+    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.008392Z - 2023-06-17T04:53:55.498392Z | 100.0 Hz, 550 samples
     """
 
-    if isinstance(mseed_object, Path):
-        mseed_object = str(mseed_object)
+    if isinstance(mseed3_file, Path):
+        mseed3_file = str(mseed3_file)
     # Parse the headonly and reclen flags.
     if headonly is True:
         unpack_data = 0
@@ -137,14 +136,14 @@ def _read_mseed3(
         unpack_data = 1
 
     # Determine total size. Either its a file-like object.
-    if hasattr(mseed_object, "tell") and hasattr(mseed_object, "seek"):
-        cur_pos = mseed_object.tell()
-        mseed_object.seek(0, 2)
-        length = mseed_object.tell() - cur_pos
-        mseed_object.seek(cur_pos, 0)
+    if hasattr(mseed3_file, "tell") and hasattr(mseed3_file, "seek"):
+        cur_pos = mseed3_file.tell()
+        mseed3_file.seek(0, 2)
+        length = mseed3_file.tell() - cur_pos
+        mseed3_file.seek(cur_pos, 0)
     # Or a file name.
     else:
-        length = os.path.getsize(mseed_object)
+        length = os.path.getsize(mseed3_file)
 
     if length < FIXED_HEADER_SIZE:
         msg = (
@@ -162,13 +161,13 @@ def _read_mseed3(
         )
         raise ObsPyMSEED3FilesizeTooLargeError(msg)
 
-    if isinstance(mseed_object, io.BufferedIOBase):
-        return _internal_read_mseed3(mseed_object,
+    if isinstance(mseed3_file, io.BufferedIOBase):
+        return _internal_read_mseed3(mseed3_file,
                                    starttime=starttime,
                                    endtime=endtime,
                                    matchsid=matchsid)
-    elif isinstance(mseed_object, (str, bytes)):
-        with open(mseed_object, "rb") as fh:
+    elif isinstance(mseed3_file, (str, bytes)):
+        with open(mseed3_file, "rb") as fh:
             return _internal_read_mseed3(fh,
                                        starttime=starttime,
                                        endtime=endtime,
@@ -189,9 +188,13 @@ def _internal_read_mseed3(fp,
         if endtime is not None and endtime < ms3.starttime:
             continue
         stats = mseed3_to_obspy_header(ms3)
-        data = ms3.decompress()
-        trace = Trace(data=data, header=stats)
-        traces.append(trace)
+        if canDecompress(ms3.header.encoding):
+            data = ms3.decompress()
+            trace = Trace(data=data, header=stats)
+            traces.append(trace)
+        else:
+            trace = Trace( header=stats)
+            traces.append(trace)
     return Stream(traces=traces)
 
 
@@ -215,11 +218,6 @@ def _write_mseed(stream, filename, encoding=None, flush=True, verbose=0, **_kwar
         ``STEIM1`` (``10``) and ``STEIM2`` (``11``)*. If no encoding is given
         it will be derived from the dtype of the data and the appropriate
         default encoding (depicted with an asterix) will be chosen.
-    :type flush: bool, optional
-    :param flush: If ``True``, all data will be packed into records. If
-        ``False`` new records will only be created when there is enough data to
-        completely fill a record. Be careful with this. If in doubt, choose
-        ``True`` which is also the default value.
     :type verbose: int, optional
     :param verbose: Controls verbosity, a value of ``0`` will result in no
         diagnostic output
@@ -277,14 +275,12 @@ def mseed3_to_obspy_header(ms3):
     stats["station"] = nslc.stationCode
     stats["location"] = nslc.locationCode
     stats["channel"] = nslc.channelCode
-
-    # store _all_ provided SAC header values
-    if "bag" in ms3.eh:
-        stats["bag"] = ms3.eh["bag"]
-    if "FDSN" in ms3.eh:
-        stats["FDSN"] = ms3.eh["FDSN"]
-
     stats["starttime"] = UTCDateTime(ms3.starttime)
+    stats["publicationVersion"] = h.publicationVersion
+
+    # store extra header values
+    if len(ms3.eh) > 0:
+        stats["eh"] = ms3.eh
 
     return Stats(stats)
 
