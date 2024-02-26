@@ -237,11 +237,17 @@ def _write_mseed3(stream, filename, encoding=None, flush=True, verbose=0, **_kwa
 
     for trace in stream:
         ms3Header = MSeed3Header()
-        header.starttime = trace.stats["starttime"]
-        header.sampleRatePeriod = trace.stats["sampling_rate"]
+        st = trace.stats["starttime"]
+        ms3Header.year = st.year
+        ms3Header.dayOfYear = st.julday
+        ms3Header.hour = st.hour
+        ms3Header.minute = st.minute
+        ms3Header.second = st.second
+        ms3Header.nanosecond = st.microsecond*1000 + st.ns % 1000
+        ms3Header.sampleRatePeriod = trace.stats["sampling_rate"]
         if len(trace.stats["channel"]) == 0:
             identifier = FDSNSourceId.createUnknown(
-                header.sampleRate,
+                ms3Header.sampleRate,
                 networkCode=trace.stats["network"],
                 stationCode=trace.stats["station"],
                 locationCode=trace.stats["location"],
@@ -257,10 +263,10 @@ def _write_mseed3(stream, filename, encoding=None, flush=True, verbose=0, **_kwa
         if "mseed3" in trace.stats:
             ms3stats = trace.stats["mseed3"]
             if "publicationVersion" in ms3stats:
-                header.publicationVersion = parseInt(ms3stats["publicationVersion"])
+                ms3Header.publicationVersion = parseInt(ms3stats["publicationVersion"])
             if "extraHeaders" in ms3stats:
                 eh = ms3stats["extraHeaders"]
-        ms3 = MSeed3Record(header, data, identifier, eh)
+        ms3 = MSeed3Record(ms3Header, identifier, trace.data, eh)
         f.write(ms3.pack())
     # Close if its a file handler.
     if not hasattr(filename, "write"):
@@ -278,7 +284,7 @@ def mseed3_to_obspy_header(ms3):
     stats["station"] = nslc.stationCode
     stats["location"] = nslc.locationCode
     stats["channel"] = nslc.channelCode
-    stats["starttime"] = UTCDateTime(ms3.starttime)
+    stats["starttime"] = UTCDateTime(h.year, julday=h.dayOfYear, hour=h.hour, minute=h.minute, microsecond=h.nanosecond/1000)
 
     # store extra header values
     eh = {}
