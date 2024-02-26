@@ -79,8 +79,8 @@ class TestWaveformPlugins:
                         continue
                     # new trace object in native byte order
                     dt = np.dtype(np.int_).newbyteorder(native_byteorder)
-                    if format in ('MSEED', 'GSE2'):
-                        # MiniSEED and GSE2 cannot write int64, enforce type
+                    if format in ('MSEED', 'MSEED3', 'GSE2'):
+                        # MiniSEED, miniseed3 and GSE2 cannot write int64, enforce type
                         dt = np.int32
                     tr = Trace(data=data.astype(dt))
                     tr.stats.network = "BW"
