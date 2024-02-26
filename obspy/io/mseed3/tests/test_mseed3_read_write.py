@@ -27,7 +27,8 @@ class TestMSEED3ReadingAndWriting:
 
             assert (jsonrec["SampleRate"] == trace.stats.sampling_rate)
             assert (
-                jsonrec["PublicationVersion"] == trace.stats.mseed3.publicationVersion
+                jsonrec["PublicationVersion"] ==
+                trace.stats.mseed3.publicationVersion
             )
             sid = FDSNSourceId.fromNslc(
                 trace.stats.network,
@@ -41,7 +42,7 @@ class TestMSEED3ReadingAndWriting:
                 jsondata = jsonrec["Data"]
                 assert len(jsondata) == len(trace)
                 for i in range(len(jsondata)):
-                    assert jsondata[i] == trace[i], f"{i}  {jsondata[i]} != {trace[i]}"
+                    assert jsondata[i] == trace[i]
 
     """
     Test everything related to the general reading and writing of MiniSEED

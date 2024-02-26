@@ -79,7 +79,6 @@ def _read_mseed3(
     mseed3_file,
     starttime=None,
     endtime=None,
-    headonly=False,
     matchsid=None,
     merge=True,
     verbose=None,
@@ -99,8 +98,6 @@ def _read_mseed3(
     :param starttime: Only read data records after or at the start time.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: Only read data records before or at the end time.
-    :param headonly: Determines whether or not to unpack the data or just
-        read the headers.
     :type matchsid: str
     :param matchsid: Only read data with matching FDSN Source Id
         (can be regular expression, e.g. "BW_UH2.*" or ".*_._._Z").
@@ -112,7 +109,7 @@ def _read_mseed3(
     >>> st = read("/path/to/casee_two.ms3")
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.008392Z - 2023-06-17T04:53:55.498392Z | 100.0 Hz, 550 samples
+    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.008392Z ... | 100.0 Hz, 550 samples
 
     >>> from obspy import UTCDateTime
     >>> st = read("/path/to/casee_two.ms3",
@@ -120,7 +117,7 @@ def _read_mseed3(
     ...           matchsid="_._H_Z")
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.008392Z - 2023-06-17T04:53:55.498392Z | 100.0 Hz, 550 samples
+    CO.CASEE.00.HHZ | 2023-06-17T04:53:50.008392Z ... | 100.0 Hz, 550 samples
     """
 
     if isinstance(mseed3_file, Path):
@@ -138,8 +135,9 @@ def _read_mseed3(
 
     if length < FIXED_HEADER_SIZE:
         msg = (
-            f"The smallest possible mseed3 record is made up of {FIXED_HEADER_SIZE} "
-            f"bytes. The passed buffer or file contains only {length}."
+            f"The smallest possible mseed3 record is made up of "
+            f"{FIXED_HEADER_SIZE} bytes. The passed buffer or file contains"
+            f" only {length}."
         )
         raise ObsPyMSEED3FilesizeTooSmallError(msg)
     elif length > 2**31:
@@ -154,7 +152,10 @@ def _read_mseed3(
 
     if isinstance(mseed3_file, io.BufferedIOBase):
         return _internal_read_mseed3(
-            mseed3_file, starttime=starttime, endtime=endtime, matchsid=matchsid
+            mseed3_file,
+            starttime=starttime,
+            endtime=endtime,
+            matchsid=matchsid
         )
     elif isinstance(mseed3_file, (str, bytes)):
         with open(mseed3_file, "rb") as fh:
@@ -166,7 +167,7 @@ def _read_mseed3(
 
 
 def _internal_read_mseed3(
-    fp, starttime=None, endtime=None, headonly=False, matchsid=None
+    fp, starttime=None, endtime=None, matchsid=None
 ):
     traces = []
     for ms3 in readMSeed3Records(fp, matchsid=matchsid, merge=True):
@@ -185,7 +186,7 @@ def _internal_read_mseed3(
     return Stream(traces=traces)
 
 
-def _write_mseed3(stream, filename, encoding=None, flush=True, verbose=0, **_kwargs):
+def _write_mseed3(stream, filename, verbose=0, **_kwargs):
     """
     Write miniseed3 file from a Stream object.
 
@@ -198,13 +199,6 @@ def _write_mseed3(stream, filename, encoding=None, flush=True, verbose=0, **_kwa
     :param stream: A Stream object.
     :type filename: str
     :param filename: Name of the output file or a file-like object.
-    :type encoding: int or str, optional
-    :param encoding: Should be set to one of the following supported mseed3
-        data encoding formats: ``ASCII`` (``0``)*, ``INT16`` (``1``),
-        ``INT32`` (``3``), ``FLOAT32`` (``4``)*, ``FLOAT64`` (``5``)*,
-        ``STEIM1`` (``10``) and ``STEIM2`` (``11``)*. If no encoding is given
-        it will be derived from the dtype of the data and the appropriate
-        default encoding (depicted with an asterix) will be chosen.
     :type verbose: int, optional
     :param verbose: Controls verbosity, a value of ``0`` will result in no
         diagnostic output
@@ -250,7 +244,8 @@ def _write_mseed3(stream, filename, encoding=None, flush=True, verbose=0, **_kwa
         if "mseed3" in trace.stats:
             ms3stats = trace.stats["mseed3"]
             if "publicationVersion" in ms3stats:
-                ms3Header.publicationVersion = int(ms3stats["publicationVersion"])
+                ms3Header.publicationVersion = \
+                    int(ms3stats["publicationVersion"])
             if "extraHeaders" in ms3stats:
                 eh = ms3stats["extraHeaders"]
         ms3 = MSeed3Record(ms3Header, identifier, trace.data, eh)
