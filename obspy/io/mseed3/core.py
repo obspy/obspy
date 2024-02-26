@@ -198,7 +198,7 @@ def _internal_read_mseed3(fp,
     return Stream(traces=traces)
 
 
-def _write_mseed(stream, filename, encoding=None, flush=True, verbose=0, **_kwargs):
+def _write_mseed3(stream, filename, encoding=None, flush=True, verbose=0, **_kwargs):
     """
     Write miniseed3 file from a Stream object.
 
