@@ -28,7 +28,7 @@ class TestMSEED3ReadingAndWriting:
             assert (jsonrec["SampleRate"] == trace.stats.sampling_rate)
             assert (
                 jsonrec["PublicationVersion"] ==
-                trace.stats.mseed3.publicationVersion
+                trace.stats.mseed3.pubVer
             )
             sid = FDSNSourceId.fromNslc(
                 trace.stats.network,
@@ -37,6 +37,9 @@ class TestMSEED3ReadingAndWriting:
                 trace.stats.channel,
             )
             assert jsonrec["SID"] == str(sid)
+            if "ExtraHeaders" in jsonrec:
+                assert "eh" in trace.stats.mseed3
+                assert jsonrec["ExtraHeaders"] == trace.stats.mseed3.eh
             if jsonrec["DataLength"] > 0:
                 assert jsonrec["SampleCount"] == len(trace)
                 jsondata = jsonrec["Data"]

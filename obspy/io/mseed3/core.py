@@ -20,6 +20,9 @@ from simplemseed import (
     canDecompress,
 )
 
+MSEED_STATS_KEY = "mseed3"
+PUB_VER_KEY = "pubVer"
+EX_HEAD_KEY = "eh"
 
 def _is_mseed3(filename):
     """
@@ -241,13 +244,13 @@ def _write_mseed3(stream, filename, verbose=0, **_kwargs):
                 trace.stats["channel"],
             )
         eh = {}
-        if "mseed3" in trace.stats:
-            ms3stats = trace.stats["mseed3"]
-            if "publicationVersion" in ms3stats:
+        if MSEED_STATS_KEY in trace.stats:
+            ms3stats = trace.stats[MSEED_STATS_KEY]
+            if PUB_VER_KEY in ms3stats:
                 ms3Header.publicationVersion = \
-                    int(ms3stats["publicationVersion"])
-            if "extraHeaders" in ms3stats:
-                eh = ms3stats["extraHeaders"]
+                    int(ms3stats[PUB_VER_KEY])
+            if EX_HEAD_KEY in ms3stats:
+                eh = ms3stats[EX_HEAD_KEY]
         ms3 = MSeed3Record(ms3Header, identifier, trace.data, eh)
         f.write(ms3.pack())
     # Close if its a file handler.
@@ -280,9 +283,9 @@ def mseed3_to_obspy_header(ms3):
     eh = {}
     if len(ms3.eh) > 0:
         eh = ms3.eh
-    stats["mseed3"] = {
-        "publicationVersion": h.publicationVersion,
-        "extraHeaders": eh,
+    stats[MSEED_STATS_KEY] = {
+        PUB_VER_KEY: h.publicationVersion,
+        EX_HEAD_KEY: eh,
     }
 
     return Stats(stats)
