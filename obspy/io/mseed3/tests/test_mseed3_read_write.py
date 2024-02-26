@@ -1,6 +1,8 @@
 import json
-from obspy import Stream, Trace, UTCDateTime, read
+
 from simplemseed import FDSNSourceId
+
+from obspy import read
 
 
 class TestMSEED3ReadingAndWriting:
@@ -23,9 +25,7 @@ class TestMSEED3ReadingAndWriting:
             with open(jsonpath, "r") as injson:
                 jsonrec = json.load(injson)[0]
 
-            assert (
-                jsonrec["SampleRate"] == trace.stats.sampling_rate
-            ), f"{jsonrec['SampleRate']} != {rec.header.sampleRate}"
+            assert (jsonrec["SampleRate"] == trace.stats.sampling_rate)
             assert (
                 jsonrec["PublicationVersion"] == trace.stats.mseed3.publicationVersion
             )
@@ -35,7 +35,7 @@ class TestMSEED3ReadingAndWriting:
                 trace.stats.location,
                 trace.stats.channel,
             )
-            assert jsonrec["SID"] == str(sid), f"sid {jsonrec['SID']}  {rec.identifier}"
+            assert jsonrec["SID"] == str(sid)
             if jsonrec["DataLength"] > 0:
                 assert jsonrec["SampleCount"] == len(trace)
                 jsondata = jsonrec["Data"]

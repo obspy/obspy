@@ -4,13 +4,10 @@ MSEED3 bindings to ObsPy core module.
 """
 import io
 import os
-import warnings
 from pathlib import Path
-from struct import pack
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
-from obspy.core.compatibility import from_buffer
 from obspy import ObsPyException, ObsPyReadingError
 
 from simplemseed import (
@@ -18,7 +15,6 @@ from simplemseed import (
     FDSNSourceId,
     FIXED_HEADER_SIZE,
     readMSeed3Records,
-    FDSNSourceId,
     MSeed3Record,
     MSeed3Header,
     canDecompress,
@@ -129,11 +125,6 @@ def _read_mseed3(
 
     if isinstance(mseed3_file, Path):
         mseed3_file = str(mseed3_file)
-    # Parse the headonly and reclen flags.
-    if headonly is True:
-        unpack_data = 0
-    else:
-        unpack_data = 1
 
     # Determine total size. Either its a file-like object.
     if hasattr(mseed3_file, "tell") and hasattr(mseed3_file, "seek"):
@@ -171,7 +162,7 @@ def _read_mseed3(
                 fh, starttime=starttime, endtime=endtime, matchsid=matchsid
             )
     else:
-        raise ValueError("Cannot open '%s'." % filename)
+        raise ValueError("Cannot open '%s'." % mseed3_file)
 
 
 def _internal_read_mseed3(
@@ -259,7 +250,7 @@ def _write_mseed3(stream, filename, encoding=None, flush=True, verbose=0, **_kwa
         if "mseed3" in trace.stats:
             ms3stats = trace.stats["mseed3"]
             if "publicationVersion" in ms3stats:
-                ms3Header.publicationVersion = parseInt(ms3stats["publicationVersion"])
+                ms3Header.publicationVersion = int(ms3stats["publicationVersion"])
             if "extraHeaders" in ms3stats:
                 eh = ms3stats["extraHeaders"]
         ms3 = MSeed3Record(ms3Header, identifier, trace.data, eh)
