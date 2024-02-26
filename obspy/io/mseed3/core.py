@@ -162,25 +162,21 @@ def _read_mseed3(
         raise ObsPyMSEED3FilesizeTooLargeError(msg)
 
     if isinstance(mseed3_file, io.BufferedIOBase):
-        return _internal_read_mseed3(mseed3_file,
-                                   starttime=starttime,
-                                   endtime=endtime,
-                                   matchsid=matchsid)
+        return _internal_read_mseed3(
+            mseed3_file, starttime=starttime, endtime=endtime, matchsid=matchsid
+        )
     elif isinstance(mseed3_file, (str, bytes)):
         with open(mseed3_file, "rb") as fh:
-            return _internal_read_mseed3(fh,
-                                       starttime=starttime,
-                                       endtime=endtime,
-                                       matchsid=matchsid)
+            return _internal_read_mseed3(
+                fh, starttime=starttime, endtime=endtime, matchsid=matchsid
+            )
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _internal_read_mseed3(fp,
-                        starttime=None,
-                        endtime=None,
-                        headonly=False,
-                        matchsid=None):
+def _internal_read_mseed3(
+    fp, starttime=None, endtime=None, headonly=False, matchsid=None
+):
     traces = []
     for ms3 in readMSeed3Records(fp, matchsid=matchsid, merge=True):
         if starttime is not None and ms3.endtime < starttime:
@@ -193,7 +189,7 @@ def _internal_read_mseed3(fp,
             trace = Trace(data=data, header=stats)
             traces.append(trace)
         else:
-            trace = Trace( header=stats)
+            trace = Trace(header=stats)
             traces.append(trace)
     return Stream(traces=traces)
 
@@ -243,7 +239,7 @@ def _write_mseed3(stream, filename, encoding=None, flush=True, verbose=0, **_kwa
         ms3Header.hour = st.hour
         ms3Header.minute = st.minute
         ms3Header.second = st.second
-        ms3Header.nanosecond = st.microsecond*1000 + st.ns % 1000
+        ms3Header.nanosecond = st.microsecond * 1000 + st.ns % 1000
         ms3Header.sampleRatePeriod = trace.stats["sampling_rate"]
         if len(trace.stats["channel"]) == 0:
             identifier = FDSNSourceId.createUnknown(
@@ -284,13 +280,15 @@ def mseed3_to_obspy_header(ms3):
     stats["station"] = nslc.stationCode
     stats["location"] = nslc.locationCode
     stats["channel"] = nslc.channelCode
-    micros = int(round(h.nanosecond/1000))
-    stats["starttime"] = UTCDateTime(h.year,
-                                     julday=h.dayOfYear,
-                                     hour=h.hour,
-                                     minute=h.minute,
-                                     second=h.second,
-                                     microsecond=micros)
+    micros = int(round(h.nanosecond / 1000))
+    stats["starttime"] = UTCDateTime(
+        h.year,
+        julday=h.dayOfYear,
+        hour=h.hour,
+        minute=h.minute,
+        second=h.second,
+        microsecond=micros,
+    )
 
     # store extra header values
     eh = {}
@@ -303,11 +301,14 @@ def mseed3_to_obspy_header(ms3):
 
     return Stats(stats)
 
+
 class ObsPyMSEED3Error(ObsPyException):
     pass
 
+
 class ObsPyMSEED3ReadingError(ObsPyMSEED3Error, ObsPyReadingError):
     pass
+
 
 class ObsPyMSEED3FilesizeTooSmallError(ObsPyMSEED3ReadingError):
     pass
@@ -315,6 +316,7 @@ class ObsPyMSEED3FilesizeTooSmallError(ObsPyMSEED3ReadingError):
 
 class ObsPyMSEED3FilesizeTooLargeError(ObsPyMSEED3ReadingError):
     pass
+
 
 if __name__ == "__main__":
     import doctest

@@ -60,6 +60,7 @@ stats and stats['eh'] are written with the following command to a file:
 """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod(exclude_empty=True)
