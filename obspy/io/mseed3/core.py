@@ -284,7 +284,13 @@ def mseed3_to_obspy_header(ms3):
     stats["station"] = nslc.stationCode
     stats["location"] = nslc.locationCode
     stats["channel"] = nslc.channelCode
-    stats["starttime"] = UTCDateTime(h.year, julday=h.dayOfYear, hour=h.hour, minute=h.minute, microsecond=h.nanosecond/1000)
+    micros = int(round(h.nanosecond/1000))
+    stats["starttime"] = UTCDateTime(h.year,
+                                     julday=h.dayOfYear,
+                                     hour=h.hour,
+                                     minute=h.minute,
+                                     second=h.second,
+                                     microsecond=micros)
 
     # store extra header values
     eh = {}
