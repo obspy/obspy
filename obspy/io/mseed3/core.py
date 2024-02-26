@@ -256,7 +256,10 @@ def _write_mseed(stream, filename, encoding=None, flush=True, verbose=0, **_kwar
         eh = {}
         if "mseed3" in trace.stats:
             ms3stats = trace.stats["mseed3"]
-            eh = ms3stats
+            if "publicationVersion" in ms3stats:
+                header.publicationVersion = parseInt(ms3stats["publicationVersion"])
+            if "extraHeaders" in ms3stats:
+                eh = ms3stats["extraHeaders"]
         ms3 = MSeed3Record(header, data, identifier, eh)
         f.write(ms3.pack())
     # Close if its a file handler.
@@ -276,11 +279,15 @@ def mseed3_to_obspy_header(ms3):
     stats["location"] = nslc.locationCode
     stats["channel"] = nslc.channelCode
     stats["starttime"] = UTCDateTime(ms3.starttime)
-    stats["publicationVersion"] = h.publicationVersion
 
     # store extra header values
+    eh = {}
     if len(ms3.eh) > 0:
-        stats["eh"] = ms3.eh
+        eh = ms3.eh
+    stats["mseed3"] = {
+        "publicationVersion": h.publicationVersion,
+        "extraHeaders": eh,
+    }
 
     return Stats(stats)
 

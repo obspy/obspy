@@ -45,8 +45,7 @@ attribute, 'eh', which contains the miniseed3 extra headers.
               npts: 550
              calib: 1.0
            _format: MSEED3
-                eh: AttribDict({'FDSN': AttribDict({'Time': AttribDict({'Quality': 0})})})
-publicationVersion: 4
+                mseed3: AttribDict({'publicationVersion': 4, 'extraHeaders': AttribDict({'FDSN': AttribDict({'Time': AttribDict({'Quality': 0})})})})
 
 >>> st[0].data #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 array([129, 123, 101, 103, 115,..., 136, 140, 143, 137], dtype=int32)

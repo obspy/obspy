@@ -27,7 +27,7 @@ class TestMSEED3ReadingAndWriting():
             ), f"{jsonrec['SampleRate']} != {rec.header.sampleRate}"
             assert (
                 jsonrec["PublicationVersion"]
-                == trace.stats.publicationVersion
+                == trace.stats.mseed3.publicationVersion
             )
             sid = FDSNSourceId.fromNslc(
                 trace.stats.network,
