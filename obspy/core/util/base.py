@@ -35,7 +35,7 @@ DEFAULT_MODULES = ['clients.filesystem', 'core', 'geodetics', 'imaging',
                    'io.cmtsolution', 'io.cnv', 'io.css', 'io.csv',
                    'io.cybershake', 'io.dmx', 'io.focmec',
                    'io.hypodd', 'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
-                   'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk', 'io.nied',
+                   'io.kinemetrics', 'io.kml', 'io.mseed', 'io.mseed3', 'io.ndk', 'io.nied',
                    'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde', 'io.quakeml',
                    'io.reftek', 'io.rg16', 'io.sac', 'io.scardec', 'io.seg2',
                    'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
@@ -48,7 +48,7 @@ NETWORK_MODULES = ['clients.earthworm', 'clients.fdsn',
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
-WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
+WAVEFORM_PREFERRED_ORDER = ['MSEED', 'MSEED3', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
