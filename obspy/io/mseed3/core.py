@@ -24,6 +24,7 @@ MSEED_STATS_KEY = "mseed3"
 PUB_VER_KEY = "pubVer"
 EX_HEAD_KEY = "eh"
 
+
 def _is_mseed3(filename):
     """
     Checks whether a file is mseed3 or not.
