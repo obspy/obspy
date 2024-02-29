@@ -16,7 +16,7 @@ import numpy as np
 from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
-                              WaveformStreamID)
+                              WaveformStreamID, ConfidenceEllipsoid)
 from obspy.core.inventory.util import (
     _add_resolve_seedid_doc, _add_resolve_seedid_ph2comp_doc, _resolve_seedid)
 from obspy.geodetics import kilometer2degrees
@@ -321,6 +321,18 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     ou.azimuth_max_horizontal_uncertainty = hor_unc_azim
     ou.preferred_description = str("uncertainty ellipse")
     ou.confidence_level = 68  # NonLinLoc in general uses 1-sigma (68%) level
+    if "QML_ConfidenceEllipsoid" in lines.keys():
+        #  From at least NLLoc 7, confidence ellipsoids have been provided
+        line = lines["QML_ConfidenceEllipsoid"]
+        majax_len, minax_len, intax_len, majax_plunge, majax_az, majax_rot = \
+            map(float, line.split()[1:12:2])
+        ou.confidence_ellipsoid = ConfidenceEllipsoid(
+            semi_major_axis_length=majax_len,
+            semi_minor_axis_length=minax_len,
+            semi_intermediate_axis_length=intax_len,
+            major_axis_plunge=majax_plunge,
+            major_axis_azimuth=majax_az,
+            major_axis_rotation=majax_rot)
 
     oq.standard_error = stderr
     oq.azimuthal_gap = az_gap
