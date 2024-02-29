@@ -497,8 +497,8 @@ class Catalog(object):
             format_ep = EVENT_ENTRY_POINTS_WRITE[format]
             # search writeFormat method for given entry point
             write_format = buffered_load_entry_point(
-                format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),
-                'writeFormat')
+                format_ep.dist.name,
+                'obspy.plugin.event.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
             raise ValueError(msg % (format,
