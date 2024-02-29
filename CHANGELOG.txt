@@ -15,7 +15,8 @@ Changes:
    * fix an issue with Stream.rotate() when there are dots in e.g. station code
      (see #3373)
  - obspy.clients.fdsn:
-   * update URL for raspberryshake FDSN web service (see #3264)
+   * update URLs for FDSN web services raspberryshake, ISC and LMU (see #3264,
+     and #3413)
    * properly include server response in error messages on bad requests (see
      #3306)
  - obspy.clients.nrl:
