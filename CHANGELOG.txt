@@ -46,6 +46,7 @@ Changes:
  - obspy.io.xseed:
    * Fixed reading SEED frequency-amplitude-phase response lists that are
      spread out over multiple blockettes (see #3277)
+   * Fix reading uncertainties of poles/zeros complex numbers (see #3401)
  - obspy.io.zmap:
    * Fix writing events with origins that have no depth or depth errors given
      (see #3343)

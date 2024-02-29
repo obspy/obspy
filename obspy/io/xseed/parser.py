@@ -1439,8 +1439,8 @@ class Parser(object):
                             _list(b53.imaginary_zero_error)):
                         z = ComplexWithUncertainties(r, i)
                         err = ComplexWithUncertainties(r_err, i_err)
-                        z.lower_uncertainty = z - err
-                        z.upper_uncertainty = z + err
+                        z.lower_uncertainty = err
+                        z.upper_uncertainty = err
                         zeros.append(z)
                 poles = []
                 # Might somehow also not have zeros.
@@ -1451,8 +1451,8 @@ class Parser(object):
                             _list(b53.imaginary_pole_error)):
                         p = ComplexWithUncertainties(r, i)
                         err = ComplexWithUncertainties(r_err, i_err)
-                        p.lower_uncertainty = p - err
-                        p.upper_uncertainty = p + err
+                        p.lower_uncertainty = err
+                        p.upper_uncertainty = err
                         poles.append(p)
 
                 try:
