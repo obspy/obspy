@@ -479,8 +479,8 @@ class TestWaveformPlot:
 
     def test_section_max_npts(self):
         """
-        Check that plotting with method='full' is respected for type='section' if points
-        are greater than max_npts.
+        Check that plotting with method='full' is respected for type='section'
+        if points are greater than max_npts.
         """
         starttime = UTCDateTime(0)
         endtime = starttime + 10009
