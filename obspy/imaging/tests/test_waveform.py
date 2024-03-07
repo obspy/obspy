@@ -476,3 +476,15 @@ class TestWaveformPlot:
         st.plot(outfile=image_path, type='dayplot',
                 timezone='EST', time_offset=-5,
                 events=cat)
+
+    def test_section_max_npts(self):
+        """
+        Check that plotting with method='full' is respected for type='section'
+        if points are greater than max_npts.
+        """
+        starttime = UTCDateTime(0)
+        endtime = starttime + 10009
+        st = _create_stream(starttime, endtime, 1)  # st[0].stats.npts = 10010
+        st[0].stats.distance = 0  # So that the section plotting works
+        fig = st.plot(type='section', method='full')
+        assert fig.axes[0].lines[0].get_xdata().size == 10010
