@@ -3019,6 +3019,19 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = self.data / response.instrument_sensitivity.value
         return self
 
+    def newbyteorder(self, byteorder='native'):
+        """
+        Change byteorder of the data
+
+        :type byteorder: str
+        :param byteorder: Byte order to set on the numpy data array, e.g.
+            ``'native'``, ``'little'`` or ``'big'``. See
+            :meth:`numpy.dtype.newbyteorder`.
+        """
+        dtype = self.data.dtype.newbyteorder(byteorder)
+        self.data = self.data.require(dtype=dtype)
+        return self
+
 
 def _data_sanity_checks(value):
     """
