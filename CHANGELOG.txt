@@ -9,6 +9,11 @@ Changes:
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
      (see #3261)
+ - obspy.clients:
+   * add new MultiClient class that can be used as an umbrella around multiple
+     Clients for workflows that need to pull in data from various sources.
+     Users can specify in a config what client instance waveforms should be
+     requested from based on the SEED ID of the request (see #3304)
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
  - obspy.clients.fdsn
