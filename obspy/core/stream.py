@@ -3639,6 +3639,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.traces += traces
         return self
 
+    def newbyteorder(self, byteorder='native'):
+        """
+        Change byteorder of the data
+
+        For details see
+        :meth:`Trace.newbyteorder <obspy.core.trace.Trace.newbyteorder>`.
+        """
+        for tr in self:
+            tr.newbyteorder(byteorder)
+        return self
+
 
 def _is_pickle(filename):  # @UnusedVariable
     """
