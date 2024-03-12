@@ -1139,10 +1139,6 @@ class Response(ComparingObject):
 
         frequencies = np.asarray(frequencies)
 
-        # Whacky. Evalresp uses a global variable and uses that to scale the
-        # response if it encounters any unit that is not SI.
-        scale_factor = [1.0]
-
         def get_unit_mapping(key):
             try:
                 key = key.upper()
@@ -1209,13 +1205,15 @@ class Response(ComparingObject):
 
             # Scale factor with the same logic as evalresp.
             if key in ["CM/S**2", "CM/S", "CM/SEC", "CM"]:
-                scale_factor[0] = 1.0E2
+                scale_factor = 1.0E2
             elif key in ["MM/S**2", "MM/S", "MM/SEC", "MM"]:
-                scale_factor[0] = 1.0E3
+                scale_factor = 1.0E3
             elif key in ["NM/S**2", "NM/S", "NM/SEC", "NM"]:
-                scale_factor[0] = 1.0E9
+                scale_factor = 1.0E9
+            else:
+                scale_factor = 1.0
 
-            return value
+            return value, scale_factor
 
         all_stages = defaultdict(list)
 
@@ -1270,6 +1268,15 @@ class Response(ComparingObject):
                         "units of stage 2."
                     warnings.warn(msg)
 
+        # determine the scale factor from the first stage input units
+        # Evalresp (in the old version we still use) uses a whacky global
+        # variable and uses that to scale the response if it encounters any
+        # unit that is not SI but the way we use the library, the functions
+        # that set that global variable never get called, so do the same, just
+        # outside of evalresp for now
+        _, scale_factor = get_unit_mapping(
+            all_stages[stage_list[0]][0].input_units)
+
         for stage_number in stage_list:
             st = ew.Stage()
             st.sequence_no = stage_number
@@ -1279,8 +1286,8 @@ class Response(ComparingObject):
             blockette = all_stages[stage_number][0]
 
             # Write the input and output units.
-            st.input_units = get_unit_mapping(blockette.input_units)
-            st.output_units = get_unit_mapping(blockette.output_units)
+            st.input_units, _ = get_unit_mapping(blockette.input_units)
+            st.output_units, _ = get_unit_mapping(blockette.output_units)
 
             if isinstance(blockette, PolesZerosResponseStage):
                 blkt = ew.Blkt()
@@ -1603,8 +1610,10 @@ class Response(ComparingObject):
                 e, m = ew.ENUM_ERROR_CODES[rc]
                 raise e('calc_resp: ' + m)
 
-            # XXX: Check if this is really not needed.
-            # output *= scale_factor[0]
+            # XXX: We currently need to do this outside of evalresp since the
+            # functions evaluating and setting the global scale factor variable
+            # currently never get called
+            output *= scale_factor
 
         finally:
             clibevresp.curr_file.value = None

@@ -537,3 +537,64 @@ class TestResponse:
             data = resp.get_evalresp_response_for_frequencies(freqs)
         assert resp.instrument_sensitivity.value == overall_sensitivity
         assert np.abs(data).tolist() == [overall_sensitivity] * len(freqs)
+
+    def test_non_SI_unit_input_first_stage(self, testdata):
+        """
+        Regression test for #3369
+
+        Test that non-SI units input (e.g. nanometer/second) is properly taken
+        into account when removing the instrument response, i.e. the additional
+        scaling factor (e.g. 1e09 for nm/s) is applied to the output.
+
+        The change in that issue affects
+        Response._call_eval_resp_for_frequencies() which in turn gets called
+        by..
+         - Response._get_overall_sensitivity_and_gain()
+         - Response.get_evalresp_response_for_frequencies()
+
+        Test all of those three for good measure.
+        """
+        inv = read_inventory(testdata['SL_BOJS_LHZ.xml'], "STATIONXML")
+
+        # original data has nm/s as a non-SI input unit. setup clones with some
+        # different input units
+        inv_nms = inv
+        inv_ms = inv_nms.copy()
+        inv_ms[0][0][0].response.instrument_sensitivity.input_units = 'm/s'
+        inv_ms[0][0][0].response.instrument_sensitivity.value *= 1e9
+        inv_ms[0][0][0].response.response_stages[0].input_units = 'm/s'
+        inv_ms[0][0][0].response.response_stages[0].stage_gain *= 1e9
+        inv_mms = inv_nms.copy()
+        inv_mms[0][0][0].response.instrument_sensitivity.input_units = 'mm/s'
+        inv_mms[0][0][0].response.instrument_sensitivity.value *= 1e6
+        inv_mms[0][0][0].response.response_stages[0].input_units = 'mm/s'
+        inv_mms[0][0][0].response.response_stages[0].stage_gain *= 1e6
+        inv_cms = inv_nms.copy()
+        inv_cms[0][0][0].response.instrument_sensitivity.input_units = 'cm/s'
+        inv_cms[0][0][0].response.instrument_sensitivity.value *= 1e7
+        inv_cms[0][0][0].response.response_stages[0].input_units = 'cm/s'
+        inv_cms[0][0][0].response.response_stages[0].stage_gain *= 1e7
+
+        # test at two frequencies in the flat response part
+        freqs = [0.01, 0.1]
+        expected = [1.84e+09, 1.85e+09]
+
+        for inv in (inv_nms, inv_ms, inv_mms, inv_cms):
+            resp = inv[0][0][0].response
+
+            # test _call_eval_resp_for_frequencies()
+            got, _ = resp._call_eval_resp_for_frequencies(
+                freqs, output='VEL', start_stage=None, end_stage=None)
+            got = np.abs(got)
+            np.testing.assert_allclose(got, expected, rtol=1e-2)
+
+            # test get_evalresp_response_for_frequencies()
+            got = resp.get_evalresp_response_for_frequencies(
+                freqs, output='VEL', start_stage=None, end_stage=None)
+            got = np.abs(got)
+            np.testing.assert_allclose(got, expected, rtol=1e-2)
+
+            # test _get_overall_sensitivity_and_gain()
+            got = [resp._get_overall_sensitivity_and_gain(f, output='VEL')[1]
+                   for f in freqs]
+            np.testing.assert_allclose(got, expected, rtol=1e-2)
