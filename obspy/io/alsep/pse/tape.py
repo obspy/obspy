@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from io import UnsupportedOperation
 import numpy as np
 from obspy.core.util import get_bytes_stream
 from .define import SIZE_PSE_RECORD
@@ -34,7 +35,7 @@ class PseTape(object):
             # (see self.fromfile)
             self._handle.fileno()
             self._handle_has_fileno = True
-        except Exception:
+        except UnsupportedOperation:
             self._handle_has_fileno = False
         return self
 

@@ -656,11 +656,12 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
 
 
 def get_bytes_stream(file_or_stream):
-    """Return a file-like object streaming bytes data
-    (`bytes` objects)
+    """
+    Return a file-like object streaming bytes data (``bytes`` objects)
 
-    :param file_or_stream: str, Path or file-like object
-    :return: a file-like object streaming text data
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream: the input from which to return the stream of bytes
+    :return: a file-like object streaming bytes data
     """
     if isinstance(file_or_stream, IOBase):
         return file_or_stream
@@ -670,10 +671,12 @@ def get_bytes_stream(file_or_stream):
 
 @contextmanager
 def open_bytes_stream(file_or_stream):
-    """Context manager to read bytes data stream from the argument,
-    e.g.: `with open_bytes_stream(file_or_stream)`
+    """
+    Context manager to read bytes data stream from the argument,
+    e.g.: ``with open_bytes_stream(file_or_stream)``
 
-    :param file_or_stream: str, Path or file-like object.
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream: The input object to open.
         If this parameter is already a file-like object,
         it will not be closed on exit but the stream position
         will be reset so that the object can be reused
@@ -693,12 +696,14 @@ def open_bytes_stream(file_or_stream):
 
 
 def get_text_stream(file_or_stream, encoding='utf-8'):
-    """Return a file-like object streaming text data
-    (`str` objects)
+    """
+    Return a file-like object streaming text data (``str`` objects)
 
-    :param file_or_stream: str, Path or file-like object
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream:  the input from which to return the stream of text
+    :type encoding: str
     :param encoding: the encoding used. If the passed argument
-        already a file-like object of encoded text data, this
+        is already a file-like object of encoded text data, this
         argument is ignored
     :return: a file-like object streaming text data
     """
@@ -712,15 +717,18 @@ def get_text_stream(file_or_stream, encoding='utf-8'):
 
 @contextmanager
 def open_text_stream(file_or_stream, encoding='utf-8'):
-    """Context manager releasing a text data stream from the argument,
-    e.g.: `with open_text_stream(file_or_stream)`
+    """
+    Context manager releasing a text data stream from the argument,
+    e.g.: ``with open_text_stream(file_or_stream)``
 
-    :param file_or_stream: str, Path or file-like object.
+    :type file_or_stream: str, Path or file-like object.
+    :param file_or_stream: The input object to open.
         If this parameter is already a file-like object,
         it will not be closed on exit but the stream position
         will be reset so that the object can be reused
+    :type encoding: str
     :param encoding: the encoding used. If the passed argument
-        already a file-like object of encoded text data, this
+        is already a file-like object of encoded text data, this
         argument is ignored
     :return: a context manager to read text data
     """

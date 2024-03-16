@@ -134,7 +134,6 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
         buf = []
         key = False
         for line in fh:
-            line = line
             if line.isspace():
                 # blank line
                 continue

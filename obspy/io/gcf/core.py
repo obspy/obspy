@@ -118,7 +118,7 @@ def compatible_sps(sps):
     """
     if not (isinstance(sps, int) or isinstance(sps, float)):
         return False
-    if sps >= 1 and sps <= 250:
+    if 1 <= sps <= 250:
         if int(sps)-sps != 0 or sps in _SPS_RESERVED:
             return False
     elif sps not in _SPS_MAP:
@@ -458,8 +458,7 @@ def _read_gcf(file, headonly=False, network='', station='',
 
     if isinstance(file, IOBase):
         if ret:
-            raise IOError("failed to read in-memory GCF data (error code %d)"
-                          % ret)
+            raise IOError("failed to read GCF data (error code %d)" % ret)
     else:
         filename = str(file)
         if ret == -1:
