@@ -211,10 +211,12 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         if isinstance(pathname_or_url, Path):
             pathname_or_url = str(pathname_or_url)
         # try to give more specific information why the stream is empty
-        if has_magic(pathname_or_url) and not glob(pathname_or_url):
+        if isinstance(pathname_or_url, str) and \
+                has_magic(pathname_or_url) and not glob(pathname_or_url):
             raise Exception("No file matching file pattern: %s" %
                             pathname_or_url)
-        elif not has_magic(pathname_or_url) and \
+        elif isinstance(pathname_or_url, str) and \
+                not has_magic(pathname_or_url) and \
                 not Path(pathname_or_url).is_file():
             raise IOError(2, "No such file or directory", pathname_or_url)
         # Only raise error if no start/end time has been set. This

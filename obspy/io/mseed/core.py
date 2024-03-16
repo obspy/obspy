@@ -22,12 +22,12 @@ from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SelectTime, Blkt100S, Blkt1001S, clibmseed)
 
 
-def _is_mseed(filename):
+def _is_mseed(file):
     """
     Checks whether a file is Mini-SEED/full SEED or not.
 
-    :type filename: str
-    :param filename: Mini-SEED/full SEED file to be checked.
+    :type file: str or file-like object
+    :param file: Mini-SEED/full SEED file to be checked.
     :rtype: bool
     :return: ``True`` if a Mini-SEED file.
 
@@ -41,26 +41,27 @@ def _is_mseed(filename):
     Thus it cannot be used to validate a Mini-SEED or SEED file.
     """
     # Open filehandler or use an existing file like object.
-    if not hasattr(filename, 'read'):
-        file_size = os.path.getsize(filename)
-        with io.open(filename, 'rb') as fh:
+    if not hasattr(file, 'read'):
+        file_size = os.path.getsize(file)
+        with io.open(file, 'rb') as fh:
             return __is_mseed(fh, file_size=file_size)
     else:
-        initial_pos = filename.tell()
+        initial_pos = file.tell()
         try:
-            if hasattr(filename, "getbuffer"):
-                file_size = filename.getbuffer().nbytes
-            try:
-                file_size = os.fstat(filename.fileno()).st_size
-            except Exception:
-                _p = filename.tell()
-                filename.seek(0, 2)
-                file_size = filename.tell()
-                filename.seek(_p, 0)
-            return __is_mseed(filename, file_size)
+            if hasattr(file, "getbuffer"):  # BytesIO
+                file_size = file.getbuffer().nbytes
+            else:
+                try:
+                    file_size = os.fstat(file.fileno()).st_size
+                except Exception:
+                    _p = file.tell()
+                    file.seek(0, 2)
+                    file_size = file.tell()
+                    file.seek(_p, 0)
+            return __is_mseed(file, file_size)
         finally:
             # Reset pointer.
-            filename.seek(initial_pos, 0)
+            file.seek(initial_pos, 0)
 
 
 def __is_mseed(fp, file_size):  # NOQA
