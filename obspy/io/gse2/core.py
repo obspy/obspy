@@ -18,9 +18,9 @@ def _is_gse2(file):
     :rtype: bool
     :return: ``True`` if a GSE2 file.
     """
-    with open_bytes_stream(file) as stream:
+    with open_bytes_stream(file) as io_stream:
         try:
-            libgse2.is_gse2(stream)
+            libgse2.is_gse2(io_stream)
         except Exception:
             return False
     return True
@@ -116,13 +116,12 @@ def _is_gse1(file):
     :rtype: bool
     :return: ``True`` if a GSE1 file.
     """
-    with open_bytes_stream(file) as stream:
+    with open_bytes_stream(file) as io_stream:
         try:
-            data = stream.readline()
+            data = io_stream.readline()
         except Exception:
             return False
-        return data.startswith(b'WID1') \
-            or data.startswith(b'XW01')
+    return data.startswith(b'WID1') or data.startswith(b'XW01')
 
 
 def _read_gse1(file, headonly=False, verify_chksum=True,

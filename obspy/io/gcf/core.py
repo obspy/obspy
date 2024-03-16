@@ -118,7 +118,7 @@ def compatible_sps(sps):
     """
     if not (isinstance(sps, int) or isinstance(sps, float)):
         return False
-    if sps >= 1 and sps <= 250:
+    if 1 <= sps <= 250:
         if int(sps)-sps != 0 or sps in _SPS_RESERVED:
             return False
     elif sps not in _SPS_MAP:
@@ -190,32 +190,39 @@ def _is_gcf(file):
     :rtype: bool
     :return: True if a object pointed to by path is a GCF file.
     """
+    input_is_gcf = True
+
     # Load shared library
     gcf_io = _load_cdll("gcf")
 
     # declare function argument and return types
     gcf_io.free_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
     gcf_io.free_GcfFile.restype = None
+    # avoid releasing uninitialized memory in free_GcfFile later:
+    gcf_io.init_GcfFile.argtypes = [ctypes.POINTER(_GcfFile)]
+    gcf_io.init_GcfFile.restype = None
 
     obj = None
     try:
-        # Decode first block
+        # Decode first block:
         obj = _GcfFile()
+        # make sure pointers in obj are properly initialized to NULL:
+        gcf_io.init_GcfFile(obj)
         ret = _fill_gcf_from_file(file, obj, 3)
 
         # b_filename = filename.encode('utf-8')
         # ret = gcf_io.read_gcf(fid, obj, 3)
         if ret or (obj.n_errHead and obj.seg[0].err not in (10, 11, 21)) \
                 or obj.n_errData:
-            return False
+            input_is_gcf = False
     except Exception:
-        return False
+        input_is_gcf = False
     finally:
         # release allocated memory
         if obj is not None:
             gcf_io.free_GcfFile(obj)
 
-    return True
+    return input_is_gcf
 
 
 def _fill_gcf_from_file(file, obj, mode):
@@ -458,8 +465,7 @@ def _read_gcf(file, headonly=False, network='', station='',
 
     if isinstance(file, IOBase):
         if ret:
-            raise IOError("failed to read in-memory GCF data (error code %d)"
-                          % ret)
+            raise IOError("failed to read GCF data (error code %d)" % ret)
     else:
         filename = str(file)
         if ret == -1:

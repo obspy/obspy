@@ -3,6 +3,7 @@
 Apollo Lunar Surface Experiments Package (ALSEP) seismometer reader for ObsPy
 """
 from collections import deque
+from io import UnsupportedOperation
 
 import numpy as np
 
@@ -19,14 +20,14 @@ from .wt.tape import WtnTape, WthTape
 
 def _read_header(file):
     """Reads the header of the given ALSEP file"""
-    with open_bytes_stream(file) as stream:
+    with open_bytes_stream(file) as io_stream:
         # np.fromfile accepts file path on-disk file-like
         # objects. In all other cases, use np.frombuffer:
         try:
-            return np.fromfile(file, dtype='u1', shape=16)
-        except Exception:
+            return np.fromfile(file, dtype='u1', count=16)
+        except UnsupportedOperation:
             # stream does not support fileno
-            buffer = stream.read(16)
+            buffer = io_stream.read(16)
             return np.frombuffer(buffer, dtype='u1')
 
 

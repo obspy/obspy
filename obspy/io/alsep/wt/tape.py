@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from io import UnsupportedOperation
 import numpy as np
 from obspy.core.util import get_bytes_stream
 from .record import WtnRecord, WthRecord
@@ -28,7 +28,7 @@ class _WtTape(object):
             # (see self.fromfile)
             self._handle.fileno()
             self._handle_has_fileno = True
-        except Exception:
+        except UnsupportedOperation:
             self._handle_has_fileno = False
         return self
 
