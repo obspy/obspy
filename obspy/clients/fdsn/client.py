@@ -583,7 +583,7 @@ class Client(object):
     def get_availability(self, network=None, station=None, location=None,
                          channel=None, starttime=None, endtime=None,
                          quality=None, orderby=None, limit=None,
-                         format=None, mergegaps=None, filename=None, **kwargs):
+                         format='geocsv', mergegaps=None, filename=None, **kwargs):
         if "availability" not in self.services:
             msg = "The current client does not have an availability service."
             raise ValueError(msg)
@@ -595,11 +595,9 @@ class Client(object):
             "availability", DEFAULT_PARAMETERS['availability'], kwargs)
 
         availability = self._download(url)
-        lines = [line.decode().split()
-                 for line in availability.readlines()[1:]]
-        extents = [(line[0], line[1], line[2], line[3], UTCDateTime(
-            line[6]), UTCDateTime(line[7])) for line in lines]
-        return extents
+        lines = [line.decode().splitlines()[0].split('|')
+                 for line in availability.readlines()[5:]]
+        return lines
 
     def get_stations(self, starttime=None, endtime=None, startbefore=None,
                      startafter=None, endbefore=None, endafter=None,

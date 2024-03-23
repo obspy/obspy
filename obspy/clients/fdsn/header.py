@@ -261,7 +261,9 @@ DEFAULT_TYPES = {
     "catalog": str,
     "contributor": str,
     "updatedafter": UTCDateTime,
-    "format": str}
+    "format": str,
+    "mergegaps": float,
+    }
 
 DEFAULT_VALUES = {
     "starttime": None,
@@ -270,7 +272,7 @@ DEFAULT_VALUES = {
     "station": None,
     "location": None,
     "channel": None,
-    "quality": "B",
+    "quality": None,
     "minimumlength": 0.0,
     "longestonly": False,
     "startbefore": None,
@@ -301,10 +303,11 @@ DEFAULT_VALUES = {
     "eventtype": None,
     "limit": None,
     "offset": 1,
-    "orderby": "time",
+    "orderby": None,
     "catalog": None,
     "contributor": None,
     "updatedafter": None,
+    "mergegaps": 0.0,
 }
 
 # This creates a services dictionary containing default and optional services,
@@ -313,7 +316,7 @@ DEFAULT_VALUES = {
 # minimal and very permissive service provider, without actually having to
 # do the query.
 DEFAULT_SERVICES = {}
-for service in ["dataselect", "event", "station"]:
+for service in ["dataselect", "event", "station", "availability"]:
     DEFAULT_SERVICES[service] = {}
 
     for default_param in DEFAULT_PARAMETERS[service]:
@@ -327,8 +330,10 @@ for service in ["dataselect", "event", "station"]:
         if optional_param == "format":
             if service == "dataselect":
                 default_val = "miniseed"
-            else:
+            elif service == "station":
                 default_val = "xml"
+            elif service == "availability":
+                default_val = "geocsv"
         else:
             default_val = DEFAULT_VALUES[optional_param]
 
