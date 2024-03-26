@@ -9,7 +9,6 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import collections.abc
 import copy
 import gzip
 import io
@@ -18,7 +17,7 @@ import re
 import textwrap
 import threading
 import warnings
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple, abc
 from http.client import HTTPException, IncompleteRead
 from urllib.parse import urlparse
 # since python 3.10 socket.timeout is just an alias for builtin TimeoutError
@@ -583,7 +582,8 @@ class Client(object):
     def get_availability(self, network=None, station=None, location=None,
                          channel=None, starttime=None, endtime=None,
                          quality=None, orderby=None, limit=None,
-                         format='geocsv', mergegaps=None, filename=None, **kwargs):
+                         format='geocsv', mergegaps=None,
+                         merge=None, show=None, **kwargs):
         if "availability" not in self.services:
             msg = "The current client does not have an availability service."
             raise ValueError(msg)
@@ -591,13 +591,51 @@ class Client(object):
         locs = locals()
         setup_query_dict('availability', locs, kwargs)
 
+        if mergegaps is not None and kwargs.get("details") == False:
+            msg = "Extent method does not support parameter 'mergegaps'"
+            raise ValueError(msg)
+        if format is not None and format not in ["text", "geocsv", "json", "request"]:
+            msg = "Unsupported value for parameter 'format'"
+            raise ValueError(msg)
+        if orderby is not None and orderby not in ["nslc_time_quality_samplerate", "latestupdate", "latestupdate_desc", "timespancount", "timespancount_desc"]:
+            msg = "Unsupported value for parameter 'orderby'"
+            raise ValueError(msg)
+        if show is not None and show != "latestupdate":
+            msg = "Unsupported value for parameter 'show'"
+            raise ValueError(msg)
+        if merge is not None:
+            parts = merge.split(',')
+            for p in parts:
+                if p not in ["samplerate", "quality", "overlap"]:
+                    msg = "Unsupported value for parameter 'merge'"
+                    raise ValueError(msg)
+        if "details" not in kwargs:
+            kwargs["details"] = True
+
         url = self._create_url_from_parameters(
             "availability", DEFAULT_PARAMETERS['availability'], kwargs)
 
         availability = self._download(url)
+
+        Availability = namedtuple(
+            'Availability',
+            ['network', 'station', 'location', 'channel', 'quality', 'sampling_rate',
+             'earliest', 'latest', 'updated', 'time_spans', 'restriction'],
+            defaults=(None, None, None))
+
         lines = [line.decode().splitlines()[0].split('|')
                  for line in availability.readlines()[5:]]
-        return lines
+
+        to_return = []
+        for l in lines:
+            l[5] = float(l[5])
+            l[6] = UTCDateTime(l[6])
+            l[7] = UTCDateTime(l[7])
+            if len(l) > 8:
+                l[8] = UTCDateTime(l[8])
+            to_return.append(Availability(*l))
+
+        return to_return
 
     def get_stations(self, starttime=None, endtime=None, startbefore=None,
                      startafter=None, endbefore=None, endafter=None,
@@ -1330,6 +1368,9 @@ class Client(object):
 
         final_parameter_set = {}
 
+        endpoint = "extent" if service == "availability" and not parameters.get("details") else "query"
+        if service == "availability" and "details" in parameters:
+            del parameters["details"]
         # Now loop over all parameters, convert them and make sure they are
         # accepted by the service.
         for key, value in parameters.items():
@@ -1373,7 +1414,7 @@ class Client(object):
             value = convert_to_string(value)
             final_parameter_set[key] = value
 
-        return self._build_url(service, "query",
+        return self._build_url(service, endpoint,
                                parameters=final_parameter_set)
 
     def __str__(self):
