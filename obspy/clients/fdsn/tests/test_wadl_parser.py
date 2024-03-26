@@ -119,7 +119,32 @@ class TestWADLParser():
             "(case insensitive)"
         assert params["magnitudetype"]["doc"] == "Examples: Ml,Ms,mb,Mw\""
 
-    def test_station_wadl_parsing(self, testdata):
+    def test_availability_wadl_parsing(self):
+        """
+        Tests the parsing of an availability wadl.
+        """
+        parser, w = self._parse_wadl_file("availability.wadl")
+        params = parser.parameters
+
+        assert "starttime" in params
+        assert "endtime" in params
+        assert "network" in params
+        assert "station" in params
+        assert "location" in params
+        assert "channel" in params
+        assert "quality" in params
+        assert "merge" in params
+        assert "orderby" in params
+        assert "limit" in params
+        assert "includerestricted" in params
+        assert "mergegaps" in params
+        assert "show" in params
+        assert "format" in params
+
+        # The nodata attribute should not be parsed.
+        assert not ("nodata" in params)
+
+    def test_station_wadl_parsing(self):
         """
         Tests the parsing of a station wadl.
         """
