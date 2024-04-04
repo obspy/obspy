@@ -199,8 +199,9 @@ class Client(object):
         :param service_mappings: For advanced use only. Allows the direct
             setting of the endpoints of the different services. (e.g.
             ``service_mappings={'station': 'http://example.com/test/stat/1'}``)
-            Valid keys are ``event``, ``station``, ``dataselect``, and ``availability``. This
-            will overwrite the ``base_url`` and ``major_versions`` arguments.
+            Valid keys are ``event``, ``station``, ``dataselect``, and
+            ``availability``. This will overwrite the ``base_url`` and
+            ``major_versions`` arguments.
             For all services not specified, the default default locations
             indicated by ``base_url`` and ``major_versions`` will be used. Any
             service that is manually specified as ``None`` (e.g.
@@ -591,13 +592,16 @@ class Client(object):
         locs = locals()
         setup_query_dict('availability', locs, kwargs)
 
-        if mergegaps is not None and kwargs.get("details") == False:
+        if mergegaps is not None and not kwargs.get("details"):
             msg = "Extent method does not support parameter 'mergegaps'"
             raise ValueError(msg)
-        if format is not None and format not in ["text", "geocsv", "json", "request"]:
+        if format is not None and format not in ["text",
+        "geocsv", "json", "request"]:
             msg = "Unsupported value for parameter 'format'"
             raise ValueError(msg)
-        if orderby is not None and orderby not in ["nslc_time_quality_samplerate", "latestupdate", "latestupdate_desc", "timespancount", "timespancount_desc"]:
+        if orderby is not None and orderby not in \
+        ["nslc_time_quality_samplerate", "latestupdate",
+        "latestupdate_desc", "timespancount", "timespancount_desc"]:
             msg = "Unsupported value for parameter 'orderby'"
             raise ValueError(msg)
         if show is not None and show != "latestupdate":
@@ -619,8 +623,9 @@ class Client(object):
 
         Availability = namedtuple(
             'Availability',
-            ['network', 'station', 'location', 'channel', 'quality', 'sampling_rate',
-             'earliest', 'latest', 'updated', 'time_spans', 'restriction'],
+            ['network', 'station', 'location', 'channel', 'quality',
+            'sampling_rate', 'earliest', 'latest', 'updated',
+            'time_spans', 'restriction'],
             defaults=(None, None, None))
 
         lines = [line.decode().splitlines()[0].split('|')
@@ -1368,7 +1373,8 @@ class Client(object):
 
         final_parameter_set = {}
 
-        endpoint = "extent" if service == "availability" and not parameters.get("details") else "query"
+        endpoint = "extent" if service == "availability" and \
+        not parameters.get("details") else "query"
         if service == "availability" and "details" in parameters:
             del parameters["details"]
         # Now loop over all parameters, convert them and make sure they are
@@ -1852,7 +1858,8 @@ def build_url(base_url, service, major_version, resource_type,
     # Only allow certain resource types.
     if service not in ["dataselect", "event", "station", "availability"]:
         msg = "Resource type '%s' not allowed. Allowed types: \n%s" % \
-            (service, ",".join(("dataselect", "event", "station", "availability")))
+            (service, ",".join(("dataselect", "event", "station",
+            "availability")))
         raise ValueError(msg)
 
     # Special location handling.
@@ -2138,7 +2145,7 @@ def get_bulk_string(bulk, arguments):
         raise FDSNInvalidRequestException(msg)
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
-    if isinstance(bulk, collections.abc.Iterable) \
+    if isinstance(bulk, abc.Iterable) \
             and not hasattr(bulk, "read") \
             and not isinstance(bulk, str):
         tmp = ["%s=%s" % (key, convert_to_string(value))
