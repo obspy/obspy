@@ -123,7 +123,7 @@ class TestWADLParser():
         """
         Tests the parsing of an availability wadl.
         """
-        parser, w = self._parse_wadl_file("availability.wadl")
+        parser, w = self._parse_wadl_file(testdata["availability.wadl"])
         params = parser.parameters
         
         self.assertIn("starttime", params)
