@@ -1,0 +1,40 @@
+# response is cropped to first stage, original data from
+# https://service.iris.edu/irisws/resp/1/query?net=IU&sta=HRV
+B050F03 Station:     HRV
+B050F16 Network:     IU
+B052F03 Location:    00
+B052F04 Channel:     BHZ
+B052F22 Start date:  2010,048,03:08:00
+B052F23 End date:    2010,119,15:13:00
+B053F03 Transfer function type:    A - Laplace transform analog response, in rad/sec
+B053F04 Stage sequence number:     1
+B053F05 Response in units lookup:  m/s - Velocity in Meters Per Second
+B053F06 Response out units lookup: V - Volts
+B053F07 A0 normalization factor:   +3.94300E+03
+B053F08 Normalization frequency:   +5.00000E-02
+B053F09 Number of zeroes:          4
+B053F14 Number of poles:           6
+B053F10-13 0  +0.00000E+00  +0.00000E+00  +0.00000E+00  +0.00000E+00
+B053F10-13 1  +0.00000E+00  +0.00000E+00  +0.00000E+00  +0.00000E+00
+B053F10-13 2  -2.60811E-02  +0.00000E+00  +2.37885E-02  +0.00000E+00
+B053F10-13 3  -2.60811E-02  +0.00000E+00  +2.37885E-02  +0.00000E+00
+B053F15-18 0  -1.54713E-02  -1.23400E-02  +6.11428E-04  +7.35041E-04
+B053F15-18 1  -1.54713E-02  +1.23400E-02  +6.11428E-04  +7.35041E-04
+B053F15-18 2  -2.16466E-02  +0.00000E+00  +4.62419E-03  +0.00000E+00
+B053F15-18 3  -2.17396E-02  +0.00000E+00  +4.68987E-03  +0.00000E+00
+B053F15-18 4  -3.91800E+01  -4.91200E+01  +0.00000E+00  +0.00000E+00
+B053F15-18 5  -3.91800E+01  +4.91200E+01  +0.00000E+00  +0.00000E+00
+B057F03 Stage sequence number:         1
+B057F04 Input sample rate (HZ):        2.0000E+01
+B057F05 Decimation factor:             00001
+B057F06 Decimation offset:             00000
+B057F07 Estimated delay (seconds):    +0.0000E+00
+B057F08 Correction applied (seconds): +0.0000E+00
+B058F03 Stage sequence number:        1
+B058F04 Sensitivity:                  +2.39900E+03
+B058F05 Frequency of sensitivity:     +5.00000E-02
+B058F06 Number of calibrations:       0
+B058F03 Stage sequence number:        0
+B058F04 Sensitivity:                  +4.02513E+09
+B058F05 Frequency of sensitivity:     +5.00000E-02
+B058F06 Number of calibrations:       0
