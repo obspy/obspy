@@ -8,6 +8,15 @@ maintenance_1.4.x
 
 Changes:
  - obspy.core:
+   * fix a bug in response calculation with non-SI input units. With e.g.
+     "nm/s" as first stage input units (which is unusual, though), the
+     amplitude of the frequency response was calculated wrongly, not taking
+     into account the scaling factor needed to get from "nm/s" to "m/s". In
+     general if this bug would have been encountered before it should have led
+     to quite obviously wrong results, since it would lead to values that would
+     have been off by at least two orders of magnitude (e.g. in case of "cm/s")
+     or even up to nine orders of magnitude (e.g. in case of "nm/s").
+     (see #3369)
    * fix a bug in Stream.select(inventory=...) (see #3282)
    * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
      warning" when interactively zooming into and then again out of a plot with
