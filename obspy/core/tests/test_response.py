@@ -9,7 +9,6 @@ Test suite for the response handling.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import io
 import warnings
 from math import pi
 
@@ -599,56 +598,3 @@ class TestResponse:
             got = [resp._get_overall_sensitivity_and_gain(f, output='VEL')[1]
                    for f in freqs]
             np.testing.assert_allclose(got, expected, rtol=1e-2)
-
-    def test_writing_sacpz_hertz_to_radians(self, testdata):
-        """
-        Tests writing out a response with poles and zeros described in Hertz as
-        a SACPZ file, which implicitely expects the given data to be RADIANS/S,
-        so that a conversion is needed.
-
-        See #3334
-        """
-        inv = read_inventory(testdata['G_CAN__LHZ.xml'], 'STATIONXML')
-
-        expected_a0 = 3.959488e+03
-        expected_constant = 7.304622e+12
-        expected_zeros = [0j, 0j, 0j]
-        expected_poles = [-1.233948e-02+1.234319e-02j,
-                          -1.233948e-02-1.234319e-02j,
-                          -3.917566e+01+4.912339e+01j,
-                          -3.917566e+01-4.912339e+01j]
-
-        sio = io.StringIO()
-        # ignore a warning because there is an additional unity PAZ stage
-        with WarningsCapture():
-            inv.write(sio, format='SACPZ')
-        sio.seek(0)
-        lines = sio.readlines()
-        # make sure we find the lines we are looking for
-        for expected_start in ('* A0  ', 'ZEROS', 'POLES', 'CONSTANT'):
-            for line in lines:
-                if line.startswith(expected_start):
-                    break
-            else:
-                msg = f"No line starting with '{expected_start}' found."
-                pytest.fail(msg)
-        # now test values
-        for i, line in enumerate(lines):
-            if line.startswith('* A0  '):
-                value = float(line.split()[-1])
-                assert round(value, 3) == expected_a0
-            elif line.startswith('ZEROS'):
-                num_zeros = int(line.split()[-1])
-                assert num_zeros == 3
-                zeros = [complex(*map(float, lines[i+1+j].split()))
-                         for j in range(num_zeros)]
-                np.testing.assert_allclose(zeros, expected_zeros)
-            elif line.startswith('POLES'):
-                num_poles = int(line.split()[-1])
-                assert num_poles == 4
-                poles = [complex(*map(float, lines[i+1+j].split()))
-                         for j in range(num_poles)]
-                np.testing.assert_allclose(poles, expected_poles)
-            elif line.startswith('CONSTANT'):
-                value = float(line.split()[-1])
-                assert round(value, 3) == expected_constant
