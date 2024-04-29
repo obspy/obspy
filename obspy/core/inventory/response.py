@@ -319,6 +319,35 @@ class PolesZerosResponseStage(ResponseStage):
         else:
             raise ValueError(msg)
 
+    def to_radians_per_second(self):
+        """
+        Convert to type 'LAPLACE (RADIANS/SECOND)'
+        """
+        if self.pz_transfer_function_type == 'LAPLACE (RADIANS/SECOND)':
+            return
+        elif self.pz_transfer_function_type == 'LAPLACE (HERTZ)':
+            twopi = 2 * pi
+            self.normalization_factor *= twopi ** (
+                len(self.poles) - len(self.zeros))
+            self.poles = [
+                ComplexWithUncertainties(
+                    x.real * twopi, x.imag * twopi,
+                    upper_uncertainty=x.upper_uncertainty * twopi,
+                    lower_uncertainty=x.lower_uncertainty * twopi)
+                for x in self.poles]
+            self.zeros = [
+                ComplexWithUncertainties(
+                    x.real * twopi, x.imag * twopi,
+                    upper_uncertainty=x.upper_uncertainty * twopi,
+                    lower_uncertainty=x.lower_uncertainty * twopi)
+                for x in self.zeros]
+            self.pz_transfer_function_type = 'LAPLACE (RADIANS/SECOND)'
+        else:
+            msg = (f"Can not convert transfer function type "
+                   f"'{self.pz_transfer_function_type}' to "
+                   f"'LAPLACE (RADIANS/SECOND)'")
+            raise ValueError(msg)
+
 
 class CoefficientsTypeResponseStage(ResponseStage):
     """
