@@ -5,9 +5,9 @@ obspy.clients.filesystem.tsindex - EarthScope TSIndex Client and Indexer
 
 The obspy.clients.filesystem.tsindex module includes a timeseries extraction
 :class:`Client` class for a database created by the EarthScope
-`mseedindex <https://github.com/EarthScope/mseedindex/>`_ program, as well as, a
-:class:`Indexer` class for creating a SQLite3 database that follows the EarthScope
-`tsindex database schema
+`mseedindex <https://github.com/EarthScope/mseedindex/>`_ program, as well as,
+a :class:`Indexer` class for creating a SQLite3 database that follows the
+EarthScope `tsindex database schema
 <https://github.com/EarthScope/mseedindex/wiki/Database-Schema/>`_\.
 
 :copyright:
@@ -654,7 +654,7 @@ class Client(object):
         containing information found in the tsindex table.
 
         Information about the tsindex schema may be found in the
-        `mseedindex wiki schema <https://github.com/EarthScope/mseedindex/wiki/\
+        `mseedindex wiki <https://github.com/EarthScope/mseedindex/wiki/\
         Database-Schema#sqlite-schema-version-11>`_.
 
         :type network: str
