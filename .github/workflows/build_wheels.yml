@@ -65,7 +65,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          path: ./wheelhouse
+          path: ./wheelhouse/*.whl
           name: wheel-${{ matrix.os }}-${{ matrix.build }}
 
   build_sdist:
@@ -84,6 +84,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: dist/*.tar.gz
+          name: sdist
 
   merge_artifacts:
     name: merge sdist and wheel artifacts together
