@@ -94,6 +94,7 @@ jobs:
       - uses: actions/upload-artifact/merge@v4
         with:
           name: artifact
+          delete-merged: true
 
   publish_test:
     name: publish tag to testpypi
