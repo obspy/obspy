@@ -319,6 +319,35 @@ class PolesZerosResponseStage(ResponseStage):
         else:
             raise ValueError(msg)
 
+    def to_radians_per_second(self):
+        """
+        Convert to type 'LAPLACE (RADIANS/SECOND)'
+        """
+        if self.pz_transfer_function_type == 'LAPLACE (RADIANS/SECOND)':
+            return
+        elif self.pz_transfer_function_type == 'LAPLACE (HERTZ)':
+            twopi = 2 * pi
+            self.normalization_factor *= twopi ** (
+                len(self.poles) - len(self.zeros))
+            self.poles = [
+                ComplexWithUncertainties(
+                    x.real * twopi, x.imag * twopi,
+                    upper_uncertainty=x.upper_uncertainty * twopi,
+                    lower_uncertainty=x.lower_uncertainty * twopi)
+                for x in self.poles]
+            self.zeros = [
+                ComplexWithUncertainties(
+                    x.real * twopi, x.imag * twopi,
+                    upper_uncertainty=x.upper_uncertainty * twopi,
+                    lower_uncertainty=x.lower_uncertainty * twopi)
+                for x in self.zeros]
+            self.pz_transfer_function_type = 'LAPLACE (RADIANS/SECOND)'
+        else:
+            msg = (f"Can not convert transfer function type "
+                   f"'{self.pz_transfer_function_type}' to "
+                   f"'LAPLACE (RADIANS/SECOND)'")
+            raise ValueError(msg)
+
 
 class CoefficientsTypeResponseStage(ResponseStage):
     """
@@ -1994,7 +2023,8 @@ class Response(ComparingObject):
         return resp
 
 
-def paz_to_sacpz_string(paz, instrument_sensitivity):
+def paz_to_sacpz_string(paz, instrument_sensitivity,
+                        to_radians_per_second=True):
     """
     Returns SACPZ ASCII text representation of Response.
 
@@ -2002,9 +2032,21 @@ def paz_to_sacpz_string(paz, instrument_sensitivity):
     :param paz: Poles and Zeros response information
     :type instrument_sensitivity: :class:`InstrumentSensitivity`
     :param paz: Overall instrument sensitivity of response
+    :type to_radians_per_second: bool
+    :param to_radians_per_second: Whether to convert poles and zeros to
+        radians/s before returning SACPZ string. This should be done in most
+        cases as SAC is expecting radians/s.
     :rtype: str
     :returns: Textual SACPZ representation of poles and zeros response stage.
     """
+    if to_radians_per_second:
+        paz = copy.deepcopy(paz)
+        paz.to_radians_per_second()
+    if paz.pz_transfer_function_type != 'LAPLACE (RADIANS/SECOND)':
+        msg = ('Returning a SACPZ string from a PAZResponseStage that is not '
+               'radians/s. SAC is expecting SACPZ data to be in radians/s '
+               '(see #3334).')
+        warnings.warn(msg)
     # assemble output string
     out = []
     out.append("ZEROS %i" % len(paz.zeros))

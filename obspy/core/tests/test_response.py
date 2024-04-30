@@ -10,6 +10,7 @@ Test suite for the response handling.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import warnings
+from copy import deepcopy
 from math import pi
 
 import numpy as np
@@ -598,3 +599,27 @@ class TestResponse:
             got = [resp._get_overall_sensitivity_and_gain(f, output='VEL')[1]
                    for f in freqs]
             np.testing.assert_allclose(got, expected, rtol=1e-2)
+
+    def test_pazresponsestage_hertz_to_radians(self, testdata):
+        """
+        Tests converting a PAZResponseStage from Hertz to Radians/s
+        """
+        inv = read_inventory(testdata['G_CAN__LHZ.xml'], 'STATIONXML')
+        paz_before = inv[0][0][0].response.response_stages[0]
+        paz_after = deepcopy(paz_before)
+        paz_after.to_radians_per_second()
+
+        expected_zeros = [0j, 0j]
+        expected_poles = [-1.233948e-02+1.234319e-02j,
+                          -1.233948e-02-1.234319e-02j,
+                          -3.917566e+01+4.912339e+01j,
+                          -3.917566e+01-4.912339e+01j]
+
+        assert paz_before.pz_transfer_function_type == 'LAPLACE (HERTZ)'
+        assert paz_after.pz_transfer_function_type == \
+            'LAPLACE (RADIANS/SECOND)'
+        assert round(paz_after.normalization_factor, 3) == 3.959488e+03
+        np.testing.assert_allclose(
+            paz_after.zeros, expected_zeros, rtol=1e-6)
+        np.testing.assert_allclose(
+            paz_after.poles, expected_poles, rtol=1e-6)
