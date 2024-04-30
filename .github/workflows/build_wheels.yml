@@ -65,7 +65,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          path: ./wheelhouse/*.whl
+          path: ./wheelhouse
+          name: wheel-${{ matrix.os }}-${{ matrix.build }}
 
   build_sdist:
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test_wheels')
