@@ -21,7 +21,7 @@ import warnings
 
 from matplotlib.dates import datestr2num
 import numpy as np
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 
 from obspy.core import Stream
 from obspy.signal.headers import clibsignal
@@ -830,7 +830,7 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
                         complex(0., (coords[l, 0] * sx + coords[l, 1] * sy) *
                                 2 * np.pi * f))
                 buff[k] = abs(_sum) ** 2
-            transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
+            transff[i, j] = cumulative_trapezoid(buff, dx=fstep)[-1]
 
     transff /= transff.max()
     return transff
