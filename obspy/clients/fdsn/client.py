@@ -1618,6 +1618,12 @@ class Client(object):
                 try:
                     self.services["available_event_catalogs"] = \
                         parse_simple_xml(wadl)["catalogs"]
+                    # XXX can be removed when IRIS/Earthscope drops its event
+                    # webservice
+                    if '.iris.' in url or 'earthscope' in url:
+                        self.services["available_event_catalogs"] = \
+                            _cleanup_earthscope(
+                                self.services["available_event_catalogs"])
                 except ValueError:
                     msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
@@ -1625,6 +1631,12 @@ class Client(object):
                 try:
                     self.services["available_event_contributors"] = \
                         parse_simple_xml(wadl)["contributors"]
+                    # XXX can be removed when IRIS/Earthscope drops its event
+                    # webservice
+                    if '.iris.' in url or 'earthscope' in url:
+                        self.services["available_event_contributors"] = \
+                            _cleanup_earthscope(
+                                self.services["available_event_contributors"])
                 except ValueError:
                     msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
@@ -2076,6 +2088,21 @@ def _validate_eida_token(token):
                    flags=re.IGNORECASE):
         return True
     return False
+
+
+def _cleanup_earthscope(items):
+    """
+    IRIS/Earthscope has all "catalogs" and "contributors" suffixed with "\n "
+    and has confirmed that this will not be fixed. So need to clean up here.
+
+    Can be removed when Earthscope drops its event service
+    """
+    new_items = []
+    for item in items:
+        if item.endswith('\n '):
+            item = item[:-2]
+        new_items.append(item)
+    return new_items
 
 
 if __name__ == '__main__':

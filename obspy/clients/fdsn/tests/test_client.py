@@ -27,7 +27,7 @@ from obspy import UTCDateTime, read, read_inventory, Stream, Trace
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
-                                       get_bulk_string)
+                                       get_bulk_string, _cleanup_earthscope)
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
                                        FDSNNoDataException,
@@ -391,6 +391,7 @@ class TestClient():
         xml = lxml.etree.fromstring(response.content)
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
+        expected = set(_cleanup_earthscope(expected))
         # check that we have some values in there
         assert len(expected) > 5
         assert {*self.client.services["available_event_contributors"]} == \

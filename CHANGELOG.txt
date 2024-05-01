@@ -28,6 +28,8 @@ Changes:
      and #3413)
    * properly include server response in error messages on bad requests (see
      #3306)
+   * IRIS/Earthscope: fix all "catalogs" and "contributors" being suffixed with
+     '\n ' (see #3438)
  - obspy.clients.nrl:
    * better handling of individual stages units when combining sensor and
      datalogger response from a full downloaded offline version of the new NRL
