@@ -1,10 +1,5 @@
-master
-======
-
-Changes:
-
-maintenance_1.4.x
-=================
+1.4.1rc1
+========
 
 Changes:
  - obspy.core:
