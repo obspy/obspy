@@ -8,7 +8,7 @@ import numpy as np
 from lxml import etree
 
 import obspy
-from obspy import UTCDateTime, read
+from obspy import UTCDateTime, read, read_inventory
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.xseed.blockette.blockette010 import Blockette010
 from obspy.io.xseed.blockette.blockette051 import Blockette051
@@ -572,6 +572,22 @@ class TestParser():
             p = Parser(fh.read())
         # Weak but at least tests that something has been read.
         assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+    def test_read_resp_paz_uncertainties(self, testdata):
+        """
+        Regression test for correctly reading uncertainties in PAZ complex
+        numbers
+        """
+        inv = read_inventory(testdata['RESP.HRV.IU.00.BHZ_cropped'], "RESP")
+        resp = inv[0][0][0].response
+        pole = resp.response_stages[0].poles[0]
+        assert round(pole.imag, 4) == -0.0123
+        assert round(pole.imag.upper_uncertainty, 6) == 0.000735
+        assert round(pole.imag.lower_uncertainty, 6) == 0.000735
+        zero = resp.response_stages[0].zeros[2]
+        assert round(zero.real, 4) == -0.0261
+        assert round(zero.real.lower_uncertainty, 4) == 0.0238
+        assert round(zero.real.upper_uncertainty, 4) == 0.0238
 
     def clean_unit_string(self, string):
         """
