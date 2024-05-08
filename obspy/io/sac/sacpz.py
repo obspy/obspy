@@ -12,6 +12,7 @@ Module for SAC poles and zero (SACPZ) file I/O.
 """
 import numpy as np
 import warnings
+from copy import deepcopy
 from pathlib import Path
 
 from obspy import UTCDateTime
@@ -55,6 +56,10 @@ def _write_sacpz(inventory, file_or_file_object):
                     warnings.warn(msg)
                     continue
                 input_unit = sens.input_units.upper()
+                # convert hertz to radians/s, see #3334
+                paz = deepcopy(paz)
+                paz.to_radians_per_second()
+                # SAC seems to expect "meters" as the unit
                 if input_unit == "M":
                     pass
                 elif input_unit in ["M/S", "M/SEC"]:
