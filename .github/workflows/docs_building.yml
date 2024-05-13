@@ -44,7 +44,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd misc/docs
-          make docset
+          bash make_docset.sh
       - name: compress with tar
         shell: bash -l {0}
         run: |
