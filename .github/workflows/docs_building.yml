@@ -45,7 +45,9 @@ jobs:
         run: |
           cd misc/docs/build
           python -c 'import obspy; print(obspy.__version__)'
-          echo "DOCSETVERSION=$(shell head -3 html/objects.inv | grep ' ObsPy Documentation ' | sed 's#.*(\(.*\)).*#\1#')" >> "$GITHUB_ENV"
+          echo "DOCSETVERSION=$(head -3 html/objects.inv | grep ' ObsPy Documentation ' | sed 's#.*(\(.*\)).*#\1#')" >> "$GITHUB_ENV"
+          ls -l *
+          ls -l */*
           doc2dash --verbose --name "ObsPy ${DOCSETVERSION}" --icon html/_static/obspy-logo_32x32.png --online-redirect-url https://docs.obspy.org/ html/
           ls -l *
           sed 's#\(<string>[Oo]bs[Pp]y\) .*\(</string>\)#\1 ${DOCSETVERSION}\2#' --in-place "ObsPy $(DOCSETVERSION).docset/Contents/Info.plist"
