@@ -10,6 +10,5 @@
        :nosignatures:
 
        core
-       libgcf
 
     .. comment to end block
