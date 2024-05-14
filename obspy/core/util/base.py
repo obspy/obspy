@@ -10,6 +10,7 @@ Base utilities and constants for ObsPy.
 """
 import glob
 import importlib
+import importlib.metadata
 import inspect
 import io
 import os
@@ -23,8 +24,6 @@ from collections import OrderedDict
 from pathlib import PurePath
 
 import numpy as np
-import pkg_resources
-from pkg_resources import get_entry_info, iter_entry_points
 
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
@@ -234,16 +233,36 @@ def _get_entry_points(group, subgroup=None):
 
     .. rubric:: Example
 
-    >>> _get_entry_points('obspy.plugin.waveform')  # doctest: +ELLIPSIS
-    {...'SLIST': EntryPoint.parse('SLIST = obspy.io.ascii.core')...}
+    >>> _get_entry_points(
+    ...     'obspy.plugin.waveform') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    {...'SLIST': EntryPoint(name='SLIST', value='obspy.io.ascii.core',
+                            group='obspy.plugin.waveform')...}
     """
-    features = {}
-    for ep in iter_entry_points(group):
+    if sys.version_info.minor < 10:
+        # compatibility workaround for Python 3.8 and 3.9
+        eps_all = importlib.metadata.entry_points()
+        eps = eps_all[group]
         if subgroup:
-            if list(iter_entry_points(group + '.' + ep.name, subgroup)):
+            features = {}
+            for ep in eps:
+                for sub_ep in eps_all[f'{group}.{ep.name}']:
+                    if sub_ep.name == subgroup:
+                        features[ep.name] = ep
+                        break
+        else:
+            features = {ep.name: ep for ep in eps}
+    else:
+        eps = importlib.metadata.entry_points(group=group)
+        if subgroup:
+            features = {}
+            for ep in eps:
+                sub_eps = tuple(importlib.metadata.entry_points(
+                    group=f'{group}.{ep.name}', name=subgroup))
+                if not sub_eps:
+                    continue
                 features[ep.name] = ep
         else:
-            features[ep.name] = ep
+            features = {ep.name: ep for ep in eps}
     return features
 
 
@@ -329,7 +348,7 @@ def _get_function_from_entry_point(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = buffered_load_entry_point(entry_point.dist.key,
+    func = buffered_load_entry_point(entry_point.dist.name,
                                      'obspy.plugin.%s' % (group),
                                      entry_point.name)
     return func
@@ -351,8 +370,8 @@ def get_dependency_version(package_name, raw_string=False):
         0.
     """
     try:
-        version_string = pkg_resources.get_distribution(package_name).version
-    except pkg_resources.DistributionNotFound:
+        version_string = importlib.metadata.version(package_name)
+    except importlib.metadata.PackageNotFoundError:
         return []
     if raw_string:
         return version_string
@@ -384,7 +403,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         for format_ep in eps.values():
             # search isFormat for given entry point
             is_format = buffered_load_entry_point(
-                format_ep.dist.key,
+                format_ep.dist.name,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # If it is a file-like object, store the position and restore it
@@ -414,7 +433,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     try:
         # search readFormat for given entry point
         read_format = buffered_load_entry_point(
-            format_ep.dist.key,
+            format_ep.dist.name,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
     except ImportError:
@@ -482,10 +501,19 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
                                     WAVEFORM_PREFERRED_ORDER)
     mod_list = []
     for name, ep in eps.items():
-        module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
-        entry_info = str(get_entry_info(*ep_list))
-        func_str = ':func:`%s`' % entry_info.split(' = ')[1].replace(':', '.')
+        if sys.version_info.minor < 10:
+            # compatibility workaround for Python 3.8 and 3.9
+            module_short = ":mod:`%s`" % ".".join(ep.value.split(".")[:3])
+            func_str = list(
+                _ep for _ep in
+                importlib.metadata.entry_points()[f'{ep.group}.{ep.name}'] if
+                _ep.name == method)[0].value
+        else:
+            module_short = ":mod:`%s`" % ".".join(ep.module.split(".")[:3])
+            func_str = tuple(importlib.metadata.entry_points(
+                group=f'{ep.group}.{ep.name}', name=method))[0].value
+        func_str = func_str.replace(':', '.')
+        func_str = f':func:`{func_str}`'
         mod_list.append((name, module_short, func_str))
 
     mod_list = sorted(mod_list)

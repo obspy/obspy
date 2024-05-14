@@ -9,6 +9,8 @@ Changes:
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
      (see #3261)
+   * replace pkg_resources with importlib for internal entry point and plugin
+     handling (should not affect users, see #3333)
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
  - obspy.clients.fdsn
