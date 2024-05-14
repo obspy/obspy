@@ -217,6 +217,16 @@ class Client(object):
         need to force fetching new information from the server (should only
         concern programs running in background for a very long time).
 
+        .. note::
+            Stations/channels are excluded from the results for which the
+            server indicates it is serving them in general but it also states
+            no data are in ring buffer currently.
+            If interested in these "no data" stations/channels, currently
+            please use ``debug=True`` when initializing the client which will
+            print the raw server ``seedlink INFO`` response which will show
+            these stations listed with ``begin_seq`` and ``end_seq`` both with
+            value ``'000000'``.
+
         :type network: str
         :param network: Network code. Supports ``fnmatch`` wildcards, e.g.
             ``*`` and ``?``.
@@ -295,17 +305,23 @@ class Client(object):
             item = (net, sta)
             if level == 'channel':
                 subtags = tag.xpath('./stream')
-                for subtag in subtags:
-                    loc = subtag.attrib['location']
-                    cha = subtag.attrib['seedname']
-                    station_cache.add(item + (loc, cha))
                 # If no data is in ring buffer (e.g. station outage?) then it
                 # seems the seedlink server replies with no subtags for the
                 # channels
                 if not subtags:
-                    station_cache.add(item + (None, None))
-            else:
+                    continue
+                for subtag in subtags:
+                    loc = subtag.attrib['location']
+                    cha = subtag.attrib['seedname']
+                    station_cache.add(item + (loc, cha))
+            elif level == 'station':
+                # remove stations that seem to have no data
+                if all(tag.attrib[key] == '000000'
+                       for key in ('begin_seq', 'end_seq')):
+                    continue
                 station_cache.add(item)
+            else:
+                raise NotImplementedError()
         # change results to an Inventory object
         self._station_cache = station_cache
         self._station_cache_level = level
