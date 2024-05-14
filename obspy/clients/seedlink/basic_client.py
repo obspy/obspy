@@ -193,7 +193,7 @@ class Client(object):
         return stream
 
     def get_info(self, network=None, station=None, location=None, channel=None,
-                 level='station', cache=True):
+                 level='station', cache=True, warn_on_excluded_stations=True):
         """
         Request available stations information from the seedlink server.
 
@@ -242,6 +242,10 @@ class Client(object):
         :type cache: bool
         :param cache: Subsequent function calls are cached, use ``cache=False``
             to force fetching station metadata again from the server.
+        :type warn_on_excluded_stations: bool
+        :param warn_on_excluded_stations: Whether to show a warning for
+            stations that are excluded from the results because the server
+            indicates there is no data currently available.
         :rtype: list
         :returns: list of 2-tuples (or 4-tuples with ``level='channel'``) with
             network/station (network/station/location/channel, respectively)
@@ -299,6 +303,7 @@ class Client(object):
             parser = etree.XMLParser(encoding='utf-8')
             xml = etree.fromstring(info.encode('utf-8'), parser=parser)
         station_cache = set()
+        excluded_stations = set()
         for tag in xml.xpath('./station'):
             net = tag.attrib['network']
             sta = tag.attrib['name']
@@ -309,6 +314,7 @@ class Client(object):
                 # seems the seedlink server replies with no subtags for the
                 # channels
                 if not subtags:
+                    excluded_stations.add(item)
                     continue
                 for subtag in subtags:
                     loc = subtag.attrib['location']
@@ -318,6 +324,7 @@ class Client(object):
                 # remove stations that seem to have no data
                 if all(tag.attrib[key] == '000000'
                        for key in ('begin_seq', 'end_seq')):
+                    excluded_stations.add(item)
                     continue
                 station_cache.add(item)
             else:
@@ -325,6 +332,14 @@ class Client(object):
         # change results to an Inventory object
         self._station_cache = station_cache
         self._station_cache_level = level
+        if warn_on_excluded_stations and excluded_stations:
+            msg = ('Some stations were excluded from results because server '
+                   'indicates no data available (use debug=True in Client '
+                   'initialization for details, suppress warning with '
+                   'warn_on_excluded_stations=False): ')
+            msg += ', '.join('.'.join(item)
+                             for item in sorted(excluded_stations))
+            warnings.warn(msg)
         return self.get_info(
             network=network, station=station, location=location,
             channel=channel, cache=True, level=level)
