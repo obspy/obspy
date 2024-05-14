@@ -201,11 +201,13 @@ class Client(object):
         ``station``, ``location`` and ``channel``.
 
         >>> client = Client('rtserver.ipgp.fr')
-        >>> info = client.get_info(station="FDFM")
+        >>> info = client.get_info(
+        ...     station="FDFM", warn_on_excluded_stations=False)
         >>> print(info)
         [('G', 'FDFM')]
-        >>> info = client.get_info(station="FD?M", channel='*Z',
-        ...                        level='channel')
+        >>> info = client.get_info(
+        ...     station="FD?M", channel='*Z', level='channel',
+        ...     warn_on_excluded_stations=False)
         >>> print(info)  # doctest: +NORMALIZE_WHITESPACE
         [('G', 'FDFM', '00', 'BHZ'), ('G', 'FDFM', '00', 'HHZ'),
          ('G', 'FDFM', '00', 'HNZ'), ('G', 'FDFM', '00', 'LHZ'),
