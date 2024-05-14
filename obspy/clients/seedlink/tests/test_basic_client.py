@@ -46,6 +46,7 @@ class TestClient():
         else:
             raise
 
+    @pytest.mark.filterwarnings('ignore:.*Some stations were excluded.*')
     def test_get_info(self):
         """
         Test fetching station information
