@@ -228,7 +228,31 @@ def sac_to_obspy_header(sacheader):
     # nothing is null
     stats = {}
     stats['npts'] = npts
-    stats['sampling_rate'] = np.float32(1.) / np.float32(delta)
+    # sampling rate can have floating point issues due to it being stored as a
+    # single precision floating point sampling interval in seconds, see #3408
+    # usually it should be ok potentially, but it seems that some SAC data
+    # sources additionally don't have the sampling interval encoded as the
+    # closest possible binary representation but rather the closest lesser
+    # binary representation (e.g. b'\x0b\xd7#=' for 0.04) when the next
+    # possible higher number would be closer to the "exact" value (here
+    # b'\n\xd7#=') which seems to be the tipping point of the floating point
+    # inaccuracy making it through our internal conversion to double precision
+    # sampling rate. here, we check if the conventional conversion and the
+    # "safer" way of rounding off (to microseconds in sample spacing) lead to a
+    # difference and warn about the fact, since the rounding approach actually
+    # could introduce buggy results for real weird unaligned sampling rates
+    sample_spacing_conventional = np.float32(delta)
+    sample_spacing_rounded_off = round(np.float64(delta), 6)
+    sampling_rate_conventional = np.float32(1.) / np.float32(delta)
+    sampling_rate_rounded_off = 1.0 / round(np.float64(delta), 6)
+    if sampling_rate_conventional != sampling_rate_rounded_off:
+        msg = (f"Sample spacing read from SAC file "
+               f"({sample_spacing_conventional:.9f} when rounded to "
+               f"nanoseconds) was rounded of to microsecond precision "
+               f"({sample_spacing_rounded_off:.9f}) to avoid floating point "
+               f"issues when converting to sampling rate (see #3408)")
+        warnings.warn(msg)
+    stats['sampling_rate'] = sampling_rate_rounded_off
     stats['network'] = _clean_str(knetwk)
     stats['station'] = _clean_str(kstnm)
     stats['channel'] = _clean_str(kcmpnm)
