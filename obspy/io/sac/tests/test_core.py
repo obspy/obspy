@@ -1034,9 +1034,11 @@ class TestCore():
                r'\(0.040000000\) to avoid floating point issues when '
                r'converting to sampling rate \(see #3408\)')
         # test with rounding (default)
-        with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
-            tr = read(path, format="SAC")[0]
-        assert abs(25.0 - tr.stats.sampling_rate) < 1e-6
+        for func in (read, _read_sac):
+            with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
+                tr = func(path, format="SAC")[0]
+            assert abs(25.0 - tr.stats.sampling_rate) < 1e-6
         # test without rounding
-        tr = read(path, format="SAC", round_sampling_interval=False)[0]
+        for func in (read, _read_sac):
+            tr = func(path, format="SAC", round_sampling_interval=False)[0]
         assert abs(25.0 - tr.stats.sampling_rate) > 1e-6
