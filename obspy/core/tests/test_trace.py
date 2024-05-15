@@ -1908,11 +1908,13 @@ class TestTrace:
         """
         # Load the prepared data. The data has been created using SAC.
         file_ = "interpolation_test_random_waveform_delta_0.01_npts_50.sac"
-        org_tr = read("/path/to/%s" % file_)[0]
+        org_tr = read("/path/to/%s" % file_, round_sampling_interval=False)[0]
         file_ = "interpolation_test_interpolated_delta_0.003.sac"
-        interp_delta_0_003 = read("/path/to/%s" % file_)[0]
+        interp_delta_0_003 = read(
+            "/path/to/%s" % file_, round_sampling_interval=False)[0]
         file_ = "interpolation_test_interpolated_delta_0.077.sac"
-        interp_delta_0_077 = read("/path/to/%s" % file_)[0]
+        interp_delta_0_077 = read(
+            "/path/to/%s" % file_, round_sampling_interval=False)[0]
 
         # Perform the same interpolation as in Python with ObsPy.
         int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.003,
