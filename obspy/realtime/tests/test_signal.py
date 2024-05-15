@@ -18,7 +18,6 @@ class TestRealTimeSignal():
     """
     The obspy.realtime.signal test suite.
     """
-    @pytest.mark.filterwarnings('ignore:.*Sample spacing read from SAC file.*')
     @pytest.fixture(scope="function")
     def trace(self, testdata):
         # read test data as float64
