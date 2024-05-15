@@ -12,6 +12,6 @@
        assign
        core
        define
-       utils
+       util
 
     .. comment to end block
