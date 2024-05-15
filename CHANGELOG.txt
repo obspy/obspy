@@ -13,6 +13,12 @@ Changes:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
  - obspy.clients.fdsn
    * Natural Resources Canada (NRCAN) added to list of known clients
+ - obspy.clients.seedlink:
+   * fix a bug in basic client `get_info()` which leaded to exceptions when
+     querying with `level="channel"` in presence of stations with no current
+     data available. Also, stations without data are now excluded from the
+     results. See docs for `get_info()` for information how to see the excluded
+     stations (see #2808)
  - obspy.io:
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
  - obspy.io.cybershake:
