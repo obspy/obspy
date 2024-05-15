@@ -193,7 +193,7 @@ class Client(object):
         return stream
 
     def get_info(self, network=None, station=None, location=None, channel=None,
-                 level='station', cache=True, warn_on_excluded_stations=True):
+                 level='station', cache=True, warn_on_excluded_stations=False):
         """
         Request available stations information from the seedlink server.
 
@@ -201,13 +201,11 @@ class Client(object):
         ``station``, ``location`` and ``channel``.
 
         >>> client = Client('rtserver.ipgp.fr')
-        >>> info = client.get_info(
-        ...     station="FDFM", warn_on_excluded_stations=False)
+        >>> info = client.get_info(station="FDFM")
         >>> print(info)
         [('G', 'FDFM')]
         >>> info = client.get_info(
-        ...     station="FD?M", channel='*Z', level='channel',
-        ...     warn_on_excluded_stations=False)
+        ...     station="FD?M", channel='*Z', level='channel')
         >>> print(info)  # doctest: +NORMALIZE_WHITESPACE
         [('G', 'FDFM', '00', 'BHZ'), ('G', 'FDFM', '00', 'HHZ'),
          ('G', 'FDFM', '00', 'HNZ'), ('G', 'FDFM', '00', 'LHZ'),
@@ -223,11 +221,12 @@ class Client(object):
             Stations/channels are excluded from the results for which the
             server indicates it is serving them in general but it also states
             no data are in ring buffer currently.
-            If interested in these "no data" stations/channels, currently
-            please use ``debug=True`` when initializing the client which will
-            print the raw server ``seedlink INFO`` response which will show
-            these stations listed with ``begin_seq`` and ``end_seq`` both with
-            value ``'000000'``.
+            If interested in these "no data" stations/channels, either set
+            ``warn_on_excluded_stations=True`` which will show a warning
+            message with excluded stations or use ``debug=True`` when
+            initializing the client which will print the raw server ``seedlink
+            INFO`` xml response which will show these stations listed with
+            ``begin_seq`` and ``end_seq`` both with value ``'000000'``.
 
         :type network: str
         :param network: Network code. Supports ``fnmatch`` wildcards, e.g.
