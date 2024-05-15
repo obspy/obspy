@@ -178,12 +178,16 @@ def _clean_str(value, strip_whitespace=True):
 
 
 # TODO: do this in SACTrace?
-def sac_to_obspy_header(sacheader):
+def sac_to_obspy_header(sacheader, round_sampling_interval=True):
     """
     Make an ObsPy Stats header dictionary from a SAC header dictionary.
 
     :param sacheader: SAC header dictionary.
     :type sacheader: dict
+    :param round_sampling_interval: Whether to round sampling interval to
+        microseconds before calculating sampling rate to avoid floating point
+        accuracy issues with some SAC files (see #3408)
+    :type round_sampling_interval: bool
 
     :rtype: :class:`~obspy.core.trace.Stats`
     :return: Filled ObsPy Stats header.
@@ -245,14 +249,18 @@ def sac_to_obspy_header(sacheader):
     sample_spacing_rounded_off = round(np.float64(delta), 6)
     sampling_rate_conventional = np.float32(1.) / np.float32(delta)
     sampling_rate_rounded_off = 1.0 / round(np.float64(delta), 6)
-    if sampling_rate_conventional != sampling_rate_rounded_off:
-        msg = (f"Sample spacing read from SAC file "
-               f"({sample_spacing_conventional:.9f} when rounded to "
-               f"nanoseconds) was rounded of to microsecond precision "
-               f"({sample_spacing_rounded_off:.9f}) to avoid floating point "
-               f"issues when converting to sampling rate (see #3408)")
-        warnings.warn(msg)
-    stats['sampling_rate'] = sampling_rate_rounded_off
+    if round_sampling_interval:
+        if sampling_rate_conventional != sampling_rate_rounded_off:
+            msg = (f"Sample spacing read from SAC file "
+                   f"({sample_spacing_conventional:.9f} when rounded to "
+                   f"nanoseconds) was rounded of to microsecond precision "
+                   f"({sample_spacing_rounded_off:.9f}) to avoid floating "
+                   f"point issues when converting to sampling rate (see "
+                   f"#3408)")
+            warnings.warn(msg)
+        stats['sampling_rate'] = sampling_rate_rounded_off
+    else:
+        stats['sampling_rate'] = sampling_rate_conventional
     stats['network'] = _clean_str(knetwk)
     stats['station'] = _clean_str(kstnm)
     stats['channel'] = _clean_str(kcmpnm)

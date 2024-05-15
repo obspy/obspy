@@ -1033,6 +1033,10 @@ class TestCore():
                r'to nanoseconds\) was rounded of to microsecond precision '
                r'\(0.040000000\) to avoid floating point issues when '
                r'converting to sampling rate \(see #3408\)')
+        # test with rounding (default)
         with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
             tr = read(path, format="SAC")[0]
         assert abs(25.0 - tr.stats.sampling_rate) < 1e-6
+        # test without rounding
+        tr = read(path, format="SAC", round_sampling_interval=False)[0]
+        assert abs(25.0 - tr.stats.sampling_rate) > 1e-6
