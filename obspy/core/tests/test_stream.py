@@ -2894,3 +2894,37 @@ class TestStream:
                'differing calibration factors (12345, 100)!')
         with pytest.raises(Exception, match=re.escape(msg)):
             st.merge()
+
+    def test_newbyteorder(self, mseed_stream):
+        """
+        Test switching byteorder on trace/stream, for simplicity both things
+        tested here
+        """
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing data types (float64, >f8)!')
+        # set different byteorders
+        st = mseed_stream
+        st[0].data = np.require(
+            st[0].data, dtype=st[0].data.dtype.newbyteorder('<'))
+        st[1].data = np.require(
+            st[1].data, dtype=st[1].data.dtype.newbyteorder('>'))
+        # check that we set up correctly this should fail now
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # check working on trace
+        st = mseed_stream.copy()
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        st[1].newbyteorder('<')
+        assert st[1].data.dtype == np.dtype('float64')
+        st.merge()
+        # check working on stream
+        st = mseed_stream.copy()
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        st.newbyteorder('=')
+        for tr in st:
+            assert tr.data.dtype == np.dtype('float64')
+        st.merge()
