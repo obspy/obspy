@@ -553,6 +553,7 @@ ENTRY_POINTS = {
         'nuttall = scipy.signal.windows:nuttall',
         'parzen = scipy.signal.windows:parzen',
         'triang = scipy.signal.windows:triang',
+        'dpss = scipy.signal.windows:dpss',
         ],
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recursive_sta_lta',

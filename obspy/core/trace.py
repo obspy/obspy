@@ -2147,6 +2147,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             Parzen window. (uses: :func:`scipy.signal.windows.parzen`)
         ``'triang'``
             Triangular window. (uses: :func:`scipy.signal.windows.triang`)
+        ``'dpss'``
+            Discrete Prolate Spheroidal Sequences window. (uses:
+            :func:`scipy.signal.windows.dpss`)
         """
         type = type.lower()
         side = side.lower()
