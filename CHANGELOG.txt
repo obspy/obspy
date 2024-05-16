@@ -14,6 +14,8 @@ Changes:
    * improve error messages when traces fail to get merged due to differing
      data type, sampling rate etc (see #3418)
    * add helper methods to change/unify byteorder on trace/stream (see #3418)
+   * window 'slepian' was removed in Trace/Stream.taper() as it was removed
+     from scipy with version 1.6 (see #3331)
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
  - obspy.clients.fdsn
