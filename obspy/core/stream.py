@@ -1972,20 +1972,23 @@ class Stream(object):
             # Check sampling rate.
             sr.setdefault(trace.id, trace.stats.sampling_rate)
             if trace.stats.sampling_rate != sr[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "sampling rates!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing sampling rates ({sr[trace.id]}, "
+                       f"{trace.stats.sampling_rate})!")
                 raise Exception(msg)
             # Check dtype.
             dtype.setdefault(trace.id, trace.data.dtype)
             if trace.data.dtype != dtype[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "data types!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing data types ({dtype[trace.id]}, "
+                       f"{trace.data.dtype})!")
                 raise Exception(msg)
             # Check calibration factor.
             calib.setdefault(trace.id, trace.stats.calib)
             if trace.stats.calib != calib[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "calibration factors.!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing calibration factors ({calib[trace.id]}, "
+                       f"{trace.stats.calib})!")
                 raise Exception(msg)
 
     def merge(self, method=0, fill_value=None, interpolation_samples=0,
@@ -3637,6 +3640,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 tr.data = new_data
                 tr.stats.channel = tr.stats.channel[:-1] + component
             self.traces += traces
+        return self
+
+    def newbyteorder(self, byteorder='native'):
+        """
+        Change byteorder of the data
+
+        For details see
+        :meth:`Trace.newbyteorder <obspy.core.trace.Trace.newbyteorder>`.
+        """
+        for tr in self:
+            tr.newbyteorder(byteorder)
         return self
 
 
