@@ -9,6 +9,8 @@ Changes:
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
      (see #3261)
+   * allow to specify Trace and Stream filter frequencies as arguments
+     (see #3294)
  - obspy.clients.filesystem:
    * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
  - obspy.clients.fdsn
@@ -41,6 +43,8 @@ Changes:
    * all butterworth filters: correct zero-phase filtering of 2-d arrays and
      filtering along non-default axis of 2-d arrays (see #3291)
    * fix naming of input args in function "rotate_rt_ne()" (see #3383)
+   * add support for Chebyshev I/II, elliptic and Bessel filters alongside
+     the default Butterworth filters (see #3294)
 
 1.4.1 (doi: 10.5281/zenodo.11093256)
 ====================================

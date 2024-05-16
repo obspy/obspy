@@ -1481,7 +1481,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @_add_processing_info
     @raise_if_masked
-    def filter(self, type, **options):
+    def filter(self, type, *args, **options):
         """
         Filter the data of the current trace.
 
@@ -1489,7 +1489,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
-        :param options: Necessary keyword arguments for the respective filter
+        :param args: Only filter frequency/frequencies can be specified
+            as argument(s). Alternatively filter frequencies can be specified
+            as keyword arguments.
+        :param options: Keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
@@ -1533,6 +1536,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr = st[0]
         >>> tr.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
+        >>> tr2 = st[1]
+        >>> tr2.filter("lowpass", 1.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
@@ -1549,7 +1555,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # filtering
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
-        self.data = func(self.data, df=self.stats.sampling_rate, **options)
+        self.data = func(self.data, *args,
+                         df=self.stats.sampling_rate, **options)
         return self
 
     @_add_processing_info
