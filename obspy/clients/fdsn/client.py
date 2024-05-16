@@ -146,14 +146,14 @@ class Client(object):
         else:
             return False
 
-    def __init__(self, base_url="IRIS", major_versions=None, user=None,
+    def __init__(self, base_url="EARTHSCOPE", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120, service_mappings=None, force_redirect=False,
                  eida_token=None, _discover_services=True):
         """
         Initializes an FDSN Web Service client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         FDSN Webservice Client (base url: http://service.iris.edu)
         Available Services: 'dataselect' (v...), 'event' (v...),
@@ -421,7 +421,7 @@ class Client(object):
         """
         Query the event service of the client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> cat = client.get_events(eventid=609301)
         >>> print(cat)
         1 Event(s) in Catalog:
@@ -569,7 +569,7 @@ class Client(object):
         """
         Query the station service of the FDSN client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> starttime = UTCDateTime("2001-01-01")
         >>> endtime = UTCDateTime("2001-01-02")
         >>> inventory = client.get_stations(network="IU", station="A*",
@@ -768,7 +768,7 @@ class Client(object):
         """
         Query the dataselect service of the client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 5
         >>> st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t1, t2)
@@ -800,7 +800,7 @@ class Client(object):
 
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
             st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
                                       attach_response=True)
@@ -935,7 +935,7 @@ class Client(object):
             - a string with the path to a local file with the request
             - an open file handle (or file-like object) with the request
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> t3 = t1 + 3
@@ -987,7 +987,7 @@ class Client(object):
 
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
             t1 = t + 300
             t2 = t + 400
@@ -1092,7 +1092,7 @@ class Client(object):
             - a string with the path to a local file with the request
             - an open file handle (or file-like object) with the request
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> t3 = t1 + 3
@@ -1120,7 +1120,7 @@ class Client(object):
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
 
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t1 = UTCDateTime("2010-02-27T06:30:00.000")
             t2 = t1 + 1
             t3 = t1 + 3

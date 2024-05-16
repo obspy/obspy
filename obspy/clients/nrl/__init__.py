@@ -3,9 +3,9 @@
 obspy.clients.nrl - Nominal Response Library client for ObsPy
 =============================================================
 
-This module contains a client to access the `IRIS Library of Nominal Response
-for Seismic Instruments <https://ds.iris.edu/NRL/>`_ (NRL).
-To cite use of the NRL, please see [Templeton2017]_.
+This module contains a client to access the `EarthScope/IRIS Library of Nominal
+Response for Seismic Instruments <https://ds.iris.edu/NRL/>`_ (NRL).  To cite
+use of the NRL, please see [Templeton2017]_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -28,7 +28,7 @@ Basic Usage
 The first step is to initialize a NRL client object. A client object can be
 initialized either with the base URL of a NRL hosted on a web server or with a
 local directory path to a downloaded and unpacked NRL zip file. The default is
-to access the always up-to-date NRL database hosted at IRIS.
+to access the always up-to-date NRL database hosted at EarthScope.
 
 >>> from obspy.clients.nrl import NRL
 >>> nrl = NRL()

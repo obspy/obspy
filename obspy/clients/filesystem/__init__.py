@@ -10,12 +10,12 @@ structure. The SDS client supports any filetypes readable by one of ObsPy's
 I/O plugins.
 
 The TSIndex :class:`~obspy.clients.filesystem.tsindex.Client` class provides
-read support for miniSEED files indexed using the IRIS
+read support for miniSEED files indexed using the EarthScope
 `mseedindex <https://github.com/iris-edu/mseedindex/>`_ program or
 :class:`~obspy.clients.filesystem.tsindex.Indexer` class. The
 :class:`~obspy.clients.filesystem.tsindex.Indexer` class provides support for
 indexing any arbitrary directory tree structure of miniSEED files
-into a SQLite3 database that follows the IRIS `tsindex database
+into a SQLite3 database that follows the EarthScope `tsindex database
 schema <https://github.com/iris-edu/mseedindex/wiki/Database-Schema>`_\. This
 SQLite3 database can then be used by the
 :class:`~obspy.clients.filesystem.tsindex.Client` for timeseries data

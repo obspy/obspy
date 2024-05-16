@@ -89,7 +89,7 @@ def _write_sacpz(inventory, file_or_file_object):
                 out.append(f"* LONGITUDE   : {cha.longitude or sta.longitude}")
                 out.append(f"* ELEVATION   : {cha.elevation or sta.elevation}")
                 out.append(f"* DEPTH       : {cha.depth}")
-                # DIP in SACPZ served by IRIS SACPZ web service is
+                # DIP in SACPZ served by EarthScope/IRIS SACPZ web service is
                 # systematically different from the StationXML entries.
                 # It is defined as an incidence angle (like done in SAC for
                 # sensor orientation), rather than an actual dip.

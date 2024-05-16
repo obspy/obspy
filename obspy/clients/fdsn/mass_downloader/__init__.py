@@ -497,7 +497,7 @@ credientials and just passing the name of the FDSN services to query.
 >>> from obspy.clients.fdsn import Client
 >>> client_orfeus = Client("ORFEUS", user="random", password="some_pw")
 >>> client_eth = Client("ETH", user="from_me", password="to_you")
->>> mdl = MassDownloader(providers=[client_orfeus, "IRIS", client_eth]) \
+>>> mdl = MassDownloader(providers=[client_orfeus, "EARTHSCOPE", client_eth]) \
     # doctest: +SKIP
 
 

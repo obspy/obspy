@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Routing client for the IRIS federator routing service.
+Routing client for the EarthScope IRISWS federator routing service.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
     Celso G Reyes, 2017
-    IRIS-DMC
+    EarthScope/IRIS-DMC
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
@@ -64,7 +64,7 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         This can route on a number of different parameters, please see the
         web site of the
-        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        `IRISWS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
         for details.
         """
         bulk_params = ["network", "station", "location", "channel",
@@ -100,7 +100,7 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         This can route on a number of different parameters, please see the
         web site of the
-        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        `IRISWS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
         for details.
         """
         return super(FederatorRoutingClient, self).get_stations(**kwargs)
@@ -119,7 +119,7 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         This can route on a number of different parameters, please see the
         web site of the
-        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        `IRISWS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
         for details.
         """
         bulk_params = ["network", "station", "location", "channel",
