@@ -2,6 +2,7 @@
 import io
 import pickle
 import platform
+import re
 import warnings
 from copy import deepcopy
 from unittest import mock
@@ -2862,3 +2863,34 @@ class TestStream:
             stf1 = st.copy().filter(filtert, freqmin=freqmin, freqmax=freqmax)
             stf2 = st.copy().filter(filtert, freqmin, freqmax)
             assert streams_almost_equal(stf2, stf1)
+
+    def test_merge_checks_messages(self, mseed_stream):
+        """
+        Test improved error messages
+        """
+        # dtype
+        st = mseed_stream.copy()
+        st[0].data = np.require(
+            st[0].data, dtype=st[0].data.dtype.newbyteorder('<'))
+        st[1].data = np.require(
+            st[1].data, dtype=st[1].data.dtype.newbyteorder('>'))
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing data types (float64, >f8)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # sampling rate
+        st = mseed_stream.copy()
+        st[0].stats.sampling_rate = 200
+        st[1].stats.sampling_rate = 20
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing sampling rates (200.0, 20.0)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # calib
+        st = mseed_stream.copy()
+        st[0].stats.calib = 12345
+        st[1].stats.calib = 100
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing calibration factors (12345, 100)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
