@@ -112,22 +112,26 @@ class WarningsCapture(object):
         warnings.warn = self._warn
         return self
 
-    def _warn_explicit(self, message, category, *args, **kwargs):
-        self.captured_warnings.append(
-            warnings.WarningMessage(message=category(message),
-                                    category=category,
-                                    filename="", lineno=0))
+    def _warn_explicit(self, *args, **kwargs):
+        self._warn(*args, **kwargs)
 
-    def _warn(self, message, category=Warning, *args, **kwargs):
-        if isinstance(message, Warning):
+    def _warn(self, message, category=None, *args, **kwargs):
+        # Python done it like this all the way since 2.7 at least and up to
+        # 3.13: Use None as default but then set it to UserWarning as a default
+        # internally
+        if category is None:
+            category = UserWarning
+        if isinstance(message, warnings.WarningMessage):
+            self.captured_warnings.append(message)
+        elif isinstance(message, Warning):
             self.captured_warnings.append(
                 warnings.WarningMessage(
-                    message=category(message), category=category or Warning,
-                    filename="", lineno=0))
+                    message=str(message), category=category, filename="",
+                    lineno=0))
         else:
             self.captured_warnings.append(
                 warnings.WarningMessage(
-                    message=category(message), category=category,
+                    message=str(message), category=category,
                     filename="", lineno=0))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
