@@ -351,6 +351,14 @@ class TestNLLOC():
         assert cat[0].origins[0].arrivals[0].azimuth == 107.42
         # compare test_rejected_origin test case
         assert cat[0].origins[0].evaluation_status is None
+        ellipsoid = cat[0].origins[0].origin_uncertainty.confidence_ellipsoid
+        assert ellipsoid is not None
+        assert ellipsoid.semi_major_axis_length == 20.2574
+        assert ellipsoid.semi_minor_axis_length == 9.1241
+        assert ellipsoid.semi_intermediate_axis_length == 19.255
+        assert ellipsoid.major_axis_plunge == 42.8141
+        assert ellipsoid.major_axis_azimuth == 86.61
+        assert ellipsoid.major_axis_rotation == 322.815
 
     def test_rejected_origin(self, testdata):
         """
