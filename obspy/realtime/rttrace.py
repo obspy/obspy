@@ -64,7 +64,8 @@ class RtTrace(Trace):
         >>> from obspy.realtime import RtTrace
         >>> from obspy import read
         >>> from obspy.realtime.signal import calculate_mwp_mag
-        >>> data_trace = read('/path/to/II.TLY.BHZ.SAC')[0]
+        >>> data_trace = read(
+        ...     '/path/to/II.TLY.BHZ.SAC', round_sampling_interval=False)[0]
         >>> len(data_trace)
         12684
         >>> ref_time_offset = data_trace.stats.sac.a

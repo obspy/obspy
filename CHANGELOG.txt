@@ -38,6 +38,12 @@ Changes:
    * set origin evaluation status to "rejected" if nonlinloc reports the
      location run as "ABORTED", "IGNORED" or "REJECTED" (see #3230)
    * store "NLLOC" info header line in event and origin comments (see #3230)
+ - obspy.io.sac:
+   * fix floating point accuracy issues in sampling rate when reading some SAC
+     files. when reading SAC files, the sample spacing interval read from file
+     will now by default be rounded to microseconds before taking the
+     reciprocal to set the sampling rate. This can be deactivated using
+     "read(..., round_sampling_interval=False)" (see #3408)
  - obspy.io.seg2:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
