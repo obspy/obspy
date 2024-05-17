@@ -14,7 +14,6 @@ import inspect
 import io
 import os
 import re
-import warnings
 
 import numpy as np
 from lxml import etree
@@ -93,56 +92,6 @@ def get_all_py_files():
         py_files.update([os.path.abspath(os.path.join(dirpath, i)) for i in
                          filenames if i.endswith(".py")])
     return sorted(py_files)
-
-
-class WarningsCapture(object):
-    """
-    Try hard to capture all warnings.
-
-    Aims to be a reliable drop-in replacement for built-in
-    warnings.catch_warnings() context manager.
-
-    Based on pytest's _DeprecatedCallContext context manager.
-    """
-    def __enter__(self):
-        self.captured_warnings = []
-        self._old_warn = warnings.warn
-        self._old_warn_explicit = warnings.warn_explicit
-        warnings.warn_explicit = self._warn_explicit
-        warnings.warn = self._warn
-        return self
-
-    def _warn_explicit(self, *args, **kwargs):
-        self._warn(*args, **kwargs)
-
-    def _warn(self, message, category=None, *args, **kwargs):
-        # Python done it like this all the way since 2.7 at least and up to
-        # 3.13: Use None as default but then set it to UserWarning as a default
-        # internally
-        if category is None:
-            category = UserWarning
-        if isinstance(message, warnings.WarningMessage):
-            self.captured_warnings.append(message)
-        elif isinstance(message, Warning):
-            self.captured_warnings.append(
-                warnings.WarningMessage(
-                    message=str(message), category=category, filename="",
-                    lineno=0))
-        else:
-            self.captured_warnings.append(
-                warnings.WarningMessage(
-                    message=str(message), category=category,
-                    filename="", lineno=0))
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        warnings.warn_explicit = self._old_warn_explicit
-        warnings.warn = self._old_warn
-
-    def __len__(self):
-        return len(self.captured_warnings)
-
-    def __getitem__(self, key):
-        return self.captured_warnings[key]
 
 
 def create_diverse_catalog():
