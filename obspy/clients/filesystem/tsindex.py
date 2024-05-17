@@ -206,6 +206,7 @@ class Client(object):
         :param datapath_replace: A ``tuple(str, str)``, where any
             occurrence of the first value will be replaced with the second
             value in filename paths from the index.
+        :param loglevel: DEPRECATED and without effect
         """
         # setup handler for database
         if isinstance(database, str):
@@ -920,6 +921,8 @@ class Indexer(object):
         :type parallel: int
         :param parallel: Max number of ``index_cmd`` instances to run in
             parallel. By default a max of 5 parallel process are run.
+        :param loglevel: DEPRECATED and without effect
+        :param leap_seconds_file: DEPRECATED and without effect
         """
         self.index_cmd = index_cmd
         if bulk_params is None:
