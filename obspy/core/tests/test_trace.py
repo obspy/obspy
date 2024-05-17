@@ -12,6 +12,7 @@ import numpy.ma as ma
 from obspy import Stream, Trace, __version__, read, read_inventory
 from obspy import UTCDateTime as UTC
 from obspy.core import Stats
+from obspy.core.util.base import _get_entry_points
 from obspy.io.xseed import Parser
 import pytest
 
@@ -2732,3 +2733,46 @@ class TestTrace:
                 tr.trim(0.01)
             assert len(tr.stats.processing) == n
             assert len(record) == 1
+
+    def test_taper_scipy_plugins(self):
+        """
+        Test that scipy window functions work in taper() and just test that
+        they do something
+        """
+        scipy_windows = {
+            'barthann': {},
+            'bartlett': {},
+            'blackman': {},
+            'blackmanharris': {},
+            'bohman': {},
+            'boxcar': {},
+            'chebwin': {'at': 50},
+            'dpss': {'NW': 1},
+            'flattop': {},
+            'gaussian': {'std': 1},
+            'general_gaussian': {'p': 1, 'sig': 1},
+            'hamming': {},
+            'hann': {},
+            'kaiser': {'beta': 1},
+            'nuttall': {},
+            'parzen': {},
+            'triang': {}}
+        eps = _get_entry_points('obspy.plugin.taper')
+        # cosine is not from scipy, leave it out here
+        eps.pop('cosine')
+
+        # make sure we test all entry points defined in setup.py
+        assert eps.keys() == scipy_windows.keys()
+
+        ones = np.ones(10, dtype=np.float64)
+        tr_bkp = Trace(np.ones(10, dtype=np.float64))
+        for window, kwargs in scipy_windows.items():
+            tr = tr_bkp.copy()
+            tr.taper(max_percentage=0.4, type=window, **kwargs)
+            # boxcar actually doesnt change the data at all
+            if window == 'boxcar':
+                np.testing.assert_array_equal(tr.data, ones)
+                continue
+            # just test that the data changed..
+            with pytest.raises(AssertionError):
+                np.testing.assert_array_almost_equal(tr.data, ones)

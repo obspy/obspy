@@ -552,11 +552,8 @@ ENTRY_POINTS = {
         'kaiser = scipy.signal.windows:kaiser',
         'nuttall = scipy.signal.windows:nuttall',
         'parzen = scipy.signal.windows:parzen',
-        # TODO slepian has been removed from scipy with version 1.6.0
-        # see https://docs.scipy.org/doc/scipy/release/1.1.0-notes.html
-        # see https://docs.scipy.org/doc/scipy/release/1.6.0-notes.html
-        'slepian = scipy.signal.windows:slepian',
         'triang = scipy.signal.windows:triang',
+        'dpss = scipy.signal.windows:dpss',
         ],
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recursive_sta_lta',
