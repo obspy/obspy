@@ -18,7 +18,9 @@ Changes:
      from scipy with version 1.6, add new window 'dpss' that scipy promotes as
      replacement but might need other parameters passed in (see #3331)
  - obspy.clients.filesystem:
-   * update syntax for SQLAlchemy 2.0 compatibility (see #3269)
+   * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
+   * tsindex: leap second handling was deactivated as it is not needed with
+     current msindex (see #3403)
  - obspy.clients.fdsn
    * Natural Resources Canada (NRCAN) added to list of known clients
  - obspy.clients.seedlink:
