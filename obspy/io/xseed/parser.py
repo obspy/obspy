@@ -81,7 +81,7 @@ class Parser(object):
 
         The XML-SEED format was proposed in [Tsuboi2004]_.
 
-        The IRIS RESP format can be found at
+        The EarthScope/IRIS RESP format can be found at
         http://ds.iris.edu/ds/nodes/dmc/data/formats/resp/
 
     """
@@ -671,7 +671,7 @@ class Parser(object):
         """
         Reads RESP files.
 
-        Reads IRIS RESP formatted data as produced with
+        Reads EarthScope/IRIS RESP formatted data as produced with
         'rdseed -f seed.test -R'.
 
         :type data: file or io.BytesIO

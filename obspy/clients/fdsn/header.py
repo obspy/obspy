@@ -102,6 +102,7 @@ class FDSNNoServiceException(FDSNException):
 URL_MAPPINGS = {
     "AUSPASS": "http://auspass.edu.au",
     "BGR": "http://eida.bgr.de",
+    "EARTHSCOPE": "http://service.iris.edu",
     "EIDA": "http://eida-federator.ethz.ch",
     "ETH": "http://eida.ethz.ch",
     "EMSC": "http://www.seismicportal.eu",
@@ -328,6 +329,6 @@ for service in ["dataselect", "event", "station"]:
 
 # This list collects WADL parameters that will not be parsed because they are
 # not useful for the ObsPy client.
-# Current the nodata parameter used by IRIS is part of that list. The ObsPy
-# client relies on the HTTP codes.
+# Current the nodata parameter used by EARTHSCOPE/IRIS is part of that list.
+# The ObsPy client relies on the HTTP codes.
 WADL_PARAMETERS_NOT_TO_BE_PARSED = ["nodata"]

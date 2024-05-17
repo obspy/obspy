@@ -77,9 +77,13 @@ class MassDownloader(object):
                 # exclude RASPISHAKE by default
                 del providers["RASPISHAKE"]
 
-            if "IRIS" in providers:
-                has_iris = True
-                del providers["IRIS"]
+            if "IRIS" in providers or "EARTHSCOPE" in providers:
+                if "IRIS" in providers:
+                    has_iris = True
+                    del providers["IRIS"]
+                if "EARTHSCOPE" in providers:
+                    has_iris = True
+                    del providers["EARTHSCOPE"]
             else:
                 has_iris = False
 

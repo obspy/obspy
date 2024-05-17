@@ -11,7 +11,7 @@ EarthScope `tsindex database schema
 <https://github.com/EarthScope/mseedindex/wiki/Database-Schema/>`_\.
 
 :copyright:
-    Nick Falco, Chad Trabant, IRIS-now-EarthScope Data Services, 2024
+    Nick Falco, Chad Trabant, EarthScope (former IRIS) Data Services, 2024
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3

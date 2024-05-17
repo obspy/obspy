@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Client for accessing the `IRIS Library of Nominal Response for Seismic
-Instruments <https://ds.iris.edu/NRL/>`_ (NRL).  To cite use of the NRL, please
-see [Templeton2017]_.
+Client for accessing the `EarthScope/IRIS Library of Nominal Response for
+Seismic Instruments <https://ds.iris.edu/NRL/>`_ (NRL).  To cite use of the
+NRL, please see [Templeton2017]_.
 
 :copyright:
     Lloyd Carothers IRIS/PASSCAL, 2016

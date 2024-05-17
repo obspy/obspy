@@ -6,7 +6,7 @@ Base class for all FDSN routers.
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
     Celso G Reyes, 2017
-    IRIS-DMC
+    EarthScope/IRIS-DMC
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
@@ -45,7 +45,7 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
 
     >>> from obspy.clients.fdsn import RoutingClient
 
-    Get an instance of a routing client using the IRIS Federator:
+    Get an instance of a routing client using the EarthScope IRISWS Federator:
 
     >>> c = RoutingClient("iris-federator")
     >>> print(type(c))  # doctest: +ELLIPSIS
@@ -356,7 +356,7 @@ class BaseRoutingClient(HTTPClient):
 
         This can route on a number of different parameters, please see the
         web sites of the
-        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        `IRISWS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
         and of the `EIDAWS Routing Service
         <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_ for
         details.
