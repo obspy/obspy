@@ -21,10 +21,10 @@ import pytest
 from obspy import UTCDateTime, read_events
 from obspy.core import event as event
 from obspy.core.event.resourceid import ResourceIdentifier, _ResourceKey
+from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.core.util.misc import _yield_obj_parent_attr
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-from obspy.core.util.testing import (create_diverse_catalog,
-                                     WarningsCapture)
+from obspy.core.util.testing import create_diverse_catalog
 
 
 class TestResourceIdentifier:
@@ -54,16 +54,15 @@ class TestResourceIdentifier:
         res_a = ResourceIdentifier(id=id, referred_object=object_a)
         # Now create a new resource with the same id but a different object.
         # This should not raise a warning as the object a and b are equal.
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             res_b = ResourceIdentifier(id=id, referred_object=object_b)
             assert len(w) == 0
         # if the set object is not equal to the last object set to the same
         # resource_id, however, a warning should be issued.
-        with WarningsCapture() as w:
+        msg = 'which is not equal to the last object bound'
+        with CatchAndAssertWarnings(expected=[(UserWarning, msg)]) as w:
             res_c = ResourceIdentifier(id=id, referred_object=object_c)
             assert len(w) == 1
-            expected_text = 'which is not equal to the last object bound'
-            assert expected_text in str(w[0])
         # even though the resource_id are the same, the referred objects
         # should point to the original (different) objects
         assert object_a is res_a.get_referred_object()
@@ -132,10 +131,10 @@ class TestResourceIdentifier:
         assert not (rid1.get_referred_object() is
                     rid2.get_referred_object())
         del obj1
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings(
+                expected=[(UserWarning, 'The object with identity')]) as w:
             rid1.get_referred_object()
             assert len(w) == 1
-            assert 'The object with identity' in str(w[0])
         # now both rids should return the same object
         assert rid1.get_referred_object() is rid2.get_referred_object()
         # the object id should now be bound to obj2
@@ -444,21 +443,21 @@ class TestResourceIdentifier:
 
         rid1 = ResourceIdentifier('abc123', referred_object=obj1)
         # this should raise a warning as the new object != old object
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             rid2 = ResourceIdentifier('abc123', referred_object=obj2)
         assert_differnt_referred_object_warning_issued(w)
 
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             rid2.set_referred_object(obj1)
         assert_differnt_referred_object_warning_issued(w)
 
         # set the referred object back to previous state, this should warn
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             ResourceIdentifier('abc123', referred_object=obj2)
         assert_differnt_referred_object_warning_issued(w)
 
         # this should not emit a warning since obj1 == obj3
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             rid1.set_referred_object(obj3)
         assert len(w) == 0
 
@@ -490,7 +489,7 @@ class TestResourceIdentifier:
 
         gc.collect()  # Call gc to ensure WeakValueDict works
         # raises UserWarning, suppress to keep std out cleaner
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             assert rid.get_referred_object() is cat2[0]
             del cat2
             assert rid.get_referred_object() is None
@@ -566,7 +565,7 @@ class TestResourceIdentifier:
         """
         cat = create_diverse_catalog().copy()
         arrival = cat[0].origins[0].arrivals[0]
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             arrival.pick_id.get_referred_object()
         assert len(w) == 0
 
@@ -614,7 +613,7 @@ class TestResourceIdentifier:
         # Iterate over first list of ids. Referred objects should be None
         for rid in rid_list1:
             # should raise a warning
-            with WarningsCapture():
+            with CatchAndAssertWarnings():
                 assert rid.get_referred_object() is None
 
     def test_get_object_hook(self):
@@ -661,13 +660,13 @@ class TestResourceIdentifier:
         2. `regnerate_uuid`
         """
         rid = ResourceIdentifier('not_a_valid_quakeml_uri')
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             rid.convert_id_to_quakeml_uri()
         assert len(w) >= 1
         assert [isinstance(x, ObsPyDeprecationWarning) for x in w]
 
         rid = ResourceIdentifier()
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             rid.regenerate_uuid()
         assert len(w) >= 1
         assert [isinstance(x, ObsPyDeprecationWarning) for x in w]
