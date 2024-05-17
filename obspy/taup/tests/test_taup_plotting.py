@@ -3,13 +3,14 @@
 """
 Tests the high level obspy.taup.tau interface.
 """
+import re
 import warnings
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pytest
 
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.taup import TauPyModel, plot_travel_times
 
@@ -117,21 +118,13 @@ class TestTauPyPlotting:
         """
         arrivals = model.get_ray_paths(500, 140)
         # check warning message on deprecated routine
-        with WarningsCapture() as w:
+        msg = ('The plot() function is deprecated. Please use '
+               'arrivals.plot_rays()')
+        with CatchAndAssertWarnings(
+                expected=[(ObsPyDeprecationWarning, re.escape(msg))]):
             arrivals.plot(plot_type="cartesian", plot_all=False,
                           show=False, legend=False)
             plt.savefig(image_path)
-            assert len(w) >= 1
-            for w_ in w:
-                try:
-                    assert str(w_.message) == 'The plot() function is ' \
-                        'deprecated. Please use arrivals.plot_rays()'
-                    assert w_.category == ObsPyDeprecationWarning
-                except AssertionError:
-                    continue
-                break
-            else:
-                raise
 
     def test_plot_travel_times(self, model, image_path):
         """
@@ -196,11 +189,10 @@ class TestTauPyPlotting:
                             "`plot_type='cartesian'` but it seems the axes is "
                             "a polar axes.")
         try:
-            with WarningsCapture() as w:
+            with CatchAndAssertWarnings(
+                    expected=[(Warning, re.escape(expected_message))]) as w:
                 arrivals.plot_rays(plot_type="cartesian", ax=ax, show=False)
             assert len(w) == 1
-            assert str(w[0].message) == expected_message
-            assert issubclass(w[0].category, Warning)
         finally:
             plt.close(fig)
 

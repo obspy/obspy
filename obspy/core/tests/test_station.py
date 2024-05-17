@@ -14,8 +14,7 @@ import pytest
 
 from obspy import read_inventory, UTCDateTime
 from obspy.core.inventory import Station
-from obspy.core.util import CatchAndAssertWarnings
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 
 
 @pytest.mark.usefixtures('ignore_numpy_errors')
@@ -28,7 +27,7 @@ class TestStation:
         Tests the response plot.
         """
         sta = read_inventory()[0][0]
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             sta.plot(0.05, channel="*[NE]", outfile=image_path)
 
     def test_response_plot_degrees(self, image_path):
@@ -36,7 +35,7 @@ class TestStation:
         Tests the response plot.
         """
         sta = read_inventory()[0][0]
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             sta.plot(0.05, channel="*[NE]", plot_degrees=True,
                      outfile=image_path)
 

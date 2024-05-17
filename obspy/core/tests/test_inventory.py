@@ -22,7 +22,7 @@ import obspy
 from obspy import UTCDateTime, read_inventory, read_events
 from obspy.core.util import CARTOPY_VERSION
 from obspy.core.util.base import _get_entry_points
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
 from obspy.core.inventory.util import _unified_content_strings
@@ -177,7 +177,7 @@ class TestInventory:
         """
         inv = read_inventory()
         t = UTCDateTime(2008, 7, 1)
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             inv.plot_response(0.01, output="ACC", channel="*N",
                               station="[WR]*", time=t, outfile=image_path)
 

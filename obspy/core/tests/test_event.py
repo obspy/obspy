@@ -13,9 +13,8 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
                               ResourceIdentifier, WaveformStreamID)
 from obspy.core.event.source import farfield
 from obspy.core.util import CARTOPY_VERSION
-from obspy.core.util.base import _get_entry_points
+from obspy.core.util.base import _get_entry_points, CatchAndAssertWarnings
 from obspy.core.util.misc import MatplotlibBackend
-from obspy.core.util.testing import WarningsCapture
 from obspy.core.event.base import QuantityError
 
 
@@ -94,7 +93,7 @@ class TestEvent:
         assert p.phase_hint == "p"
         # Add some more random attributes. These should disappear upon
         # cleaning.
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             p.test_1 = "a"
             p.test_2 = "b"
             # two warnings should have been issued by setting non-default keys
