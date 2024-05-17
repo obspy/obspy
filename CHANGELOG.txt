@@ -38,7 +38,7 @@ Changes:
    * set origin evaluation status to "rejected" if nonlinloc reports the
      location run as "ABORTED", "IGNORED" or "REJECTED" (see #3230)
    * store "NLLOC" info header line in event and origin comments (see #3230)
-   * add reading of confidence ellipsoids for NLLoc V7 (see #3350)
+   * add reading of confidence ellipsoids (see #3350)
  - obspy.io.sac:
    * fix floating point accuracy issues in sampling rate when reading some SAC
      files. when reading SAC files, the sample spacing interval read from file
