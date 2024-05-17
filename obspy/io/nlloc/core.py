@@ -189,7 +189,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     if date.startswith('run:'):
         date = date[4:]
     signature = signature.strip()
-    creation_time = UTCDateTime.strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
+    creation_time = UTCDateTime.strptime(date + time, "%d%b%Y%Hh%Mm%S")
 
     if coordinate_converter:
         # maximum likelihood origin location in km info line
@@ -212,7 +212,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     covariance_xx = float(line.split()[7])
     covariance_yy = float(line.split()[13])
     covariance_zz = float(line.split()[17])
-    stats_info_string = str(
+    stats_info_string = (
         "Note: Depth/Latitude/Longitude errors are calculated from covariance "
         "matrix as 1D marginal (Lon/Lat errors as great circle degrees) "
         "while OriginUncertainty min/max horizontal errors are calculated "
@@ -305,7 +305,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     o.depth = z * 1e3  # meters!
     o.depth_errors.uncertainty = sqrt(covariance_zz) * 1e3  # meters!
     o.depth_errors.confidence_level = 68
-    o.depth_type = str("from location")
+    o.depth_type = "from location"
     o.time = time
 
     ou.horizontal_uncertainty = hor_unc
@@ -319,7 +319,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         else:
             ou[field] *= 1e3  # meters!
     ou.azimuth_max_horizontal_uncertainty = hor_unc_azim
-    ou.preferred_description = str("uncertainty ellipse")
+    ou.preferred_description = "uncertainty ellipse"
     ou.confidence_level = 68  # NonLinLoc in general uses 1-sigma (68%) level
     if "QML_ConfidenceEllipsoid" in lines:
         #  From at least NLLoc v6, confidence ellipsoids have been provided
