@@ -24,7 +24,7 @@ import pytest
 import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, CatchAndAssertWarnings
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
                                        get_bulk_string, _cleanup_earthscope)
@@ -1657,3 +1657,14 @@ class TestClient():
                "does not seem to contain a valid PGP message.")
         with pytest.raises(ValueError, match=msg):
             client = Client('GFZ', eida_token=testdata['event_helpstring.txt'])
+
+    def test_iris_earthscope_message(self):
+        """
+        Test that using "IRIS" short URL in FDSN client shows a warning message
+        and switches to "EARTHSCOPE" short URL.
+        """
+        msg = ("IRIS is now EarthScope, please consider changing the FDSN "
+               "client short URL to 'EARTHSCOPE'.")
+        with CatchAndAssertWarnings(expected=[(DeprecationWarning, msg)]):
+            client = Client('IRIS', _discover_services=False)
+        assert client.base_url == 'http://service.iris.edu'

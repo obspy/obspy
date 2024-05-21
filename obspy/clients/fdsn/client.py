@@ -228,6 +228,12 @@ class Client(object):
         # the client more convenient.
         self.__version_cache = {}
 
+        if base_url.upper() == 'IRIS':
+            base_url = 'EARTHSCOPE'
+            msg = ("IRIS is now EarthScope, please consider changing the FDSN "
+                   "client short URL to 'EARTHSCOPE'.")
+            warnings.warn(msg, DeprecationWarning)
+
         if base_url.upper() in URL_MAPPINGS:
             url_mapping = base_url.upper()
             base_url = URL_MAPPINGS[url_mapping]
