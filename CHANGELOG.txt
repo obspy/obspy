@@ -90,6 +90,17 @@ Changes:
      #3306)
    * IRIS/Earthscope: fix all "catalogs" and "contributors" being suffixed with
      '\n ' (see #3438)
+   * IRIS is now Earthscope. Adjusted all mention in docs accordingly and using
+     'IRIS' as short URL in FDSN client initialization as well as using
+     'iris-federator' in FDSN routing client initialization will show
+     deprecation warnings to use 'EARTHSCOPE' and 'earthscope-federator'
+     instead, respectively, but both old namings will still work (see #3448 and
+     #3456)
+ - obspy.clients.iris:
+   * IRIS is now Earthscope. Adjusted all mention in docs accordingly. The
+     module name will stay as 'obspy.clients.iris', though, to avoid breaking
+     users' codes  (see #3448 and
+     #3456)
  - obspy.clients.nrl:
    * better handling of individual stages units when combining sensor and
      datalogger response from a full downloaded offline version of the new NRL
