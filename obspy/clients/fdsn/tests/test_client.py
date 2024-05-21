@@ -52,7 +52,6 @@ from obspy.geodetics import locations2degrees
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
-pytestmark = pytest.mark.network
 
 
 def _normalize_stats(obj):
@@ -99,6 +98,7 @@ def normalize_version_number(string):
     return [line.strip() for line in repl.splitlines()]
 
 
+@pytest.mark.network
 class TestClient():
     """
     Test cases for obspy.clients.fdsn.client.Client.
@@ -1673,3 +1673,11 @@ class TestClient():
         with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
             client = Client('IRIS', _discover_services=False)
         assert client.base_url == 'http://service.iris.edu'
+
+
+class TestClientNoNetwork():
+    """
+    Test cases for obspy.clients.fdsn.client.Client that do not need network
+    access.
+    """
+    pass
