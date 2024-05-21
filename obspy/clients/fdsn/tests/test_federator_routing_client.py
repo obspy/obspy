@@ -14,6 +14,8 @@ from packaging.version import parse as parse_version
 import pytest
 
 import obspy
+from obspy.core.util.base import CatchAndAssertWarnings
+from obspy.clients.fdsn import RoutingClient
 from obspy.clients.fdsn.routing.federator_routing_client import \
     FederatorRoutingClient
 
@@ -341,3 +343,18 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         # because times stamps and also order might change slightly.
         # But the get_contents() method should be safe enough.
         assert inv.get_contents() == inv2.get_contents()
+
+    def test_iris_deprecation(self):
+        """
+        Test deprecation warning for "iris-federator" routing type
+        """
+        mock_path = (
+            'obspy.clients.fdsn.routing.federator_routing_client.'
+            'FederatorRoutingClient.__init__')
+        msg = ("IRIS is now EarthScope, please consider changing the "
+               "'routing_type' to 'earthscope-federator'.")
+        with mock.patch(mock_path) as p:
+            p.return_value = None
+            with CatchAndAssertWarnings(expected=[(DeprecationWarning, msg)]):
+                client = RoutingClient("iris-federator")
+        assert isinstance(client, FederatorRoutingClient)

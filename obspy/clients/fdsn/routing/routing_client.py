@@ -34,9 +34,10 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
 
     :type routing_type: str
     :param routing_type: The type of router to initialize.
-        ``"iris-federator"`` or ``"eida-routing"``. Will consequently return
-        either a :class:`~.federator_routing_client.FederatorRoutingClient` or
-        a :class:`~.eidaws_routing_client.EIDAWSRoutingClient` object,
+        ``"earthscope-federator"`` or ``"eida-routing"``. Will consequently
+        return either a
+        :class:`~.federator_routing_client.FederatorRoutingClient` or a
+        :class:`~.eidaws_routing_client.EIDAWSRoutingClient` object,
         respectively.
 
     Remaining ``args`` and ``kwargs`` will be passed to the underlying classes.
@@ -48,7 +49,7 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
     Get an instance of a routing client using the EarthScope (former IRIS)
     Federator:
 
-    >>> c = RoutingClient("iris-federator")
+    >>> c = RoutingClient("earthscope-federator")
     >>> print(type(c))  # doctest: +ELLIPSIS
     <class '...routing.federator_routing_client.FederatorRoutingClient'>
 
@@ -59,16 +60,22 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
     >>> print(type(c))  # doctest: +ELLIPSIS
     <class '...routing.eidaws_routing_client.EIDAWSRoutingClient'>
     """
+    if routing_type.lower() == "iris-federator":
+        routing_type = "earthscope-federator"
+        msg = ("IRIS is now EarthScope, please consider changing the "
+               "'routing_type' to 'earthscope-federator'.")
+        warnings.warn(msg, DeprecationWarning)
+
     if routing_type.lower() == "eida-routing":
         from .eidaws_routing_client import EIDAWSRoutingClient
         return EIDAWSRoutingClient(*args, **kwargs)
-    if routing_type.lower() == "iris-federator":
+    elif routing_type.lower() == "earthscope-federator":
         from .federator_routing_client import FederatorRoutingClient
         return FederatorRoutingClient(*args, **kwargs)
     else:
         raise NotImplementedError(
             "Routing type '%s' is not implemented. Available types: "
-            "`iris-federator`, `eida-routing`" % routing_type)
+            "`earthscope-federator`, `eida-routing`" % routing_type)
 
 
 @decorator.decorator

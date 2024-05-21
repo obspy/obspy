@@ -98,7 +98,7 @@ class FederatorRoutingClient(BaseRoutingClient):
         supported.
 
         This can route on a number of different parameters, please see the
-        web site of the `EarthScope (foremer IRIS) Federator
+        web site of the `EarthScope (former IRIS) Federator
         <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
         """
         return super(FederatorRoutingClient, self).get_stations(**kwargs)
