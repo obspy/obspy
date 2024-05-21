@@ -51,17 +51,17 @@ class TestBaseRoutingClient():
         c = RoutingClient("eida-routing")
         assert isinstance(c, EIDAWSRoutingClient)
 
-        c = RoutingClient("iris-federator")
+        c = RoutingClient("earthscope-federator")
         assert isinstance(c, FederatorRoutingClient)
 
         msg = "Routing type 'random' is not implemented. Available types: " \
-              "`iris-federator`, `eida-routing`"
+              "`earthscope-federator`, `eida-routing`"
         with pytest.raises(NotImplementedError, match=msg):
             RoutingClient("random")
 
     def test_expansion_of_include_and_exclude_providers(self):
         c = self._cls_object(
-            include_providers=["IRIS", "http://example.com"],
+            include_providers=["EARTHSCOPE", "http://example.com"],
             exclude_providers=["BGR", "http://example2.com"])
         assert c.include_providers == ["service.iris.edu", "example.com"]
         assert c.exclude_providers == ["eida.bgr.de", "example2.com"]
@@ -72,7 +72,7 @@ class TestBaseRoutingClient():
         assert c.exclude_providers == []
 
         # Single strings.
-        c = self._cls_object(include_providers="IRIS",
+        c = self._cls_object(include_providers="EARTHSCOPE",
                              exclude_providers="BGR")
         assert c.include_providers == ["service.iris.edu"]
         assert c.exclude_providers == ["eida.bgr.de"]
@@ -91,13 +91,15 @@ class TestBaseRoutingClient():
             "http://service.iris.edu": "1234"
         }
 
-        c = self._cls_object(include_providers=["IRIS", "http://example.com"])
+        c = self._cls_object(include_providers=["EARTHSCOPE",
+                                                "http://example.com"])
         assert c._filter_requests(split) == {
             "https://example.com": "1234",
             "http://service.iris.edu": "1234"
         }
 
-        c = self._cls_object(exclude_providers=["IRIS", "http://example.com"])
+        c = self._cls_object(exclude_providers=["EARTHSCOPE",
+                                                "http://example.com"])
         assert c._filter_requests(split) == {
             "http://example2.com": "1234",
             "http://example3.com": "1234"
@@ -105,8 +107,9 @@ class TestBaseRoutingClient():
 
         # Both filters are always applied - it might result in zero
         # remaining providers.
-        c = self._cls_object(include_providers=["IRIS", "http://example.com"],
-                             exclude_providers=["IRIS", "http://example.com"])
+        c = self._cls_object(
+            include_providers=["EARTHSCOPE", "http://example.com"],
+            exclude_providers=["EARTHSCOPE", "http://example.com"])
         assert c._filter_requests(split) == {}
 
     def test_downloading_waveforms(self):

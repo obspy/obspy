@@ -174,7 +174,7 @@ To use them, call the
 
 Get an instance of a routing client using the EarthScope Federator:
 
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> print(type(client))  # doctest: +ELLIPSIS
 <class '...fdsn.routing.federator_routing_client.FederatorRoutingClient'>
 
@@ -199,7 +199,7 @@ automatically - please note that the clients also supports non-standard
 waveform query parameters like geographical constraints.
 
 >>> from obspy import UTCDateTime
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> st = client.get_waveforms(
 ...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
 ...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
@@ -211,7 +211,7 @@ II.MBAR.10.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
 
 The same works for stations:
 
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> inv = client.get_stations(
 ...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
 ...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
