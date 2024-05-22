@@ -650,6 +650,7 @@ class TestMSEEDSpecialIssue():
                 if year == 2056:
                     tr.stats.starttime = UTCDateTime(2056, 2, 1)
                 tr.write(memfile, format="mseed")
+                memfile.seek(0, 0)
                 st2 = read(memfile)
                 assert len(st2) == 1
                 tr2 = st2[0]

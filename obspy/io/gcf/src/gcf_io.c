@@ -1007,18 +1007,52 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
 }
 
 
+void init_GcfSeg_for_read(GcfSeg *seg, int mode){
+   init_GcfSeg(seg,0);
+   if (mode >= 0) realloc_GcfSeg(seg, MAX_DATA_BLOCK);
+}
+
+
+int read_gcf_block(GcfFile *obj, unsigned char buffer[1024], GcfSeg *seg, int mode, int endian, double tol) {
+   int32 n_alloc=0;
+   int err=0;
+
+   obj->n_blk += 1;
+   if ((err=parse_gcf_block(buffer,seg,mode,endian)) < 0) {
+      // not a data block
+      return 1;
+   } else if (err >= 10) {
+      // there were some issues with the data block
+      obj->n_errData++;
+   }
+   if (seg->err > 0 && seg->err < 10) {
+      obj->n_errHead++;
+   }
+
+   // all done add segment
+   seg->blk = obj->n_blk-1;
+   if (mode >= 0 && (seg->err == 3 || seg->err == 4)) {
+      // no data were actually decoded, temporarly set n_alloc to 0 to avoid adding non-existing data to GcfFile
+      n_alloc = seg->n_alloc;
+      seg->n_alloc = 0;
+   }
+   add_GcfSeg(obj,*seg,abs(mode),tol);
+   if (mode >= 0 && (seg->err == 3 || seg->err == 4)) seg->n_alloc = n_alloc;
+   return 0;
+}
+
+
 /* function read_gcf() parses a gcf data file */
 int read_gcf(const char *f, GcfFile *obj, int mode) {
-   int ret=0, endian, d=0, err=0, b1 = 0; 
-   int32 fid=0, n_alloc=0;
+   int ret=0, endian, d=0, b1 = 0;
+   int32 fid=0;
    GcfSeg seg;
    double tol = 1.E-3;
    unsigned char buffer[1024]; 
    
    // initiate and allocate segment
-   init_GcfSeg(&seg,0);
-   if (mode >= 0) realloc_GcfSeg(&seg, MAX_DATA_BLOCK);
-   
+   init_GcfSeg_for_read(&seg, mode);
+
    // adjust mode if nedded
    if (mode > 2) {
       mode = 2;
@@ -1030,27 +1064,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
    if (opengcf(f,&fid)) ret=-1;
    else {
       while(FillBuffer(1024,buffer,&fid)) {
-         obj->n_blk += 1;
-         if ((err=parse_gcf_block(buffer,&seg,mode,endian)) < 0) {
-            // not a data block
-            d++;
-         } else if (err >= 10) {
-            // there were some issues with the data block
-            obj->n_errData++;
-         }
-         if (seg.err > 0 && seg.err < 10) {
-            obj->n_errHead++;
-         }
-         
-         // all done add segment
-         seg.blk = obj->n_blk-1;
-         if (mode >= 0 && (seg.err == 3 || seg.err == 4)) {
-            // no data were actually decoded, temporarly set n_alloc to 0 to avoid adding non-existing data to GcfFile
-            n_alloc = seg.n_alloc;
-            seg.n_alloc = 0;
-         }
-         add_GcfSeg(obj,seg,abs(mode),tol);
-         if (mode >= 0 && (seg.err == 3 || seg.err == 4)) seg.n_alloc = n_alloc;
+         d += read_gcf_block(obj, buffer, &seg, mode, endian, tol);
          if (b1) break;
       }
       closegcf(&fid);
@@ -1060,7 +1074,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
 
    // merge segments if asked for
    if (abs(mode) < 2) merge_GcfFile(obj,mode,tol);
-   if (!ret && obj->n_blk==d) ret = 1 + endian; // no data blocks in file   
+   if (!ret && obj->n_blk==d) ret = 1 + endian; // no data blocks in file
    return ret;
 }
 
