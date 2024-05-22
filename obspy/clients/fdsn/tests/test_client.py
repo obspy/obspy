@@ -25,6 +25,7 @@ import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
 from obspy.core.util.base import NamedTemporaryFile, CatchAndAssertWarnings
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
                                        get_bulk_string, _cleanup_earthscope)
@@ -1669,6 +1670,6 @@ class TestClient():
         """
         msg = ("IRIS is now EarthScope, please consider changing the FDSN "
                "client short URL to 'EARTHSCOPE'.")
-        with CatchAndAssertWarnings(expected=[(DeprecationWarning, msg)]):
+        with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
             client = Client('IRIS', _discover_services=False)
         assert client.base_url == 'http://service.iris.edu'

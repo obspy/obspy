@@ -15,6 +15,7 @@ import pytest
 
 import obspy
 from obspy.core.util.base import CatchAndAssertWarnings
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.clients.fdsn import RoutingClient
 from obspy.clients.fdsn.routing.federator_routing_client import \
     FederatorRoutingClient
@@ -355,6 +356,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
                "'routing_type' to 'earthscope-federator'.")
         with mock.patch(mock_path) as p:
             p.return_value = None
-            with CatchAndAssertWarnings(expected=[(DeprecationWarning, msg)]):
+            with CatchAndAssertWarnings(
+                    expected=[(ObsPyDeprecationWarning, msg)]):
                 client = RoutingClient("iris-federator")
         assert isinstance(client, FederatorRoutingClient)

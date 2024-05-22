@@ -21,6 +21,7 @@ import warnings
 from urllib.parse import urlparse
 
 import obspy
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 from ...base import HTTPClient
 from .. import client
@@ -64,7 +65,7 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
         routing_type = "earthscope-federator"
         msg = ("IRIS is now EarthScope, please consider changing the "
                "'routing_type' to 'earthscope-federator'.")
-        warnings.warn(msg, DeprecationWarning)
+        warnings.warn(msg, ObsPyDeprecationWarning)
 
     if routing_type.lower() == "eida-routing":
         from .eidaws_routing_client import EIDAWSRoutingClient
