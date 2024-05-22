@@ -295,6 +295,9 @@ def _fill_gcf_from_file(file, obj, mode):
             buffer = fpt.read(1024)
             if not buffer:
                 break
+            elif len(buffer) < 1024:
+                ret = -1
+                break
             d += gcf_io.read_gcf_block(obj, buffer, seg, mode, endian, tol)
             if b1:
                 break
