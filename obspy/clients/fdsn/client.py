@@ -27,6 +27,7 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
                      URL_DEFAULT_SUBPATH, URL_MAPPINGS, URL_MAPPING_SUBPATHS,
@@ -227,6 +228,12 @@ class Client(object):
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
         self.__version_cache = {}
+
+        if base_url.upper() == 'IRIS':
+            base_url = 'EARTHSCOPE'
+            msg = ("IRIS is now EarthScope, please consider changing the FDSN "
+                   "client short URL to 'EARTHSCOPE'.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
 
         if base_url.upper() in URL_MAPPINGS:
             url_mapping = base_url.upper()

@@ -24,7 +24,8 @@ import pytest
 import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, CatchAndAssertWarnings
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
                                        get_bulk_string, _cleanup_earthscope)
@@ -104,9 +105,9 @@ class TestClient():
     """
     @classmethod
     def setup_class(cls):
-        cls.client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        cls.client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT)
         cls.client_auth = \
-            Client(base_url="IRIS", user_agent=USER_AGENT,
+            Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
 
     def test_empty_bulk_string(self):
@@ -302,7 +303,7 @@ class TestClient():
         `set_credentials`, waveform queries should still properly go to
         "queryauth" endpoint.
         """
-        client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT)
         user = "nobody@iris.edu"
         password = "anonymous"
         client.set_credentials(user=user, password=password)
@@ -332,17 +333,18 @@ class TestClient():
 
     def test_service_discovery_iris(self):
         """
-        Tests the automatic discovery of services with the IRIS endpoint. The
-        test parameters are taken from IRIS' website.
+        Tests the automatic discovery of services with the EARTHSCOPE endpoint.
+        The test parameters are taken from EARTHSCOPE website.
 
-        This will have to be adjusted once IRIS changes their implementation.
+        This will have to be adjusted once EARTHSCOPE changes their
+        implementation.
         """
         client = self.client
         assert {*client.services.keys()} == \
             {"dataselect", "event", "station", "available_event_contributors",
              "available_event_catalogs"}
 
-        # The test sets are copied from the IRIS webpage.
+        # The test sets are copied from the EARTHSCOPE webpage.
         assert {*client.services["dataselect"].keys()} == \
             {"starttime", "endtime", "network", "station", "location",
              "channel", "quality", "minimumlength", "longestonly"}
@@ -403,7 +405,7 @@ class TestClient():
         any services/WADL queries on the endpoint, and should show only the
         default service parameters.
         """
-        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                         _discover_services=False)
         assert client.services == DEFAULT_SERVICES
 
@@ -427,7 +429,7 @@ class TestClient():
 
     def test_iris_example_queries_event(self):
         """
-        Tests the (sometimes modified) example queries given on the IRIS
+        Tests the (sometimes modified) example queries given on the EARTHSCOPE
         web page.
 
         Used to be tested against files but that was not maintainable. It
@@ -466,9 +468,9 @@ class TestClient():
             assert event.origins[0].latitude > -170.1
             assert 170.1 > event.origins[0].latitude
             # events returned by FDSNWS can contain many magnitudes with a wide
-            # range, and currently (at least for IRIS) the magnitude threshold
-            # sent to the server checks if at least one magnitude matches, it
-            # does not only check the preferred magnitude..
+            # range, and currently (at least for EARTHSCOPE) the magnitude
+            # threshold sent to the server checks if at least one magnitude
+            # matches, it does not only check the preferred magnitude..
             assert any(m.mag >= 3.999 for m in event.magnitudes)
 
     @pytest.mark.filterwarnings('ignore:.*cannot deal with')
@@ -486,7 +488,8 @@ class TestClient():
 
     def test_iris_example_queries_station(self):
         """
-        Tests the (sometimes modified) example queries given on IRIS webpage.
+        Tests the (sometimes modified) example queries given on EARTHSCOPE
+        webpage.
 
         This test used to download files but that is almost impossible to
         keep up to date - thus it is now a bit smarter and tests the
@@ -556,7 +559,8 @@ class TestClient():
 
     def test_iris_example_queries_dataselect(self, testdata):
         """
-        Tests the (sometimes modified) example queries given on IRIS webpage.
+        Tests the (sometimes modified) example queries given on EARTHSCOPE
+        webpage.
         """
         client = self.client
 
@@ -616,13 +620,13 @@ class TestClient():
 
     def test_iris_example_queries_event_discover_services_false(self):
         """
-        Tests the (sometimes modified) example queries given on the IRIS
+        Tests the (sometimes modified) example queries given on the EARTHSCOPE
         web page, without service discovery.
 
         Used to be tested against files but that was not maintainable. It
         now tests if the queries return what was asked for.
         """
-        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                         _discover_services=False)
 
         # Event id query.
@@ -656,21 +660,21 @@ class TestClient():
             assert event.origins[0].latitude > -170.1
             assert 170.1 > event.origins[0].latitude
             # events returned by FDSNWS can contain many magnitudes with a wide
-            # range, and currently (at least for IRIS) the magnitude threshold
-            # sent to the server checks if at least one magnitude matches, it
-            # does not only check the preferred magnitude..
+            # range, and currently (at least for EARTHSCOPE) the magnitude
+            # threshold sent to the server checks if at least one magnitude
+            # matches, it does not only check the preferred magnitude..
             assert any(m.mag >= 3.999 for m in event.magnitudes)
 
     def test_iris_example_queries_station_discover_services_false(self):
         """
-        Tests the (sometimes modified) example queries given on IRIS webpage,
-        without service discovery.
+        Tests the (sometimes modified) example queries given on EARTHSCOPE
+        webpage, without service discovery.
 
         This test used to download files but that is almost impossible to
         keep up to date - thus it is now a bit smarter and tests the
         returned inventory in different ways.
         """
-        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                         _discover_services=False)
 
         # Radial query.
@@ -736,10 +740,10 @@ class TestClient():
     def test_iris_example_queries_dataselect_discover_services_false(
             self, testdata):
         """
-        Tests the (sometimes modified) example queries given on IRIS webpage,
-        without discovering services first.
+        Tests the (sometimes modified) example queries given on EARTHSCOPE
+        webpage, without discovering services first.
         """
-        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                         _discover_services=False)
 
         queries = [
@@ -789,9 +793,9 @@ class TestClient():
 
     def test_help_function_with_iris(self, testdata):
         """
-        Tests the help function with the IRIS example.
+        Tests the help function with the EARTHSCOPE example.
 
-        This will have to be adopted any time IRIS changes their
+        This will have to be adopted any time EARTHSCOPE changes their
         implementation.
         """
         try:
@@ -888,7 +892,8 @@ class TestClient():
                 ("IU", "ANMO", "*", "HHZ",
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:08")))
-        # As of 03 December 2018, it looks like IRIS is ignoring minimumlength?
+        # As of 03 December 2018, it looks like EARTHSCOPE is ignoring
+        # minimumlength?
         params = dict(quality="B", longestonly=False, minimumlength=5)
         for client in clients:
             # test output to stream
@@ -1179,7 +1184,7 @@ class TestClient():
         """
         Test manually deactivating a single service.
         """
-        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                         service_mappings={"event": None})
         assert sorted(client.services.keys()) == ['dataselect', 'station']
 
@@ -1264,12 +1269,12 @@ class TestClient():
         Tests the redirection of GET and POST requests. We redirect
         everything if not authentication is used.
 
-        IRIS runs three services to test it:
+        EARTHSCOPE runs three services to test it:
             http://ds.iris.edu/files/redirect/307/station/1
             http://ds.iris.edu/files/redirect/307/dataselect/1
             http://ds.iris.edu/files/redirect/307/event/1
         """
-        c = Client("IRIS", service_mappings={
+        c = Client("EARTHSCOPE", service_mappings={
             "station":
                 "http://ds.iris.edu/files/redirect/307/station/1",
             "dataselect":
@@ -1340,11 +1345,11 @@ class TestClient():
             # I was not able to fix in the code
             warnings.filterwarnings('ignore', 'unclosed')
             with pytest.raises(FDSNRedirectException):
-                Client("IRIS", service_mappings=service_mappings,
+                Client("EARTHSCOPE", service_mappings=service_mappings,
                        user="nobody@iris.edu", password="anonymous",
                        user_agent=USER_AGENT)
             # The force_redirect flag overwrites that behaviour.
-            c_auth = Client("IRIS", service_mappings=service_mappings,
+            c_auth = Client("EARTHSCOPE", service_mappings=service_mappings,
                             user="nobody@iris.edu", password="anonymous",
                             user_agent=USER_AGENT, force_redirect=True)
         st = c_auth.get_waveforms(
@@ -1451,7 +1456,7 @@ class TestClient():
                 Client(eida_token="TEST")
 
         with pytest.raises(FDSNDoubleAuthenticationException):
-            Client("IRIS", eida_token="TEST", user="TEST")
+            Client("EARTHSCOPE", eida_token="TEST", user="TEST")
 
         download_url_mock.return_value = (401, None)
         with pytest.raises(FDSNUnauthorizedException):
@@ -1657,3 +1662,14 @@ class TestClient():
                "does not seem to contain a valid PGP message.")
         with pytest.raises(ValueError, match=msg):
             client = Client('GFZ', eida_token=testdata['event_helpstring.txt'])
+
+    def test_iris_earthscope_message(self):
+        """
+        Test that using "IRIS" short URL in FDSN client shows a warning message
+        and switches to "EARTHSCOPE" short URL.
+        """
+        msg = ("IRIS is now EarthScope, please consider changing the FDSN "
+               "client short URL to 'EARTHSCOPE'.")
+        with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
+            client = Client('IRIS', _discover_services=False)
+        assert client.base_url == 'http://service.iris.edu'

@@ -161,7 +161,8 @@ only support the ``dataselect`` and the ``station`` FDSNWS services.
 
 ObsPy has support for two routing services:
 
-(i) The `IRISWS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_.
+(i) The `EarthScope (former IRIS) Federator
+    <https://service.iris.edu/irisws/fedcatalog/1/>`_.
 (ii) The `EIDAWS Routing Service
      <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_.
 
@@ -171,9 +172,9 @@ To use them, call the
 
 >>> from obspy.clients.fdsn import RoutingClient
 
-Get an instance of a routing client using the IRISWS Federator:
+Get an instance of a routing client using the EarthScope Federator:
 
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> print(type(client))  # doctest: +ELLIPSIS
 <class '...fdsn.routing.federator_routing_client.FederatorRoutingClient'>
 
@@ -188,17 +189,17 @@ They can be used like the normal FDSNWS clients, meaning the
 
 To be able to do geographic waveform queries with the EIDA service,
 ObsPy will internally perform a station query before downloading the
-waveforms. This results in a similar usage between the EIDA and EarthScope/IRIS
-routing services from a user's perspective.
+waveforms. This results in a similar usage between the EIDA and EarthScope
+(former IRIS) routing services from a user's perspective.
 
-The following snippet will call the EarthScope/IRIS federator to figure out who
+The following snippet will call the EarthScope federator to figure out who
 has waveform data for that particular query and subsequently call the
 individual data centers to actually get the data. This happens fully
 automatically - please note that the clients also supports non-standard
 waveform query parameters like geographical constraints.
 
 >>> from obspy import UTCDateTime
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> st = client.get_waveforms(
 ...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
 ...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
@@ -210,7 +211,7 @@ II.MBAR.10.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
 
 The same works for stations:
 
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> inv = client.get_stations(
 ...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
 ...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,

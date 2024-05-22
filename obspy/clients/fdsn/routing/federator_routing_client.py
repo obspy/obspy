@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Routing client for the EarthScope IRISWS federator routing service.
+Routing client for the EarthScope (former IRIS) federator routing service.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -63,9 +63,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         provider FDSN client are not supported.
 
         This can route on a number of different parameters, please see the
-        web site of the
-        `IRISWS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
-        for details.
+        web site of the `EarthScope (former IRIS) Federator
+        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
         """
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]
@@ -99,9 +98,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         supported.
 
         This can route on a number of different parameters, please see the
-        web site of the
-        `IRISWS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
-        for details.
+        web site of the `EarthScope (former IRIS) Federator
+        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
         """
         return super(FederatorRoutingClient, self).get_stations(**kwargs)
 
@@ -118,9 +116,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         supported.
 
         This can route on a number of different parameters, please see the
-        web site of the
-        `IRISWS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
-        for details.
+        web site of the `EarthScope (former IRIS) Federator
+        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
         """
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]
