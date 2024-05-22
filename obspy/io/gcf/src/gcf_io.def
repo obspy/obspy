@@ -8,3 +8,4 @@ EXPORTS
    free_GcfFile
    merge_GcfFile
    write_gcf
+   init_GcfFile
