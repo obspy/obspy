@@ -9,7 +9,6 @@ coverage:
       default:
         target: auto
         threshold: 0
-        set_pending: yes
         if_no_uploads: error
         if_not_found: error
         if_ci_failed: error
@@ -18,7 +17,6 @@ coverage:
     patch:
       default:
         target: 90
-        set_pending: yes
         base: auto
         if_no_uploads: error
         if_not_found: error
