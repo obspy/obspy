@@ -21,18 +21,18 @@ import numpy as np
 #: * ``top_qs``: The S wave attenuation at the top.
 #: * ``bot_qs``: The S wave attenuation at the bottom.
 VelocityLayer = np.dtype([
-    ('top_depth', np.float_),
-    ('bot_depth', np.float_),
-    ('top_p_velocity', np.float_),
-    ('bot_p_velocity', np.float_),
-    ('top_s_velocity', np.float_),
-    ('bot_s_velocity', np.float_),
-    ('top_density', np.float_),
-    ('bot_density', np.float_),
-    ('top_qp', np.float_),
-    ('bot_qp', np.float_),
-    ('top_qs', np.float_),
-    ('bot_qs', np.float_),
+    ('top_depth', np.float64),
+    ('bot_depth', np.float64),
+    ('top_p_velocity', np.float64),
+    ('bot_p_velocity', np.float64),
+    ('top_s_velocity', np.float64),
+    ('bot_s_velocity', np.float64),
+    ('top_density', np.float64),
+    ('bot_density', np.float64),
+    ('top_qp', np.float64),
+    ('bot_qp', np.float64),
+    ('top_qs', np.float64),
+    ('bot_qs', np.float64),
 ])
 
 

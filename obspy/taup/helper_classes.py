@@ -17,39 +17,39 @@ class TauModelError(Exception):
 
 #: The SlownessLayer dtype stores a single layer.
 SlownessLayer = np.dtype([
-    ('top_p', np.float_),
-    ('top_depth', np.float_),
-    ('bot_p', np.float_),
-    ('bot_depth', np.float_),
+    ('top_p', np.float64),
+    ('top_depth', np.float64),
+    ('bot_p', np.float64),
+    ('bot_depth', np.float64),
 ])
 
 
 #: Holds the ray parameter, time and distance increments, and optionally a
 #: depth, for a ray passing through some layer.
 TimeDist = np.dtype([
-    ('p', np.float_),
-    ('time', np.float_),
-    ('dist', np.float_),
-    ('depth', np.float_),
+    ('p', np.float64),
+    ('time', np.float64),
+    ('dist', np.float64),
+    ('depth', np.float64),
 ])
 
 
 #: Holds the ray parameter, time and distance increments, and optionally a
 #: depth, latitude and longitude for a ray passing through some layer.
 TimeDistGeo = np.dtype([
-    ('p', np.float_),
-    ('time', np.float_),
-    ('dist', np.float_),
-    ('depth', np.float_),
-    ('lat', np.float_),
-    ('lon', np.float_)
+    ('p', np.float64),
+    ('time', np.float64),
+    ('dist', np.float64),
+    ('depth', np.float64),
+    ('lat', np.float64),
+    ('lon', np.float64)
 ])
 
 
 #: Tracks critical points (discontinuities or reversals in slowness gradient)
 #: within slowness and velocity models.
 CriticalDepth = np.dtype([
-    ('depth', np.float_),
+    ('depth', np.float64),
     ('vel_layer_num', np.int_),
     ('p_layer_num', np.int_),
     ('s_layer_num', np.int_),
@@ -70,7 +70,7 @@ class DepthRange:
         """
         Store all attributes for serialization in a structured array.
         """
-        arr = np.empty(3, dtype=np.float_)
+        arr = np.empty(3, dtype=np.float64)
         arr[0] = self.top_depth
         arr[1] = self.bot_depth
         arr[2] = self.ray_param

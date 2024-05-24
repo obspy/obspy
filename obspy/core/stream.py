@@ -3384,7 +3384,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             sampling_rate = float(items[6])
             npts = int(items[8])
             tr = Trace()
-            tr.data = np.ones(npts, dtype=np.float_)
+            tr.data = np.ones(npts, dtype=np.float64)
             tr.stats.station = sta
             tr.stats.network = net
             tr.stats.location = loc
