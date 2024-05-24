@@ -1720,7 +1720,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.filter('lowpass_cheby_2', freq=freq, maxorder=12)
 
         # resample in the frequency domain. Make sure the byteorder is native.
-        x = rfft(self.data.newbyteorder("="))
+        x = rfft(self.data.view(self.data.dtype.newbyteorder("=")))
         # Cast the value to be inserted to the same dtype as the array to avoid
         # issues with numpy rule 'safe'.
         x = np.insert(x, 1, x.dtype.type(0))

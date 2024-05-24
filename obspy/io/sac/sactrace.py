@@ -964,10 +964,13 @@ class SACTrace(object):
 
         """
         try:
-            self._hf = self._hf.byteswap(True).newbyteorder('S')
-            self._hi = self._hi.byteswap(True).newbyteorder('S')
+            self._hf = self._hf.byteswap(True).view(
+                self._hf.dtype.newbyteorder('S'))
+            self._hi = self._hi.byteswap(True).view(
+                self._hi.dtype.newbyteorder('S'))
             if self.data is not None:
-                self.data = self.data.byteswap(True).newbyteorder('S')
+                self.data = self.data.byteswap(True).view(
+                        self.data.dtype.newbyteorder('S'))
         except Exception as e:
             # if this fails, roll it back?
             raise e
