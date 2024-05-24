@@ -59,14 +59,14 @@ class TestTauPyModel:
             output = np.genfromtxt(
                 fh,
                 usecols=[0, 1, 2, 3, 4, 5, 6, 7, 9],
-                dtype=[('distance', np.float_),
-                       ('depth', np.float_),
+                dtype=[('distance', np.float64),
+                       ('depth', np.float64),
                        ('name', (np.str_, 10)),
-                       ('time', np.float_),
-                       ('ray_param_sec_degree', np.float_),
-                       ('takeoff_angle', np.float_),
-                       ('incident_angle', np.float_),
-                       ('purist_distance', np.float_),
+                       ('time', np.float64),
+                       ('ray_param_sec_degree', np.float64),
+                       ('takeoff_angle', np.float64),
+                       ('incident_angle', np.float64),
+                       ('purist_distance', np.float64),
                        ('purist_name', (np.str_, 10))])
 
         output = np.atleast_1d(output)
@@ -710,10 +710,10 @@ class TestTauPyModel:
         time = time[:, ::2] * 60.0 + time[:, 1::2]
 
         values = np.empty(np.size(ray_param),
-                          dtype=[('depth', np.float_),
-                                 ('dist', np.float_),
-                                 ('ray_param', np.float_),
-                                 ('time', np.float_)])
+                          dtype=[('depth', np.float64),
+                                 ('dist', np.float64),
+                                 ('ray_param', np.float64),
+                                 ('time', np.float64)])
 
         values['depth'] = np.tile(depths, len(dist))
         values['dist'] = np.repeat(dist, len(depths))
