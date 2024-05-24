@@ -69,7 +69,7 @@ class TestAlmostEqual:
         Ensure NaNs eval equal if equal_nan is used, else they do not.
         """
         tr1, tr2 = read()[0], read()[0]
-        tr1.data[0], tr2.data[0] = np.NaN, np.NaN
+        tr1.data[0], tr2.data[0] = np.nan, np.nan
         assert traces_almost_equal(tr1, tr2, equal_nan=True)
         assert not traces_almost_equal(tr1, tr2, equal_nan=False)
 
