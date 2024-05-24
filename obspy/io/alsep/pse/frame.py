@@ -6,7 +6,7 @@ from .parser import parse_pse_frame_to_alsep_words
 
 class PseFrame(object):
     def __init__(self, frame, _is_old_format):
-        self.data = frame
+        self.data = np.require(frame, dtype=np.int64)
         self._is_old_format = _is_old_format
         # Frame header parameters
         self.software_time_flag = None
