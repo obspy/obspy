@@ -413,7 +413,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
             rows = npts // 5
             np.savetxt(f, np.reshape(data[0:5 * rows], (rows, 5)),
                        fmt="%#15.7g", delimiter='')
-            np.savetxt(f, data[5 * rows:], delimiter=b'\t')
+            np.savetxt(f, data[5 * rows:], delimiter='\t')
         except Exception:
             if is_file_name:
                 f.close()
