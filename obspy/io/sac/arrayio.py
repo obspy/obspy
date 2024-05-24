@@ -141,8 +141,8 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
             # not valid, but not specified.
             # swap the dtype interpretation (dtype.byteorder), but keep the
             # bytes, so the arrays in memory reflect the bytes on disk
-            hf = hf.newbyteorder('S')
-            hi = hi.newbyteorder('S')
+            hf = hf.view(hf.dtype.newbyteorder('S'))
+            hi = hi.view(hi.dtype.newbyteorder('S'))
 
     # we now have correct headers, let's use their correct byte order.
     endian_str = hi.dtype.byteorder
