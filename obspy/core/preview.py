@@ -66,7 +66,7 @@ def create_preview(trace, delta=60):
     # reshape matrix
     data = trace.data[start:end].reshape([number_of_slices, samples_per_slice])
     # get minimum and maximum for each row
-    diff = data.ptp(axis=1)
+    diff = np.ptp(data, axis=1)
     # fill masked values with -1 -> means missing data
     if isinstance(diff, np.ma.masked_array):
         diff = np.ma.filled(diff, -1)

@@ -157,7 +157,7 @@ class TestStream():
             for tr1, tr2 in zip(st1, st2):
                 assert tr1.stats == tr2.stats
                 np.testing.assert_allclose(tr1.data, tr2.data, rtol=1E-6,
-                                           atol=1E-6 * tr1.data.ptp())
+                                           atol=1E-6 * np.ptp(tr1.data))
         else:
             # Added (up to ###) to debug appveyor fails
             for tr1, tr2 in zip(st1.sort(), st2.sort()):
