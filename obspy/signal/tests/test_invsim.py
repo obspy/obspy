@@ -456,8 +456,8 @@ class TestInvSim():
 
         # The only thing that changed was the channel code. This should change
         # the response.
-        rel_diff = np.abs(response_2 - response_1).ptp() / \
-            max(np.abs(response_1).ptp(), np.abs(response_2).ptp())
+        rel_diff = np.ptp(np.abs(response_2 - response_1)) / \
+            max(np.ptp(np.abs(response_1)), np.ptp(np.abs(response_2)))
         assert rel_diff > 1E-3
 
         # The RESP file only contains two channels.
