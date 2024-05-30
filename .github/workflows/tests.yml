@@ -184,7 +184,7 @@ jobs:
         id: tests
         shell: bash -l {0}
         run: |
-          obspy-runtests --cov obspy --cov-report='xml' --cov-append --report ${{ env.runtest_options }}
+          obspy-runtests --cov obspy --cov-report=xml:$PWD/coverage.xml --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
         uses: codecov/codecov-action@v4.4.1
@@ -194,7 +194,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-umbrella
           fail_ci_if_error: false
-          file: obspy/coverage.xml
 
       - name: optionally upload image directory
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'upload_images')
