@@ -193,7 +193,7 @@ jobs:
           flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-umbrella
-          fail_ci_if_error: false
+          fail_ci_if_error: true
 
       - name: optionally upload image directory
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'upload_images')
