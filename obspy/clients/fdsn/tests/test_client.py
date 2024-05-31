@@ -948,82 +948,6 @@ class TestClient():
                         service_mappings={"event": None})
         assert sorted(client.services.keys()) == ['dataselect', 'station']
 
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_download_urls_for_custom_mapping(
-            self, download_url_mock, testdata):
-        """
-        Tests the downloading of data with custom mappings.
-        """
-        base_url = "http://example.com"
-
-        # More extensive mock setup simulation service discovery.
-        def custom_side_effects(*args, **kwargs):
-            if "version" in args[0]:
-                return 200, "1.0.200"
-            elif "event" in args[0]:
-                with open(testdata["2014-01-07_iris_event.wadl"], "rb") as fh:
-                    return 200, fh.read()
-            elif "station" in args[0]:
-                with open(testdata["2014-01-07_iris_station.wadl"],
-                          "rb") as fh:
-                    return 200, fh.read()
-            elif "dataselect" in args[0]:
-                with open(testdata["2014-01-07_iris_dataselect.wadl"],
-                          "rb") as fh:
-                    return 200, fh.read()
-            return 404, None
-
-        download_url_mock.side_effect = custom_side_effects
-
-        # Some custom urls
-        base_url_event = "http://example.com/beta/event_service/11"
-        base_url_station = "http://example.org/beta2/station/7"
-        base_url_ds = "http://example.edu/beta3/dataselect/8"
-
-        # An exception will be raised if not actual WADLs are returned.
-        # Catch warnings to avoid them being raised for the tests.
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            c = Client(base_url=base_url, service_mappings={
-                "event": base_url_event,
-                "station": base_url_station,
-                "dataselect": base_url_ds,
-            })
-        for warning in w:
-            assert "Could not parse" in str(warning) or \
-                            "cannot deal with" in str(warning)
-
-        # Test the dataselect downloading.
-        download_url_mock.reset_mock()
-        download_url_mock.side_effect = None
-        download_url_mock.return_value = 404, None
-        try:
-            c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
-                            UTCDateTime())
-        except Exception:
-            pass
-        assert base_url_ds in download_url_mock.call_args_list[0][0][0]
-
-        # Test the station downloading.
-        download_url_mock.reset_mock()
-        download_url_mock.side_effect = None
-        download_url_mock.return_value = 404, None
-        try:
-            c.get_stations()
-        except Exception:
-            pass
-        assert base_url_station in download_url_mock.call_args_list[0][0][0]
-
-        # Test the event downloading.
-        download_url_mock.reset_mock()
-        download_url_mock.side_effect = None
-        download_url_mock.return_value = 404, None
-        try:
-            c.get_events()
-        except Exception:
-            pass
-        assert base_url_event in download_url_mock.call_args_list[0][0][0]
-
     def test_redirection(self):
         """
         Tests the redirection of GET and POST requests. We redirect
@@ -1184,26 +1108,6 @@ class TestClient():
             assert '{}='.format(key) in url_parts
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_no_data_exception(self, download_url_mock):
-        """
-        Verify that a request returning no data raises an identifiable
-        exception
-        """
-        download_url_mock.return_value = (204, None)
-        with pytest.raises(FDSNNoDataException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_request_too_large_exception(self, download_url_mock):
-        """
-        Verify that a request returning too much data raises an identifiable
-        exception
-        """
-        download_url_mock.return_value = (413, None)
-        with pytest.raises(FDSNRequestTooLargeException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_authentication_exceptions(self, download_url_mock):
         """
         Verify that a request with missing authentication raises an
@@ -1226,15 +1130,6 @@ class TestClient():
         with pytest.raises(FDSNForbiddenException):
             self.client.get_stations()
 
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_timeout_exception(self, download_url_mock):
-        """
-        Verify that a request timing out raises an identifiable exception
-        """
-        download_url_mock.return_value = (None, "timeout")
-        with pytest.raises(FDSNTimeoutException):
-            self.client.get_stations()
-
     def test_no_service_exception(self):
         """
         Verify that opening a client to a provider without FDSN service raises
@@ -1242,63 +1137,6 @@ class TestClient():
         """
         with pytest.raises(FDSNNoServiceException):
             Client("http://nofdsnservice.org")
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_not_implemented_exception(self, download_url_mock):
-        """
-        Verify that a client receiving a 501 'Not Implemented' status
-        raises an identifiable exception
-        """
-        download_url_mock.return_value = (501, None)
-        with pytest.raises(FDSNNotImplementedException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_bad_gateway_exception(self, download_url_mock):
-        """
-        Verify that a client receiving a 502 'Bad Gateway' status
-        raises an identifiable exception
-        """
-        download_url_mock.return_value = (502, None)
-        with pytest.raises(FDSNBadGatewayException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_service_unavailable_exception(self, download_url_mock):
-        """
-        Verify that opening a client to a service temporarily unavailable
-        raises an identifiable exception
-        """
-        download_url_mock.return_value = (503, None)
-        with pytest.raises(FDSNServiceUnavailableException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_bad_request_exception(self, download_url_mock):
-        """
-        Verify that a bad request raises an identifiable exception
-        """
-        download_url_mock.return_value = (400, io.BytesIO(b""))
-        with pytest.raises(FDSNBadRequestException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_server_exception(self, download_url_mock):
-        """
-        Verify that a server error raises an identifiable exception
-        """
-        download_url_mock.return_value = (500, None)
-        with pytest.raises(FDSNInternalServerException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_too_many_requests_exception(self, download_url_mock):
-        """
-        Verify that too many requests raise an identifiable exception
-        """
-        download_url_mock.return_value = (429, None)
-        with pytest.raises(FDSNTooManyRequestsException):
-            self.client.get_stations()
 
     @pytest.mark.skip(reason='Token is expired')
     def test_eida_token_resolution(self, testdata):
@@ -1422,17 +1260,6 @@ class TestClient():
                "does not seem to contain a valid PGP message.")
         with pytest.raises(ValueError, match=msg):
             client = Client('GFZ', eida_token=testdata['event_helpstring.txt'])
-
-    def test_iris_earthscope_message(self):
-        """
-        Test that using "IRIS" short URL in FDSN client shows a warning message
-        and switches to "EARTHSCOPE" short URL.
-        """
-        msg = ("IRIS is now EarthScope, please consider changing the FDSN "
-               "client short URL to 'EARTHSCOPE'.")
-        with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
-            client = Client('IRIS', _discover_services=False)
-        assert client.base_url == 'http://service.iris.edu'
 
 
 class TestClientNoNetwork():
@@ -1708,3 +1535,176 @@ class TestClientNoNetwork():
         got = normalize_version_number(got)
         expected = normalize_version_number(expected)
         assert got == expected, failmsg(got, expected)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_download_urls_for_custom_mapping(
+            self, download_url_mock, testdata):
+        """
+        Tests the downloading of data with custom mappings.
+        """
+        base_url = "http://example.com"
+
+        # More extensive mock setup simulation service discovery.
+        def custom_side_effects(*args, **kwargs):
+            if "version" in args[0]:
+                return 200, "1.0.200"
+            elif "event" in args[0]:
+                with open(testdata["2014-01-07_iris_event.wadl"], "rb") as fh:
+                    return 200, fh.read()
+            elif "station" in args[0]:
+                with open(testdata["2014-01-07_iris_station.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            elif "dataselect" in args[0]:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            return 404, None
+
+        download_url_mock.side_effect = custom_side_effects
+
+        # Some custom urls
+        base_url_event = "http://example.com/beta/event_service/11"
+        base_url_station = "http://example.org/beta2/station/7"
+        base_url_ds = "http://example.edu/beta3/dataselect/8"
+
+        # An exception will be raised if not actual WADLs are returned.
+        # Catch warnings to avoid them being raised for the tests.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            c = Client(base_url=base_url, service_mappings={
+                "event": base_url_event,
+                "station": base_url_station,
+                "dataselect": base_url_ds,
+            })
+        for warning in w:
+            assert "Could not parse" in str(warning) or \
+                            "cannot deal with" in str(warning)
+
+        # Test the dataselect downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
+                            UTCDateTime())
+        except Exception:
+            pass
+        assert base_url_ds in download_url_mock.call_args_list[0][0][0]
+
+        # Test the station downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_stations()
+        except Exception:
+            pass
+        assert base_url_station in download_url_mock.call_args_list[0][0][0]
+
+        # Test the event downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_events()
+        except Exception:
+            pass
+        assert base_url_event in download_url_mock.call_args_list[0][0][0]
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_no_data_exception(self, download_url_mock):
+        """
+        Verify that a request returning no data raises an identifiable
+        exception
+        """
+        download_url_mock.return_value = (204, None)
+        with pytest.raises(FDSNNoDataException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_request_too_large_exception(self, download_url_mock):
+        """
+        Verify that a request returning too much data raises an identifiable
+        exception
+        """
+        download_url_mock.return_value = (413, None)
+        with pytest.raises(FDSNRequestTooLargeException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_timeout_exception(self, download_url_mock):
+        """
+        Verify that a request timing out raises an identifiable exception
+        """
+        download_url_mock.return_value = (None, "timeout")
+        with pytest.raises(FDSNTimeoutException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_not_implemented_exception(self, download_url_mock):
+        """
+        Verify that a client receiving a 501 'Not Implemented' status
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (501, None)
+        with pytest.raises(FDSNNotImplementedException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_bad_gateway_exception(self, download_url_mock):
+        """
+        Verify that a client receiving a 502 'Bad Gateway' status
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (502, None)
+        with pytest.raises(FDSNBadGatewayException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_service_unavailable_exception(self, download_url_mock):
+        """
+        Verify that opening a client to a service temporarily unavailable
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (503, None)
+        with pytest.raises(FDSNServiceUnavailableException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_bad_request_exception(self, download_url_mock):
+        """
+        Verify that a bad request raises an identifiable exception
+        """
+        download_url_mock.return_value = (400, io.BytesIO(b""))
+        with pytest.raises(FDSNBadRequestException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_server_exception(self, download_url_mock):
+        """
+        Verify that a server error raises an identifiable exception
+        """
+        download_url_mock.return_value = (500, None)
+        with pytest.raises(FDSNInternalServerException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_too_many_requests_exception(self, download_url_mock):
+        """
+        Verify that too many requests raise an identifiable exception
+        """
+        download_url_mock.return_value = (429, None)
+        with pytest.raises(FDSNTooManyRequestsException):
+            self.client.get_stations()
+
+    def test_iris_earthscope_message(self):
+        """
+        Test that using "IRIS" short URL in FDSN client shows a warning message
+        and switches to "EARTHSCOPE" short URL.
+        """
+        msg = ("IRIS is now EarthScope, please consider changing the FDSN "
+               "client short URL to 'EARTHSCOPE'.")
+        with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
+            client = Client('IRIS', _discover_services=False)
+        assert client.base_url == 'http://service.iris.edu'
