@@ -41,9 +41,6 @@ from obspy.clients.fdsn.mass_downloader.download_helpers import (
     Channel, TimeInterval, Station, STATUS, ClientDownloadHelper)
 
 
-pytestmark = pytest.mark.network
-
-
 class TestDomain():
     """
     Test case for the domain definitions.
