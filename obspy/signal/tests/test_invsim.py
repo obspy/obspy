@@ -12,7 +12,7 @@ import numpy as np
 
 from obspy import Trace, UTCDateTime, read, read_inventory
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.misc import SuppressOutput
+from obspy.core.util.misc import SuppressOutput, ptp
 from obspy.core.util.testing import traces_almost_equal
 from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
@@ -456,8 +456,8 @@ class TestInvSim():
 
         # The only thing that changed was the channel code. This should change
         # the response.
-        rel_diff = np.ptp(np.abs(response_2 - response_1)) / \
-            max(np.ptp(np.abs(response_1)), np.ptp(np.abs(response_2)))
+        rel_diff = ptp(np.abs(response_2 - response_1)) / \
+            max(ptp(np.abs(response_1)), ptp(np.abs(response_2)))
         assert rel_diff > 1E-3
 
         # The RESP file only contains two channels.
