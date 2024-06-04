@@ -24,11 +24,14 @@ def _read_header(file):
         # np.fromfile accepts file path on-disk file-like
         # objects. In all other cases, use np.frombuffer:
         try:
-            return np.fromfile(file, dtype='u1', count=16)
+            header = np.fromfile(file, dtype='u1', count=16)
         except UnsupportedOperation:
             # stream does not support fileno
             buffer = io_stream.read(16)
-            return np.frombuffer(buffer, dtype='u1')
+            header = np.frombuffer(buffer, dtype='u1')
+    # manual upcast for later bitshifting etc
+    header = np.require(header, dtype=np.int64)
+    return header
 
 
 def _is_pse(file):
