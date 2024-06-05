@@ -182,7 +182,7 @@ class Reftek130(object):
         Checks if there are packets of a type that is currently not implemented
         and drop them showing a warning message.
         """
-        is_implemented = np.in1d(
+        is_implemented = np.isin(
             self._data['packet_type'],
             [x.encode() for x in PACKET_TYPES_IMPLEMENTED])
         # if all packets are of a type that is implemented, the nothing to do..
