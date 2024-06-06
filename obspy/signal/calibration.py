@@ -219,7 +219,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,  # noqa
     step = int(NFFT) - int(noverlap)
     ind = np.arange(0, len(x) - NFFT + 1, step, dtype=np.int32)
     n = len(ind)
-    p_xy = np.zeros((num_freqs, n), np.complex_)
+    p_xy = np.zeros((num_freqs, n), np.complex128)
 
     # do the ffts of the slices
     for i in range(n):

@@ -126,7 +126,7 @@ def byteswap(*arrays):
     .. seealso::
         https://docs.scipy.org/doc/numpy/user/basics.byteswapping.html
     """
-    return [arr.newbyteorder('S') for arr in arrays]
+    return [arr.view(arr.dtype.newbyteorder('S')) for arr in arrays]
 
 
 def is_same_byteorder(bo1, bo2):

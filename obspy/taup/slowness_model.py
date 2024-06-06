@@ -1327,15 +1327,15 @@ class SlownessModel(object):
         ldim = np.ndim(layer_num)
 
         if ldim == 1 and pdim == 0:
-            time = np.empty(shape=layer_num.shape, dtype=np.float_)
-            dist = np.empty(shape=layer_num.shape, dtype=np.float_)
+            time = np.empty(shape=layer_num.shape, dtype=np.float64)
+            dist = np.empty(shape=layer_num.shape, dtype=np.float64)
         elif ldim == 0 and pdim == 1:
-            time = np.empty(shape=spherical_ray_param.shape, dtype=np.float_)
-            dist = np.empty(shape=spherical_ray_param.shape, dtype=np.float_)
+            time = np.empty(shape=spherical_ray_param.shape, dtype=np.float64)
+            dist = np.empty(shape=spherical_ray_param.shape, dtype=np.float64)
         elif ldim == pdim and (ldim == 0 or
                                layer_num.shape == spherical_ray_param.shape):
-            time = np.empty(shape=layer_num.shape, dtype=np.float_)
-            dist = np.empty(shape=layer_num.shape, dtype=np.float_)
+            time = np.empty(shape=layer_num.shape, dtype=np.float64)
+            dist = np.empty(shape=layer_num.shape, dtype=np.float64)
         else:
             raise TypeError('Either spherical_ray_param or layer_num must be '
                             '0D, or they must have the same shape.')

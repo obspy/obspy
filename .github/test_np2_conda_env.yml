@@ -7,7 +7,9 @@ dependencies:
   - decorator
   - lxml
   - matplotlib
-  - numpy < 2
+  - numpy >= 2.0.0rc2
+  # dummy package needed to install the np2 rc via conda
+  - conda-forge/label/numpy_rc::_numpy_rc
   - scipy
   - requests
   - setuptools

@@ -1427,7 +1427,7 @@ class TestTrace:
         tr.data = np.ma.ones(100)
         tr.data[30:40] = np.ma.masked
         tm = tr.times()
-        assert np.alltrue(tr.data.mask == tm.mask)
+        assert np.all(tr.data.mask == tm.mask)
         # test relative with reftime
         tr.data = np.ones(100)
         shift = 9.5

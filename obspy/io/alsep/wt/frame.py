@@ -8,7 +8,7 @@ from .parser import \
 class _WtFrame(object):
 
     def __init__(self, frame):
-        self.data = frame
+        self.data = np.require(frame, dtype=np.int64)
         # Frame header parameters
         self.flag_bit = None
         self.msec_of_year = None

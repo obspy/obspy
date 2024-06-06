@@ -7,7 +7,7 @@ dependencies:
   - decorator
   - lxml
   - matplotlib
-  - numpy
+  - numpy < 2
   - scipy
   - requests
   - setuptools

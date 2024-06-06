@@ -7,7 +7,7 @@ import warnings
 import numpy as np
 
 import obspy
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, CatchAndAssertWarnings
 from obspy.io.reftek.core import (
     _read_reftek130, _is_reftek130, Reftek130, Reftek130Exception)
 from obspy.io.reftek.packet import (
@@ -168,17 +168,15 @@ class TestReftek():
         rt_mseed fills in network as "XX", location as "01" and channels as
         "001", "002", "003".
         """
-        with warnings.catch_warnings(record=True) as w:
+        msg = ('No channel code specified in the data file and no component '
+               'codes specified. Using stream label and number of channel '
+               'in file as channel codes.')
+        with CatchAndAssertWarnings(expected=[(UserWarning, msg)]) as w:
             warnings.simplefilter("always")
             st_reftek = _read_reftek130(
                 self.reftek_file, network="XX", location="01",
                 sort_permuted_package_sequence=True)
-        assert len(w) == 8
-        for w_ in w:
-            assert str(w_.message) == \
-                ('No channel code specified in the data file and no component '
-                 'codes specified. Using stream label and number of channel '
-                 'in file as channel codes.')
+        assert len(w) >= 8
         # check that channel codes are set with stream label from EH packet +
         # enumerated channel number starting at 0
         for tr, cha in zip(st_reftek, ('EH0', 'EH0', 'EH0', 'EH1', 'EH1',
@@ -234,14 +232,12 @@ class TestReftek():
                 fh.write(fh2.read())
             fh.seek(0)
             # try to read file, finding a non-contiguous packet sequence
-            with warnings.catch_warnings(record=True) as w:
+            msg = 'Detected a non-contiguous packet sequence!'
+            with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
                 warnings.simplefilter("always")
                 _read_reftek130(fh.name, network="XX", location="01",
                                 component_codes=["1", "2", "3"],
                                 sort_permuted_package_sequence=True)
-        assert len(w) == 1
-        assert str(w[0].message) == \
-            'Detected a non-contiguous packet sequence!'
 
     def test_read_file_perturbed_packet_sequence(self):
         """
@@ -268,16 +264,14 @@ class TestReftek():
             fh.write(tmp4)
             fh.seek(0)
             # try to read file, finding a non-contiguous packet sequence
-            with warnings.catch_warnings(record=True) as w:
+            msg = 'Detected permuted packet sequence, sorting.'
+            with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
                 warnings.simplefilter("always")
                 st_reftek = _read_reftek130(
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
         st_reftek.merge(-1)
-        assert len(w) == 1
-        assert str(w[0].message) == \
-            'Detected permuted packet sequence, sorting.'
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_drop_not_implemented_packets(self):
@@ -303,22 +297,22 @@ class TestReftek():
             fh.write(b"BB")
             fh.write(tmp4[2:])
             fh.seek(0)
-            with warnings.catch_warnings(record=True) as w:
+            msg = re.escape(
+                "Encountered some packets of types that are not "
+                "implemented yet (types: [b'AA', b'BB']). Dropped 3 "
+                "packets overall.")
+            # this message we get because ET packet at end is now missing
+            msg2 = re.escape(
+                'No event trailer (ET) packets in packet sequence. File '
+                'might be truncated.')
+            with CatchAndAssertWarnings(
+                    expected=[(UserWarning, msg), (UserWarning, msg2)]) as w:
                 warnings.simplefilter("always")
                 _read_reftek130(
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        assert len(w) == 2
-        assert re.match(
-                r"Encountered some packets of types that are not implemented "
-                r"yet \(types: \[b?'AA', b?'BB'\]\). Dropped 3 packets "
-                r"overall.",
-                str(w[0].message))
-        # this message we get because ET packet at end is now missing
-        assert str(w[1].message) == \
-            ('No event trailer (ET) packets in packet sequence. File might be '
-             'truncated.')
+            assert len(w) >= 2
 
     def test_missing_event_trailer_packet(self):
         """
@@ -333,16 +327,15 @@ class TestReftek():
                 tmp = tmp[:-1024]
             fh.write(tmp)
             fh.seek(0)
-            with warnings.catch_warnings(record=True) as w:
+            msg = re.escape(
+                'No event trailer (ET) packets in packet sequence. File '
+                'might be truncated.')
+            with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
                 warnings.simplefilter("always")
                 st_reftek = _read_reftek130(
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        assert len(w) == 1
-        assert str(w[0].message) == \
-            ('No event trailer (ET) packets in packet sequence. File might be '
-             'truncated.')
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_truncated_last_packet(self):
@@ -358,22 +351,23 @@ class TestReftek():
                 tmp = tmp[:-10]
             fh.write(tmp)
             fh.seek(0)
-            with warnings.catch_warnings(record=True) as w:
+            # we get two warnings, one about the truncated packet and one about
+            # the missing last (ET) packet
+            msg = re.escape(
+                'Length of data not a multiple of '
+                '1024. Data might be truncated. Dropping 1014 '
+                'byte(s) at the end.')
+            msg2 = re.escape(
+                'No event trailer (ET) packets in packet sequence. File '
+                'might be truncated.')
+            with CatchAndAssertWarnings(
+                    expected=[(UserWarning, msg), (UserWarning, msg2)]) as w:
                 warnings.simplefilter("always")
                 st_reftek = _read_reftek130(
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
-        assert len(w) == 2
-        # we get two warnings, one about the truncated packet and one about the
-        # missing last (ET) packet
-        assert str(w[0].message) == (
-            'Length of data not a multiple of '
-            '1024. Data might be truncated. Dropping 1014 '
-            'byte(s) at the end.')
-        assert str(w[1].message) == \
-            ('No event trailer (ET) packets in packet sequence. File might be '
-             'truncated.')
+            assert len(w) >= 2
         # data should be read OK aside from the warnings
         self._assert_reftek130_test_stream(st_reftek)
 
