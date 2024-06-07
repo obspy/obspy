@@ -20,9 +20,9 @@ from obspy.clients.fdsn.routing.eidaws_routing_client import \
 
 
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
-pytestmark = pytest.mark.network
 
 
+@pytest.mark.network
 class TestEIDAWSRoutingClient():
     @classmethod
     def setup_class(cls):
@@ -35,6 +35,86 @@ class TestEIDAWSRoutingClient():
         # make sure it is larger.
         assert parse_version(self.client.get_service_version()) >= \
             parse_version("1.1.1")
+
+    def test_error_handling(self):
+        msg = "No data available for request."
+        with pytest.raises(FDSNNoDataException, match=msg):
+            self.client.get_waveforms(
+                network="XX", station="XXXXX", location="XX", channel="XXX",
+                starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 2))
+
+    def test_get_waveforms_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        st = self.client.get_waveforms(
+            network="B*", station="*", location="*", channel="HHZ",
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 0, 0, 1))
+        # This yields 4 channels at the time of writing this test - I assume
+        # it is unlikely to every yield less than 1.
+        # So this test should be fairly stable.
+        assert len(st) >= 1
+
+        # Same with the bulk download.
+        st2 = self.client.get_waveforms_bulk(
+            [["B*", "*", "*", "HHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 0, 0, 1)]])
+        assert len(st2) >= 1
+
+        # They should be identical.
+        assert st == st2
+
+    def test_get_stations_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        inv = self.client.get_stations(
+            network="B*", station="*", location="*", channel="LHZ",
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
+            level="network")
+        # This yields 1 network at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        assert len(inv) >= 1
+
+        # Can also be formulated as a bulk query.
+        inv2 = self.client.get_stations_bulk(
+            [["B*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
+            level="network")
+        assert len(inv2) >= 1
+
+        # The results should be basically identical - they will still differ
+        # because times stamps and also order might change slightly.
+        # But the get_contents() method should be safe enough.
+        assert inv.get_contents() == inv2.get_contents()
+
+    def test_proper_no_data_exception_on_out_of_epoch_dates(self):
+        """
+        Test for #2611 (EIDA/userfeedback#56) which was leading to bulk request
+        of *all* EIDA data when querying a legit station but an out-of-epoch
+        time window for which no data exists.
+        """
+        # this time window is before the requested station was installed
+        t1 = obspy.UTCDateTime('2012-01-01')
+        t2 = t1 + 2
+        with pytest.raises(FDSNNoDataException, match='No data'):
+            self.client.get_waveforms(
+                network='OE', station='UNNA', channel='HHZ', location='*',
+                starttime=t1, endtime=t2)
+
+
+class TestEIDAWSRoutingClientNoNetwork():
+    @classmethod
+    def setup_class(cls):
+        cls.client = EIDAWSRoutingClient(timeout=20)
+        cls._cls = ("obspy.clients.fdsn.routing.eidaws_routing_client."
+                    "EIDAWSRoutingClient")
 
     def test_response_splitting(self):
         data = """
@@ -128,14 +208,6 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
         msg = 'The `filename` argument is not supported'
         with pytest.raises(ValueError, match=msg):
             self.client.get_stations_bulk([], filename="out.xml")
-
-    def test_error_handling(self):
-        msg = "No data available for request."
-        with pytest.raises(FDSNNoDataException, match=msg):
-            self.client.get_waveforms(
-                network="XX", station="XXXXX", location="XX", channel="XXX",
-                starttime=obspy.UTCDateTime(2017, 1, 1),
-                endtime=obspy.UTCDateTime(2017, 1, 2))
 
     def test_get_waveforms(self):
         """
@@ -296,67 +368,3 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         assert p2.call_args[1] == {
             "longitude": 1.0, "latitude": 0.0,
             "starttime": obspy.UTCDateTime(2017, 1, 1)}
-
-    def test_get_waveforms_integration_test(self):
-        """
-        Integration test that does not mock anything but actually downloads
-        things.
-        """
-        st = self.client.get_waveforms(
-            network="B*", station="*", location="*", channel="HHZ",
-            starttime=obspy.UTCDateTime(2017, 1, 1),
-            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 0, 0, 1))
-        # This yields 4 channels at the time of writing this test - I assume
-        # it is unlikely to every yield less than 1.
-        # So this test should be fairly stable.
-        assert len(st) >= 1
-
-        # Same with the bulk download.
-        st2 = self.client.get_waveforms_bulk(
-            [["B*", "*", "*", "HHZ", obspy.UTCDateTime(2017, 1, 1),
-              obspy.UTCDateTime(2017, 1, 1, 0, 0, 0, 1)]])
-        assert len(st2) >= 1
-
-        # They should be identical.
-        assert st == st2
-
-    def test_get_stations_integration_test(self):
-        """
-        Integration test that does not mock anything but actually downloads
-        things.
-        """
-        inv = self.client.get_stations(
-            network="B*", station="*", location="*", channel="LHZ",
-            starttime=obspy.UTCDateTime(2017, 1, 1),
-            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            level="network")
-        # This yields 1 network at the time of writing this test - I assume
-        # it is unlikely to every yield less. So this test should be fairly
-        # stable.
-        assert len(inv) >= 1
-
-        # Can also be formulated as a bulk query.
-        inv2 = self.client.get_stations_bulk(
-            [["B*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
-              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            level="network")
-        assert len(inv2) >= 1
-
-        # The results should be basically identical - they will still differ
-        # because times stamps and also order might change slightly.
-        # But the get_contents() method should be safe enough.
-        assert inv.get_contents() == inv2.get_contents()
-
-    def test_proper_no_data_exception_on_out_of_epoch_dates(self):
-        """
-        Test for #2611 (EIDA/userfeedback#56) which was leading to bulk request
-        of *all* EIDA data when querying a legit station but an out-of-epoch
-        time window for which no data exists.
-        """
-        # this time window is before the requested station was installed
-        t1 = obspy.UTCDateTime('2012-01-01')
-        t2 = t1 + 2
-        with pytest.raises(FDSNNoDataException, match='No data'):
-            self.client.get_waveforms(
-                network='OE', station='UNNA', channel='HHZ', location='*',
-                starttime=t1, endtime=t2)

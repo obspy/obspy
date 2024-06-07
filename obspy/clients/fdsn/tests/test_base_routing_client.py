@@ -23,7 +23,6 @@ from obspy.clients.fdsn.routing.federator_routing_client import (
     FederatorRoutingClient)
 
 
-pytestmark = pytest.mark.network
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 
 

@@ -52,7 +52,6 @@ from obspy.geodetics import locations2degrees
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
-pytestmark = pytest.mark.network
 
 
 def _normalize_stats(obj):
@@ -99,6 +98,7 @@ def normalize_version_number(string):
     return [line.strip() for line in repl.splitlines()]
 
 
+@pytest.mark.network
 class TestClient():
     """
     Test cases for obspy.clients.fdsn.client.Client.
@@ -109,212 +109,6 @@ class TestClient():
         cls.client_auth = \
             Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
-
-    def test_empty_bulk_string(self):
-        """
-        Makes sure an exception is raised if an empty bulk string would be
-        produced (e.g. empty list as input for `get_bulk_string()`)
-        """
-        msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
-               "of all available data")
-        for bad_input in [[], '', None]:
-            with pytest.raises(FDSNInvalidRequestException, match=msg):
-                get_bulk_string(bulk=bad_input, arguments={})
-
-    def test_validate_base_url(self):
-        """
-        Tests the _validate_base_url() method.
-        """
-
-        test_urls_valid = list(URL_MAPPINGS.values())
-        test_urls_valid += [
-            "http://something.ethz.ch",
-            "http://example.org",
-            "https://webservices.rm.ingv.it",
-            "http://localhost:8080/test/",
-            "http://93.63.40.85/",
-            "http://[::1]:80/test/",
-            "http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]",
-            "http://[2001:db8::ff00:42:8329]",
-            "http://[::ffff:192.168.89.9]",
-            "http://jane",
-            "http://localhost",
-            "http://hyphenated-internal-hostname",
-            "http://internal-machine.private",
-            "https://long-public-tld.international",
-            "http://punycode-tld.xn--fiqs8s"]
-
-        test_urls_fails = [
-            "http://",
-            "http://127.0.1",
-            "http://127.=.0.1",
-            "http://127.0.0.0.1",
-            "http://tld.too.long." + ("x" * 64)]
-        test_urls_fails += [
-            "http://[]",
-            "http://[1]",
-            "http://[1:2]",
-            "http://[1::2::3]",
-            "http://[1::2:3::4]",
-            "http://[1:2:2:4:5:6:7]"]
-
-        for url in test_urls_valid:
-            assert self.client._validate_base_url(url), \
-                '%s should be valid' % url
-
-        for url in test_urls_fails:
-            assert not self.client._validate_base_url(url), \
-                '%s should be invalid' % url
-
-    def test_url_building(self):
-        """
-        Tests the build_url() functions.
-        """
-        # Application WADL
-        assert build_url("http://service.iris.edu", "dataselect", 1,
-                         "application.wadl") == \
-            "http://service.iris.edu/fdsnws/dataselect/1/application.wadl"
-        assert build_url("http://service.iris.edu", "event", 1,
-                         "application.wadl") == \
-            "http://service.iris.edu/fdsnws/event/1/application.wadl"
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "application.wadl") == \
-            "http://service.iris.edu/fdsnws/station/1/application.wadl"
-
-        # Test one parameter.
-        assert build_url("http://service.iris.edu", "dataselect", 1,
-                         "query", {"network": "BW"}) == \
-            "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW"
-        assert build_url("http://service.iris.edu", "dataselect", 1,
-                         "queryauth", {"network": "BW"}) == \
-            "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW"
-        # Test two parameters. Note random order, two possible results.
-        assert build_url("http://service.iris.edu", "dataselect", 1,
-                         "query", {"net": "A", "sta": "BC"}) in \
-            ("http://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
-             "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A")
-
-        # A wrong service raises a ValueError
-        with pytest.raises(ValueError):
-            build_url("http://service.iris.edu", "obspy", 1, "query")
-
-    def test_location_parameters(self):
-        """
-        Tests how the variety of location values are handled.
-
-        Why location? Mostly because it is one tricky parameter. It is not
-        uncommon to assume that a non-existent location is "--", but in reality
-        "--" is "<space><space>". This substitution exists because mostly
-        because various applications have trouble digesting spaces (spaces in
-        the URL, for example).
-        The confusion begins when location is treated as empty instead, which
-        would imply "I want all locations" instead of "I only want locations of
-        <space><space>"
-        """
-        # requests with no specified location should be treated as a wildcard
-        assert not ("--" in build_url(
-            "http://service.iris.edu", "station", 1, "query",
-            {"network": "IU", "station": "ANMO", "starttime": "2013-01-01"}))
-        # location of "  " is the same as "--"
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "query", {"location": "  "}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?location=--"
-        # wildcard locations are valid. Will be encoded.
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "query", {"location": "*"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?location=%2A"
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "query", {"location": "A?"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?location=A%3F"
-
-        # lists are valid, including <space><space> lists. Again encoded
-        # result.
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "query", {"location": "  ,1?,?0"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
-            "location=--%2C1%3F%2C%3F0"
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "query", {"location": "1?,--,?0"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
-            "location=1%3F%2C--%2C%3F0"
-
-        # Test all three special cases with empty parameters into lists.
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "query", {"location": "  ,AA,BB"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
-            "location=--%2CAA%2CBB"
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "query", {"location": "AA,  ,BB"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
-            "location=AA%2C--%2CBB"
-        assert build_url("http://service.iris.edu", "station", 1,
-                         "query", {"location": "AA,BB,  "}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
-            "location=AA%2CBB%2C--"
-
-        # The location parameter is also passed through the
-        # _create_url_from_parameters() method and thus has to survive it!
-        # This guards against a regression where all empty location codes
-        # where removed by this function!
-        for service in ["station", "dataselect"]:
-            for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
-                        u"", u" ", u"  ", u"--"]:
-                assert "location=--" in \
-                    self.client._create_url_from_parameters(
-                        service, [],
-                        {"location": loc, "starttime": 0, "endtime": 1})
-
-        # Also check the full call with a mock test.
-        for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
-                    u"", u" ", u"  ", u"--"]:
-            with mock.patch("obspy.clients.fdsn.Client._download") as p:
-                self.client.get_stations(0, 0, location=loc,
-                                         filename=mock.Mock())
-            assert p.call_count == 1
-            assert "location=--" in p.call_args[0][0]
-            with mock.patch("obspy.clients.fdsn.Client._download") as p:
-                self.client.get_waveforms(1, 2, loc, 4, 0, 0,
-                                          filename=mock.Mock())
-            assert p.call_count == 1
-            assert "location=--" in p.call_args[0][0]
-
-    def test_url_building_with_auth(self):
-        """
-        Tests the Client._build_url() method with authentication.
-
-        Necessary on top of test_url_building test case because clients with
-        authentication have to build different URLs for dataselect.
-        """
-        # no authentication
-        got = self.client._build_url("dataselect", "query", {'net': "BW"})
-        expected = "http://service.iris.edu/fdsnws/dataselect/1/query?net=BW"
-        assert got == expected
-        # with authentication
-        got = self.client_auth._build_url("dataselect", "query", {'net': "BW"})
-        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
-                    "queryauth?net=BW")
-        assert got == expected
-
-    def test_set_credentials(self):
-        """
-        Test for issue #2146
-
-        When setting credentials not during `__init__` but using
-        `set_credentials`, waveform queries should still properly go to
-        "queryauth" endpoint.
-        """
-        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT)
-        user = "nobody@iris.edu"
-        password = "anonymous"
-        client.set_credentials(user=user, password=password)
-        got = client._build_url("dataselect", "query", {'net': "BW"})
-        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
-                    "queryauth?net=BW")
-        assert got == expected
-        # more basic test: check that set_credentials has set Client.user
-        # (which is tested when checking which endpoint to use, query or
-        # queryauth)
-        assert client.user == user
 
     @pytest.mark.skip(reason='data no longer available')
     def test_trim_stream_after_get_waveform(self):
@@ -398,34 +192,6 @@ class TestClient():
         assert len(expected) > 5
         assert {*self.client.services["available_event_contributors"]} == \
             expected
-
-    def test_discover_services_defaults(self):
-        """
-        A Client initialized with _discover_services=False shouldn't perform
-        any services/WADL queries on the endpoint, and should show only the
-        default service parameters.
-        """
-        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
-                        _discover_services=False)
-        assert client.services == DEFAULT_SERVICES
-
-    def test_simple_xml_parser(self):
-        """
-        Tests the simple XML parsing helper function.
-        """
-        catalogs = parse_simple_xml("""
-            <?xml version="1.0"?>
-            <Catalogs>
-              <total>6</total>
-              <Catalog>ANF</Catalog>
-              <Catalog>GCMT</Catalog>
-              <Catalog>TEST</Catalog>
-              <Catalog>ISC</Catalog>
-              <Catalog>UofW</Catalog>
-              <Catalog>NEIC PDE</Catalog>
-            </Catalogs>""")
-        assert catalogs == {"catalogs": set(
-            ("ANF", "GCMT", "TEST", "ISC", "UofW", "NEIC PDE"))}
 
     def test_iris_example_queries_event(self):
         """
@@ -784,12 +550,6 @@ class TestClient():
                     expected = fh.read()
             assert got == expected, \
                 "Dataselect failed for query %s" % repr(query)
-
-    def test_conflicting_params(self):
-        """
-        """
-        with pytest.raises(FDSNInvalidRequestException):
-            self.client.get_stations(network="IU", net="IU")
 
     def test_help_function_with_iris(self, testdata):
         """
@@ -1188,82 +948,6 @@ class TestClient():
                         service_mappings={"event": None})
         assert sorted(client.services.keys()) == ['dataselect', 'station']
 
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_download_urls_for_custom_mapping(
-            self, download_url_mock, testdata):
-        """
-        Tests the downloading of data with custom mappings.
-        """
-        base_url = "http://example.com"
-
-        # More extensive mock setup simulation service discovery.
-        def custom_side_effects(*args, **kwargs):
-            if "version" in args[0]:
-                return 200, "1.0.200"
-            elif "event" in args[0]:
-                with open(testdata["2014-01-07_iris_event.wadl"], "rb") as fh:
-                    return 200, fh.read()
-            elif "station" in args[0]:
-                with open(testdata["2014-01-07_iris_station.wadl"],
-                          "rb") as fh:
-                    return 200, fh.read()
-            elif "dataselect" in args[0]:
-                with open(testdata["2014-01-07_iris_dataselect.wadl"],
-                          "rb") as fh:
-                    return 200, fh.read()
-            return 404, None
-
-        download_url_mock.side_effect = custom_side_effects
-
-        # Some custom urls
-        base_url_event = "http://example.com/beta/event_service/11"
-        base_url_station = "http://example.org/beta2/station/7"
-        base_url_ds = "http://example.edu/beta3/dataselect/8"
-
-        # An exception will be raised if not actual WADLs are returned.
-        # Catch warnings to avoid them being raised for the tests.
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            c = Client(base_url=base_url, service_mappings={
-                "event": base_url_event,
-                "station": base_url_station,
-                "dataselect": base_url_ds,
-            })
-        for warning in w:
-            assert "Could not parse" in str(warning) or \
-                            "cannot deal with" in str(warning)
-
-        # Test the dataselect downloading.
-        download_url_mock.reset_mock()
-        download_url_mock.side_effect = None
-        download_url_mock.return_value = 404, None
-        try:
-            c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
-                            UTCDateTime())
-        except Exception:
-            pass
-        assert base_url_ds in download_url_mock.call_args_list[0][0][0]
-
-        # Test the station downloading.
-        download_url_mock.reset_mock()
-        download_url_mock.side_effect = None
-        download_url_mock.return_value = 404, None
-        try:
-            c.get_stations()
-        except Exception:
-            pass
-        assert base_url_station in download_url_mock.call_args_list[0][0][0]
-
-        # Test the event downloading.
-        download_url_mock.reset_mock()
-        download_url_mock.side_effect = None
-        download_url_mock.return_value = 404, None
-        try:
-            c.get_events()
-        except Exception:
-            pass
-        assert base_url_event in download_url_mock.call_args_list[0][0][0]
-
     def test_redirection(self):
         """
         Tests the redirection of GET and POST requests. We redirect
@@ -1424,26 +1108,6 @@ class TestClient():
             assert '{}='.format(key) in url_parts
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_no_data_exception(self, download_url_mock):
-        """
-        Verify that a request returning no data raises an identifiable
-        exception
-        """
-        download_url_mock.return_value = (204, None)
-        with pytest.raises(FDSNNoDataException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_request_too_large_exception(self, download_url_mock):
-        """
-        Verify that a request returning too much data raises an identifiable
-        exception
-        """
-        download_url_mock.return_value = (413, None)
-        with pytest.raises(FDSNRequestTooLargeException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_authentication_exceptions(self, download_url_mock):
         """
         Verify that a request with missing authentication raises an
@@ -1466,15 +1130,6 @@ class TestClient():
         with pytest.raises(FDSNForbiddenException):
             self.client.get_stations()
 
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_timeout_exception(self, download_url_mock):
-        """
-        Verify that a request timing out raises an identifiable exception
-        """
-        download_url_mock.return_value = (None, "timeout")
-        with pytest.raises(FDSNTimeoutException):
-            self.client.get_stations()
-
     def test_no_service_exception(self):
         """
         Verify that opening a client to a provider without FDSN service raises
@@ -1482,63 +1137,6 @@ class TestClient():
         """
         with pytest.raises(FDSNNoServiceException):
             Client("http://nofdsnservice.org")
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_not_implemented_exception(self, download_url_mock):
-        """
-        Verify that a client receiving a 501 'Not Implemented' status
-        raises an identifiable exception
-        """
-        download_url_mock.return_value = (501, None)
-        with pytest.raises(FDSNNotImplementedException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_bad_gateway_exception(self, download_url_mock):
-        """
-        Verify that a client receiving a 502 'Bad Gateway' status
-        raises an identifiable exception
-        """
-        download_url_mock.return_value = (502, None)
-        with pytest.raises(FDSNBadGatewayException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_service_unavailable_exception(self, download_url_mock):
-        """
-        Verify that opening a client to a service temporarily unavailable
-        raises an identifiable exception
-        """
-        download_url_mock.return_value = (503, None)
-        with pytest.raises(FDSNServiceUnavailableException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_bad_request_exception(self, download_url_mock):
-        """
-        Verify that a bad request raises an identifiable exception
-        """
-        download_url_mock.return_value = (400, io.BytesIO(b""))
-        with pytest.raises(FDSNBadRequestException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_server_exception(self, download_url_mock):
-        """
-        Verify that a server error raises an identifiable exception
-        """
-        download_url_mock.return_value = (500, None)
-        with pytest.raises(FDSNInternalServerException):
-            self.client.get_stations()
-
-    @mock.patch("obspy.clients.fdsn.client.download_url")
-    def test_too_many_requests_exception(self, download_url_mock):
-        """
-        Verify that too many requests raise an identifiable exception
-        """
-        download_url_mock.return_value = (429, None)
-        with pytest.raises(FDSNTooManyRequestsException):
-            self.client.get_stations()
 
     @pytest.mark.skip(reason='Token is expired')
     def test_eida_token_resolution(self, testdata):
@@ -1662,6 +1260,443 @@ class TestClient():
                "does not seem to contain a valid PGP message.")
         with pytest.raises(ValueError, match=msg):
             client = Client('GFZ', eida_token=testdata['event_helpstring.txt'])
+
+
+class TestClientNoNetwork():
+    """
+    Test cases for obspy.clients.fdsn.client.Client that do not need network
+    access.
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                            _discover_services=False)
+        cls.client_auth = \
+            Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                   user="nobody@iris.edu", password="anonymous",
+                   _discover_services=False)
+
+    def test_empty_bulk_string(self):
+        """
+        Makes sure an exception is raised if an empty bulk string would be
+        produced (e.g. empty list as input for `get_bulk_string()`)
+        """
+        msg = ("Empty 'bulk' parameter potentially leading to a FDSN request "
+               "of all available data")
+        for bad_input in [[], '', None]:
+            with pytest.raises(FDSNInvalidRequestException, match=msg):
+                get_bulk_string(bulk=bad_input, arguments={})
+
+    def test_validate_base_url(self):
+        """
+        Tests the _validate_base_url() method.
+        """
+
+        test_urls_valid = list(URL_MAPPINGS.values())
+        test_urls_valid += [
+            "http://something.ethz.ch",
+            "http://example.org",
+            "https://webservices.rm.ingv.it",
+            "http://localhost:8080/test/",
+            "http://93.63.40.85/",
+            "http://[::1]:80/test/",
+            "http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]",
+            "http://[2001:db8::ff00:42:8329]",
+            "http://[::ffff:192.168.89.9]",
+            "http://jane",
+            "http://localhost",
+            "http://hyphenated-internal-hostname",
+            "http://internal-machine.private",
+            "https://long-public-tld.international",
+            "http://punycode-tld.xn--fiqs8s"]
+
+        test_urls_fails = [
+            "http://",
+            "http://127.0.1",
+            "http://127.=.0.1",
+            "http://127.0.0.0.1",
+            "http://tld.too.long." + ("x" * 64)]
+        test_urls_fails += [
+            "http://[]",
+            "http://[1]",
+            "http://[1:2]",
+            "http://[1::2::3]",
+            "http://[1::2:3::4]",
+            "http://[1:2:2:4:5:6:7]"]
+
+        for url in test_urls_valid:
+            assert self.client._validate_base_url(url), \
+                '%s should be valid' % url
+
+        for url in test_urls_fails:
+            assert not self.client._validate_base_url(url), \
+                '%s should be invalid' % url
+
+    def test_url_building(self):
+        """
+        Tests the build_url() functions.
+        """
+        # Application WADL
+        assert build_url("http://service.iris.edu", "dataselect", 1,
+                         "application.wadl") == \
+            "http://service.iris.edu/fdsnws/dataselect/1/application.wadl"
+        assert build_url("http://service.iris.edu", "event", 1,
+                         "application.wadl") == \
+            "http://service.iris.edu/fdsnws/event/1/application.wadl"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "application.wadl") == \
+            "http://service.iris.edu/fdsnws/station/1/application.wadl"
+
+        # Test one parameter.
+        assert build_url("http://service.iris.edu", "dataselect", 1,
+                         "query", {"network": "BW"}) == \
+            "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW"
+        assert build_url("http://service.iris.edu", "dataselect", 1,
+                         "queryauth", {"network": "BW"}) == \
+            "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW"
+        # Test two parameters. Note random order, two possible results.
+        assert build_url("http://service.iris.edu", "dataselect", 1,
+                         "query", {"net": "A", "sta": "BC"}) in \
+            ("http://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
+             "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A")
+
+        # A wrong service raises a ValueError
+        with pytest.raises(ValueError):
+            build_url("http://service.iris.edu", "obspy", 1, "query")
+
+    def test_location_parameters(self):
+        """
+        Tests how the variety of location values are handled.
+
+        Why location? Mostly because it is one tricky parameter. It is not
+        uncommon to assume that a non-existent location is "--", but in reality
+        "--" is "<space><space>". This substitution exists because mostly
+        because various applications have trouble digesting spaces (spaces in
+        the URL, for example).
+        The confusion begins when location is treated as empty instead, which
+        would imply "I want all locations" instead of "I only want locations of
+        <space><space>"
+        """
+        # requests with no specified location should be treated as a wildcard
+        assert not ("--" in build_url(
+            "http://service.iris.edu", "station", 1, "query",
+            {"network": "IU", "station": "ANMO", "starttime": "2013-01-01"}))
+        # location of "  " is the same as "--"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "  "}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?location=--"
+        # wildcard locations are valid. Will be encoded.
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "*"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?location=%2A"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "A?"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?location=A%3F"
+
+        # lists are valid, including <space><space> lists. Again encoded
+        # result.
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "  ,1?,?0"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=--%2C1%3F%2C%3F0"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "1?,--,?0"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=1%3F%2C--%2C%3F0"
+
+        # Test all three special cases with empty parameters into lists.
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "  ,AA,BB"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=--%2CAA%2CBB"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "AA,  ,BB"}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=AA%2C--%2CBB"
+        assert build_url("http://service.iris.edu", "station", 1,
+                         "query", {"location": "AA,BB,  "}) == \
+            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "location=AA%2CBB%2C--"
+
+        # The location parameter is also passed through the
+        # _create_url_from_parameters() method and thus has to survive it!
+        # This guards against a regression where all empty location codes
+        # where removed by this function!
+        for service in ["station", "dataselect"]:
+            for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                        u"", u" ", u"  ", u"--"]:
+                assert "location=--" in \
+                    self.client._create_url_from_parameters(
+                        service, [],
+                        {"location": loc, "starttime": 0, "endtime": 1})
+
+        # Also check the full call with a mock test.
+        for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                    u"", u" ", u"  ", u"--"]:
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                self.client.get_stations(0, 0, location=loc,
+                                         filename=mock.Mock())
+            assert p.call_count == 1
+            assert "location=--" in p.call_args[0][0]
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                self.client.get_waveforms(1, 2, loc, 4, 0, 0,
+                                          filename=mock.Mock())
+            assert p.call_count == 1
+            assert "location=--" in p.call_args[0][0]
+
+    def test_url_building_with_auth(self):
+        """
+        Tests the Client._build_url() method with authentication.
+
+        Necessary on top of test_url_building test case because clients with
+        authentication have to build different URLs for dataselect.
+        """
+        # no authentication
+        got = self.client._build_url("dataselect", "query", {'net': "BW"})
+        expected = "http://service.iris.edu/fdsnws/dataselect/1/query?net=BW"
+        assert got == expected
+        # with authentication
+        got = self.client_auth._build_url("dataselect", "query", {'net': "BW"})
+        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
+                    "queryauth?net=BW")
+        assert got == expected
+
+    def test_set_credentials(self):
+        """
+        Test for issue #2146
+
+        When setting credentials not during `__init__` but using
+        `set_credentials`, waveform queries should still properly go to
+        "queryauth" endpoint.
+        """
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        _discover_services=False)
+        user = "nobody@iris.edu"
+        password = "anonymous"
+        client.set_credentials(user=user, password=password)
+        got = client._build_url("dataselect", "query", {'net': "BW"})
+        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
+                    "queryauth?net=BW")
+        assert got == expected
+        # more basic test: check that set_credentials has set Client.user
+        # (which is tested when checking which endpoint to use, query or
+        # queryauth)
+        assert client.user == user
+
+    def test_discover_services_defaults(self):
+        """
+        A Client initialized with _discover_services=False shouldn't perform
+        any services/WADL queries on the endpoint, and should show only the
+        default service parameters.
+        """
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        _discover_services=False)
+        assert client.services == DEFAULT_SERVICES
+
+    def test_simple_xml_parser(self):
+        """
+        Tests the simple XML parsing helper function.
+        """
+        catalogs = parse_simple_xml("""
+            <?xml version="1.0"?>
+            <Catalogs>
+              <total>6</total>
+              <Catalog>ANF</Catalog>
+              <Catalog>GCMT</Catalog>
+              <Catalog>TEST</Catalog>
+              <Catalog>ISC</Catalog>
+              <Catalog>UofW</Catalog>
+              <Catalog>NEIC PDE</Catalog>
+            </Catalogs>""")
+        assert catalogs == {"catalogs": set(
+            ("ANF", "GCMT", "TEST", "ISC", "UofW", "NEIC PDE"))}
+
+    def test_conflicting_params(self):
+        """
+        """
+        with pytest.raises(FDSNInvalidRequestException):
+            self.client.get_stations(network="IU", net="IU")
+
+    @mock.patch(
+        "obspy.clients.fdsn.client.Client._get_webservice_versionstring")
+    def test_str_method(self, version_mock):
+        # doesn't matter what version a server would actually return, since we
+        # normalize the version numbers during testing the string anyway
+        version_mock.return_value = '1.1.9'
+        got = str(self.client)
+        expected = (
+            "FDSN Webservice Client (base url: http://service.iris.edu)\n"
+            "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
+            "'station' (v1.0.7)\n\n"
+            "Use e.g. client.help('dataselect') for the\n"
+            "parameter description of the individual services\n"
+            "or client.help() for parameter description of\n"
+            "all webservices.")
+        got = normalize_version_number(got)
+        expected = normalize_version_number(expected)
+        assert got == expected, failmsg(got, expected)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_download_urls_for_custom_mapping(
+            self, download_url_mock, testdata):
+        """
+        Tests the downloading of data with custom mappings.
+        """
+        base_url = "http://example.com"
+
+        # More extensive mock setup simulation service discovery.
+        def custom_side_effects(*args, **kwargs):
+            if "version" in args[0]:
+                return 200, "1.0.200"
+            elif "event" in args[0]:
+                with open(testdata["2014-01-07_iris_event.wadl"], "rb") as fh:
+                    return 200, fh.read()
+            elif "station" in args[0]:
+                with open(testdata["2014-01-07_iris_station.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            elif "dataselect" in args[0]:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            return 404, None
+
+        download_url_mock.side_effect = custom_side_effects
+
+        # Some custom urls
+        base_url_event = "http://example.com/beta/event_service/11"
+        base_url_station = "http://example.org/beta2/station/7"
+        base_url_ds = "http://example.edu/beta3/dataselect/8"
+
+        # An exception will be raised if not actual WADLs are returned.
+        # Catch warnings to avoid them being raised for the tests.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            c = Client(base_url=base_url, service_mappings={
+                "event": base_url_event,
+                "station": base_url_station,
+                "dataselect": base_url_ds,
+            })
+        for warning in w:
+            assert "Could not parse" in str(warning) or \
+                            "cannot deal with" in str(warning)
+
+        # Test the dataselect downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
+                            UTCDateTime())
+        except Exception:
+            pass
+        assert base_url_ds in download_url_mock.call_args_list[0][0][0]
+
+        # Test the station downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_stations()
+        except Exception:
+            pass
+        assert base_url_station in download_url_mock.call_args_list[0][0][0]
+
+        # Test the event downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_events()
+        except Exception:
+            pass
+        assert base_url_event in download_url_mock.call_args_list[0][0][0]
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_no_data_exception(self, download_url_mock):
+        """
+        Verify that a request returning no data raises an identifiable
+        exception
+        """
+        download_url_mock.return_value = (204, None)
+        with pytest.raises(FDSNNoDataException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_request_too_large_exception(self, download_url_mock):
+        """
+        Verify that a request returning too much data raises an identifiable
+        exception
+        """
+        download_url_mock.return_value = (413, None)
+        with pytest.raises(FDSNRequestTooLargeException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_timeout_exception(self, download_url_mock):
+        """
+        Verify that a request timing out raises an identifiable exception
+        """
+        download_url_mock.return_value = (None, "timeout")
+        with pytest.raises(FDSNTimeoutException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_not_implemented_exception(self, download_url_mock):
+        """
+        Verify that a client receiving a 501 'Not Implemented' status
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (501, None)
+        with pytest.raises(FDSNNotImplementedException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_bad_gateway_exception(self, download_url_mock):
+        """
+        Verify that a client receiving a 502 'Bad Gateway' status
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (502, None)
+        with pytest.raises(FDSNBadGatewayException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_service_unavailable_exception(self, download_url_mock):
+        """
+        Verify that opening a client to a service temporarily unavailable
+        raises an identifiable exception
+        """
+        download_url_mock.return_value = (503, None)
+        with pytest.raises(FDSNServiceUnavailableException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_bad_request_exception(self, download_url_mock):
+        """
+        Verify that a bad request raises an identifiable exception
+        """
+        download_url_mock.return_value = (400, io.BytesIO(b""))
+        with pytest.raises(FDSNBadRequestException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_server_exception(self, download_url_mock):
+        """
+        Verify that a server error raises an identifiable exception
+        """
+        download_url_mock.return_value = (500, None)
+        with pytest.raises(FDSNInternalServerException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_too_many_requests_exception(self, download_url_mock):
+        """
+        Verify that too many requests raise an identifiable exception
+        """
+        download_url_mock.return_value = (429, None)
+        with pytest.raises(FDSNTooManyRequestsException):
+            self.client.get_stations()
 
     def test_iris_earthscope_message(self):
         """
