@@ -606,7 +606,7 @@ class Trace(object):
         return st
 
     def __add__(self, trace, method=0, interpolation_samples=0,
-                fill_value=None, sanity_checks=True):
+                fill_value=None, sanity_checks=True, crossfade='linear'):
         """
         Add another Trace object to current trace.
 
@@ -629,6 +629,13 @@ class Trace(object):
         :type sanity_checks: bool, optional
         :param sanity_checks: Enables some sanity checks before merging traces.
             Defaults to ``True``.
+        :type crossfade: string, optional
+        :param crossfade: this parameter controls the crossfade type that is
+            used when method=2 is chosen. Possible values are:
+            'middle': transfers in the middle of the overlap
+            'sum': sums both traces in the overlap region
+            'linear': linear crossfade from one trace to the other
+            'sinus': sin(delta)**2 crossfade function
 
         Trace data will be converted into a NumPy masked array data type if
         any gaps are present. This behavior may be prevented by setting the
@@ -798,6 +805,25 @@ class Trace(object):
                                                lt.data.dtype)
                     data = [lt.data[:-delta], interpolation,
                             rt.data[interpolation_samples:]]
+            elif method == 2:  # crossfade with different possibilities
+                if crossfade == 'middle':
+                    ldelta = delta//2
+                    rdelta = delta - ldelta
+                    new_samples = np.empty(delta)
+                    new_samples[:ldelta] = lt.data[-delta:-delta + ldelta]
+                    new_samples[ldelta:] = rt.data[delta - rdelta:delta]
+                elif crossfade == 'sum':
+                    new_samples = lt[-delta:] + rt[:delta]
+                elif crossfade == 'linear':
+                    fadein = np.linspace(0., 1., delta)
+                    fadeout = fadein[::-1]
+                    new_samples = lt[-delta:] * fadeout + rt[:delta] * fadein
+                elif crossfade == 'sinus':
+                    fraction = np.linspace(0., np.pi / 2., delta)
+                    fadein = np.sin(fraction)**2
+                    fadeout = np.cos(fraction)**2
+                    new_samples = lt[-delta:] * fadeout + rt[:delta] * fadein
+                data = [lt.data[:-delta], new_samples, rt.data[delta:]]
             else:
                 raise NotImplementedError
         elif delta < 0 and delta_endtime >= 0:
@@ -830,6 +856,8 @@ class Trace(object):
                 data = [lt.data[:t1], gap, lt.data[t2:]]
             elif method == 1:
                 data = [lt.data]
+            elif method == 2:
+                data = [lt.data]
             else:
                 raise NotImplementedError
         elif delta == 0:
@@ -838,6 +866,7 @@ class Trace(object):
         else:
             # gap
             # use fixed value or interpolate in between
+            #gap = create_empty_data_chunk(delta, lt.data.dtype, fill_value)
             gap = create_empty_data_chunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
         # merge traces depending on NumPy array type
