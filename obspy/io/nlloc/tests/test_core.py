@@ -376,3 +376,7 @@ class TestNLLOC():
         assert cat[0].origins[0].evaluation_status == "rejected"
         assert cat[0].origins[0].comments[1].text == expected_comment
         assert cat[0].comments[1].text == expected_comment
+
+    def test_read_nlloc_doc_resolve_seedid(self):
+        assert 'seedid_map:' in read_nlloc_hyp.__doc__
+        assert 'ph2comp:' in read_nlloc_hyp.__doc__
