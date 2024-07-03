@@ -1143,7 +1143,6 @@ def _add_resolve_seedid_doc(func):
     3. if 1 and 2 did not succeed, use specified default template
        (default_seedid)
 
-    :param str filename: File or file-like object in text mode.
     :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Inventory used to retrieve network code, location code
         and channel code of stations (SEED id).
