@@ -4,7 +4,7 @@
 Utility objects.
 
 :copyright:
-    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
+    Lion Krischer (krischer@geophysik.uni-muenchen.de), Tom Eulenfeld 2013-2024
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
@@ -1130,7 +1130,7 @@ def _warn_on_invalid_uri(uri):
 
 
 def _add_resolve_seedid_doc(func):
-    """
+    doc = """
     The following parameters deal with the problem, that the format
     only stores station names for the picks, but the Pick object expects
     a SEED id. The SEED id is looked up for every pick by the
@@ -1158,18 +1158,18 @@ def _add_resolve_seedid_doc(func):
        (no matching data found or ambiguous results) in the inventory
     """
     if func.__doc__ is not None:
-        func.__doc__ = func.__doc__ + __doc__
+        func.__doc__ = func.__doc__ + doc
     return func
 
 
 def _add_resolve_seedid_ph2comp_doc(func):
-    """
+    doc = """
     :param dict ph2comp: mapping of phases to components if format does not
         specify the component or if the component ends with '?'. Set it to
         `None` for no mapping of components. (default: {'P': 'Z', 'S': 'N'})
     """
     if func.__doc__ is not None:
-        func.__doc__ = func.__doc__ + __doc__
+        func.__doc__ = func.__doc__ + doc
     return func
 
 
