@@ -546,7 +546,7 @@ class Client(object):
         """
         if "event" not in self.services:
             msg = "The current client does not have an event service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('event', locs, kwargs)
@@ -744,7 +744,7 @@ class Client(object):
         """
         if "station" not in self.services:
             msg = "The current client does not have a station service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('station', locs, kwargs)
@@ -862,7 +862,7 @@ class Client(object):
         """
         if "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('dataselect', locs, kwargs)
@@ -1044,7 +1044,7 @@ class Client(object):
         """
         if "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         arguments = OrderedDict(
             quality=quality,
@@ -1231,7 +1231,7 @@ class Client(object):
         """
         if "station" not in self.services:
             msg = "The current client does not have a station service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         arguments = OrderedDict(
             minlatitude=minlatitude,
