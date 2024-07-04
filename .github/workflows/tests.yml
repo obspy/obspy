@@ -122,16 +122,6 @@ jobs:
           - os: ubuntu-latest
             python-version: '3.12'
             options: default warnings
-          # numpy 2 specific builds
-          - os: ubuntu-latest
-            python-version: '3.12'
-            options: default warnings np2
-          - os: macos-latest
-            python-version: '3.12'
-            options: default warnings np2
-          - os: windows-latest
-            python-version: '3.12'
-            options: default warnings np2
           - os: ubuntu-latest
             python-version: '3.12'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network warnings' || 'default' }}
@@ -146,7 +136,7 @@ jobs:
       # set individual cache key
       cache_key: ${{ matrix.os }}-py${{ matrix.python-version }}-${{ contains(matrix.options, 'mindep') }}-${{ contains(matrix.options, 'mindepversion') }}
       # set conda environment file with dependencies
-      env_file: .github/test${{ contains(matrix.options, 'np2') && '_np2' || contains(matrix.options, 'mindepversion') && '_mindepversion' || contains(matrix.options, 'mindep') && '_mindep' || '' }}_conda_env.yml
+      env_file: .github/test${{ contains(matrix.options, 'mindepversion') && '_mindepversion' || contains(matrix.options, 'mindep') && '_mindep' || '' }}_conda_env.yml
       # set additional runtest options (--keep-images, --network, -W error)
       runtest_options: ${{ github.event_name == 'pull_request' && '--keep-images' || '' }} ${{ contains(matrix.options, 'network') && '--network' || '' }} ${{ contains(matrix.options, 'warnings') && '-W error' || '' }}
     steps:
