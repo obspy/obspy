@@ -551,6 +551,19 @@ class TestClient():
             assert got == expected, \
                 "Dataselect failed for query %s" % repr(query)
 
+    def test_dataselect_when_not_present_in_services(self):
+        """
+        Tests get_waveforms when dataselect is not present in Client.services
+        Should raise a FDSNNoServiceException
+        """
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        _discover_services=False)
+        client.services.pop("dataselect")
+        starttime = UTCDateTime('2016-11-01T00:00:00')
+        endtime = UTCDateTime('2016-11-01T00:00:10')
+        with pytest.raises(FDSNNoServiceException):
+            _ = client.get_waveforms('G', 'PEL', '*', 'LHZ', starttime, endtime)
+
     def test_help_function_with_iris(self, testdata):
         """
         Tests the help function with the EARTHSCOPE example.
