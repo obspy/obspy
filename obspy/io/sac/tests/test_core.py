@@ -9,7 +9,7 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, CatchAndAssertWarnings
 from obspy.core import AttribDict
 from obspy.io.sac import SacError, SACTrace, SacIOError
 from obspy.io.sac.core import (_is_sac, _is_sac_xy, _read_sac, _read_sac_xy,
@@ -1021,3 +1021,24 @@ class TestCore():
             tr_trimmed.stats.starttime.second
         assert tr_trimmed_read.stats.sac['nzmsec'] == \
             tr_trimmed.stats.starttime.microsecond * 1000
+
+    def test_sampling_rate_float_issue(self, testdata):
+        """
+        Test for rounding issues when reading SAC which stores sampling rate as
+        a single precision floating point represntation of the sample spacing
+        in seconds. See #3408.
+        """
+        path = testdata['sample_spacing_rounding_issue.sac']
+        msg = (r'Sample spacing read from SAC file \(0.040000003 when rounded '
+               r'to nanoseconds\) was rounded of to microsecond precision '
+               r'\(0.040000000\) to avoid floating point issues when '
+               r'converting to sampling rate \(see #3408\)')
+        # test with rounding (default)
+        for func in (read, _read_sac):
+            with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
+                tr = func(path, format="SAC")[0]
+            assert abs(25.0 - tr.stats.sampling_rate) < 1e-6
+        # test without rounding
+        for func in (read, _read_sac):
+            tr = func(path, format="SAC", round_sampling_interval=False)[0]
+        assert abs(25.0 - tr.stats.sampling_rate) > 1e-6

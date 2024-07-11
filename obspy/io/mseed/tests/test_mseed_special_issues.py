@@ -17,7 +17,7 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.io.mseed import (InternalMSEEDError, InternalMSEEDWarning,
                             ObsPyMSEEDFilesizeTooSmallError,
                             ObsPyMSEEDFilesizeTooLargeError)
@@ -150,7 +150,7 @@ class TestMSEEDSpecialIssue():
                                     verbose=0)
 
         # test readMSTraces. Will raise an internal warning.
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             data_record = _read_mseed(file)[0].data
 
         # This will raise 18 (!) warnings. It will skip 17 * 128 bytes due
@@ -650,6 +650,7 @@ class TestMSEEDSpecialIssue():
                 if year == 2056:
                     tr.stats.starttime = UTCDateTime(2056, 2, 1)
                 tr.write(memfile, format="mseed")
+                memfile.seek(0, 0)
                 st2 = read(memfile)
                 assert len(st2) == 1
                 tr2 = st2[0]
@@ -1170,13 +1171,13 @@ class TestMSEEDSpecialIssue():
                 buf.write(rec2)
                 buf.seek(0, 0)
                 # This will raise 1 warning per 128 bytes.
-                with WarningsCapture() as w:
+                with CatchAndAssertWarnings() as w:
                     st = _read_mseed(buf)
                 assert len(w) == length // 128
 
             # Also explicitly test the first warning message which should be
             # identical for all cases.
-            assert w[0].message.args[0] == \
+            assert str(w[0].message) == \
                 "readMSEEDBuffer(): Not a SEED record. Will skip bytes " \
                 "4096 to 4223."
 
@@ -1198,7 +1199,7 @@ class TestMSEEDSpecialIssue():
                 buf.write(rec2)
                 buf.seek(0, 0)
                 # This will raise 1 warning per 128 bytes.
-                with WarningsCapture() as w:
+                with CatchAndAssertWarnings() as w:
                     st = _read_mseed(buf)
                 assert len(w) == length // 128
 

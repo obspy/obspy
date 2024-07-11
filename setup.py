@@ -117,7 +117,7 @@ EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
 KEYWORDS = [
     'ALSEP', 'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'CYBERSHAKE', 'database', 'dataless',
-    'Dataless SEED', 'DMX', 'earthquakes', 'Earthworm', 'EIDA',
+    'Dataless SEED', 'DMX', 'earthquakes', 'EarthScope', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
     'IASPEI', 'imaging', 'IMS', 'instrument correction',
@@ -126,8 +126,8 @@ KEYWORDS = [
     'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
-    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
-    'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
+    'SAGE', 'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'SEISAN', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
@@ -559,11 +559,8 @@ ENTRY_POINTS = {
         'kaiser = scipy.signal.windows:kaiser',
         'nuttall = scipy.signal.windows:nuttall',
         'parzen = scipy.signal.windows:parzen',
-        # TODO slepian has been removed from scipy with version 1.6.0
-        # see https://docs.scipy.org/doc/scipy/release/1.1.0-notes.html
-        # see https://docs.scipy.org/doc/scipy/release/1.6.0-notes.html
-        'slepian = scipy.signal.windows:slepian',
         'triang = scipy.signal.windows:triang',
+        'dpss = scipy.signal.windows:dpss',
         ],
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recursive_sta_lta',
@@ -825,6 +822,7 @@ def setupPackage():
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,

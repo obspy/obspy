@@ -25,7 +25,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: setup conda
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         with:
           miniconda-version: 'latest'
           python-version: '3.9'
@@ -40,12 +40,23 @@ jobs:
         run: |
           cd misc/docs
           make html
-      - name: compress with tar
+      - name: compress docs with tar
         shell: bash -l {0}
         run: |
           cd misc/docs/build/html/
           tar cfJ obspydoc.tar.xz *
-      - uses: actions/upload-artifact@v3
+      - name: actions/upload-artifact@v4 for docs
+        uses: actions/upload-artifact@v4
         with:
           name: obspydoc
           path: misc/docs/build/html/obspydoc.tar.xz
+      - name: build docset
+        shell: bash -l {0}
+        run: |
+          cd misc/docs
+          bash make_docset.sh
+      - name: actions/upload-artifact@v4 for docset
+        uses: actions/upload-artifact@v4
+        with:
+          name: obspydocset
+          path: misc/docs/build/obspy-*.docset.tgz

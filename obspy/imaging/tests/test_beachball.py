@@ -7,8 +7,7 @@ import warnings
 import matplotlib.pyplot as plt
 import pytest
 
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import NamedTemporaryFile, CatchAndAssertWarnings
 from obspy.imaging.beachball import (tdl, aux_plane, beach, beachball,
                                      MomentTensor, mt2axes, mt2plane,
                                      strike_dip)
@@ -297,7 +296,7 @@ class TestBeachballPlot:
         """
         mt = [0.000, -1.232e25, 1.233e25, 0.141e25, -0.421e25, 2.531e25]
 
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             # Always raise warning.
             beachball(mt, outfile=image_path)
 

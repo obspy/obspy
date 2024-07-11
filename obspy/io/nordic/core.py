@@ -51,6 +51,7 @@ import re
 from math import sqrt
 import datetime
 from obspy import UTCDateTime, read
+from obspy.core.util import open_text_stream
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import (
     Event, Origin, Magnitude, StationMagnitude, Catalog, EventDescription,
@@ -88,63 +89,63 @@ def _is_sfile(sfile, encoding='latin-1'):
 
     Not exhaustive, but checks some of the basics.
 
-    :type sfile: str
+    :type sfile: str or file-like object
     :param sfile: Path to sfile
     :type encoding: str
     :param encoding: Encoding of the file.
 
     :rtype: bool
     """
-    if not hasattr(sfile, "readline"):
-        try:
-            with open(sfile, 'r', encoding=encoding) as f:
-                tags = _get_line_tags(f=f, report=False)
-        except Exception:
-            return False
-    else:
-        try:
-            tags = _get_line_tags(f=sfile, report=False)
-        except Exception:
-            return False
-    if tags is not None:
-        try:
-            head_line = tags['1'][0][0]
-        except IndexError:
-            return False
-        try:
-            sfile_seconds = int(head_line[16:18])
-        except ValueError:
-            return False
-        if sfile_seconds == 60:
-            sfile_seconds = 0
-        try:
-            UTCDateTime(
-                int(head_line[1:5]), int(head_line[6:8]), int(head_line[8:10]),
-                int(head_line[11:13]), int(head_line[13:15]), sfile_seconds,
-                int(head_line[19:20]) * 100000)
-            return True
-        except Exception:
-            return False
-    else:
+    if isinstance(sfile, (str, bytes, Path)) \
+            and not os.path.isfile(sfile):
         return False
+
+    with open_text_stream(sfile, encoding=encoding) as f:
+        try:
+            tags = _get_line_tags(f=f, report=False)
+        except Exception:
+            return False
+        if tags is not None:
+            try:
+                head_line = tags['1'][0][0]
+            except IndexError:
+                return False
+            try:
+                sfile_seconds = int(head_line[16:18])
+            except ValueError:
+                return False
+            if sfile_seconds == 60:
+                sfile_seconds = 0
+            try:
+                UTCDateTime(
+                    int(head_line[1:5]), int(head_line[6:8]),
+                    int(head_line[8:10]), int(head_line[11:13]),
+                    int(head_line[13:15]), sfile_seconds,
+                    int(head_line[19:20]) * 100000)
+                return True
+            except Exception:
+                return False
+        else:
+            return False
 
 
 def readheader(sfile, encoding='latin-1'):
     """
     Read header information from a seisan nordic format S-file.
 
-    :type sfile: str
+    :type sfile: str or file-like object
     :param sfile: Path to the s-file
     :type encoding: str
     :param encoding: Encoding for file, used to decode from bytes to string
 
     :returns: :class:`~obspy.core.event.event.Event`
     """
-    with open(sfile, 'r', encoding=encoding) as f:
+    with open_text_stream(sfile, encoding=encoding) as f:
         tagged_lines = _get_line_tags(f)
         if len(tagged_lines['1']) == 0:
             raise NordicParsingError("No header lines found")
         header, _ = _readheader(head_lines=tagged_lines['1'])
+
     return header
 
 
@@ -336,7 +337,7 @@ def read_spectral_info(sfile, encoding='latin-1'):
         list of dictionaries of spectral information, units as in seisan
         manual, expect for logs which have been converted to floats.
     """
-    with open(sfile, 'r', encoding=encoding) as f:
+    with open_text_stream(sfile, encoding=encoding) as f:
         tagged_lines = _get_line_tags(f=f)
         spec_inf = _read_spectral_info(tagged_lines=tagged_lines)
     return spec_inf
@@ -457,40 +458,33 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
     :return: catalog of events
     :rtype: :class:`~obspy.core.event.event.Event`
     """
-    if not hasattr(select_file, "readline"):
-        try:
-            f = open(select_file, 'r', encoding=encoding)
-        except Exception:
-            try:
-                f = select_file.decode(encoding)
-            except Exception:
-                f = str(select_file)
-    else:
-        f = select_file
-    wav_names = []
-    event_str = []
-    catalog = Catalog()
-    for line in f:
-        if len(line.rstrip()) > 0:
-            event_str.append(line)
-        elif len(event_str) > 0:
+    with open_text_stream(select_file, encoding=encoding) as f:
+        wav_names = []
+        event_str = []
+        catalog = Catalog()
+        for line in f:
+            if len(line.rstrip()) > 0:
+                event_str.append(line)
+            elif len(event_str) > 0:
+                catalog, wav_names = _extract_event(
+                    event_str=event_str, catalog=catalog,
+                    wav_names=wav_names, return_wavnames=return_wavnames,
+                    nordic_format=nordic_format,
+                    **kwargs)
+                event_str = []
+
+        if len(event_str) > 0:
+            # May occur if the last line of the file is not blank
+            # as it should be
             catalog, wav_names = _extract_event(
                 event_str=event_str, catalog=catalog, wav_names=wav_names,
                 return_wavnames=return_wavnames, nordic_format=nordic_format,
                 **kwargs)
-            event_str = []
-    f.close()
-    if len(event_str) > 0:
-        # May occur if the last line of the file is not blank as it should be
-        catalog, wav_names = _extract_event(
-            event_str=event_str, catalog=catalog, wav_names=wav_names,
-            return_wavnames=return_wavnames, nordic_format=nordic_format,
-            **kwargs)
-    if return_wavnames:
-        return catalog, wav_names
-    for event in catalog:
-        event.scope_resource_ids()
-    return catalog
+        if return_wavnames:
+            return catalog, wav_names
+        for event in catalog:
+            event.scope_resource_ids()
+        return catalog
 
 
 def _extract_event(event_str, catalog, wav_names, return_wavnames=False,
@@ -1293,7 +1287,7 @@ def readwavename(sfile, encoding='latin-1'):
     :returns: List of strings of wave paths
     :rtype: list
     """
-    with open(sfile, 'r', encoding=encoding) as f:
+    with open_text_stream(sfile, encoding=encoding) as f:
         tagged_lines = _get_line_tags(f=f)
         if len(tagged_lines['6']) == 0:
             msg = ('No waveform files in sfile %s' % sfile)

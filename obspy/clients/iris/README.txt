@@ -13,10 +13,10 @@ Copyright (c) 2010-2013 by:
 
 Overview
 --------
-IRIS Web service client for ObsPy.
+EarthScope (former IRIS) Web service client for ObsPy.
 
 The obspy.clients.iris package contains a client for the DMC Web services
-provided by IRIS (https://www.iris.edu/ws/).
+provided by EarthScope (https://www.iris.edu/ws/).
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

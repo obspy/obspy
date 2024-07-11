@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import re
-import requests
 import tempfile
 import uuid
 from collections import namedtuple
@@ -13,7 +12,6 @@ import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
 from obspy import read, UTCDateTime
-from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler
 
@@ -568,7 +566,7 @@ class TestIndexer():
         database = os.path.join(filepath,
                                 'timeseries.sqlite')
 
-        # test that a bad leap second file path raises an error
+        # test that a bad root path raises an error
         with pytest.raises(OSError, match="^Root path.*does not exists.$"):
             Indexer("/some/bad/path", database=database,
                     filename_pattern="*.mseed", parallel=2)
@@ -591,70 +589,6 @@ class TestIndexer():
         match = "^Database must be a string or TSIndexDatabaseHandler object.$"
         with pytest.raises(ValueError, match=match):
             Indexer(filepath, database=None, filename_pattern="*.mseed")
-
-    def test_download_leap_seconds_file(self):
-        with TemporaryWorkingDirectory() as tempdir:
-            database = os.path.join(tempdir, 'timeseries.sqlite')
-            indexer = Indexer(tempdir,
-                              database=database)
-            # mock actually downloading the file since this requires a internet
-            # connection
-            indexer._download = mock.MagicMock(
-                return_value=requests.Response())
-            # create a empty leap-seconds.list file
-            test_file = os.path.join(
-                                os.path.dirname(database), "leap-seconds.list")
-            file_path = indexer.download_leap_seconds_file(test_file)
-            # assert that the file was put in the same location as the
-            # sqlite db
-            assert os.path.isfile(file_path)
-            assert file_path == test_file
-
-    def test_download_leap_seconds_file_no_path_given(self):
-        with TemporaryWorkingDirectory() as tempdir:
-            database = os.path.join(tempdir, 'timeseries.sqlite')
-            indexer = Indexer(tempdir,
-                              database=database)
-            # mock actually downloading the file since this requires a internet
-            # connection
-            indexer._download = mock.MagicMock(
-                return_value=requests.Response())
-            file_path = indexer.download_leap_seconds_file()
-
-            assert os.path.normpath(file_path) == \
-                os.path.normpath(os.path.join(os.path.dirname(database),
-                                              "leap-seconds.list"))
-
-            # assert that the file was put in the same location as the
-            # sqlite db
-            assert os.path.isfile(file_path)
-
-    def test__get_leap_seconds_file(self, filepath):
-        database = os.path.join(filepath, 'timeseries.sqlite')
-        indexer = Indexer(filepath,
-                          database=database)
-
-        # test that a bad leap second file path raises an error
-        with pytest.raises(OSError,
-                           match="^No leap seconds file exists at.*$"):
-            Indexer(filepath, database=database,
-                    leap_seconds_file="/some/bad/path/")
-        with pytest.raises(OSError,
-                           match="^No leap seconds file exists at.*$"):
-            indexer._get_leap_seconds_file("/some/bad/path/")
-
-        # test search
-        # create a empty leap-seconds.list file
-        with TemporaryWorkingDirectory() as tempdir:
-            database = os.path.join(tempdir, 'timeseries.sqlite')
-            indexer = Indexer(tempdir,
-                              database=database)
-            test_file = os.path.normpath(os.path.join(
-                os.path.dirname(database), "leap-seconds.list"))
-            open(test_file, 'a').close()
-            file_path = os.path.normpath(
-                indexer._get_leap_seconds_file("SEARCH"))
-            assert file_path == test_file
 
     def test_build_file_list(self, filepath):
         database = os.path.join(filepath, 'timeseries.sqlite')
@@ -689,8 +623,7 @@ class TestIndexer():
         # this time pass a TSIndexDatabaseHandler instance as the database
         indexer = Indexer(filepath,
                           database=TSIndexDatabaseHandler(database=database),
-                          filename_pattern="*.mseed",
-                          leap_seconds_file=None)
+                          filename_pattern="*.mseed")
         file_list = indexer.build_file_list(reindex=True)
         file_list.sort()
         assert len(file_list) == 3
@@ -769,16 +702,16 @@ class TestIndexer():
                 expected_tsindex_data = \
                     [
                      NamedRow(
-                        "CU", "TGUH", "00", "BHZ", "M",
-                        "2018-01-01T00:00:00.000000",
-                        "2018-01-01T00:01:00.000000", 40.0,
+                        "CU", "TGUH", "00", "BHZ", None,
+                        "2018-01-01T00:00:00",
+                        "2018-01-01T00:01:00", 40.0,
                         "CU/2018/001/"
                         "CU.TGUH.00.BHZ.2018.001_first_minute.mseed",
                         0, 4096, "aaaac5315f84cdd174fd8360002a1e3a",
                         "1514764800.000000=>0,latest=>1",
                         "[1514764800.000000:1514764860.000000]", None, None),
                      NamedRow(
-                        "IU", "ANMO", "10", "BHZ", "M",
+                        "IU", "ANMO", "10", "BHZ", None,
                         "2018-01-01T00:00:00.019500",
                         "2018-01-01T00:00:59.994536", 40.0,
                         "IU/2018/001/"
@@ -787,7 +720,7 @@ class TestIndexer():
                         "1514764800.019500=>0,latest=>1",
                         "[1514764800.019500:1514764859.994536]", None, None),
                      NamedRow(
-                        "IU", "COLA", "10", "BHZ", "M",
+                        "IU", "COLA", "10", "BHZ", None,
                         "2018-01-01T00:00:00.019500",
                         "2018-01-01T00:00:59.994538", 40.0,
                         "IU/2018/001/"

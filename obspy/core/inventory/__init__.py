@@ -7,8 +7,8 @@ This class hierarchy is closely modelled after the upcoming de-facto standard
 format `FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was
 developed as a human readable XML replacement for Dataless SEED.
 
-.. note:: IRIS is maintaining a Java tool for converting dataless SEED into
-          StationXML and vice versa at
+.. note:: EarthScope/IRIS is maintaining a Java tool for converting dataless
+          SEED into StationXML and vice versa at
           https://seiscode.iris.washington.edu/projects/stationxml-converter
 
 :copyright:

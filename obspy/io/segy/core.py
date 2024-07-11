@@ -16,6 +16,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
+from obspy.core.util import open_bytes_stream
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .segy import _read_segy as _read_segyrev1
@@ -51,12 +52,12 @@ class SEGYSampleIntervalError(SEGYError):
     pass
 
 
-def _is_segy(filename):
+def _is_segy(file):
     """
     Checks whether or not the given file is a SEG Y file.
 
-    :type filename: str
-    :param filename: SEG Y file to be checked.
+    :type file: str or file-like object
+    :param file: SEG Y file to be checked.
     :rtype: bool
     :return: ``True`` if a SEG Y file.
     """
@@ -66,7 +67,7 @@ def _is_segy(filename):
     # greater than 0 and that the number of samples per trace is greater than
     # 0.
     try:
-        with open(filename, 'rb') as fp:
+        with open_bytes_stream(file) as fp:
             fp.seek(3212)
             _number_of_data_traces = fp.read(2)
             _number_of_auxiliary_traces = fp.read(2)
@@ -399,12 +400,12 @@ def _write_segy(stream, filename, data_encoding=None, byteorder=None,
     segy_file.write(filename, data_encoding=data_encoding, endian=byteorder)
 
 
-def _is_su(filename):
+def _is_su(file):
     """
     Checks whether or not the given file is a Seismic Unix (SU) file.
 
-    :type filename: str
-    :param filename: Seismic Unix file to be checked.
+    :type file: str or file-like object
+    :param file: Seismic Unix file to be checked.
     :rtype: bool
     :return: ``True`` if a Seismic Unix file.
 
@@ -412,7 +413,7 @@ def _is_su(filename):
         This test is rather shaky because there is no reliable identifier in a
         Seismic Unix file.
     """
-    with open(filename, 'rb') as f:
+    with open_bytes_stream(file) as f:
         stat = autodetect_endian_and_sanity_check_su(f)
     if stat is False:
         return False

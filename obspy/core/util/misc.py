@@ -708,6 +708,20 @@ def _yield_resource_id_parent_attr(obj):
     return func(obj)
 
 
+def ptp(a, *args, **kwargs):
+    """
+    Replacement for :meth:`numpy.ndarray.ptp()` and the corresponding method on
+    `MaskedArray` objects which are being removed in numpy 2.0
+    Basically just makes sure we call the correct replacement function numpy
+    put in place for regular and masked arrays.
+
+    :type a: :class:`numpy.ndarray` or :class:`numpy.ma.MaskedArray`
+    """
+    if isinstance(a, np.ma.MaskedArray):
+        return np.ma.ptp(a, *args, **kwargs)
+    return np.ptp(a, *args, **kwargs)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

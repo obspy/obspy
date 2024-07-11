@@ -27,6 +27,7 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
                      URL_DEFAULT_SUBPATH, URL_MAPPINGS, URL_MAPPING_SUBPATHS,
@@ -146,14 +147,14 @@ class Client(object):
         else:
             return False
 
-    def __init__(self, base_url="IRIS", major_versions=None, user=None,
+    def __init__(self, base_url="EARTHSCOPE", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120, service_mappings=None, force_redirect=False,
                  eida_token=None, _discover_services=True):
         """
         Initializes an FDSN Web Service client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         FDSN Webservice Client (base url: http://service.iris.edu)
         Available Services: 'dataselect' (v...), 'event' (v...),
@@ -227,6 +228,12 @@ class Client(object):
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
         self.__version_cache = {}
+
+        if base_url.upper() == 'IRIS':
+            base_url = 'EARTHSCOPE'
+            msg = ("IRIS is now EarthScope, please consider changing the FDSN "
+                   "client short URL to 'EARTHSCOPE'.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
 
         if base_url.upper() in URL_MAPPINGS:
             url_mapping = base_url.upper()
@@ -421,7 +428,7 @@ class Client(object):
         """
         Query the event service of the client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> cat = client.get_events(eventid=609301)
         >>> print(cat)
         1 Event(s) in Catalog:
@@ -569,7 +576,7 @@ class Client(object):
         """
         Query the station service of the FDSN client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> starttime = UTCDateTime("2001-01-01")
         >>> endtime = UTCDateTime("2001-01-02")
         >>> inventory = client.get_stations(network="IU", station="A*",
@@ -768,7 +775,7 @@ class Client(object):
         """
         Query the dataselect service of the client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 5
         >>> st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t1, t2)
@@ -800,7 +807,7 @@ class Client(object):
 
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
             st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
                                       attach_response=True)
@@ -935,7 +942,7 @@ class Client(object):
             - a string with the path to a local file with the request
             - an open file handle (or file-like object) with the request
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> t3 = t1 + 3
@@ -987,7 +994,7 @@ class Client(object):
 
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
             t1 = t + 300
             t2 = t + 400
@@ -1092,7 +1099,7 @@ class Client(object):
             - a string with the path to a local file with the request
             - an open file handle (or file-like object) with the request
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> t3 = t1 + 3
@@ -1120,7 +1127,7 @@ class Client(object):
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
 
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t1 = UTCDateTime("2010-02-27T06:30:00.000")
             t2 = t1 + 1
             t3 = t1 + 3
@@ -1618,6 +1625,12 @@ class Client(object):
                 try:
                     self.services["available_event_catalogs"] = \
                         parse_simple_xml(wadl)["catalogs"]
+                    # XXX can be removed when IRIS/Earthscope drops its event
+                    # webservice
+                    if '.iris.' in url or 'earthscope' in url:
+                        self.services["available_event_catalogs"] = \
+                            _cleanup_earthscope(
+                                self.services["available_event_catalogs"])
                 except ValueError:
                     msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
@@ -1625,6 +1638,12 @@ class Client(object):
                 try:
                     self.services["available_event_contributors"] = \
                         parse_simple_xml(wadl)["contributors"]
+                    # XXX can be removed when IRIS/Earthscope drops its event
+                    # webservice
+                    if '.iris.' in url or 'earthscope' in url:
+                        self.services["available_event_contributors"] = \
+                            _cleanup_earthscope(
+                                self.services["available_event_contributors"])
                 except ValueError:
                     msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
@@ -1799,7 +1818,21 @@ def raise_on_error(code, data):
     """
     # get detailed server response message
     if code != 200:
-        server_info = data.decode('ASCII', errors='ignore')
+        # let's try to resolve all the different types that `data` can sadly
+        # have..
+        # first, if it's `BytesIO` (or should it for whatever reason be
+        # `StringIO` which it shouldn't..) then break it down by reading it
+        try:
+            server_info = data.read()
+        # if there is no `read()` method it should be `bytes`
+        except AttributeError:
+            server_info = data
+        # now decode the bytes (or if for whatever weird reason we ended up
+        # with a string, then do nothing more)
+        try:
+            server_info = server_info.decode('ASCII', errors='ignore')
+        except AttributeError:
+            pass
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
@@ -1885,10 +1918,34 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib_request.HTTPError as e:
-        error_data = e.read()
+        # try hard to assemble the most details on what the problem is from the
+        # exception object
+        try:
+            error_msg = e.msg
+        except AttributeError:
+            error_msg = None
+        try:
+            error_details = e.read()
+        except Exception:
+            error_details = None
+        if error_details:
+            # looks like we get bytes back so let's decode but be robust just
+            # in case
+            try:
+                error_details = error_details.decode('UTF-8', errors='ignore')
+            except AttributeError:
+                pass
+        if error_msg and error_details:
+            error_data = f'{error_msg}\n{error_details}'
+        elif error_msg:
+            error_data = error_msg
+        elif error_details:
+            error_data = error_details
+        else:
+            error_data = None
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
-                  (e.code, str(e.reason), url, error_data)
+                  (e.code, str(e.reason), url, error_data or '')
             print(msg)
         return e.code, error_data
     except Exception as e:
@@ -2038,6 +2095,21 @@ def _validate_eida_token(token):
                    flags=re.IGNORECASE):
         return True
     return False
+
+
+def _cleanup_earthscope(items):
+    """
+    IRIS/Earthscope has all "catalogs" and "contributors" suffixed with "\n "
+    and has confirmed that this will not be fixed. So need to clean up here.
+
+    Can be removed when Earthscope drops its event service
+    """
+    new_items = []
+    for item in items:
+        if item.endswith('\n '):
+            item = item[:-2]
+        new_items.append(item)
+    return new_items
 
 
 if __name__ == '__main__':

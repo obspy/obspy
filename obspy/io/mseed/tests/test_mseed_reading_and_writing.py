@@ -155,6 +155,7 @@ class TestMSEEDReadingAndWriting():
         # make sure the data can be written to mseed
         with io.BytesIO() as buf:
             st.write(buf, format="mseed")
+            buf.seek(0, 0)
             st2 = read(buf)
         assert len(st) == len(st2)
         for tr, tr2 in zip(st, st2):

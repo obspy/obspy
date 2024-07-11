@@ -766,6 +766,34 @@ class TestPsd:
 
         ppsd.plot_spectrogram(filename=image_path, show=False)
 
+    def test_ppsd_uneven_sampling_rate(self):
+        """
+        Regression test for #3387
+
+        Makes sure that with weird sampling rates that do not align with the
+        length of the PPSD slice at all, still no data slices are left out.
+        The fix for this was to make sure to insert the times used for slicing
+        into the processed times list and not the actual sample start time of
+        the trace that resulted from slicing based on these times.
+        """
+        tr = read()[0]
+        inv = read_inventory()
+        # make the sampling rate a bit weird so we end up with sample start
+        # times creeping on a decimal seconds and not aligning well with the
+        # ppsd length well
+        tr.stats.sampling_rate = 100.1
+        ppsd = PPSD(tr.stats, inv, ppsd_length=8, overlap=0.0)
+        ppsd.add(tr)
+        assert len(ppsd._times_processed) == 3
+        assert ppsd._times_processed == [
+            1251073203000000000, 1251073211000000000, 1251073219000000000]
+        tr.stats.sampling_rate = 99.99
+        ppsd = PPSD(tr.stats, inv, ppsd_length=8, overlap=0.0)
+        ppsd.add(tr)
+        assert len(ppsd._times_processed) == 3
+        assert ppsd._times_processed == [
+            1251073203000000000, 1251073211000000000, 1251073219000000000]
+
     def test_exception_reading_newer_npz(self, testdata):
         """
         Checks that an exception is properly raised when trying to read a npz

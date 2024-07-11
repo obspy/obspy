@@ -374,7 +374,9 @@ class Ellipse:
         temp.y -= pt[1]
         t0, t1 = temp._get_tangents((0, 0))
         cosang = np.dot(t0, t1)
-        sinang = np.linalg.norm(np.cross(t0, t1))
+        # avoid np.cross() complaining about 2-d vectors
+        # see https://github.com/obspy/obspy/pull/3461#issuecomment-2149488336
+        sinang = abs(t0[0] * t1[1] - t0[1] * t1[0])
         return np.degrees(np.arctan2(sinang, cosang))
 
     def plot(self, linewidth=2, color='k',
