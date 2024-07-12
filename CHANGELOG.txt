@@ -66,6 +66,9 @@ Changes:
    * fix naming of input args in function "rotate_rt_ne()" (see #3383)
    * add support for Chebyshev I/II, elliptic and Bessel filters alongside
      the default Butterworth filters (see #3294)
+ - obspy.scripts:
+   * SDS report extended to check for input power voltage and number of GPS
+     satellites (see #2676)
 
 1.4.1 (doi: 10.5281/zenodo.11093256)
 ====================================
