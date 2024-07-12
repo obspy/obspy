@@ -1708,3 +1708,34 @@ class TestClientNoNetwork():
         with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
             client = Client('IRIS', _discover_services=False)
         assert client.base_url == 'http://service.iris.edu'
+
+    def test_query_a_non_existent_service_exception(self):
+        """
+        Tests that a FDSNNoServiceException is raised when no services are
+        available but a get_(waveforms|stations|events) method is called
+        nonetheless
+        """
+        start = UTCDateTime(2020, 1, 1)
+        end = start + 10
+
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        _discover_services=False)
+        client.services.pop('dataselect')
+        with pytest.raises(FDSNNoServiceException):
+            self.client.get_waveforms('G', 'PEL', '*', 'LHZ', start, end)
+        with pytest.raises(FDSNNoServiceException):
+            self.client.get_waveforms_bulk('G', 'PEL', '*', 'LHZ', start, end)
+
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        _discover_services=False)
+        client.services.pop('station')
+        with pytest.raises(FDSNNoServiceException):
+            self.client.get_stations('G', 'PEL', '*', 'LHZ', start, end)
+        with pytest.raises(FDSNNoServiceException):
+            self.client.get_stations_bulk('G', 'PEL', '*', 'LHZ', start, end)
+
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        _discover_services=False)
+        client.services.pop('event')
+        with pytest.raises(FDSNNoServiceException):
+            self.client.get_events(start, end)
