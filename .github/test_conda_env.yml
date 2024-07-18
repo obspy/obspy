@@ -10,7 +10,8 @@ dependencies:
   - numpy
   - scipy
   - requests
-  - setuptools
+  # see pypa/setuptools#4480
+  - setuptools !=71.0.1
   # see #3258
   - sqlalchemy < 2.0
   # soft dependencies
