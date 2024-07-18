@@ -283,7 +283,7 @@ class Client(object):
         if _discover_services:
             self._discover_services()
         else:
-            self.services = DEFAULT_SERVICES
+            self.services = DEFAULT_SERVICES.copy()
 
         # Use EIDA token if provided - this requires setting new url openers.
         #
