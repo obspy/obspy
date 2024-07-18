@@ -1722,20 +1722,20 @@ class TestClientNoNetwork():
                         _discover_services=False)
         client.services.pop('dataselect')
         with pytest.raises(FDSNNoServiceException):
-            self.client.get_waveforms('G', 'PEL', '*', 'LHZ', start, end)
+            client.get_waveforms('G', 'PEL', '*', 'LHZ', start, end)
         with pytest.raises(FDSNNoServiceException):
-            self.client.get_waveforms_bulk('G', 'PEL', '*', 'LHZ', start, end)
+            client.get_waveforms_bulk('G', 'PEL', '*', 'LHZ', start, end)
 
         client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                         _discover_services=False)
         client.services.pop('station')
         with pytest.raises(FDSNNoServiceException):
-            self.client.get_stations('G', 'PEL', '*', 'LHZ', start, end)
+            client.get_stations('G', 'PEL', '*', 'LHZ', start, end)
         with pytest.raises(FDSNNoServiceException):
-            self.client.get_stations_bulk('G', 'PEL', '*', 'LHZ', start, end)
+            client.get_stations_bulk('G', 'PEL', '*', 'LHZ', start, end)
 
         client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                         _discover_services=False)
         client.services.pop('event')
         with pytest.raises(FDSNNoServiceException):
-            self.client.get_events(start, end)
+            client.get_events(start, end)
