@@ -29,6 +29,9 @@ Changes:
    * Natural Resources Canada (NRCAN) added to list of known clients
    * A FDSNNoServiceException is now raised instead of a ValueError when
      querying a webservice not present in Client.services  (see #3483)
+   * make sure to use a copy of `DEFAULT_SERVICES` when initializing a client
+     instance while skipping service discovery, to avoid accidental changes to
+     `DEFAULT_SERVICES` (see #3493)
  - obspy.clients.seedlink:
    * fix a bug in basic client `get_info()` which leaded to exceptions when
      querying with `level="channel"` in presence of stations with no current
