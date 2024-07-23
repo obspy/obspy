@@ -23,7 +23,8 @@ import numpy as np
 import pytest
 import requests
 
-from obspy import UTCDateTime, read, read_inventory, Stream, Trace
+from obspy import (
+    UTCDateTime, read, read_inventory, Stream, Trace, Inventory, Catalog)
 from obspy.core.util.base import NamedTemporaryFile, CatchAndAssertWarnings
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.clients.fdsn import Client, RoutingClient
@@ -1739,3 +1740,42 @@ class TestClientNoNetwork():
         client.services.pop('event')
         with pytest.raises(FDSNNoServiceException):
             client.get_events(start, end)
+
+    @mock.patch('obspy.clients.fdsn.client.download_url')
+    def test_no_gzip(self, download_mock):
+        """
+        Tests that opting out of gzip works
+        """
+        for use_gzip in (True, False):
+            client = Client(_discover_services=False, use_gzip=use_gzip)
+            # check a station request
+            bio = io.BytesIO()
+            Inventory().write(bio, 'STATIONXML')
+            download_mock.return_value = (200, bio)
+            client.get_stations(network='XX')
+            # check that the download url was called with the correct option
+            # for use_gzip
+            assert (
+                download_mock.call_args.kwargs.get('use_gzip', None)
+                is use_gzip)
+            # check an event request
+            bio = io.BytesIO()
+            Catalog().write(bio, 'QUAKEML')
+            download_mock.return_value = (200, bio)
+            client.get_events(minmagnitude=10)
+            # check that the download url was called with the correct option
+            # for use_gzip
+            assert (
+                download_mock.call_args.kwargs.get('use_gzip', None)
+                is use_gzip)
+            # check dataselct request, these always have gzip disabled
+            bio = io.BytesIO()
+            read().write(bio, 'MSEED')
+            download_mock.return_value = (200, bio)
+            now = UTCDateTime()
+            client.get_waveforms("XX", "XXX", "", "XXX", now - 10, now - 5)
+            # check that the download url was called with the correct option
+            # for use_gzip
+            assert (
+                download_mock.call_args.kwargs.get('use_gzip', None)
+                is False)
