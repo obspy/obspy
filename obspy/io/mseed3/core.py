@@ -6,6 +6,7 @@ import io
 import os
 from pathlib import Path
 
+import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy import ObsPyException, ObsPyReadingError
@@ -19,6 +20,7 @@ from simplemseed import (
     MSeed3Header,
     canDecompress,
 )
+import simplemseed
 
 MSEED_STATS_KEY = "mseed3"
 PUB_VER_KEY = "pubVer"
@@ -190,7 +192,7 @@ def _internal_read_mseed3(
     return Stream(traces=traces)
 
 
-def _write_mseed3(stream, filename, verbose=0, **_kwargs):
+def _write_mseed3(stream, filename, encoding=None, verbose=0, **_kwargs):
     """
     Write miniseed3 file from a Stream object.
 
@@ -203,6 +205,14 @@ def _write_mseed3(stream, filename, verbose=0, **_kwargs):
     :param stream: A Stream object.
     :type filename: str
     :param filename: Name of the output file or a file-like object.
+    :type encoding: int or str, optional
+    :param encoding: Should be set to one of the following supported Mini-SEED
+        data encoding formats: ``INT16`` (``1``),
+        ``INT32`` (``3``)*, ``FLOAT32`` (``4``)*, ``FLOAT64`` (``5``)*,
+        ``STEIM1`` (``10``) and ``STEIM2`` (``11``). If no encoding is given
+        it will be derived from the dtype of the data and the appropriate
+        default encoding (depicted with an asterix) will be chosen based
+        on the numpy dtype.
     :type verbose: int, optional
     :param verbose: Controls verbosity, a value of ``0`` will result in no
         diagnostic output
@@ -211,8 +221,25 @@ def _write_mseed3(stream, filename, verbose=0, **_kwargs):
 
     >>> from obspy import read
     >>> st = read()
-    >>> st.write('filename.ms3', format='MSEED3')  # doctest: +SKIP
+    >>> st.write('filename.ms3', format='MSEED3', encoding='STEIM2')  # doctest: +SKIP
     """
+
+    if encoding is not None:
+        encoding = _encoding_int_from_string(encoding)
+
+    # check for downcase if needed from int64 to int32
+    #
+    # numpy ndarray.astype() does not check values fitting for
+    # int64 -> int32 conversion, manually check trace max for
+    # integer-style encodings
+    ii32 = np.iinfo(np.int32)
+    if encoding in [ simplemseed.seedcodec.SHORT,
+                     simplemseed.seedcodec.INTEGER,
+                     simplemseed.seedcodec.STEIM1,
+                     simplemseed.seedcodec.STEIM2]:
+        for trace in stream:
+            if abs(trace.max()) > ii32.max:
+                raise ObsPyMSEED3DataOverflowError(f"Trace contains values too large to cast to int32 data type, trace max={trace.max()} > i32 max={ii32.max}")
 
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, "write"):
@@ -252,12 +279,54 @@ def _write_mseed3(stream, filename, verbose=0, **_kwargs):
                     int(ms3stats[PUB_VER_KEY])
             if EX_HEAD_KEY in ms3stats:
                 eh = ms3stats[EX_HEAD_KEY]
-        ms3 = MSeed3Record(ms3Header, identifier, trace.data, eh)
+        if encoding is not None:
+            encoding = _encoding_int_from_string(encoding)
+            if encoding == simplemseed.seedcodec.STEIM1:
+                encodedValues = simplemseed.encodeSteim1(trace.data)
+            elif encoding == simplemseed.seedcodec.STEIM2:
+                encodedValues = simplemseed.encodeSteim2(trace.data)
+            elif encoding == simplemseed.seedcodec.SHORT:
+                encodedValues = np.array(trace.data, dtype="int16")
+            elif encoding == simplemseed.seedcodec.INTEGER:
+                encodedValues = np.array(trace.data, dtype="int32")
+            elif encoding == simplemseed.seedcodec.FLOAT:
+                encodedValues = np.array(trace.data, dtype="float32")
+            elif encoding == simplemseed.seedcodec.DOUBLE:
+                encodedValues = np.array(trace.data, dtype="float64")
+            else:
+                raise ValueError(f"Unknown encoding: '{encoding}'." )
+            ms3Header.encoding = encoding
+            ms3Header.numSamples = len(trace.data)
+        else:
+            # pack() will determine from numpy array dtype
+            # likely float32 or int32
+            encodedValues = trace.data
+        ms3 = MSeed3Record(ms3Header, identifier, encodedValues, eh)
         f.write(ms3.pack())
-    # Close if its a file handler.
-    if not hasattr(filename, "write"):
+    # Close if we opened.
+    if filename is not f:
         f.close()
 
+def _encoding_int_from_string(encoding):
+    try:
+        encoding = int(encoding)
+    except Exception:
+        pass
+    if encoding == simplemseed.seedcodec.STEIM1 or encoding == "STEIM1":
+        out = simplemseed.seedcodec.STEIM1
+    elif encoding == simplemseed.seedcodec.STEIM2 or encoding == "STEIM2":
+        out = simplemseed.seedcodec.STEIM2
+    elif encoding == simplemseed.seedcodec.SHORT or encoding == "INT16":
+        out = simplemseed.seedcodec.SHORT
+    elif encoding == simplemseed.seedcodec.INTEGER or encoding == "INT32":
+        out = simplemseed.seedcodec.INTEGER
+    elif encoding == simplemseed.seedcodec.FLOAT or encoding == "FLOAT32":
+        out = simplemseed.seedcodec.FLOAT
+    elif encoding == simplemseed.seedcodec.DOUBLE or encoding == "FLOAT64":
+        out = simplemseed.seedcodec.DOUBLE
+    else:
+        raise ValueError(f"Unknown encoding: '{encoding}'." )
+    return out
 
 def mseed3_to_obspy_header(ms3):
     stats = {}
@@ -293,6 +362,9 @@ def mseed3_to_obspy_header(ms3):
 
 
 class ObsPyMSEED3Error(ObsPyException):
+    pass
+
+class ObsPyMSEED3DataOverflowError(ObsPyMSEED3Error):
     pass
 
 
