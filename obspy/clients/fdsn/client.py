@@ -150,7 +150,7 @@ class Client(object):
     def __init__(self, base_url="EARTHSCOPE", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120, service_mappings=None, force_redirect=False,
-                 eida_token=None, _discover_services=True):
+                 eida_token=None, _discover_services=True, use_gzip=True):
         """
         Initializes an FDSN Web Service client.
 
@@ -219,11 +219,19 @@ class Client(object):
             to ``False``, no service discovery is performed and default
             parameter support is assumed. This parameter is experimental and
             will likely be removed in the future.
+        :type use_gzip: bool
+        :param use_gzip: Can be set to ``False`` to opt out of gzip
+            compression, i.e. not tell the server that gzip compressed response
+            is acceptable which should make the server not try gzip compression
+            on results. Can be used if servers experience server side issues
+            with gzip compression but results in downloads being larger in
+            size.
         """
         self.debug = debug
         self.user = user
         self.timeout = timeout
         self._force_redirect = force_redirect
+        self.use_gzip = use_gzip
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
@@ -283,7 +291,7 @@ class Client(object):
         if _discover_services:
             self._discover_services()
         else:
-            self.services = DEFAULT_SERVICES
+            self.services = DEFAULT_SERVICES.copy()
 
         # Use EIDA token if provided - this requires setting new url openers.
         #
@@ -406,7 +414,7 @@ class Client(object):
 
         # Already does the error checking with fdsnws semantics.
         response = self._download(url=url, data=token.encode(),
-                                  use_gzip=True, return_string=True,
+                                  return_string=True,
                                   content_type='application/octet-stream')
 
         user, password = response.decode().split(':')
@@ -546,7 +554,7 @@ class Client(object):
         """
         if "event" not in self.services:
             msg = "The current client does not have an event service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('event', locs, kwargs)
@@ -744,7 +752,7 @@ class Client(object):
         """
         if "station" not in self.services:
             msg = "The current client does not have a station service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('station', locs, kwargs)
@@ -862,7 +870,7 @@ class Client(object):
         """
         if "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('dataselect', locs, kwargs)
@@ -1044,7 +1052,7 @@ class Client(object):
         """
         if "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         arguments = OrderedDict(
             quality=quality,
@@ -1231,7 +1239,7 @@ class Client(object):
         """
         if "station" not in self.services:
             msg = "The current client does not have a station service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         arguments = OrderedDict(
             minlatitude=minlatitude,
@@ -1481,8 +1489,13 @@ class Client(object):
 
         print("\n".join(msg))
 
-    def _download(self, url, return_string=False, data=None, use_gzip=True,
+    def _download(self, url, return_string=False, data=None, use_gzip=None,
                   content_type=None):
+        # make it possible to have a default for gzip set on client
+        # initialization but also be able to override it here (for dataselect
+        # requests)
+        if use_gzip is None:
+            use_gzip = self.use_gzip
         headers = self.request_headers.copy()
         if content_type:
             headers['Content-Type'] = content_type
