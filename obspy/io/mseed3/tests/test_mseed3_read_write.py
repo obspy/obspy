@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 from io import BytesIO
 
+
 class TestMSEED3ReadingAndWriting:
     """
     Test everything related to the general reading and writing of mseed3
@@ -28,11 +29,8 @@ class TestMSEED3ReadingAndWriting:
             with open(jsonpath, "r") as injson:
                 jsonrec = json.load(injson)[0]
 
-            assert (jsonrec["SampleRate"] == trace.stats.sampling_rate)
-            assert (
-                jsonrec["PublicationVersion"] ==
-                trace.stats.mseed3.pubVer
-            )
+            assert jsonrec["SampleRate"] == trace.stats.sampling_rate
+            assert jsonrec["PublicationVersion"] == trace.stats.mseed3.pubVer
             sid = FDSNSourceId.fromNslc(
                 trace.stats.network,
                 trace.stats.station,
@@ -65,7 +63,6 @@ class TestMSEED3ReadingAndWriting:
         # This is controlled by the stream[0].data attribute.
         assert stream[0].stats.npts == 3000
         assert stream[0].data.dtype == np.int32
-
 
     def test_write_int32(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
@@ -133,10 +130,10 @@ class TestMSEED3ReadingAndWriting:
         data = np.array([1.1, 2, 3], dtype="float32")
         tr = Trace(data)
         stream = Stream([tr])
-        with pytest.raises(Exception) as ex:
+        with pytest.raises(Exception):
             with NamedTemporaryFile() as tf:
                 stream.write(tf.name, format="MSEED3", encoding="STEIM1")
-        with pytest.raises(Exception) as ex:
+        with pytest.raises(Exception):
             with NamedTemporaryFile() as tf:
                 stream.write(tf.name, format="MSEED3", encoding="STEIM2")
 
@@ -159,7 +156,7 @@ class TestMSEED3ReadingAndWriting:
             in_stream = read(buf)
         assert in_stream[0].data.dtype == np.float32
         assert np.array_equal(stream[0].data, in_stream[0].data)
-        tr = Trace(np.array([1.1, 2.2, 3.3, -17.1, 2 ** 55], dtype="float64"))
+        tr = Trace(np.array([1.1, 2.2, 3.3, -17.1, 2**55], dtype="float64"))
         stream = Stream([tr])
         # guess output encoding
         with BytesIO() as buf:
@@ -170,17 +167,17 @@ class TestMSEED3ReadingAndWriting:
         assert np.array_equal(stream[0].data, in_stream[0].data)
 
     def test_fail_overflow(self, datapath):
-        x = 2 ** 55
-        data = [ 1, 2, -3, x, -1]
+        x = 2**55
+        data = [1, 2, -3, x, -1]
         # should fail as python int list to numpy array checks values can fit
-        with pytest.raises(OverflowError) as ex:
-            data_i32 = np.array(data, dtype=np.int32)
+        with pytest.raises(OverflowError):
+            np.array(data, dtype=np.int32)
         data_i64 = np.array(data, dtype=np.int64)
 
         # numpy ndarray.astype() does not check values fitting for
         # int64 -> int32 conversion
         tr = Trace(data_i64)
         stream = Stream([tr])
-        with pytest.raises(ObsPyMSEED3DataOverflowError) as ex:
+        with pytest.raises(ObsPyMSEED3DataOverflowError):
             with NamedTemporaryFile() as tf:
                 stream.write(tf.name, format="MSEED3", encoding="INT32")

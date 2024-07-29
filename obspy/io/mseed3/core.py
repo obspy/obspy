@@ -158,10 +158,7 @@ def _read_mseed3(
 
     if isinstance(mseed3_file, io.BufferedIOBase):
         return _internal_read_mseed3(
-            mseed3_file,
-            starttime=starttime,
-            endtime=endtime,
-            matchsid=matchsid
+            mseed3_file, starttime=starttime, endtime=endtime, matchsid=matchsid
         )
     elif isinstance(mseed3_file, (str, bytes)):
         with open(mseed3_file, "rb") as fh:
@@ -172,9 +169,7 @@ def _read_mseed3(
         raise ValueError("Cannot open '%s'." % mseed3_file)
 
 
-def _internal_read_mseed3(
-    fp, starttime=None, endtime=None, matchsid=None
-):
+def _internal_read_mseed3(fp, starttime=None, endtime=None, matchsid=None):
     traces = []
     for ms3 in readMSeed3Records(fp, matchsid=matchsid, merge=True):
         if starttime is not None and ms3.endtime < starttime:
@@ -233,14 +228,18 @@ def _write_mseed3(stream, filename, encoding=None, verbose=0, **_kwargs):
     # int64 -> int32 conversion, manually check trace max for
     # integer-style encodings
     ii32 = np.iinfo(np.int32)
-    if encoding in [simplemseed.seedcodec.SHORT,
-                    simplemseed.seedcodec.INTEGER,
-                    simplemseed.seedcodec.STEIM1,
-                    simplemseed.seedcodec.STEIM2]:
+    if encoding in [
+        simplemseed.seedcodec.SHORT,
+        simplemseed.seedcodec.INTEGER,
+        simplemseed.seedcodec.STEIM1,
+        simplemseed.seedcodec.STEIM2,
+    ]:
         for trace in stream:
             if abs(trace.max()) > ii32.max:
-                msg = "Trace contains values too large to cast to int32 "\
+                msg = (
+                    "Trace contains values too large to cast to int32 "
                     f"data type, trace max={trace.max()} > i32 max={ii32.max}"
+                )
                 raise ObsPyMSEED3DataOverflowError(msg)
 
     # Open filehandler or use an existing file like object.
@@ -277,8 +276,7 @@ def _write_mseed3(stream, filename, encoding=None, verbose=0, **_kwargs):
         if MSEED_STATS_KEY in trace.stats:
             ms3stats = trace.stats[MSEED_STATS_KEY]
             if PUB_VER_KEY in ms3stats:
-                ms3Header.publicationVersion = \
-                    int(ms3stats[PUB_VER_KEY])
+                ms3Header.publicationVersion = int(ms3stats[PUB_VER_KEY])
             if EX_HEAD_KEY in ms3stats:
                 eh = ms3stats[EX_HEAD_KEY]
         if encoding is not None:
