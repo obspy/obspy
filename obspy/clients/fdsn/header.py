@@ -111,6 +111,7 @@ URL_MAPPINGS = {
     "GFZ": "http://geofon.gfz-potsdam.de",
     "ICGC": "http://ws.icgc.cat",
     "IESDMC": "http://batsws.earth.sinica.edu.tw",
+    "IGN": "http://fdsnws.sismologia.ign.es",
     "INGV": "http://webservices.ingv.it",
     "IPGP": "http://ws.ipgp.fr",
     "IRIS": "http://service.iris.edu",
