@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Parsing of the text files from the FDSN station web services.
@@ -9,11 +8,6 @@ Parsing of the text files from the FDSN station web services.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import collections
 import csv
 import io
@@ -70,7 +64,7 @@ def unicode_csv_reader(unicode_csv_data, **kwargs):
 
 def utf_8_encoder(unicode_csv_data):
     for line in unicode_csv_data:
-        if isinstance(line, native_str):
+        if isinstance(line, str):
             yield line
         else:
             yield line.encode('utf-8')
@@ -122,14 +116,15 @@ def is_fdsn_station_text_file(path_or_file_object):
     return False
 
 
-def read_fdsn_station_text_file(path_or_file_object):
+def read_fdsn_station_text_file(
+        path_or_file_object, **kwargs):  # @UnusedVariable
     """
     Function reading a FDSN station text file to an inventory object.
 
     :param path_or_file_object: File name or file like object.
     """
     def _read(obj):
-        r = unicode_csv_reader(obj, delimiter=native_str("|"))
+        r = unicode_csv_reader(obj, delimiter="|")
         header = next(r)
         header[0] = header[0].lstrip("#")
         header = [_i.strip().lower() for _i in header]
@@ -387,9 +382,9 @@ def _write_stationtxt(inventory, path_or_file_object, level='channel',
     Writes an inventory object to a file or file-like object in stationtxt
     format.
 
-    :type inventory: :class:`~obspy.core.inventory.Inventory`
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: The inventory instance to be written.
-    :param file_or_file_object: The file or file-like object to be written to.
+    :param path_or_file_object: The file or file-like object to be written to.
     :param level: Specify level of detail using one of: ``'network'``,
         ``'station'`` or ``'channel'``.
     """
@@ -403,8 +398,3 @@ def _write_stationtxt(inventory, path_or_file_object, level='channel',
     finally:
         if not hasattr(path_or_file_object, 'write'):
             f.close()
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

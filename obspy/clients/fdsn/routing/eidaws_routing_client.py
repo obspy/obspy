@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Routing client for the EIDAWS routing service.
@@ -9,16 +8,13 @@ Routing client for the EIDAWS routing service.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import collections
 
 from ..client import get_bulk_string
+from ..header import FDSNNoDataException
 from .routing_client import (
     BaseRoutingClient, _assert_attach_response_not_in_kwargs,
-    _assert_filename_not_in_kwargs)
+    _assert_filename_not_in_kwargs, _assert_format_not_in_kwargs)
 
 
 class EIDAWSRoutingClient(BaseRoutingClient):
@@ -31,7 +27,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
     station information at each data center with additional constraints
     (e.g. latitude/longitude/...) and use that information for the final
     waveform query. This means that with ObsPy the EIDA routing client
-    behaves very similar to the IRIS federator routing client.
+    behaves very similar to the EarthScope (former IRIS) federator routing
+    client.
     """
     def __init__(self, url="http://www.orfeus-eu.org/eidaws/routing/1",
                  include_providers=None, exclude_providers=None,
@@ -40,7 +37,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         Initialize an EIDAWS router client.
 
         All parameters except ``url`` are passed on to the
-        :class:`~obspy.clients.fdsn.routing.routing_clieng.BaseRoutingClient`
+        :class:`~obspy.clients.fdsn.routing.routing_client.BaseRoutingClient`
         parent class
 
         :param url: The URL of the routing service.
@@ -100,11 +97,16 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         new_bulk = []
         for t, _b in bulk_per_time_interval.items():
             # channel level and text to keep it fast.
-            inv = self.get_stations_bulk(_b, format="text",
-                                         level="channel", **kwargs)
+            inv = self.get_stations_bulk(_b, level="channel", **kwargs)
             for c in sorted(set(inv.get_contents()["channels"])):
                 new_bulk.append(c.split("."))
                 new_bulk[-1].extend(t)
+
+        # no available data, show appropriate error message and raise
+        if not new_bulk:
+            msg = ('No data available for request (requested time window '
+                   'might be out of bounds of valid station epochs).')
+            raise FDSNNoDataException(msg)
 
         # Finally get the waveforms by getting the routes and downloading
         # everytyhing. Don't directly pass in the initializer as the order
@@ -114,7 +116,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         arguments["format"] = "post"
 
         bulk_str = get_bulk_string(new_bulk, arguments)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_waveforms(split, **kwargs)
@@ -145,6 +148,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         """
         return super(EIDAWSRoutingClient, self).get_stations(**kwargs)
 
+    @_assert_format_not_in_kwargs
     @_assert_filename_not_in_kwargs
     def get_stations_bulk(self, bulk, **kwargs):
         """
@@ -156,8 +160,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         station service if the service supports them (otherwise they are
         silently ignored for that particular fdsnws endpoint).
 
-        The ``filename`` parameter of the single provider FDSN client is not
-        supported for practical reasons.
+        The ``filename`` and ``format`` parameters of the single provider FDSN
+        client are not supported for practical reasons.
 
         This can route on a number of different parameters, please see the
         web site of the `EIDAWS Routing Service
@@ -169,7 +173,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         arguments["format"] = "post"
         arguments["alternative"] = "false"
         bulk_str = get_bulk_string(bulk, arguments)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_stations(split, **kwargs)
@@ -196,8 +201,3 @@ class EIDAWSRoutingClient(BaseRoutingClient):
             split[current_key].append(line)
 
         return {k: "\n".join(v) for k, v in split.items()}
-
-
-if __name__ == '__main__':  # pragma: no cover
-    import doctest
-    doctest.testmod(exclude_empty=True)

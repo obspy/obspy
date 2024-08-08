@@ -117,7 +117,7 @@ dw = abs(baz_edges[1] - baz_edges[0])
 
 # circle through backazimuth
 for i, row in enumerate(hist):
-    bars = ax.bar(left=(i * dw) * np.ones(N2),
+    bars = ax.bar((i * dw) * np.ones(N2),
                   height=dh * np.ones(N2),
                   width=dw, bottom=dh * np.arange(N2),
                   color=cmap(row / hist.max()))

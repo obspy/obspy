@@ -1,16 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_bytes
-
 import importlib
 import io
-import os
 import sys
-import unittest
 import warnings
-from glob import iglob
 
 from lxml import etree
 
@@ -18,16 +10,13 @@ from obspy.io.xseed.blockette import (
     Blockette041, Blockette050, Blockette054, Blockette060)
 from obspy.io.xseed.blockette.blockette import BlocketteLengthException
 from obspy.io.xseed.fields import SEEDTypeException
+import pytest
 
 
-class BlocketteTestCase(unittest.TestCase):
+class TestBlockette():
     """
     Test cases for all blockettes.
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.dirname(__file__)
-
     def test_invalid_blockette_length(self):
         """
         A wrong blockette length should raise an exception.
@@ -35,7 +24,8 @@ class BlocketteTestCase(unittest.TestCase):
         # create a blockette 054 which is way to long
         b054 = b"0540240A0400300300000020" + (b"+1.58748E-03" * 40)
         blockette = Blockette054(strict=True)
-        self.assertRaises(BlocketteLengthException, blockette.parse_seed, b054)
+        with pytest.raises(BlocketteLengthException):
+            blockette.parse_seed(b054)
 
     def parse_file(self, blkt_file):
         """
@@ -165,28 +155,27 @@ class BlocketteTestCase(unittest.TestCase):
             for key1, blkt1 in versions.items():
                 # conversion to SEED
                 seed = blkt1['Blkt'].get_seed()
-                self.assertEqual(seed, versions['SEED']['data'],
-                                 errmsg % (blkt_number, 'SEED', key1,
-                                           seed, versions['SEED']['data']))
+                assert seed == versions['SEED']['data'], \
+                    errmsg % (blkt_number, 'SEED', key1,
+                              seed, versions['SEED']['data'])
                 for key2, blkt2 in versions.items():
                     if key2 == 'SEED':
                         continue
                     xseed = etree.tostring(blkt1['Blkt'].get_xml(
                         xseed_version=blkt2['version']))
-                    self.assertEqual(xseed, versions[key2]['data'],
-                                     errmsg % (blkt_number, 'XSEED', key2,
-                                               xseed, blkt2['data']))
+                    assert xseed == versions[key2]['data'], \
+                        errmsg % (blkt_number, 'XSEED', key2,
+                                  xseed, blkt2['data'])
 
-    def test_all_blockettes(self):
+    def test_all_blockettes(self, datapath):
         """
         Tests all Blockettes.
         """
         # Loop over all files in the blockette-tests directory.
-        path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
         test_example_count = 0
-        for blkt_file in iglob(path):
+        for blkt_file in (datapath / 'blockette-tests').glob('blockette*.txt'):
             # Get blockette number.
-            blkt_number = blkt_file[-7:-4]
+            blkt_number = str(blkt_file)[-7:-4]
             # Check whether the blockette class can be loaded.
             try:
                 __import__('obspy.io.xseed.blockette.blockette' + blkt_number)
@@ -200,19 +189,18 @@ class BlocketteTestCase(unittest.TestCase):
             # The last step is to actually test the conversions to and from
             # SEED/XSEED for every example in every direction.
             self.seed_and_xseed_conversion(test_examples, blkt_number)
-        self.assertGreater(test_example_count, 0)
+        assert test_example_count > 0
 
-    def test_all_blockettes_get_resp(self):
+    def test_all_blockettes_get_resp(self, datapath):
         """
         Tests get_resp() for all blockettes that have that method.
         """
         tested_blockettes = 0
         # Loop over all files in the blockette-tests directory.
-        path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
-        for blkt_file in iglob(path):
+        for blkt_file in (datapath / 'blockette-tests').glob('blockette*.txt'):
 
             # Import the corresponding blockette.
-            blkt_number = blkt_file[-7:-4]
+            blkt_number = str(blkt_file)[-7:-4]
             blkt = importlib.import_module(
                 'obspy.io.xseed.blockette.blockette%s' % blkt_number)
             blkt = getattr(blkt, "Blockette%s" % blkt_number)
@@ -246,10 +234,10 @@ class BlocketteTestCase(unittest.TestCase):
                         r = b.get_resp("AA", "BB", [blkt41])
                     # For now only check that it contains something and that it
                     # returns bytes.
-                    self.assertGreater(len(r), 0)
-                    self.assertTrue(isinstance(r, native_bytes))
+                    assert len(r) > 0
+                    assert isinstance(r, bytes)
 
-        self.assertGreater(tested_blockettes, 0)
+        assert tested_blockettes > 0
 
     def test_blockette60_has_blockette_id(self):
         """
@@ -257,8 +245,8 @@ class BlocketteTestCase(unittest.TestCase):
         called.
         """
         blkt = Blockette060()
-        self.assertEqual(blkt.blockette_id, "060")
-        self.assertEqual(blkt.id, 60)
+        assert blkt.blockette_id == "060"
+        assert blkt.id == 60
 
     def test_issue701(self):
         """
@@ -273,29 +261,27 @@ class BlocketteTestCase(unittest.TestCase):
             "0363210102003,211,11:18:00.0000~2004,146,08:52:00.0000~NFR"
         # reading should work but without issues
         blockette = Blockette050()
-        # utf-8 only needed for PY2
         blockette.parse_seed(b050_orig.encode('utf-8'))
-        # utf-8 only needed for PY2
-        self.assertEqual(len(blockette.site_name.encode('utf-8')), 72)
+        assert len(blockette.site_name.encode('utf-8')) == 72
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
-            self.assertRaises(UserWarning, blockette.get_seed)
+            with pytest.raises(UserWarning):
+                blockette.get_seed()
             # Now ignore the warnings and test the default values.
             warnings.simplefilter('ignore', UserWarning)
             # writing should cut to 60 chars
             out = blockette.get_seed()
             # utf-8 only needed for PY2
-            self.assertEqual(out.decode('utf-8'), b050_cut)
+            assert out.decode('utf-8') == b050_cut
             # reading it again should have cut length
             blockette = Blockette050()
             blockette.parse_seed(out)
-            # utf-8 only needed for PY2
-            self.assertEqual(len(blockette.site_name.encode('utf-8')), 60)
+            assert len(blockette.site_name.encode('utf-8')) == 60
         # writing with strict=True will raise
         blockette = Blockette050(strict=True)
-        # utf-8 only needed for PY2
         blockette.parse_seed(b050_orig.encode('utf-8'))
-        self.assertRaises(SEEDTypeException, blockette.get_seed)
+        with pytest.raises(SEEDTypeException):
+            blockette.get_seed()
 
     def test_equality_and_unequality(self):
         """
@@ -311,25 +297,17 @@ class BlocketteTestCase(unittest.TestCase):
         c.test = 2
         d.test = 1
 
-        self.assertTrue(a == a)
-        self.assertTrue(a == b)
-        self.assertTrue(a != c)
-        self.assertTrue(a != d)
+        assert a == a
+        assert a == b
+        assert a != c
+        assert a != d
         # Revert order
-        self.assertTrue(a == a)
-        self.assertTrue(b == a)
-        self.assertTrue(c != a)
-        self.assertTrue(d != a)
+        assert a == a
+        assert b == a
+        assert c != a
+        assert d != a
         # Negations
-        self.assertFalse(a != a)
-        self.assertFalse(a != b)
-        self.assertFalse(a == c)
-        self.assertFalse(a == d)
-
-
-def suite():
-    return unittest.makeSuite(BlocketteTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert not (a != a)
+        assert not (a != b)
+        assert not (a == c)
+        assert not (a == d)

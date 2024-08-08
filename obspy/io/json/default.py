@@ -6,7 +6,7 @@ This module provides:
 ---------------------
 Default : a class to create a "default" function accepted by the
 python :py:mod:`json` module Encoder classes, valid for
-:class:`~obspy.core.event.Event` objects.
+:class:`~obspy.core.event.event.Event` objects.
 
 Example
 -------
@@ -18,10 +18,6 @@ Example
 >>> s = json.dumps(c, default=d)
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from obspy import UTCDateTime
 from obspy.core.event import Catalog, ResourceIdentifier
 from obspy.core.util import AttribDict
@@ -54,7 +50,8 @@ class Default(object):
 
     def __call__(self, obj):
         """
-        Deal with :class:`~obspy.core.event.Event` objects in JSON Encoder
+        Deal with :class:`~obspy.core.event.event.Event` objects in JSON
+        Encoder
 
         This function can be passed to the json module's
         `default` keyword parameter

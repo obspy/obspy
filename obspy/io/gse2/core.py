@@ -2,35 +2,31 @@
 """
 GSE2/GSE1 bindings to ObsPy core module.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 
 from obspy import Stream, Trace
 from . import libgse1, libgse2
+from obspy.core.util import open_bytes_stream
 
 
-def _is_gse2(filename):
+def _is_gse2(file):
     """
     Checks whether a file is GSE2 or not.
 
-    :type filename: str
-    :param filename: GSE2 file to be checked.
+    :type file: str or file-like object
+    :param file: GSE2 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE2 file.
     """
-    # Open file.
-    try:
-        with open(filename, 'rb') as f:
-            libgse2.is_gse2(f)
-    except Exception:
-        return False
+    with open_bytes_stream(file) as io_stream:
+        try:
+            libgse2.is_gse2(io_stream)
+        except Exception:
+            return False
     return True
 
 
-def _read_gse2(filename, headonly=False, verify_chksum=True,
+def _read_gse2(file, headonly=False, verify_chksum=True,
                **kwargs):  # @UnusedVariable
     """
     Reads a GSE2 file and returns a Stream object.
@@ -41,8 +37,8 @@ def _read_gse2(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
-    :param filename: GSE2 file to be read.
+    :type file: str or file-like object
+    :param file: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only head of GSE2 file.
     :type verify_chksum: bool, optional
@@ -57,7 +53,7 @@ def _read_gse2(filename, headonly=False, verify_chksum=True,
     >>> st = read("/path/to/loc_RJOB20050831023349.z")
     """
     traces = []
-    with open(filename, 'rb') as f:
+    with open_bytes_stream(file) as f:
         # reading multiple gse2 parts
         while True:
             try:
@@ -111,27 +107,24 @@ def _write_gse2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
             libgse2.write(trace.stats, trace.data, f, inplace)
 
 
-def _is_gse1(filename):
+def _is_gse1(file):
     """
     Checks whether a file is GSE1 or not.
 
-    :type filename: str
-    :param filename: GSE1 file to be checked.
+    :type file: str or file-like object
+    :param file: GSE1 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE1 file.
     """
-    # Open file.
-    with open(filename, 'rb') as f:
+    with open_bytes_stream(file) as io_stream:
         try:
-            data = f.readline()
+            data = io_stream.readline()
         except Exception:
             return False
-    if data.startswith(b'WID1') or data.startswith(b'XW01'):
-        return True
-    return False
+    return data.startswith(b'WID1') or data.startswith(b'XW01')
 
 
-def _read_gse1(filename, headonly=False, verify_chksum=True,
+def _read_gse1(file, headonly=False, verify_chksum=True,
                **kwargs):  # @UnusedVariable
     """
     Reads a GSE1 file and returns a Stream object.
@@ -142,8 +135,8 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
-    :param filename: GSE2 file to be read.
+    :type file: str or file-like object
+    :param file: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only header of GSE1 file.
     :type verify_chksum: bool, optional
@@ -159,7 +152,7 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
     """
     traces = []
     # read GSE1 file
-    with open(filename, 'rb') as fh:
+    with open_bytes_stream(file) as fh:
         while True:
             try:
                 if headonly:

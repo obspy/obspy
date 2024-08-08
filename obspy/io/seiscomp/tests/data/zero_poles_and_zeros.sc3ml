@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
+    <Inventory>
+        <sensor publicID="Sensor/20200219143551.502901.174" name="II.MBAR.10BH2.1999.265.00.00.00" response="ResponsePAZ/20200219143551.502921.175">
+            <description>Guralp CMG-3T Seismometer</description>
+            <unit>m/s</unit>
+            <remark>{&quot;unit&quot;:&quot;Velocity in Meters Per Second&quot;}</remark>
+        </sensor>
+        <datalogger publicID="Datalogger/20200219143551.502855.173" name="II.MBAR.10BH2.1999.265.00.00.00">
+            <gain>6553.6</gain>
+            <maxClockDrift>5e-05</maxClockDrift>
+            <decimation sampleRateNumerator="40" sampleRateDenominator="1">
+                <analogueFilterChain>ResponsePAZ/20200219143551.503013.176</analogueFilterChain>
+                <digitalFilterChain>ResponseFIR/20200219143551.502669.171</digitalFilterChain>
+            </decimation>
+        </datalogger>
+        <responsePAZ publicID="ResponsePAZ/20200219143551.503013.176" name="ResponsePAZ/20200219143551.503013.176">
+            <type>B</type>
+            <gain>33.3625</gain>
+            <gainFrequency>0.05</gainFrequency>
+            <normalizationFactor>1</normalizationFactor>
+            <normalizationFrequency>0.05</normalizationFrequency>
+            <numberOfZeros>0</numberOfZeros>
+            <numberOfPoles>0</numberOfPoles>
+        </responsePAZ>
+        <responsePAZ publicID="ResponsePAZ/20200219143551.502921.175" name="ResponsePAZ/20200219143551.502921.175">
+            <type>B</type>
+            <gain>1383.04</gain>
+            <gainFrequency>0.05</gainFrequency>
+            <normalizationFactor>3.60287e+16</normalizationFactor>
+            <normalizationFrequency>0.05</normalizationFrequency>
+            <numberOfZeros>2</numberOfZeros>
+            <numberOfPoles>2</numberOfPoles>
+            <zeros>(0,0) (0,0)</zeros>
+            <poles>(-0.00707,0.00707) (-0.00707,-0.00707)</poles>
+        </responsePAZ>
+        <responseFIR publicID="ResponseFIR/20200219143551.502669.171" name="ResponseFIR/20200219143551.502669.171">
+            <gain>4</gain>
+            <decimationFactor>5</decimationFactor>
+            <delay>0</delay>
+            <correction>0</correction>
+            <numberOfCoefficients>2</numberOfCoefficients>
+            <symmetry>B</symmetry>
+            <coefficients>-3.37741e-07 -8.62909e-07</coefficients>
+        </responseFIR>
+        <network publicID="NET/II/20200219143551.489081.8091" code="XX">
+            <start>1986-01-01T00:00:00.0000Z</start>
+            <description>Global Seismograph Network - IRIS/IDA (GSN)</description>
+            <restricted>false</restricted>
+            <shared>true</shared>
+            <station publicID="STA/II/MBAR/20200219143551.489322.8092" code="XXXX">
+                <start>1999-09-22T00:00:00.0000Z</start>
+                <description>TEST STATION</description>
+                <latitude>-0.6019</latitude>
+                <longitude>30.7382</longitude>
+                <elevation>1390</elevation>
+                <restricted>false</restricted>
+                <shared>true</shared>
+                <sensorLocation publicID="LOC/II/MBAR/10/20200219143551.502278.8381" code="10">
+                    <start>1999-09-22T00:00:00.0000Z</start>
+                    <latitude>-0.6019</latitude>
+                    <longitude>30.7382</longitude>
+                    <elevation>1390</elevation>
+                    <stream code="XXX" datalogger="Datalogger/20200219143551.502855.173" sensor="Sensor/20200219143551.502901.174">
+                        <start>1999-09-22T00:00:00.0000Z</start>
+                        <end>2001-10-31T01:59:59.0000Z</end>
+                        <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+                        <dataloggerChannel>2</dataloggerChannel>
+                        <sensorSerialNumber>yyyy</sensorSerialNumber>
+                        <sensorChannel>2</sensorChannel>
+                        <sampleRateNumerator>40</sampleRateNumerator>
+                        <sampleRateDenominator>1</sampleRateDenominator>
+                        <depth>7</depth>
+                        <azimuth>72.8</azimuth>
+                        <dip>0</dip>
+                        <gain>1209570000</gain>
+                        <gainFrequency>0.05</gainFrequency>
+                        <gainUnit>m/s</gainUnit>
+                        <flags>CG</flags>
+                        <restricted>false</restricted>
+                    </stream>
+                </sensorLocation>
+            </station>
+        </network>
+    </Inventory>
+</seiscomp>

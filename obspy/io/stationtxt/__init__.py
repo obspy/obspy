@@ -37,11 +37,6 @@ Inventory created at ...
         Channels (6):
             AK.BAGL..LHZ, AK.BWN..LHZ (2x), AZ.BZN..LHZ (3x)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

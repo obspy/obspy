@@ -22,8 +22,8 @@ mechanisms including format autodetection.
 >>> cat = read_events('/path/to/zmap_events.txt')
 >>> print(cat)
 2 Event(s) in Catalog:
-2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 None
-2012-04-04T14:21:42.300000Z | +41.822,  +79.684 | 5.1 None
+2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  None
+2012-04-04T14:21:42.300000Z | +41.822,  +79.684 | 5.1  None
 >>> cat.write('example.txt', format='ZMAP')  # doctest: +SKIP
 
 
@@ -67,13 +67,14 @@ origin and magnitude columns. Any missing values are exported as ``'NaN'``.
 Writing extended ZMAP, is supported by using the keyword argument
 ``with_uncertainties``.
 
-If :class:`~obspy.core.event.OriginUncertainty` specifies a
+If :class:`~obspy.core.event.origin.OriginUncertainty` specifies a
 *horizontal uncertainty* the value for column 11 is extracted from there.
 *Uncertainty ellipse* and *confidence ellipsoid* are not currently supported.
-If no horizontal uncertainty is given, :class:`~obspy.core.event.Origin`'s
+If no horizontal uncertainty is given,
+:class:`~obspy.core.event.origin.Origin`'s
 ``latitude_errors`` and ``longitude_errors`` are used instead. Depth and
 magnitude errors are always read from the respective ``_errors`` attribute in
-:class:`~obspy.core.event.Origin`.
+:class:`~obspy.core.event.origin.Origin`.
 
 
 The ZMAP Format
@@ -111,11 +112,7 @@ Column #            Value
 13                  Magnitude error
 =================   ==============================================
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod(exclude_empty=True)

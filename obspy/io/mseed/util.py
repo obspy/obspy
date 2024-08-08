@@ -2,14 +2,10 @@
 """
 MiniSEED specific utilities.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import collections
 import ctypes as C  # NOQA
 import os
+from pathlib import Path
 import sys
 import warnings
 from datetime import datetime
@@ -18,7 +14,7 @@ from struct import pack, unpack
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.compatibility import from_buffer, collections_abc
+from obspy.core.compatibility import from_buffer
 from obspy.core.util.decorator import ObsPyDeprecationWarning
 from . import InternalMSEEDParseTimeError
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
@@ -105,7 +101,7 @@ def get_flags(files, starttime=None, endtime=None,
     file and returns statistics about the timing quality if applicable.
 
     :param files: MiniSEED file or list of MiniSEED files.
-    :type files: list, str, file-like object
+    :type files: list, str, :class:`~pathlib.Path`, file-like object
     :param starttime: Only use records whose end time is larger than this
         given time.
     :type starttime: str or :class:`obspy.core.utcdatetime.UTCDateTime`
@@ -232,7 +228,7 @@ def get_flags(files, starttime=None, endtime=None,
     for file in files:
 
         # If it's a file name just read it.
-        if isinstance(file, (str, native_str)):
+        if isinstance(file, (str, Path)):
             # Read to NumPy array which is used as a buffer.
             bfr_np = np.fromfile(file, dtype=np.int8)
         elif hasattr(file, 'read'):
@@ -242,7 +238,7 @@ def get_flags(files, starttime=None, endtime=None,
 
         msr = clibmseed.msr_init(C.POINTER(MSRecord)())
 
-        while(True):
+        while True:
             # Read up to max record length.
             record = bfr_np[offset: offset + 8192]
             if len(record) < 48:
@@ -539,7 +535,7 @@ def get_record_information(file_or_file_object, offset=0, endian=None):
     station HGN
     time_correction 0
     """
-    if isinstance(file_or_file_object, (str, native_str)):
+    if isinstance(file_or_file_object, (str, Path)):
         with open(file_or_file_object, 'rb') as f:
             info = _get_record_information(f, offset=offset, endian=endian)
     else:
@@ -670,7 +666,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     data = file_object.read(28)
 
     def fmt(s):
-        return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
+        return '%sHHBBBxHHhhBBBxlxxH' % s
 
     def _parse_time(values):
         if not (1 <= values[1] <= 366):
@@ -738,7 +734,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     # if any of those is found.
     while blkt_offset:
         file_object.seek(record_start + blkt_offset, 0)
-        blkt_type, next_blkt = unpack(native_str('%sHH' % endian),
+        blkt_type, next_blkt = unpack('%sHH' % endian,
                                       file_object.read(4))
         if next_blkt != 0 and (next_blkt < 4 or next_blkt - 4 <= blkt_offset):
             msg = ('Invalid blockette offset (%d) less than or equal to '
@@ -749,7 +745,7 @@ def _get_record_information(file_object, offset=0, endian=None):
         # Parse in order of likeliness.
         if blkt_type == 1000:
             encoding, word_order, record_length = \
-                unpack(native_str('%sBBB' % endian),
+                unpack('%sBBB' % endian,
                        file_object.read(3))
             if word_order not in ENDIAN:
                 msg = ('Invalid word order "%s" in blockette 1000 for '
@@ -764,16 +760,16 @@ def _get_record_information(file_object, offset=0, endian=None):
             info['record_length'] = 2 ** record_length
         elif blkt_type == 1001:
             info['timing_quality'], mu_sec = \
-                unpack(native_str('%sBb' % endian),
+                unpack('%sBb' % endian,
                        file_object.read(2))
             starttime += float(mu_sec) / 1E6
         elif blkt_type == 500:
             file_object.seek(14, 1)
-            mu_sec = unpack(native_str('%sb' % endian),
+            mu_sec = unpack('%sb' % endian,
                             file_object.read(1))[0]
             starttime += float(mu_sec) / 1E6
         elif blkt_type == 100:
-            samp_rate = unpack(native_str('%sf' % endian),
+            samp_rate = unpack('%sf' % endian,
                                file_object.read(4))[0]
 
     # No blockette 1000 found.
@@ -838,7 +834,7 @@ def _ctypes_array_2_numpy_array(buffer_, buffer_elements, sampletype):
     """
     # Allocate NumPy array to move memory to
     numpy_array = np.empty(buffer_elements, dtype=sampletype)
-    datptr = numpy_array.ctypes.get_data()
+    datptr = numpy_array.ctypes.data
     # Manually copy the contents of the C allocated memory area to
     # the address of the previously created NumPy array
     C.memmove(datptr, buffer_, buffer_elements * SAMPLESIZES[sampletype])
@@ -928,7 +924,7 @@ def set_flags_in_fixed_headers(filename, flags):
     """
     Updates a given MiniSEED file with some fixed header flags.
 
-    :type filename: string
+    :type filename: str
     :param filename: Name of the MiniSEED file to be changed
     :type flags: dict
     :param flags: The flags to update in the MiniSEED file
@@ -1009,9 +1005,9 @@ def set_flags_in_fixed_headers(filename, flags):
     # import has to be here to break import loop
     from .core import _is_mseed
     # Basic check
-    if not os.path.isfile(filename) or not _is_mseed(filename):
+    if not Path(filename).is_file() or not _is_mseed(filename):
         raise IOError("File %s is not a valid MiniSEED file" % filename)
-    filesize = os.path.getsize(filename)
+    filesize = Path(filename).stat().st_size
 
     # Nested dictionaries to allow empty strings as wildcards
     class NestedDict(dict):
@@ -1114,19 +1110,19 @@ def set_flags_in_fixed_headers(filename, flags):
             if flags_value is not None:
                 # Calculate the real start and end of the record
                 recstart = mseed_file.read(10)
-                (yr, doy, hr, mn, sec, _, mil) = unpack(native_str(">HHBBBBH"),
+                (yr, doy, hr, mn, sec, _, mil) = unpack(">HHBBBBH",
                                                         recstart)
                 # Transformation to UTCDatetime()
                 recstart = UTCDateTime(year=yr, julday=doy, hour=hr, minute=mn,
                                        second=sec, microsecond=mil * 100)
                 # Read data to date begin and end of record
-                (nb_samples, fact, mult) = unpack(native_str(">Hhh"),
+                (nb_samples, fact, mult) = unpack(">Hhh",
                                                   mseed_file.read(6))
 
                 # Manage time correction
-                act_flags = unpack(native_str(">B"), mseed_file.read(1))[0]
+                act_flags = unpack(">B", mseed_file.read(1))[0]
                 time_correction_applied = bool(act_flags & 2)
-                (_, _, _, time_correction) = unpack(native_str(">BBBl"),
+                (_, _, _, time_correction) = unpack(">BBBl",
                                                     mseed_file.read(7))
                 if (time_correction_applied is False) and time_correction:
                     # Time correction is in units of 0.0001 seconds.
@@ -1136,11 +1132,11 @@ def set_flags_in_fixed_headers(filename, flags):
                 # Search for blockette 100's "Actual sample rate" field
                 samp_rate = _search_flag_in_blockette(mseed_file, 4, 100, 4, 1)
                 if samp_rate is not None:
-                    samp_rate = unpack(native_str(">b"), samp_rate)[0]
+                    samp_rate = unpack(">b", samp_rate)[0]
                 # Search for blockette 1001's "microsec" field
                 microsec = _search_flag_in_blockette(mseed_file, 4, 1001, 5, 1)
                 if microsec is not None:
-                    microsec = unpack(native_str(">b"), microsec)[0]
+                    microsec = unpack(">b", microsec)[0]
                 else:
                     microsec = 0
 
@@ -1161,10 +1157,10 @@ def set_flags_in_fixed_headers(filename, flags):
                         # if everything is unset or 0 set sample rate to 1
                         samp_rate = 1
 
-                # date of the last sample is recstart+samp_rate*(nb_samples-1)
+                # date of the last sample is recstart+(nb_samples-1)/samp_rate
                 # We assume here that a record with samples [0, 1, ..., n]
                 # has a period [ date_0, date_n+1 [  AND NOT [ date_0, date_n ]
-                realendtime = recstart + samp_rate * (nb_samples)
+                realendtime = recstart + nb_samples / samp_rate
 
                 # Convert flags to bytes : activity
                 if 'activity_flags' in flags_value:
@@ -1212,7 +1208,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 msg = "Invalid MiniSEED file. No blockette 1000 was found."
                 raise IOError(msg)
             else:
-                reclen_pow = unpack(native_str("B"), reclen_pow)[0]
+                reclen_pow = unpack("B", reclen_pow)[0]
                 reclen = 2**reclen_pow
                 mseed_file.seek(record_start + reclen, os.SEEK_SET)
 
@@ -1264,7 +1260,7 @@ def _check_flag_value(flag_value):
         utc_val = UTCDateTime(flag_value)
         corrected_flag = [(utc_val, utc_val)]
 
-    elif isinstance(flag_value, collections_abc.Mapping):
+    elif isinstance(flag_value, collections.abc.Mapping):
         # dict allowed if it has the right format
         corrected_flag = []
         for flag_key in flag_value:
@@ -1276,7 +1272,7 @@ def _check_flag_value(flag_value):
                     # Single value : ensure it's UTCDateTime and store it
                     utc_val = UTCDateTime(inst_values)
                     corrected_flag.append((utc_val, utc_val))
-                elif isinstance(inst_values, collections_abc.Sequence):
+                elif isinstance(inst_values, collections.abc.Sequence):
                     # Several instant values : check their types
                     # and add each of them
                     for value in inst_values:
@@ -1296,7 +1292,7 @@ def _check_flag_value(flag_value):
                 # Expecting either a list of tuples (start, end) or
                 # a list of (start1, end1, start1, end1)
                 dur_values = flag_value[flag_key]
-                if isinstance(dur_values, collections_abc.Sequence):
+                if isinstance(dur_values, collections.abc.Sequence):
                     if len(dur_values) != 0:
                         # Check first item
                         if isinstance(dur_values[0], datetime) or \
@@ -1340,11 +1336,11 @@ def _check_flag_value(flag_value):
                                 next(duration_iter)
 
                         elif isinstance(dur_values[0],
-                                        collections_abc.Sequence):
+                                        collections.abc.Sequence):
                             # List of tuples (start, end)
                             for value in dur_values:
                                 if not isinstance(value,
-                                                  collections_abc.Sequence):
+                                                  collections.abc.Sequence):
                                     msg = "Incorrect type %s for flag duration"
                                     raise ValueError(msg % str(type(value)))
                                 elif len(value) != 2:
@@ -1437,7 +1433,7 @@ def _search_flag_in_blockette(mseed_file_desc, first_blockette_offset,
         mseed_record_start = mseed_file_desc.tell() - 48
         read_data = mseed_file_desc.read(4)
         # Read info in the first blockette
-        [cur_blkt_number, next_blkt_offset] = unpack(native_str(">HH"),
+        [cur_blkt_number, next_blkt_offset] = unpack(">HH",
                                                      read_data)
 
         while cur_blkt_number != blockette_number \
@@ -1446,7 +1442,7 @@ def _search_flag_in_blockette(mseed_file_desc, first_blockette_offset,
             mseed_file_desc.seek(mseed_record_start + next_blkt_offset,
                                  os.SEEK_SET)
             read_data = mseed_file_desc.read(4)
-            [cur_blkt_number, next_blkt_offset] = unpack(native_str(">HH"),
+            [cur_blkt_number, next_blkt_offset] = unpack(">HH",
                                                          read_data)
 
         if cur_blkt_number == blockette_number:
@@ -1482,10 +1478,12 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
     compared to the expected_signals, and its value is converted to bool.
     Missing values are considered false.
 
-    :type expected_flags: dict {int: str}
-    :param expected_flags: every possible flag in this field, with its offset
-    :type user_flags: dict {str: bool}
-    :param user_flags: user defined flags and its value
+    :type expected_flags: dict
+    :param expected_flags: every possible flag in this field, with its offset.
+        Structure: {int: str}.
+    :type user_flags: dict
+    :param user_flags: user defined flags and its value.
+        Structure: {str: bool}.
     :type recstart: UTCDateTime
     :param recstart: date of the first sample of the current record
     :type recstart: UTCDateTime
@@ -1501,7 +1499,7 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
             if isinstance(user_flags[key], bool) and user_flags[key]:
                 # Boolean value, we accept it for all records
                 use_in_this_record = True
-            elif isinstance(user_flags[key], collections_abc.Sequence):
+            elif isinstance(user_flags[key], collections.abc.Sequence):
                 # List of tuples (start, end)
                 use_in_this_record = False
                 for tuple_value in user_flags[key]:
@@ -1509,7 +1507,7 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
                     event_start = tuple_value[0]
                     event_end = tuple_value[1]
 
-                    if(event_start < recend) and (recstart <= event_end):
+                    if (event_start < recend) and (recstart <= event_end):
                         use_in_this_record = True
                         break
 
@@ -1611,7 +1609,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
         # This should rarely be the case.
         if current_time_shift == 0 and is_time_correction_applied:
             # This sets bit 2 of the activity flags to 0.
-            current_record[36] = current_record[36] & (~2)
+            current_record[36] = np.int64(current_record[36]) & (~2)
             is_time_correction_applied = False
         # This is the case if the time correction has been applied. This
         # requires some more work by changing both, the actual time and the
@@ -1661,9 +1659,9 @@ def shift_time_of_file(input_file, output_file, timeshift):
             # Write to current record.
             time[0:2] = year[:]
             time[2:4] = julday[:]
-            time[4] = hour[:]
-            time[5] = minute[:]
-            time[6] = second[:]
+            time[4] = hour[0]
+            time[5] = minute[0]
+            time[6] = second[0]
             time[8:10] = msecs[:]
             current_record[20:30] = time[:]
 
@@ -1674,6 +1672,179 @@ def shift_time_of_file(input_file, output_file, timeshift):
             current_time_shift = current_time_shift.byteswap(False)
         current_time_shift.dtype = np.uint8
         current_record[40:44] = current_time_shift[:]
+
+    # Write to the output file.
+    data.tofile(output_file)
+
+
+def spread_time_over_file(input_file, output_file, timeshift):
+    """
+    Takes a MiniSEED file and a time shift and changes each record to gradually
+    spread the given time shift across all of the blockettes.  The intended use
+    is to correct apparent gaps or overlaps less than a sample interval in
+    continuous data that could arise due to hardware (clock drift) or
+    software (rounding errors in time calculations during data management).
+
+    The same could be achieved by reading the MiniSEED file with ObsPy,
+    modifying the sample times and writing it again. The problem with this
+    approach is that some record specific flags and special blockettes might
+    not be conserved. This function directly operates on the file and simply
+    changes some header fields, not touching the rest, thus preserving it.
+
+    Will work correctly only if all records have the same record length; this
+    usually should be the case.
+
+    All times are in 0.0001 seconds, that is in 1/10000 seconds. NOT ms but one
+    order of magnitude smaller! This is due to the way time corrections are
+    stored in the MiniSEED format.
+
+    :type input_file: str
+    :param input_file: The input filename.
+    :type output_file: str
+    :param output_file: The output filename.
+    :type timeshift: int
+    :param timeshift: The cumulative time shift to be progressively applied in
+        units of 0.0001 s.  Use an integer number, e.g. ``10`` for a total
+        cumulative time shift of one millisecond.
+
+    It is strongly recommended to not work directly on the original data to
+    avoid data loss in case anything goes wrong. Also always check
+    the resulting output file.
+
+    .. rubric:: Technical details
+
+    The function will loop over every record and change the "Time correction"
+    field in the fixed section of the MiniSEED header by ``I*timeshift/(N-1)``,
+    where N is the number of blockettes in the file and I is the blockette
+    number (starting with zero).  Thus the start time of the file will be
+    unchanged, but the end time will be later or earlier.  Unfortunately
+    a further flag (bit 1 in the "Activity flags" field) determines whether or
+    not the time correction has already been applied to the record start time.
+    If it has not, all is fine and changing the "Time correction" field is
+    enough.  Otherwise the actual time also needs to be changed.
+
+    One further detail: If bit 1 in the "Activity flags" field is 1 (True) and
+    the "Time correction" field is 0, then the bit will be set to 0 and only
+    the time correction will be changed thus avoiding the need to change the
+    record start time which is preferable.
+    """
+
+    if timeshift != int(timeshift):
+        msg = "The time shift must be an integer."
+        raise ValueError(msg)
+
+    timeshift = int(timeshift)
+    # A timeshift of zero makes no sense.
+    if timeshift == 0:
+        msg = "The timeshift must to be not equal to 0."
+        raise ValueError(msg)
+
+    # Get the necessary information from the file.
+    info = get_record_information(input_file)
+    record_length = info["record_length"]
+
+    byteorder = info["byteorder"]
+    sys_byteorder = "<" if (sys.byteorder == "little") else ">"
+    do_swap = False if (byteorder == sys_byteorder) else True
+
+    # This is in this scenario somewhat easier to use than BytesIO because one
+    # can directly modify the data array.
+    data = np.fromfile(input_file, dtype=np.uint8)
+    array_length = len(data)
+    N = int(array_length / record_length) - 1
+    shift = timeshift / N
+
+    # Loop over every record after the first.
+    for i in range(1, N+1):
+        remaining_bytes = array_length - i*record_length
+        if remaining_bytes < 48:
+            if remaining_bytes > 0:
+                msg = "%i excessive byte(s) in the file. " % remaining_bytes
+                msg += "They will be appended to the output file."
+                warnings.warn(msg)
+            break
+        # Use a slice for the current record.
+        current_record = data[i*record_length: (i+1)*record_length]
+
+        activity_flags = current_record[36]
+        is_time_correction_applied = bool(activity_flags & 2)
+
+        current_time_shift = current_record[40:44]
+        current_time_shift.dtype = np.int32
+        if do_swap:
+            current_time_shift = current_time_shift.byteswap(False)
+        current_time_shift = current_time_shift[0]
+
+        # If the time correction has been applied, but there is no actual
+        # time correction, then simply set the time correction applied
+        # field to false and process normally.
+        # This should rarely be the case.
+        if current_time_shift == 0 and is_time_correction_applied:
+            # This sets bit 2 of the activity flags to 0.
+            current_record[36] = current_record[36] & (~2)
+            is_time_correction_applied = False
+        # This is the case if the time correction has been applied. This
+        # requires some more work by changing both, the actual time and the
+        # time correction field.
+        elif is_time_correction_applied:
+            msg = "The time shift can only be applied by actually changing the"
+            msg += " time. This is experimental. Please make sure the output "
+            msg += "file is correct."
+            warnings.warn(msg)
+            # The whole process is not particularly fast or optimized but
+            # instead intends to avoid errors.
+            # Get the time variables.
+            time = current_record[20:30]
+            year = time[0:2]
+            julday = time[2:4]
+            hour = time[4:5]
+            minute = time[5:6]
+            second = time[6:7]
+            msecs = time[8:10]
+            # Change dtype of multibyte values.
+            year.dtype = np.uint16
+            julday.dtype = np.uint16
+            msecs.dtype = np.uint16
+            if do_swap:
+                year = year.byteswap(False)
+                julday = julday.byteswap(False)
+                msecs = msecs.byteswap(False)
+            dtime = UTCDateTime(year=year[0], julday=julday[0], hour=hour[0],
+                                minute=minute[0], second=second[0],
+                                microsecond=msecs[0] * 100)
+            dtime += (float(i*shift) / 10000)
+            year[0] = dtime.year
+            julday[0] = dtime.julday
+            hour[0] = dtime.hour
+            minute[0] = dtime.minute
+            second[0] = dtime.second
+            msecs[0] = dtime.microsecond / 100
+            # Swap again.
+            if do_swap:
+                year = year.byteswap(False)
+                julday = julday.byteswap(False)
+                msecs = msecs.byteswap(False)
+            # Change dtypes back.
+            year.dtype = np.uint8
+            julday.dtype = np.uint8
+            msecs.dtype = np.uint8
+            # Write to current record.
+            time[0:2] = year[:]
+            time[2:4] = julday[:]
+            time[4] = hour[:]
+            time[5] = minute[:]
+            time[6] = second[:]
+            time[8:10] = msecs[:]
+            current_record[20:30] = time[:]
+
+        # Now modify the time correction flag.
+        current_time_shift += int(i*shift)
+        if current_time_shift != 0:
+            current_time_shift = np.array([current_time_shift], np.int32)
+            if do_swap:
+                current_time_shift = current_time_shift.byteswap(False)
+            current_time_shift.dtype = np.uint8
+            current_record[40:44] = current_time_shift[:]
 
     # Write to the output file.
     data.tofile(output_file)

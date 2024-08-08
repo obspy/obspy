@@ -1,0 +1,37 @@
+BEGIN GSE2.0
+MSG_TYPE DATA
+MSG_ID 11-JUL-1711:22:06  FRA_NDC
+E-MAIL
+DATA_TYPE BULLETIN
+Reviewed Bulletin (REB) # P2017-026  from French NDC for regional phases     PERIOD 28 JUN 2017 TO 04 JUL 2017 Cenalt JP S
+EVENT     375368
+    Date      Time       Latitude Longitude    Depth    Ndef Nsta Gap    Mag1  N    Mag2  N    Mag3  N   Author         ID
+       rms   OT_Error      Smajor Sminor Az        Err   mdist  Mdist     Err        Err        Err      Quality
+
+2017/06/28 18:35:22.3     44.7472    6.6159      3.0 f    53    7 056  Ml 1.6  3  Md 1.6  2              bulletin    375628
+                                                                                                         _ldg
+      0.27   +-  0.03        .8     .5   63.00 +-  0.0    0.07   1.42   +-0.3      +-0.2                 m i ke
+
+FRANCE
+Sta     Dist  EvAz     Phase      Date       Time     TRes  Azim  AzRes  Slow  SRes Def   SNR       Amp   Per   Mag1   Mag2       ID
+MBDF  000.11 100.3 m E Pg      2017/06/28 18:35:24.8  -0.2                          T                                        6867445
+MBDF  000.11 100.3 m E Sg      2017/06/28 18:35:26.5  -0.3                          T               32.4  .24        Md 1.7  6867444
+ORIF  000.55 288.4 m E Pg      2017/06/28 18:35:33.0   0.0                          T                                        6867443
+ORIF  000.55 288.4 m E Sg      2017/06/28 18:35:40.1  -0.1                          T                3.8  .28        Md 1.4  6867442
+LPG   000.76 007.2 m E Pg      2017/06/28 18:35:36.9  -0.1                          T                                        6867441
+LPG   000.76 007.2 m E Sg      2017/06/28 18:35:46.8  -0.1                          T                1.9  .24                6867440
+LPL   000.77 006.1 m E Pg      2017/06/28 18:35:37.1  -0.1                          T                                        6867439
+LPL   000.77 006.1 m E Sg      2017/06/28 18:35:47.2  -0.1                          T                1.9  .31                6867438
+SBF   001.06 146.1 m E Pg      2017/06/28 18:35:42.2  -0.1                          T                                        6867475
+SBF   001.06 146.1 m E Sg      2017/06/28 18:35:55.9  -0.2                          T                3.2  .26 Ml 1.9         6867474
+SMRF  001.07 224.4 m E P       2017/06/28 18:35:44.4   0.1                          T                                        6867477
+SMRF  001.07 224.4 m E Sg      2017/06/28 18:35:56.4   0.0                          T                 .8  .30 Ml 1.3         6867476
+LMR   001.42 183.2 m E Pg      2017/06/28 18:35:48.7  -0.1                          T                                        6867479
+LMR   001.42 183.2 m E Sg      2017/06/28 18:36:07.0  -0.1                          T                 .6  .16 Ml 1.6         6867478
+
+.
+
+DATA_TYPE ARRIVAL
+Sta     Dist  EvAz     Phase      Date       Time     TRes  Azim  AzRes  Slow  SRes Def   SNR       Amp   Per   Mag1   Mag2       ID
+
+STOP

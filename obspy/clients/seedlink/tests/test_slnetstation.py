@@ -2,16 +2,16 @@
 """
 The obspy.clients.seedlink.client.slnetstation test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
 
-import unittest
+import pytest
 
 from obspy.clients.seedlink.client.slnetstation import SLNetStation
 
 
-class SLNetStationTestCase(unittest.TestCase):
+pytestmark = pytest.mark.network
+
+
+class TestSLNetStation():
 
     def test_issue769(self):
         """
@@ -22,14 +22,6 @@ class SLNetStationTestCase(unittest.TestCase):
 
         station1.append_selectors('FOO')
 
-        self.assertNotEqual(id(station1.selectors), id(station2.selectors))
-        self.assertEqual(station1.get_selectors(), ['FOO'])
-        self.assertEqual(station2.get_selectors(), [])
-
-
-def suite():
-    return unittest.makeSuite(SLNetStationTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert id(station1.selectors) != id(station2.selectors)
+        assert station1.get_selectors() == ['FOO']
+        assert station2.get_selectors() == []

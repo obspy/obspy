@@ -1,6 +1,3 @@
-obspy.io.quakeml
-================
-
 .. currentmodule:: obspy.io.quakeml
 .. automodule:: obspy.io.quakeml
 

@@ -30,10 +30,6 @@ the format is autodetected.
 See also the example in the Tutorial section:
 https://tutorial.obspy.org
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import fnmatch
 import os
 import sys
@@ -164,7 +160,13 @@ def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
         counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter,
                                      format, verbose, quiet=quiet)
     elif os.path.isdir(path):
-        for file in (os.path.join(path, file) for file in os.listdir(path)):
+        try:
+            dirlist = os.listdir(path)
+        except PermissionError:
+            if verbose or not quiet:
+                print(f"Can not read directory {path} ('Permission denied')")
+            return counter
+        for file in (os.path.join(path, file) for file in dirlist):
             counter = recursive_parse(data_dict, samp_int_dict, file, counter,
                                       format, verbose, quiet, ignore_links)
     else:
@@ -231,6 +233,7 @@ class Scanner(object):
 
         import os
         import obspy
+        from obspy.imaging.scripts.scan import Scanner
         directory = os.path.join(os.path.dirname(obspy.__file__),
                                  "io", "gse2", "tests", "data")
         scanner = Scanner()
@@ -299,8 +302,8 @@ class Scanner(object):
         :type fig: :class:`matplotlib.figure.Figure`
         :param fig: Figure instance to reuse.
         :type plot_x: bool
-        :param plot_x: Whether to plot "X" markers at start of all parsed
-            ``Trace``s.
+        :param plot_x: Whether to plot "X" markers at start of all
+            parsed :class:`~obspy.core.trace.Trace`s.
         :type plot_gaps: bool
         :param plot_gaps: Whether to plot filled rectangles at data gaps (red)
             and overlaps (blue).
@@ -317,7 +320,7 @@ class Scanner(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Whether to use a fixed end time for the plot and
             data percentage calculation.
-        :type seed_ids: list of str
+        :type seed_ids: list[str]
         :param seed_ids: Whether to consider only a specific set of SEED IDs
             (e.g. ``seed_ids=["GR.FUR..BHZ", "GR.WET..BHZ"]``) or just all SEED
             IDs encountered in data (if left ``None``). Given SEED IDs may
@@ -419,7 +422,6 @@ class Scanner(object):
             height = len(labels) * 0.5
             height = max(4, height)
             fig.set_figheight(height)
-            plt.tight_layout()
 
             if not starttime or not endtime:
                 days = ax.get_xlim()
@@ -431,7 +433,11 @@ class Scanner(object):
             width = min(width, height * 4)
             fig.set_figwidth(width)
             plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
-            plt.tight_layout()
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", "The figure layout has changed to tight",
+                    UserWarning)
+                plt.tight_layout()
 
             fig.savefig(outfile)
             plt.close(fig)
@@ -460,7 +466,7 @@ class Scanner(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Whether to use a fixed end time for the plot and
             data percentage calculation.
-        :type seed_ids: list of str
+        :type seed_ids: list[str]
         :param seed_ids: Whether to consider only a specific set of SEED IDs
             (e.g. ``seed_ids=["GR.FUR..BHZ", "GR.WET..BHZ"]``) or just all SEED
             IDs encountered in data (if left ``None``).

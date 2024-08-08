@@ -51,8 +51,7 @@ the plot. Please see the documentation of method
 :meth:`~obspy.core.stream.Stream.plot` for more details on all parameters.
 
    >>> dt = singlechannel[0].stats.starttime
-   >>> singlechannel.plot(color='red', number_of_ticks=7,
-   ...                    tick_rotation=5, tick_format='%I:%M %p',
+   >>> singlechannel.plot(color='red', tick_rotation=5, tick_format='%I:%M %p',
    ...                    starttime=dt + 60*60, endtime=dt + 60*60 + 120)
 
 .. plot:: tutorial/code_snippets/waveform_plotting_tutorial_2.py

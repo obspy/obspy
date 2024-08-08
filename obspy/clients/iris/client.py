@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IRIS Web service client for ObsPy.
+EarthScope (former IRIS) Web service client for ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -8,25 +8,16 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import io
 import platform
-import sys
+import urllib.request as urllib_request
 from lxml import objectify
+from urllib.parse import urlencode
 
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
+import numpy as np
 
 from obspy import Stream, UTCDateTime, __version__, read
-from obspy.core.util import NamedTemporaryFile, loadtxt
+from obspy.core.util import NamedTemporaryFile
 
 
 DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (__version__,
@@ -41,10 +32,10 @@ DEFAULT_SERVICE_VERSIONS = {"timeseries": 1, "sacpz": 1, "resp": 1,
 
 class Client(object):
     """
-    IRIS Web service request client.
+    EarthScope Web service request client.
 
     :type base_url: str, optional
-    :param base_url: Base URL of the IRIS Web service (default
+    :param base_url: Base URL of the EarthScope Web service (default
         is ``'http://service.iris.edu/irisws'``).
     :type user: str, optional
     :param user: The user name used for authentication with the Web
@@ -86,7 +77,7 @@ class Client(object):
                  user="", password="", timeout=20, debug=False,
                  user_agent=DEFAULT_USER_AGENT, major_versions={}):
         """
-        Initializes the IRIS Web service client.
+        Initializes the EarthScope Web service client.
 
         See :mod:`obspy.clients.iris` for all parameters.
         """
@@ -158,7 +149,7 @@ class Client(object):
         # file name is given, create fh, write to file and return nothing
         if hasattr(filename, "write") and callable(filename.write):
             fh = filename
-        elif isinstance(filename, (str, native_str)):
+        elif isinstance(filename, str):
             fh = open(filename, method)
             file_opened = True
         else:
@@ -176,7 +167,7 @@ class Client(object):
                    starttime, endtime, filter=[], filename=None,
                    output='miniseed', **kwargs):
         """
-        Low-level interface for `timeseries` Web service of IRIS
+        Low-level interface for `timeseries` Web service of EarthScope
         (http://service.iris.edu/irisws/timeseries/)- release 1.3.5
         (2012-06-07).
 
@@ -206,7 +197,7 @@ class Client(object):
 
         The following parameters act as filters upon the time series.
 
-        :type filter: list of str, optional
+        :type filter: list[str], optional
         :param filter: Filter list.  List order matters because each filter
             operation is performed in the order given. For example
             ``filter=["demean", "lp=2.0"]`` will demean and then apply a
@@ -293,7 +284,7 @@ class Client(object):
             ``'audio'``
                 audio WAV file
             ``'miniseed'``
-                IRIS MiniSEED format
+                MiniSEED format
             ``'plot'``
                 A simple plot of the time series
             ``'saca'``
@@ -318,7 +309,7 @@ class Client(object):
         >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10,
         ...     filter=["correct", "demean", "lp=2.0"])
         >>> print(st[0].data)  # doctest: +ELLIPSIS
-        [ -1.57488682e-06  -1.26318002e-06  -7.84807128e-07 ...
+        [ -1.57498380e-06  -1.26325779e-06  -7.84855445e-07 ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -359,7 +350,7 @@ class Client(object):
     def resp(self, network, station, location="*", channel="*",
              starttime=None, endtime=None, filename=None, **kwargs):
         """
-        Low-level interface for `resp` Web service of IRIS
+        Low-level interface for `resp` Web service of EarthScope
         (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
@@ -453,7 +444,7 @@ class Client(object):
     def sacpz(self, network, station, location="*", channel="*",
               starttime=None, endtime=None, filename=None, **kwargs):
         """
-        Low-level interface for `sacpz` Web service of IRIS
+        Low-level interface for `sacpz` Web service of EarthScope
         (http://service.iris.edu/irisws/sacpz/) - release 1.1.1 (2012-1-9).
 
         This method provides access to instrument response information
@@ -489,7 +480,7 @@ class Client(object):
         >>> client = Client()
         >>> dt = UTCDateTime("2005-01-01")
         >>> sacpz = client.sacpz("IU", "ANMO", "00", "BHZ", dt)
-        >>> print(sacpz.decode())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(sacpz.decode())  # doctest: +SKIP
         * **********************************
         * NETWORK   (KNETWK): IU
         * STATION    (KSTNM): ANMO
@@ -499,8 +490,8 @@ class Client(object):
         * START             : 2002-11-19T21:07:00
         * END               : 2008-06-30T00:00:00
         * DESCRIPTION       : Albuquerque, New Mexico, USA
-        * LATITUDE          : 34.945980
-        * LONGITUDE         : -106.457130
+        * LATITUDE          : 34.945981
+        * LONGITUDE         : -106.457133
         * ELEVATION         : 1671.0
         * DEPTH             : 145.0
         * DIP               : 0.0
@@ -510,23 +501,14 @@ class Client(object):
         * OUTPUT UNIT       : COUNTS
         * INSTTYPE          : Geotech KS-54000 Borehole Seismometer
         * INSTGAIN          : 1.935000e+03 (M/S)
-        * COMMENT           :
-        * SENSITIVITY       : 8.115970e+08 (M/S)
-        * A0                : 8.608300e+04
+        * ...
         * **********************************
-        ZEROS    3
-            +0.000000e+00    +0.000000e+00
-            +0.000000e+00    +0.000000e+00
-            +0.000000e+00    +0.000000e+00
-        POLES    5
-            -5.943130e+01    +0.000000e+00
-            -2.271210e+01    +2.710650e+01
-            -2.271210e+01    -2.710650e+01
-            -4.800400e-03    +0.000000e+00
-            -7.319900e-02    +0.000000e+00
-        CONSTANT    6.986470e+13
-        <BLANKLINE>
-        <BLANKLINE>
+        ZEROS      3
+           +0.000000e+00   +0.000000e+00
+           +0.000000e+00   +0.000000e+00
+           +0.000000e+00   +0.000000e+00
+        POLES      5 ...
+        CONSTANT   6.985619e+13
         <BLANKLINE>
         ...
         """
@@ -560,7 +542,7 @@ class Client(object):
 
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
-        Low-level interface for `distaz` Web service of IRIS
+        Low-level interface for `distaz` Web service of EarthScope
         (http://service.iris.edu/irisws/distaz/) - release 1.0.3 (2016).
 
         This method will calculate the great-circle angular distance, azimuth,
@@ -625,7 +607,7 @@ class Client(object):
 
     def flinnengdahl(self, lat, lon, rtype="both"):
         """
-        Low-level interface for `flinnengdahl` Web service of IRIS
+        Low-level interface for `flinnengdahl` Web service of EarthScope
         (http://service.iris.edu/irisws/flinnengdahl/) - release 1.1
         (2011-06-08).
 
@@ -688,7 +670,7 @@ class Client(object):
                    noheader=False, traveltimeonly=False, rayparamonly=False,
                    mintimeonly=False, filename=None):
         """
-        Low-level interface for `traveltime` Web service of IRIS
+        Low-level interface for `traveltime` Web service of EarthScope
         (http://service.iris.edu/irisws/traveltime/) - release 1.1.1
         (2012-05-15).
 
@@ -704,7 +686,7 @@ class Client(object):
             * ``'prem'`` - Preliminary Reference Earth Model
             * ``'ak135'``
 
-        :type phases: list of str, optional
+        :type phases: list[str], optional
         :param phases: Comma separated list of phases. The default is as
             follows::
 
@@ -730,15 +712,16 @@ class Client(object):
         * Specify an event location and one or more station locations,
           using ``evloc`` and ``staloc``
 
-        :type distdeg: float or list of float, optional
+        :type distdeg: float or list[float], optional
         :param evtlon: Great-circle distance from source to station, in decimal
             degrees. Multiple distances may be specified as a list.
-        :type distkm: float or list of float, optional
+        :type distkm: float or list[float], optional
         :param distkm: Distance between the source and station, in kilometers.
             Multiple distances may be specified as a list.
-        :type evloc: tuple of two floats, optional
+        :type evloc: tuple(float, float), optional
         :param evloc: The Event location (lat,lon) using decimal degrees.
-        :type staloc: tuple of two floats or list of tuples, optional
+        :type staloc: tuple(float, float) or list[tuple(float, float)],
+            optional
         :param staloc: Station locations for which the phases will be listed.
             The general format is (lat,lon). Specify multiple station locations
             with a list, e.g. ``[(lat1,lon1),(lat2,lon2),...,(latn,lonn)]``.
@@ -834,12 +817,12 @@ class Client(object):
                  width=800, height=600, annotate=True, output='plot',
                  filename=None, **kwargs):
         """
-        Low-level interface for `evalresp` Web service of IRIS
+        Low-level interface for `evalresp` Web service of EarthScope
         (http://service.iris.edu/irisws/evalresp/) - release 1.0.0
         (2011-08-11).
 
         This method evaluates instrument response information stored at the
-        IRIS DMC and outputs ASCII data or
+        EarthScope DMC and outputs ASCII data or
         `Bode Plots <https://en.wikipedia.org/wiki/Bode_plots>`_.
 
         :type network: str
@@ -939,7 +922,7 @@ class Client(object):
             >>> data = client.evalresp("IU", "ANMO", "00", "BHZ", dt,
             ...                        output='fap')
             >>> data[0]  # frequency, amplitude, phase of first point
-            array([  1.00000000e-05,   1.05599900e+04,   1.79200700e+02])
+            array([  1.00000000e-05,   1.05593400e+04,   1.79200700e+02])
 
         (2) Returning amplitude and phase plot.
 
@@ -1001,7 +984,7 @@ class Client(object):
                     tf.write(data)
                     # force matplotlib to use internal PNG reader. image.imread
                     # will use PIL if available
-                    img = image._png.read_png(native_str(tf.name))
+                    img = image._png.read_png(tf.name)
                 # add image to axis
                 ax.imshow(img)
                 # hide axes
@@ -1013,7 +996,7 @@ class Client(object):
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(io.BytesIO(data), ndmin=1)
+                return np.loadtxt(io.BytesIO(data), ndmin=1)
             else:
                 return self._to_file_or_data(filename, data, binary=True)
 

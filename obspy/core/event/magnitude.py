@@ -15,12 +15,8 @@ This class hierarchy is closely modelled after the de-facto standard format
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from obspy import UTCDateTime
 from obspy.core.event.base import (
     _event_type_class_factory, CreationInfo,
@@ -147,7 +143,8 @@ class StationMagnitude(__StationMagnitude):
         `resource_id` attribute in case it is not specified will be skipped.
     :type origin_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param origin_id: Reference to an origin’s ``resource_id`` if the
-        StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
+        StationMagnitude has an associated
+        :class:`~obspy.core.event.origin.Origin`.
     :type mag: float
     :param mag: Estimated magnitude.
     :type mag_errors: :class:`~obspy.core.event.base.QuantityError`

@@ -8,16 +8,10 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
 import contextlib
 import inspect
 import io
 import itertools
-import locale
 import math
 import os
 import shutil
@@ -34,10 +28,10 @@ WIN32 = sys.platform.startswith('win32')
 
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
-# to: SEED MANUAL p.124
-# We use this e.g. in seishub.client.getWaveform to request two samples more on
-# both start and end to cut to the samples that really are nearest to requested
-# start/end time afterwards.
+# to SEED MANUAL p.124
+# It can e.g. be used to request additional samples on both start and end to
+# cut to the samples that really are nearest to requested start/end time
+# afterwards.
 BAND_CODE = {'F': 1000.0,
              'G': 1000.0,
              'D': 250.0,
@@ -53,7 +47,8 @@ BAND_CODE = {'F': 1000.0,
              'R': 0.0001,
              'P': 0.000001,
              'T': 0.0000001,
-             'Q': 0.00000001}
+             'Q': 0.00000001
+             }
 
 # Dict that stores results from load entry points
 _ENTRY_POINT_CACHE = {}
@@ -123,7 +118,7 @@ def score_at_percentile(values, per, limit=(), issorted=True):
     >>> score_at_percentile(a, 75, limit=(0, 100))
     42.5
 
-    This function is taken from :func:`scipy.stats.score_at_percentile`.
+    This function is taken from `scipy.stats.score_at_percentile`.
 
     Copyright (c) Gary Strangman
     """
@@ -208,39 +203,6 @@ def to_int_or_zero(value):
         return 0
 
 
-# import numpy loadtxt and check if ndmin parameter is available
-try:
-    from numpy import loadtxt
-    loadtxt(np.array([0]), ndmin=1)
-except TypeError:
-    # otherwise redefine loadtxt
-    def loadtxt(*args, **kwargs):
-        """
-        Replacement for older numpy.loadtxt versions not supporting ndmin
-        parameter.
-        """
-        if 'ndmin' not in kwargs:
-            return np.loadtxt(*args, **kwargs)
-        # ok we got a ndmin param
-        if kwargs['ndmin'] != 1:
-            # for now we support only one dimensional arrays
-            raise NotImplementedError('Upgrade your NumPy version!')
-        del kwargs['ndmin']
-        dtype = kwargs.get('dtype', None)
-        # lets get the data
-        try:
-            data = np.loadtxt(*args, **kwargs)
-        except IOError as e:
-            # raises in older versions if no data could be read
-            if 'reached before encountering data' in str(e):
-                # return empty array
-                return np.array([], dtype=dtype)
-            # otherwise just raise
-            raise
-        # ensures that an array is returned
-        return np.atleast_1d(data)
-
-
 def get_untracked_files_from_git():
     """
     Tries to return a list of files (absolute paths) that are untracked by git
@@ -272,16 +234,13 @@ def get_untracked_files_from_git():
     return files
 
 
-if PY2:
-    from cStringIO import StringIO as CaptureIO
-else:
-    class CaptureIO(io.TextIOWrapper):
-        def __init__(self):
-            super(CaptureIO, self).__init__(io.BytesIO(), encoding='utf-8',
-                                            newline='\n', write_through=True)
+class CaptureIO(io.TextIOWrapper):
+    def __init__(self):
+        super(CaptureIO, self).__init__(io.BytesIO(), encoding='utf-8',
+                                        newline='\n', write_through=True)
 
-        def getvalue(self):
-            return self.buffer.getvalue().decode('utf-8')
+    def getvalue(self):
+        return self.buffer.getvalue().decode('utf-8')
 
 
 @contextlib.contextmanager
@@ -326,24 +285,14 @@ def CatchOutput():  # NOQA
         if WIN32:
             out.stdout = out.stdout.replace('\r', '')
             out.stderr = out.stderr.replace('\r', '')
-        # remove encoding for PY2 -> we always want PY2 unicode/PY3 str
-        if PY2:
-            if sys.stdout.isatty():
-                out.stdout.decode(sys.stdout.encoding)
-            else:
-                out.stdout.decode(locale.getpreferredencoding())
-            if sys.stderr.isatty():
-                out.stderr.decode(sys.stderr.encoding)
-            else:
-                out.stderr.decode(locale.getpreferredencoding())
 
     if raised:
         raise SystemExit(out.stderr)
 
 
-def _py36_windowsconsoleio_workaround():
+def _py3_windowsconsoleio_workaround():
     """
-    This monkey patch prevents crashing Py3.6 under Windows while using
+    This monkey patch prevents crashing Py >=3.6 under Windows while using
     the SuppressOutput context manager.
 
     Python 3.6 implemented unicode console handling for Windows. This works
@@ -358,9 +307,10 @@ def _py36_windowsconsoleio_workaround():
     The workaround in this case will reopen stdio with a different fd which
     also means a different handle by replicating the logic in
     "Py_lifecycle.c:initstdio/create_stdio".
-    See https://github.com/pytest-dev/py/issues/103
 
+    See https://github.com/pytest-dev/py/issues/103
     See http://bugs.python.org/issue30555
+    See https://github.com/obspy/obspy/issues/3148#issuecomment-1274254892
     """
     if not WIN32 or sys.version_info[:2] < (3, 6):
         return
@@ -385,12 +335,9 @@ def _py36_windowsconsoleio_workaround():
             f.newlines,
             f.line_buffering)
 
-    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
-    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
-    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')
-
-
-_py36_windowsconsoleio_workaround()
+    sys.stdin = _reopen_stdio(sys.stdin, 'rb')
+    sys.stdout = _reopen_stdio(sys.stdout, 'wb')
+    sys.stderr = _reopen_stdio(sys.stderr, 'wb')
 
 
 @contextlib.contextmanager
@@ -402,9 +349,10 @@ def SuppressOutput():  # noqa
     ...    os.system('echo "mystdout"')
     ...    os.system('echo "mystderr" >&2')
 
-    Note: Does not work reliably for Windows Python 3.6 under Windows - see
-    function definition of _py36_windowsconsoleio_workaround().
+    Note: Does not work reliably for Python 3 under Windows - see
+    function definition of _py3_windowsconsoleio_workaround().
     """
+    _py3_windowsconsoleio_workaround()
     with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
         with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
             with open(os.devnull, 'wb') as to_file:
@@ -420,6 +368,7 @@ def SuppressOutput():  # noqa
                     os.dup2(tmp_stdout.fileno(), 1)
                     os.dup2(tmp_stderr.fileno(), 2)
     # reset to original stdout/stderr
+    sys.stdin = sys.__stdin__
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
 
@@ -438,7 +387,7 @@ def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
     old_dir = os.getcwd()
     os.chdir(tempdir)
     try:
-        yield
+        yield tempdir
     finally:
         os.chdir(old_dir)
         try:
@@ -583,9 +532,13 @@ class MatplotlibBackend(object):
             shows a warning if the backend was not switched successfully.
         """
         import matplotlib
+        # first of all, all figures should be closed, matplotlib is showing a
+        # warning that this will not be done automatically by matplotlib in
+        # newer releases anymore, so do it here
+        import matplotlib.pyplot as plt
+        plt.close("all")
         # sloppy. only do a `plt.switch_backend(..)`
         if sloppy:
-            import matplotlib.pyplot as plt
             plt.switch_backend(backend)
         else:
             # check if `matplotlib.use(..)` is emitting a warning
@@ -595,7 +548,6 @@ class MatplotlibBackend(object):
                     matplotlib.use(backend)
             # if that's the case, follow up with `plt.switch_backend(..)`
             except UserWarning:
-                import matplotlib.pyplot as plt
                 plt.switch_backend(backend)
             # finally check if the switch was successful,
             # show a warning if not
@@ -756,25 +708,18 @@ def _yield_resource_id_parent_attr(obj):
     return func(obj)
 
 
-def _seed_id_map(
-        inventory=None, user_id_map=None, key='{sta.code}',
-        seed_factory='{net.code}.{{}}.{cha.location_code}.{cha.code:.2}{{}}'):
+def ptp(a, *args, **kwargs):
     """
-    Return mapping between station code and seed id expressions
+    Replacement for :meth:`numpy.ndarray.ptp()` and the corresponding method on
+    `MaskedArray` objects which are being removed in numpy 2.0
+    Basically just makes sure we call the correct replacement function numpy
+    put in place for regular and masked arrays.
+
+    :type a: :class:`numpy.ndarray` or :class:`numpy.ma.MaskedArray`
     """
-    id_map = {}
-    if inventory is not None:
-        msg = 'Multiple seed ids found for station {}. Use first.'
-        for net in inventory:
-            for sta in net:
-                for cha in sta:
-                    k = key.format(net=net, sta=sta, cha=cha)
-                    v = seed_factory.format(net=net, sta=sta, cha=cha)
-                    if id_map.setdefault(k, v) != v:
-                        warnings.warn(msg.format(k))
-    if user_id_map is not None:
-        id_map.update(user_id_map)
-    return id_map
+    if isinstance(a, np.ma.MaskedArray):
+        return np.ma.ptp(a, *args, **kwargs)
+    return np.ptp(a, *args, **kwargs)
 
 
 if __name__ == '__main__':

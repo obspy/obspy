@@ -10,10 +10,6 @@
 """
 Routines to read and write SEG Y rev 1 encoded seismic data files.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import io
 import os
 from struct import pack, unpack

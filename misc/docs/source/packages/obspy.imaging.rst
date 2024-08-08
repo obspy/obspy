@@ -11,6 +11,7 @@
 
        scripts.scan.Scanner
        scripts.scan.scan
+       cm.pqlx
 
     .. comment to end block
 
@@ -20,13 +21,14 @@
        :toctree: autogen
        :nosignatures:
 
-       spectrogram
        beachball
        cm
-       waveform
-       mopad_wrapper
        maps
+       mopad_wrapper
        source
+       spectrogram
+       util
+       waveform
 
     .. comment to end block
 

@@ -20,37 +20,36 @@ For more information visit https://www.obspy.org.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-# Importing setuptools monkeypatches some of distutils commands so things like
-# 'python setup.py develop' work. Wrap in try/except so it is not an actual
-# dependency. Inplace installation with pip works also without importing
-# setuptools.
-try:
-    import setuptools  # @UnusedImport # NOQA
-except ImportError:
-    pass
 
-try:
-    import numpy  # @UnusedImport # NOQA
-except ImportError:
-    msg = ("No module named numpy. "
-           "Please install numpy first, it is needed before installing ObsPy.")
-    raise ImportError(msg)
-
-import fnmatch
 import glob
 import inspect
 import os
-import sys
 import platform
+import shutil
+import subprocess
+import sys
+import sysconfig
+
+import setuptools
+
+from distutils.ccompiler import get_default_compiler
+from distutils.command.build import build
+from distutils.command.install import install
+from distutils.errors import DistutilsSetupError
 from distutils.util import change_root
 
-from numpy.distutils.core import DistutilsSetupError, setup
-from numpy.distutils.ccompiler import get_default_compiler
-from numpy.distutils.command.build import build
-from numpy.distutils.command.install import install
-from numpy.distutils.exec_command import exec_command, find_executable
-from numpy.distutils.misc_util import Configuration
+from setuptools import Extension, find_packages, setup
 
+
+# The minimum python version which can be used to run ObsPy
+MIN_PYTHON_VERSION = (3, 8)
+
+# Fail fast if the user is on an unsupported version of python.
+if sys.version_info < MIN_PYTHON_VERSION:
+    msg = ("ObsPy requires python version >= {}".format(MIN_PYTHON_VERSION) +
+           " you are using python version {}".format(sys.version_info))
+    print(msg, file=sys.stderr)
+    sys.exit(1)
 
 # Directory of the current file in the (hopefully) most reliable way
 # possible, according to krischer
@@ -63,7 +62,6 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from libnames import _get_lib_name  # @UnresolvedImport
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -82,11 +80,43 @@ else:
 EXTERNAL_EVALRESP = False
 EXTERNAL_LIBMSEED = False
 
+# Hard dependencies needed to install/run ObsPy.
+# Backwards compatibility hacks to be removed later:
+#  - matplotlib 3.3 (/3.4?): imaging (see #3242)
+# sqlalchemy pinned to <2.0 for now because of API changes that break
+# clients.filesystem.db. We suppress warnings in that module and also see
+# pytest.ini for some rules to ignore related warnings
+INSTALL_REQUIRES = [
+    'numpy>=1.20',
+    'scipy>=1.7',
+    'matplotlib>=3.3',
+    'lxml',
+    'setuptools',
+    'sqlalchemy>=1.4',
+    'decorator',
+    'requests',
+]
+# Extra dependencies
+EXTRAS_REQUIRES = {
+    'tests': [
+        'packaging',
+        'pyproj',
+        'pytest',
+        'pytest-json-report',
+    ],
+    'geo': ['geographiclib'],
+    'imaging': ['cartopy'],
+    'io.shapefile': ['pyshp'],
+}
+EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
+                          for dep in depl]
+
+
 # package specific settings
 KEYWORDS = [
-    'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
-    'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'DMX', 'earthquakes', 'Earthworm', 'EIDA',
+    'ALSEP', 'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
+    'beamforming', 'cross correlation', 'CYBERSHAKE', 'database', 'dataless',
+    'Dataless SEED', 'DMX', 'earthquakes', 'EarthScope', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
     'IASPEI', 'imaging', 'IMS', 'instrument correction',
@@ -95,45 +125,20 @@ KEYWORDS = [
     'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
-    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
-    'SeisHub', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
+    'SAGE', 'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'SEISAN', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
     'XSEED']
-
-# when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
-# and in obspy/io/mseed/core.py change downcasting check to numpy.can_cast()
-# when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
-# and get rid of helper function _np_copy_astype() in obspy/io/mseed/core.py
-INSTALL_REQUIRES = [
-    'future>=0.12.4',
-    'numpy>=1.6.1',
-    'scipy>=0.9.0',
-    'matplotlib>=1.1.0',
-    'lxml',
-    'setuptools',
-    'sqlalchemy',
-    'decorator',
-    'requests']
-EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
-    # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
-    'arclink': ['cryptography'],
-    'io.shapefile': ['pyshp'],
-    }
-# PY2
-if sys.version_info[0] == 2:
-    EXTRAS_REQUIRE['tests'].append('mock')
 
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-flinn-engdahl = obspy.scripts.flinnengdahl:main',
         'obspy-runtests = obspy.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.scripts.reftekrescue:main',
-        'obspy-print = obspy.scripts._print:main',
+        'obspy-print = obspy.scripts.print:main',
         'obspy-sds-report = obspy.scripts.sds_html_report:main',
-        'obspy-indexer = obspy.db.scripts.indexer:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',
         'obspy-mopad = obspy.imaging.scripts.mopad:main',
@@ -171,6 +176,10 @@ ENTRY_POINTS = {
         'REFTEK130 = obspy.io.reftek.core',
         'RG16 = obspy.io.rg16.core',
         'DMX = obspy.io.dmx.core',
+        'ALSEP_PSE = obspy.io.alsep.core',
+        'ALSEP_WTN = obspy.io.alsep.core',
+        'ALSEP_WTH = obspy.io.alsep.core',
+        'CYBERSHAKE = obspy.io.cybershake.core'
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -280,6 +289,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.GCF': [
         'isFormat = obspy.io.gcf.core:_is_gcf',
         'readFormat = obspy.io.gcf.core:_read_gcf',
+        'writeFormat = obspy.io.gcf.core:_write_gcf',
         ],
     'obspy.plugin.waveform.REFTEK130': [
         'isFormat = obspy.io.reftek.core:_is_reftek130',
@@ -288,10 +298,26 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.RG16': [
         'isFormat = obspy.io.rg16.core:_is_rg16',
         'readFormat = obspy.io.rg16.core:_read_rg16',
-    ],
+        ],
     'obspy.plugin.waveform.DMX': [
         'isFormat = obspy.io.dmx.core:_is_dmx',
         'readFormat = obspy.io.dmx.core:_read_dmx',
+    ],
+    'obspy.plugin.waveform.ALSEP_PSE': [
+        'isFormat = obspy.io.alsep.core:_is_pse',
+        'readFormat = obspy.io.alsep.core:_read_pse',
+        ],
+    'obspy.plugin.waveform.ALSEP_WTN': [
+        'isFormat = obspy.io.alsep.core:_is_wtn',
+        'readFormat = obspy.io.alsep.core:_read_wtn',
+        ],
+    'obspy.plugin.waveform.ALSEP_WTH': [
+        'isFormat = obspy.io.alsep.core:_is_wth',
+        'readFormat = obspy.io.alsep.core:_read_wth',
+        ],
+    'obspy.plugin.waveform.CYBERSHAKE': [
+        'isFormat = obspy.io.cybershake.core:_is_cybershake',
+        'readFormat = obspy.io.cybershake.core:_read_cybershake'
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
@@ -313,7 +339,10 @@ ENTRY_POINTS = {
         'IMS10BULLETIN = obspy.io.iaspei.core',
         'EVT = obspy.io.sh.evt',
         'FOCMEC = obspy.io.focmec.core',
-        'HYPODDPHA = obspy.io.hypodd.pha'
+        'HYPODDPHA = obspy.io.hypodd.pha',
+        'CSV = obspy.io.csv.core',
+        'CSZ = obspy.io.csv.core',
+        'EVENTTXT = obspy.io.csv.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -395,6 +424,22 @@ ENTRY_POINTS = {
     'obspy.plugin.event.HYPODDPHA': [
         'isFormat = obspy.io.hypodd.pha:_is_pha',
         'readFormat = obspy.io.hypodd.pha:_read_pha',
+        'writeFormat = obspy.io.hypodd.pha:_write_pha',
+        ],
+    'obspy.plugin.event.CSV': [
+        'isFormat = obspy.io.csv.core:_is_csv',
+        'readFormat = obspy.io.csv.core:_read_csv',
+        'writeFormat = obspy.io.csv.core:_write_csv',
+        ],
+    'obspy.plugin.event.CSZ': [
+        'isFormat = obspy.io.csv.core:_is_csz',
+        'readFormat = obspy.io.csv.core:_read_csz',
+        'writeFormat = obspy.io.csv.core:_write_csz',
+        ],
+    'obspy.plugin.event.EVENTTXT': [
+        'isFormat = obspy.io.csv.core:_is_eventtxt',
+        'readFormat = obspy.io.csv.core:_read_eventtxt',
+        'writeFormat = obspy.io.csv.core:_write_eventtxt',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
@@ -492,23 +537,23 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosine_taper',
-        'barthann = scipy.signal:barthann',
-        'bartlett = scipy.signal:bartlett',
-        'blackman = scipy.signal:blackman',
-        'blackmanharris = scipy.signal:blackmanharris',
-        'bohman = scipy.signal:bohman',
-        'boxcar = scipy.signal:boxcar',
-        'chebwin = scipy.signal:chebwin',
-        'flattop = scipy.signal:flattop',
-        'gaussian = scipy.signal:gaussian',
-        'general_gaussian = scipy.signal:general_gaussian',
-        'hamming = scipy.signal:hamming',
-        'hann = scipy.signal:hann',
-        'kaiser = scipy.signal:kaiser',
-        'nuttall = scipy.signal:nuttall',
-        'parzen = scipy.signal:parzen',
-        'slepian = scipy.signal:slepian',
-        'triang = scipy.signal:triang',
+        'barthann = scipy.signal.windows:barthann',
+        'bartlett = scipy.signal.windows:bartlett',
+        'blackman = scipy.signal.windows:blackman',
+        'blackmanharris = scipy.signal.windows:blackmanharris',
+        'bohman = scipy.signal.windows:bohman',
+        'boxcar = scipy.signal.windows:boxcar',
+        'chebwin = scipy.signal.windows:chebwin',
+        'flattop = scipy.signal.windows:flattop',
+        'gaussian = scipy.signal.windows:gaussian',
+        'general_gaussian = scipy.signal.windows:general_gaussian',
+        'hamming = scipy.signal.windows:hamming',
+        'hann = scipy.signal.windows:hann',
+        'kaiser = scipy.signal.windows:kaiser',
+        'nuttall = scipy.signal.windows:nuttall',
+        'parzen = scipy.signal.windows:parzen',
+        'triang = scipy.signal.windows:triang',
+        'dpss = scipy.signal.windows:dpss',
         ],
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recursive_sta_lta',
@@ -518,38 +563,14 @@ ENTRY_POINTS = {
         'zdetect = obspy.signal.trigger:z_detect',
         'recstaltapy = obspy.signal.trigger:recursive_sta_lta_py',
         'classicstaltapy = obspy.signal.trigger:classic_sta_lta_py',
-        ],
-    'obspy.db.feature': [
-        'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
-        'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
+        'energyratio = obspy.signal.trigger:energy_ratio',
+        'modifiedenergyratio = obspy.signal.trigger:modified_energy_ratio',
         ],
     }
 
 
-def find_packages():
-    """
-    Simple function to find all modules under the current folder.
-    """
-    modules = []
-    for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
-                                                      "obspy")):
-        if "__init__.py" in filenames:
-            modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
-    return [_i.replace(os.sep, ".") for _i in modules]
-
-
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    import distutils
-    from distutils.msvc9compiler import MSVCCompiler
-
-    # for Python 2.x only -> support library paths containing spaces
-    if distutils.__version__.startswith('2.'):
-        def _library_dir_option(self, dir):
-            return '/LIBPATH:"%s"' % (dir)
-
-        MSVCCompiler.library_dir_option = _library_dir_option
-
     # remove 'init' entry in exported symbols
     def _get_export_symbols(self, ext):
         return ext.export_symbols
@@ -565,7 +586,7 @@ def export_symbols(*path):
 
 # adds --with-system-libs command-line option if possible
 def add_features():
-    if 'setuptools' not in sys.modules:
+    if not hasattr(setuptools, 'Feature'):
         return {}
 
     class ExternalLibFeature(setuptools.Feature):
@@ -598,11 +619,23 @@ def add_features():
     }
 
 
-def configuration(parent_package="", top_path=None):
+def get_extensions():
     """
     Config function mainly used to compile C code.
     """
-    config = Configuration("", parent_package, top_path)
+    extensions = []
+
+    # GCF
+    path = os.path.join("obspy", "io", "gcf", "src")
+    files = [os.path.join(path, "gcf_io.c")]
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'gcf_io.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
+    extensions.append(Extension("gcf", files, **kwargs))
 
     # GSE2
     path = os.path.join("obspy", "io", "gse2", "src", "GSE_UTI")
@@ -612,8 +645,9 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    config.add_extension(_get_lib_name("gse2", add_extension_suffix=False),
-                         files, **kwargs)
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
+    extensions.append(Extension("gse2", files, **kwargs))
 
     # LIBMSEED
     path = os.path.join("obspy", "io", "mseed", "src")
@@ -630,10 +664,11 @@ def configuration(parent_package="", top_path=None):
             export_symbols(path, 'libmseed', 'libmseed.def')
         kwargs['export_symbols'] += \
             export_symbols(path, 'obspy-readbuffer.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
     if EXTERNAL_LIBMSEED:
-        kwargs['libraries'] = ['mseed']
-    config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
-                         files, **kwargs)
+        kwargs.setdefault('libraries', []).append('mseed')
+    extensions.append(Extension("mseed", files, **kwargs))
 
     # SEGY
     path = os.path.join("obspy", "io", "segy", "src")
@@ -643,8 +678,9 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    config.add_extension(_get_lib_name("segy", add_extension_suffix=False),
-                         files, **kwargs)
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
+    extensions.append(Extension("segy", files, **kwargs))
 
     # SIGNAL
     path = os.path.join("obspy", "signal", "src")
@@ -654,8 +690,9 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    config.add_extension(_get_lib_name("signal", add_extension_suffix=False),
-                         files, **kwargs)
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
+    extensions.append(Extension("signal", files, **kwargs))
 
     # EVALRESP
     path = os.path.join("obspy", "signal", "src")
@@ -670,10 +707,11 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
     if EXTERNAL_EVALRESP:
-        kwargs['libraries'] = ['evresp']
-    config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
-                         files, **kwargs)
+        kwargs.setdefault('libraries', []).append('evresp')
+    extensions.append(Extension("evresp", files, **kwargs))
 
     # TAU
     path = os.path.join("obspy", "taup", "src")
@@ -683,44 +721,11 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
-    config.add_extension(_get_lib_name("tau", add_extension_suffix=False),
-                         files, **kwargs)
+    if sysconfig.get_config_var('LIBM') == '-lm':
+        kwargs['libraries'] = ['m']
+    extensions.append(Extension("tau", files, **kwargs))
 
-    add_data_files(config)
-
-    return config
-
-
-def add_data_files(config):
-    """
-    Recursively include all non python files
-    """
-    # python files are included per default, we only include data files
-    # here
-    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf', '.git*']
-    EXCLUDE_DIRS = ['src', '__pycache__']
-    common_prefix = SETUP_DIRECTORY + os.path.sep
-    for root, dirs, files in os.walk(os.path.join(SETUP_DIRECTORY, 'obspy')):
-        root = root.replace(common_prefix, '')
-        for name in files:
-            if any(fnmatch.fnmatch(name, w) for w in EXCLUDE_WILDCARDS):
-                continue
-            config.add_data_files(os.path.join(root, name))
-        for folder in EXCLUDE_DIRS:
-            if folder in dirs:
-                dirs.remove(folder)
-
-    # Force include the contents of some directories.
-    FORCE_INCLUDE_DIRS = [
-        os.path.join(SETUP_DIRECTORY, 'obspy', 'io', 'mseed', 'src',
-                     'libmseed', 'test')]
-
-    for folder in FORCE_INCLUDE_DIRS:
-        for root, _, files in os.walk(folder):
-            for filename in files:
-                config.add_data_files(
-                    os.path.relpath(os.path.join(root, filename),
-                                    SETUP_DIRECTORY))
+    return extensions
 
 
 # Auto-generate man pages from --help output
@@ -729,8 +734,8 @@ class Help2ManBuild(build):
 
     def finalize_options(self):
         build.finalize_options(self)
-        self.help2man = find_executable('help2man')
-        if not self.help2man:
+        self.help2man = shutil.which('help2man')
+        if self.help2man is None:
             raise DistutilsSetupError('Building man pages requires help2man.')
 
     def run(self):
@@ -745,11 +750,11 @@ class Help2ManBuild(build):
 
             output = os.path.join(mandir, ep.name + '.1')
             print('Generating %s ...' % (output))
-            exec_command([self.help2man,
-                          '--no-info', '--no-discard-stderr',
-                          '--output', output,
-                          '"%s -m %s"' % (sys.executable,
-                                          ep.module_name)])
+            subprocess.call([self.help2man,
+                             '--no-info', '--no-discard-stderr',
+                             '--output', output,
+                             '"%s -m %s"' % (sys.executable,
+                                             ep.module_name)])
 
 
 class Help2ManInstall(install):
@@ -787,6 +792,11 @@ def setupPackage():
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
         url="https://www.obspy.org",
+        project_urls={
+            "Bug Tracker": "https://github.com/obspy/obspy/issues",
+            "Documentation": "https://docs.obspy.org/",
+            "Source Code": "https://github.com/obspy/obspy",
+        },
         author='The ObsPy Development Team',
         author_email='devs@obspy.org',
         license='GNU Lesser General Public License, Version 3 (LGPLv3)',
@@ -796,44 +806,67 @@ def setupPackage():
             'Environment :: Console',
             'Intended Audience :: Science/Research',
             'Intended Audience :: Developers',
-            'License :: OSI Approved :: GNU Library or ' +
-                'Lesser General Public License (LGPL)',
+            'License :: OSI Approved :: '
+                'GNU Lesser General Public License v3 (LGPLv3)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.4',
-            'Programming Language :: Python :: 3.5',
-            'Programming Language :: Python :: 3.6',
-            'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
         packages=find_packages(),
+        include_package_data=True,
+        exclude_package_data={
+            'obspy.io.css': ['contrib/*'],
+            # NOTE: If the libmseed test data wasn't used in our tests, we
+            # could just ignore src/* everywhere.
+            'obspy.io.gcf': ['src/*'],
+            'obspy.io.gse2': ['src/*'],
+            'obspy.io.mseed': [
+                # Only keep src/libmseed/test/* except for the C files.
+                'src/*.c',
+                'src/*.def',
+                'src/libmseed/.clang-format',
+                'src/libmseed/ChangeLog',
+                'src/libmseed/Makefile*',
+                'src/libmseed/README.byteorder',
+                'src/libmseed/doc/*',
+                'src/libmseed/example/*',
+                'src/libmseed/test/Makefile',
+                'src/libmseed/*.h',
+                'src/libmseed/*.in',
+                'src/libmseed/*.map',
+                'src/libmseed/*.md',
+            ],
+            'obspy.io.segy': ['src/*'],
+            'obspy.signal': ['src/*'],
+            'obspy.taup': ['src/*'],
+        },
         namespace_packages=[],
         zip_safe=False,
+        python_requires=f'>={MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}',
         install_requires=INSTALL_REQUIRES,
-        extras_require=EXTRAS_REQUIRE,
+        tests_require=EXTRAS_REQUIRES['tests'],
+        extras_require=EXTRAS_REQUIRES,
         features=add_features(),
-        # this is needed for "easy_install obspy==dev"
-        download_url=("https://github.com/obspy/obspy/zipball/master"
-                      "#egg=obspy=dev"),
-        include_package_data=True,
         entry_points=ENTRY_POINTS,
+        ext_modules=get_extensions(),
         ext_package='obspy.lib',
         cmdclass={
             'build_man': Help2ManBuild,
             'install_man': Help2ManInstall
         },
-        configuration=configuration)
+    )
 
 
 if __name__ == '__main__':
     # clean --all does not remove extensions automatically
     if 'clean' in sys.argv and '--all' in sys.argv:
-        import shutil
         # delete complete build directory
         path = os.path.join(SETUP_DIRECTORY, 'build')
         try:

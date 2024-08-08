@@ -20,19 +20,15 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import inspect
 import io
-import os
+from pathlib import Path
 import re
 import warnings
 
+from collections.abc import Mapping
 from lxml import etree
 
-from obspy.core import compatibility
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               CompositeTime, ConfidenceEllipsoid, CreationInfo,
                               DataUsed, Event, EventDescription,
@@ -146,7 +142,7 @@ class Unpickler(object):
 
         :type file: str
         :param file: File name to read.
-        :rtype: :class:`~obspy.core.event.Catalog`
+        :rtype: :class:`~obspy.core.event.catalog.Catalog`
         :returns: ObsPy Catalog object.
         """
         self.xml_doc = _xml_doc_from_anything(file)
@@ -158,7 +154,7 @@ class Unpickler(object):
 
         :type string: str
         :param string: QuakeML string to parse.
-        :rtype: :class:`~obspy.core.event.Catalog`
+        :rtype: :class:`~obspy.core.event.catalog.Catalog`
         :returns: ObsPy Catalog object.
         """
         self.xml_doc = etree.parse(io.BytesIO(string))
@@ -333,6 +329,11 @@ class Unpickler(object):
             upper_uncertainty = self._xpath2obj('upperUncertainty', el, int)
             if upper_uncertainty is not None:
                 error.upper_uncertainty = upper_uncertainty
+
+        # Silent QuantityError warning for extra attribute
+        error.do_not_warn_on.append('extra')
+        self._extra(el, error)
+
         return value, error
 
     def _float_value(self, element, name):
@@ -428,8 +429,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into an Arrival object.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.Arrival`
+        :type element: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.origin.Arrival`
         """
         obj = Arrival(force_resource_id=False)
         # required parameter
@@ -462,8 +463,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into a Pick object.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.Pick`
+        :type element: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.origin.Pick`
         """
         obj = Pick(force_resource_id=False)
         # required parameter
@@ -492,8 +493,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into a TimeWindow object.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.TimeWindow`
+        :type element: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.base.TimeWindow`
         """
         obj = TimeWindow(force_resource_id=False)
         # required parameter
@@ -508,8 +509,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into a Amplitude object.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.Amplitude`
+        :type element: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.magnitude.Amplitude`
         """
         obj = Amplitude(force_resource_id=False)
         # required parameter
@@ -543,8 +544,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into an Origin object.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.Origin`
+        :type element: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.origin.Origin`
 
         .. rubric:: Example
 
@@ -592,8 +593,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into a Magnitude object.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.Magnitude`
+        :type element: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.magnitude.Magnitude`
 
         .. rubric:: Example
 
@@ -631,8 +632,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into a StationMagnitude object.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.StationMagnitude`
+        :type element: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.magnitude.StationMagnitude`
 
         .. rubric:: Example
 
@@ -666,10 +667,10 @@ class Unpickler(object):
         """
         Converts an etree.Element into an Axis object.
 
-        :type parent: etree.Element
+        :type parent: :class:`~lxml.etree._Element`
         :type name: str
         :param name: tag name of axis
-        :rtype: :class:`~obspy.core.event.Axis`
+        :rtype: :class:`~obspy.core.event.source.Axis`
         """
         obj = Axis()
         try:
@@ -687,8 +688,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into an PrincipalAxes object.
 
-        :type parent: etree.Element
-        :rtype: :class:`~obspy.core.event.PrincipalAxes`
+        :type parent: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.source.PrincipalAxes`
         """
         try:
             sub_el = self._xpath('principalAxes', parent)[0]
@@ -707,10 +708,10 @@ class Unpickler(object):
         """
         Converts an etree.Element into an NodalPlane object.
 
-        :type parent: etree.Element
+        :type parent: :class:`~lxml.etree._Element`
         :type name: str
         :param name: tag name of sub nodal plane
-        :rtype: :class:`~obspy.core.event.NodalPlane`
+        :rtype: :class:`~obspy.core.event.source.NodalPlane`
         """
         try:
             sub_el = self._xpath(name, parent)[0]
@@ -728,8 +729,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into an NodalPlanes object.
 
-        :type parent: etree.Element
-        :rtype: :class:`~obspy.core.event.NodalPlanes`
+        :type parent: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.source.NodalPlanes`
         """
         try:
             sub_el = self._xpath('nodalPlanes', parent)[0]
@@ -751,8 +752,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into an SourceTimeFunction object.
 
-        :type parent: etree.Element
-        :rtype: :class:`~obspy.core.event.SourceTimeFunction`
+        :type parent: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.source.SourceTimeFunction`
         """
         try:
             sub_el = self._xpath('sourceTimeFunction', parent)[0]
@@ -772,8 +773,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into an Tensor object.
 
-        :type parent: etree.Element
-        :rtype: :class:`~obspy.core.event.Tensor`
+        :type parent: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.source.Tensor`
         """
         try:
             sub_el = self._xpath('tensor', parent)[0]
@@ -794,8 +795,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into a list of DataUsed objects.
 
-        :type parent: etree.Element
-        :rtype: list of :class:`~obspy.core.event.DataUsed`
+        :type parent: :class:`~lxml.etree._Element`
+        :rtype: list of :class:`~obspy.core.event.base.DataUsed`
         """
         obj = []
         for el in self._xpath('dataUsed', parent):
@@ -820,8 +821,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into an MomentTensor object.
 
-        :type parent: etree.Element
-        :rtype: :class:`~obspy.core.event.MomentTensor`
+        :type parent: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.source.MomentTensor`
         """
         try:
             mt_el = self._xpath('momentTensor', parent)[0]
@@ -858,8 +859,8 @@ class Unpickler(object):
         """
         Converts an etree.Element into a FocalMechanism object.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.FocalMechanism`
+        :type element: :class:`~lxml.etree._Element`
+        :rtype: :class:`~obspy.core.event.source.FocalMechanism`
 
         .. rubric:: Example
 
@@ -1007,38 +1008,40 @@ class Unpickler(object):
         """
         Add information stored in custom tags/attributes in obj.extra.
         """
-        # search all namespaces in current scope
-        for ns in element.nsmap.values():
+        for el in element:
+            # Separate namespace and tag name
+            try:
+                ns, name = el.tag[1:].split("}")
+            except ValueError:
+                # Node without namespace, so no extra nodes
+                continue
+
             # skip the two top-level quakeml namespaces,
             # we're not interested in quakeml defined tags here
             if ns in self._quakeml_namespaces:
                 continue
-            # process all elements of this custom namespace, if any
-            for el in element.iterfind("{%s}*" % ns):
-                # remove namespace from tag name
-                _, name = el.tag.split("}")
-                # check if element has children (nested tags)
-                if len(el):
-                    sub_obj = AttribDict()
-                    self._extra(el, sub_obj)
-                    value = sub_obj.extra
+
+            # check if element has children (nested tags)
+            if len(el):
+                sub_obj = AttribDict()
+                self._extra(el, sub_obj)
+                value = sub_obj.extra
+            else:
+                value = el.text
+            try:
+                extra = obj.setdefault("extra", AttribDict())
+            # Catalog object is not based on AttribDict..
+            except AttributeError:
+                if not isinstance(obj, Catalog):
+                    raise
+                if hasattr(obj, "extra"):
+                    extra = obj.extra
                 else:
-                    value = el.text
-                try:
-                    extra = obj.setdefault("extra", AttribDict())
-                # Catalog object is not based on AttribDict..
-                except AttributeError:
-                    if not isinstance(obj, Catalog):
-                        raise
-                    if hasattr(obj, "extra"):
-                        extra = obj.extra
-                    else:
-                        extra = AttribDict()
-                        obj.extra = extra
-                extra[name] = {'value': value,
-                               'namespace': '%s' % ns}
-                if el.attrib:
-                    extra[name]['attrib'] = el.attrib
+                    extra = AttribDict()
+                    obj.extra = extra
+            extra[name] = {'value': value, 'namespace': '%s' % ns}
+            if el.attrib:
+                extra[name]['attrib'] = el.attrib
         # process all attributes of custom namespaces, if any
         for key, value in element.attrib.items():
             # no custom namespace
@@ -1079,7 +1082,7 @@ class Pickler(object):
         """
         Writes ObsPy Catalog into given file.
 
-        :type catalog: :class:`~obspy.core.event.Catalog`
+        :type catalog: :class:`~obspy.core.event.catalog.Catalog`
         :param catalog: ObsPy Catalog object.
         :type file: str
         :param file: File name.
@@ -1092,7 +1095,7 @@ class Pickler(object):
         """
         Returns QuakeML string of given ObsPy Catalog object.
 
-        :type catalog: :class:`~obspy.core.event.Catalog`
+        :type catalog: :class:`~obspy.core.event.catalog.Catalog`
         :param catalog: ObsPy Catalog object.
         :rtype: str
         :returns: QuakeML formatted string.
@@ -1137,6 +1140,7 @@ class Pickler(object):
             self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
             self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
             self._str(error.confidence_level, subelement, 'confidenceLevel')
+            self._extra(error, subelement)
         element.append(subelement)
 
     def _waveform_id(self, obj, element, required=False):
@@ -1222,8 +1226,11 @@ class Pickler(object):
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
+                if value is None:
+                    subelement = etree.SubElement(element, tag, attrib=attrib)
+                    element.append(subelement)
                 # check if value is dictionary-like
-                if isinstance(value, compatibility.collections_abc.Mapping):
+                elif isinstance(value, Mapping):
                     subelement = etree.SubElement(element, tag, attrib=attrib)
                     self._custom(value, subelement)
                 elif isinstance(value, bool):
@@ -1256,8 +1263,8 @@ class Pickler(object):
         """
         Converts an Arrival into etree.Element object.
 
-        :type arrival: :class:`~obspy.core.event.Arrival`
-        :rtype: etree.Element
+        :type arrival: :class:`~obspy.core.event.origin.Arrival`
+        :rtype: :class:`~lxml.etree._Element`
         """
         attrib = {'publicID': self._id(arrival.resource_id)}
         element = etree.Element('arrival', attrib=attrib)
@@ -1288,8 +1295,8 @@ class Pickler(object):
         """
         Converts an Magnitude into etree.Element object.
 
-        :type magnitude: :class:`~obspy.core.event.Magnitude`
-        :rtype: etree.Element
+        :type magnitude: :class:`~obspy.core.event.magnitude.Magnitude`
+        :rtype: :class:`~lxml.etree._Element`
 
         .. rubric:: Example
 
@@ -1327,8 +1334,8 @@ class Pickler(object):
         """
         Converts an StationMagnitude into etree.Element object.
 
-        :type magnitude: :class:`~obspy.core.event.StationMagnitude`
-        :rtype: etree.Element
+        :type magnitude: :class:`~obspy.core.event.magnitude.StationMagnitude`
+        :rtype: :class:`~lxml.etree._Element`
 
         .. rubric:: Example
 
@@ -1363,8 +1370,8 @@ class Pickler(object):
         """
         Converts an Origin into etree.Element object.
 
-        :type origin: :class:`~obspy.core.event.Origin`
-        :rtype: etree.Element
+        :type origin: :class:`~obspy.core.event.origin.Origin`
+        :rtype: :class:`~lxml.etree._Element`
 
         .. rubric:: Example
 
@@ -1487,8 +1494,8 @@ class Pickler(object):
         """
         Converts an Amplitude into etree.Element object.
 
-        :type amp: :class:`~obspy.core.event.Amplitude`
-        :rtype: etree.Element
+        :type amp: :class:`~obspy.core.event.magnitude.Amplitude`
+        :rtype: :class:`~lxml.etree._Element`
         """
         element = etree.Element(
             'amplitude', attrib={'publicID': self._id(amp.resource_id)})
@@ -1521,8 +1528,8 @@ class Pickler(object):
         """
         Converts a Pick into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.Pick`
-        :rtype: etree.Element
+        :type pick: :class:`~obspy.core.event.origin.Pick`
+        :rtype: :class:`~lxml.etree._Element`
         """
         element = etree.Element(
             'pick', attrib={'publicID': self._id(pick.resource_id)})
@@ -1551,8 +1558,8 @@ class Pickler(object):
         """
         Converts a NodalPlanes into etree.Element object.
 
-        :type obj: :class:`~obspy.core.event.NodalPlanes`
-        :rtype: etree.Element
+        :type obj: :class:`~obspy.core.event.source.NodalPlanes`
+        :rtype: :class:`~lxml.etree._Element`
         """
         if obj is None:
             return
@@ -1589,8 +1596,8 @@ class Pickler(object):
         """
         Converts a PrincipalAxes into etree.Element object.
 
-        :type obj: :class:`~obspy.core.event.PrincipalAxes`
-        :rtype: etree.Element
+        :type obj: :class:`~obspy.core.event.source.PrincipalAxes`
+        :rtype: :class:`~lxml.etree._Element`
         """
         if obj is None:
             return
@@ -1633,8 +1640,8 @@ class Pickler(object):
         """
         Converts a MomentTensor into etree.Element object.
 
-        :type moment_tensor: :class:`~obspy.core.event.MomentTensor`
-        :rtype: etree.Element
+        :type moment_tensor: :class:`~obspy.core.event.source.MomentTensor`
+        :rtype: :class:`~lxml.etree._Element`
         """
         if moment_tensor is None:
             return
@@ -1699,8 +1706,8 @@ class Pickler(object):
         """
         Converts a FocalMechanism into etree.Element object.
 
-        :type focal_mechanism: :class:`~obspy.core.event.FocalMechanism`
-        :rtype: etree.Element
+        :type focal_mechanism: :class:`~obspy.core.event.source.FocalMechanism`
+        :rtype: :class:`~lxml.etree._Element`
         """
         if focal_mechanism is None:
             return
@@ -1820,8 +1827,8 @@ def _read_quakeml(filename):
     >>> cat = read_events('/path/to/iris_events.xml')
     >>> print(cat)
     2 Event(s) in Catalog:
-    2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
-    2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8 MS
+    2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1  MW
+    2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8  MS
     """
     return Unpickler().load(filename)
 
@@ -1833,13 +1840,14 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        the :meth:`~obspy.core.event.Catalog.write` method of an
-        ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
+        the :meth:`~obspy.core.event.catalog.Catalog.write` method of an
+        ObsPy :class:`~obspy.core.event.catalog.Catalog` object, call this
+        instead.
 
     :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
-    :param filename: Filename to write or open file-like object.
+    :param filename: Filename to write or open file-like object
     :type validate: bool, optional
     :param validate: If True, the final QuakeML file will be validated against
         the QuakeML schema file. Raises an AssertionError if the validation
@@ -1892,11 +1900,11 @@ def _validate(xml_file, verbose=False):
         warnings.warn(msg, UserWarning)
         return True
     # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data", "QuakeML-1.2.rng")
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
+    schema_location = schema_location / "data" / "QuakeML-1.2.rng"
 
     try:
-        relaxng = RelaxNG(etree.parse(schema_location))
+        relaxng = RelaxNG(etree.parse(str(schema_location)))
     except TypeError:
         msg = "Could not validate QuakeML - try using a newer lxml version"
         warnings.warn(msg, UserWarning)

@@ -9,28 +9,21 @@ Test suite for the CSS station writer.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import fnmatch
-import inspect
 import os
+import pytest
 import shutil
 import tempfile
-import unittest
 
 import obspy
 
 
-class CSSStationTestCase(unittest.TestCase):
+class TestCSSStation():
     """
     Test cases for css station interface
     """
-    def setUp(self):
-        # Most generic way to get the actual data directory.
-        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), 'data', 'station')
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, datapath):
+        self.data_dir = datapath / 'station'
 
     def _run_test(self, inv, fname):
         tempdir = tempfile.mkdtemp(prefix='obspy-')
@@ -38,10 +31,10 @@ class CSSStationTestCase(unittest.TestCase):
         try:
             inv.write(os.path.join(tempdir, fname), format='CSS')
 
-            expected_files = sorted(name for name in os.listdir(self.data_dir)
-                                    if fnmatch.fnmatch(name, fname + '.*'))
+            expected_files = sorted(
+                path.name for path in self.data_dir.glob(fname + '.*'))
             actual_files = sorted(os.listdir(tempdir))
-            self.assertEqual(expected_files, actual_files)
+            assert expected_files == actual_files
 
             for expected, actual in zip(expected_files, actual_files):
                 with open(os.path.join(self.data_dir, expected), 'rt') as f:
@@ -49,7 +42,7 @@ class CSSStationTestCase(unittest.TestCase):
                 with open(os.path.join(tempdir, actual), 'rt') as f:
                     actual_text = f.readlines()
 
-                self.assertEqual(expected_text, actual_text)
+                assert expected_text == actual_text
 
         finally:
             shutil.rmtree(tempdir)
@@ -72,11 +65,3 @@ class CSSStationTestCase(unittest.TestCase):
         ]
 
         self._run_test(inv, fname)
-
-
-def suite():
-    return unittest.makeSuite(CSSStationTestCase, "test")
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

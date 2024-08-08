@@ -3,69 +3,53 @@
 """
 The Rotate test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import gzip
 import itertools
-import os
-import unittest
 
 import numpy as np
 
-from obspy.core.compatibility import RegExTestCase
 from obspy.signal.rotate import (rotate_lqt_zne, rotate_ne_rt, rotate_rt_ne,
                                  rotate_zne_lqt, _dip_azimuth2zne_base_vector,
                                  rotate2zne)
+import pytest
 
 
-class RotateTestCase(RegExTestCase):
+class TestRotate():
     """
     Test cases for Rotate.
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_rotate_ne_rt_vs_pitsa(self):
+    def test_rotate_ne_rt_vs_pitsa(self, testdata):
         """
         Test horizontal component rotation against PITSA.
         """
         # load test files
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz')) as f:
+        with gzip.open(testdata['rjob_20051006_n.gz']) as f:
             data_n = np.loadtxt(f)
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz')) as f:
+        with gzip.open(testdata['rjob_20051006_e.gz']) as f:
             data_e = np.loadtxt(f)
         # test different angles, one from each sector
         for angle in [30, 115, 185, 305]:
             # rotate traces
             datcorr_r, datcorr_t = rotate_ne_rt(data_n, data_e, angle)
             # load pitsa files
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_r_%sdeg.gz' %
-                                        angle)) as f:
+            with gzip.open(testdata['rjob_20051006_r_%sdeg.gz' % angle]) as f:
                 data_pitsa_r = np.loadtxt(f)
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_t_%sdeg.gz' %
-                                        angle)) as f:
+            with gzip.open(testdata['rjob_20051006_t_%sdeg.gz' % angle]) as f:
                 data_pitsa_t = np.loadtxt(f)
             # Assert.
-            self.assertTrue(np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3,
-                                        atol=1E-5))
-            self.assertTrue(np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3,
-                                        atol=1E-5))
+            assert np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3, atol=1E-5)
+            assert np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3, atol=1E-5)
 
-    def test_rotate_zne_lqt_vs_pitsa(self):
+    def test_rotate_zne_lqt_vs_pitsa(self, testdata):
         """
         Test LQT component rotation against PITSA. Test back-rotation.
         """
         # load test files
-        with gzip.open(os.path.join(self.path, 'rjob_20051006.gz')) as f:
+        with gzip.open(testdata['rjob_20051006.gz']) as f:
             data_z = np.loadtxt(f)
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz')) as f:
+        with gzip.open(testdata['rjob_20051006_n.gz']) as f:
             data_n = np.loadtxt(f)
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz')) as f:
+        with gzip.open(testdata['rjob_20051006_e.gz']) as f:
             data_e = np.loadtxt(f)
         # test different backazimuth/incidence combinations
         for ba, inci in ((60, 130), (210, 60)):
@@ -76,51 +60,42 @@ class RotateTestCase(RegExTestCase):
             data_back_z, data_back_n, data_back_e = \
                 rotate_lqt_zne(data_l, data_q, data_t, ba, inci)
             # load pitsa files
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_q_%sba_%sinc.gz' %
-                                        (ba, inci))) as f:
+            with gzip.open(
+                    testdata[f'rjob_20051006_q_{ba}ba_{inci}inc.gz']) as f:
                 data_pitsa_q = np.loadtxt(f)
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_t_%sba_%sinc.gz' %
-                                        (ba, inci))) as f:
+            with gzip.open(
+                    testdata[f'rjob_20051006_t_{ba}ba_{inci}inc.gz']) as f:
                 data_pitsa_t = np.loadtxt(f)
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_l_%sba_%sinc.gz' %
-                                        (ba, inci))) as f:
+            with gzip.open(
+                    testdata[f'rjob_20051006_l_{ba}ba_{inci}inc.gz']) as f:
                 data_pitsa_l = np.loadtxt(f)
             # Assert the output. Has to be to rather low accuracy due to
             # rounding error prone rotation and single precision value.
-            self.assertTrue(
-                np.allclose(data_l, data_pitsa_l, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_q, data_pitsa_q, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_t, data_pitsa_t, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_z, data_back_z, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_n, data_back_n, rtol=1E-3, atol=1E-5))
-            self.assertTrue(
-                np.allclose(data_e, data_back_e, rtol=1E-3, atol=1E-5))
+            assert np.allclose(data_l, data_pitsa_l, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_q, data_pitsa_q, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_t, data_pitsa_t, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_z, data_back_z, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_n, data_back_n, rtol=1E-3, atol=1E-5)
+            assert np.allclose(data_e, data_back_e, rtol=1E-3, atol=1E-5)
 
-    def test_rotate_ne_rt_ne(self):
+    def test_rotate_ne_rt_ne(self, testdata):
         """
         Rotating there and back with the same back-azimuth should not change
         the data.
         """
         # load the data
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz')) as f:
+        with gzip.open(testdata['rjob_20051006_n.gz']) as f:
             data_n = np.loadtxt(f)
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz')) as f:
+        with gzip.open(testdata['rjob_20051006_e.gz']) as f:
             data_e = np.loadtxt(f)
         # Use double precision to get more accuracy for testing.
         data_n = np.require(data_n, np.float64)
         data_e = np.require(data_e, np.float64)
         ba = 33.3
-        new_n, new_e = rotate_ne_rt(data_n, data_e, ba)
-        new_n, new_e = rotate_rt_ne(new_n, new_e, ba)
-        self.assertTrue(np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12))
-        self.assertTrue(np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12))
+        r, t = rotate_ne_rt(data_n, data_e, ba)
+        new_n, new_e = rotate_rt_ne(r, t, ba)
+        assert np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12)
+        assert np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12)
 
     def test_rotate2zne_round_trip(self):
         """
@@ -163,9 +138,10 @@ class RotateTestCase(RegExTestCase):
         dip_1, dip_2, dip_3 = 0.0, 30.0, 60.0
         azi_1, azi_2, azi_3 = 0.0, 170.0, 35.0
 
-        self.assertRaisesRegex(
-            ValueError, 'All three data arrays must be of same length.',
-            rotate2zne, z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
+        with pytest.raises(
+                ValueError,
+                match='All three data arrays must be of same length.'):
+            rotate2zne(z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
 
     def test_base_vector_calculation_simple_cases(self):
         """
@@ -237,9 +213,9 @@ class RotateTestCase(RegExTestCase):
         v2_ref = np.array([np.sqrt(2.0), np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
         v3_ref = np.array([np.sqrt(2.0), -np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
 
-        self.assertTrue(np.allclose(v1, v1_ref, rtol=1E-7, atol=1E-7))
-        self.assertTrue(np.allclose(v2, v2_ref, rtol=1E-7, atol=1E-7))
-        self.assertTrue(np.allclose(v3, v3_ref, rtol=1E-7, atol=1E-7))
+        assert np.allclose(v1, v1_ref, rtol=1E-7, atol=1E-7)
+        assert np.allclose(v2, v2_ref, rtol=1E-7, atol=1E-7)
+        assert np.allclose(v3, v3_ref, rtol=1E-7, atol=1E-7)
 
     def test_galperin_configuration(self):
         """
@@ -263,9 +239,9 @@ class RotateTestCase(RegExTestCase):
         n_ref = np.array([0.0, fac * 2.0 * np.sqrt(3.0), 0.0])
         e_ref = np.array([0.0, 0.0, -4.0 * fac])
 
-        self.assertTrue(np.allclose(z, z_ref, rtol=1E-7, atol=1E-7))
-        self.assertTrue(np.allclose(n, n_ref, rtol=1E-7, atol=1E-7))
-        self.assertTrue(np.allclose(e, e_ref, rtol=1E-7, atol=1E-7))
+        assert np.allclose(z, z_ref, rtol=1E-7, atol=1E-7)
+        assert np.allclose(n, n_ref, rtol=1E-7, atol=1E-7)
+        assert np.allclose(e, e_ref, rtol=1E-7, atol=1E-7)
 
     def test_rotate2zne_against_rotate_ne_rt(self):
         np.random.seed(123)
@@ -399,14 +375,14 @@ class RotateTestCase(RegExTestCase):
                 if a[2] == b[2] == c[2] == 0 or \
                         set([_i[3] for _i in (a, b, c)]) == \
                         set(["Z", "Q", "L"]):
-                    with self.assertRaises(ValueError) as err:
+                    msg = (
+                        "The given directions are not linearly independent, "
+                        "at least within numerical precision. Determinant of "
+                        "the base change matrix:")
+                    with pytest.raises(ValueError, match=msg):
                         rotate2zne(a[0], a[1], a[2],
                                    b[0], b[1], b[2],
                                    c[0], c[1], c[2])
-                    self.assertTrue(err.exception.args[0].startswith(
-                        "The given directions are not linearly independent, "
-                        "at least within numerical precision. Determinant of "
-                        "the base change matrix:"))
                     failure_count += 1
                     continue
 
@@ -418,9 +394,9 @@ class RotateTestCase(RegExTestCase):
                 np.testing.assert_allclose(e_new, e)
                 success_count += 1
         # Make sure it actually tested all combinations.
-        self.assertEqual(success_count, 3888)
+        assert success_count == 3888
         # Also the linearly dependent variants.
-        self.assertEqual(failure_count, 432)
+        assert failure_count == 432
 
     def test_with_real_data(self):
         # Filtered and downsampled test data with two co-located
@@ -495,16 +471,8 @@ class RotateTestCase(RegExTestCase):
                 a[0], a[1] + 1.5, a[2] - 1.5,
                 b[0], b[1] - 0.7, b[2] + 1.2,
                 c[0], c[1] + 1.0, c[2] - 0.4)
-            with self.assertRaises(AssertionError):
+            with pytest.raises(AssertionError):
                 np.testing.assert_allclose(z_new, z[0], rtol=1E-5)
 
-        self.assertEqual(success_count, 12)
-        self.assertEqual(failure_count, 12)
-
-
-def suite():
-    return unittest.makeSuite(RotateTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert success_count == 12
+        assert failure_count == 12

@@ -9,11 +9,6 @@ Provides the Inventory class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible
-
 import copy
 import fnmatch
 import textwrap
@@ -43,19 +38,24 @@ def _create_example_inventory():
 
 
 @map_example_filename("path_or_file_object")
-def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
+def read_inventory(path_or_file_object=None, format=None, level='response',
+                   *args, **kwargs):
     """
     Function to read inventory files.
 
-    :type path_or_file_object: str or file-like object.
-    :param path_or_file_object: String containing a file name or a URL or a
-        open file-like object. Wildcards are allowed for a file name. If this
-        attribute is omitted, an example
+    :type path_or_file_object: str, pathlib.Path, or file-like object, optional
+    :param path_or_file_object: String containing a file name or a URL, a Path
+        object, or a open file-like object. Wildcards are allowed for a file
+        name. If this attribute is omitted, an example
         :class:`~obspy.core.inventory.inventory.Inventory` object will be
         returned.
     :type format: str
     :param format: Format of the file to read (e.g. ``"STATIONXML"``). See the
         `Supported Formats`_ section below for a list of supported formats.
+    :type level: str
+    :param level: Level of detail to read from file. One of ``'response'``,
+        ``'channel'``, ``'station'`` or ``'network'``. Lower level of detail
+        can result in much shorter reading times for some file formats.
     :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
     :return: An ObsPy :class:`~obspy.core.inventory.inventory.Inventory`
         object.
@@ -81,6 +81,9 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
         StationXML standard and how to output it to StationXML
         see the :ref:`ObsPy Tutorial <stationxml-extra>`.
     """
+    # add default parameters to kwargs so sub-modules may handle them
+    kwargs['level'] = level
+
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
@@ -99,10 +102,12 @@ def _read(filename, format=None, **kwargs):
     return inventory
 
 
-@python_2_unicode_compatible
 class Inventory(ComparingObject):
     """
-    The root object of the Inventory->Network->Station->Channel hierarchy.
+    The root object of the
+    :class:`~obspy.core.inventory.network.Network`->
+    :class:`~obspy.core.inventory.station.Station`->
+    :class:`~obspy.core.inventory.channel.Channel` hierarchy.
 
     In essence just a container for one or more networks.
     """
@@ -149,7 +154,7 @@ class Inventory(ComparingObject):
         """
         __eq__ method of the Inventory object.
 
-        :type other: :class:`~obspy.core.inventory.Inventory`
+        :type other: :class:`~obspy.core.inventory.inventory.Inventory`
         :param other: Inventory object for comparison.
         :rtype: bool
         :return: ``True`` if both Inventories are equal.
@@ -172,7 +177,7 @@ class Inventory(ComparingObject):
         return not self.__eq__(other)
 
     def __add__(self, other):
-        new = copy.deepcopy(self)
+        new = copy.copy(self)
         new += other
         return new
 
@@ -302,17 +307,19 @@ class Inventory(ComparingObject):
 
     def extend(self, network_list):
         """
-        Extends the current Catalog object with a list of Network objects.
+        Extends the current Inventory object with another Inventory or a list
+        of Network objects.
         """
         if isinstance(network_list, list):
             for _i in network_list:
-                # Make sure each item in the list is a event.
+                # Make sure each item in the list is a Network.
                 if not isinstance(_i, Network):
                     msg = 'Extend only accepts a list of Network objects.'
                     raise TypeError(msg)
             self.networks.extend(network_list)
         elif isinstance(network_list, Inventory):
             self.networks.extend(network_list.networks)
+            self.__copy_inventory_metadata(network_list)
         else:
             msg = 'Extend only supports a list of Network objects as argument.'
             raise TypeError(msg)
@@ -547,7 +554,7 @@ class Inventory(ComparingObject):
             The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
             also modify the original object
-            (see https://docs.python.org/2/library/copy.html).
+            (see https://docs.python.org/3/library/copy.html).
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
@@ -680,7 +687,7 @@ class Inventory(ComparingObject):
             The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
             also modify the original object
-            (see https://docs.python.org/2/library/copy.html).
+            (see https://docs.python.org/3/library/copy.html).
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
@@ -830,8 +837,8 @@ class Inventory(ComparingObject):
 
             Defaults to ``"global"``
         :type resolution: str, optional
-        :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are:
+        :param resolution: Resolution of the boundary database to use.
+            Possible values are:
 
             * ``"c"`` (crude)
             * ``"l"`` (low)
@@ -840,10 +847,10 @@ class Inventory(ComparingObject):
             * ``"f"`` (full)
 
             Defaults to ``"l"``
-        :type continent_fill_color: Valid matplotlib color, optional
+        :type continent_fill_color: valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
             ``"0.9"`` which is a light gray.
-        :type water_fill_color: Valid matplotlib color, optional
+        :type water_fill_color: valid matplotlib color, optional
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type marker: str
@@ -861,7 +868,7 @@ class Inventory(ComparingObject):
             drawn in a different color. A dictionary can be provided that maps
             network codes to color values (e.g.
             ``color_per_network={"GR": "black", "II": "green"}``).
-        :type colormap: str, any matplotlib colormap, optional
+        :type colormap: str, valid matplotlib colormap, optional
         :param colormap: Only used if ``color_per_network=True``. Specifies
             which colormap is used to draw the colors for the individual
             networks. Defaults to the "Paired" color map.
@@ -885,16 +892,15 @@ class Inventory(ComparingObject):
         :type method: str
         :param method: Method to use for plotting. Possible values are:
 
-            * ``'basemap'`` to use the Basemap library
             * ``'cartopy'`` to use the Cartopy library
             * ``None`` to use the best available library
 
             Defaults to ``None``.
         :type fig: :class:`matplotlib.figure.Figure`
         :param fig: Figure instance to reuse, returned from a previous
-            inventory/catalog plot call with `method=basemap`.
-            If a previous basemap plot is reused, any kwargs regarding the
-            basemap plot setup will be ignored (i.e.  `projection`,
+            inventory/catalog plot call with `method=cartopy`.
+            If a previous cartopy plot is reused, any kwargs regarding the
+            cartopy plot setup will be ignored (i.e.  `projection`,
             `resolution`, `continent_fill_color`, `water_fill_color`). Note
             that multiple plots using colorbars likely are problematic, but
             e.g. one station plot (without colorbar) and one event plot (with
@@ -940,13 +946,13 @@ class Inventory(ComparingObject):
                      color_per_network={'GR': 'blue',
                                         'BW': 'green'})
 
-        Combining a station and event plot (uses basemap):
+        Combining a station and event plot:
 
         >>> from obspy import read_inventory, read_events
         >>> inv = read_inventory()
         >>> cat = read_events()
-        >>> fig = inv.plot(method="basemap", show=False)  # doctest:+SKIP
-        >>> cat.plot(method="basemap", fig=fig)  # doctest:+SKIP
+        >>> fig = inv.plot(show=False)  # doctest:+SKIP
+        >>> cat.plot(fig=fig)  # doctest:+SKIP
 
         .. plot::
 
@@ -958,6 +964,7 @@ class Inventory(ComparingObject):
         """
         from obspy.imaging.maps import plot_map
         import matplotlib.pyplot as plt
+        from matplotlib.lines import Line2D
 
         # The empty ones must be kept as otherwise inventory files without
         # channels will end up with nothing.
@@ -970,9 +977,8 @@ class Inventory(ComparingObject):
         colors = []
 
         if color_per_network and not isinstance(color_per_network, dict):
-            from matplotlib.cm import get_cmap
             codes = set([n.code for n in inv])
-            cmap = get_cmap(name=colormap, lut=len(codes))
+            cmap = plt.get_cmap(name=colormap, lut=len(codes))
             color_per_network = dict([(code, cmap(i))
                                       for i, code in enumerate(sorted(codes))])
 
@@ -1006,20 +1012,13 @@ class Inventory(ComparingObject):
 
         if legend is not None and color_per_network:
             ax = fig.axes[0]
-            count = len(ax.collections)
-            for code, color in sorted(color_per_network.items()):
-                ax.scatter([0], [0], size, color, label=code, marker=marker)
-            # workaround for older matplotlib versions
-            try:
-                ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                          fontsize="medium", markerscale=0.8,
-                          handletextpad=0.1)
-            except TypeError:
-                leg_ = ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                                 markerscale=0.8, handletextpad=0.1)
-                leg_.prop.set_size("medium")
-            # remove collections again solely created for legend handles
-            ax.collections = ax.collections[:count]
+            legend_elements = [
+                Line2D([0], [0], marker=marker, color=color, label=code,
+                       markersize=size ** 0.5, ls='')
+                for code, color in sorted(color_per_network.items())]
+            ax.legend(handles=legend_elements, loc=legend, fancybox=True,
+                      scatterpoints=1, fontsize="medium", markerscale=0.8,
+                      handletextpad=0.1)
 
         if outfile:
             fig.savefig(outfile)
@@ -1043,9 +1042,18 @@ class Inventory(ComparingObject):
         :type output: str
         :param output: Output units. One of:
 
-                * ``"DISP"`` -- displacement, output unit is meters;
-                * ``"VEL"`` -- velocity, output unit is meters/second; or,
-                * ``"ACC"`` -- acceleration, output unit is meters/second**2.
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+            ``"DEF"``
+                default units, the response is calculated in
+                output units/input units (last stage/first stage).
+                Useful if the units for a particular type of sensor (e.g., a
+                pressure sensor) cannot be converted to displacement, velocity
+                or acceleration.
 
         :type network: str
         :param network: Only plot matching networks. Accepts UNIX style

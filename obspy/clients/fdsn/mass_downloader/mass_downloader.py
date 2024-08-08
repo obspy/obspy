@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Helpers to download potentially big data sets across a number of FDSN web
@@ -10,10 +9,6 @@ services in an automated fashion.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import collections
 import logging
 from multiprocessing.pool import ThreadPool
@@ -27,19 +22,7 @@ from . import utils
 from .download_helpers import ClientDownloadHelper, STATUS
 
 
-# Setup the logger.
 logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
-logger.setLevel(logging.DEBUG)
-# Prevent propagating to higher loggers.
-logger.propagate = 0
-# Console log handler.
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-# Add formatter
-FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
-formatter = logging.Formatter(FORMAT)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 
 class FDSNMassDownloaderException(FDSNException):
@@ -55,17 +38,31 @@ class MassDownloader(object):
     implementations.
 
     :param providers: List of FDSN client names or service URLS. Will use
-        all FDSN implementations known to ObsPy except RASPISHAKE if set to
-        None. The order in the list also determines their priority, if data
-        is available at more then one provider it will always be downloaded
-        from the provider that comes first in the list. To include RASPISHAKE,
-        you must set this parameter to
+        all FDSN implementations known to ObsPy except RASPISHAKE (generally
+        worse quality data) and IRISPH5 (active source / nodal experiments that
+        might match a very large amount of data occasionally) if set to None.
+        The order in the list also determines their priority, if data is
+        available at more then one provider it will always be downloaded from
+        the provider that comes first in the list. To include RASPISHAKE and
+        IRISPH5, you must set this parameter to
         `obspy.clients.fdsn.header.URL_MAPPINGS` explicitly.
     :param debug: Debug flag passed to the underlying FDSN web service clients.
-    :type providers: list of str or :class:`~obspy.clients.fdsn.client.Client`
+    :type providers: list[str] or :class:`~obspy.clients.fdsn.client.Client`
         instances
     """
-    def __init__(self, providers=None, debug=False):
+    def __init__(self, providers=None, debug=False, configure_logging=True):
+        if configure_logging:
+            logger.setLevel(logging.DEBUG)
+            # Prevent propagating to higher loggers.
+            logger.propagate = 0
+            # Console log handler.
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.INFO)
+            # Add formatter
+            formatter = logging.Formatter(
+                    "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s")
+            ch.setFormatter(formatter)
+            logger.addHandler(ch)
         self.debug = debug
         # If not given, use all providers ObsPy knows. They will be sorted
         # alphabetically except that ORFEUS is second to last and IRIS last.
@@ -80,11 +77,14 @@ class MassDownloader(object):
                 # exclude RASPISHAKE by default
                 del providers["RASPISHAKE"]
 
-            if "IRIS" in providers:
-                has_iris = True
-                del providers["IRIS"]
+            if "IRIS" in providers or "EARTHSCOPE" in providers:
+                has_earthscope = True
+                if "IRIS" in providers:
+                    del providers["IRIS"]
+                if "EARTHSCOPE" in providers:
+                    del providers["EARTHSCOPE"]
             else:
-                has_iris = False
+                has_earthscope = False
 
             if "ODC" in providers:
                 providers["ORFEUS"] = providers["ODC"]
@@ -96,11 +96,16 @@ class MassDownloader(object):
             else:
                 has_orfeus = False
 
+            # leave out IRISPH5 which is for nodal experiments and might match
+            # insanely large datasets, depending on restrictions
+            if "IRISPH5" in providers:
+                del providers["IRISPH5"]
+
             _p = sorted(providers)
             if has_orfeus:
                 _p.append("ORFEUS")
-            if has_iris:
-                _p.append("IRIS")
+            if has_earthscope:
+                _p.append("EARTHSCOPE")
 
             providers = _p
 
@@ -123,11 +128,11 @@ class MassDownloader(object):
         :param mseed_storage: Where to store the waveform files. See
             the :mod:`~obspy.clients.fdsn.mass_downloader` documentation for
             more details.
-        :type mseed_storage: str or function
+        :type mseed_storage: str or callable
         :param stationxml_storage: Where to store the StationXML files. See
             the :mod:`~obspy.clients.fdsn.mass_downloader` documentation for
             more details.
-        :type stationxml_storage: str or function
+        :type stationxml_storage: str or callable
         :param download_chunk_size_in_mb: MiniSEED data will be downloaded
             in bulk chunks. This settings limits the chunk size. A higher
             number means that less total download requests will be sent,

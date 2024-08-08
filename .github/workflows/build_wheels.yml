@@ -1,0 +1,129 @@
+name: wheels
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  release:
+    types: [published]
+
+concurrency:
+  group: wheels-${{ github.event_name }}-${{ github.ref_name }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build_wheels:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test_wheels')
+    name: build (${{ matrix.os }}, ${{ matrix.build }})
+    runs-on: ${{ matrix.os }}
+    env:
+      CIBW_BUILD: '${{ matrix.build }}-*'
+      CIBW_SKIP: '*i686 *win32 *s390x *ppc64le *musllinux*'
+      CIBW_ENVIRONMENT: OBSPY_NODE_NAME='wheel-builder'
+      CIBW_TEST_COMMAND: obspy-runtests --report
+      CIBW_TEST_EXTRAS: tests
+    strategy:
+      # for pushes to master, we only build a subset of wheels
+      # this does not apply to tags
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build: [cp38, cp39, cp310, cp311, cp312]
+        exclude-flag:
+          - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+        exclude:
+          - build: cp38
+            exclude-flag: true
+          - build: cp39
+            exclude-flag: true
+          - build: cp310
+            exclude-flag: true
+          - build: cp311
+            exclude-flag: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Adapt environment variables to build only some wheels
+        if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+        shell: bash -l {0}
+        run: |
+          echo "CIBW_SKIP=$CIBW_SKIP *aarch64" >> "$GITHUB_ENV"
+
+      - name: Print environment variables
+        shell: bash -l {0}
+        run: |
+          echo "CIBW_BUILD: $CIBW_BUILD"
+          echo "CIBW_SKIP: $CIBW_SKIP"
+          echo "CIBW_TEST_COMMAND: $CIBW_TEST_COMMAND"
+
+      - name: Build and test wheels
+        uses: pypa/cibuildwheel@v2.19.2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./wheelhouse/*.whl
+          name: wheel-${{ matrix.os }}-${{ matrix.build }}
+
+  build_sdist:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test_wheels')
+    name: build sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build sdist
+        shell: bash -l {0}
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: dist/*.tar.gz
+          name: sdist
+
+  merge_artifacts:
+    name: merge sdist and wheel artifacts together
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/upload-artifact/merge@v4
+        with:
+          name: artifact
+          delete-merged: true
+
+  publish_test:
+    name: publish tag to testpypi
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: merge_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@v1.9.0
+        with:
+          user: __token__
+          password: ${{ secrets.TESTPYPI }}
+          repository_url: https://test.pypi.org/legacy/
+
+  publish:
+    name: publish release
+    if: github.event_name == 'release'
+    needs: merge_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@v1.9.0
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI }}

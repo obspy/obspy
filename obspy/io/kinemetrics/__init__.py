@@ -21,7 +21,7 @@ Reading
 Similar to reading any other waveform data format using obspy.core:
 
     >>> from obspy import read
-    >>> st = read("/path/to/BI008_MEMA-04823.evt")
+    >>> st = read("/path/to/BI008_MEMA-04823.evt", apply_calib=True)
     >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
     >>> print (st)  # doctest: +NORMALIZE_WHITESPACE
@@ -53,7 +53,7 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
        sampling_rate: 250.0
                delta: 0.004
                 npts: 5750
-               calib: 1.0
+               calib: 1.1694431304931641e-06
              _format: KINEMETRICS_EVT
     >>> for k, v in sorted(stats_evt.items()):
     ...     print(k, v)
@@ -76,7 +76,7 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     comment MEMBACH
     duration 230
     elevation 298
-    gpslastlock 2013-08-15T09:19:20.000Z
+    gpslastlock 2013-08-15T09:19:20.000000Z
     gpsstatus Present ON
     installedchan 4
     instrument New Etna
@@ -87,10 +87,10 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     nscans 6
     samplebytes 3
     serialnumber 4823
-    starttime 2013-08-15T09:20:28.000Z
+    starttime 2013-08-15T09:20:28.000000Z
     stnid MEMA
     temperature 76
-    triggertime 2013-08-15T09:20:34.600Z
+    triggertime 2013-08-15T09:20:34.600000Z
 
 The actual data is stored as :class:`numpy.ndarray` in the ``data`` attribute
 of each trace.
@@ -107,11 +107,6 @@ Not implemented
 
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

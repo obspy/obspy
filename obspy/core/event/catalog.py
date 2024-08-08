@@ -15,13 +15,8 @@ This class hierarchy is closely modelled after the de-facto standard format
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copy
 import warnings
 
@@ -32,7 +27,6 @@ from obspy.core.util import _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS, _generic_reader
 from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
-from obspy.imaging.cm import obspy_sequential
 
 from .base import CreationInfo
 from obspy.core.event import ResourceIdentifier
@@ -45,7 +39,8 @@ EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
 
 class Catalog(object):
     """
-    This class serves as a container for Event objects.
+    This class serves as a container for
+    :class:`~obspy.core.event.event.Event` objects.
 
     :type events: list of :class:`~obspy.core.event.event.Event`, optional
     :param events: List of events
@@ -82,7 +77,7 @@ class Catalog(object):
     def _set_resource_id(self, value):
         if isinstance(value, dict):
             value = ResourceIdentifier(**value)
-        elif type(value) != ResourceIdentifier:
+        elif not isinstance(value, ResourceIdentifier):
             value = ResourceIdentifier(value)
         value.set_referred_object(self, warn=False)
         self.__dict__['resource_id'] = value
@@ -102,9 +97,9 @@ class Catalog(object):
         return self.__dict__['creation_info']
 
     def _set_creation_info(self, value):
-        if type(value) == dict:
+        if isinstance(value, dict):
             value = CreationInfo(**value)
-        elif type(value) != CreationInfo:
+        elif not isinstance(value, CreationInfo):
             value = CreationInfo(value)
         self.__dict__['creation_info'] = value
 
@@ -172,7 +167,7 @@ class Catalog(object):
 
         :return: Catalog object
         """
-        # see also http://docs.python.org/reference/datamodel.html
+        # see also http://docs.python.org/3/reference/datamodel.html
         return self.__class__(events=self.events[max(0, i):max(0, j):k])
 
     def __iadd__(self, other):
@@ -199,9 +194,10 @@ class Catalog(object):
         Return a robust iterator for Events of current Catalog.
 
         Doing this it is safe to remove events from catalogs inside of
-        for-loops using catalog's :meth:`~obspy.core.event.Catalog.remove`
-        method. Actually this creates a new iterator every time a event is
-        removed inside the for-loop.
+        for-loops using catalog's
+        :meth:`~obspy.core.event.catalog.Catalog.remove` method. Actually
+        this creates a new iterator every time a event is removed inside the
+        for-loop.
         """
         return list(self.events).__iter__()
 
@@ -217,7 +213,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, (str, native_str)):
+        if not isinstance(index, str):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)
@@ -305,25 +301,25 @@ class Catalog(object):
         >>> cat = read_events()
         >>> print(cat)
         3 Event(s) in Catalog:
-        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
-        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
-        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
+        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  mb | manual
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
+        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0  ML | manual
         >>> cat2 = cat.filter("magnitude >= 4.0", "latitude < 40.0")
         >>> print(cat2)
         1 Event(s) in Catalog:
-        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
         >>> cat3 = cat.filter("time > 2012-04-04T14:10",
         ...                   "time < 2012-04-04T14:20")
         >>> print(cat3)
         1 Event(s) in Catalog:
-        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3  ML | manual
         >>> cat4 = cat.filter("time > 2012-04-04T14:10",
         ...                   "time < 2012-04-04T14:20",
         ...                   inverse=True)
         >>> print(cat4)
         2 Event(s) in Catalog:
-        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
-        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
+        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4  mb | manual
+        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0  ML | manual
         """
         # Helper functions. Only first argument might be None. Avoid
         # unorderable types by checking first shortcut on positive is None
@@ -369,7 +365,8 @@ class Catalog(object):
             if key == "magnitude":
                 temp_events = []
                 for event in events:
-                    if (event.magnitudes and event.magnitudes[0].mag and
+                    if (event.magnitudes and
+                        event.magnitudes[0].mag is not None and
                         operator_map[operator](
                             event.magnitudes[0].mag,
                             float(value))):
@@ -407,7 +404,7 @@ class Catalog(object):
         """
         Returns a deepcopy of the Catalog object.
 
-        :rtype: :class:`~obspy.core.stream.Catalog`
+        :rtype: :class:`~obspy.core.event.catalog.Catalog`
         :return: Copy of current catalog.
 
         .. rubric:: Examples
@@ -485,7 +482,7 @@ class Catalog(object):
         .. rubric:: _`Supported Formats`
 
         Additional ObsPy modules extend the parameters of the
-        :meth:`~obspy.core.event.Catalog.write` method. The following
+        :meth:`~obspy.core.event.catalog.Catalog.write` method. The following
         table summarizes all known formats with write capability currently
         available for ObsPy.
 
@@ -525,8 +522,8 @@ class Catalog(object):
 
             Defaults to "global"
         :type resolution: str, optional
-        :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are:
+        :param resolution: Resolution of the boundary database to use.
+            Possible values are:
 
             * ``"c"`` (crude)
             * ``"l"`` (low)
@@ -535,10 +532,10 @@ class Catalog(object):
             * ``"f"`` (full)
 
             Defaults to ``"l"``
-        :type continent_fill_color: Valid matplotlib color, optional
+        :type continent_fill_color: valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
             ``"0.9"`` which is a light gray.
-        :type water_fill_color: Valid matplotlib color, optional
+        :type water_fill_color: valid matplotlib color, optional
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type label: str, optional
@@ -557,7 +554,7 @@ class Catalog(object):
             * ``"depth"``
 
             Defaults to ``"depth"``
-        :type colormap: str, any matplotlib colormap, optional
+        :type colormap: str, valid matplotlib colormap, optional
         :param colormap: The colormap for color-coding the events.
             The event with the smallest property will have the
             color of one end of the colormap and the event with the biggest
@@ -581,7 +578,6 @@ class Catalog(object):
         :type method: str
         :param method: Method to use for plotting. Possible values are:
 
-            * ``'basemap'`` to use the Basemap library
             * ``'cartopy'`` to use the Cartopy library
             * ``None`` to pick the best available library
 
@@ -589,9 +585,9 @@ class Catalog(object):
         :type fig: :class:`matplotlib.figure.Figure` (or
             :class:`matplotlib.axes.Axes`)
         :param fig: Figure instance to reuse, returned from a previous
-            inventory/catalog plot call with `method=basemap`.
-            If a previous basemap plot is reused, any kwargs regarding the
-            basemap plot setup will be ignored (i.e.  `projection`,
+            inventory/catalog plot call with `method=cartopy`.
+            If a previous cartopy plot is reused, any kwargs regarding the
+            cartopy plot setup will be ignored (i.e.  `projection`,
             `resolution`, `continent_fill_color`, `water_fill_color`). Note
             that multiple plots using colorbars likely are problematic, but
             e.g. one station plot (without colorbar) and one event plot (with
@@ -637,13 +633,13 @@ class Catalog(object):
             cat = read_events()
             cat.plot(projection="local")
 
-        Combining a station and event plot (uses basemap):
+        Combining a station and event plot:
 
         >>> from obspy import read_inventory, read_events
         >>> inv = read_inventory()
         >>> cat = read_events()
-        >>> fig = inv.plot(method=basemap, show=False)  # doctest:+SKIP
-        >>> cat.plot(method=basemap, fig=fig)  # doctest:+SKIP
+        >>> fig = inv.plot(show=False)  # doctest:+SKIP
+        >>> cat.plot(fig=fig)  # doctest:+SKIP
 
         .. plot::
 
@@ -653,7 +649,7 @@ class Catalog(object):
             fig = inv.plot(show=False)
             cat.plot(fig=fig)
         """
-        from obspy.imaging.maps import plot_map, _plot_basemap_into_axes
+        from obspy.imaging.maps import plot_map, _plot_cartopy_into_axes
         import matplotlib
         import matplotlib.pyplot as plt
 
@@ -700,6 +696,7 @@ class Catalog(object):
 
         # Create the colormap for date based plotting.
         if colormap is None:
+            from obspy.imaging.cm import obspy_sequential
             colormap = obspy_sequential
 
         if title is None:
@@ -737,15 +734,15 @@ class Catalog(object):
             size_plot = 15.0 ** 2
 
         if isinstance(fig, matplotlib.axes.Axes):
-            if method is not None and method != "basemap":
+            if method is not None and method != "cartopy":
                 msg = ("Plotting into an matplotlib.axes.Axes instance "
-                       "currently only implemented for `method='basemap'`.")
+                       "currently only implemented for `method='cartopy'`.")
                 raise NotImplementedError(msg)
             ax = fig
             fig = ax.figure
-            _plot_basemap_into_axes(
+            _plot_cartopy_into_axes(
                 ax=ax, lons=lons, lats=lats, size=size_plot,
-                color=colors, bmap=None, labels=labels,
+                color=colors, labels=labels,
                 projection=projection, resolution=resolution,
                 continent_fill_color=continent_fill_color,
                 water_fill_color=water_fill_color,
@@ -772,17 +769,18 @@ class Catalog(object):
 @map_example_filename("pathname_or_url")
 def read_events(pathname_or_url=None, format=None, **kwargs):
     """
-    Read event files into an ObsPy Catalog object.
+    Read event files into an ObsPy
+    :class:`~obspy.core.event.catalog.Catalog` object.
 
     The :func:`~obspy.core.event.read_events` function opens either one or
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
-    :type pathname_or_url: str or StringIO.StringIO
-    :param pathname_or_url: String containing a file name or a URL or a open
-        file-like object. Wildcards are allowed for a file name. If this
-        attribute is omitted, an example :class:`~obspy.core.event.Catalog`
-        object will be returned.
+    :type pathname_or_url: str, pathlib.Path, or file-like object, optional
+    :param pathname_or_url: String containing a file name or a URL, Path
+        object, or an open file-like object. Wildcards are allowed for a file
+        name. If this attribute is omitted, an example
+        :class:`~obspy.core.event.Catalog` object will be returned.
     :type format: str
     :param format: Format of the file to read (e.g. ``"QUAKEML"``). See the
         `Supported Formats`_ section below for a list of supported formats.
@@ -801,9 +799,9 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
     %s
 
     Next to the :func:`~obspy.core.event.read_events` function the
-    :meth:`~obspy.core.event.Catalog.write` method of the returned
-    :class:`~obspy.core.event.Catalog` object can be used to export the data to
-    the file system.
+    :meth:`~obspy.core.event.catalog.Catalog.write` method of the returned
+    :class:`~obspy.core.event.catalog.Catalog` object can be used to export the
+    data to the file system.
     """
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog

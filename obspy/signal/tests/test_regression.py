@@ -3,22 +3,18 @@
 """
 Tests for linear regression.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import unittest
-
 import numpy as np
+import pytest
 
 from obspy.signal.regression import linear_regression
 
 
-class RegressionTestCase(unittest.TestCase):
+class TestRegression():
     """
     Test cases for the regression method.
     """
-    def setUp(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
         # seed a random sequence and add some noise
         np.random.seed(0)
         n = 10
@@ -66,11 +62,3 @@ class RegressionTestCase(unittest.TestCase):
         result = linear_regression(self.x, self.y, intercept_origin=True)
         np.testing.assert_equal(len(result), 2)
         np.testing.assert_allclose(result, ref_result)
-
-
-def suite():
-    return unittest.makeSuite(RegressionTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

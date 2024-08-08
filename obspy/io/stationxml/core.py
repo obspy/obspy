@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Functions dealing with reading and writing StationXML.
@@ -9,22 +8,18 @@ Functions dealing with reading and writing StationXML.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
+import collections.abc
 import copy
 import inspect
 import io
 import math
-import os
+from pathlib import Path
 import re
 import warnings
 
 from lxml import etree
 
 import obspy
-from obspy.core import compatibility
 from obspy.core.util import AttribDict
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
@@ -42,8 +37,8 @@ from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip, Distance,
 # Define some constants for writing StationXML files.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "https://www.obspy.org"
-SCHEMA_VERSION = "1.1"
-READABLE_VERSIONS = ("1.0", "1.1")
+SCHEMA_VERSION = "1.2"
+READABLE_VERSIONS = ("1.0", "1.1", "1.2")
 
 
 def _get_version_from_xmldoc(xmldoc):
@@ -68,7 +63,7 @@ def _get_version_from_xmldoc(xmldoc):
 def _is_stationxml(path_or_file_object):
     """
     Simple function checking if the passed object contains a valid StationXML
-    1.0 or StationXML 1.1 file. Returns True of False.
+    1.x file. Returns True of False.
 
     The test is not exhaustive - it only checks the root tag but that should
     be good enough for most real world use cases. If the schema is used to
@@ -126,11 +121,12 @@ def validate_stationxml(path_or_object):
     version = _get_version_from_xmldoc(xmldoc)
 
     # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "fdsn-station-%s.xsd" % version)
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
 
-    if not os.path.exists(schema_location):
+    schema_location = schema_location / "data"
+    schema_location = str(schema_location / ("fdsn-station-%s.xsd" % version))
+
+    if not Path(schema_location).exists():
         msg = "No schema file found to validate StationXML version '%s'"
         raise ValueError(msg % version)
 
@@ -144,11 +140,14 @@ def validate_stationxml(path_or_object):
     return (True, ())
 
 
-def _read_stationxml(path_or_file_object):
+def _read_stationxml(path_or_file_object, level='response'):
     """
     Function reading a StationXML file.
 
     :param path_or_file_object: File name or file like object.
+    :type level: str
+    :param level: Level of detail to read from file. One of ``'response'``,
+        ``'channel'``, ``'station'`` or ``'network'``.
     """
     root = etree.parse(path_or_file_object).getroot()
 
@@ -178,7 +177,7 @@ def _read_stationxml(path_or_file_object):
                 'Setting Numerator/Denominator with a unit is deprecated.',
                 ObsPyDeprecationWarning)
         for network in root.findall(_ns("Network")):
-            networks.append(_read_network(network, _ns))
+            networks.append(_read_network(network, _ns, level))
 
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
@@ -228,7 +227,7 @@ def _read_base_node(element, object_to_write_to, _ns):
     _read_extra(element, object_to_write_to)
 
 
-def _read_network(net_element, _ns):
+def _read_network(net_element, _ns, level):
     network = obspy.core.inventory.Network(net_element.get("code"))
     _read_base_node(net_element, network, _ns)
     for operator in net_element.findall(_ns("Operator")):
@@ -238,13 +237,14 @@ def _read_network(net_element, _ns):
     network.selected_number_of_stations = \
         _tag2obj(net_element, _ns("SelectedNumberStations"), int)
     stations = []
-    for station in net_element.findall(_ns("Station")):
-        stations.append(_read_station(station, _ns))
+    if level in ('station', 'channel', 'response'):
+        for station in net_element.findall(_ns("Station")):
+            stations.append(_read_station(station, _ns, level))
     network.stations = stations
     return network
 
 
-def _read_station(sta_element, _ns):
+def _read_station(sta_element, _ns, level):
     longitude = _read_floattype(sta_element, _ns("Longitude"), Longitude,
                                 datum=True)
     latitude = _read_floattype(sta_element, _ns("Latitude"), Latitude,
@@ -278,23 +278,25 @@ def _read_station(sta_element, _ns):
     for ref in sta_element.findall(_ns("ExternalReference")):
         station.external_references.append(_read_external_reference(ref, _ns))
     channels = []
-    for channel in sta_element.findall(_ns("Channel")):
-        # Skip empty channels.
-        if not channel.items() and not channel.attrib:
-            continue
-        cha = _read_channel(channel, _ns)
-        # Might be None in case the channel could not be parsed.
-        if cha is None:
-            # This is None if, and only if, one of the coordinates could not
-            # be set.
-            msg = ("Channel %s.%s of station %s does not have a complete set "
-                   "of coordinates and thus it cannot be read. It will not be "
-                   "part of the final inventory object." % (
-                       channel.get("locationCode"), channel.get("code"),
-                       sta_element.get("code")))
-            warnings.warn(msg, UserWarning)
-        else:
-            channels.append(cha)
+    if level in ('channel', 'response'):
+        for channel in sta_element.findall(_ns("Channel")):
+            # Skip empty channels.
+            if not channel.items() and not channel.attrib:
+                continue
+            cha = _read_channel(channel, _ns, level=level)
+            # Might be None in case the channel could not be parsed.
+            if cha is None:
+                # This is None if, and only if, one of the coordinates could
+                # not be set.
+                msg = ("Channel %s.%s of station %s does not have a complete "
+                       "set of coordinates (latitude, longitude), elevation "
+                       "and depth and thus it cannot be read. It "
+                       "will not be part of the final inventory object." % (
+                           channel.get("locationCode"), channel.get("code"),
+                           sta_element.get("code")))
+                warnings.warn(msg, UserWarning)
+            else:
+                channels.append(cha)
     station.channels = channels
     return station
 
@@ -359,7 +361,7 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
     return objs
 
 
-def _read_channel(cha_element, _ns):
+def _read_channel(cha_element, _ns, level):
     """
     Returns either a :class:`~obspy.core.inventory.channel.Channel` object or
     ``None``.
@@ -438,10 +440,11 @@ def _read_channel(cha_element, _ns):
     for equipment in cha_element.findall(_ns("Equipment")):
         channel.equipments.append(_read_equipment(equipment, _ns))
     # Finally parse the response.
-    response = cha_element.find(_ns("Response"))
-    if response is not None:
-        channel.response = _read_response(response, _ns)
-        channel.response._attempt_to_fix_units()
+    if level == 'response':
+        response = cha_element.find(_ns("Response"))
+        if response is not None:
+            channel.response = _read_response(response, _ns)
+            channel.response._attempt_to_fix_units()
     return channel
 
 
@@ -523,7 +526,12 @@ def _read_response_stage(stage_elem, _ns):
                 stage_sequence_number=stage_sequence_number,
                 stage_gain=stage_gain,
                 stage_gain_frequency=stage_gain_frequency,
-                resource_id=resource_id, input_units=None, output_units=None)
+                resource_id=resource_id, input_units=None, output_units=None,
+                decimation_input_sample_rate=decimation_input_sample_rate,
+                decimation_factor=decimation_factor,
+                decimation_offset=decimation_offset,
+                decimation_delay=decimation_delay,
+                decimation_correction=decimation_correction)
         # Raise if none of the previous ones has been found.
         msg = "Could not find a valid Response Stage Type."
         raise ValueError(msg)
@@ -875,7 +883,8 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
                       nsmap=None, level="response", **kwargs):
     """
     Writes an inventory object to a buffer.
-    :type inventory: :class:`~obspy.core.inventory.Inventory`
+
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
     :type validate: bool
@@ -883,9 +892,8 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.
     :type nsmap: dict
-    :param nsmap: Additional custom namespace abbreviation mappings
-        (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
-
+    :param nsmap: Additional custom namespace abbreviation
+        mappings (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
     """
     if nsmap is None:
         nsmap = {}
@@ -1337,7 +1345,7 @@ def _write_response_stage(parent, stage):
         attr["resourceId"] = stage.resource_id
     sub = etree.SubElement(parent, "Stage", attr)
     # do nothing for gain only response stages
-    if type(stage) == ResponseStage:
+    if type(stage) is ResponseStage:
         pass
     else:
         # create tag for stage type
@@ -1362,7 +1370,7 @@ def _write_response_stage(parent, stage):
         _obj2tag(sub__, "Description", stage.output_units_description)
 
         # write custom fields of respective stage type
-        if type(stage) == ResponseStage:
+        if type(stage) is ResponseStage:
             pass
         elif isinstance(stage, PolesZerosResponseStage):
             _obj2tag(sub_, "PzTransferFunctionType",
@@ -1565,7 +1573,7 @@ def _write_element(parent, element, name):
         sub = etree.SubElement(parent, custom_name, attrib=attrib)
         if isinstance(
                 element['value'],
-                compatibility.collections_abc.Mapping):  # nested extra tags
+                collections.abc.Mapping):  # nested extra tags
             for tagname, tag_element in element['value'].items():
                 _write_element(sub, tag_element, tagname)
         else:
@@ -1648,7 +1656,7 @@ def _read_element(prefix, ns, element, extra):
     etree.register_namespace(prefix, ns)
     extra[name] = AttribDict()
     extra[name].namespace = ns
-    if(len(element) > 0):  # element contains nested elements
+    if len(element) > 0:  # element contains nested elements
         extra[name].value = AttribDict()
         for nested_el in element:
             _read_element(prefix, ns, nested_el, extra[name].value)
@@ -1695,8 +1703,3 @@ def _read_extra(element, obj):
         extra[name] = {'value': str(value),
                        'namespace': '%s' % ns,
                        'type': 'attribute'}
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

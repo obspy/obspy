@@ -1,13 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Functionality for dealing with a single velocity layer.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import numpy as np
 
 
@@ -27,18 +21,18 @@ import numpy as np
 #: * ``top_qs``: The S wave attenuation at the top.
 #: * ``bot_qs``: The S wave attenuation at the bottom.
 VelocityLayer = np.dtype([
-    (native_str('top_depth'), np.float_),
-    (native_str('bot_depth'), np.float_),
-    (native_str('top_p_velocity'), np.float_),
-    (native_str('bot_p_velocity'), np.float_),
-    (native_str('top_s_velocity'), np.float_),
-    (native_str('bot_s_velocity'), np.float_),
-    (native_str('top_density'), np.float_),
-    (native_str('bot_density'), np.float_),
-    (native_str('top_qp'), np.float_),
-    (native_str('bot_qp'), np.float_),
-    (native_str('top_qs'), np.float_),
-    (native_str('bot_qs'), np.float_),
+    ('top_depth', np.float64),
+    ('bot_depth', np.float64),
+    ('top_p_velocity', np.float64),
+    ('bot_p_velocity', np.float64),
+    ('top_s_velocity', np.float64),
+    ('bot_s_velocity', np.float64),
+    ('top_density', np.float64),
+    ('bot_density', np.float64),
+    ('top_qp', np.float64),
+    ('bot_qp', np.float64),
+    ('top_qs', np.float64),
+    ('bot_qs', np.float64),
 ])
 
 
@@ -49,7 +43,8 @@ def evaluate_velocity_at_bottom(layer, prop):
     .. seealso:: :func:`evaluate_velocity_at_top`, :func:`evaluate_velocity_at`
 
     :param layer: The velocity layer to use for evaluation.
-    :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`
+    :type layer: :class:`~numpy.ndarray`,
+        dtype = :py:const:`~obspy.taup.velocity_layer.VelocityLayer`
     :param prop: The material property to evaluate. One of:
 
         * ``p``
@@ -82,7 +77,8 @@ def evaluate_velocity_at_top(layer, prop):
         :func:`evaluate_velocity_at`
 
     :param layer: The velocity layer to use for evaluation.
-    :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`
+    :type layer: :class:`~numpy.ndarray`,
+        dtype = :py:class:`~obspy.taup.velocity_layer.VelocityLayer`
     :param prop: The material property to evaluate. One of:
 
         * ``p``
@@ -115,7 +111,8 @@ def evaluate_velocity_at(layer, depth, prop):
         :func:`evaluate_velocity_at_bottom`
 
     :param layer: The velocity layer to use for evaluation.
-    :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`
+    :type layer: :class:`~numpy.ndarray`,
+        dtype = :py:class:`~obspy.taup.velocity_layer.VelocityLayer`
     :param depth: The depth at which the material property should be
         evaluated. Must be within the bounds of the layer or results will be
         undefined.

@@ -23,13 +23,7 @@ written by Lars Krieger and Sebastian Heimann.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import numpy as np
-import matplotlib.collections as mpl_collections
-from matplotlib import patches, transforms
 
 from obspy.imaging.beachball import xy2patch
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
@@ -126,6 +120,8 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     ``'NWU'`` North, West, Up     Stein and Wysession 2003
     ========= =================== =============================================
     """
+    import matplotlib.collections as mpl_collections
+    from matplotlib import patches, transforms
     fm = _normalize_focmec(fm)
     # initialize beachball
     mt = mopad_MomentTensor(fm, system=mopad_basis)
@@ -196,7 +192,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     # resize.
     if axes is not None:
         # This is what holds the aspect ratio (but breaks the positioning)
-        collection.set_transform(transforms.IdentityTransform())
+        collection.set_transform(transforms.Affine2D(np.identity(3)))
         # Next is a dirty hack to fix the positioning:
         # 1. Need to bring the all patches to the origin (0, 0).
         for p in collection._paths:
@@ -204,7 +200,11 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # 2. Then use the offset property of the collection to position the
         # patches
         collection.set_offsets(xy)
-        collection._transOffset = axes.transData
+        try:
+            collection.set_offset_transform(axes.transData)
+        except AttributeError:
+            # compatibility for matplotlib 3.3 (and maybe 3.4 too?)
+            collection._transOffset = axes.transData
     collection.set_edgecolors(edgecolor)
     collection.set_alpha(alpha)
     collection.set_linewidth(linewidth)

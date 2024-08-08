@@ -52,17 +52,7 @@ connection object and cannot be easily influenced. Also, a ``HELLO`` is always
 sent to the server when connecting in order to determine the SeedLink protocol
 version.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-import sys
-
-if sys.version_info.major == 2:
-    from urlparse import urlparse
-else:
-    from urllib.parse import urlparse
+from urllib.parse import urlparse
 
 import lxml
 
@@ -135,7 +125,7 @@ class EasySeedLinkClient(object):
 
     def __init__(self, server_url, autoconnect=True):
         # Catch invalid server_url parameters
-        if not isinstance(server_url, (str, native_str)):
+        if not isinstance(server_url, str):
             raise ValueError('Expected string for SeedLink server URL')
         # Allow for sloppy server URLs (e.g. 'geofon.gfz-potsdam.de:18000).
         # (According to RFC 1808 the net_path segment needs to start with '//'
@@ -300,13 +290,13 @@ class EasySeedLinkClient(object):
             If the server doesn't send one of the stop words, this never
             returns!
 
-        :type bytes_: str (Python 2) or bytes (Python 3)
+        :type bytes_: bytes
         :param bytes_: The bytes to send to the server
-        :type stop_on: list
+        :type stop_on: list[str]
         :param stop_on: A list of strings that indicate the end of the server
                         response.
 
-        :rtype: str (Python 2) or bytes (Python 3)
+        :rtype: bytes
         :return: The server's response
         """
         if not bytes_.endswith(b'\r'):
@@ -314,7 +304,7 @@ class EasySeedLinkClient(object):
         if not type(stop_on) is list:
             stop_on = [stop_on]
         for i, stopword in enumerate(stop_on):
-            if not type(stopword) == bytes:
+            if not isinstance(stopword, bytes):
                 stop_on[i] = stopword.encode()
 
         self.conn.socket.send(bytes_)
@@ -414,7 +404,7 @@ class EasySeedLinkClient(object):
             # At this point the received data should be a SeedLink packet
             # XXX In SLClient there is a check for data == None, but I think
             #     there is no way that self.conn.collect() can ever return None
-            assert(isinstance(data, SLPacket))
+            assert isinstance(data, SLPacket)
 
             packet_type = data.get_type()
 
@@ -510,16 +500,16 @@ def create_client(server_url, on_data=None, on_seedlink_error=None,
 
     :type server_url: str
     :param server_url: The SeedLink server URL
-    :type on_data: function or callable
+    :type on_data: callable
     :param on_data: A function or callable that is called for every new trace
                     received from the server; needs to accept one argument (the
                     trace); default is ``None``
-    :type on_seedlink_error: function or callable
+    :type on_seedlink_error: callable
     :param on_seedlink_error: A function or callable that is called when a
                               SeedLink ERROR response is received (see the
                               :meth:`~.EasySeedLinkClient.on_seedlink_error`
                               method for details); default is ``None``
-    :type on_terminate: function or callable
+    :type on_terminate: callable
     :param on_terminate: A function or callable that is called when the
                          connection is terminated (see the
                          :meth:`~.EasySeedLinkClient.on_terminate`

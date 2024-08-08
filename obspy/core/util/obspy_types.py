@@ -8,10 +8,6 @@ Various types used in ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from collections import OrderedDict
 
 try:
@@ -25,7 +21,7 @@ class Enum(object):
     """
     Enumerated type (enum) implementation for Python.
 
-    :type enums: list of str
+    :type enums: list[str]
     :type replace: dict, optional
     :param replace: Dictionary of keys which are replaced by values.
 
@@ -266,8 +262,9 @@ class FloatWithUncertaintiesFixedUnit(FloatWithUncertainties):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
-    :type unit: str (read only)
-    :param unit: Unit for physical interpretation of the float value.
+    :type unit: str
+    :param unit: Unit for physical interpretation of the float value
+        (read only).
     :type measurement_method: str
     :param measurement_method: Method used in the measurement.
     """

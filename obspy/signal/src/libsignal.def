@@ -4,6 +4,7 @@ EXPORTS
     utl_geo_km
     utl_lonlat
     recstalta
+    aic_simple
     ar_picker
     spr_bp_fast_bworth
     spr_hp_fast_bworth

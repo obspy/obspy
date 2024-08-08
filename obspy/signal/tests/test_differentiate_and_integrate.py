@@ -3,11 +3,6 @@
 """
 Tests for differentiation and integration functions.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import unittest
 
 import numpy as np
 
@@ -15,7 +10,7 @@ from obspy.signal.differentiate_and_integrate import (
     integrate_cumtrapz, integrate_spline)
 
 
-class IntegrateTestCase(unittest.TestCase):
+class TestIntegrate():
     """
     Test cases for the integration methods.
     """
@@ -61,11 +56,3 @@ class IntegrateTestCase(unittest.TestCase):
             np.testing.assert_allclose(
                 integrate_spline(np.zeros(10), dx=0.5, k=k),
                 np.zeros(10))
-
-
-def suite():
-    return unittest.makeSuite(IntegrateTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

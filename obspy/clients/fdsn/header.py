@@ -8,11 +8,6 @@ Header files for the FDSN webservice.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
 import platform
 import sys
 
@@ -20,18 +15,84 @@ from obspy import UTCDateTime, __version__
 
 
 class FDSNException(Exception):
+    status_code = None
+
     def __init__(self, value, server_info=None):
         if server_info is not None:
-            value = "\n".join([value, "Detailed response of server:", "",
-                               server_info])
+            if self.status_code is None:
+                value = "\n".join([value, "Detailed response of server:", "",
+                                   server_info])
+            else:
+                value = "\n".join([value,
+                                   "HTTP Status code: {}"
+                                   .format(self.status_code),
+                                   "Detailed response of server:",
+                                   "",
+                                   server_info])
         super(FDSNException, self).__init__(value)
+
+
+class FDSNNoDataException(FDSNException):
+    status_code = 204
+
+
+class FDSNBadRequestException(FDSNException):
+    status_code = 400
+
+
+class FDSNUnauthorizedException(FDSNException):
+    status_code = 401
+
+
+class FDSNForbiddenException(FDSNException):
+    status_code = 403
+
+
+class FDSNRequestTooLargeException(FDSNException):
+    status_code = 413
+
+
+class FDSNTooManyRequestsException(FDSNException):
+    status_code = 429
+
+
+class FDSNInternalServerException(FDSNException):
+    status_code = 500
+
+
+class FDSNNotImplementedException(FDSNException):
+    status_code = 501
+
+
+class FDSNBadGatewayException(FDSNException):
+    status_code = 502
+
+
+class FDSNServiceUnavailableException(FDSNException):
+    status_code = 503
+
+
+class FDSNTimeoutException(FDSNException):
+    pass
 
 
 class FDSNRedirectException(FDSNException):
     pass
 
 
-class FDSNNoDataException(FDSNException):
+class FDSNNoAuthenticationServiceException(FDSNException):
+    pass
+
+
+class FDSNDoubleAuthenticationException(FDSNException):
+    pass
+
+
+class FDSNInvalidRequestException(FDSNException):
+    pass
+
+
+class FDSNNoServiceException(FDSNException):
     pass
 
 
@@ -39,38 +100,49 @@ class FDSNNoDataException(FDSNException):
 # https://www.fdsn.org/webservices/datacenters/
 # https://www.orfeus-eu.org/data/eida/nodes/
 URL_MAPPINGS = {
+    "AUSPASS": "http://auspass.edu.au",
     "BGR": "http://eida.bgr.de",
+    "EARTHSCOPE": "http://service.iris.edu",
+    "EIDA": "http://eida-federator.ethz.ch",
     "ETH": "http://eida.ethz.ch",
     "EMSC": "http://www.seismicportal.eu",
     "GEONET": "http://service.geonet.org.nz",
+    "GEOFON": "http://geofon.gfz-potsdam.de",
     "GFZ": "http://geofon.gfz-potsdam.de",
     "ICGC": "http://ws.icgc.cat",
+    "IESDMC": "http://batsws.earth.sinica.edu.tw",
     "INGV": "http://webservices.ingv.it",
     "IPGP": "http://ws.ipgp.fr",
     "IRIS": "http://service.iris.edu",
-    "ISC": "http://isc-mirror.iris.washington.edu",
+    "IRISPH5": "http://service.iris.edu",
+    "ISC": "http://www.isc.ac.uk",
     "KNMI": "http://rdsa.knmi.nl",
     "KOERI": "http://eida.koeri.boun.edu.tr",
-    "LMU": "http://erde.geophysik.uni-muenchen.de",
-    "NCEDC": "http://service.ncedc.org",
+    "LMU": "https://erde.geophysik.uni-muenchen.de",
+    "NCEDC": "https://service.ncedc.org",
     "NIEP": "http://eida-sc3.infp.ro",
     "NOA": "http://eida.gein.noa.gr",
+    "NRCAN": "https://earthquakescanada.nrcan.gc.ca",
     "ODC": "http://www.orfeus-eu.org",
     "ORFEUS": "http://www.orfeus-eu.org",
     "RESIF": "http://ws.resif.fr",
-    "RASPISHAKE": "http://fdsnws.raspberryshakedata.com",
+    "RESIFPH5": "http://ph5ws.resif.fr",
+    "RASPISHAKE": "https://data.raspberryshake.org",
     "SCEDC": "http://service.scedc.caltech.edu",
     "TEXNET": "http://rtserve.beg.utexas.edu",
+    "UIB-NORSAR": "http://eida.geo.uib.no",
     "USGS": "http://earthquake.usgs.gov",
-    "USP": "http://sismo.iag.usp.br"}
+    "USP": "http://sismo.iag.usp.br",
+}
+URL_MAPPING_SUBPATHS = {
+    "IRISPH5": "/ph5ws",
+}
+URL_DEFAULT_SUBPATH = "/fdsnws"
 
 FDSNWS = ("dataselect", "event", "station")
 
-if PY2:
-    platform_ = platform.platform().decode("ascii", "ignore")
-else:
-    encoding = sys.getdefaultencoding() or "UTF-8"
-    platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
+encoding = sys.getdefaultencoding() or "UTF-8"
+platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
 # The default User Agent that will be sent with every request.
 DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (
     __version__, platform_, platform.python_version())
@@ -101,8 +173,9 @@ DEFAULT_EVENT_PARAMETERS = [
 
 OPTIONAL_EVENT_PARAMETERS = [
     "latitude", "longitude", "minradius", "maxradius", "magnitudetype",
-    "includeallorigins", "includeallmagnitudes", "includearrivals", "eventid",
-    "limit", "offset", "catalog", "contributor", "updatedafter"]
+    "eventtype", "includeallorigins", "includeallmagnitudes",
+    "includearrivals", "eventid", "limit", "offset", "catalog", "contributor",
+    "updatedafter"]
 
 DEFAULT_PARAMETERS = {
     "dataselect": DEFAULT_DATASELECT_PARAMETERS,
@@ -170,6 +243,7 @@ DEFAULT_TYPES = {
     "includearrivals": bool,
     "matchtimeseries": bool,
     "eventid": str,
+    "eventtype": str,
     "limit": int,
     "offset": int,
     "orderby": str,
@@ -213,6 +287,7 @@ DEFAULT_VALUES = {
     "includearrivals": False,
     "matchtimeseries": False,
     "eventid": None,
+    "eventtype": None,
     "limit": None,
     "offset": 1,
     "orderby": "time",
@@ -254,6 +329,6 @@ for service in ["dataselect", "event", "station"]:
 
 # This list collects WADL parameters that will not be parsed because they are
 # not useful for the ObsPy client.
-# Current the nodata parameter used by IRIS is part of that list. The ObsPy
-# client relies on the HTTP codes.
+# Current the nodata parameter used by EARTHSCOPE/IRIS is part of that list.
+# The ObsPy client relies on the HTTP codes.
 WADL_PARAMETERS_NOT_TO_BE_PARSED = ["nodata"]

@@ -1,0 +1,210 @@
+# This workflow runs on all pull requests. It has the following functions:
+#   1. Apply flake8 to the codebase for linting
+#   2. Run the default test suite, then, optionally, run network tests,
+#      upload images based on tags in the PR.
+# Additionally, this workflow runs anytime new commits are added to master branch.
+# It simply runs all of ObsPy's default tests on all supported OS/python versions
+# and network tests for some supported OS/python versions
+
+name: tests
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - '**'
+
+# Set globally scoped environmental variables used for test report.
+env:
+  ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+  PR_URL: ${{ github.event.pull_request.html_url }}
+  CI_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  OBSPY_NODE_NAME: gh-actions
+
+# Cancel previous runs
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Simply applies flake8 to the codebase.
+  # Additionally adds link to tests.obspy.org to Githubs checks tab.
+  # Only run for PRs.
+  lint_code:
+    name: setup code linter
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: set status with url of test report website
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_ci') }}
+        run: |
+          curl --request POST \
+          --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }} \
+          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+          --header 'content-type: application/json' \
+          --data '{
+            "state": "success",
+            "context": "tests / all reports",
+            "description": "See Details link",
+            "target_url": "https://tests.obspy.org/?pr=${{ github.event.pull_request.number }}"
+            }'
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install flake8
+        run: |
+          python -m pip install wheel
+          python -m pip install flake8
+
+      - name: Set up reviewdog
+        run: |
+          mkdir -p $HOME/bin
+          curl -sfL \
+            https://github.com/reviewdog/reviewdog/raw/master/install.sh | \
+              sh -s -- -b $HOME/bin
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: flake8
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -o pipefail
+          python -m flake8 obspy | \
+            reviewdog -f=pep8 -name=flake8 \
+              -tee -reporter=github-check -filter-mode nofilter
+
+  # Runs the tests on combinations of the supported python/os matrix.
+  run_tests:
+    if: github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        options: [default]
+        include:
+          # The mindep option indicates optional dependencies should not be installed.
+          - os: ubuntu-latest
+            python-version: '3.11'
+            options: default mindep
+          # The mindepversion option indicates dependencies should be installed with minimal supported version.
+          - os: ubuntu-latest
+            python-version: '3.8'
+            options: default mindepversion
+          - os: macos-latest
+            python-version: '3.8'
+            options: default mindepversion
+          - os: windows-latest
+            python-version: '3.8'
+            options: default mindepversion
+          # For push events and for test_network labels, options is set to 'network' and runs for network tests are added.
+          # Otherwise these include statements do nothing, because options='default' is already present in matrix.
+          - os: ubuntu-latest
+            python-version: '3.8'
+            options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network mindepversion' || 'default' }}
+          - os: ubuntu-latest
+            python-version: '3.12'
+            options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
+          - os: macos-latest
+            python-version: '3.12'
+            options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
+          - os: windows-latest
+            python-version: '3.12'
+            options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
+          # With warnings option pytest will fail on warnings.
+          - os: ubuntu-latest
+            python-version: '3.12'
+            options: default warnings
+          - os: ubuntu-latest
+            python-version: '3.12'
+            options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network warnings' || 'default' }}
+    name: ${{ matrix.options }} (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    # Ensure warnings don't fail build for runs which are to test warnings.
+    # Ensure network tests dont fail build.
+    continue-on-error: ${{ contains(matrix.options, 'network') || contains(matrix.options, 'warnings') }}
+    env:
+      # set path of test environment for caching
+      prefix: ${{ startsWith(matrix.os, 'ubuntu') && '/usr/share/miniconda3/envs/test' || startsWith(matrix.os, 'macos') && '/Users/runner/miniconda3/envs/test' || startsWith(matrix.os, 'windows') && 'C:\Miniconda3\envs\test' }}
+      # set individual cache key
+      cache_key: ${{ matrix.os }}-py${{ matrix.python-version }}-${{ contains(matrix.options, 'mindep') }}-${{ contains(matrix.options, 'mindepversion') }}
+      # set conda environment file with dependencies
+      env_file: .github/test${{ contains(matrix.options, 'mindepversion') && '_mindepversion' || contains(matrix.options, 'mindep') && '_mindep' || '' }}_conda_env.yml
+      # set additional runtest options (--keep-images, --network, -W error)
+      runtest_options: ${{ github.event_name == 'pull_request' && '--keep-images' || '' }} ${{ contains(matrix.options, 'network') && '--network' || '' }} ${{ contains(matrix.options, 'warnings') && '-W error' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          activate-environment: test
+          use-mamba: true
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.prefix }}
+          key: ${{ env.cache_key }}-hash${{ hashFiles(env.env_file) }}-${{ steps.date.outputs.date }}-${{ env.CACHE_NUMBER }}
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        id: cache
+
+      - name: Update environment
+        run: mamba env update -n test -f ${{ env.env_file }}
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: print package info
+        shell: bash -l {0}
+        run: |
+          conda info -a
+          conda list
+
+      - name: install obspy
+        shell: bash -l {0}
+        run: |
+          python -m pip install --no-deps .
+
+      - name: run tests
+        id: tests
+        shell: bash -l {0}
+        run: |
+          obspy-runtests --cov obspy --cov-report=xml:$PWD/coverage.xml --cov-append --report ${{ env.runtest_options }}
+
+      - name: upload coverage
+        uses: codecov/codecov-action@v4.5.0
+        if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
+        with:
+          flags: unittests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          name: codecov-umbrella
+          fail_ci_if_error: true
+
+      - name: optionally upload image directory
+        if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'upload_images')
+        uses: actions/upload-artifact@v4
+        with:
+          name: "images_${{ github.event.pull_request.number }}_${{ matrix.python-version }}_${{ matrix.os }}"
+          path: obspy/obspy_test_images
+          retention-days: 1
+
+
+# This is a very useful step for debugging, it allows you to ssh into the CI
+# machine (https://github.com/marketplace/actions/debugging-with-tmate).
+#- name: Setup tmate session
+#  uses: mxschmitt/action-tmate@v3

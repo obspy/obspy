@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.13" version="0.13">
+    <EventParameters />
+    <Inventory />
+</seiscomp>

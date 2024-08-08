@@ -1,0 +1,11 @@
+LIBRARY gcf_io.dll
+EXPORTS
+   read_gcf
+   is_LittleEndian_gcf
+   init_GcfSeg_for_read
+   read_gcf_block
+   free_GcfSeg
+   free_GcfFile
+   merge_GcfFile
+   write_gcf
+   init_GcfFile

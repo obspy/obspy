@@ -6,8 +6,8 @@ obspy.io.xseed - (X)SEED and RESP support for ObsPy
 representation of `Dataless SEED`. This module contains converters from
 `Dataless SEED` to `XML-SEED` and vice versa as well as a converter from
 `Dataless SEED` to `RESP` files. The :mod:`~obspy.io.xseed` module is tested
-against the complete ORFEUS Dataless SEED archive, the IRIS (US) Dataless SEED
-archive and against ArcLink response requests.
+against the complete ORFEUS Dataless SEED archive, the EarthScope/IRIS (US)
+Dataless SEED archive and against ArcLink response requests.
 
 All files can be converted to ObsPy's internal inventory objects at which
 point they can be written out to any format ObsPy supports. In the case of
@@ -70,15 +70,11 @@ parsed in a :class:`~obspy.io.xseed.parser.Parser` structure.
   headers will be written in case they are needed by SEED/XSEED conventions.)
 
 After parsing a `SEED` or `XML-SEED` file the Blockette objects for each
-volume will be stored in the attributes``Parser.volume``,
+volume will be stored in the attributes ``Parser.volume``,
 ``Parser.abbreviations`` and ``Parser.stations``. Each item is a list of all
 related Blockettes and ``Parser.stations`` is a list of stations which contains
 all related Blockettes.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 # needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'
 

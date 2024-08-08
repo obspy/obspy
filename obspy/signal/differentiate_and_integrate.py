@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Integration and differentiation routines.
@@ -9,10 +8,6 @@ Integration and differentiation routines.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 import scipy.integrate
 import scipy.interpolate
@@ -27,10 +22,7 @@ def integrate_cumtrapz(data, dx, **kwargs):
     """
     # Integrate. Set first value to zero to avoid changing the total
     # length of the array.
-    # (manually adding the zero and not using `cumtrapz(..., initial=0)` is a
-    # backwards compatibility fix for scipy versions < 0.11.
-    ret = scipy.integrate.cumtrapz(data, dx=dx)
-    return np.concatenate([np.array([0], dtype=ret.dtype), ret])
+    return scipy.integrate.cumulative_trapezoid(data, dx=dx, initial=0)
 
 
 def integrate_spline(data, dx, k=3, **kwargs):

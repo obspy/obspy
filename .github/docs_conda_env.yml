@@ -1,0 +1,31 @@
+name: obspydoc
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # obspy
+  - decorator
+  - lxml
+  # sphinx currently is failing trying to import "deprecated" from
+  # matplotlib.cbook, seems it was deprecated in mpl 3.4 and removed in 3.6,
+  # see
+  # https://github.com/matplotlib/matplotlib/blob/v3.5.0/lib/matplotlib/cbook/__init__.py#L37
+  - matplotlib < 3.6
+  - numpy
+  - scipy
+  - requests  
+  # see pypa/setuptools#4480
+  - setuptools !=71.0.1
+  # see #3258
+  - sqlalchemy < 2.0
+  # docs
+  - cartopy>=0.20
+  - pip
+  - pip:
+    - pybtex
+    - m2r2 >= 0.3.2  # latest version which is not yet included in conda-forge
+  - sphinx>=4.2.0
+  - sphinx_rtd_theme
+  # deps used in tutorial but not working anymore
+  #- mlpy
+  - doc2dash  # for building docset for dash/zeal

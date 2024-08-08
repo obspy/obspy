@@ -1,24 +1,19 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
-import os
 import sys
 import tempfile
-import unittest
 import warnings
+from unittest import mock
+
+import pytest
 
 from obspy import UTCDateTime, read
-from obspy.core.compatibility import mock
 from obspy.core.event import ResourceIdentifier as ResId
 from obspy.core.util.misc import CatchOutput, get_window_times, \
     _ENTRY_POINT_CACHE, _yield_obj_parent_attr
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 
 
-class UtilMiscTestCase(unittest.TestCase):
+class TestUtilMisc:
     """
     Test suite for obspy.core.util.misc
     """
@@ -42,31 +37,27 @@ class UtilMiscTestCase(unittest.TestCase):
         with CatchOutput() as out:
             sys.stdout.write("test_catch_output #1")
             sys.stderr.write("test_catch_output #2")
-        self.assertEqual(out.stdout, 'test_catch_output #1')
-        self.assertEqual(out.stderr, 'test_catch_output #2')
+        assert out.stdout == 'test_catch_output #1'
+        assert out.stderr == 'test_catch_output #2'
 
         with CatchOutput() as out:
             print("test_catch_output #3")
-        self.assertEqual(out.stdout, 'test_catch_output #3\n')
-        self.assertEqual(out.stderr, '')
+        assert out.stdout == 'test_catch_output #3\n'
+        assert out.stderr == ''
 
         with CatchOutput() as out:
             print("test_catch_output #4", file=sys.stdout)
             print("test_catch_output #5", file=sys.stderr)
-        self.assertEqual(out.stdout, 'test_catch_output #4\n')
-        self.assertEqual(out.stderr, 'test_catch_output #5\n')
+        assert out.stdout == 'test_catch_output #4\n'
+        assert out.stderr == 'test_catch_output #5\n'
 
     def test_catch_output_bytes(self):
         with CatchOutput() as out:
-            if PY2:
-                sys.stdout.write(b"test_catch_output_bytes #1")
-                sys.stderr.write(b"test_catch_output_bytes #2")
-            else:
-                # PY3 does not allow to write directly bytes into text streams
-                sys.stdout.buffer.write(b"test_catch_output_bytes #1")
-                sys.stderr.buffer.write(b"test_catch_output_bytes #2")
-        self.assertEqual(out.stdout, 'test_catch_output_bytes #1')
-        self.assertEqual(out.stderr, 'test_catch_output_bytes #2')
+            # PY3 does not allow to write directly bytes into text streams
+            sys.stdout.buffer.write(b"test_catch_output_bytes #1")
+            sys.stderr.buffer.write(b"test_catch_output_bytes #2")
+        assert out.stdout == 'test_catch_output_bytes #1'
+        assert out.stderr == 'test_catch_output_bytes #2'
 
     def test_catch_output_io(self):
         """
@@ -81,17 +72,15 @@ class UtilMiscTestCase(unittest.TestCase):
             fn.read(3)
             fn.close()
         except OSError as e:
-            self.fail('CatchOutput has broken file I/O!\n' + str(e))
+            pytest.fail('CatchOutput has broken file I/O!\n' + str(e))
 
-    def test_no_obspy_imports(self):
+    def test_no_obspy_imports(self, root):
         """
         Check files that are used at install time for obspy imports.
         """
-        from obspy.core import util
-        files = ["libnames.py", "version.py"]
+        files = [root / "core" / "util" / "version.py"]
 
         for file_ in files:
-            file_ = os.path.join(os.path.dirname(util.__file__), file_)
             msg = ("File %s seems to contain an import 'from obspy' "
                    "(line %%i: '%%s').") % file_
             with open(file_, "rb") as fh:
@@ -102,153 +91,165 @@ class UtilMiscTestCase(unittest.TestCase):
                     continue
                 if b"from obspy" in line:
                     if b" import " in line:
-                        self.fail(msg % (i, line))
+                        pytest.fail(msg % (i, line))
                 if b"import obspy" in line:
-                    self.fail(msg % (i, line))
+                    pytest.fail(msg % (i, line))
 
-    def test_get_window_times(self):
+    def test_get_window_times_1(self):
         """
-        Tests for the get_window_times() helper function.
+        Basic windows. 4 pieces.
         """
-        # Basic windows. 4 pieces.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(20),
-                window_length=5.0,
-                step=5.0,
-                offset=0.0,
-                include_partial_windows=False),
-            [
-                (UTCDateTime(0), UTCDateTime(5)),
-                (UTCDateTime(5), UTCDateTime(10)),
-                (UTCDateTime(10), UTCDateTime(15)),
-                (UTCDateTime(15), UTCDateTime(20))
-            ]
-        )
+        expected = ([
+            (UTCDateTime(0), UTCDateTime(5)),
+            (UTCDateTime(5), UTCDateTime(10)),
+            (UTCDateTime(10), UTCDateTime(15)),
+            (UTCDateTime(15), UTCDateTime(20))
+            ],)
+        windows = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(20),
+            window_length=5.0,
+            step=5.0,
+            offset=0.0,
+            include_partial_windows=False),
+        assert expected == windows
 
+    def test_get_window_times_2(self):
+        """
         # Different step size.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(20),
-                window_length=5.0,
-                step=10.0,
-                offset=0.0,
-                include_partial_windows=False),
-            [
-                (UTCDateTime(0), UTCDateTime(5)),
-                (UTCDateTime(10), UTCDateTime(15))
-            ]
-        )
+        """
+        expected = ([
+            (UTCDateTime(0), UTCDateTime(5)),
+            (UTCDateTime(10), UTCDateTime(15)),
+        ],)
+        windows = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(20),
+            window_length=5.0,
+            step=10.0,
+            offset=0.0,
+            include_partial_windows=False),
 
-        # With offset.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(20),
-                window_length=5.0,
-                step=6.5,
-                offset=8.5,
-                include_partial_windows=False),
-            [
-                (UTCDateTime(8.5), UTCDateTime(13.5)),
-                (UTCDateTime(15), UTCDateTime(20))
-            ]
-        )
+        assert expected == windows
 
-        # Don't return partial windows.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(20),
-                window_length=15.0,
-                step=15.0,
-                offset=0.0,
-                include_partial_windows=False),
-            [
-                (UTCDateTime(0), UTCDateTime(15))
-            ]
-        )
+    def test_get_window_times_3(self):
+        """
+        Window times with offset.
+        """
+        expected = ([
+            (UTCDateTime(8.5), UTCDateTime(13.5)),
+            (UTCDateTime(15), UTCDateTime(20))
+        ],)
+        windows = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(20),
+            window_length=5.0,
+            step=6.5,
+            offset=8.5,
+            include_partial_windows=False),
+        assert expected == windows
 
-        # Return partial windows.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(20),
-                window_length=15.0,
-                step=15.0,
-                offset=0.0,
-                include_partial_windows=True),
-            [
-                (UTCDateTime(0), UTCDateTime(15)),
-                (UTCDateTime(15), UTCDateTime(20))
-            ]
-        )
+    def test_get_window_times_4(self):
+        """
+        Test for not returning partial windows.
+        """
+        expected = [(UTCDateTime(0), UTCDateTime(15))]
+        windows = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(20),
+            window_length=15.0,
+            step=15.0,
+            offset=0.0,
+            include_partial_windows=False)
 
-        # Negative step length has to be used together with an offset.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(20),
-                window_length=5.0,
-                step=-5.0,
-                offset=20.0,
-                include_partial_windows=False),
-            [
-                (UTCDateTime(15), UTCDateTime(20)),
-                (UTCDateTime(10), UTCDateTime(15)),
-                (UTCDateTime(5), UTCDateTime(10)),
-                (UTCDateTime(0), UTCDateTime(5))
-            ]
-        )
+        assert windows == expected
 
-        # Negative step length and not partial windows.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(20),
-                window_length=15.0,
-                step=-15.0,
-                offset=20.0,
-                include_partial_windows=False),
-            [
-                (UTCDateTime(5), UTCDateTime(20))
-            ]
-        )
+    def test_get_window_times_5(self):
+        """
+        Test for partial windows.
+        """
+        expected = ([
+            (UTCDateTime(0), UTCDateTime(15)),
+            (UTCDateTime(15), UTCDateTime(20))
+        ],)
+        windows = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(20),
+            window_length=15.0,
+            step=15.0,
+            offset=0.0,
+            include_partial_windows=True),
+        assert windows == expected
 
-        # Negative step length with partial windows.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(20),
-                window_length=15.0,
-                step=-15.0,
-                offset=20.0,
-                include_partial_windows=True),
-            [
-                (UTCDateTime(5), UTCDateTime(20)),
-                (UTCDateTime(0), UTCDateTime(5))
-            ]
-        )
+    def test_get_window_times_6(self):
+        """
+        Negative step length has to be used together with an offset.
+        """
+        expected = [
+            (UTCDateTime(15), UTCDateTime(20)),
+            (UTCDateTime(10), UTCDateTime(15)),
+            (UTCDateTime(5), UTCDateTime(10)),
+            (UTCDateTime(0), UTCDateTime(5))
+        ]
+        window = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(20),
+            window_length=5.0,
+            step=-5.0,
+            offset=20.0,
+            include_partial_windows=False)
+        assert window == expected
 
-        # Smaller step than window.
-        self.assertEqual(
-            get_window_times(
-                starttime=UTCDateTime(0),
-                endtime=UTCDateTime(2),
-                window_length=1.0,
-                step=0.25,
-                offset=0.0,
-                include_partial_windows=False),
-            [
-                (UTCDateTime(0), UTCDateTime(1)),
-                (UTCDateTime(0.25), UTCDateTime(1.25)),
-                (UTCDateTime(0.5), UTCDateTime(1.5)),
-                (UTCDateTime(0.75), UTCDateTime(1.75)),
-                (UTCDateTime(1.0), UTCDateTime(2.0))
-            ]
-        )
+    def test_get_window_times_7(self):
+        """
+        Negative step length and not partial windows.
+        """
+        expected = [(UTCDateTime(5), UTCDateTime(20))]
+        window = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(20),
+            window_length=15.0,
+            step=-15.0,
+            offset=20.0,
+            include_partial_windows=False)
+        assert window == expected
+
+    def test_get_window_times_8(self):
+        """
+        Negative step length with partial windows.
+        """
+        expected = [
+            (UTCDateTime(5), UTCDateTime(20)),
+            (UTCDateTime(0), UTCDateTime(5))
+        ]
+        window = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(20),
+            window_length=15.0,
+            step=-15.0,
+            offset=20.0,
+            include_partial_windows=True)
+        assert window == expected
+
+    def test_get_window_times_9(self):
+        """
+        Smaller step than window.
+        """
+        expected = ([
+            (UTCDateTime(0), UTCDateTime(1)),
+            (UTCDateTime(0.25), UTCDateTime(1.25)),
+            (UTCDateTime(0.5), UTCDateTime(1.5)),
+            (UTCDateTime(0.75), UTCDateTime(1.75)),
+            (UTCDateTime(1.0), UTCDateTime(2.0))
+        ],)
+        window = get_window_times(
+            starttime=UTCDateTime(0),
+            endtime=UTCDateTime(2),
+            window_length=1.0,
+            step=0.25,
+            offset=0.0,
+            include_partial_windows=False),
+        assert window == expected
 
     def test_entry_point_buffer(self):
         """
@@ -261,8 +262,8 @@ class UtilMiscTestCase(unittest.TestCase):
                     warnings.simplefilter('ignore', UserWarning)
                     st = read()
                     st.write('temp.mseed', 'mseed')
-            self.assertEqual(len(_ENTRY_POINT_CACHE), 3)
-            self.assertEqual(p.call_count, 3)
+            assert len(_ENTRY_POINT_CACHE) == 3
+            assert p.call_count == 3
 
     def test_yield_obj_parent_attr(self):
         """
@@ -289,28 +290,20 @@ class UtilMiscTestCase(unittest.TestCase):
 
         out = list(_yield_obj_parent_attr(base, ResId))
 
-        self.assertEqual(len(out), 6)
+        assert len(out) == 6
 
         for obj, parent, attr in out:
-            self.assertEqual(attr, 'right')
-            self.assertIsInstance(obj, ResId)
+            assert attr == 'right'
+            assert isinstance(obj, ResId)
 
     def test_warning_capture(self):
         """
-        Tests for the WarningsCapture class in obspy.core.util.testing
+        Tests for the CatchAndAssertWarnings class in obspy.core.util.base
         """
         # ensure a warning issued with warn is captured. Before, this could
         # raise a TypeError.
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             warnings.warn('something bad is happening in the world')
 
-        self.assertEqual(len(w), 1)
-        self.assertIn('something bad', str(w.captured_warnings[0].message))
-
-
-def suite():
-    return unittest.makeSuite(UtilMiscTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert len(w) == 1
+        assert 'something bad' in str(w[0].message)

@@ -17,10 +17,6 @@ Various Seismogram Rotation Functions
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import warnings
 from math import cos, sin, radians
 
@@ -54,7 +50,7 @@ def rotate_ne_rt(n, e, ba):
     return r, t
 
 
-def rotate_rt_ne(n, e, ba):
+def rotate_rt_ne(r, t, ba):
     """
     Rotates horizontal components of a seismogram.
 
@@ -63,9 +59,15 @@ def rotate_rt_ne(n, e, ba):
 
     This is the inverse transformation of the transformation described
     in :func:`rotate_ne_rt`.
+
+    :type r: :class:`~numpy.ndarray`
+    :param r: Data of the Radial component of the seismogram.
+    :type t: :class:`~numpy.ndarray`
+    :param t: Data of the Transverse component of the seismogram.
+    :returns: North and East component of seismogram.
     """
     ba = 360.0 - ba
-    return rotate_ne_rt(n, e, ba)
+    return rotate_ne_rt(r, t, ba)
 
 
 def rotate_zne_lqt(z, n, e, ba, inc):
@@ -110,7 +112,7 @@ def rotate_zne_lqt(z, n, e, ba, inc):
     return l, q, t
 
 
-def rotate_lqt_zne(l, q, t, ba, inc):
+def rotate_lqt_zne(l, q, t, ba, inc):  # NOQA
     """
     Rotates all components of a seismogram.
 
@@ -177,7 +179,8 @@ def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
         and E and the dips and azimuths specify where to transform to.
     :type inverse: bool
 
-    :rtype: Tuple of three NumPy arrays.
+    :rtype: tuple(:class:`numpy.ndarray`, :class:`numpy.ndarray`,
+        :class:`numpy.ndarray`)
     :returns: The three rotated components, oriented in Z, N, and E if
         `inverse` is `False`. Otherwise they will be oriented as specified
         by the dips and azimuths.

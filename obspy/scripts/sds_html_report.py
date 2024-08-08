@@ -26,16 +26,11 @@ For a subsequent update of latency only:
 
 Screenshot of resulting html page (cut off at the bottom):
 
-.. image:: /_static/sds_report.png
+.. image:: /_images/sds_report.png
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-
+from pathlib import Path
 import numpy as np
 
 from obspy import __version__, UTCDateTime
@@ -219,7 +214,7 @@ def _format_html(args, data_normal, data_outdated):
     html_legend['ok_info'] = "All checks pass"
     html_legend['outdated_info'] = (
         "No data within {check_back_days:d} days").format(**vars(args))
-    html_legend['output_basename'] = os.path.basename(args.output)
+    html_legend['output_basename'] = Path(args.output).name
     html_legend.update(vars(args))
     html = HTML_TEMPLATE.format(
         time=UTCDateTime().strftime("%c"), lines_normal=lines_normal,
@@ -351,7 +346,7 @@ def main(argv=None):
     # check whether to set up list of streams to check or use existing list
     # update list of streams once per day at nighttime
     if args.update:
-        if not os.path.isfile(streams_file):
+        if not Path(streams_file).is_file():
             msg = ("Update flag specified, but no output of previous full run "
                    "was present in the expected location (as determined by "
                    "``--output`` flag: {})").format(streams_file)
@@ -386,8 +381,9 @@ def main(argv=None):
             latency = []
             # check latency of all channels that should be checked
             for cha in args.channels:
-                latency_ = client.get_latency(net, sta, loc, cha,
-                                              stop_time=stop_time)
+                latency_ = client.get_latency(
+                    net, sta, loc, cha, stop_time=stop_time,
+                    check_has_no_data=False)
                 latency.append(latency_ or np.inf)
             # only include the channel with lowest latency in our stream list
             cha = args.channels[np.argmin(latency)]
@@ -395,8 +391,9 @@ def main(argv=None):
             nslc.append((net, sta, loc, cha, latency))
         for id in args.ids:
             net, sta, loc, cha = id.split(".")
-            latency = client.get_latency(net, sta, loc, cha,
-                                         stop_time=stop_time)
+            latency = client.get_latency(
+                net, sta, loc, cha, stop_time=stop_time,
+                check_has_no_data=False)
             latency = latency or np.inf
             nslc.append((net, sta, loc, cha, latency))
         nslc_ = []
@@ -433,8 +430,9 @@ def main(argv=None):
     data = []
     for net, sta, loc, cha, latency, percentage, gap_count in nslc:
         if args.update:
-            latency = client.get_latency(net, sta, loc, cha,
-                                         stop_time=stop_time)
+            latency = client.get_latency(
+                net, sta, loc, cha, stop_time=stop_time,
+                check_has_no_data=False)
             latency = latency or np.inf
         data.append((net, sta, loc, cha, latency, percentage, gap_count))
 

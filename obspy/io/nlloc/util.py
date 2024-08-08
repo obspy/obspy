@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 NonLinLoc file format support for ObsPy
@@ -9,11 +8,6 @@ NonLinLoc file format support for ObsPy
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import numpy as np
 
 
@@ -29,7 +23,7 @@ def read_nlloc_scatter(filename, coordinate_converter=None):
 
     :type filename: str
     :param filename: Filename with NonLinLoc scatter.
-    :type coordinate_converter: func
+    :type coordinate_converter: callable
     :param coordinate_converter: Function to convert (x, y, z)
         coordinates of NonLinLoc output to geographical coordinates and depth
         in meters (longitude, latitude, depth in kilometers).
@@ -44,17 +38,12 @@ def read_nlloc_scatter(filename, coordinate_converter=None):
     """
     # omit the first 4 values (header information) and reshape
     dtype = np.dtype([
-        (native_str("x"), native_str("<f4")),
-        (native_str("y"), native_str("<f4")),
-        (native_str("z"), native_str("<f4")),
-        (native_str("pdf"), native_str("<f4"))])
+        ("x", "<f4"),
+        ("y", "<f4"),
+        ("z", "<f4"),
+        ("pdf", "<f4")])
     data = np.fromfile(filename, dtype=dtype)[4:]
     if coordinate_converter:
         data["x"], data["y"], data["z"] = coordinate_converter(
             data["x"], data["y"], data["z"])
     return data
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

@@ -8,10 +8,6 @@ SeedLink request client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import fnmatch
 import warnings
 
@@ -49,7 +45,6 @@ class Client(object):
         """
         self.timeout = timeout
         self.debug = debug
-        self.loglevel = debug and "DEBUG" or "CRITICAL"
         self._server_url = "%s:%i" % (server, port)
         self._station_cache = None
         self._station_cache_level = None
@@ -61,7 +56,7 @@ class Client(object):
         Should be done before any request to server, since SLClient keeps
         things like multiselect etc for subsequent requests
         """
-        self._slclient = SLClient(loglevel=self.loglevel, timeout=self.timeout)
+        self._slclient = SLClient(timeout=self.timeout)
 
     def _connect(self):
         """
@@ -135,7 +130,7 @@ class Client(object):
         """
         # need to do an info request?
         if any('*' in x for x in (network, station, location, channel)) \
-                or ('?' in x for x in (network, station)):
+                or any('?' in x for x in (network, station)):
             # need to do an info request on channel level?
             if any('*' in x for x in (location, channel)):
                 info = self.get_info(network=network, station=station,
@@ -198,7 +193,7 @@ class Client(object):
         return stream
 
     def get_info(self, network=None, station=None, location=None, channel=None,
-                 level='station', cache=True):
+                 level='station', cache=True, warn_on_excluded_stations=False):
         """
         Request available stations information from the seedlink server.
 
@@ -209,8 +204,8 @@ class Client(object):
         >>> info = client.get_info(station="FDFM")
         >>> print(info)
         [('G', 'FDFM')]
-        >>> info = client.get_info(station="FD?M", channel='*Z',
-        ...                        level='channel')
+        >>> info = client.get_info(
+        ...     station="FD?M", channel='*Z', level='channel')
         >>> print(info)  # doctest: +NORMALIZE_WHITESPACE
         [('G', 'FDFM', '00', 'BHZ'), ('G', 'FDFM', '00', 'HHZ'),
          ('G', 'FDFM', '00', 'HNZ'), ('G', 'FDFM', '00', 'LHZ'),
@@ -221,6 +216,17 @@ class Client(object):
         server, so use ``cache=False`` on subsequent requests if there is a
         need to force fetching new information from the server (should only
         concern programs running in background for a very long time).
+
+        .. note::
+            Stations/channels are excluded from the results for which the
+            server indicates it is serving them in general but it also states
+            no data are in ring buffer currently.
+            If interested in these "no data" stations/channels, either set
+            ``warn_on_excluded_stations=True`` which will show a warning
+            message with excluded stations or use ``debug=True`` when
+            initializing the client which will print the raw server ``seedlink
+            INFO`` xml response which will show these stations listed with
+            ``begin_seq`` and ``end_seq`` both with value ``'000000'``.
 
         :type network: str
         :param network: Network code. Supports ``fnmatch`` wildcards, e.g.
@@ -237,6 +243,10 @@ class Client(object):
         :type cache: bool
         :param cache: Subsequent function calls are cached, use ``cache=False``
             to force fetching station metadata again from the server.
+        :type warn_on_excluded_stations: bool
+        :param warn_on_excluded_stations: Whether to show a warning for
+            stations that are excluded from the results because the server
+            indicates there is no data currently available.
         :rtype: list
         :returns: list of 2-tuples (or 4-tuples with ``level='channel'``) with
             network/station (network/station/location/channel, respectively)
@@ -294,26 +304,43 @@ class Client(object):
             parser = etree.XMLParser(encoding='utf-8')
             xml = etree.fromstring(info.encode('utf-8'), parser=parser)
         station_cache = set()
+        excluded_stations = set()
         for tag in xml.xpath('./station'):
             net = tag.attrib['network']
             sta = tag.attrib['name']
             item = (net, sta)
             if level == 'channel':
                 subtags = tag.xpath('./stream')
-                for subtag in subtags:
-                    loc = subtag.attrib['location']
-                    cha = subtag.attrib['seedname']
-                    station_cache.add(item + (loc, cha))
                 # If no data is in ring buffer (e.g. station outage?) then it
                 # seems the seedlink server replies with no subtags for the
                 # channels
                 if not subtags:
-                    station_cache.add(item + (None, None))
-            else:
+                    excluded_stations.add(item)
+                    continue
+                for subtag in subtags:
+                    loc = subtag.attrib['location']
+                    cha = subtag.attrib['seedname']
+                    station_cache.add(item + (loc, cha))
+            elif level == 'station':
+                # remove stations that seem to have no data
+                if all(tag.attrib[key] == '000000'
+                       for key in ('begin_seq', 'end_seq')):
+                    excluded_stations.add(item)
+                    continue
                 station_cache.add(item)
+            else:
+                raise NotImplementedError()
         # change results to an Inventory object
         self._station_cache = station_cache
         self._station_cache_level = level
+        if warn_on_excluded_stations and excluded_stations:
+            msg = ('Some stations were excluded from results because server '
+                   'indicates no data available (use debug=True in Client '
+                   'initialization for details, suppress warning with '
+                   'warn_on_excluded_stations=False): ')
+            msg += ', '.join('.'.join(item)
+                             for item in sorted(excluded_stations))
+            warnings.warn(msg)
         return self.get_info(
             network=network, station=station, location=location,
             channel=channel, cache=True, level=level)
@@ -340,8 +367,9 @@ class Client(object):
             return False
         elif type_ == SLPacket.TYPE_SLINFT:
             if self.debug:
-                print("Complete INFO:" + self.slconn.get_info_string())
-            return False
+                print("Complete INFO:",
+                      self._slclient.slconn.get_info_string())
+            return True
 
         # process packet data
         trace = slpack.get_trace()

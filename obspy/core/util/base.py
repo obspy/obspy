@@ -8,48 +8,45 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
-import builtins
-import doctest
 import glob
 import importlib
 import inspect
 import io
 import os
+from contextlib import contextmanager
+from io import IOBase, TextIOBase, TextIOWrapper
+from pathlib import Path
 import re
 import sys
 import tempfile
 import unicodedata
 import warnings
 from collections import OrderedDict
+from pathlib import PurePath
 
 import numpy as np
 import pkg_resources
-import requests
-from future.utils import native_str
 from pkg_resources import get_entry_info, iter_entry_points
 
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
 # defining ObsPy modules currently used by runtests and the path function
-DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
-                   'io.ah', 'io.arclink', 'io.ascii', 'io.cmtsolution',
-                   'io.cnv', 'io.css', 'io.dmx', 'io.focmec', 'io.iaspei',
-                   'io.gcf', 'io.gse2', 'io.json', 'io.kinemetrics', 'io.kml',
-                   'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc', 'io.nordic',
-                   'io.pdas', 'io.pde', 'io.quakeml', 'io.reftek', 'io.rg16',
-                   'io.sac', 'io.scardec', 'io.seg2', 'io.segy', 'io.seisan',
-                   'io.sh', 'io.shapefile', 'io.seiscomp', 'io.stationtxt',
-                   'io.stationxml', 'io.wav', 'io.win', 'io.xseed', 'io.y',
-                   'io.zmap', 'realtime', 'scripts', 'signal', 'taup']
-NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
+DEFAULT_MODULES = ['clients.filesystem', 'core', 'geodetics', 'imaging',
+                   'io.ah', 'io.alsep', 'io.arclink', 'io.ascii',
+                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.csv',
+                   'io.cybershake', 'io.dmx', 'io.focmec',
+                   'io.hypodd', 'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
+                   'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk', 'io.nied',
+                   'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde', 'io.quakeml',
+                   'io.reftek', 'io.rg16', 'io.sac', 'io.scardec', 'io.seg2',
+                   'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
+                   'io.seiscomp', 'io.stationtxt', 'io.stationxml', 'io.wav',
+                   'io.win', 'io.xseed', 'io.y', 'io.zmap', 'realtime',
+                   'scripts', 'signal', 'taup']
+NETWORK_MODULES = ['clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.nrl',
-                   'clients.seedlink', 'clients.seishub', 'clients.syngine']
+                   'clients.seedlink', 'clients.syngine']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
@@ -57,7 +54,8 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
-                            'GCF', 'DMX']
+                            'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
+                            'ALSEP_WTH', 'CYBERSHAKE']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
 # waveform plugins accepting a byteorder keyword
@@ -65,6 +63,15 @@ WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
+
+# Define Obspy hard and soft dependencies
+HARD_DEPENDENCIES = [
+    "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "sqlalchemy", "decorator", "requests"]
+OPTIONAL_DEPENDENCIES = [
+    "packaging", "pyproj", "pytest", "pytest-json-report", "pyshp",
+    "geographiclib", "cartopy"]
+DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
 
 class NamedTemporaryFile(io.BufferedIOBase):
@@ -129,7 +136,7 @@ class NamedTemporaryFile(io.BufferedIOBase):
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
         self.close()
-        os.remove(self.name)
+        Path(self.name).unlink()
 
 
 def create_empty_data_chunk(delta, dtype, fill_value=None):
@@ -154,9 +161,6 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
-    # For compatibility with NumPy 1.4
-    if isinstance(dtype, str):
-        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
         # fill with nan if float number and otherwise with a very small number
@@ -205,15 +209,15 @@ def get_example_file(filename):
     for module in ALL_MODULES:
         try:
             mod = __import__("obspy.%s" % module,
-                             fromlist=[native_str("obspy")])
+                             fromlist=["obspy"])
         except ImportError:
             continue
-        file_ = os.path.join(mod.__path__[0], "tests", "data", filename)
-        if os.path.isfile(file_):
-            return file_
-        file_ = os.path.join(mod.__path__[0], "data", filename)
-        if os.path.isfile(file_):
-            return file_
+        file_ = Path(mod.__path__[0]) / "tests" / "data" / filename
+        if file_.is_file():
+            return str(file_)
+        file_ = Path(mod.__path__[0]) / "data" / filename
+        if file_.is_file():
+            return str(file_)
     msg = ("Could not find file %s in tests/data or data "
            "directory of ObsPy modules") % filename
     raise OSError(msg)
@@ -359,65 +363,18 @@ def get_dependency_version(package_name, raw_string=False):
     return version_list
 
 
-def get_proj_version(raw_string=False):
-    """
-    Get the version number for proj4 as a list.
-
-    proj4 >= 5 does not play nicely for pseudocyl projections
-    (see basemap issue 433).  Checking this will allow us to raise a warning
-    when plotting using basemap.
-
-    :returns: Package version as a list of three integers. Empty list if pyproj
-        not installed.
-        With option ``raw_string=True`` returns raw version string instead.
-        The last version number can indicate different things like it being a
-        version from the old svn trunk, the latest git repo, some release
-        candidate version, ...
-        If the last number cannot be converted to an integer it will be set to
-        0.
-    """
-    try:
-        from pyproj import Proj
-    except ImportError:
-        return []
-
-    # proj4 is a c library, prproj wraps this.  proj_version is an attribute
-    # of the Proj class that is only set when the projection is made. Make
-    # a dummy projection and get the version
-    _proj = Proj(proj='utm', zone=10, ellps='WGS84')
-    if hasattr(_proj, 'proj_version'):
-        version_string = str(getattr(_proj, 'proj_version'))
-    else:
-        from pyproj import proj_version_str
-        version_string = proj_version_str
-
-    if raw_string:
-        return version_string
-    version_list = [to_int_or_zero(no) for no in version_string.split(".")]
-    # For version 5.2.0 the version number is given as 5.2
-    while len(version_list) < 3:
-        version_list.append(0)
-    return version_list
-
-
 NUMPY_VERSION = get_dependency_version('numpy')
 SCIPY_VERSION = get_dependency_version('scipy')
 MATPLOTLIB_VERSION = get_dependency_version('matplotlib')
-BASEMAP_VERSION = get_dependency_version('basemap')
-PROJ4_VERSION = get_proj_version()
 CARTOPY_VERSION = get_dependency_version('cartopy')
-
-
-if PY2:
-    FileNotFoundError = getattr(builtins, 'IOError')
 
 
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
-    if isinstance(filename, (str, native_str)):
-        if not os.path.exists(filename):
+    if isinstance(filename, str):
+        if not Path(filename).exists():
             msg = "[Errno 2] No such file or directory: '{}'".format(
                 filename)
             raise FileNotFoundError(msg)
@@ -475,8 +432,8 @@ def get_script_dir_name():
     Get the directory of the current script file. This is more robust than
     using __file__.
     """
-    return os.path.abspath(os.path.dirname(inspect.getfile(
-        inspect.currentframe())))
+    return str(Path(inspect.getfile(
+        inspect.currentframe())).parent.resolve())
 
 
 def make_format_plugin_table(group="waveform", method="read", numspaces=4,
@@ -486,12 +443,13 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     in docstrings.
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
-    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS +SKIP
     ======... ===========... ========================================...
     Format    Used Module    _`Linked Function Call`
     ======... ===========... ========================================...
     CMTSOLUTION  :mod:`...io.cmtsolution` :func:`..._write_cmtsolution`
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
+    HYPODDPHA :mod:`...io.hypodd`    :func:`obspy.io.hypodd.pha._write_pha`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     KML       :mod:`obspy.io.kml` :func:`obspy.io.kml.core._write_kml`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
@@ -558,13 +516,9 @@ def _add_format_plugin_table(func, group, method, numspaces=4):
     """
     A function to populate the docstring of func with its plugin table.
     """
-    if '%s' in func.__doc__:
-        if PY2 and method == "write":
-            func.im_func.func_doc = func.__doc__ % make_format_plugin_table(
-                group, method, numspaces=numspaces)
-        else:
-            func.__doc__ = func.__doc__ % make_format_plugin_table(
-                group, method, numspaces=numspaces)
+    if func.__doc__ is not None and '%s' in func.__doc__:
+        func.__doc__ = func.__doc__ % make_format_plugin_table(
+            group, method, numspaces=numspaces)
 
 
 class ComparingObject(object):
@@ -636,6 +590,7 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
     :param chunk_size: The chunk size in bytes.
     :type chunk_size: int
     """
+    import requests
     # Workaround for old request versions.
     try:
         r = requests.get(url, stream=True)
@@ -662,19 +617,12 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
 
 def _generic_reader(pathname_or_url=None, callback_func=None,
                     **kwargs):
-    if not isinstance(pathname_or_url, (str, native_str)):
+    # convert pathlib.Path objects to str for compatibility.
+    if isinstance(pathname_or_url, PurePath):
+        pathname_or_url = str(pathname_or_url)
+    if not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
-        try:
-            # first try reading directly
-            generic = callback_func(pathname_or_url, **kwargs)
-        except TypeError:
-            # if this fails, create a temporary file which is read directly
-            # from the file system
-            pathname_or_url.seek(0)
-            with NamedTemporaryFile() as fh:
-                fh.write(pathname_or_url.read())
-                generic = callback_func(fh.name, **kwargs)
-        return generic
+        return callback_func(pathname_or_url, **kwargs)
     elif isinstance(pathname_or_url, bytes) and \
             pathname_or_url.strip().startswith(b'<'):
         # XML string
@@ -682,7 +630,9 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
     elif "://" in pathname_or_url[:10]:
         # URL
         # extract extension if any
-        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
+        suffix = Path(Path(pathname_or_url).name).suffix
+        if suffix == '':
+            suffix = ".tmp"
         with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
             download_to_file(url=pathname_or_url, filename_or_buffer=fh)
             generic = callback_func(fh.name, **kwargs)
@@ -695,7 +645,7 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
             # try to give more specific information why the stream is empty
             if glob.has_magic(pathname) and not glob.glob(pathname):
                 raise Exception("No file matching file pattern: %s" % pathname)
-            elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
+            elif not glob.has_magic(pathname) and not Path(pathname).is_file():
                 raise IOError(2, "No such file or directory", pathname)
 
         generic = callback_func(pathnames[0], **kwargs)
@@ -705,10 +655,107 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
         return generic
 
 
+def get_bytes_stream(file_or_stream):
+    """
+    Return a file-like object streaming bytes data (``bytes`` objects)
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream: the input from which to return the stream of bytes
+    :return: a file-like object streaming bytes data
+    """
+    if isinstance(file_or_stream, IOBase):
+        return file_or_stream
+    else:
+        return open(file_or_stream, 'rb')
+
+
+@contextmanager
+def open_bytes_stream(file_or_stream):
+    """
+    Context manager to read bytes data stream from the argument,
+    e.g.: ``with open_bytes_stream(file_or_stream)``
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream: The input object to open.
+        If this parameter is already a file-like object,
+        it will not be closed on exit but the stream position
+        will be reset so that the object can be reused
+    :return: a context manager to read bytes data
+    """
+    cur_pos = None
+    if isinstance(file_or_stream, IOBase):
+        cur_pos = file_or_stream.tell()
+    stream = get_bytes_stream(file_or_stream)
+    try:
+        yield stream
+    finally:
+        if cur_pos is None:  # str or Path passed: close stream
+            stream.close()
+        else:
+            file_or_stream.seek(cur_pos, 0)
+
+
+def get_text_stream(file_or_stream, encoding='utf-8'):
+    """
+    Return a file-like object streaming text data (``str`` objects)
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream:  the input from which to return the stream of text
+    :type encoding: str
+    :param encoding: the encoding used. If the passed argument
+        is already a file-like object of encoded text data, this
+        argument is ignored
+    :return: a file-like object streaming text data
+    """
+    if isinstance(file_or_stream, TextIOBase):
+        return file_or_stream
+    elif isinstance(file_or_stream, IOBase):
+        return TextIOWrapper(file_or_stream, encoding=encoding)
+    else:
+        return open(file_or_stream, 'rt', encoding=encoding)
+
+
+@contextmanager
+def open_text_stream(file_or_stream, encoding='utf-8'):
+    """
+    Context manager releasing a text data stream from the argument,
+    e.g.: ``with open_text_stream(file_or_stream)``
+
+    :type file_or_stream: str, Path or file-like object.
+    :param file_or_stream: The input object to open.
+        If this parameter is already a file-like object,
+        it will not be closed on exit but the stream position
+        will be reset so that the object can be reused
+    :type encoding: str
+    :param encoding: the encoding used. If the passed argument
+        is already a file-like object of encoded text data, this
+        argument is ignored
+    :return: a context manager to read text data
+    """
+    cur_pos = None
+    if isinstance(file_or_stream, IOBase):
+        cur_pos = file_or_stream.tell()
+    stream = get_text_stream(file_or_stream, encoding=encoding)
+    try:
+        yield stream
+    finally:
+        if cur_pos is None:  # str or Path passed: close stream
+            stream.close()
+        else:
+            # if we wrapped file_or_stream in a TextIOWrapper,
+            # closing the latter would close also the underlying
+            # stream. Simply detach the wrapper in this case:
+            if isinstance(stream, TextIOWrapper) and \
+                    stream is not file_or_stream:
+                stream.detach()
+            # reset position:
+            file_or_stream.seek(cur_pos, 0)
+
+
 class CatchAndAssertWarnings(warnings.catch_warnings):
     def __init__(self, clear=None, expected=None, show_all=True, **kwargs):
         """
-        :type clear: list of str
+        :type clear: list[str]
         :param clear: list of modules to clear warning
             registries on (e.g. ``["obspy.signal", "obspy.core"]``), in order
             to make sure any expected warnings will be shown and not suppressed
@@ -787,4 +834,5 @@ class CatchAndAssertWarnings(warnings.catch_warnings):
 
 
 if __name__ == '__main__':
+    import doctest
     doctest.testmod(exclude_empty=True)

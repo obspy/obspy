@@ -10,14 +10,10 @@ A file format description is given by [Pullan1990]_.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2
-
 from copy import deepcopy
 from struct import unpack, unpack_from
 import warnings
+import re
 
 import numpy as np
 
@@ -177,15 +173,9 @@ class SEG2(object):
         # XXX: Need some more generic date/time parsers.
         if "ACQUISITION_TIME" in self.stream.stats.seg2 \
                 and "ACQUISITION_DATE" in self.stream.stats.seg2:
-            time = self.stream.stats.seg2.ACQUISITION_TIME
-            date = self.stream.stats.seg2.ACQUISITION_DATE
-            time = time.strip().split(':')
-            date = date.strip().split('/')
-            hour, minute, second = int(time[0]), int(time[1]), float(time[2])
-            day, month, year = int(date[0]), MONTHS[date[1].lower()], \
-                int(date[2])
-            self.starttime = UTCDateTime(year, month, day, hour, minute,
-                                         second)
+            self.starttime = _parse_date_and_time(
+                self.stream.stats.seg2.ACQUISITION_DATE,
+                self.stream.stats.seg2.ACQUISITION_TIME)
         else:
             self.starttime = UTCDateTime(0)
 
@@ -296,13 +286,8 @@ class SEG2(object):
 
             # A loop over a bytestring in Python 3 returns integers. This can
             # be solved with a number of imports from the python-future module
-            # and all kinds of subtle changes throughout this file. Separating
-            # the handling for Python 2 and 3 seems the cleaner and simpler
-            # approach.
-            if PY2:
-                return "".join(filter(is_good_char, value)).strip()
-            else:
-                return "".join(map(chr, filter(is_good_char, value))).strip()
+            # and all kinds of subtle changes throughout this file.
+            return "".join(map(chr, filter(is_good_char, value))).strip()
 
         # Separate the strings. Every string starts with a 2-byte offset to the
         # next string, and ends with a terminator. An offset of 0 indicates the
@@ -330,7 +315,7 @@ class SEG2(object):
             try:
                 value = string[1]
             except IndexError:
-                value = ''
+                value = b''
             if key == 'NOTE':
                 value = [cleanup_and_decode_string(line)
                          for line in value.split(self.line_terminator)
@@ -338,6 +323,42 @@ class SEG2(object):
             else:
                 value = cleanup_and_decode_string(value)
             setattr(attrib_dict, key, value)
+
+
+def _parse_date_and_time(date, time):
+    """
+    Parse the date and time into a UTCDateTime object
+    """
+    # Split on any non numeric character
+    time = list(filter(None, re.split(r'\D+', time)))
+    # Split on space, dot (.), slash (/), and dash (-)
+    date_raw = date
+    date = list(filter(None, re.split("[, ./-]+", date)))
+
+    # We need the full date to process time
+    if len(date) > 2:
+        day, month, year = int(
+            date[0]), MONTHS[date[1].lower()], int(date[2])
+    else:
+        msg = (f"Unable to parse date string '{date_raw}' into year, month "
+               f"and day. Using 1970-01-01.")
+        warnings.warn(msg)
+        return UTCDateTime(0)
+
+    if len(time) == 3:
+        hour = int(time[0])
+        minute = int(time[1])
+        second = float(time[2])
+        return UTCDateTime(year, month, day, hour, minute, second)
+    elif len(time) == 2:
+        hour = int(time[0])
+        minute = int(time[1])
+        return UTCDateTime(year, month, day, hour, minute)
+    elif len(time) == 1:
+        hour = int(time[0])
+        return UTCDateTime(year, month, day, hour)
+    else:
+        return UTCDateTime(year, month, day)
 
 
 def _is_seg2(filename):

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 ObsPy implementation for parsing the arclink inventory format
@@ -12,15 +11,11 @@ This is a modified version of obspy.io.stationxml and obspy.io.sc3ml.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import inspect
 import math
-import os
+from pathlib import Path
 import re
 import warnings
 
@@ -98,9 +93,8 @@ def validate_arclink_xml(path_or_object):
         element.
     """
     # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "arclink_schema.xsd")
+    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
+    schema_location = str(schema_location / "data" / "arclink_schema.xsd")
 
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
 
@@ -129,7 +123,7 @@ def _ns(tagname):
     return "{%s}%s" % (SCHEMA_NAMESPACE, tagname)
 
 
-def _read_inventory_xml(path_or_file_object):
+def _read_inventory_xml(path_or_file_object, **kwargs):
     """
     Function for reading an Arclink inventory file.
 
@@ -629,7 +623,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
     :param rate: stage sample rate
     :param stage_number: response stage number
     :param input_units: input units of stage
-    :param output_units output units of stage
+    :param output_units: output units of stage
     """
     elem_type = stage.tag.split("}")[1]
 
@@ -777,7 +771,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             numerator=numerator, denominator=denominator, **kwargs)
 
     elif elem_type == 'responsePolynomial':
-        raise NotImplementedError("responsePolynomial not"
+        raise NotImplementedError("responsePolynomial not "
                                   "implemented. Contact the ObsPy developers")
         # Polynomial response (UNTESTED)
         # Currently not implemented in ObsPy (20-11-2015)

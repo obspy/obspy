@@ -3,8 +3,9 @@
 obspy.clients.nrl - Nominal Response Library client for ObsPy
 =============================================================
 
-This module contains a client to access the Nominal Response Library (NRL)
-hosted by IRIS (http://ds.iris.edu/NRL/).
+This module contains a client to access the `EarthScope/IRIS Library of Nominal
+Response for Seismic Instruments <https://ds.iris.edu/NRL/>`_ (NRL).  To cite
+use of the NRL, please see [Templeton2017]_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -15,10 +16,19 @@ hosted by IRIS (http://ds.iris.edu/NRL/).
 Basic Usage
 -----------
 
+.. warning::
+    Connecting to NRL hosted online is deprecated. The new NRLv2 will stop
+    providing navigational information in machine readable form in favor of the
+    html navigation, so the existing client for online use will stop working
+    when the original NRLv1 is taken offline (announced for Spring 2023).
+    Please consider using a full downloaded copy of the NRL (v1 or v2,
+    `instructions on NRL homepage <https://ds.iris.edu/ds/nrl/>`_) providing a
+    local path, e.g. ``nrl = NRL('./downloads/NRL')``.
+
 The first step is to initialize a NRL client object. A client object can be
 initialized either with the base URL of a NRL hosted on a web server or with a
 local directory path to a downloaded and unpacked NRL zip file. The default is
-to access the always up-to-date NRL database hosted at IRIS.
+to access the always up-to-date NRL database hosted at EarthScope.
 
 >>> from obspy.clients.nrl import NRL
 >>> nrl = NRL()
@@ -78,8 +88,4 @@ Channel Response
         Stage 9: CoefficientsTypeResponseStage from COUNTS to COUNTS, gain: 1
         Stage 10: CoefficientsTypeResponseStage from COUNTS to COUNTS, gain: 1
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .client import NRL

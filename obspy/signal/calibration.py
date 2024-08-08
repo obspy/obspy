@@ -16,11 +16,6 @@ Functions for relative calibration.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import numpy as np
 
 from obspy.core.stream import Stream
@@ -132,10 +127,10 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
         temp[:, 0] = freq
         temp[:, 1] = amp
         temp[:, 2] = phase
-        np.savetxt(trans_new, temp, fmt=native_str('%.10f'))
+        np.savetxt(trans_new, temp, fmt='%.10f')
         temp[:, 1] = ra
         temp[:, 2] = rpha
-        np.savetxt(trans_ref, temp, fmt=native_str('%.10f'))
+        np.savetxt(trans_ref, temp, fmt='%.10f')
 
     return freq, amp, phase
 
@@ -224,7 +219,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,  # noqa
     step = int(NFFT) - int(noverlap)
     ind = np.arange(0, len(x) - NFFT + 1, step, dtype=np.int32)
     n = len(ind)
-    p_xy = np.zeros((num_freqs, n), np.complex_)
+    p_xy = np.zeros((num_freqs, n), np.complex128)
 
     # do the ffts of the slices
     for i in range(n):

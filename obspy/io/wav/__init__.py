@@ -59,11 +59,6 @@ squeezed. Using the original sampling_rate results in an WAV file with
 frequencies which cannot be heard by a human, therefore it makes sense to
 set the framerate to a high value.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

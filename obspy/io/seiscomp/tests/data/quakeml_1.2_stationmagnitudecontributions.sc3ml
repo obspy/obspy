@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
-  <EventParameters publicID="smi:eu.emsc/unid">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12" version="0.12">
+  <EventParameters>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:ch.ethz.sed/event/historical/1165/origin/1</originReference>
+    </event>
     <origin publicID="smi:ch.ethz.sed/event/historical/1165/origin/1">
       <time>
         <value>2011-03-11T05:46:24.120000Z</value>
@@ -29,8 +32,5 @@
         </stationMagnitudeContribution>
       </magnitude>
     </origin>
-    <event publicID="smi:ch.ethz.sed/event/historical/1165">
-      <originReference>smi:ch.ethz.sed/event/historical/1165/origin/1</originReference>
-    </event>
   </EventParameters>
 </seiscomp>

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: trigger.py
@@ -25,10 +24,6 @@ characteristic functions and a coincidence triggering routine.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from collections import deque
 import ctypes as C  # NOQA
 import warnings
@@ -88,28 +83,24 @@ def recursive_sta_lta_py(a, nsta, nlta):
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
     """
-    try:
-        a = a.tolist()
-    except Exception:
-        pass
     ndat = len(a)
     # compute the short time average (STA) and long time average (LTA)
     # given by Evans and Allen
     csta = 1. / nsta
     clta = 1. / nlta
     sta = 0.
-    lta = 1e-99  # avoid zero division
-    charfct = [0.0] * len(a)
+    lta = np.finfo(0.0).tiny  # avoid zero division
+    a = np.square(a)
+    charfct = np.zeros(ndat, dtype=np.float64)
     icsta = 1 - csta
     iclta = 1 - clta
     for i in range(1, ndat):
-        sq = a[i] ** 2
-        sta = csta * sq + icsta * sta
-        lta = clta * sq + iclta * lta
+        sta = csta * a[i] + icsta * sta
+        lta = clta * a[i] + iclta * lta
         charfct[i] = sta / lta
-        if i < nlta:
-            charfct[i] = 0.
-    return np.array(charfct)
+    charfct[:nlta] = 0
+
+    return charfct
 
 
 def carl_sta_trig(a, nsta, nlta, ratio, quiet):
@@ -221,10 +212,7 @@ def classic_sta_lta_py(a, nsta, nlta):
     """
     # The cumulative sum can be exploited to calculate a moving average (the
     # cumsum function is quite efficient)
-    sta = np.cumsum(a ** 2)
-
-    # Convert to float
-    sta = np.require(sta, dtype=np.float)
+    sta = np.cumsum(a ** 2, dtype=np.float64)
 
     # Copy for LTA
     lta = sta.copy()
@@ -284,18 +272,83 @@ def z_detect(a, nsta):
 
     .. seealso:: [Withers1998]_, p. 99
     """
-    m = len(a)
-    #
     # Z-detector given by Swindell and Snell (1977)
-    sta = np.zeros(len(a), dtype=np.float64)
-    # Standard Sta
-    pad_sta = np.zeros(nsta)
-    for i in range(nsta):  # window size to smooth over
-        sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
+    # Standard Sta shifted by 1
+    sta = np.cumsum(a ** 2, dtype=np.float64)
+    sta[nsta + 1:] = sta[nsta:-1] - sta[:-nsta - 1]
+    sta[nsta] = sta[nsta - 1]
+    sta[:nsta] = 0
     a_mean = np.mean(sta)
     a_std = np.std(sta)
     _z = (sta - a_mean) / a_std
     return _z
+
+
+def energy_ratio(a, nsta):
+    r"""
+    Energy ratio detector.
+
+    Energy ratio defined as
+
+    .. math::
+        \text{er}(i) = \frac{\sum_{j=i}^{i+L}{a_j^2}}{\sum_{j=i-L}^{i}{a_j^2}}
+
+    where :math:`L` is ``nsta``.
+
+    :type a: NumPy :class:`~numpy.ndarray`
+    :param a: Seismic Trace
+    :type nsta: int
+    :param nsta: Length of the energy ratio window in samples. It's the same
+                 length as ``nsta`` in the classical STA/LTA methods.
+    :rtype: NumPy :class:`~numpy.ndarray`
+    :return: Energy Ratio
+
+    .. seealso:: [Han2009]_
+    """
+    if nsta > len(a) // 2:
+        # Half forward, half backward -> empty medium
+        msg = (
+            f'nsta ({nsta}) must not be larger than half the length of the '
+            f'data ({len(a)} samples).')
+        raise ValueError(msg)
+    if nsta <= 0:
+        # If nsta is zero, the sum is undefined
+        msg = f'nsta ({nsta}) must not be equal to or less than zero.'
+        raise ValueError(msg)
+    sig_power = np.r_[0, np.cumsum(a ** 2, dtype=np.float64)]
+    energy_diff = sig_power[nsta:] - sig_power[:len(sig_power) - nsta]
+    er = np.zeros(len(a), dtype=np.float64)
+    np.divide(energy_diff[nsta:], energy_diff[:len(energy_diff) - nsta],
+              where=energy_diff[:len(energy_diff) - nsta] != 0,
+              out=er[nsta:len(er) - nsta + 1])
+    return er
+
+
+def modified_energy_ratio(a, nsta, power=3):
+    r"""
+    Modified energy ratio detector.
+
+    Improvement of the :func:`energy_ratio` that accounts for the signal
+    itself:
+
+    .. math::
+        \text{mer}(i) = (\text{er}(i) * |a(i)|)^3
+
+    where :math:`text{er}(i)` is the :func:`energy_ratio`.
+
+    :type a: NumPy :class:`~numpy.ndarray`
+    :param a: Seismic Trace
+    :type nsta: int
+    :param nsta: Length of energy ratio window in samples. It's the same length
+                 as ``nsta`` in the classical STA/LTA methods.
+    :type power: int
+    :param power: The power exponent in the equation above. Default: 3
+    :rtype: NumPy :class:`~numpy.ndarray`
+    :return: Modified Energy Ratio
+    """
+    er = energy_ratio(a, nsta=nsta)
+    mer = np.power(er * np.abs(a), power, out=er)
+    return mer
 
 
 def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
@@ -340,10 +393,10 @@ def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     # 5) if the signal stays above thres2 longer than max_len an event
     #    is triggered and following a new event can be triggered as soon as
     #    the signal is above thres1
-    ind1 = np.where(charfct > thres1)[0]
+    ind1 = np.where(charfct >= thres1)[0]
     if len(ind1) == 0:
         return []
-    ind2 = np.where(charfct > thres2)[0]
+    ind2 = np.where(charfct >= thres2)[0]
     #
     on = deque([ind1[0]])
     of = deque([-1])
@@ -362,6 +415,10 @@ def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     else:
         # include it
         of.extend([ind2[-1]])
+
+    # add last sample to ensure trigger gets switched off if ctf does not fall
+    # below off-threshold before hitting the end
+    of.append(len(charfct))
     #
     pick = []
     while on[-1] > of[0]:
@@ -399,6 +456,7 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     :return: (pptime, pfm [,cf]) pptime sample number of parrival;
         pfm direction of first motion (U or D), optionally also the
         characteristic function.
+
     .. note:: currently the first sample is not taken into account
 
     .. seealso:: [Baer1987]_
@@ -426,6 +484,36 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
         return pptime.value + 1, pfm.value.decode('utf-8'), cf_arr
     else:
         return pptime.value + 1, pfm.value.decode('utf-8')
+
+
+def aic_simple(a):
+    r"""
+    Simple Akaike Information Criterion [Maeda1985]_.
+
+    It's computed directly from input data :math:`a` and defined as
+
+    .. math::
+        \text{AIC}(k) = k\log(\text{Var}(a_{1..k})) +
+                        (N-k-1)\log(\text{Var}(a_{k+1..N}))
+
+    which variance denoted as :math:`\text{Var}`.
+
+    The true output is one data sample less. To make it convenient with other
+    metrics in this module, where the output length is preserved, the last
+    element is appended to the output: ``aic[-2] == aic[-1]``.
+
+    :type a: :class:`numpy.ndarray` or :class:`list`
+    :param a: Input time series
+    :rtype: :class:`numpy.ndarray`
+    :return: aic - Akaike Information Criterion array
+    """
+    n = len(a)
+    if n <= 2:
+        return np.zeros(n, dtype=np.float64)
+    a = np.ascontiguousarray(a, np.float64)
+    aic_res = np.empty(n, dtype=np.float64)
+    clibsignal.aic_simple(aic_res, a, n)
+    return aic_res
 
 
 def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
@@ -518,6 +606,31 @@ def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     return ptime.value, stime.value
 
 
+def plot_trace(trace, cft):
+    """
+    Plot characteristic function of trigger along with waveform data.
+
+    :type trace: :class:`~obspy.core.trace.Trace`
+    :param trace: waveform data
+    :type cft: :class:`numpy.ndarray`
+    :param cft: characteristic function as returned by a trigger in
+        :mod:`obspy.signal.trigger`
+    :rtype: tuple
+    :returns: Matplotlib figure instance and axes
+    """
+    import matplotlib.pyplot as plt
+    df = trace.stats.sampling_rate
+    npts = trace.stats.npts
+    t = np.arange(npts, dtype=np.float32) / df
+    fig, axes = plt.subplots(nrows=2, sharex=True)
+    axes[0].plot(t, trace.data, 'k')
+    axes[1].plot(t, cft, 'k')
+    axes[1].set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
+    fig.suptitle(trace.id)
+    fig.canvas.draw()
+    return fig, axes
+
+
 def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     """
     Plot characteristic function of trigger along with waveform data and
@@ -535,22 +648,19 @@ def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     :type show: bool
     :param show: Do not call `plt.show()` at end of routine. That way,
         further modifications can be done to the figure before showing it.
+    :rtype: tuple
+    :returns: Matplotlib figure instance and axes
     """
     import matplotlib.pyplot as plt
     df = trace.stats.sampling_rate
-    npts = trace.stats.npts
-    t = np.arange(npts, dtype=np.float32) / df
-    fig = plt.figure()
-    ax1 = fig.add_subplot(211)
-    ax1.plot(t, trace.data, 'k')
-    ax2 = fig.add_subplot(212, sharex=ax1)
-    ax2.plot(t, cft, 'k')
+    fig, axes = plot_trace(trace, cft)
+    ax1, ax2 = axes
     on_off = np.array(trigger_onset(cft, thr_on, thr_off))
-    i, j = ax1.get_ylim()
+    ymin, ymax = ax1.get_ylim()
     try:
-        ax1.vlines(on_off[:, 0] / df, i, j, color='r', lw=2,
+        ax1.vlines(on_off[:, 0] / df, ymin, ymax, color='r', lw=2,
                    label="Trigger On")
-        ax1.vlines(on_off[:, 1] / df, i, j, color='b', lw=2,
+        ax1.vlines(on_off[:, 1] / df, ymin, ymax, color='b', lw=2,
                    label="Trigger Off")
         ax1.legend()
     except IndexError:
@@ -562,6 +672,7 @@ def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     fig.canvas.draw()
     if show:
         plt.show()
+    return fig, axes
 
 
 def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
@@ -668,23 +779,23 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
     :rtype: list
     :returns: List of event triggers sorted chronologically.
     """
-    st = stream.copy()
     # if no trace ids are specified use all traces ids found in stream
     if trace_ids is None:
-        trace_ids = [tr.id for tr in st]
+        trace_ids = [tr.id for tr in stream]
     # we always work with a dictionary with trace ids and their weights later
     if isinstance(trace_ids, list) or isinstance(trace_ids, tuple):
         trace_ids = dict.fromkeys(trace_ids, 1)
     # set up similarity thresholds as a dictionary if necessary
     if not isinstance(similarity_threshold, dict):
-        similarity_threshold = dict.fromkeys([tr.stats.station for tr in st],
-                                             similarity_threshold)
+        similarity_threshold = dict.fromkeys(
+            [tr.stats.station for tr in stream], similarity_threshold)
 
     # the single station triggering
     triggers = []
     # prepare kwargs for trigger_onset
     kwargs = {'max_len_delete': delete_long_trigger}
-    for tr in st:
+    for tr in stream:
+        tr = tr.copy()
         if tr.id not in trace_ids:
             msg = "At least one trace's ID was not found in the " + \
                   "trace ID list and was disregarded (%s)" % tr.id
@@ -708,12 +819,22 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
                              cft_std))
     triggers.sort()
 
+    for i, (on, off, tr_id, cft_peak, cft_std) in enumerate(triggers):
+        sta = tr_id.split(".")[1]
+        templates = event_templates.get(sta)
+        if templates:
+            simil = templates_max_similarity(
+                stream, UTCDateTime(on), templates)
+        else:
+            simil = None
+        triggers[i] = (on, off, tr_id, cft_peak, cft_std, simil)
+
     # the coincidence triggering and coincidence sum computation
     coincidence_triggers = []
     last_off_time = 0.0
     while triggers != []:
         # remove first trigger from list and look for overlaps
-        on, off, tr_id, cft_peak, cft_std = triggers.pop(0)
+        on, off, tr_id, cft_peak, cft_std, simil = triggers.pop(0)
         sta = tr_id.split(".")[1]
         event = {}
         event['time'] = UTCDateTime(on)
@@ -726,13 +847,11 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             event['cft_stds'] = [cft_std]
         # evaluate maximum similarity for station if event templates were
         # provided
-        templates = event_templates.get(sta)
-        if templates:
-            event['similarity'][sta] = \
-                templates_max_similarity(stream, event['time'], templates)
+        if simil is not None:
+            event['similarity'][sta] = simil
         # compile the list of stations that overlap with the current trigger
-        for trigger in triggers:
-            tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
+        for (tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std,
+                tmp_simil) in triggers:
             tmp_sta = tmp_tr_id.split(".")[1]
             # skip retriggering of already present station in current
             # coincidence trigger
@@ -753,10 +872,8 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             off = max(off, tmp_off)
             # evaluate maximum similarity for station if event templates were
             # provided
-            templates = event_templates.get(tmp_sta)
-            if templates:
-                event['similarity'][tmp_sta] = \
-                    templates_max_similarity(stream, event['time'], templates)
+            if tmp_simil is not None:
+                event['similarity'][tmp_sta] = tmp_simil
         # skip if both coincidence sum and similarity thresholds are not met
         if event['coincidence_sum'] < thr_coincidence_sum:
             if not event['similarity']:
@@ -779,8 +896,3 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
         coincidence_triggers.append(event)
         last_off_time = off
     return coincidence_triggers
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

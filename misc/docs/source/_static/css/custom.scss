@@ -1,0 +1,162 @@
+// sass-lint:disable no-color-literals no-important
+
+.logo {
+  margin: 0 !important;
+}
+
+.wy-nav-content {
+  max-width: 100%;
+}
+
+footer {
+  font-size: 12px;
+
+  p {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+}
+
+
+// gallery
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-bottom: 2em;
+
+  .figure {
+    width: 20%;
+    padding: 5px;
+    margin-bottom: 0 !important;
+
+    img {
+      display: block;
+      padding: 5px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: .2s ease-in-out;
+
+      &:hover {
+        border-color: #428bca;
+      }
+    }
+  }
+}
+
+
+@media all and (max-width: 1024px) {
+  .gallery {
+    .figure {
+      width: 50%;
+    }
+  }
+}
+
+
+@media all and (max-width: 640px) {
+  .gallery {
+    .figure {
+      width: 100%;
+    }
+  }
+}
+
+
+// parameters
+
+dl {
+  &.field-list {
+    background-color: #ede;
+    font-size: .85em !important;
+    padding-left: 12px !important;
+
+    dt {
+      padding: 10px 0 !important;
+    }
+
+    dd {
+      background-color: #eef;
+      padding: 10px !important;
+
+      ul {
+        margin-bottom: 0 !important;
+      }
+
+      li {
+        margin-bottom: 7px;
+      }
+
+      p {
+        font-size: 1em !important;
+        line-height: 1.5em;
+
+        &:last-of-type {
+          margin-bottom: 0 !important;
+        }
+      }
+    }
+  }
+}
+
+
+// start page
+
+.banner {
+  margin-bottom: 0 !important;
+  float: right;
+  clear: both;
+}
+
+
+.startpage {
+  a {
+    font-size: 1.3em;
+  }
+
+  h2 {
+    margin-top: 1.3em;
+  }
+
+  .hlist {
+    margin-bottom: 1.3em;
+
+    td {
+      width: 50%;
+    }
+
+    li {
+      list-style: none !important;
+      margin: 0 0 1.3em;
+    }
+
+    p {
+      margin: 0 !important;
+
+      & + p {
+        font-size: .85em;
+      }
+    }
+  }
+}
+
+
+// responsive table in startpage
+
+@media all and (max-width: 1024px) {
+  .banner {
+    float: none;
+    display: block;
+  }
+
+  .startpage {
+    .hlist {
+      td {
+        display: block;
+        width: 100% !important;
+      }
+    }
+  }
+}

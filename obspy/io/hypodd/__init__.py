@@ -22,15 +22,10 @@ mechanisms including format autodetection.
 >>> cat = read_events('/path/to/example.pha')
 >>> print(cat)
 2 Event(s) in Catalog:
-2025-05-14T14:35:35.510000Z | +40.225,  +10.450 | 3.5 None
-2025-05-14T15:43:05.280000Z | +40.223,  +10.450 | 1.8 None
+2025-05-14T14:35:35.510000Z | +40.225,  +10.450 | 3.5  None
+2025-05-14T15:43:05.280000Z | +40.223,  +10.450 | 1.8  None
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

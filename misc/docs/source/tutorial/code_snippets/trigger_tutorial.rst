@@ -8,7 +8,26 @@ course on triggering. Test data used in this tutorial can be downloaded here:
 
 The triggers are implemented as described in [Withers1998]_. Information on
 finding the right trigger parameters for STA/LTA type triggers can be found in
-[Trnkoczy2012]_.
+[Trnkoczy2012]_. The list includes (but not limited to):
+
+* Generally, STA duration must be longer than a few periods (zero-crossings of
+  the main frequency) of a typically expected seismic signal. On the other
+  hand, STA duration must be shorter than the shortest events (trigger on/off,
+  the envelope duration) we expect to capture.
+* STA duration must be longer than the inverse frequency of noisy spikes.
+  Otherwise, false alarms will be captured.
+* The LTA window should be longer than a few 'periods' of typically irregular
+  (slow) seismic noise fluctuations. Typically, it's an order of magnitude
+  larger than the STA duration.
+
+A nice explanation of STA and LTA parameters is given in [Han2009]_:
+
+.. figure:: /_images/STA_LTA-ratio.png
+
+    FIG. 1: Definition of the STA/LTA method. The length of the LTA energy
+    collection window is five to ten times the length of the STA energy
+    collection window, which needs to be on the order or two to three times
+    the dominant period of the seismic arrival.
 
 .. seealso::
     Please note the convenience method of ObsPy's
@@ -84,6 +103,8 @@ trigger routines defined in :mod:`obspy.signal.trigger`:
     ~obspy.signal.trigger.z_detect
     ~obspy.signal.trigger.pk_baer
     ~obspy.signal.trigger.ar_pick
+    ~obspy.signal.trigger.energy_ratio
+    ~obspy.signal.trigger.modified_energy_ratio
 
 Help for each function is available HTML formatted or in the usual Python manner:
 
@@ -103,8 +124,9 @@ Trigger Examples
 For all the examples, the commands to read in the data and to load the modules
 are the following:
 
+    >>> import matplotlib.pyplot as plt
     >>> from obspy.core import read
-    >>> from obspy.signal.trigger import plot_trigger
+    >>> from obspy.signal.trigger import plot_trigger, plot_trace
     >>> trace = read("https://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
 
@@ -152,6 +174,32 @@ Delayed Sta Lta
     >>> plot_trigger(trace, cft, 5, 10)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
+
+
+Energy Ratio
+============
+
+.. plot:: tutorial/code_snippets/trigger_tutorial_energy_ratio.py
+   :include-source:
+
+
+Modified Energy Ratio
+=====================
+
+An improvement of the energy ratio that accounts for the signal itself.
+
+The picture below is taken from [Han2009]_.
+
+.. figure:: /_images/MER.png
+
+    FIG. 2: Definition of the MER method. Preceding and following energy
+    collection windows with equal lengths are located at a test point. The
+    window lengths are two to three times the dominant periods of the seismic
+    arrival.
+
+.. plot:: tutorial/code_snippets/trigger_tutorial_modified_energy_ratio.py
+   :include-source:
+
 
 .. _trigger-tutorial-coincidence:
 
@@ -396,11 +444,24 @@ For :func:`~obspy.signal.trigger.ar_pick`, input and output are in seconds.
 This gives the output 30.6350002289 and 31.2800006866, meaning that a P pick at
 30.64s and an S pick at 31.28s were identified.
 
+
+AIC - Akaike Information Criterion by Maeda (1985)
+==================================================
+
+Credits: mbagagli
+
+The :func:`~obspy.signal.trigger.aic_simple` function estimates the Akaike
+Information directly from data (see [Maeda1985]_). The algorithm provides a
+simple way to localize points of interest, i.e. trigger onset.
+
+.. plot:: tutorial/code_snippets/trigger_tutorial_aic_simple.py
+
+
 ----------------
 Advanced Example
 ----------------
 
-A more complicated example, where the data are retrieved via ArcLink and
+A more complicated example, where the data are retrieved via FDSNWS and
 results are plotted step by step, is shown here:
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_advanced.py

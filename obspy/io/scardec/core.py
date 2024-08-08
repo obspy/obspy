@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 SCARDEC file format support for ObsPy.
@@ -14,10 +13,6 @@ files is only possible, if the event contains a moment rate function.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import uuid
 import warnings
 
@@ -52,7 +47,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
     opened, otherwise it will just be passed to the underlying function.
 
     :param filename_or_buf: File to pass.
-    :type filename_or_buf: str, open file, or file-like object.
+    :type filename_or_buf: str, open file, or file-like object
     :param function: The function to call.
     :param reset_fp: If True, the file pointer will be set to the initial
         position after the function has been called.
@@ -80,7 +75,7 @@ def _is_scardec(filename_or_buf):
     Checks if the file is a SCARDEC file.
 
     :param filename_or_buf: File to test.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: str or file-like object
     """
     try:
         return _buffer_proxy(filename_or_buf, _internal_is_scardec,
@@ -96,7 +91,7 @@ def _internal_is_scardec(buf):
     Checks if the file is a SCARDEC file.
 
     :param buf: File to check.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     # The file format is so simple. Just attempt to read the first event. If
     # it passes it will be read again but that has really no
@@ -113,7 +108,7 @@ def _read_scardec(filename_or_buf, **kwargs):
     Reads a SCARDEC file to a :class:`~obspy.core.event.Catalog` object.
 
     :param filename_or_buf: File to read.
-    :type filename_or_buf: str or file-like object.
+    :type filename_or_buf: str or file-like object
     """
     return _buffer_proxy(filename_or_buf, _internal_read_scardec, **kwargs)
 
@@ -123,7 +118,7 @@ def _internal_read_scardec(buf, **kwargs):  # @UnusedVariable
     Reads a SCARDEC file to a :class:`~obspy.core.event.Catalog` object.
 
     :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     events = []
     cur_pos = buf.tell()
@@ -158,7 +153,7 @@ def _internal_read_single_scardec(buf):
     object.
 
     :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :type buf: open file or file-like object
     """
     # The first line encodes the origin time and epicenter
     line = buf.readline()
@@ -327,7 +322,7 @@ def _write_scardec(catalog, filename_or_buf, **kwargs):
     :param catalog: The catalog to write. Can only contain one event.
     :type catalog: :class:`~obspy.core.event.Catalog`
     :param filename_or_buf: Filename or file-like object to write to.
-    :type filename_or_buf: str, open file, or file-like object.
+    :type filename_or_buf: str, open file, or file-like object
     """
     return _buffer_proxy(filename_or_buf, _internal_write_scardec,
                          file_mode="wb", catalog=catalog, **kwargs)
@@ -338,7 +333,7 @@ def _internal_write_scardec(buf, catalog, **kwargs):  # @UnusedVariable
     Write events to a file.
 
     :param buf: File to write to.
-    :type buf: Open file or file-like object.
+    :type buf: open file or file-like object
     :param catalog: The catalog to write.
     :type catalog: :class:`~obspy.core.event.Catalog`
     """
@@ -357,9 +352,9 @@ def _internal_write_single_scardec(buf, event, **kwargs):  # @UnusedVariable
     Write an event to a file.
 
     :param buf: File to write to.
-    :type buf: Open file or file-like object.
+    :type buf: open file or file-like object
     :param event: The event to write.
-    :type event: :class:`~obspy.core.event.Event`
+    :type event: :class:`~obspy.core.event.event.Event`
     """
     if not event.focal_mechanisms:
         raise ValueError("Event must contain a focal mechanism.")
@@ -455,10 +450,4 @@ def _internal_write_single_scardec(buf, event, **kwargs):  # @UnusedVariable
     times = np.arange(0, nsamples) * stf['dt']['value'] + t_offset
     samples = stf['moment_rate']['value'] * scalmom
 
-    np.savetxt(buf, np.asarray([times, samples]).T,
-               fmt=' %16.9E %16.9E'.encode('ascii', 'strict'))
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)
+    np.savetxt(buf, np.asarray([times, samples]).T, fmt=' %16.9E %16.9E')

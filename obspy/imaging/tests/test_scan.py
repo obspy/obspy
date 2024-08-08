@@ -2,34 +2,28 @@
 """
 The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import os
 import shutil
-import unittest
-from os.path import abspath, dirname, join, pardir
 import warnings
+from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pytest
 
 from obspy import read, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, get_example_file
 from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
-from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
 from obspy.imaging.scripts.scan import scan, Scanner
 
 
-class ScanTestCase(unittest.TestCase):
+class TestScan:
     """
     Test cases for obspy-scan
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.root = abspath(join(dirname(__file__), pardir, pardir))
-        self.path = join(self.root, 'imaging', 'tests', 'images')
+    @pytest.fixture(scope='class')
+    def all_files(self, root):
+        """return a list of all waveform files in the test suite."""
         sac_files = ['LMOW.BHE.SAC', 'seism.sac', 'dis.G.SCZ.__.BHE_short',
                      'null_terminated.sac', 'test.sac', 'seism-longer.sac',
                      'test.sac.swap', 'seism-shorter.sac', 'testxy.sac']
@@ -38,42 +32,85 @@ class ScanTestCase(unittest.TestCase):
                       'loc_RJOB20050831023349_first100_dos.z',
                       'loc_RNON20040609200559.z', 'loc_STAU20031119011659.z',
                       'sta2.gse2', 'twiceCHK2.gse2', 'y2000.gse']
-        all_files = [join(self.root, 'io', 'sac', 'tests', 'data', i)
+        all_files = [root / 'io' / 'sac' / 'tests' / 'data' / i
                      for i in sac_files]
-        all_files.extend([join(self.root, 'io', 'gse2', 'tests', 'data', i)
+        all_files.extend([root / 'io' / 'gse2' / 'tests' / 'data' / i
                           for i in gse2_files])
-        self.all_files = all_files
+        return all_files
 
-    def test_scan_main_method(self):
+    def test_scan_main_method(self, all_files, image_path):
         """
         Run obspy-scan on selected tests/data directories
         """
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
-            with ImageComparison(self.path, 'scan.png') as ic:
-                obspy_scan([os.curdir] + ['--output', ic.name])
+            obspy_scan([os.curdir] + ['--output', str(image_path)])
 
-    def test_scan_function_and_scanner_class(self):
+    def test_scan_dir_no_permission(self, all_files):
+        """
+        Run obspy-scan on a directory without read permission.
+        Should just skip it and not raise an exception. see #3115
+        """
+        # Copy files to a temp folder to avoid wildcard scans.
+        scanner = Scanner()
+        with TemporaryWorkingDirectory():
+            no_permission_dir = Path('no_permission_dir')
+            no_permission_dir.mkdir()
+            # copy one test file in
+            shutil.copy(all_files[0], no_permission_dir)
+            # take away read permissions
+            no_permission_dir.chmod(0o000)
+            # still sometimes even on Linux CI runners it seems that stripping
+            # read permission does not work and the scanner is able to process
+            # it, thus ending up with a higher counter than if properly making
+            # the directory not readable
+            try:
+                os.listdir(no_permission_dir)
+            # this is what we want, not being able to read the directory, thus
+            # the scanner only processing one item
+            except PermissionError:
+                pass
+            # this is unexpected, we weren't able to strip read permissions,
+            # and then in consequence this test is meaningless and we mark it
+            # as a skipped test
+            else:
+                pytest.skip(
+                    "unable to remove read permission from a test file for "
+                    "testing purposes")
+            scanner.parse(str(no_permission_dir))
+            # should not have been able to read test file but also not raised
+            # an error
+            assert scanner.counter == 1
+            assert not scanner.data
+            # now allow read permission and read again
+            no_permission_dir.chmod(0o777)
+            scanner.parse(str(no_permission_dir))
+            assert scanner.counter == 2
+            assert '.LMOW..BHE' in scanner.data
+            for child in no_permission_dir.iterdir():
+                child.unlink()
+            no_permission_dir.rmdir()
+
+    def test_scan_function_and_scanner_class(self, all_files, image_path):
         """
         Test scan function and Scanner class (in one test to keep overhead of
         copying files down)
         """
         scanner = Scanner()
+        path1 = image_path.parent / 'scan1.png'
+        path2 = image_path.parent / 'scan2.png'
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             scanner.parse(os.curdir)
+            scan(paths=os.curdir, plot=path1)
 
-            with ImageComparison(self.path, 'scan.png') as ic:
-                scan(paths=os.curdir, plot=ic.name)
-
-        with ImageComparison(self.path, 'scan.png') as ic:
-            scanner.plot(ic.name)
+        scanner.plot(path2)
 
     def test_scan_plot_by_id_with_wildcard(self):
         """
@@ -113,17 +150,17 @@ class ScanTestCase(unittest.TestCase):
             fig, ax = plt.subplots()
             fig = scanner.plot(fig=fig, show=False, seed_ids=[seed_id])
             got = [label.get_text() for label in ax.get_yticklabels()]
-            self.assertEqual(got, expected_labels)
+            assert got == expected_labels
             plt.close(fig)
 
-    def test_scanner_manually_add_streams(self):
+    def test_scanner_manually_add_streams(self, all_files, image_path):
         """
         Test Scanner class, manually adding streams of read data files
         """
         scanner = Scanner()
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             for file_ in os.listdir(os.curdir):
@@ -135,10 +172,9 @@ class ScanTestCase(unittest.TestCase):
                 st = read(file_, headonly=True)
                 scanner.add_stream(st)
 
-        with ImageComparison(self.path, 'scan.png') as ic:
-            scanner.plot(ic.name)
+        scanner.plot(str(image_path))
 
-    def test_scan_save_load_npz(self):
+    def test_scan_save_load_npz(self, all_files, image_path):
         """
         Run obspy-scan on selected tests/data directories, saving/loading
         to/from npz.
@@ -148,7 +184,7 @@ class ScanTestCase(unittest.TestCase):
         scanner = Scanner()
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
             # save via command line
@@ -159,36 +195,36 @@ class ScanTestCase(unittest.TestCase):
             scanner.save_npz('scanner.npz')
             scanner = Scanner()
 
+            path1 = image_path.parent / 'scan_load_npz_1.png'
+            path2 = image_path.parent / 'scan_load_npz_2.png'
+
             # version string of '0.0.0+archive' raises UserWarning - ignore
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('ignore', UserWarning)
 
                 # load via Python
                 scanner.load_npz('scanner.npz')
-                with ImageComparison(self.path, 'scan.png') as ic:
-                    scanner.plot(ic.name)
+                scanner.plot(path1)
 
                 # load via command line
-                with ImageComparison(self.path, 'scan.png') as ic:
-                    obspy_scan(['--load', 'scan.npz', '--output', ic.name])
+                obspy_scan(['--load', 'scan.npz', '--output', str(path2)])
 
-    def test_scan_times(self):
+    def test_scan_times(self, all_files, image_path):
         """
         Checks for timing related options
         """
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
-            for filename in self.all_files:
+            for filename in all_files:
                 shutil.copy(filename, os.curdir)
 
-            with ImageComparison(self.path, 'scan_times.png') as ic:
-                obspy_scan([os.curdir] + ['--output', ic.name] +
-                           ['--start-time', '2004-01-01'] +
-                           ['--end-time', '2004-12-31'] +
-                           ['--event-time', '2004-03-14T15:09:26'] +
-                           ['--event-time', '2004-02-07T18:28:18'])
+            obspy_scan([os.curdir] + ['--output', str(image_path)] +
+                       ['--start-time', '2004-01-01'] +
+                       ['--end-time', '2004-12-31'] +
+                       ['--event-time', '2004-03-14T15:09:26'] +
+                       ['--event-time', '2004-02-07T18:28:18'])
 
-    def test_multiple_sampling_rates(self):
+    def test_multiple_sampling_rates(self, image_path):
         """
         Check for multiple sampling rates
         """
@@ -217,38 +253,25 @@ class ScanTestCase(unittest.TestCase):
                 files.append(fp.name)
 
             # make image comparison instance and set manual rms (see #2089)
-            image_comp = ImageComparison(self.path, 'scan_mult_sampl.png')
-            image_comp.tol = 50
 
-            with image_comp as ic:
+            with CatchOutput() as out:
+                cmds = ['--output', str(image_path), '--print-gaps']
+                obspy_scan(files + cmds)
 
-                obspy_scan(files + ['--output', ic.name, '--print-gaps'])
-
-                with CatchOutput() as out:
-                    obspy_scan(files + ['--output', ic.name, '--print-gaps'])
-
-                # read output and compare with expected
-                # only check if datetime objects are close, not exact
-                output = out.stdout.splitlines()
-                for ex_line, out_line in zip(expected, output):
-                    ex_split = ex_line.split(' ')
-                    out_split = out_line.split(' ')
-                    for ex_str, out_str in zip(ex_split, out_split):
-                        try:
-                            utc1 = UTCDateTime(ex_str)
-                            utc2 = UTCDateTime(out_str)
-                        except (ValueError, TypeError):
-                            # if str is not a datetime it should be equal
-                            self.assertEqual(ex_str, out_str)
-                        else:
-                            # datetimes just need to be close
-                            t1, t2 = utc1.timestamp, utc2.timestamp
-                            self.assertTrue(abs(t1 - t2) < .001)
-
-
-def suite():
-    return unittest.makeSuite(ScanTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+            # read output and compare with expected
+            # only check if datetime objects are close, not exact
+            output = out.stdout.splitlines()
+            for ex_line, out_line in zip(expected, output):
+                ex_split = ex_line.split(' ')
+                out_split = out_line.split(' ')
+                for ex_str, out_str in zip(ex_split, out_split):
+                    try:
+                        utc1 = UTCDateTime(ex_str)
+                        utc2 = UTCDateTime(out_str)
+                    except (ValueError, TypeError):
+                        # if str is not a datetime it should be equal
+                        assert ex_str == out_str
+                    else:
+                        # datetimes just need to be close
+                        t1, t2 = utc1.timestamp, utc2.timestamp
+                        assert abs(t1 - t2) < .001

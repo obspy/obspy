@@ -8,10 +8,6 @@ Evt (Kinemetrics files) bindings to ObsPy's core classes.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from . import evt
 from .evt_base import EvtBaseError
 
@@ -20,7 +16,7 @@ def is_evt(filename_or_object):
     """
     Checks whether a file is Evt or not.
 
-    :type filename_or_object: filename or file-like object
+    :type filename_or_object: str or file-like object
     :param filename_or_object: Evt file to be checked
     :rtype: bool
     :return: ``True`` if a Evt file, ``False`` otherwise
@@ -70,5 +66,5 @@ def read_evt(filename_or_object, **kwargs):
     :return: Stream object containing header and data
     """
     evt_obj = evt.Evt()
-    stream = evt_obj.read_file(filename_or_object)
+    stream = evt_obj.read_file(filename_or_object, **kwargs)
     return stream

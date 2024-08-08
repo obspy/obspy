@@ -13,7 +13,7 @@ try:
     in_file = sys.argv[1]
     out_file = sys.argv[2]
     calibration = float(sys.argv[3])
-except:
+except Exception:
     print(__doc__)
     raise
 

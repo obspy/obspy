@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Some Seismogram Interpolating Functions.
@@ -9,10 +8,6 @@ Some Seismogram Interpolating Functions.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 import scipy.interpolate
 
@@ -154,7 +149,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     # If m_i and m_{i+1} have opposite signs then set the slope to zero.
     # This forces the curve to have extrema at the sample points and not
     # in-between.
-    sign_change = np.diff(np.sign(m)).astype(np.bool)
+    sign_change = np.diff(np.sign(m)).astype(bool)
     slope[1:-1][sign_change] = 0.0
 
     derivatives = np.empty((len(data), 2), dtype=np.float64)
@@ -440,8 +435,3 @@ def plot_lanczos_windows(a, filename=None):
     else:
         plt.savefig(filename)
         plt.close()
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

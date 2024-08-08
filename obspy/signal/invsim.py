@@ -19,15 +19,11 @@ to m/s.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import math
 import os
 import warnings
+from pathlib import Path
 
 import numpy as np
 import scipy.signal
@@ -42,7 +38,8 @@ from obspy.signal.util import _npts2nfft
 
 
 # Sensitivity is 2080 according to:
-# P. Bormann: New Manual of Seismological Observatory Practice
+# Bormann, P. (ed.) (2002). IASPEI New Manual of Seismological Observatory
+# Practice (NMSOP), GeoForschungsZentrum Potsdam, ISBN: 3-9808780-0-7,
 # IASPEI Chapter 3, page 24
 # (PITSA has 2800)
 WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
@@ -63,7 +60,8 @@ def cosine_taper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     :return: Cosine taper array/vector of length npts.
     :type freqs: NumPy :class:`~numpy.ndarray`
     :param freqs: Frequencies as, for example, returned by fftfreq
-    :type flimit: list or tuple of floats
+    :type flimit: list(float, float, float, float) or
+        tuple(float, float, float, float)
     :param flimit: The list or tuple defines the four corner frequencies
         (f1, f2, f3, f4) of the cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
@@ -161,7 +159,7 @@ def cosine_sac_taper(freqs, flimit):
     :param freqs: frequency vector to use
     :type freqs: :class:`numpy.ndarray`
     :param flimit: sequence containing the 4 frequency limits
-    :type flimit: tuple of 4 floats
+    :type flimit: tuple(float, float, float, float)
     :returns: taper
     :rtype: :class:`numpy.ndarray`
 
@@ -225,9 +223,9 @@ def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
 
     :type t_samp: float
     :param t_samp: Sampling interval in seconds
-    :type frequencies: list of float
+    :type frequencies: list[float]
     :param frequencies: Discrete frequencies to calculate response for.
-    :type filename: str or file
+    :type filename: str or file or Path
     :param filename: SEED RESP-filename or open file like object with RESP
         information. Any object that provides a read() method will be
         considered to be a file like object.
@@ -248,7 +246,7 @@ def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
     :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response from SEED RESP-file for given frequencies
     """
-    if isinstance(filename, (str, native_str)):
+    if isinstance(filename, (str, Path)):
         with open(filename, 'rb') as fh:
             data = fh.read()
     elif hasattr(filename, 'read'):
@@ -361,9 +359,9 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
 
     The output contains the frequency zero which is the offset of the trace.
 
-    :type poles: list of complex
+    :type poles: list[complex]
     :param poles: The poles of the transfer function
-    :type zeros: list of complex
+    :type zeros: list[complex]
     :param zeros: The zeros of the transfer function
     :type scale_fac: float
     :param scale_fac: Gain factor
@@ -375,7 +373,7 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     :return: Frequency response of PAZ of length nfft
     """
     n = nfft // 2
-    b, a = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
+    b, a = scipy.signal.zpk2tf(zeros, poles, scale_fac)
     # a has to be a list for the scipy.signal.freqs() call later but zpk2tf()
     # strangely returns it as an integer.
     if not isinstance(a, np.ndarray) and a == 1.0:
@@ -469,7 +467,8 @@ def simulate_seismometer(
     :param taper: If true a cosine taper is applied.
     :type taper_fraction: float
     :param taper_fraction: Taper fraction of cosine taper to use
-    :type pre_filt: list or tuple of floats
+    :type pre_filt: list(float, float, float, float) or
+        tuple(float, float, float, float)
     :param pre_filt: Apply a bandpass filter to the data trace before
         deconvolution. The list or tuple defines the four corner frequencies
         (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and
@@ -646,6 +645,15 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
     Readings on two components can be used in magnitude estimation by providing
     lists for ``paz``, ``amplitude`` and ``timespan``.
 
+    .. note::
+        The input poles and zeros for the actual instrument in use need to
+        convert input data units to velocity in ``m/s``. Metadata from
+        accelerometers and other instruments might have to be adjusted
+        accordingly. It is strongly recommended to supply
+        :class:`~obspy.core.inventory.response.Response` objects instead of
+        poles and zeros dictionaries, as these adjustment are then done
+        automatically.
+
     :param paz: PAZ of the instrument [m/s] (as a dictionary) or response of
         the instrument (as :class:`~obspy.core.inventory.response.Response`) or
         list of the same
@@ -719,6 +727,14 @@ def estimate_wood_anderson_amplitude(paz, amplitude, timespan):
     Zeros information for use in :func:`estimate_magnitude`.
     Amplitude should be measured as full peak to peak amplitude, timespan as
     difference of the two readings.
+
+    .. note::
+        It is recommended to use
+        :func:`estimate_wood_anderson_amplitude_using_response` with a
+        :class:`~obspy.core.inventory.response.Response` object instead
+        whenever possible as this prevents user errors with potentially
+        misaligned in between units when using poles and zeros from e.g.
+        accelerometers.
 
     :param paz: PAZ of the instrument [m/s] or list of the same
     :param amplitude: Peak to peak amplitude [counts] or list of the same

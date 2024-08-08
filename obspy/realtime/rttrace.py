@@ -8,10 +8,6 @@ Module for handling ObsPy RtTrace objects.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import copy
 import warnings
 
@@ -68,7 +64,8 @@ class RtTrace(Trace):
         >>> from obspy.realtime import RtTrace
         >>> from obspy import read
         >>> from obspy.realtime.signal import calculate_mwp_mag
-        >>> data_trace = read('/path/to/II.TLY.BHZ.SAC')[0]
+        >>> data_trace = read(
+        ...     '/path/to/II.TLY.BHZ.SAC', round_sampling_interval=False)[0]
         >>> len(data_trace)
         12684
         >>> ref_time_offset = data_trace.stats.sac.a
@@ -127,7 +124,7 @@ class RtTrace(Trace):
             string += '\n'
             string += '  ' + (str(key) + ' ' + 80 * '-')[:80]
             string += str(REALTIME_PROCESS_FUNCTIONS[key][0].__doc__)
-        return(string)
+        return string
 
     def __init__(self, max_length=None, *args, **kwargs):  # @UnusedVariable
         """
@@ -316,7 +313,7 @@ class RtTrace(Trace):
             or a non-recursive, time-domain NumPy or ObsPy function which takes
             a single array as an argument and returns an array
 
-        :type process: str or function
+        :type process: str or callable
         :param process: Specifies which processing function is added,
             e.g. ``"boxcar"`` or ``np.abs``` (functions without brackets).
             See :mod:`obspy.realtime.signal` for all predefined processing

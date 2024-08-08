@@ -15,22 +15,18 @@ instructions.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
+import collections.abc
 import io
 import json
 from operator import attrgetter
-import os
+from pathlib import Path
 from uuid import uuid4
 
 import numpy as np
 
 from obspy import Stream, UTCDateTime, read, __version__
-from obspy.core.compatibility import collections_abc
 from obspy.core.util.base import get_dependency_version
 from obspy.io.mseed.util import get_flags
 
@@ -64,7 +60,7 @@ class MSEEDMetadata(object):
     MiniSEED files must have a matching stream ID and quality.
 
     :param files: One ore more MiniSEED files.
-    :type files: str or list of str
+    :type files: str or list[str]
     :type id: str, optional
     :param id: A unique identifier of the to be created QC object. It is
         not verified, that it actually is unique. The user has to take care of
@@ -607,15 +603,13 @@ class MSEEDMetadata(object):
                    get_dependency_version("jsonschema", raw_string=True))
             raise ValueError(msg)
 
-        schema_path = os.path.join(os.path.dirname(__file__), "data",
-                                   "wf_metadata_schema.json")
-
+        schema_path = Path(__file__).parent/"data"/"wf_metadata_schema.json"
         with io.open(schema_path, "rt") as fh:
             schema = json.load(fh)
 
         # If passed as a dictionary, serialize and derialize to get the
         # mapping from Python object to JSON type.
-        if isinstance(qc_metrics, collections_abc.Mapping):
+        if isinstance(qc_metrics, collections.abc.Mapping):
             qc_metrics = json.loads(self.get_json_meta(validate=False))
         elif hasattr(qc_metrics, "read"):
             qc_metrics = json.load(qc_metrics)

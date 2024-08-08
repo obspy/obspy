@@ -9,11 +9,6 @@ Provides the Network class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible
-
 import copy
 import fnmatch
 import warnings
@@ -27,7 +22,6 @@ from .util import (
     _response_plot_label)
 
 
-@python_2_unicode_compatible
 class Network(BaseNode):
     """
     From the StationXML definition:
@@ -45,6 +39,8 @@ class Network(BaseNode):
         """
         :type code: str
         :param code: The SEED network code.
+        :type stations: list of :class:`~obspy.core.inventory.station.Station`
+        :param stations: List of stations for the network.
         :type total_number_of_stations: int
         :param total_number_of_stations: The total number of stations
             contained in this network, including inactive or terminated
@@ -71,10 +67,11 @@ class Network(BaseNode):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
-        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :type data_availability:
+            :class:`~obspy.core.inventory.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network.
-        :type identifiers: list of str, optional
+        :type identifiers: list[str], optional
         :param identifiers: Persistent identifiers for network/station/channel
             (schema version >=1.1). URIs are in general composed of a 'scheme'
             and a 'path' (optionally with additional components), the two of
@@ -378,7 +375,7 @@ class Network(BaseNode):
             The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
             also modify the original object
-            (see https://docs.python.org/2/library/copy.html).
+            (see https://docs.python.org/3/library/copy.html).
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
@@ -517,8 +514,8 @@ class Network(BaseNode):
 
             Defaults to "global"
         :type resolution: str, optional
-        :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are:
+        :param resolution: Resolution of the boundary database to use.
+            Possible values are:
 
             * ``"c"`` (crude)
             * ``"l"`` (low)
@@ -527,10 +524,10 @@ class Network(BaseNode):
             * ``"f"`` (full)
 
             Defaults to ``"l"``
-        :type continent_fill_color: Valid matplotlib color, optional
+        :type continent_fill_color: valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
             ``"0.9"`` which is a light gray.
-        :type water_fill_color: Valid matplotlib color, optional
+        :type water_fill_color: valid matplotlib color, optional
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type marker: str
@@ -556,16 +553,15 @@ class Network(BaseNode):
         :type method: str
         :param method: Method to use for plotting. Possible values are:
 
-            * ``'basemap'`` to use the Basemap library
             * ``'cartopy'`` to use the Cartopy library
             * ``None`` to use the best available library
 
             Defaults to ``None``.
         :type fig: :class:`matplotlib.figure.Figure`
         :param fig: Figure instance to reuse, returned from a previous
-            inventory/catalog plot call with `method=basemap`.
-            If a previous basemap plot is reused, any kwargs regarding the
-            basemap plot setup will be ignored (i.e.  `projection`,
+            inventory/catalog plot call with `method=cartopy`.
+            If a previous cartopy plot is reused, any kwargs regarding the
+            cartopy plot setup will be ignored (i.e.  `projection`,
             `resolution`, `continent_fill_color`, `water_fill_color`). Note
             that multiple plots using colorbars likely are problematic, but
             e.g. one station plot (without colorbar) and one event plot (with
@@ -716,7 +712,7 @@ class Network(BaseNode):
         """
         import matplotlib.pyplot as plt
 
-        if axes:
+        if axes is not None:
             ax1, ax2 = axes
             fig = ax1.figure
         else:

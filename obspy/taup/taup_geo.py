@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Functions to handle geographical points
@@ -11,10 +10,6 @@ something other than spherical would change the epicentral distance, the change
 in the distance for the ray to pass through each layer has a larger effect.
 We do not make the larger correction.
 """
-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
 import warnings
 
 import numpy as np
@@ -78,7 +73,7 @@ def calc_dist_azi(source_latitude_in_deg, source_longitude_in_deg,
 
     :returns: distance_in_deg (in degrees), source_receiver_azimuth (in
               degrees) and receiver_to_source_backazimuth (in degrees).
-    :rtype: tuple of three floats
+    :rtype: tuple(float, float, float)
     """
     if geodetics.HAS_GEOGRAPHICLIB:
         ellipsoid = Geodesic(a=radius_of_planet_in_km * 1000.0,
@@ -122,7 +117,7 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
     Add geographical information to arrivals.
 
     :param arrivals: Set of taup arrivals
-    :type: :class:`Arrivals`
+    :type: :class:`obspy.taup.tau.Arrivals`
     :param source_latitude_in_deg: Source location latitude in degrees
     :type source_latitude_in_deg: float
     :param source_longitude_in_deg: Source location longitude in degrees
@@ -138,13 +133,13 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
     :param resample: adds sample points to allow for easy cartesian
                      interpolation. This is especially useful for phases
                      like Pdiff.
-    :type resample: boolean
+    :type resample: bool
 
 
     :return: List of ``Arrival`` objects, each of which has the time,
         corresponding phase name, ray parameter, takeoff angle, etc. as
         attributes.
-    :rtype: :class:`Arrivals`
+    :rtype: :class:`obspy.taup.tau.Arrivals`
     """
     if geodetics.HAS_GEOGRAPHICLIB:
         if not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34:
@@ -197,7 +192,7 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                     radii = rplanet - arrival.path['depth']
                     rmean = np.sqrt(radii[1:] * radii[:-1])
                     diff_dists = rmean * np.diff(arrival.path['dist'])
-                    npts_extra = np.floor(diff_dists / mindist).astype(np.int)
+                    npts_extra = np.floor(diff_dists / mindist).astype(int)
 
                     # count number of extra points and initialize array
                     npts_old = len(arrival.path)

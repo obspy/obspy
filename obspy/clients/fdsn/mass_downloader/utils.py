@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Utility functions required for the download helpers.
@@ -9,27 +8,19 @@ Utility functions required for the download helpers.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import collections
 import fnmatch
 import itertools
 import os
-import sys
-from lxml import etree
-import numpy as np
-from scipy.spatial import cKDTree
+from http.client import HTTPException
 from socket import timeout as socket_timeout
+from urllib.error import HTTPError, URLError
 
-if sys.version_info.major == 2:
-    from urllib2 import HTTPError, URLError
-else:
-    from urllib.error import HTTPError, URLError
+import numpy as np
+from lxml import etree
+from scipy.spatial import cKDTree
 
 import obspy
-from obspy.core import compatibility
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn.client import FDSNException
 from obspy.io.mseed.util import get_record_information
@@ -37,17 +28,8 @@ from obspy.io.mseed.util import get_record_information
 
 # Different types of errors that can happen when downloading data via the
 # FDSN clients.
-ERRORS = [FDSNException, HTTPError, URLError, socket_timeout]
-
-# Python 2 does have special classes for connection errors.
-if sys.version_info.major == 2:
-    # Use the base OS error on Python 2.
-    ERRORS.append(OSError)
-else:
-    # All other connection errors inherit from it.
-    ERRORS.append(ConnectionError)  # NOQA
-
-ERRORS = tuple(ERRORS)
+ERRORS = (ConnectionError, FDSNException, HTTPError, HTTPException, URLError,
+          socket_timeout, )
 
 # mean earth radius in meter as defined by the International Union of
 # Geodesy and Geophysics. Used for the spherical kd-tree.
@@ -302,7 +284,7 @@ class SphericalNearestNeighbour(object):
     @staticmethod
     def spherical2cartesian(data):
         """
-        Converts a list of :class:`~obspy.fdsn.download_status.Station`
+        Converts a list of :class:`~obspy.clients.fdsn.download_status.Station`
         objects to an array of shape(len(list), 3) containing x/y/z in meters.
         """
         # Create three arrays containing lat/lng/radius.
@@ -458,14 +440,14 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     Helper function getting the filename of a StationXML file.
 
     :param str_or_fct: The string or function to be evaluated.
-    :type str_or_fct: function or str
+    :type str_or_fct: callable or str
     :param network: The network code.
     :type network: str
     :param station: The station code.
     :type station: str
     :param channels: The channels. Each channel is a tuple of two strings:
         location code and channel code.
-    :type channels: list of tuples
+    :type channels: list[tuple]
     :param starttime: The start time.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: The end time.
@@ -498,7 +480,7 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     if isinstance(path, (str, bytes)):
         return path
 
-    elif isinstance(path, compatibility.collections_abc.Container):
+    elif isinstance(path, collections.abc.Container):
         if "available_channels" not in path or \
                 "missing_channels" not in path or \
                 "filename" not in path:
@@ -507,9 +489,9 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
                 "must contain the following keys: 'available_channels', "
                 "'missing_channels', and 'filename'.")
         if not isinstance(path["available_channels"],
-                          compatibility.collections_abc.Iterable) or\
+                          collections.abc.Iterable) or\
                 not isinstance(path["missing_channels"],
-                               compatibility.collections_abc.Iterable) or \
+                               collections.abc.Iterable) or \
                 not isinstance(path["filename"], (str, bytes)):
             raise ValueError("Return types must be two lists of channels and "
                              "a string for the filename.")
@@ -564,8 +546,3 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     elif not isinstance(path, (str, bytes)):
         raise TypeError("'%s' is not a filepath." % str(path))
     return path
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

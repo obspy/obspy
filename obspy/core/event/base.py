@@ -19,11 +19,6 @@ This class hierarchy is closely modelled after the de-facto standard format
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copy
 import warnings
 
@@ -92,9 +87,6 @@ class QuantityError(AttribDict):
             return True
         return super(QuantityError, self).__eq__(other)
 
-    # Python 2 compatibility
-    __nonzero__ = __bool__
-
 
 def _bool(value):
     """
@@ -102,7 +94,7 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if value == 0 or isinstance(value, (str, native_str)):
+    if value == 0 or isinstance(value, str):
         return True
     return bool(value)
 
@@ -115,7 +107,8 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
     The types oftentimes share attributes and setting them manually every time
     is cumbersome, error-prone and hard to do consistently. The classes created
-    with this method will inherit from :class:`~obspy.core.util.AttribDict`.
+    with this method will inherit from
+    :class:`~obspy.core.util.attribdict.AttribDict`.
 
     Usage to create a new class type:
 
@@ -234,6 +227,10 @@ def _event_type_class_factory(class_name, class_attributes=[],
                     setattr(self, key, QuantityError())
 
         def clear(self):
+            """
+            Clear the class
+            :return:
+            """
             super(AbstractEventType, self).clear()
             self.__init__(force_resource_id=False)
 
@@ -268,8 +265,8 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
             def get_value_repr(key):
                 value = getattr(self, key)
-                if isinstance(value, (str, native_str)):
-                    value = native_str(value)
+                if isinstance(value, str):
+                    value = value
                 repr_str = value.__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
@@ -316,10 +313,6 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
         def __repr__(self):
             return self.__str__(force_one_line=True)
-
-        # called for bool on PY2
-        def __nonzero__(self):
-            return self.__bool__()
 
         def __bool__(self):
             # We use custom _bool() for testing getattr() since we want
@@ -410,7 +403,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
         base_class = AbstractEventType
 
     # Set the class type name.
-    setattr(base_class, "__name__", native_str(class_name))
+    setattr(base_class, "__name__", class_name)
     return base_class
 
 
@@ -621,7 +614,7 @@ class WaveformStreamID(__WaveformStreamID):
     :type channel_code: str, optional
     :param channel_code: Channel code.
     :type resource_uri:
-    :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_uri: Resource identifier for the waveform stream.
     :type seed_string: str, optional
     :param seed_string: Provides an alternative initialization way by passing a

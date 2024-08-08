@@ -15,15 +15,14 @@ a number of values followed by the time series data.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
+import warnings
 
-import xdrlib
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util import open_bytes_stream
 from obspy.core.util.attribdict import AttribDict
+from obspy.io.ah import xdrlib
 
 AH1_CODESIZE = 6
 AH1_CHANSIZE = 6
@@ -75,7 +74,7 @@ def _get_ah_version(filename):
     :rtype: str or False
     :return: version string of AH waveform data or ``False`` if unknown.
     """
-    with open(filename, "rb") as fh:
+    with open_bytes_stream(filename) as fh:
         # read first 8 bytes with XDR library
         try:
             data = xdrlib.Unpacker(fh.read(8))
@@ -117,7 +116,14 @@ def _get_ah_version(filename):
 
 
 def _unpack_string(data):
-    return data.unpack_string().split(b'\x00', 1)[0].strip().decode("utf-8")
+    data = data.unpack_string().split(b'\x00', 1)[0].strip()
+    try:
+        data = data.decode("utf-8")
+    except UnicodeDecodeError:
+        msg = f'can not decode {data} as UTF-8, decoding with replacing errors'
+        warnings.warn(msg)
+        data = data.decode("utf-8", errors="replace")
+    return data
 
 
 def _read_ah1(filename):
@@ -220,7 +226,7 @@ def _read_ah1(filename):
         return tr
 
     st = Stream()
-    with open(filename, "rb") as fh:
+    with open_bytes_stream(filename) as fh:
         # read with XDR library
         data = xdrlib.Unpacker(fh.read())
         # loop as long we can read records
@@ -449,12 +455,12 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
     return packer
 
 
-def _read_ah2(filename):
+def _read_ah2(file):
     """
     Reads an AH v2 waveform file and returns a Stream object.
 
-    :type filename: str
-    :param filename: AH v2 file to be read.
+    :type file: str or file-like object
+    :param file: AH v2 file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
@@ -568,7 +574,7 @@ def _read_ah2(filename):
         return tr
 
     st = Stream()
-    with open(filename, "rb") as fh:
+    with open_bytes_stream(file) as fh:
         # loop as long we can read records
         while True:
             try:

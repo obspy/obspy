@@ -22,40 +22,49 @@ Basic FDSN Client Usage
 The first step is always to initialize a client object.
 
 >>> from obspy.clients.fdsn import Client
->>> client = Client("IRIS")
+>>> client = Client("EARTHSCOPE")
 
 A client object can be initialized either with the base URL of any FDSN web
 service or with a shortcut name which will be mapped to a FDSN URL. All the
-example make use of the FDSN web service at IRIS. For a list of other
-available web service providers, see the
+example make use of the FDSN web service at EarthScope (former IRIS). For a
+list of other available web service providers, see the
 :meth:`~obspy.clients.fdsn.client.Client.__init__()` method. The currently
 available providers are:
 
 >>> from obspy.clients.fdsn.header import URL_MAPPINGS
 >>> for key in sorted(URL_MAPPINGS.keys()):
-...     print("{0:<11} {1}".format(key,  URL_MAPPINGS[key]))
+...     print("{0:<11} {1}".format(key,  URL_MAPPINGS[key]))  # doctest: +SKIP
+AUSPASS     http://auspass.edu.au
 BGR         http://eida.bgr.de
+EARTHSCOPE  http://service.iris.edu
+EIDA        http://eida-federator.ethz.ch
 EMSC        http://www.seismicportal.eu
 ETH         http://eida.ethz.ch
+GEOFON      http://geofon.gfz-potsdam.de
 GEONET      http://service.geonet.org.nz
 GFZ         http://geofon.gfz-potsdam.de
 ICGC        http://ws.icgc.cat
+IESDMC      http://batsws.earth.sinica.edu.tw
 INGV        http://webservices.ingv.it
 IPGP        http://ws.ipgp.fr
 IRIS        http://service.iris.edu
-ISC         http://isc-mirror.iris.washington.edu
+IRISPH5     http://service.iris.edu
+ISC         http://www.isc.ac.uk
 KNMI        http://rdsa.knmi.nl
 KOERI       http://eida.koeri.boun.edu.tr
-LMU         http://erde.geophysik.uni-muenchen.de
+LMU         https://erde.geophysik.uni-muenchen.de
 NCEDC       http://service.ncedc.org
 NIEP        http://eida-sc3.infp.ro
 NOA         http://eida.gein.noa.gr
+NRCAN       https://earthquakescanada.nrcan.gc.ca
 ODC         http://www.orfeus-eu.org
 ORFEUS      http://www.orfeus-eu.org
-RASPISHAKE  http://fdsnws.raspberryshakedata.com
+RASPISHAKE  https://data.raspberryshake.org
 RESIF       http://ws.resif.fr
+RESIFPH5    http://ph5ws.resif.fr
 SCEDC       http://service.scedc.caltech.edu
 TEXNET      http://rtserve.beg.utexas.edu
+UIB-NORSAR  http://eida.geo.uib.no
 USGS        http://earthquake.usgs.gov
 USP         http://sismo.iag.usp.br
 
@@ -152,7 +161,8 @@ only support the ``dataselect`` and the ``station`` FDSNWS services.
 
 ObsPy has support for two routing services:
 
-(i) The `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_.
+(i) The `EarthScope (former IRIS) Federator
+    <https://service.iris.edu/irisws/fedcatalog/1/>`_.
 (ii) The `EIDAWS Routing Service
      <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_.
 
@@ -162,9 +172,9 @@ To use them, call the
 
 >>> from obspy.clients.fdsn import RoutingClient
 
-Get an instance of a routing client using the IRIS Federator:
+Get an instance of a routing client using the EarthScope Federator:
 
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> print(type(client))  # doctest: +ELLIPSIS
 <class '...fdsn.routing.federator_routing_client.FederatorRoutingClient'>
 
@@ -179,17 +189,17 @@ They can be used like the normal FDSNWS clients, meaning the
 
 To be able to do geographic waveform queries with the EIDA service,
 ObsPy will internally perform a station query before downloading the
-waveforms. This results in a similar usage between the EIDA and IRIS routing
-services from a user's perspective.
+waveforms. This results in a similar usage between the EIDA and EarthScope
+(former IRIS) routing services from a user's perspective.
 
-The following snippet will call the IRIS federator to figure out who has
-waveform data for that particular query and subsequently call the individual
-data centers to actually get the data. This happens fully automatically -
-please note that the clients also supports non-standard waveform
-query parameters like geographical constraints.
+The following snippet will call the EarthScope federator to figure out who
+has waveform data for that particular query and subsequently call the
+individual data centers to actually get the data. This happens fully
+automatically - please note that the clients also supports non-standard
+waveform query parameters like geographical constraints.
 
 >>> from obspy import UTCDateTime
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> st = client.get_waveforms(
 ...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
 ...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
@@ -201,7 +211,7 @@ II.MBAR.10.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
 
 The same works for stations:
 
->>> client = RoutingClient("iris-federator")
+>>> client = RoutingClient("earthscope-federator")
 >>> inv = client.get_stations(
 ...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
 ...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
@@ -235,11 +245,6 @@ examples.
 
 .. _FDSN web service definitions: https://www.fdsn.org/webservices/
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
 from .client import Client  # NOQA
 from .routing.routing_client import RoutingClient  # NOQA
 from .header import URL_MAPPINGS  # NOQA
@@ -247,17 +252,12 @@ from .header import URL_MAPPINGS  # NOQA
 
 # insert supported URL mapping list dynamically in docstring
 # we need an if clause because add_doctests() executes the file once again
-if r"%s" in Client.__init__.__doc__:
-    if PY2:
-        Client.__init__.__func__.__doc__ = \
-            Client.__init__.__doc__ % \
-            str(sorted(URL_MAPPINGS.keys())).strip("[]")
-    else:
-        Client.__init__.__doc__ = \
-            Client.__init__.__doc__ % \
-            str(sorted(URL_MAPPINGS.keys())).strip("[]")
+if Client.__init__.__doc__ is not None and r"%s" in Client.__init__.__doc__:
+    Client.__init__.__doc__ = \
+        Client.__init__.__doc__ % \
+        str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
-__all__ = [native_str(x) for x in ("Client", "RoutingClient")]
+__all__ = ["Client", "RoutingClient"]
 
 
 if __name__ == '__main__':

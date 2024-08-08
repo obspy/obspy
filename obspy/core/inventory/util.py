@@ -4,15 +4,11 @@
 Utility objects.
 
 :copyright:
-    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
+    Lion Krischer (krischer@geophysik.uni-muenchen.de), Tom Eulenfeld 2013-2024
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import copy
 import re
 import warnings
@@ -58,10 +54,11 @@ class BaseNode(ComparingObject):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
-        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :type data_availability:
+            :class:`~obspy.core.inventory.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the network/station/channel.
-        :type identifiers: list of str, optional
+        :type identifiers: list[str], optional
         :param identifiers: Persistent identifiers for network/station/channel
             (schema version >=1.1). URIs are in general composed of a 'scheme'
             and a 'path' (optionally with additional components), the two of
@@ -505,13 +502,13 @@ class Person(ComparingObject):
 
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
-        :type names: list of str, optional
+        :type names: list[str], optional
         :param names: Self-explanatory. Multiple names allowed.
-        :type agencies: list of str, optional
+        :type agencies: list[str], optional
         :param agencies: Self-explanatory. Multiple agencies allowed.
-        :type emails: list of str, optional
+        :type emails: list[str], optional
         :param emails: Self-explanatory. Multiple emails allowed.
-        :type phones: list of :class:`PhoneNumber`, optional
+        :type phones: list[:class:`PhoneNumber`], optional
         :param phones: Self-explanatory. Multiple phone numbers allowed.
         """
         self.names = names or []
@@ -966,6 +963,59 @@ def _unified_content_strings(contents):
     return items
 
 
+def _unified_content_strings_expanded(contents):
+    contents2 = [["." + item.location_code, item.code,
+                  item.sample_rate, item.start_date, item.end_date,
+                  item.depth]
+                 for item in contents]
+
+    # sorts by startdate, sample rate, and channel code (ZNE321)
+    contents2 = sorted(contents2, key=lambda x: (x[1], x[2], x[3]),
+                       reverse=True)
+
+    uniques = []
+    for u in [[e[0], e[1][0:2], e[3], e[4], e[5]] for e in contents2]:
+        if u not in uniques:
+            uniques.append(u)
+
+    contents3 = []
+    for u in uniques:
+        c = [e for e in contents2 if
+             [e[0], e[1][0:2], e[3], e[4], e[5]] == u]
+        test = [[e[0], e[2], e[3], e[4], e[5]] for e in c]
+        if all(test[0] == x for x in test) and len(test) > 1:
+            mergedch = u[1] + '[' \
+                + ''.join(map(str, [e[1][-1] for e in c])) + ']'
+            c[0][1] = mergedch
+        contents3.append(c[0])
+
+    contents3 = sorted(contents3, key=lambda x: (x[3], x[2], x[5]),
+                       reverse=True)
+
+    items = []
+    for item in contents3:
+        start_str = "%.10s(%03d)" % (str(item[3]),
+                                     UTCDateTime(item[3]).julday)
+        if item[4]:
+            end_str = "%.10s(%03d)" % (str(item[4]),
+                                       UTCDateTime(item[4]).julday)
+        else:
+            end_str = "    "  # or "None" ?
+        if item[5]:
+            items.append("{l: >5s}.{c: <9s}{sr: 6.1f} Hz  {start: <.15s}"
+                         " - {end: <15.15s}  Depth {ldepth: >5.1f} m"
+                         .format(l=item[0], c=item[1], sr=item[2],
+                                 start=start_str, end=end_str,
+                                 ldepth=item[5]))
+        else:
+            items.append("{l: >5s}.{c: <9s}{sr: 6.1f} Hz  {start: <.15s}"
+                         " - {end: <.15s}"
+                         .format(l=item[0], c=item[1], sr=item[2],
+                                 start=start_str, end=end_str))
+
+    return items
+
+
 # make TextWrapper only split on colons, so that we avoid splitting in between
 # e.g. network code and network code occurence count (can be controlled with
 # class attributes).
@@ -975,6 +1025,8 @@ class InventoryTextWrapper(TextWrapper):
     wordsep_simple_re = re.compile(r'(, )')
 
     def _wrap_chunks(self, *args, **kwargs):
+        """
+        """
         # the following doesn't work somehow (likely because of future??)
         # lines = super(InventoryTextWrapper, self)._wrap_chunks(
         #     *args, **kwargs)
@@ -1073,8 +1125,142 @@ def _is_valid_uri(uri):
 
 def _warn_on_invalid_uri(uri):
     if not _is_valid_uri(uri):
-        msg = "Given string seems to not be a valid URI: ''" % uri
+        msg = f"Given string seems to not be a valid URI: '{uri}'"
         warnings.warn(msg)
+
+
+def _add_resolve_seedid_doc(func):
+    doc = """
+    The following parameters deal with the problem, that the format
+    only stores station names for the picks, but the Pick object expects
+    a SEED id. The SEED id is looked up for every pick by the
+    following procedure:
+
+    1. look at seedid_map for a direct station name match and use the specified
+       template
+    2. if 1 did not succeed, look if the station is present in inventory and
+       use its first channel as template
+    3. if 1 and 2 did not succeed, use specified default template
+       (default_seedid)
+
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+    :param inventory: Inventory used to retrieve network code, location code
+        and channel code of stations (SEED id).
+    :param dict seedid_map: Default templates for each station
+        (example: `seedid_map={'MOX': 'GR.{}..HH{}'`).
+        The values must contain three dots and two `{}` which are
+        substituted by station code and component.
+    :param str default_seedid: Default SEED id template.
+        The value must contain three dots and two `{}` which are
+        substituted by station code and component.
+    :param bool warn: Whether or not to warn on failed look ups
+       (no matching data found or ambiguous results) in the inventory
+    """
+    if func.__doc__ is not None:
+        func.__doc__ = func.__doc__ + doc
+    return func
+
+
+def _add_resolve_seedid_ph2comp_doc(func):
+    doc = """
+    :param dict ph2comp: mapping of phases to components if format does not
+        specify the component or if the component ends with '?'. Set it to
+        `None` for no mapping of components. (default: {'P': 'Z', 'S': 'N'})
+    """
+    if func.__doc__ is not None:
+        func.__doc__ = func.__doc__ + doc
+    return func
+
+
+def _resolve_seedid(station, component, inventory=None,
+                    time=None, seedid_map=None, default_seedid=None,
+                    key='{sta.code}', id_map=None, id_default=None,
+                    phase=None, ph2comp={'P': 'Z', 'S': 'N'},
+                    unused_kwargs=False, warn=True, **kwargs):
+    if not unused_kwargs and len(kwargs) > 0:
+        raise ValueError(f'Unexpected arguments: {kwargs}')
+    if id_map is not None:  # backwards compatibility
+        seedid_map = id_map
+    if id_default is not None:  # backwards compatibility
+        default_seedid = id_default
+    if phase is not None and ph2comp is not None and (
+            component == '' or component.endswith('?')):
+        component = component[:-1] + ph2comp.get(phase.upper(), '')
+    seedid = None
+    if seedid_map is not None and station in seedid_map:
+        seedid = seedid_map[station].format(station, component)
+    elif inventory is not None:
+        seedid = _resolve_seedid_from_inventory(
+                station, component, inventory, time=time, warn=warn)
+    if seedid is None and default_seedid is not None:
+        seedid = default_seedid.format(station, component)
+    if seedid is None:
+        return '', station, None, component
+    else:
+        return tuple(seedid.split('.'))
+
+
+def _resolve_seedid_from_inventory(
+        station, component, inventory, time=None, network=None,
+        location=None, warn=True):
+    """
+    Return a (Network, Station, Location, Channel) tuple.
+
+    Given a station and channel code and station metadata (and optionally a
+    certain point in time), try to resolve the full SEED ID, i.e. fill in
+    a missing/unknown network and/or location code.
+    If no matching data is found in metadata or if ambiguities in the station
+    metadata are encountered, returns ``None`` for network and/or location
+    code.
+
+    Simply returns the given (Network, Station, Location, Channel) input if
+    *both* ``location`` and ``network`` are already specified.
+
+    :type station: str
+    :param station: Station code to look up.
+    :type channel: str
+    :param channel: Channel code to look up.
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+    :param inventory: Station metadata to use for look up of missing parts of
+        the full SEED ID.
+    :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param time: Optionally restrict lookup from metadata to given timestamp.
+    :type network: str
+    :param network: Also specify network code for lookup (not intended to be
+        used together with ``location``, see above)
+    :type location: str
+    :param location: Also specify location code for lookup (not intended to be
+        used together with ``network``, see above)
+    :type warn: bool
+    :param warn: Whether or not to warn on failed look ups (no matching data
+        found or ambiguous results) that return some ``None``s.
+    :rtype: str
+    :returns: SEED id string
+    """
+    inv = inventory.select(station=station, channel='*' + component, time=time,
+                           network=network, location=location,
+                           keep_empty=False)
+    if len(inv.networks) != 1 or len(inv.networks[0].stations) == 0:
+        if warn:
+            msg = ('No matching metadata found for station '
+                   f'{station}, component {component}.')
+            warnings.warn(msg)
+        return
+    net = inv.networks[0]
+    seedids = [f'{net.code}.{station}.{cha.location_code}.{cha.code}'
+               for cha in net.stations[0] if cha.is_active(time=time)]
+    seedids = [id_[:len(id_) - len(component)] + component for id_ in seedids]
+    if len(seedids) == 0:
+        if warn:
+            msg = ('No matching metadata found for station '
+                   f'{station}, component {component}.')
+            warnings.warn(msg)
+        return
+    if len(set(seedids)) > 1 and warn:
+        msg = ('Multiple SEED ids found for station '
+               f'{station}, component {component}. Use first.')
+        warnings.warn(msg)
+    return seedids.pop(0)
 
 
 if __name__ == '__main__':

@@ -69,7 +69,7 @@ a dictionary as ``'attrib'``.
 If desired for better (human-)readability, namespace abbreviations in the
 output xml can be specified during output as StationXML by providing a dictionary
 of namespace abbreviation mappings as `nsmap` parameter to
-:meth:`Inventory.write() <obspy.core.inventory.Inventory.write>`.
+:meth:`Inventory.write() <obspy.core.inventory.inventory.Inventory.write>`.
 The xml output of the above example looks like:
 
 .. code-block:: xml

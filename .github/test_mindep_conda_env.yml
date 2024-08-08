@@ -1,0 +1,20 @@
+name: test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # obspy
+  - decorator
+  - lxml
+  - matplotlib
+  - numpy
+  - scipy
+  - requests
+  # see pypa/setuptools#4480
+  - setuptools !=71.0.1
+  # see #3258
+  - sqlalchemy < 2.0
+  # tests
+  - pytest
+  - pytest-cov
+  - pytest-json-report >= 1.4

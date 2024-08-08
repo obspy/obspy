@@ -16,10 +16,7 @@ Plotting spectrogram of seismograms.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
+import os
 import math
 
 import numpy as np
@@ -40,7 +37,7 @@ def _nearest_pow_2(x):
 
     :type x: float
     :param x: Number
-    :rtype: Int
+    :rtype: int
     :return: Nearest power of 2 to x
     """
     a = math.pow(2, math.ceil(np.log2(x)))
@@ -54,7 +51,7 @@ def _nearest_pow_2(x):
 def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
                 outfile=None, fmt=None, axes=None, dbscale=False,
                 mult=8.0, cmap=obspy_sequential, zorder=None, title=None,
-                show=True, sphinx=False, clip=[0.0, 1.0]):
+                show=True, clip=[0.0, 1.0]):
     """
     Computes and plots spectrogram of the input data.
 
@@ -66,8 +63,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         to 1. High overlaps take a long time to compute.
     :type wlen: int or float
     :param wlen: Window length for fft in seconds. If this parameter is too
-        small, the calculation will take forever. If None, it defaults to
-        (samp_rate/100.0).
+        small, the calculation will take forever. If None, it defaults to a
+        window length matching 128 samples.
     :type log: bool
     :param log: Logarithmic frequency axis if True, linear frequency axis
         otherwise.
@@ -96,8 +93,6 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :type show: bool
     :param show: Do not call `plt.show()` at end of routine. That way, further
         modifications can be done to the figure before showing it.
-    :type sphinx: bool
-    :param sphinx: Internal flag used for API doc generation, default False
     :type clip: [float, float]
     :param clip: adjust colormap to clip at lower and/or upper end. The given
         percentages of the amplitude range (linear or logarithmic depending
@@ -109,14 +104,19 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 
     # set wlen from samp_rate if not specified otherwise
     if not wlen:
-        wlen = samp_rate / 100.
+        wlen = 128 / samp_rate
 
     npts = len(data)
+
     # nfft needs to be an integer, otherwise a deprecation will be raised
     # XXX add condition for too many windows => calculation takes for ever
     nfft = int(_nearest_pow_2(wlen * samp_rate))
-    if nfft > npts:
-        nfft = int(_nearest_pow_2(npts / 8.0))
+
+    if npts < nfft:
+        msg = (f'Input signal too short ({npts} samples, window length '
+               f'{wlen} seconds, nfft {nfft} samples, sampling rate '
+               f'{samp_rate} Hz)')
+        raise ValueError(msg)
 
     if mult is not None:
         mult = int(_nearest_pow_2(mult))
@@ -132,6 +132,13 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
                                          pad_to=mult, noverlap=nlap)
+
+    if len(time) < 2:
+        msg = (f'Input signal too short ({npts} samples, window length '
+               f'{wlen} seconds, nfft {nfft} samples, {nlap} samples window '
+               f'overlap, sampling rate {samp_rate} Hz)')
+        raise ValueError(msg)
+
     # db scale and remove zero/offset for amplitude
     if dbscale:
         specgram = 10 * np.log10(specgram[1:, :])
@@ -158,10 +165,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     halfbin_time = (time[1] - time[0]) / 2.0
     halfbin_freq = (freq[1] - freq[0]) / 2.0
 
-    # argument None is not allowed for kwargs on matplotlib python 3.3
-    kwargs = {k: v for k, v in (('cmap', cmap), ('zorder', zorder))
-              if v is not None}
-
+    kwargs = {'cmap': cmap, 'zorder': zorder}
     if log:
         # pcolor expects one bin more at the right end
         freq = np.concatenate((freq, [freq[-1] + 2 * halfbin_freq]))
@@ -195,7 +199,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     if title:
         ax.set_title(title)
 
-    if not sphinx:
+    if not os.environ.get('SPHINXBUILD'):
         # ignoring all NumPy warnings during plot
         with np.errstate(all='ignore'):
             plt.draw()

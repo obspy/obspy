@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import io
 import sys
 
@@ -76,7 +71,7 @@ class Blockette060(Blockette):
         if isinstance(data, bytes):
             length = len(data)
             data = io.BytesIO(data)
-        elif isinstance(data, (str, native_str)):
+        elif isinstance(data, str):
             raise TypeError("data must be bytes, not string")
         new_data = data.read(length)
         new_data = new_data[7:]

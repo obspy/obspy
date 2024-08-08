@@ -1,15 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Object dealing with branches in the model.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-import warnings
-
 import numpy as np
 
 from .c_wrappers import clibtau
@@ -24,6 +16,7 @@ class TauBranch(object):
     branch. A branch is a group of layers bounded by discontinuities or
     reversals in slowness gradient.
     """
+
     def __init__(self, top_depth=0, bot_depth=0, is_p_wave=False):
         self.top_depth = top_depth
         self.bot_depth = bot_depth
@@ -147,25 +140,10 @@ class TauBranch(object):
                 new_time = np.sum(time)
                 new_dist = np.sum(dist)
 
-        self.shift_branch(index)
-        self.time[index] = new_time
-        self.dist[index] = new_dist
-        self.tau[index] = new_time - ray_param * new_dist
-
-    def shift_branch(self, index):
-        new_size = len(self.dist) + 1
-
-        self._robust_resize('time', new_size)
-        self.time[index + 1:] = self.time[index:-1]
-        self.time[index] = 0
-
-        self._robust_resize('dist', new_size)
-        self.dist[index + 1:] = self.dist[index:-1]
-        self.dist[index] = 0
-
-        self._robust_resize('tau', new_size)
-        self.tau[index + 1:] = self.tau[index:-1]
-        self.tau[index] = 0
+        new_tau = new_time - ray_param * new_dist
+        self.time = np.insert(self.time, index, new_time)
+        self.dist = np.insert(self.dist, index, new_dist)
+        self.tau = np.insert(self.tau, index, new_tau)
 
     def difference(self, top_branch, index_p, index_s, s_mod, min_p_so_far,
                    ray_params):
@@ -244,72 +222,91 @@ class TauBranch(object):
             # In case index_s==P then only need one.
             index_s = -1
 
-        if index_p == -1:
+        # allocate enough space
+        bot_branch.time = np.zeros(array_length)
+        bot_branch.dist = np.zeros(array_length)
+        bot_branch.tau = np.zeros(array_length)
+        if index_p == -1 and index_s == -1:
             # Then both indices are -1 so no new ray parameters are added.
             bot_branch.time = self.time - top_branch.time
             bot_branch.dist = self.dist - top_branch.dist
             bot_branch.tau = self.tau - top_branch.tau
+        elif index_p == -1 and index_s != -1:
+            # Only index_s != -1.
+            bot_branch.time[:index_s] = (self.time[:index_s] -
+                                         top_branch.time[:index_s])
+            bot_branch.dist[:index_s] = (self.dist[:index_s] -
+                                         top_branch.dist[:index_s])
+            bot_branch.tau[:index_s] = (self.tau[:index_s] -
+                                        top_branch.tau[:index_s])
+
+            bot_branch.time[index_s] = time_dist_s['time'].item()
+            bot_branch.dist[index_s] = time_dist_s['dist'].item()
+            bot_branch.tau[index_s] = (
+                time_dist_s['time'] - s_ray_param * time_dist_s['dist']).item()
+
+            bot_branch.time[index_s + 1:] = (self.time[index_s:] -
+                                             top_branch.time[index_s + 1:])
+            bot_branch.dist[index_s + 1:] = (self.dist[index_s:] -
+                                             top_branch.dist[index_s + 1:])
+            bot_branch.tau[index_s + 1:] = (self.tau[index_s:] -
+                                            top_branch.tau[index_s + 1:])
+        elif index_p != -1 and index_s == -1:
+            # Only index_p != -1.
+            bot_branch.time[:index_p] = (self.time[:index_p] -
+                                         top_branch.time[:index_p])
+            bot_branch.dist[:index_p] = (self.dist[:index_p] -
+                                         top_branch.dist[:index_p])
+            bot_branch.tau[:index_p] = (self.tau[:index_p] -
+                                        top_branch.tau[:index_p])
+
+            bot_branch.time[index_p] = time_dist_p['time'].item()
+            bot_branch.dist[index_p] = time_dist_p['dist'].item()
+            bot_branch.tau[index_p] = (
+                time_dist_p['time'] - p_ray_param * time_dist_p['dist']).item()
+
+            bot_branch.time[index_p + 1:] = (self.time[index_p:] -
+                                             top_branch.time[index_p + 1:])
+            bot_branch.dist[index_p + 1:] = (self.dist[index_p:] -
+                                             top_branch.dist[index_p + 1:])
+            bot_branch.tau[index_p + 1:] = (self.tau[index_p:] -
+                                            top_branch.tau[index_p + 1:])
+
         else:
-            bot_branch.time = np.empty(array_length)
-            bot_branch.dist = np.empty(array_length)
-            bot_branch.tau = np.empty(array_length)
+            # Both index_p and S are != -1 so have two new samples
+            bot_branch.time[:index_s] = (self.time[:index_s] -
+                                         top_branch.time[:index_s])
+            bot_branch.dist[:index_s] = (self.dist[:index_s] -
+                                         top_branch.dist[:index_s])
+            bot_branch.tau[:index_s] = (self.tau[:index_s] -
+                                        top_branch.tau[:index_s])
 
-            if index_s == -1:
-                # Only index_p != -1.
-                bot_branch.time[:index_p] = (self.time[:index_p] -
-                                             top_branch.time[:index_p])
-                bot_branch.dist[:index_p] = (self.dist[:index_p] -
-                                             top_branch.dist[:index_p])
-                bot_branch.tau[:index_p] = (self.tau[:index_p] -
-                                            top_branch.tau[:index_p])
+            bot_branch.time[index_s] = time_dist_s['time'].item()
+            bot_branch.dist[index_s] = time_dist_s['dist'].item()
+            bot_branch.tau[index_s] = (
+                time_dist_s['time'] - s_ray_param * time_dist_s['dist']).item()
 
-                bot_branch.time[index_p] = time_dist_p['time']
-                bot_branch.dist[index_p] = time_dist_p['dist']
-                bot_branch.tau[index_p] = (time_dist_p['time'] -
-                                           p_ray_param * time_dist_p['dist'])
+            bot_branch.time[index_s + 1:index_p] = (
+                self.time[index_s:index_p - 1] -
+                top_branch.time[index_s + 1:index_p])
+            bot_branch.dist[index_s + 1:index_p] = (
+                self.dist[index_s:index_p - 1] -
+                top_branch.dist[index_s + 1:index_p])
+            bot_branch.tau[index_s + 1:index_p] = (
+                self.tau[index_s:index_p - 1] -
+                top_branch.tau[index_s + 1:index_p])
 
-                bot_branch.time[index_p + 1:] = (self.time[index_p:] -
-                                                 top_branch.time[index_p + 1:])
-                bot_branch.dist[index_p + 1:] = (self.dist[index_p:] -
-                                                 top_branch.dist[index_p + 1:])
-                bot_branch.tau[index_p + 1:] = (self.tau[index_p:] -
-                                                top_branch.tau[index_p + 1:])
+            bot_branch.time[index_p] = time_dist_p['time'].item()
+            bot_branch.dist[index_p] = time_dist_p['dist'].item()
+            bot_branch.tau[index_p] = (
+                time_dist_p['time'] - p_ray_param * time_dist_p['dist']).item()
 
-            else:
-                # Both index_p and S are != -1 so have two new samples
-                bot_branch.time[:index_s] = (self.time[:index_s] -
-                                             top_branch.time[:index_s])
-                bot_branch.dist[:index_s] = (self.dist[:index_s] -
-                                             top_branch.dist[:index_s])
-                bot_branch.tau[:index_s] = (self.tau[:index_s] -
-                                            top_branch.tau[:index_s])
-
-                bot_branch.time[index_s] = time_dist_s['time']
-                bot_branch.dist[index_s] = time_dist_s['dist']
-                bot_branch.tau[index_s] = (time_dist_s['time'] -
-                                           s_ray_param * time_dist_s['dist'])
-
-                bot_branch.time[index_s + 1:index_p] = (
-                    self.time[index_s:index_p - 1] -
-                    top_branch.time[index_s + 1:index_p])
-                bot_branch.dist[index_s + 1:index_p] = (
-                    self.dist[index_s:index_p - 1] -
-                    top_branch.dist[index_s + 1:index_p])
-                bot_branch.tau[index_s + 1:index_p] = (
-                    self.tau[index_s:index_p - 1] -
-                    top_branch.tau[index_s + 1:index_p])
-
-                bot_branch.time[index_p] = time_dist_p['time']
-                bot_branch.dist[index_p] = time_dist_p['dist']
-                bot_branch.tau[index_p] = (time_dist_p['time'] -
-                                           p_ray_param * time_dist_p['dist'])
-
-                bot_branch.time[index_p + 1:] = (self.time[index_p - 1:] -
-                                                 top_branch.time[index_p + 1:])
-                bot_branch.dist[index_p + 1:] = (self.dist[index_p - 1:] -
-                                                 top_branch.dist[index_p + 1:])
-                bot_branch.tau[index_p + 1:] = (self.tau[index_p - 1:] -
-                                                top_branch.tau[index_p + 1:])
+            bot_branch.time[index_p + 1:] = (self.time[index_p - 1:] -
+                                             top_branch.time[index_p + 1:])
+            bot_branch.dist[index_p + 1:] = (self.dist[index_p - 1:] -
+                                             top_branch.dist[index_p + 1:])
+            bot_branch.tau[index_p + 1:] = (self.tau[index_p - 1:] -
+                                            top_branch.tau[index_p + 1:])
 
         return bot_branch
 
@@ -389,9 +386,10 @@ class TauBranch(object):
                         ray_param,
                         s_mod.radius_of_planet)
                     the_path[path_index]['p'] = ray_param
-                    the_path[path_index]['time'] = time
-                    the_path[path_index]['dist'] = dist
-                    the_path[path_index]['depth'] = turn_s_layer['bot_depth']
+                    the_path[path_index]['time'] = time.item()
+                    the_path[path_index]['dist'] = dist.item()
+                    the_path[path_index]['depth'] = \
+                        turn_s_layer['bot_depth'].item()
                     path_index += 1
 
         # Upgoing branches:
@@ -417,10 +415,11 @@ class TauBranch(object):
                     turn_s_layer,
                     ray_param,
                     s_mod.radius_of_planet)
-                the_path[path_index]['p'] = ray_param
-                the_path[path_index]['time'] = time
-                the_path[path_index]['dist'] = dist
-                the_path[path_index]['depth'] = turn_s_layer['top_depth']
+                the_path[path_index]['p'] = ray_param.item()
+                the_path[path_index]['time'] = time.item()
+                the_path[path_index]['dist'] = dist.item()
+                the_path[path_index]['depth'] = \
+                    turn_s_layer['top_depth'].item()
                 path_index += 1
                 mask[first_unmasked] = True
 
@@ -450,16 +449,16 @@ class TauBranch(object):
         """
         Store all attributes for serialization in a structured array.
         """
-        dtypes = [(native_str('debug'), np.bool_),
-                  (native_str('bot_depth'), np.float_),
-                  (native_str('dist'), np.float_, self.dist.shape),
-                  (native_str('is_p_wave'), np.bool_),
-                  (native_str('max_ray_param'), np.float_),
-                  (native_str('min_ray_param'), np.float_),
-                  (native_str('min_turn_ray_param'), np.float_),
-                  (native_str('tau'), np.float_, self.tau.shape),
-                  (native_str('time'), np.float_, self.time.shape),
-                  (native_str('top_depth'), np.float_)]
+        dtypes = [('debug', np.bool_),
+                  ('bot_depth', np.float64),
+                  ('dist', np.float64, self.dist.shape),
+                  ('is_p_wave', np.bool_),
+                  ('max_ray_param', np.float64),
+                  ('min_ray_param', np.float64),
+                  ('min_turn_ray_param', np.float64),
+                  ('tau', np.float64, self.tau.shape),
+                  ('time', np.float64, self.time.shape),
+                  ('top_depth', np.float64)]
         arr = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]
@@ -479,18 +478,3 @@ class TauBranch(object):
                 arr_ = arr_[()]
             setattr(branch, key, arr_)
         return branch
-
-    def _robust_resize(self, attr, new_size):
-        """
-        Try to resize an array inplace. If an error is raised use numpy
-        resize function to create a new array. Assign the array to self as
-        attribute listed in attr.
-        """
-        try:
-            getattr(self, attr).resize(new_size)
-        except ValueError:
-            msg = ('Resizing a TauP array inplace failed due to the '
-                   'existence of other references to the array, creating '
-                   'a new array. See Obspy #2280.')
-            warnings.warn(msg)
-            setattr(self, attr, np.resize(getattr(self, attr), new_size))

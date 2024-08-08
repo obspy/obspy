@@ -8,20 +8,14 @@ SH bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import io
-import os
-
+from pathlib import Path
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
-from obspy.core.util import loadtxt
+from obspy.core.util import open_bytes_stream
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
@@ -87,7 +81,7 @@ def _is_asc(filename):
     """
     # first six chars should contain 'DELTA:'
     try:
-        with open(filename, 'rb') as f:
+        with open_bytes_stream(filename) as f:
             temp = f.read(6)
     except Exception:
         return False
@@ -105,7 +99,7 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
+    :type filename: str or StringIO
     :param filename: ASCII file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
@@ -134,38 +128,39 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
     .TEST..BHE | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
     .WET..HHZ  | 2010-01-01T01:01:05.999000Z - ... | 100.0 Hz, 4001 samples
     """
-    fh = open(filename, 'rt')
     # read file and split text into channels
     channels = []
     headers = {}
     data = io.StringIO()
-    for line in fh.readlines()[skip:]:
-        if line.isspace():
-            # blank line
-            # check if any data fetched yet
-            if len(headers) == 0 and data.tell() == 0:
+    with open_bytes_stream(filename) as fh:
+        for line in fh.readlines()[skip:]:
+            if isinstance(line, bytes):
+                line = line.decode('ascii')
+            if line.isspace():
+                # blank line
+                # check if any data fetched yet
+                if len(headers) == 0 and data.tell() == 0:
+                    continue
+                # append current channel
+                data.seek(0)
+                channels.append((headers, data))
+                # create new channel
+                headers = {}
+                data = io.StringIO()
+                if skip:
+                    # if skip is set only one trace is read, everything else
+                    # makes no sense.
+                    break
                 continue
-            # append current channel
-            data.seek(0)
-            channels.append((headers, data))
-            # create new channel
-            headers = {}
-            data = io.StringIO()
-            if skip:
-                # if skip is set only one trace is read, everything else makes
-                # no sense.
-                break
-            continue
-        elif line[0].isalpha():
-            # header entry
-            key, value = line.split(':', 1)
-            key = key.strip()
-            value = value.strip()
-            headers[key] = value
-        elif not headonly:
-            # data entry - may be written in multiple columns
-            data.write(line.strip() + ' ')
-    fh.close()
+            elif line[0].isalpha():
+                # header entry
+                key, value = line.split(':', 1)
+                key = key.strip()
+                value = value.strip()
+                headers[key] = value
+            elif not headonly:
+                # data entry - may be written in multiple columns
+                data.write(line.strip() + ' ')
     # create ObsPy stream object
     stream = Stream()
     # custom header
@@ -215,7 +210,7 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
             stream.append(Trace(header=header))
         else:
             # read data
-            data = loadtxt(data, dtype=np.float32, ndmin=1)
+            data = np.loadtxt(data, dtype=np.float32, ndmin=1)
 
             # cut data if requested
             if skip and length:
@@ -379,11 +374,13 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
     """
     if not headonly:
         if not data_directory:
-            data_file = os.path.splitext(filename)[0] + '.QBN'
+            path = Path(filename)
+            data_file = Path(path.parent) / (path.stem+".QBN")
+
         else:
-            data_file = os.path.basename(os.path.splitext(filename)[0])
-            data_file = os.path.join(data_directory, data_file + '.QBN')
-        if not os.path.isfile(data_file):
+            path = Path(filename)
+            data_file = Path(data_directory) / Path(filename).stem+".QBN"
+        if not Path(data_file).is_file():
             msg = "Can't find corresponding QBN file at %s."
             raise IOError(msg % data_file)
         fh_data = open(data_file, 'rb')
@@ -410,7 +407,7 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
         header = {}
         header['sh'] = {
             "FROMQ": True,
-            "FILE": os.path.splitext(os.path.split(filename)[1])[0],
+            "FILE": Path(filename).stem,
         }
         channel = ['', '', '']
         npts = 0
@@ -467,10 +464,10 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
                 continue
             # read data
             data = fh_data.read(npts * 4)
-            dtype = native_str(byteorder + 'f4')
+            dtype = byteorder + 'f4'
             data = from_buffer(data, dtype=dtype)
             # convert to system byte order
-            data = np.require(data, native_str('=f4'))
+            data = np.require(data, '=f4')
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
@@ -502,26 +499,28 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
     :param append: If filename exists append all data to file, default False.
     """
     if filename.endswith('.QHD') or filename.endswith('.QBN'):
-        filename = os.path.splitext(filename)[0]
+        path = Path(filename)
+        filename = str(Path(path.parent)/path.stem)
     if data_directory:
-        temp = os.path.basename(filename)
-        filename_data = os.path.join(data_directory, temp)
+        filename_data = Path(data_directory) / Path(filename).name
     else:
         filename_data = filename
     filename_header = filename + '.QHD'
 
     # if the header file exists its assumed that the data is also there
-    if os.path.exists(filename_header) and append:
+    if Path(filename_header).exists() and append:
         try:
             trcs = _read_q(filename_header, headonly=True)
-            mode = 'ab'
-            count_offset = len(trcs)
         except Exception:
             raise Exception("Target filename '%s' not readable!" % filename)
+        mode = 'ab'
+        count_offset = len(trcs)
+        cur_npts_offset = sum([trcs[i].stats.npts for i in range(len(trcs))])
     else:
         append = False
         mode = 'wb'
         count_offset = 0
+        cur_npts_offset = 0
 
     fh = open(filename_header, mode)
     fh_data = open(filename_data + '.QBN', mode)
@@ -529,7 +528,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
     # build up header strings
     headers = []
     minnol = 4
-    cur_npts = 0
+    cur_npts = 0 + cur_npts_offset
     for trace in stream:
         temp = "L000:%d~ " % cur_npts
         cur_npts += trace.stats.npts
@@ -578,7 +577,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
                 line = "%02d|\n" % ((i + 1 + count_offset) % 100)
                 fh.write(line.encode('ascii', 'strict'))
         # write data in given byte order
-        dtype = native_str(byteorder + 'f4')
+        dtype = byteorder + 'f4'
         data = np.require(trace.data, dtype=dtype)
         fh_data.write(data.data)
     fh.close()

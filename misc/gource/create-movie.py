@@ -39,7 +39,7 @@ def fetch_avatar():
     try:
         log = subprocess.check_output(['git', 'log',
                                        '--pretty=format:%ae!%an'])
-    except OSError, subprocess.CalledProcessError:
+    except (OSError, subprocess.CalledProcessError):
         print('ERROR: Unable to read git log.')
         exit(1)
 
@@ -94,7 +94,7 @@ def read_ppm_header(fh):
 
 # DRY
 fps_str = '%f' % (FPS, )
-logo = os.path.join(os.pardir, 'docs', 'source', '_static', 'obspy-logo.png')
+logo = os.path.join(os.pardir, 'docs', 'source', '_static', 'obspy_logo.png')
 
 # Prepare avatar images
 fetch_avatar()

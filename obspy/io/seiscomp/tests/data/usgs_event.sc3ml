@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
-  <EventParameters publicID="quakeml:comcat.cr.usgs.gov/fdsnws/event/1/query">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.11" version="0.11">
+  <EventParameters>
+    <event publicID="quakeml:comcat.cr.usgs.gov/fdsnws/event/1/query?eventid=ci37285320&amp;amp;format=quakeml">
+      <preferredOriginID>quakeml:earthquake.usgs.gov/product/ci/origin/ci37285320/1415311367340</preferredOriginID>
+      <preferredMagnitudeID>quakeml:earthquake.usgs.gov/product/ci/origin/ci37285320/1415311367340/magnitude</preferredMagnitudeID>
+      <type>quarry_blast</type>
+      <creationInfo>
+        <agencyID>ci</agencyID>
+        <creationTime>2014-11-06T22:02:47.340Z</creationTime>
+        <version>6</version>
+      </creationInfo>
+      <originReference>quakeml:earthquake.usgs.gov/product/ci/origin/ci37285320/1415311367340</originReference>
+    </event>
     <origin publicID="quakeml:earthquake.usgs.gov/product/ci/origin/ci37285320/1415311367340">
       <time>
         <value>2014-11-06T00:24:42.240Z</value>
@@ -46,6 +57,17 @@
         </creationInfo>
       </magnitude>
     </origin>
+    <event publicID="quakeml:comcat.cr.usgs.gov/fdsnws/event/1/query?eventid=uw60916552&amp;amp;format=quakeml">
+      <preferredOriginID>quakeml:earthquake.usgs.gov/product/uw/origin/uw60916552/1416001662333</preferredOriginID>
+      <preferredMagnitudeID>quakeml:earthquake.usgs.gov/product/uw/origin/uw60916552/1416001662333/magnitude</preferredMagnitudeID>
+      <type>quarry</type>
+      <creationInfo>
+        <agencyID>uw</agencyID>
+        <creationTime>2014-11-20T14:01:28.031Z</creationTime>
+        <version>1</version>
+      </creationInfo>
+      <originReference>quakeml:earthquake.usgs.gov/product/uw/origin/uw60916552/1416001662333</originReference>
+    </event>
     <origin publicID="quakeml:earthquake.usgs.gov/product/uw/origin/uw60916552/1416001662333">
       <time>
         <value>2014-11-14T21:07:48.200Z</value>
@@ -88,27 +110,5 @@
         </creationInfo>
       </magnitude>
     </origin>
-    <event publicID="quakeml:comcat.cr.usgs.gov/fdsnws/event/1/query?eventid=ci37285320&amp;amp;format=quakeml">
-      <preferredOriginID>quakeml:earthquake.usgs.gov/product/ci/origin/ci37285320/1415311367340</preferredOriginID>
-      <preferredMagnitudeID>quakeml:earthquake.usgs.gov/product/ci/origin/ci37285320/1415311367340/magnitude</preferredMagnitudeID>
-      <type>quarry_blast</type>
-      <creationInfo>
-        <agencyID>ci</agencyID>
-        <creationTime>2014-11-06T22:02:47.340Z</creationTime>
-        <version>6</version>
-      </creationInfo>
-      <originReference>quakeml:earthquake.usgs.gov/product/ci/origin/ci37285320/1415311367340</originReference>
-    </event>
-    <event publicID="quakeml:comcat.cr.usgs.gov/fdsnws/event/1/query?eventid=uw60916552&amp;amp;format=quakeml">
-      <preferredOriginID>quakeml:earthquake.usgs.gov/product/uw/origin/uw60916552/1416001662333</preferredOriginID>
-      <preferredMagnitudeID>quakeml:earthquake.usgs.gov/product/uw/origin/uw60916552/1416001662333/magnitude</preferredMagnitudeID>
-      <type>quarry</type>
-      <creationInfo>
-        <agencyID>uw</agencyID>
-        <creationTime>2014-11-20T14:01:28.031Z</creationTime>
-        <version>1</version>
-      </creationInfo>
-      <originReference>quakeml:earthquake.usgs.gov/product/uw/origin/uw60916552/1416001662333</originReference>
-    </event>
   </EventParameters>
 </seiscomp>

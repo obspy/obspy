@@ -39,6 +39,7 @@ def name_key_function(name):
         last.pop(0)
     return last, first
 
+
 filename = os.path.join(os.pardir, os.pardir, 'CONTRIBUTORS.txt')
 lines = [line for line in codecs.open(filename, 'r', 'utf-8').readlines()
          if line.strip()]

@@ -1,12 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Functions acting on slowness layers.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 
 import numpy as np
@@ -31,7 +26,8 @@ def bullen_radial_slowness(layer, p, radius_of_planet, check=True):
     shape.
 
     :param layer: The layer(s) in which to calculate the increments.
-    :type layer: :class:`~numpy.ndarray`, dtype = :const:`SlownessLayer`
+    :type layer: :class:`~numpy.ndarray`,
+        dtype = :class:`obspy.taup.helper_classes.SlownessLayer`
     :param p: The spherical ray paramater to use for calculation, in s/km.
     :type p: :class:`~numpy.ndarray`, dtype = :class:`float`
     :param radius_of_planet: The radius of the planet to use, in km.
@@ -42,26 +38,26 @@ def bullen_radial_slowness(layer, p, radius_of_planet, check=True):
     :type check: bool
 
     :returns: Time (in s) and distance (in rad) increments.
-    :rtype: tuple of :class:`~numpy.ndarray`
+    :rtype: tuple(:class:`~numpy.ndarray`)
     """
     ldim = np.ndim(layer)
     pdim = np.ndim(p)
     if ldim == 1 and pdim == 0:
-        time = np.zeros(shape=layer.shape, dtype=np.float_)
-        dist = np.zeros(shape=layer.shape, dtype=np.float_)
+        time = np.zeros(shape=layer.shape, dtype=np.float64)
+        dist = np.zeros(shape=layer.shape, dtype=np.float64)
     elif ldim == 0 and pdim == 1:
-        time = np.zeros(shape=p.shape, dtype=np.float_)
-        dist = np.zeros(shape=p.shape, dtype=np.float_)
+        time = np.zeros(shape=p.shape, dtype=np.float64)
+        dist = np.zeros(shape=p.shape, dtype=np.float64)
     elif ldim == pdim and (ldim == 0 or layer.shape == p.shape):
-        time = np.zeros(shape=layer.shape, dtype=np.float_)
-        dist = np.zeros(shape=layer.shape, dtype=np.float_)
+        time = np.zeros(shape=layer.shape, dtype=np.float64)
+        dist = np.zeros(shape=layer.shape, dtype=np.float64)
     else:
         raise TypeError('Either layer or p must be 0D, or they must have '
                         'the same shape.')
 
     length = len(time)
-    if isinstance(p, np.float_):
-        p = p * np.ones(length, dtype=np.float_)
+    if isinstance(p, np.float64):
+        p = p * np.ones(length, dtype=np.float64)
 
     clibtau.bullen_radial_slowness_inner_loop(
         layer, p, time, dist, radius_of_planet, length)
@@ -86,7 +82,7 @@ def bullen_depth_for(layer, ray_param, radius_of_planet, check=True):
 
     :param layer: The layer(s) to check.
     :type layer: :class:`~numpy.ndarray` (shape = (1, ), dtype =
-        :const:`SlownessLayer`)
+        :class:`obspy.taup.helper_classes.SlownessLayer`)
     :param ray_param: The ray parameter(s) to use for calculation, in s/km.
     :type ray_param: float
     :param radius_of_planet: The radius (in km) of the planet to use.
@@ -98,17 +94,17 @@ def bullen_depth_for(layer, ray_param, radius_of_planet, check=True):
     ldim = np.ndim(layer)
     pdim = np.ndim(ray_param)
     if ldim == 1 and pdim == 0:
-        ray_param = ray_param * np.ones(layer.shape, dtype=np.float_)
-        depth = np.zeros(shape=layer.shape, dtype=np.float_)
+        ray_param = ray_param * np.ones(layer.shape, dtype=np.float64)
+        depth = np.zeros(shape=layer.shape, dtype=np.float64)
     elif ldim == 0 and pdim == 1:
         layer = layer * np.ones(ray_param.shape, dtype=SlownessLayer)
-        depth = np.zeros(shape=ray_param.shape, dtype=np.float_)
+        depth = np.zeros(shape=ray_param.shape, dtype=np.float64)
     elif ldim == pdim and (ldim == 0 or layer.shape == ray_param.shape):
         if ldim == 0:
             # Make array-like to work with NumPy < 1.9.
             layer = np.array([layer], dtype=SlownessLayer)
             ray_param = np.array([ray_param])
-        depth = np.zeros(shape=layer.shape, dtype=np.float_)
+        depth = np.zeros(shape=layer.shape, dtype=np.float64)
     else:
         raise TypeError('Either layer or ray_param must be 0D, or they must '
                         'have the same shape.')
@@ -248,7 +244,8 @@ def evaluate_at_bullen(layer, depth, radius_of_planet):
     with the tau model.
 
     :param layer: The layer to use for the calculation.
-    :type layer: :class:`numpy.ndarray`, dtype = :const:`SlownessLayer`
+    :type layer: :class:`numpy.ndarray`,
+        dtype = :class:`obspy.taup.helper_classes.SlownessLayer`
     :param depth: The depth (in km) to use for the calculation. It must be
         contained within the provided ``layer`` or else results are undefined.
     :type depth: float
@@ -307,7 +304,8 @@ def create_from_vlayer(v_layer, is_p_wave, radius_of_planet,
     Compute the slowness layer from a velocity layer.
 
     :param v_layer: The velocity layer to convert.
-    :type v_layer: :class:`numpy.ndarray`, dtype = :const:`VelocityLayer`
+    :type v_layer: :class:`numpy.ndarray`,
+        dtype = :class:`obspy.taup.velocity_layer.VelocityLayer`
     :param is_p_wave: Whether this velocity layer is for compressional/P
          (``True``) or shear/S (``False``) waves.
     :type is_p_wave: bool
@@ -328,7 +326,7 @@ def create_from_vlayer(v_layer, is_p_wave, radius_of_planet,
         bot_depth = ret["bot_depth"]
         bot_vel = evaluate_velocity_at_bottom(v_layer, wave_type)
 
-        if bot_depth.shape:
+        if bot_depth.shape and bot_depth.size:
             if bot_depth[-1] == radius_of_planet and bot_vel[-1] == 0.0:
                 bot_depth[-1] = 1.0
         ret['bot_p'] = (radius_of_planet - bot_depth) / bot_vel

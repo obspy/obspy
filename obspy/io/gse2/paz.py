@@ -19,12 +19,7 @@ The read in PAZ information can be used with
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-import doctest
+from pathlib import Path
 
 import numpy as np
 
@@ -38,7 +33,7 @@ def read_paz(paz_file):
 
     Do not use this function in connection with the ObsPy instrument
     simulation, the A0_normalization_factor might be set wrongly. Use
-    :func:`~obspy.io.gse2.libgse2.attach_paz` instead.
+    :func:`~obspy.io.gse2.paz.attach_paz` instead.
 
     >>> import io
     >>> f = io.StringIO(
@@ -58,7 +53,7 @@ def read_paz(paz_file):
     poles = []
     zeros = []
 
-    if isinstance(paz_file, (str, native_str)):
+    if isinstance(paz_file, (str, Path)):
         with open(paz_file, 'rt') as fh:
             paz = fh.readlines()
     else:
@@ -157,4 +152,5 @@ def attach_paz(tr, paz_file):
 
 
 if __name__ == '__main__':
+    import doctest
     doctest.testmod(exclude_empty=True)

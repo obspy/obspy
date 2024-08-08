@@ -2,19 +2,16 @@
 """
 REFTEK130 read support, core routines.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import copy
-import io
 import os
+from io import BytesIO
+from pathlib import Path
 import warnings
 
 import numpy as np
 
 from obspy import Trace, Stream, UTCDateTime
+from obspy.core.util import open_bytes_stream
 from obspy.core.util.obspy_types import ObsPyException
 
 from .packet import (Packet, EHPacket, _initial_unpack_packets, PACKET_TYPES,
@@ -42,14 +39,17 @@ def _is_reftek130(filename):
     bytes) and checks for valid packet type identifiers in the first 20
     expected packet positions.
     """
-    if not os.path.isfile(filename):
-        return False
-    filesize = os.stat(filename).st_size
+    if isinstance(filename, BytesIO):
+        filesize = filename.getbuffer().nbytes
+    else:
+        if not Path(filename).is_file():
+            return False
+        filesize = Path(filename).stat().st_size
     # check if overall file size is a multiple of 1024
     if filesize < 1024 or filesize % 1024 != 0:
         return False
 
-    with open(filename, 'rb') as fp:
+    with open_bytes_stream(filename) as fp:
         # check first 20 expected packets' type header field
         for i in range(20):
             packet_type = fp.read(2).decode("ASCII", "replace")
@@ -146,7 +146,7 @@ class Reftek130(object):
 
     @staticmethod
     def from_file(filename):
-        with io.open(filename, "rb") as fh:
+        with open_bytes_stream(filename) as fh:
             string = fh.read()
         rt = Reftek130()
         rt._data = _initial_unpack_packets(string)
@@ -168,7 +168,7 @@ class Reftek130(object):
             warnings.warn(msg)
             if sort_permuted_package_sequence:
                 self._data.sort(order=[
-                    native_str(key) for key in ("packet_sequence", "time")])
+                    key for key in ("packet_sequence", "time")])
 
     def check_packet_sequence_contiguous(self):
         """
@@ -186,7 +186,7 @@ class Reftek130(object):
         Checks if there are packets of a type that is currently not implemented
         and drop them showing a warning message.
         """
-        is_implemented = np.in1d(
+        is_implemented = np.isin(
             self._data['packet_type'],
             [x.encode() for x in PACKET_TYPES_IMPLEMENTED])
         # if all packets are of a type that is implemented, the nothing to do..
@@ -260,10 +260,6 @@ class Reftek130(object):
             elif eh.data_format == b"C2":
                 encoding = 'C2'
             elif eh.data_format == b"16":
-                msg = ("Reftek130 encoding '16' is implemented but untested, "
-                       "please provide example data for testing at "
-                       "https://github.com/obspy/obspy/issues/new.")
-                warnings.warn(msg)
                 encoding = '16'
             elif eh.data_format == b"32":
                 encoding = '32'
@@ -319,15 +315,38 @@ class Reftek130(object):
                             sample_data = _unpack_C0_C2_data(packets_,
                                                              encoding)
                         elif encoding in ('16', '32'):
-                            dtype = {'16': np.int16, '32': np.int32}[encoding]
+                            # rt130 stores in big endian
+                            dtype = {'16': '>i2', '32': '>i4'}[encoding]
                             # just fix endianness and use correct dtype
                             sample_data = np.require(
                                 packets_['payload'],
                                 requirements=['C_CONTIGUOUS'])
                             # either int16 or int32
-                            sample_data = sample_data.flatten().view(dtype)
-                            # switch endianness, rt130 stores in big endian
-                            sample_data = sample_data.byteswap()
+                            sample_data = sample_data.view(dtype)
+                            # account for number of samples, i.e. some packets
+                            # might not use the full payload size but have
+                            # empty parts at the end that need to be cut away
+                            number_of_samples_max = sample_data.shape[1]
+                            sample_data = sample_data.flatten()
+                            # go through packets starting at the back,
+                            # otherwise indices of later packets would change
+                            # while looping
+                            for ind, num_samps in reversed([
+                                    (ind, num_samps) for ind, num_samps in
+                                    enumerate(packets_["number_of_samples"])
+                                    if num_samps != number_of_samples_max]):
+                                # looping backwards we can easily find the
+                                # start of each packet, since the earlier
+                                # packets are still untouched and at maximum
+                                # sample length in our big array with all
+                                # packets
+                                start_of_packet = ind * number_of_samples_max
+                                start_empty_part = start_of_packet + num_samps
+                                end_empty_part = (start_of_packet +
+                                                  number_of_samples_max)
+                                sample_data = np.delete(
+                                    sample_data,
+                                    slice(start_empty_part, end_empty_part))
                         npts = len(sample_data)
 
                     tr = Trace(data=sample_data, header=copy.deepcopy(header))

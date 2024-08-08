@@ -27,16 +27,21 @@ for seismology.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
-
+import sys
 import warnings
-import requests
 
 # don't change order
-from obspy.core.utcdatetime import UTCDateTime  # NOQA
+# ignore pkg resources deprecation warning for now
+# we really only need this here for one single reason: this file here gets
+# imported during the pytest startup phase before ignore rules in pytest.ini
+# take effect. otherwise we could just add this warning to the ignore list in
+# pytest.ini (see #3333)
+# The warning capture can be removed after #3333 gets finalized and merged
+with warnings.catch_warnings(record=True) as w:
+    msg = ('pkg_resources is deprecated as an API')
+    warnings.filterwarnings(
+        'ignore', message=msg, category=DeprecationWarning, module='obspy')
+    from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _get_version_string
 __version__ = _get_version_string(abbrev=10)
 from obspy.core.trace import Trace  # NOQA
@@ -50,7 +55,6 @@ from obspy.core.util.obspy_types import (  # NOQA
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
            "read_events", "Catalog", "read_inventory", "ObsPyException",
            "ObsPyReadingError"]
-__all__ = [native_str(i) for i in __all__]
 
 
 # insert supported read/write format plugin lists dynamically in docstrings
@@ -64,12 +68,23 @@ _add_format_plugin_table(Stream.write, "waveform", "write", numspaces=8)
 _add_format_plugin_table(Catalog.write, "event", "write", numspaces=8)
 _add_format_plugin_table(Inventory.write, "inventory", "write", numspaces=8)
 
+if int(sys.version[0]) < 3:
+    raise ImportError("""You are running ObsPy >= 1.3 on Python 2
 
-if requests.__version__ in ('2.12.0', '2.12.1', '2.12.2'):
-    msg = ("ObsPy has some known issues with 'requests' version {} (see "
-           "github issue #1599). Please consider updating module 'requests' "
-           "to a newer version.").format(requests.__version__)
-    warnings.warn(msg)
+ObsPy version 1.3 and above is not compatible with Python 2, and you still
+ended up with this version installed. This should not have happened.
+Make sure you have pip >= 9.0 and setuptools >= 24.2:
+
+ $ pip install pip setuptools --upgrade
+
+Your choices:
+
+- Upgrade to Python 3.
+
+- Install an older version of ObsPy:
+
+ $ pip install 'obspy<1.3'
+""")
 
 
 if __name__ == '__main__':

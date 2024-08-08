@@ -8,10 +8,6 @@ NEIC CWB Query service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import io
 import socket
 import traceback
@@ -168,7 +164,7 @@ class Client(object):
         IU.ANMO.00.BH... | 40.0 Hz, 401 samples
         """
         start = str(UTCDateTime(starttime)).replace("T", " ").replace("Z", "")
-        line = "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'\t" % \
+        line = "'-s' '%s' '-b' '%s' '-d' '%s'\t" % \
             (seedname, start, duration)
         if self.debug:
             print(ascdate() + " " + asctime() + " line=" + line)
@@ -194,7 +190,6 @@ class Client(object):
                     s.connect((self.host, self.port))
 
                 with io.BytesIO() as tf:
-                    s.setblocking(0)
                     s.send(line.encode('ascii', 'strict'))
                     if self.debug:
                         print(ascdate(), asctime(), "Connected - start reads")

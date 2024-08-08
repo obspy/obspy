@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .blockette import Blockette
 from ..fields import Float, Integer, Loop, VariableString
 from ..utils import format_resp
@@ -89,13 +85,13 @@ class Blockette058(Blockette):
             string += \
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n'
-            for _i in range(self.number_of_history_values):
-                string += \
-                    'B058F07-08   %2s %13s %13s %s\n' \
-                    % (format_resp(self.sensitivity_for_calibration[_i], 6),
-                       format_resp(
-                           self.frequency_of_calibration_sensitivity[_i], 6),
-                       self.time_of_above_calibration[_i].format_seed())
+            for i in range(self.number_of_history_values):
+                string += 'B058F07-08   %2s %13s %13s %s\n' % (
+                    i,
+                    format_resp(self.sensitivity_for_calibration[i], 6),
+                    format_resp(
+                        self.frequency_of_calibration_sensitivity[i], 6),
+                    self.time_of_above_calibration[i].format_seed())
         elif self.number_of_history_values == 1:
             string += \
                 '#\t\tCalibrations:\n' + \

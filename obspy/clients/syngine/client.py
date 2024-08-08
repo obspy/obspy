@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-ObsPy client for the IRIS Syngine service.
+ObsPy client for the EarthScope/IRIS Syngine service.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -9,11 +8,7 @@ ObsPy client for the IRIS Syngine service.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
+import collections.abc
 import io
 import zipfile
 
@@ -21,7 +16,6 @@ import numpy as np
 
 import obspy
 from obspy.core import AttribDict
-from obspy.core import compatibility
 
 from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
     ClientHTTPException
@@ -29,7 +23,7 @@ from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
 
 class Client(WaveformClient, HTTPClient):
     """
-    Client for the IRIS Syngine service.
+    Client for the EarthScope/IRIS Syngine service.
     """
     def __init__(self, base_url="http://service.iris.edu/irisws/syngine/1",
                  user_agent=DEFAULT_USER_AGENT, debug=False, timeout=20):
@@ -57,7 +51,7 @@ class Client(WaveformClient, HTTPClient):
 
     def _handle_requests_http_error(self, r):
         msg = "HTTP code %i when downloading '%s':\n\n%s" % (
-            r.status_code, r.url, compatibility.get_text_from_response(r))
+            r.status_code, r.url, r.text)
         raise ClientHTTPException(msg.strip())
 
     def get_model_info(self, model_name):
@@ -80,7 +74,7 @@ class Client(WaveformClient, HTTPClient):
         model_name = model_name.strip().lower()
         r = self._download(self._get_url("info"),
                            params={"model": model_name})
-        info = AttribDict(compatibility.get_json_from_response(r))
+        info = AttribDict(r.json())
         # Convert slip and sliprate into numpy arrays for easier handling.
         info.slip = np.array(info.slip, dtype=np.float64)
         info.sliprate = np.array(info.sliprate, dtype=np.float64)
@@ -90,15 +84,15 @@ class Client(WaveformClient, HTTPClient):
         """
         Get information about all available velocity models.
         """
-        return compatibility.get_json_from_response(
-            self._download(self._get_url("models")))
+        r = self._download(self._get_url("models"))
+        return r.json()
 
     def get_service_version(self):
         """
         Get the service version of the remote Syngine server.
         """
         r = self._download(self._get_url("version"))
-        return compatibility.get_text_from_response(r)
+        return r.text
 
     def _convert_parameters(self, model, **kwargs):
         model = model.strip().lower()
@@ -118,7 +112,7 @@ class Client(WaveformClient, HTTPClient):
         int_arguments = ["kernelwidth"]
         time_arguments = ["origintime"]
 
-        for keys, t in ((str_arguments, native_str),
+        for keys, t in ((str_arguments, str),
                         (float_arguments, float),
                         (int_arguments, int),
                         (time_arguments, obspy.UTCDateTime)):
@@ -132,7 +126,7 @@ class Client(WaveformClient, HTTPClient):
                 value = t(value)
                 # String arguments are stripped and empty strings are not
                 # allowed.
-                if t is native_str:
+                if t is str:
                     value = value.strip()
                     if not value:
                         raise ValueError("String argument '%s' must not be "
@@ -154,7 +148,7 @@ class Client(WaveformClient, HTTPClient):
             # If a string like object, attempt to parse it to a datetime
             # object, otherwise assume it`s a phase-relative time and let the
             # Syngine service deal with the error handling.
-            elif isinstance(value, (str, native_str)):
+            elif isinstance(value, str):
                 try:
                     value = obspy.UTCDateTime(value)
                 except Exception:
@@ -163,7 +157,7 @@ class Client(WaveformClient, HTTPClient):
             # constructor without catching the error.
             else:
                 value = obspy.UTCDateTime(value)
-            params[key] = native_str(value)
+            params[key] = value
 
         # These all have to be lists of floats. Otherwise it fails.
         source_mecs = ["sourcemomenttensor",
@@ -266,16 +260,16 @@ class Client(WaveformClient, HTTPClient):
         :param sourcemomenttensor: Specify a source in moment tensor
             components as a list: ``Mrr``, ``Mtt``, ``Mpp``, ``Mrt``, ``Mrp``,
             ``Mtp`` with values in Newton meters (*Nm*).
-        :type sourcemomenttensor: list of floats
+        :type sourcemomenttensor: list[float]
         :param sourcedoublecouple: Specify a source as a double couple. The
             list of values are ``strike``, ``dip``, ``rake`` [, ``M0`` ],
             where strike, dip and rake are in degrees and M0 is the scalar
             seismic moment in Newton meters (Nm). If not specified, a value
             of *1e19* will be used as the scalar moment.
-        :type sourcedoublecouple: list of floats
+        :type sourcedoublecouple: list[float]
         :param sourceforce: Specify a force source as a list of ``Fr``, ``Ft``,
             ``Fp`` in units of Newtons (N).
-        :type sourceforce: list of floats
+        :type sourceforce: list[float]
         :param origintime: Specify the source origin time. This must be
             specified as an absolute date and time.
         :type origintime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -292,7 +286,7 @@ class Client(WaveformClient, HTTPClient):
             for example ``P-10`` (meaning P wave arrival time minus 10
             seconds). If the value is a numerical value it is interpreted as an
             offset, in seconds, from the ``origintime``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, str, or
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, str or
             float
         :param endtime: Specifies the desired end time for the synthetic
             trace(s). This may be specified as either:
@@ -307,7 +301,7 @@ class Client(WaveformClient, HTTPClient):
             for example ``P+10`` (meaning P wave arrival time plus 10
             seconds). If the value is a numerical value it is interpreted as an
             offset, in seconds, from the ``starttime``.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, str,
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, str
             or float
         :param label: Specify a label to be included in file names and HTTP
             file name suggestions.
@@ -315,7 +309,7 @@ class Client(WaveformClient, HTTPClient):
         :param components: Specify the orientation of the synthetic
             seismograms as a list of any combination of ``Z`` (vertical),
             ``N`` (north), ``E`` (east), ``R`` (radial), ``T`` (transverse)
-        :type components: str or list of strings.
+        :type components: str or list[str].
         :param units: Specify either ``displacement``, ``velocity`` or
             ``acceleration`` for the synthetics. The length unit is meters.
         :type units: str
@@ -431,7 +425,7 @@ class Client(WaveformClient, HTTPClient):
         :param model: Specify the model.
         :type model: str
         :param bulk: Specify the receivers to download in bulk.
-        :type bulk: list of lists, tuples, or dictionaries
+        :type bulk: list[list], list[tuple], or list[dict]
         :param eventid: Specify an event identifier in the form
             [catalog]:[eventid]. The centroid time and location and moment
             tensor of the solution will be used as the source.
@@ -445,16 +439,16 @@ class Client(WaveformClient, HTTPClient):
         :param sourcemomenttensor: Specify a source in moment tensor
             components as a list: ``Mrr``, ``Mtt``, ``Mpp``, ``Mrt``, ``Mrp``,
             ``Mtp`` with values in Newton meters (*Nm*).
-        :type sourcemomenttensor: list of floats
+        :type sourcemomenttensor: list[float]
         :param sourcedoublecouple: Specify a source as a double couple. The
             list of values are ``strike``, ``dip``, ``rake`` [, ``M0`` ],
             where strike, dip and rake are in degrees and M0 is the scalar
             seismic moment in Newton meters (Nm). If not specified, a value
             of *1e19* will be used as the scalar moment.
-        :type sourcedoublecouple: list of floats
+        :type sourcedoublecouple: list[float]
         :param sourceforce: Specify a force source as a list of ``Fr``, ``Ft``,
             ``Fp`` in units of Newtons (N).
-        :type sourceforce: list of floats
+        :type sourceforce: list[float]
         :param origintime: Specify the source origin time. This must be
             specified as an absolute date and time.
         :type origintime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -494,7 +488,7 @@ class Client(WaveformClient, HTTPClient):
         :param components: Specify the orientation of the synthetic
             seismograms as a list of any combination of ``Z`` (vertical),
             ``N`` (north), ``E`` (east), ``R`` (radial), ``T`` (transverse)
-        :type components: str or list of strings.
+        :type components: str or list[str].
         :param units: Specify either ``displacement``, ``velocity`` or
             ``acceleration`` for the synthetics. The length unit is meters.
         :type units: str
@@ -519,7 +513,7 @@ class Client(WaveformClient, HTTPClient):
             Syngine service as a POST payload. All other parameters except the
             ``filename`` parameter will be silently ignored. Likely not that
             useful for most people.
-        :type data: dictionary, bytes, or file-like object
+        :type data: dict, bytes, or file-like object
         """
         # Send data straight via POST if given.
         if data:
@@ -571,7 +565,7 @@ class Client(WaveformClient, HTTPClient):
             # Write the bulk content.
             for item in bulk:
                 # Dictionary like items.
-                if isinstance(item, compatibility.collections_abc.Mapping):
+                if isinstance(item, collections.abc.Mapping):
                     if "latitude" in item or "longitude" in item:
                         if not ("latitude" in item and "longitude" in item):
                             raise ValueError(
@@ -590,7 +584,7 @@ class Client(WaveformClient, HTTPClient):
                         raise ValueError("Item '%s' in bulk is malformed." %
                                          str(item))
                 # Iterable items.
-                elif isinstance(item, compatibility.collections_abc.Container):
+                elif isinstance(item, collections.abc.Container):
                     if len(item) != 2:
                         raise ValueError("Item '%s' in bulk must have two "
                                          "entries." % str(item))

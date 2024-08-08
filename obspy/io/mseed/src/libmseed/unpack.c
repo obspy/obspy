@@ -12,8 +12,6 @@
  * Written by Chad Trabant,
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
- *
- * modified: 2016.273
  ***************************************************************************/
 #include <ctype.h>
 #include <stdio.h>
@@ -158,12 +156,12 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
   if (headerswapflag)
   {
     MS_SWAPBTIME (&msr->fsdh->start_time);
-    ms_gswap2a (&msr->fsdh->numsamples);
-    ms_gswap2a (&msr->fsdh->samprate_fact);
-    ms_gswap2a (&msr->fsdh->samprate_mult);
-    ms_gswap4a (&msr->fsdh->time_correct);
-    ms_gswap2a (&msr->fsdh->data_offset);
-    ms_gswap2a (&msr->fsdh->blockette_offset);
+    ms_gswap2 (&msr->fsdh->numsamples);
+    ms_gswap2 (&msr->fsdh->samprate_fact);
+    ms_gswap2 (&msr->fsdh->samprate_mult);
+    ms_gswap4 (&msr->fsdh->time_correct);
+    ms_gswap2 (&msr->fsdh->data_offset);
+    ms_gswap2 (&msr->fsdh->blockette_offset);
   }
 
   /* Populate some of the common header fields */
@@ -824,7 +822,14 @@ msr_unpack_data (MSRecord *msr, int swapflag, flag verbose)
       ms_log (1, "%s: Found ASCII data\n", srcname);
 
     nsamples = (int)msr->samplecnt;
-    memcpy (msr->datasamples, dbuf, nsamples);
+    if (nsamples > 0)
+    {
+      memcpy (msr->datasamples, dbuf, nsamples);
+    }
+    else
+    {
+      nsamples = 0;
+    }
     msr->sampletype = 'a';
     break;
 

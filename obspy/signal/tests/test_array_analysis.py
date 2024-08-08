@@ -3,42 +3,35 @@
 """
 The array_analysis test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import unittest
-
 import numpy as np
+import pytest
 
 from obspy.signal.array_analysis import array_rotation_strain, get_geometry
 
 
-class ArrayTestCase(unittest.TestCase):
+class TestArray():
     """
     Test cases for array_analysis functions.
     """
-    def setUp(self):
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
         self.array_coords = np.array([[0.0, 0.0, 0.0],
-                                      [-5.0, 7.0, 0.0],
-                                      [5.0, 7.0, 0.0],
-                                      [10.0, 0.0, 0.0],
-                                      [5.0, -7.0, 0.0],
-                                      [-5.0, -7.0, 0.0],
-                                      [-10.0, 0.0, 0.0]])
+                                     [-5.0, 7.0, 0.0],
+                                     [5.0, 7.0, 0.0],
+                                     [10.0, 0.0, 0.0],
+                                     [5.0, -7.0, 0.0],
+                                     [-5.0, -7.0, 0.0],
+                                     [-10.0, 0.0, 0.0]])
         self.subarray = np.array([0, 1, 2, 3, 4, 5, 6])
         self.ts1 = np.empty((1000, 7))
         self.ts2 = np.empty((1000, 7))
         self.ts3 = np.empty((1000, 7))
-        self.ts1.fill(np.NaN)
-        self.ts2.fill(np.NaN)
-        self.ts3.fill(np.NaN)
+        self.ts1.fill(np.nan)
+        self.ts2.fill(np.nan)
+        self.ts3.fill(np.nan)
         self.sigmau = 0.0001
         self.Vp = 1.93
         self.Vs = 0.326
-
-    def tearDown(self):
-        pass
 
     def test_array_rotation(self):
         # tests function array_rotation_strain with synthetic data with pure
@@ -190,11 +183,3 @@ class ArrayTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(la[:, 0].sum(), 0., decimal=8)
         np.testing.assert_almost_equal(la[:, 1].sum(), 0., decimal=8)
         np.testing.assert_almost_equal(la[:, 2].sum(), 0., decimal=8)
-
-
-def suite():
-    return unittest.makeSuite(ArrayTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')

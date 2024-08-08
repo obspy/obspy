@@ -2,8 +2,7 @@
 
 [![NumFOCUS affiliated project](https://numfocus.org/wp-content/uploads/2018/01/optNumFocus_LRG.png)](https://numfocus.org/sponsored-projects/affiliated-projects)
 
-[![TravisCI Status](https://travis-ci.org/obspy/obspy.svg?branch=master)](https://travis-ci.org/obspy/obspy)
-[![AppVeyor Status](https://ci.appveyor.com/api/projects/status/xqrbaj9phjm6l2vw/branch/master?svg=true)](https://ci.appveyor.com/project/obspy/obspy)
+[![Github Action Status](https://github.com/obspy/obspy/workflows/tests/badge.svg?event=push)](https://github.com/obspy/obspy/actions)
 [![Coverage Status](https://codecov.io/gh/obspy/obspy/branch/master/graph/badge.svg)](https://codecov.io/gh/obspy/obspy)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/obspy.svg)](https://pypi.python.org/pypi/obspy/)
 
@@ -11,13 +10,14 @@
 [![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
 
 [![PyPI Version](https://img.shields.io/pypi/v/obspy.svg)](https://pypi.python.org/pypi/obspy)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3674646.svg)](http://dx.doi.org/10.5281/zenodo.3674646)
-[![Depsy](http://depsy.org/api/package/pypi/obspy/badge.svg)](http://depsy.org/package/python/obspy)
-![Conda](https://img.shields.io/conda/dn/conda-forge/obspy?label=conda%20downloads)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11093256.svg)](https://doi.org/10.5281/zenodo.11093256)
+[![Conda](https://img.shields.io/conda/dn/conda-forge/obspy?label=conda%20downloads)](https://anaconda.org/conda-forge/obspy)
 
+[![Discourse status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.obspy.org)](https://discourse.obspy.org)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-![Twitter Follow](https://img.shields.io/twitter/follow/obspy?label=Follow%20%40obspy&style=social)
+[![Announcements Mailing List](https://img.shields.io/badge/mailing%20list-announcements-blue)](https://mail.python.org/mailman3/lists/obspy.python.org/)
 
+<a rel="me" href="https://fosstodon.org/@obspy"><img src="https://img.shields.io/mastodon/follow/109309284431089274?domain=https%3A%2F%2Ffosstodon.org&style=social" alt="Mastodon Follow" /></a>
 
 ObsPy is an open-source project dedicated to provide a **Python framework for processing seismological** data. It provides parsers for common file formats, clients to access data centers and seismological signal processing routines which allow the manipulation of seismological time series (see [Beyreuther et al. 2010](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), [Megies et al. 2011](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838), [Krischer et al. 2015](http://iopscience.iop.org/article/10.1088/1749-4699/8/1/014003)).
 
@@ -69,4 +69,4 @@ Please see details on how to contribute to the project [here](CONTRIBUTING.md).
 
 ### Impact
 
-![ObsPy impact statistics](https://user-images.githubusercontent.com/1842780/70671351-0c884100-1c7c-11ea-81ed-7c477b7cf29c.png)
+<img src='https://github.com/obspy/obspy/assets/1842780/9fb7c987-b1cd-4ce5-b079-c6eda6c0f8e6'>

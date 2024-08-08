@@ -2,22 +2,21 @@
 """
 The obspy.clients.neic.client test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import unittest
+import pytest
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.clients.neic import Client
 
 
-class ClientTestCase(unittest.TestCase):
+pytestmark = pytest.mark.network
+
+
+class TestClient():
     """
     Test cases for obspy.clients.neic.client.Client.
     """
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls.client = Client(host="137.227.224.97", port=2061, timeout=8)
         cls.starttime = UTCDateTime() - 5 * 60 * 60
 
@@ -38,7 +37,7 @@ class ClientTestCase(unittest.TestCase):
         for args_ in args:
             st2 = client.get_waveforms(*args_, starttime=t,
                                        endtime=t + duration)
-            self.assertEqual(st, st2)
+            assert st == st2
 
     def test_get_waveform_nscl(self):
         """
@@ -54,48 +53,46 @@ class ClientTestCase(unittest.TestCase):
         # merge to avoid failing tests simply due to gaps
         st.merge()
         st.sort()
-        self.assertEqual(len(st), 3)
+        assert len(st) == 3
         for tr, component in zip(st, components):
             stats = tr.stats
-            self.assertEqual(stats.station, "ANMO")
-            self.assertEqual(stats.network, "IU")
-            self.assertEqual(stats.location, "00")
-            self.assertEqual(stats.channel, "BH" + component)
+            assert stats.station == "ANMO"
+            assert stats.network == "IU"
+            assert stats.location == "00"
+            assert stats.channel == "BH" + component
             # requested data duration has some minor fluctuations sometimes but
             # should be pretty close to the expected duration.
             # it should not be over a delta longer than expected (it should be
             # trimmed correctly if more data is returned) but sometimes it's
             # one delta shorter
-            self.assertTrue(
-                abs(duration_long - (stats.endtime - stats.starttime)) <=
-                tr.stats.delta)
+            assert abs(duration_long - (stats.endtime - stats.starttime)) <= \
+                tr.stats.delta
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertEqual(stats.sampling_rate, 40.0)
-            self.assertEqual(len(tr), 144001)
+            assert stats.sampling_rate == 40.0
+            assert len(tr) == 144001
         # now use shorter piece, this is faster and less error prone (gaps etc)
         st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
         st.sort()
         # test returned stream
-        self.assertEqual(len(st), 3)
+        assert len(st) == 3
         for tr, component in zip(st, components):
             stats = tr.stats
-            self.assertEqual(stats.station, "ANMO")
-            self.assertEqual(stats.network, "IU")
-            self.assertEqual(stats.location, "00")
-            self.assertEqual(stats.channel, "BH" + component)
+            assert stats.station == "ANMO"
+            assert stats.network == "IU"
+            assert stats.location == "00"
+            assert stats.channel == "BH" + component
             # requested data duration has some minor fluctuations sometimes but
             # should be pretty close to the expected duration.
             # it should not be over a delta longer than expected (it should be
             # trimmed correctly if more data is returned) but sometimes it's
             # one delta shorter
-            self.assertTrue(
-                abs(duration - (stats.endtime - stats.starttime)) <=
-                tr.stats.delta)
+            assert abs(duration - (stats.endtime - stats.starttime)) <= \
+                tr.stats.delta
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertEqual(stats.sampling_rate, 40.0)
-            self.assertEqual(len(tr), 41)
+            assert stats.sampling_rate == 40.0
+            assert len(tr) == 41
 
         # try a series of regex patterns that should return the same data
         st = client.get_waveforms_nscl("IUANMO BH", t, duration)
@@ -106,12 +103,4 @@ class ClientTestCase(unittest.TestCase):
                     "..ANMO BH.*"]
         for pattern in patterns:
             st2 = client.get_waveforms_nscl(pattern, t, duration)
-            self.assertEqual(st, st2)
-
-
-def suite():
-    return unittest.makeSuite(ClientTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+            assert st == st2

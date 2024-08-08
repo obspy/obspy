@@ -3,4 +3,4 @@ import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots()
 ax = plot_travel_times(source_depth=10, ax=ax, fig=fig,
-                       phase_list=['P', 'PP', 'S'], npoints=200)
+                       phase_list=['P', 'PP', 'S'])

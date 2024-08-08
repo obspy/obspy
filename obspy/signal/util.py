@@ -9,16 +9,11 @@ Various additional utilities for obspy.signal.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native
-
 import ctypes as C  # NOQA
 import math
 
 import numpy as np
-from scipy import fftpack, fix, signal
+from scipy import fftpack, signal
 
 from obspy.core.util.misc import factorize_int
 from obspy.signal.headers import clibsignal
@@ -92,7 +87,7 @@ def next_pow_2(i):
     """
     # do not use NumPy here, math is much faster for single values
     buf = math.ceil(math.log(i) / math.log(2))
-    return native(int(math.pow(2, buf)))
+    return int(math.pow(2, buf))
 
 
 def prev_pow_2(i):
@@ -129,6 +124,7 @@ def enframe(x, win, inc):
     of inc. Each frame is multiplied by the window win().
     The length of the frames is given by the length of the window win().
     The centre of frame I is x((I-1)*inc+(length(win)+1)/2) for I=1,2,...
+    The mean is also subtracted from each individual frame.
 
     :param x: signal to split in frames
     :param win: window multiplied to each frame, length determines frame length
@@ -143,7 +139,7 @@ def enframe(x, win, inc):
     else:
         # length = next_pow_2(nwin)
         length = nwin
-    nf = int(fix((nx - length + inc) // inc))
+    nf = int(np.fix((nx - length + inc) // inc))
     # f = np.zeros((nf, length))
     indf = inc * np.arange(nf)
     inds = np.arange(length) + 1

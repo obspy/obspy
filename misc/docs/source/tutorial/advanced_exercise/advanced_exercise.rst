@@ -3,6 +3,13 @@
 Advanced Exercise
 -----------------
 
+.. note::
+
+    Please note that this exercise is several years old and outdated in terms
+    of recommended use of obspy, e.g. in terms of higher-level
+    functionality like the Inventory object, and that ArcLink has been
+    deactivated by data centers and the arclink client removed from obspy.
+
 This practical intends to demonstrate how ObsPy can be used to develop
 workflows for data processing and analysis that have a short, easy to read and
 extensible source code. The overall task is to automatically estimate local
@@ -51,7 +58,7 @@ a) Use the file `LKBD_WA_CUT.MSEED
 
 b) Calculate the epicentral distance from the station coordinates (46.387°N,
    7.627°E) and catalog epicenter fetched above (46.218°N, 7.706°E). Some useful
-   routines for such tasks are included in :mod:`obspy.core.util.geodetics`.
+   routines for such tasks are included in :mod:`obspy.geodetics`.
 
 3. Seismometer Correction/Simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,12 +92,12 @@ a) Modify the existing code and use the file `LKBD.MSEED
 b) Instead of the hard-coded values, read the response information from a locally
    stored *dataless SEED* `LKBD.dataless
    <https://github.com/obspy/examples/blob/master/LKBD.dataless?raw=true>`_.
-   Use the Parser of module :mod:`obspy.xseed` to extract the poles-and-zeros
+   Use the Parser of module :mod:`obspy.io.xseed` to extract the poles-and-zeros
    information of the used channel.
 
 c) We can also request the response information from `WebDC
    <http://www.webdc.eu>`_ using the ArcLink protocol. Use the Client provided in
-   :mod:`obspy.arclink` module (specify e.g. *user="sed-workshop@obspy.org"*).
+   :mod:`obspy.clients.arclink` module (specify e.g. *user="sed-workshop@obspy.org"*).
 
 4. Fetch Waveform Data from WebDC
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

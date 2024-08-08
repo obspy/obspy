@@ -9,10 +9,6 @@ SeismicHandler evt file bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from collections import defaultdict
 import io
 from math import cos, pi
@@ -23,7 +19,7 @@ from obspy.core.event import (Arrival, Catalog, Event,
                               OriginUncertainty, Pick, ResourceIdentifier,
                               StationMagnitude, WaveformStreamID)
 from obspy.core.event.header import EvaluationMode, EventType, PickOnset
-from obspy.core.util.misc import _seed_id_map
+from obspy.core.inventory.util import _resolve_seedid, _add_resolve_seedid_doc
 from obspy.io.sh.core import to_utcdatetime
 
 
@@ -140,8 +136,8 @@ def _mags(obj, evid, stamag=False, wid=None):
     return mags, pm
 
 
-def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
-              encoding='utf-8'):
+@_add_resolve_seedid_doc
+def _read_evt(filename, encoding='utf-8', **kwargs):
     """
     Read a SeismicHandler EVT file and returns an ObsPy Catalog object.
 
@@ -150,21 +146,6 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
         ObsPy :func:`~obspy.core.event.read_events` function, call this
         instead.
 
-    :type filename: str
-    :param filename: File or file-like object in text mode.
-    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
-    :param inventory: Inventory used to retrieve network code, location code
-        and channel code of stations (SEED id).
-    :type id_map: dict
-    :param id_map: If channel information was not found in inventory,
-        it will be looked up in this dictionary
-        (example: `id_map={'MOX': 'GR.{}..HH{}'`).
-        The values must contain three dots and two `{}` which are
-        substituted by station code and component.
-    :type id_default: str
-    :param id_default: Default SEED id expression.
-        The value must contain three dots and two `{}` which are
-        substituted by station code and component.
     :param str encoding: encoding used (default: utf-8)
 
     :rtype: :class:`~obspy.core.event.Catalog`
@@ -175,7 +156,6 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
 
         Compare with http://www.seismic-handler.org/wiki/ShmDocFileEvt
     """
-    seed_map = _seed_id_map(inventory, id_map)
     with io.open(filename, 'r', encoding=encoding) as f:
         temp = f.read()
     # first create phases and phases_o dictionaries for different phases
@@ -220,9 +200,11 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
         for p in phases[evid]:
             sta = p.get('station code', '')
             comp = p.get('component', '')
-            wid = seed_map.get(sta, id_default)
-            wid = WaveformStreamID(seed_string=wid.format(sta, comp))
-            pick = Pick(waveform_id=wid, **_kw(p, 'pick'))
+            pick_kwargs = _kw(p, 'pick')
+            widargs = _resolve_seedid(
+                    sta, comp, time=pick_kwargs['time'], **kwargs)
+            wid = WaveformStreamID(*widargs)
+            pick = Pick(waveform_id=wid, **pick_kwargs)
             arrival = Arrival(pick_id=pick.resource_id, **_kw(p, 'arrival'))
             picks.append(pick)
             arrivals.append(arrival)
@@ -258,4 +240,5 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
                    description='Created from SeismicHandler EVT format')
 
 
-_read_evt.__doc__ = _read_evt.__doc__ % (SUPPORTED_KEYS,)
+if _read_evt.__doc__ is not None and '%s' in _read_evt.__doc__:
+    _read_evt.__doc__ = _read_evt.__doc__ % (SUPPORTED_KEYS,)

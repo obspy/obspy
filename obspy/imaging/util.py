@@ -8,11 +8,6 @@ Waveform plotting utilities.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
 import re
 from dateutil.rrule import MINUTELY, SECONDLY
 
@@ -21,7 +16,6 @@ from matplotlib.dates import (
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
-from obspy.core.util import MATPLOTLIB_VERSION
 
 
 def _seconds_to_days(sec):
@@ -102,10 +96,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
         # class prior to matplotlib version 1.2
-        if MATPLOTLIB_VERSION < [1, 2, 0]:
-            AutoDateFormatter.__init__(self, *args, **kwargs)
-        else:
-            super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
+        super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
         # Reset the scale to make it reproducible across matplotlib versions.
         self.scaled = {}
         self.scaled[1.0] = '%b %d %Y'
@@ -145,7 +136,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
                 fmt = self.scaled[k]
                 break
 
-        if isinstance(fmt, (str, native_str)):
+        if isinstance(fmt, str):
             self._formatter = DateFormatter(fmt, self._tz)
             return self._formatter(x, pos)
         elif hasattr(fmt, '__call__'):

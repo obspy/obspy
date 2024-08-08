@@ -16,12 +16,7 @@ WAV bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-import os
+from pathlib import Path
 import wave
 
 import numpy as np
@@ -33,9 +28,9 @@ from obspy.core.compatibility import from_buffer
 # WAVE data format is unsigned char up to 8bit, and signed int
 # for the remaining.
 WIDTH2DTYPE = {
-    1: native_str('<u1'),  # unsigned char
-    2: native_str('<i2'),  # signed short int
-    4: native_str('<i4'),  # signed int (int32)
+    1: '<u1',  # unsigned char
+    2: '<i2',  # signed short int
+    4: '<i4',  # signed int (int32)
 }
 
 
@@ -93,20 +88,19 @@ def _read_wav(filename, headonly=False, **kwargs):  # @UnusedVariable
     | 7000.0 Hz, 2599 samples
     """
     # read WAV file
-    fh = wave.open(filename, 'rb')
-    try:
+    with wave.open(filename, 'rb') as fh:
         # header information
-        (_nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
+        (nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
         header = {'sampling_rate': rate, 'npts': length}
         if headonly:
-            return Stream([Trace(header=header)])
+            return Stream([Trace(header=header) for _ in range(nchannel)])
         if width not in WIDTH2DTYPE.keys():
             msg = "Unsupported Format Type, word width %dbytes" % width
             raise TypeError(msg)
         data = from_buffer(fh.readframes(length), dtype=WIDTH2DTYPE[width])
-    finally:
-        fh.close()
-    return Stream([Trace(header=header, data=data)])
+    traces = [Trace(header=header, data=data[i::nchannel])
+              for i in range(nchannel)]
+    return Stream(traces)
 
 
 def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
@@ -137,7 +131,8 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
         tries to autodetect width from data, uses 4 otherwise
     """
     i = 0
-    base, ext = os.path.splitext(filename)
+    file_path = Path(filename)
+    base = file_path.parent / file_path.stem
     if width not in WIDTH2DTYPE.keys() and width is not None:
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
@@ -151,7 +146,7 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
             tr_width = width
         # write WAV file
         if len(stream) >= 2:
-            filename = "%s%03d%s" % (base, i, ext)
+            filename = "%s%03d%s" % (base, i, file_path.suffix)
         w = wave.open(filename, 'wb')
         try:
             trace.stats.npts = len(trace.data)
@@ -162,12 +157,12 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
             dtype = WIDTH2DTYPE[tr_width]
             if rescale:
                 # optimal scale, account for +/- and the zero
-                maxint = 2 ** (width * 8 - 1) - 1
+                maxint = 2 ** (tr_width * 8 - 1) - 1
                 # upcast for following rescaling
                 data = data.astype(np.float64)
                 data = data / abs(data).max() * maxint
             data = np.require(data, dtype=dtype)
-            w.writeframes(data.tostring())
+            w.writeframes(data.tobytes())
         finally:
             w.close()
         i += 1

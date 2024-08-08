@@ -12,14 +12,8 @@ Routines for error ellipses in seismological coordinates (N=0, W=90)
 - See if a point is inside or on an ellipse
 - Calculate the angle subtended by an ellipse (for back-azimuth uncertainty)
 - Plot an ellipse
-
-.. note:
- TODO: ellipsoids (3D ellipses)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
+from math import sin, cos, radians
 
 import numpy as np
 import copy
@@ -43,7 +37,7 @@ class Ellipse:
         :param theta: azimuth (degrees CW from 0=N (y positive))
         :type b: float
         :param center: x,y coordinates of ellipse center
-        :type center: tuple of numeric
+        :type center: tuple(:class:`numpy.ndarray)
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
@@ -54,6 +48,23 @@ class Ellipse:
         self.theta = theta
         self.x = center[0]
         self.y = center[1]
+        self.rtol = 1e-5    # tolerance for __eq__ method
+
+    @classmethod
+    def from_origin_uncertainty(cls, uncert, center=(0, 0)):
+        """Set Ellipse from obspy origin_uncertainty
+
+        :param uncert: obspy origin_uncertainty
+        :type uncert: :class: `~obspy.origin.origin_uncertainty`
+        :param center: center position (x,y)
+        :type center: tuple
+        :return: ellipse
+        :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
+        """
+        a = uncert.max_horizontal_uncertainty
+        b = uncert.min_horizontal_uncertainty
+        theta = uncert.azimuth_max_horizontal_uncertainty
+        return cls(a, b, theta, center)
 
     @classmethod
     def from_cov(cls, cov, center=(0, 0)):
@@ -68,16 +79,24 @@ class Ellipse:
         :param cov: covariance matrix [[c_xx, c_xy], [c_xy, c_yy]]
         :type cov: 2-list of 2-lists
         :param center: center position (x,y)
-        :type center: 2-tuple of numeric
+        :type center: tuple
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
+        cov = np.array(cov)
         if _almost_good_cov(cov):
             cov = _fix_cov(cov)
         evals, evecs = np.linalg.eig(cov)
         if np.any(evals < 0):
-            warnings.warn('Bad covariance matrix, no ellipse calculated')
-            return cls(None, None, None, center)
+            cov_factor = cov[0][1]
+            cov_base = cov/cov_factor
+            warnings.warn("Can not make data ellipse because covariance "
+                          "matrix is not positive definite: "
+                          "{:g}x[{:.2f} {:g}][{:g} {:.2f}]. ".format(
+                            cov_factor, cov_base[0][0], cov_base[0][1],
+                            cov_base[1][0], cov_base[1][1]))
+            # return cls(None, None, None, center)
+            return None
         # Sort eigenvalues in decreasing order
         sort_indices = np.argsort(evals)[::-1]
         # Select semi-major and semi-minor axes
@@ -103,7 +122,7 @@ class Ellipse:
         :param c_xy:  x-y covariance (dist_units^2)
         :type c_xy: float
         :param center: center position (x,y)
-        :type center: 2-tuple of numeric
+        :type center: tuple
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
@@ -127,12 +146,12 @@ class Ellipse:
         :param baz:   back-azimuth from observer (degrees)
         :type baz: float
         :param viewpoint: observer's position
-        :type viewpoint: 2-tuple of floats
+        :type viewpoint: tuple
         :return: ellipse
         :rtype: :class: `~obspy.io.nordic.ellipse.Ellipse`
         """
-        x = viewpoint[0] + dist * np.sin(np.radians(baz))
-        y = viewpoint[1] + dist * np.cos(np.radians(baz))
+        x = viewpoint[0] + dist * sin(radians(baz))
+        y = viewpoint[1] + dist * cos(radians(baz))
         return cls.from_uncerts(x_err, y_err, c_xy, (x, y))
 
     def __repr__(self):
@@ -140,8 +159,8 @@ class Ellipse:
 
         >>> str(Ellipse(20, 10))
         'Ellipse(20, 10, 0)'
-        >>>str(Ellipse(20, 10, 45, (3,4)))
-        'Ellipse(20, 10, 45, (3,4)>'
+        >>> str(Ellipse(20, 10, 45, (3,4)))
+        'Ellipse(20, 10, 45, (3,4))'
         """
         s = 'Ellipse({:.3g}, {:.3g}'.format(self.a, self.b)
         s += ', {:.3g}'.format(self.theta)
@@ -149,6 +168,29 @@ class Ellipse:
             s += ', ({:.3g},{:.3g})'.format(self.x, self.y)
         s += ')'
         return s
+
+    def __eq__(self, other):
+        """
+        Returns true if two Ellipses are equal
+
+        :param other: second Ellipse
+        :type other:  :class: `~ellipsoid.Ellipse`
+        :return: equal
+        :rtype: bool
+        """
+        if not abs((self.a - other.a) / self.a) < self.rtol:
+            return False
+        if not abs((self.b - other.b) / self.b) < self.rtol:
+            return False
+        if not self.x == other.x:
+            return False
+        if not self.y == other.y:
+            return False
+        theta_diff = (self.theta - other.theta) % 180
+        if not ((abs(theta_diff) < self.rtol)
+                or (abs(theta_diff - 180) < self.rtol)):
+            return False
+        return True
 
     def to_cov(self):
         """Convert to covariance matrix notation
@@ -159,10 +201,10 @@ class Ellipse:
 
         :returns: covariance_matrix [[c_xx, c_xy], [c_xy, c_yy]],
                  center_position (x,y)
-        :rtype: 2-tuple
+        :rtype: tuple
         """
-        sin_theta = np.sin(np.radians(self.theta))
-        cos_theta = np.cos(np.radians(self.theta))
+        sin_theta = sin(radians(self.theta))
+        cos_theta = cos(radians(self.theta))
         # The following is BACKWARDs from math standard
         # but consistent with geographic notation
         c_yy = self.a**2 * cos_theta**2 + self.b**2 * sin_theta**2
@@ -194,7 +236,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: True or False
         :rtype: bool
         """
@@ -211,7 +253,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: True or False
         :rtype: bool
         """
@@ -231,9 +273,9 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: original coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: new coordinates of the viewpoint
-        :rtype: 2-tuple of floats
+        :rtype: tuple(float, float)
         """
         # Translate
         pt1 = (pt[0] - self.x, pt[1] - self.y)
@@ -252,9 +294,9 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: original coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: new coordinates of the viewpoint
-        :rtype: 2-tuple of floats
+        :rtype: tuple(float, float)
         """
         # Unrotate
         r_rot = _rot_cw(self.theta)
@@ -272,7 +314,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: coordinates of both tangent intersections
         :rtype: 2-tuple of 2-tuples of floats
         """
@@ -316,7 +358,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :return: subtended angle (degrees)
         :rtype: float
 
@@ -332,7 +374,9 @@ class Ellipse:
         temp.y -= pt[1]
         t0, t1 = temp._get_tangents((0, 0))
         cosang = np.dot(t0, t1)
-        sinang = np.linalg.norm(np.cross(t0, t1))
+        # avoid np.cross() complaining about 2-d vectors
+        # see https://github.com/obspy/obspy/pull/3461#issuecomment-2149488336
+        sinang = abs(t0[0] * t1[1] - t0[1] * t1[0])
         return np.degrees(np.arctan2(sinang, cosang))
 
     def plot(self, linewidth=2, color='k',
@@ -406,7 +450,7 @@ class Ellipse:
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the viewpoint (x,y)
-        :type pt: 2-tuple of floats
+        :type pt: tuple(float, float)
         :parm self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param color: Color of the edges. Defaults to ``'k'`` (black).
@@ -477,13 +521,13 @@ class Ellipse:
 
 def _rot_ccw(theta):
     """counter-clockwise rotation matrix for theta in DEGREES"""
-    c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
+    c, s = cos(radians(theta)), sin(radians(theta))
     return np.array(((c, -s), (s, c)))
 
 
 def _rot_cw(theta):
     """clockwise rotation matrix for theta in DEGREES"""
-    c, s = np.cos(np.radians(theta)), np.sin(np.radians(theta))
+    c, s = cos(radians(theta)), sin(radians(theta))
     return np.array(((c, s), (-s, c)))
 
 

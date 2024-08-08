@@ -11,10 +11,6 @@
 Functions that will all take a file pointer and the sample count and return a
 NumPy array with the unpacked values.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import sys
 
 import numpy as np
@@ -118,7 +114,7 @@ def pack_4byte_ibm(file, data, endian='>'):
     new_data.dtype = np.uint32
     new_data[zeros] = 0
     # Write to file.
-    file.write(new_data.tostring())
+    file.write(new_data.tobytes())
 
 
 def pack_4byte_integer(file, data, endian='>'):
@@ -132,7 +128,7 @@ def pack_4byte_integer(file, data, endian='>'):
     if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.
-    file.write(data.tostring())
+    file.write(data.tobytes())
 
 
 def pack_2byte_integer(file, data, endian='>'):
@@ -146,7 +142,7 @@ def pack_2byte_integer(file, data, endian='>'):
     if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.
-    file.write(data.tostring())
+    file.write(data.tobytes())
 
 
 def pack_4byte_fixed_point(file, data, endian='>'):
@@ -164,7 +160,7 @@ def pack_4byte_ieee(file, data, endian='>'):
     if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.
-    file.write(data.tostring())
+    file.write(data.tobytes())
 
 
 def pack_1byte_integer(file, data, endian='>'):

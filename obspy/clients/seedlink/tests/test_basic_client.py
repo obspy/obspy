@@ -2,38 +2,36 @@
 """
 The obspy.clients.seedlink.basic_client test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from unittest import mock
 
-import unittest
+import pytest
 
 from obspy import UTCDateTime
 from obspy.clients.seedlink.basic_client import Client
 
 
-class ClientTestCase(unittest.TestCase):
-    def setUp(self):
+@pytest.mark.network
+class TestClient():
+
+    def init_client(self):
         self.client = Client("rtserver.ipgp.fr")
+
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
+        self.init_client()
 
     def test_get_waveform(self):
         def _test_offset_from_realtime(offset):
             t = UTCDateTime() - offset
-            for request in [["G", "FDFM", "00", "LHN", t, t + 20],
-                            ["G", "CLF", "00", "BHZ", t, t + 10]]:
-                st = self.client.get_waveforms(*request)
-                self.assertGreater(len(st), 0)
-                for tr in st:
-                    self.assertEqual(tr.id, ".".join(request[:4]))
-                self.assertTrue(any([len(tr) > 0 for tr in st]))
-                st.merge(1)
-                self.assertTrue(abs(tr.stats.starttime - request[4]) < 1)
-                self.assertTrue(abs(tr.stats.endtime - request[5]) < 1)
-                for tr in st:
-                    self.assertEqual(tr.stats.network, request[0])
-                    self.assertEqual(tr.stats.station, request[1])
-                    self.assertEqual(tr.stats.location, request[2])
-                    self.assertEqual(tr.stats.channel, request[3])
+            request = ["G", "FDFM", "00", "LHN", t, t + 20]
+            st = self.client.get_waveforms(*request)
+            assert len(st) > 0
+            for tr in st:
+                assert tr.id == ".".join(request[:4])
+            assert any([len(tr) > 0 for tr in st])
+            st.merge(1)
+            assert abs(tr.stats.starttime - request[4]) < 1
+            assert abs(tr.stats.endtime - request[5]) < 1
 
         # getting a result depends on two things.. how long backwards the ring
         # buffer stores data and how close to realtime the data is available,
@@ -55,16 +53,16 @@ class ClientTestCase(unittest.TestCase):
         client = self.client
 
         info = client.get_info(station='F*')
-        self.assertIn(('G', 'FDFM'), info)
+        assert ('G', 'FDFM') in info
         # should have at least 7 stations
-        self.assertTrue(len(info) > 2)
+        assert len(info) > 2
         # only fetch one station
         info = client.get_info(network='G', station='FDFM')
-        self.assertEqual([('G', 'FDFM')], info)
+        assert [('G', 'FDFM')] == info
         # check that we have a cache on station level
-        self.assertIn(('G', 'FDFM'), client._station_cache)
-        self.assertTrue(len(client._station_cache) > 20)
-        self.assertEqual(client._station_cache_level, "station")
+        assert ('G', 'FDFM') in client._station_cache
+        assert len(client._station_cache) > 20
+        assert client._station_cache_level == "station"
 
     def test_multiple_waveform_requests_with_multiple_info_requests(self):
         """
@@ -73,33 +71,31 @@ class ClientTestCase(unittest.TestCase):
         """
         def _test_offset_from_realtime(offset):
             # need to reinit to clean out any caches
-            self.setUp()
+            self.init_client()
             t = UTCDateTime() - offset
             # first do a request that needs an info request on station level
             # only
             st = self.client.get_waveforms("*", "F?FM", "??", "B??", t, t + 5)
-            self.assertGreater(len(st), 2)
-            self.assertTrue(len(self.client._station_cache) > 20)
+            assert len(st) > 2
+            assert len(self.client._station_cache) > 20
             station_cache_size = len(self.client._station_cache)
-            self.assertIn(("G", "FDFM"), self.client._station_cache)
-            self.assertEqual(self.client._station_cache_level, "station")
+            assert ("G", "FDFM") in self.client._station_cache
+            assert self.client._station_cache_level == "station"
             for tr in st:
-                self.assertEqual(tr.stats.network, "G")
-                self.assertEqual(tr.stats.station, "FDFM")
-                self.assertEqual(tr.stats.channel[0], "B")
+                assert tr.stats.network == "G"
+                assert tr.stats.station == "FDFM"
+                assert tr.stats.channel[0] == "B"
             # now make a subsequent request that needs an info request on
             # channel level
             st = self.client.get_waveforms("*", "F?FM", "*", "B*", t, t + 5)
-            self.assertGreater(len(st), 2)
-            self.assertTrue(
-                len(self.client._station_cache) > station_cache_size)
-            self.assertIn(("G", "FDFM", "00", "BHZ"),
-                          self.client._station_cache)
-            self.assertEqual(self.client._station_cache_level, "channel")
+            assert len(st) > 2
+            assert len(self.client._station_cache) > station_cache_size
+            assert ("G", "FDFM", "00", "BHZ") in self.client._station_cache
+            assert self.client._station_cache_level == "channel"
             for tr in st:
-                self.assertEqual(tr.stats.network, "G")
-                self.assertEqual(tr.stats.station, "FDFM")
-                self.assertEqual(tr.stats.channel[0], "B")
+                assert tr.stats.network == "G"
+                assert tr.stats.station == "FDFM"
+                assert tr.stats.channel[0] == "B"
 
         # getting a result depends on two things.. how long backwards the ring
         # buffer stores data and how close to realtime the data is available,
@@ -115,9 +111,23 @@ class ClientTestCase(unittest.TestCase):
             raise
 
 
-def suite():
-    return unittest.makeSuite(ClientTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+@mock.patch("obspy.clients.seedlink.basic_client.Client._multiselect_request")
+def test_get_waveform_calls_to_get_info(multiselect_mock):
+    """
+    Make sure get_waveforms() without wildcards does not call get_info()
+    Test works without network since connection is only made when
+    multiselect request goes out.
+    """
+    client = Client("abcde")
+    t = UTCDateTime(2000, 1, 1)
+    with mock.patch(
+            "obspy.clients.seedlink.basic_client.Client.get_info") as p:
+        client.get_waveforms("GR", "FUR", "", "HHZ", t, t+1)
+        assert p.call_count == 0
+        # get_info should only be called when wildcards are in SEED ID
+        client.get_waveforms("GR", "?UR", "", "HHZ", t, t+1)
+        assert p.call_count == 1
+        client.get_waveforms("*R", "FUR", "", "HHZ", t, t+1)
+        assert p.call_count == 2
+        client.get_waveforms("GR", "FUR", "", "HH*", t, t+1)
+        assert p.call_count == 3

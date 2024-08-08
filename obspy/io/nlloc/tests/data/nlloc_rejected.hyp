@@ -1,0 +1,23 @@
+NLLOC "./locs/20211214_2020-12-09_manual_loc/20211214_2020-12-09_manual.20201209.163708.grid0" "REJECTED" "WARNING: max prob location on grid boundary 10, rejecting location."
+SIGNATURE "   obs:./picks/taupo_2020-12-09_manual_PickFiles/Picks_2020m000124.dat   NLLoc:v7.00.00(27Oct2017)  run:14Dec2021 22h40m22"
+COMMENT ""
+GRID  240 240 80  0 0 -4  0.5 0.5 0.5 PROB_DENSITY
+SEARCH OCTREE nInitial 25000 nEvaluated 49928 smallestNodeSide 0.074688/0.074688/0.125000 oct_tree_integral 3.450765e+01 scatter_volume 3.450765e+01
+HYPOCENTER  x 0.0373438 y 2.42734 z 35.3125  OT 3.0582  ix -1 iy -1 iz -1 MAXIMUM_LIKELIHOOD
+GEOGRAPHIC  OT 2020 12 09  16 37 3.058205  Lat -39.278154 Long 175.300434 Depth 35.312500
+QUALITY  Pmax 3.39278e+150 MFmin 29.4569 MFmax 29.5213 RMS 0.645344 Nphs 53 Gap 263.731 Dist 4.14012 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio 1.7759  Npair 24  Diff 7.8165
+STATISTICS  ExpectX 0.987252 Y 4.05843 Z 32.9989  CovXX 0.914195 XY -0.152226 XZ 0.25015 YY 6.22208 YZ -2.06938 ZZ 5.98514 EllAz1  89.3552 Dip1  -2.55491 Len1  1.78372 Az2  2.05253 Dip2  46.5237 Len2  3.77301 Len3  5.375995e+00
+STAT_GEOG  ExpectLat -39.263474 Long 175.311476 Depth 32.998901
+TRANSFORM  SIMPLE LatOrig -39.300000  LongOrig 175.300000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 55  usedPhCt 53  assocStaCt -1  usedStaCt 29  depthPhCt -1  stdErr 0.645344  azGap 263.731  secAzGap 263.731  gtLevel -  minDist 4.14012 maxDist 107.432 medDist 38.7315
+QML_OriginUncertainty  horUnc -1  minHorUnc 1.44659  maxHorUnc 3.78429  azMaxHorUnc 178.359
+QML_ConfidenceEllipsoid  semiMajorAxisLength 5.376  semiMinorAxisLength 1.78372  semiIntermediateAxisLength 3.77301  majorAxisPlunge 43.3623  majorAxisAzimuth 176.94  majorAxisRotation 227.074
+FOCALMECH  Hyp  -39.278154 175.300434 35.312500 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr
+TLZ    ?    Z    ? P      ? 20201209 1637   19.3339 GAU -1.00e+00 -1.00e+00 -1.00e+00 -1.00e+00 >   17.6946   -1.4189    0.8293   20.7446  107.8444   -0.6600  107.4316  11.11  40.0 200.0  0     0.0000
+TLZ    ?    N    ? S      ? 20201209 1637   32.6579 GAU -1.00e+00 -1.00e+00 -1.00e+00 -1.00e+00 >   32.3436   -2.7439    0.2918   20.7446  107.8444   -0.6600  107.4316  11.11  40.0 200.0  0     0.0000
+MAVZ   ?    Z    ? P      d 20201209 1637   10.7803 GAU -1.00e+00 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000 -100000000000000000000.0000 -100000000000000000000.0000 -100000000000000000000.0000    0.0000   0.00 359.0  -1.0  0     0.0000
+MAVZ   ?    ?    ? S      ? 20201209 1637   17.3001 GAU -1.00e+00 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000 -100000000000000000000.0000 -100000000000000000000.0000 -100000000000000000000.0000    0.0000   0.00 359.0  -1.0  0     0.0000
+END_PHASE
+END_NLLOC

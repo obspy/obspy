@@ -12,10 +12,6 @@ Python Module for (Weighted) Linear Regression.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 import scipy.optimize
 
@@ -25,7 +21,7 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
     """
     Use linear least squares to fit a function, f, to data.
     This method is a generalized version of
-    :func:`scipy.optimize.minpack.curve_fit`; allowing for Ordinary Least
+    :func:`scipy.optimize.curve_fit`; allowing for Ordinary Least
     Square and Weighted Least Square regressions:
 
     * OLS through origin: ``linear_regression(xdata, ydata)``
@@ -50,7 +46,7 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
         if ``False``: solves ``y=a*x+b``.
 
     Extra keword arguments will be passed to
-    :func:`scipy.optimize.minpack.curve_fit`.
+    :func:`scipy.optimize.curve_fit`.
 
     :rtype: tuple
     :returns: (slope, std_slope) if ``intercept_origin`` is ``True``;

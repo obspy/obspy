@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 NonLinLoc file format support for ObsPy
@@ -9,10 +8,6 @@ NonLinLoc file format support for ObsPy
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import warnings
 from math import sqrt
 
@@ -21,7 +16,9 @@ import numpy as np
 from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
-                              WaveformStreamID)
+                              WaveformStreamID, ConfidenceEllipsoid)
+from obspy.core.inventory.util import (
+    _add_resolve_seedid_doc, _add_resolve_seedid_ph2comp_doc, _resolve_seedid)
 from obspy.geodetics import kilometer2degrees
 
 
@@ -45,10 +42,12 @@ def is_nlloc_hyp(filename):
     return True
 
 
+@_add_resolve_seedid_ph2comp_doc
+@_add_resolve_seedid_doc
 def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     """
     Reads a NonLinLoc Hypocenter-Phase file to a
-    :class:`~obspy.core.event.Catalog` object.
+    :class:`~obspy.core.event.catalog.Catalog` object.
 
     .. note::
 
@@ -62,7 +61,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         page in the documentation pages.
 
     :param filename: File or file-like object in text mode.
-    :type coordinate_converter: func
+    :type coordinate_converter: callable
     :param coordinate_converter: Function to convert (x, y, z)
         coordinates of NonLinLoc output to geographical coordinates and depth
         in meters (longitude, latitude, depth in kilometers).
@@ -71,14 +70,14 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         The function should accept three arguments x, y, z (each of type
         :class:`numpy.ndarray`) and return a tuple of three
         :class:`numpy.ndarray` (lon, lat, depth in kilometers).
-    :type picks: list of :class:`~obspy.core.event.Pick`
+    :type picks: list of :class:`~obspy.core.event.origin.Pick`
     :param picks: Original picks used to generate the NonLinLoc location.
         If provided, the output event will include the original picks and the
         arrivals in the output origin will link to them correctly (with their
         ``pick_id`` attribute). If not provided, the output event will include
         (the rather basic) pick information that can be reconstructed from the
         NonLinLoc hypocenter-phase file.
-    :rtype: :class:`~obspy.core.event.Catalog`
+    :rtype: :class:`~obspy.core.event.catalog.Catalog`
     """
     if not hasattr(filename, "read"):
         # Check if it exists, otherwise assume its a string.
@@ -126,18 +125,20 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     for start, end in zip(lines_start, lines_end):
         event = _read_single_hypocenter(
             lines[start:end + 1], coordinate_converter=coordinate_converter,
-            original_picks=original_picks)
+            original_picks=original_picks, **kwargs)
         cat.append(event)
     cat.creation_info.creation_time = UTCDateTime()
     cat.creation_info.version = "ObsPy %s" % __version__
     return cat
 
 
-def _read_single_hypocenter(lines, coordinate_converter, original_picks):
+def _read_single_hypocenter(lines, coordinate_converter, original_picks,
+                            **kwargs):
     """
     Given a list of lines (starting with a 'NLLOC' line and ending with a
     'END_NLLOC' line), parse them into an Event.
     """
+    nlloc_file_format_version = None
     try:
         # some paranoid checks..
         assert lines[0].startswith("NLLOC ")
@@ -154,6 +155,18 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     for i, line in enumerate(lines):
         if line.startswith("PHASE "):
             indices_phases[0] = i
+            # determine whether it's old format or new one which has one
+            # additional item in middle. use position of magic character to
+            # find out.
+            separator_position = line.split().index('>')
+            if separator_position == 15:
+                nlloc_file_format_version = 1
+            elif separator_position == 16:
+                nlloc_file_format_version = 2
+            else:
+                msg = ("This should not happen, please open a ticket on "
+                       "github and supply your nonlinloc file for debugging")
+                raise NotImplementedError(msg)
         elif line.startswith("END_PHASE"):
             indices_phases[1] = i
 
@@ -176,7 +189,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     if date.startswith('run:'):
         date = date[4:]
     signature = signature.strip()
-    creation_time = UTCDateTime.strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
+    creation_time = UTCDateTime.strptime(date + time, "%d%b%Y%Hh%Mm%S")
 
     if coordinate_converter:
         # maximum likelihood origin location in km info line
@@ -199,7 +212,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     covariance_xx = float(line.split()[7])
     covariance_yy = float(line.split()[13])
     covariance_zz = float(line.split()[17])
-    stats_info_string = str(
+    stats_info_string = (
         "Note: Depth/Latitude/Longitude errors are calculated from covariance "
         "matrix as 1D marginal (Lon/Lat errors as great circle degrees) "
         "while OriginUncertainty min/max horizontal errors are calculated "
@@ -228,6 +241,8 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     hor_unc, min_hor_unc, max_hor_unc, hor_unc_azim = \
         map(float, line.split()[1:9:2])
 
+    nlloc_info_line = 'NLLOC ' + lines['NLLOC']
+
     # assign origin info
     event = Event()
     o = Origin()
@@ -238,7 +253,10 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     ou = o.origin_uncertainty
     oq = o.quality
     o.comments.append(Comment(text=stats_info_string, force_resource_id=False))
+    o.comments.append(Comment(text=nlloc_info_line, force_resource_id=False))
     event.comments.append(Comment(text=comment, force_resource_id=False))
+    event.comments.append(Comment(text=nlloc_info_line,
+                                  force_resource_id=False))
 
     # SIGNATURE field's first item is LOCSIG, which is supposed to be
     # 'Identification of an individual, institiution or other entity'
@@ -251,6 +269,13 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     o.creation_info = CreationInfo(creation_time=creation_time,
                                    version=version,
                                    author=signature)
+
+    # nlloc writes location status in "NLLOC" line
+    # char location status LOCATED, ABORTED, IGNORED, REJECTED
+    # set evaluation status to "rejected" if it is anything but LOCATED
+    nlloc_location_status = lines['NLLOC'].split()[1].strip('\'"')
+    if nlloc_location_status in ('ABORTED', 'IGNORED', 'REJECTED'):
+        o.evaluation_status = 'rejected'
 
     # negative values can appear on diagonal of covariance matrix due to a
     # precision problem in NLLoc implementation when location coordinates are
@@ -280,7 +305,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     o.depth = z * 1e3  # meters!
     o.depth_errors.uncertainty = sqrt(covariance_zz) * 1e3  # meters!
     o.depth_errors.confidence_level = 68
-    o.depth_type = str("from location")
+    o.depth_type = "from location"
     o.time = time
 
     ou.horizontal_uncertainty = hor_unc
@@ -294,8 +319,21 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         else:
             ou[field] *= 1e3  # meters!
     ou.azimuth_max_horizontal_uncertainty = hor_unc_azim
-    ou.preferred_description = str("uncertainty ellipse")
+    ou.preferred_description = "uncertainty ellipse"
     ou.confidence_level = 68  # NonLinLoc in general uses 1-sigma (68%) level
+    if "QML_ConfidenceEllipsoid" in lines:
+        #  From at least NLLoc v6, confidence ellipsoids have been provided
+        line = lines["QML_ConfidenceEllipsoid"]
+        majax_len, minax_len, intax_len, majax_plunge, majax_az, majax_rot = \
+            map(float, line.split()[1:12:2])
+        ou.confidence_ellipsoid = ConfidenceEllipsoid(
+            semi_major_axis_length=majax_len,
+            semi_minor_axis_length=minax_len,
+            semi_intermediate_axis_length=intax_len,
+            major_axis_plunge=majax_plunge,
+            major_axis_azimuth=majax_az,
+            major_axis_rotation=majax_rot)
+        ou.preferred_description = "confidence ellipsoid"
 
     oq.standard_error = stderr
     oq.azimuthal_gap = az_gap
@@ -315,26 +353,47 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         line = line.split()
         arrival = Arrival()
         o.arrivals.append(arrival)
-        station = str(line[0])
-        phase = str(line[4])
+        station = line[0]
+        channel = line[2]
+        phase = line[4]
         arrival.phase = phase
-        arrival.distance = kilometer2degrees(float(line[21]))
-        arrival.azimuth = float(line[23])
-        arrival.takeoff_angle = float(line[24])
-        arrival.time_residual = float(line[16])
-        arrival.time_weight = float(line[17])
+        if nlloc_file_format_version == 1:
+            arrival.distance = kilometer2degrees(float(line[21]))
+            arrival.azimuth = float(line[22])
+            # do not read in take off angle, if the ray takeoff quality is
+            # given as "0" for "unreliable", see #3224
+            if int(line[25]) != 0:
+                arrival.takeoff_angle = float(line[24])
+            arrival.time_residual = float(line[16])
+            arrival.time_weight = float(line[17])
+        elif nlloc_file_format_version == 2:
+            arrival.distance = kilometer2degrees(float(line[22]))
+            arrival.azimuth = float(line[23])
+            # do not read in take off angle, if the ray takeoff quality is
+            # given as "0" for "unreliable", see #3224
+            if int(line[26]) != 0:
+                arrival.takeoff_angle = float(line[25])
+            arrival.time_residual = float(line[17])
+            arrival.time_weight = float(line[18])
+        else:
+            msg = ("This should not happen, please open a ticket on "
+                   "github and supply your nonlinloc file for debugging")
+            raise NotImplementedError(msg)
         pick = Pick()
-        # network codes are not used by NonLinLoc, so they can not be known
-        # when reading the .hyp file.. to conform with QuakeML standard set an
-        # empty network code
-        wid = WaveformStreamID(network_code="", station_code=station)
         # have to split this into ints for overflow to work correctly
         date, hourmin, sec = map(str, line[6:9])
         ymd = [int(date[:4]), int(date[4:6]), int(date[6:8])]
         hm = [int(hourmin[:2]), int(hourmin[2:4])]
         t = UTCDateTime(*(ymd + hm), strict=False) + float(sec)
-        pick.waveform_id = wid
         pick.time = t
+        # network codes are not used by NonLinLoc, so they can not be known
+        # when reading the .hyp file.. if an inventory is provided, a lookup
+        # is done
+        widargs = _resolve_seedid(
+            station=station, component=channel, time=t, phase=phase,
+            unused_kwargs=True, **kwargs)
+        wid = WaveformStreamID(*widargs)
+        pick.waveform_id = wid
         pick.time_errors.uncertainty = float(line[10])
         pick.phase_hint = phase
         pick.onset = ONSETS.get(line[3].lower(), None)
@@ -365,16 +424,16 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
 def write_nlloc_obs(catalog, filename, **kwargs):
     """
     Write a NonLinLoc Phase file (NLLOC_OBS) from a
-    :class:`~obspy.core.event.Catalog` object.
+    :class:`~obspy.core.event.catalog.Catalog` object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
         the :meth:`~obspy.core.event.Catalog.write` method of an
         ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: str or file
+    :type filename: str or file-like object
     :param filename: Filename to write or open file-like object.
     """
     info = []
@@ -397,22 +456,25 @@ def write_nlloc_obs(catalog, filename, **kwargs):
     for pick in catalog[0].picks:
         wid = pick.waveform_id
         station = wid.station_code or "?"
-        component = wid.channel_code and wid.channel_code[-1].upper() or "?"
-        if component not in "ZNEH":
-            component = "?"
+        component = wid.channel_code or "?"
         onset = ONSETS_REVERSE.get(pick.onset, "?")
         phase_type = pick.phase_hint or "?"
         polarity = POLARITIES_REVERSE.get(pick.polarity, "?")
         date = pick.time.strftime("%Y%m%d")
         hourminute = pick.time.strftime("%H%M")
         seconds = pick.time.second + pick.time.microsecond * 1e-6
-        time_error = pick.time_errors.uncertainty or -1
-        if time_error == -1:
-            try:
-                time_error = (pick.time_errors.upper_uncertainty +
-                              pick.time_errors.lower_uncertainty) / 2.0
-            except Exception:
-                pass
+        if pick.time_errors.upper_uncertainty is not None and \
+                pick.time_errors.lower_uncertainty is not None:
+            time_error = (pick.time_errors.upper_uncertainty +
+                          pick.time_errors.lower_uncertainty) / 2.0
+        elif pick.time_errors.uncertainty is not None:
+            time_error = pick.time_errors.uncertainty
+        else:
+            # see discussion in #2371
+            msg = ("Writing pick without time uncertainty. Time uncertainty "
+                   "will be written as '0.0'")
+            warnings.warn(msg)
+            time_error = 0.0
         info_ = fmt % (station.ljust(6), "?".ljust(4), component.ljust(4),
                        onset.ljust(1), phase_type.ljust(6), polarity.ljust(1),
                        date, hourminute, seconds, time_error, -1, -1, -1)
@@ -428,8 +490,3 @@ def write_nlloc_obs(catalog, filename, **kwargs):
     # Close if a file has been opened by this function.
     if file_opened is True:
         fh.close()
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

@@ -1,12 +1,7 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Ray path calculations.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .taup_pierce import TauPPierce
 
 
@@ -31,4 +26,4 @@ class TauPPath(TauPPierce):
         """
         self.degrees = degrees
         for phase in self.phases:
-            self.arrivals += phase.calc_path(degrees)
+            self.arrivals += phase.calc_path(degrees, self.ray_param_tol)

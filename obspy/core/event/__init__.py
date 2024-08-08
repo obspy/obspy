@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.event - Classes for handling event metadata
-======================================================
+Module handling event metadata
+
 This module provides a class hierarchy to consistently handle event metadata.
 This class hierarchy is closely modelled after the de-facto standard
 format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
@@ -17,12 +17,8 @@ format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from .base import (
     Comment, CompositeTime, ConfidenceEllipsoid, CreationInfo, DataUsed,
     QuantityError, TimeWindow, WaveformStreamID)

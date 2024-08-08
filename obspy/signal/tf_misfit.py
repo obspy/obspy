@@ -18,14 +18,19 @@ Various Time Frequency Misfit Functions based on [Kristekova2006]_ and
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import numpy as np
 
 from obspy.imaging.cm import obspy_sequential, obspy_divergent
 from obspy.signal import util
+
+
+def _pcolormesh_same_dim(ax, x, y, v, **kwargs):
+    # x, y, v must have the same dimension
+    try:
+        return ax.pcolormesh(x, y, v, shading='nearest', **kwargs)
+    except TypeError:
+        # matplotlib versions < 3.3
+        return ax.pcolormesh(x, y, v[:-1, :-1], **kwargs)
 
 
 def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
@@ -52,7 +57,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     t = np.linspace(0., tmax, npts)
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    cwt = np.zeros((npts // 2, nf), dtype=np.complex)
+    cwt = np.zeros((npts // 2, nf), dtype=complex)
 
     if wl == 'morlet':
 
@@ -109,14 +114,14 @@ def tfem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         and (number of components, nf, len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
 
         w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=complex)
 
         for i in np.arange(st1.shape[0]):
             w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -173,14 +178,14 @@ def tfpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         and (number of components, nf, len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
 
         w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=complex)
 
         for i in np.arange(st1.shape[0]):
             w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -237,14 +242,14 @@ def tem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
 
         w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=complex)
 
         for i in np.arange(st1.shape[0]):
             w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -301,14 +306,14 @@ def tpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
 
         w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=complex)
 
         for i in np.arange(st1.shape[0]):
             w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -366,14 +371,14 @@ def fem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         multicomponent data
     """
     if len(st1.shape) == 1:
-        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
 
         w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=complex)
 
         for i in np.arange(st1.shape[0]):
             w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -431,14 +436,14 @@ def fpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         multicomponent data
     """
     if len(st1.shape) == 1:
-        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
 
         w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=complex)
 
         for i in np.arange(st1.shape[0]):
             w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -494,14 +499,14 @@ def em(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :return: Single Valued Envelope Misfit
     """
     if len(st1.shape) == 1:
-        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
 
         w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=complex)
 
         for i in np.arange(st1.shape[0]):
             w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -558,14 +563,14 @@ def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :return: Single Valued Phase Misfit
     """
     if len(st1.shape) == 1:
-        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=complex)
 
         w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=complex)
 
         for i in np.arange(st1.shape[0]):
             w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -1019,7 +1024,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            _tfem[itr].shape[0]))
-        img_tfem = ax_tfem.pcolormesh(x, y, _tfem[itr], cmap=cmap)
+        img_tfem = _pcolormesh_same_dim(ax_tfem, x, y, _tfem[itr], cmap=cmap)
         img_tfem.set_rasterized(True)
         ax_tfem.set_yscale("log")
         ax_tfem.set_ylim(fmin, fmax)
@@ -1037,7 +1042,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         ax_tfpm = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
 
         x, y = np.meshgrid(t, f)
-        img_tfpm = ax_tfpm.pcolormesh(x, y, _tfpm[itr], cmap=cmap)
+        img_tfpm = _pcolormesh_same_dim(ax_tfpm, x, y, _tfpm[itr], cmap=cmap)
         img_tfpm.set_rasterized(True)
         ax_tfpm.set_yscale("log")
         ax_tfpm.set_ylim(f[0], f[-1])
@@ -1076,7 +1081,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         img_tfem.set_clim(-clim, clim)
 
         # add text box for EM + PM
-        textstr = 'EM = %.2f\nPM = %.2f' % (_em[itr], _pm[itr])
+        textstr = 'EM = %.2f\nPM = %.2f' % (_em[itr][0], _pm[itr][0])
         props = dict(boxstyle='round', facecolor='white')
         ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
                     verticalalignment='center', horizontalalignment='left',
@@ -1279,7 +1284,7 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            _tfeg[itr].shape[0]))
-        img_tfeg = ax_tfeg.pcolormesh(x, y, _tfeg[itr], cmap=cmap)
+        img_tfeg = _pcolormesh_same_dim(ax_tfeg, x, y, _tfeg[itr], cmap=cmap)
         img_tfeg.set_rasterized(True)
         ax_tfeg.set_yscale("log")
         ax_tfeg.set_ylim(fmin, fmax)
@@ -1297,7 +1302,7 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         ax_tfpg = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
 
         x, y = np.meshgrid(t, f)
-        img_tfpg = ax_tfpg.pcolormesh(x, y, _tfpg[itr], cmap=cmap)
+        img_tfpg = _pcolormesh_same_dim(ax_tfpg, x, y, _tfpg[itr], cmap=cmap)
         img_tfpg.set_rasterized(True)
         ax_tfpg.set_yscale("log")
         ax_tfpg.set_ylim(f[0], f[-1])
@@ -1336,7 +1341,7 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         img_tfeg.set_clim(0., clim)
 
         # add text box for EG + PG
-        textstr = 'EG = %2.2f\nPG = %2.2f' % (_eg[itr], _pg[itr])
+        textstr = 'EG = %2.2f\nPG = %2.2f' % (_eg[itr][0], _pg[itr][0])
         props = dict(boxstyle='round', facecolor='white')
         ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
                     verticalalignment='center', horizontalalignment='left',
@@ -1456,17 +1461,17 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     f_lin = np.linspace(0, 0.5 / dt, nfft // 2 + 1)
 
     if len(st.shape) == 1:
-        _w = np.zeros((1, nf, npts), dtype=np.complex)
+        _w = np.zeros((1, nf, npts), dtype=complex)
         _w[0] = cwt(st, dt, w0, fmin, fmax, nf)
         ntr = 1
 
-        spec = np.zeros((1, nfft // 2 + 1), dtype=np.complex)
+        spec = np.zeros((1, nfft // 2 + 1), dtype=complex)
         spec[0] = np.fft.rfft(st, n=nfft) * dt
 
         st = st.reshape((1, npts))
     else:
-        _w = np.zeros((st.shape[0], nf, npts), dtype=np.complex)
-        spec = np.zeros((st.shape[0], nfft // 2 + 1), dtype=np.complex)
+        _w = np.zeros((st.shape[0], nf, npts), dtype=complex)
+        spec = np.zeros((st.shape[0], nfft // 2 + 1), dtype=complex)
 
         for i in np.arange(st.shape[0]):
             _w[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
@@ -1498,7 +1503,7 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            _tfr[itr].shape[0]))
-        img_tfr = ax_tfr.pcolormesh(x, y, _tfr[itr], cmap=cmap)
+        img_tfr = _pcolormesh_same_dim(ax_tfr, x, y, _tfr[itr], cmap=cmap)
         img_tfr.set_rasterized(True)
         ax_tfr.set_yscale("log")
         ax_tfr.set_ylim(fmin, fmax)

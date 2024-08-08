@@ -1,6 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()
-
 import io
 from urllib.request import urlopen
 
@@ -26,7 +23,7 @@ clusters = hierarchy.fcluster(linkage, threshold, criterion="distance")
 
 # A little nicer set of colors.
 cmap = plt.get_cmap('Paired', lut=6)
-colors = ['#%02x%02x%02x' % tuple(col * 255 for col in cmap(i)[:3])
+colors = ['#%02x%02x%02x' % tuple(int(col * 255) for col in cmap(i)[:3])
           for i in range(6)]
 try:
     hierarchy.set_link_color_palette(colors[1:])

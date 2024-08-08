@@ -1,20 +1,15 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Routing client for the IRIS federator routing service.
+Routing client for the EarthScope (former IRIS) federator routing service.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
     Celso G Reyes, 2017
-    IRIS-DMC
+    EarthScope/IRIS-DMC
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import collections
 
 from ..client import get_bulk_string
@@ -31,7 +26,7 @@ class FederatorRoutingClient(BaseRoutingClient):
         Initialize a federated routing client.
 
         All parameters except ``url`` are passed on to the
-        :class:`~obspy.clients.fdsn.routing.routing_clieng.BaseRoutingClient`
+        :class:`~obspy.clients.fdsn.routing.routing_client.BaseRoutingClient`
         parent class
 
         :param url: The URL of the routing service.
@@ -68,9 +63,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         provider FDSN client are not supported.
 
         This can route on a number of different parameters, please see the
-        web site of the
-        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
-        for details.
+        web site of the `EarthScope (former IRIS) Federator
+        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
         """
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]
@@ -84,7 +78,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         params["format"] = "request"
 
         bulk_str = get_bulk_string(bulk, params)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content,
             service="dataselect")
@@ -103,9 +98,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         supported.
 
         This can route on a number of different parameters, please see the
-        web site of the
-        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
-        for details.
+        web site of the `EarthScope (former IRIS) Federator
+        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
         """
         return super(FederatorRoutingClient, self).get_stations(**kwargs)
 
@@ -122,9 +116,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         supported.
 
         This can route on a number of different parameters, please see the
-        web site of the
-        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
-        for details.
+        web site of the `EarthScope (former IRIS) Federator
+        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
         """
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]
@@ -140,7 +133,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         params["format"] = "request"
 
         bulk_str = get_bulk_string(bulk, params)
-        r = self._download(self._url + "/query", data=bulk_str)
+        r = self._download(self._url + "/query", data=bulk_str,
+                           content_type='text/plain')
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content,
             service="station")
@@ -169,7 +163,7 @@ class FederatorRoutingClient(BaseRoutingClient):
             line = line.strip()
             if not line:
                 continue
-            if "http://" in line:
+            if "http://" in line or "https://" in line:
                 if key not in line:
                     continue
                 current_key = line[len(key) + 1:line.rfind("/fdsnws")]
@@ -180,8 +174,3 @@ class FederatorRoutingClient(BaseRoutingClient):
             split[current_key].append(line)
 
         return {k: "\n".join(v) for k, v in split.items()}
-
-
-if __name__ == '__main__':  # pragma: no cover
-    import doctest
-    doctest.testmod(exclude_empty=True)

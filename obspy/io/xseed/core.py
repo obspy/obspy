@@ -8,10 +8,6 @@ Integration with ObsPy's core classes.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import collections
 import io
 import re
@@ -127,7 +123,7 @@ def _read_seed(filename, skip_invalid_responses=True, *args, **kwargs):
     Read dataless SEED files to an ObsPy inventory object
 
     :param filename: File with a SEED file.
-    :type filename: str or file-like object.
+    :type filename: str or file-like object
     :param skip_invalid_responses: If True, invalid responses will be replaced
         by None but a warning will be raised. Otherwise an exception will be
         raised. Only responses which are clearly invalid will not be read.
@@ -144,7 +140,7 @@ def _read_xseed(filename, skip_invalid_responses=True, *args, **kwargs):
     Read XML-SEED files to an ObsPy inventory object
 
     :param filename: File with a XML-SEED file.
-    :type filename: str or file-like object.
+    :type filename: str or file-like object
     :param skip_invalid_responses: If True, invalid responses will be replaced
         by None but a warning will be raised. Otherwise an exception will be
         raised. Only responses which are clearly invalid will not be read.
@@ -162,7 +158,7 @@ def _read_resp(filename, skip_invalid_responses=True, *args, **kwargs):
     this information will be missing from the inventory objects.
 
     :param filename: File with a RESP file.
-    :type filename: str or file-like object.
+    :type filename: str or file-like object
     :param skip_invalid_responses: If True, invalid responses will be replaced
         by None but a warning will be raised. Otherwise an exception will be
         raised. Only responses which are clearly invalid will not be read.
@@ -184,7 +180,8 @@ def _read_resp(filename, skip_invalid_responses=True, *args, **kwargs):
 
 def _parse_to_inventory_object(p, skip_invalid_responses=True):
     """
-    Parses a Parser object to an obspy.core.inventory.Inventory object.
+    Parses a Parser object to an obspy.core.inventory.inventory.Inventory
+    object.
 
     :param p: A Parser object.
     :param skip_invalid_responses: If True, invalid responses will be replaced
@@ -234,6 +231,10 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
         elevation = last_or_none("elevation")
         site_name = last_or_none("site_name")
 
+        # handle None in mandatory elevation field with obvious bogus value
+        if elevation is None:
+            elevation = 123456.0
+
         # Take the first start-date and the last end-date.
         start_effective_date = station_info["start_effective_date"][0] \
             if "start_effective_date" in station_info else None
@@ -258,9 +259,10 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
         s = obspy.core.inventory.Station(
             code=station_call_letters,
             # Set to bogus values if not set.
+            # elevation bogus is handled above
             latitude=latitude or 0.0,
             longitude=longitude or 0.0,
-            elevation=elevation or 123456.0,
+            elevation=elevation,
             channels=None,
 
             site=obspy.core.inventory.Site(name=site_name),

@@ -11,51 +11,36 @@ seiscomp.core test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+import re
 
-import os
-import unittest
+import pytest
 
 from obspy.io.seiscomp.core import _is_sc3ml, validate
 
 
-class CoreTestCase(unittest.TestCase):
+class TestCore():
     """
     Test suite for obspy.io.seiscomp.event
     """
-    def setUp(self):
-        self.data_dir = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_sc3ml_versions(self):
+    def test_sc3ml_versions(self, testdata):
         """
         Test multiple schema versions
         """
-        for version in ['0.3', '0.5', '0.9', '0.10']:
-            filename = os.path.join(self.data_dir, 'version%s' % version)
-            self.assertTrue(_is_sc3ml(filename))
+        for version in ['0.10', '0.11', '0.12', '0.13']:
+            filename = testdata['version%s' % version]
+            assert _is_sc3ml(filename)
 
-    def test_sc3ml_no_version_attribute(self):
-        filename = os.path.join(self.data_dir, 'no_version_attribute.sc3ml')
-        self.assertTrue(_is_sc3ml(filename))
+    def test_sc3ml_no_version_attribute(self, testdata):
+        filename = testdata['no_version_attribute.sc3ml']
+        assert _is_sc3ml(filename)
 
-    def test_validate(self):
-        filename = os.path.join(self.data_dir, 'qml-example-1.2-RC3.sc3ml')
-        self.assertTrue(validate(filename))
-        self.assertFalse(validate(filename, version='0.8'))
+    def test_validate(self, testdata):
+        filename = testdata['qml-example-1.2-RC3.sc3ml']
+        assert validate(filename)
+        assert not validate(filename, version='0.8')
 
-        with self.assertRaises(ValueError) as e:
-            validate(filename, version='0.11')
-
-        expected_error = ("0.11 is not a supported version. Use one of these "
-                          "versions: [0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 0.10].")
-        self.assertEqual(e.exception.args[0], expected_error)
-
-
-def suite():
-    return unittest.makeSuite(CoreTestCase, "test")
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        expected_error = re.escape(
+            "0.99 is not a supported version. Use one of these "
+            "versions: [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13].")
+        with pytest.raises(ValueError, match=expected_error):
+            validate(filename, version='0.99')

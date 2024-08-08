@@ -34,7 +34,7 @@ ObsPy currently ships with the following 1D velocity models:
   http://rses.anu.edu.au/seismology/ak135/ak135f.html (not supported)
 * ``ak135f_no_mud``, ``ak135f`` with ``ak135`` used above the 120-km
   discontinuity; see the SPECFEM3D_GLOBE manual at
-  https://geodynamics.org/cig/software/specfem3d_globe/
+  https://specfem3d-globe.readthedocs.io/en/latest/
 * ``herrin``, see [Herrin1968]_
 * ``iasp91``, see [KennetEngdahl1991]_
 * ``jb``, see [JeffreysBullen1940]_
@@ -64,7 +64,7 @@ and model. By default it returns arrivals for a number of phases.
     PcP phase arrival at 674.865 seconds
     PP phase arrival at 794.992 seconds
     PKiKP phase arrival at 1034.098 seconds
-    pPKiKP phase arrival at 1050.529 seconds
+    pPKiKP phase arrival at 1050.528 seconds
     sPKiKP phase arrival at 1056.721 seconds
     S phase arrival at 1176.948 seconds
     pS phase arrival at 1195.508 seconds
@@ -83,7 +83,7 @@ and model. By default it returns arrivals for a number of phases.
     PKIKKIKS phase arrival at 2069.756 seconds
     SKIKKIKS phase arrival at 2277.857 seconds
     PKIKPPKIKP phase arrival at 2353.934 seconds
-    PKPPKP phase arrival at 2356.425 seconds
+    PKPPKP phase arrival at 2356.426 seconds
     PKPPKP phase arrival at 2358.899 seconds
     SKIKSSKIKS phase arrival at 3208.155 seconds
 
@@ -106,7 +106,7 @@ object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
 >>> arr.ray_param, arr.time, arr.incident_angle  # doctest: +ELLIPSIS
-(453.7535..., 485.2100..., 24.3988...)
+(453.7..., 485.210..., 24.39...)
 
 Ray Paths
 ^^^^^^^^^
@@ -211,8 +211,7 @@ size or subplot setup:
 >>> import matplotlib.pyplot as plt
 >>> fig, ax = plt.subplots(figsize=(9, 9))
 >>> ax = plot_travel_times(source_depth=10, phase_list=["P", "S", "PP"],
-...                        ax=ax, fig=fig, verbose=True)
-There was 1 epicentral distance without an arrival
+...                        ax=ax, fig=fig)
 
 .. plot::
     :width: 50%
@@ -222,8 +221,8 @@ There was 1 epicentral distance without an arrival
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(9, 9))
-    ax = plot_travel_times(source_depth=10, ax=ax, phase_list=["P", "S", "PP"],
-                           fig=fig)
+    ax = plot_travel_times(source_depth=10, phase_list=["P", "S", "PP"],
+                           ax=ax, fig=fig)
 
 The ray path plot wrapper function is :func:`~obspy.taup.tau.plot_ray_paths`.
 Again, creating the figure and axes first is optional to have control over e.g.
@@ -246,13 +245,13 @@ There were rays for all but the following epicentral distances:
     from obspy.taup import plot_ray_paths
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplot(subplot_kw=dict(projection='polar'))
+    fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
     ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
 
 More examples of plotting may be found in the :doc:`ObsPy tutorial
 </tutorial/code_snippets/travel_time>`.
 
-.. _`Phase naming in taup`:
+.. _phase_taup:
 
 Phase naming in obspy.taup
 --------------------------
@@ -308,7 +307,8 @@ depth to an interface involved in an interaction.
     * ``v`` - topside reflection, used primarily for crustal and mantle
       interfaces
     * ``diff`` appended to ``P`` or ``S`` - diffracted wave along the core
-      mantle boundary
+      mantle boundary; appended to ``K`` - diffracted wave along the inner-core
+      outer-core boundary
     * ``kmps`` appended to a velocity - horizontal phase velocity (see 10
       below)
     * ``ed`` appended to ``P`` or ``S`` - an exclusively downgoing path, for a
@@ -426,10 +426,6 @@ Building custom models
 Custom models can be built from ``.tvel`` and ``.nd`` files using the
 :func:`~obspy.taup.taup_create.build_taup_model` function.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 # Module wide default settings.
 _DEFAULT_VALUES = {
     # Default depths for a couple of discontinuities in earth. These are
@@ -443,7 +439,9 @@ _DEFAULT_VALUES = {
     "qp": 1000.0,
     "qs": 2000.0,
     # Slowness tolerance
-    "slowness_tolerance": 1e-16
+    "slowness_tolerance": 1e-16,
+    "default_time_ray_param_tol": 1e-1,
+    "default_path_ray_param_tol": 1e-6
 }
 
 

@@ -1,0 +1,30 @@
+[Main]
+question = "Which is the channel description?"
+
+[Temperature]
+path = "Q330PacketBaler_CDTemperature.txt"
+
+[SystemCurrent]
+path = "Q330PacketBaler_CDSystemCurrent.txt"
+
+[PacketBuffer]
+path = "Q330PacketBaler_CDPacketBuffer.txt"
+
+[MassPosition]
+path = "Q330PacketBaler_CDMassPosition.txt"
+
+[InputVoltage]
+path = "Q330PacketBaler_CDInputVoltage.txt"
+
+[CrystalOscillator]
+path = "Q330PacketBaler_CDCrystalOscillator.txt"
+
+[ClockQuality]
+path = "Q330PacketBaler_CDClockQuality.txt"
+
+[ClockError]
+path = "Q330PacketBaler_CDClockError.txt"
+
+[AntennaCurrent]
+path = "Q330PacketBaler_CDAntennaCurrent.txt"
+

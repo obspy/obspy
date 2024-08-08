@@ -15,10 +15,6 @@ Frequency Attributes
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 from operator import itemgetter
 
 import numpy as np
@@ -315,7 +311,7 @@ def log_spaced_filterbank_matrix(p, n, fs, w):
     v = 2 * np.append([1 - pm[k2:k4 + 1]], [pm[1:k3 + 1]])
     mn = b1 + 1
     mx = b4 + 1
-    # x = np.array([[c],[r]], dtype=[('x', np.float), ('y', np.float)])
+    # x = np.array([[c],[r]], dtype=[('x', float), ('y', float)])
     # ind=np.argsort(x, order=('x','y'))
     if (w == 'Hann'):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]
@@ -324,7 +320,7 @@ def log_spaced_filterbank_matrix(p, n, fs, w):
     # bugfix for #70 - scipy.sparse.csr_matrix() delivers sometimes a
     # transposed matrix depending on the installed NumPy version - using
     # scipy.sparse.coo_matrix() ensures compatibility with old NumPy versions
-    xx = sparse.coo_matrix((v, (c, r))).transpose().todense()
+    xx = np.array(sparse.coo_matrix((v, (c, r))).transpose().todense())
     return xx, mn - 1, mx - 1
 
 
@@ -359,7 +355,7 @@ def log_cepstrum(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     ath = np.sqrt(pth)
     # h1 = np.transpose(np.array([[ath] * int(b + 1 - a)]))
     # h2 = m * abs(f[a - 1:b, :])
-    y = np.log(np.maximum(m * abs(f[a - 1:b, :]), ath))
+    y = np.log(np.maximum(m @ abs(f[a - 1:b, :]), ath))
     z = util.rdct(y)
     z = z[1:, :]
     # nc = nc + 1
@@ -376,8 +372,9 @@ def peak_ground_motion(data, delta, freq, damp=0.1):
     Peak ground motion parameters
 
     Compute the maximal displacement, velocity, acceleration and the peak
-    ground acceleration at a certain frequency (standard frequencies for
-    ShakeMaps are 0.3/1.0/3.0 Hz).
+    ground acceleration at a certain frequency (standard periods for
+    ShakeMaps are 0.3/1.0/3.0 seconds. Note that the above input is expected as
+    frequency in Hertz.).
 
     Data must be displacement
 

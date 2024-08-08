@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import io
 import os
 import warnings
@@ -56,7 +51,7 @@ class Blockette(object):
         self.seed_version = kwargs.get('version', 2.4)
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
         return self.__dict__ == other.__dict__
 
@@ -103,7 +98,7 @@ class Blockette(object):
         if isinstance(data, bytes):
             expected_length = len(data)
             data = io.BytesIO(data)
-        elif isinstance(data, (str, native_str)):
+        elif isinstance(data, str):
             raise TypeError("data must be bytes, not string")
         start_pos = data.tell()
         # debug

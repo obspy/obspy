@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: array.py
@@ -17,15 +16,12 @@ Functions for Array Analysis
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 import warnings
 
+from matplotlib.dates import datestr2num
 import numpy as np
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 
 from obspy.core import Stream
 from obspy.signal.headers import clibsignal
@@ -350,13 +346,13 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     ts_ptilde = np.empty((nt, 6))
     for array in (ts_wmag, ts_w1, ts_w2, ts_w3, ts_tilt, ts_dh, ts_sh, ts_s,
                   ts_pred, ts_misfit, ts_m, ts_data, ts_ptilde):
-        array.fill(np.NaN)
+        array.fill(np.nan)
     ts_e = np.empty((nt, 3, 3))
-    ts_e.fill(np.NaN)
+    ts_e.fill(np.nan)
 
     # other matrices
     udif = np.empty((3, _n))
-    udif.fill(np.NaN)
+    udif.fill(np.nan)
 
     # ---------------------------------------------------------------
     # here we define 4x6 be and 3x6 bw matrices.  these map the solution
@@ -487,7 +483,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         misfit_sq = misfit ** 2
         misfit_sq = np.reshape(misfit_sq, (_n, 3)).T
         misfit_sumsq = np.empty(_n)
-        misfit_sumsq.fill(np.NaN)
+        misfit_sumsq.fill(np.nan)
         for i in range(_n):
             misfit_sumsq[i] = misfit_sq[:, i].sum()
         misfit_len = np.sum(np.sqrt(misfit_sumsq))
@@ -511,7 +507,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
         # Three components of the rotation vector omega (=w here)
         w = np.empty(3)
-        w.fill(np.NaN)
+        w.fill(np.nan)
         w[0] = -ptilde[5]
         w[1] = ptilde[2]
         w[2] = .5 * (ptilde[3] - ptilde[1])
@@ -799,9 +795,9 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     :type fmin: float
     :param fmin: minimum frequency in signal
     :type fmax: float
-    :param fmin: maximum frequency in signal
+    :param fmax: maximum frequency in signal
     :type fstep: float
-    :param fmin: frequency sample distance
+    :param fstep: frequency sample distance
     """
     coords = get_geometry(coords, coordsys)
     if isinstance(slim, float):
@@ -829,12 +825,12 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
         for j, sy in enumerate(np.arange(symin, symax + sstep / 10., sstep)):
             for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
                 _sum = 0j
-                for l in np.arange(len(coords)):
+                for l in np.arange(len(coords)):  # NOQA
                     _sum += np.exp(
                         complex(0., (coords[l, 0] * sx + coords[l, 1] * sy) *
                                 2 * np.pi * f))
                 buff[k] = abs(_sum) ** 2
-            transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
+            transff[i, j] = cumulative_trapezoid(buff, dx=fstep)[-1]
 
     transff /= transff.max()
     return transff
@@ -894,11 +890,10 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
         the timestamp in seconds since 1970-01-01T00:00:00, 'mlabday'
         returns the timestamp in days (decimals represent hours, minutes
-        and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
-        date plotting (see e.g. matplotlib's num2date)
+        and seconds) since the start of the used matplotlib time epoch
     :type method: int
     :param method: the method to use 0 == bf, 1 == capon
-    :type store: function
+    :type store: callable
     :param store: A custom function which gets called on each iteration. It is
         called with the relative power map and the time offset as first and
         second arguments and the iteration number as third argument. Useful for
@@ -1022,14 +1017,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     if timestamp == 'julsec':
         pass
     elif timestamp == 'mlabday':
-        # 719163 == days between 1970 and 0001 + 1
-        res[:, 0] = res[:, 0] / (24. * 3600) + 719163
+        res[:, 0] = res[:, 0] / (24. * 3600) + datestr2num('1970-01-01')
     else:
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)
     return np.array(res)
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

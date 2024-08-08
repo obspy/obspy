@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.1">
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.2">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.4</Module>

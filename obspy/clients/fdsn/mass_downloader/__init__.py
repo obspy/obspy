@@ -475,7 +475,7 @@ Logging
 -------
 
 The download helpers utilizes Python's `logging facilities
-<https://docs.python.org/2/library/logging.html>`__. By default it will log to
+<https://docs.python.org/3/library/logging.html>`__. By default it will log to
 stdout at the ``logging.INFO`` level which provides a fair amount of detail. If
 you want to change the log level or setup a different stream handler, just get
 the corresponding logger after you import the download helpers module:
@@ -497,7 +497,7 @@ credientials and just passing the name of the FDSN services to query.
 >>> from obspy.clients.fdsn import Client
 >>> client_orfeus = Client("ORFEUS", user="random", password="some_pw")
 >>> client_eth = Client("ETH", user="from_me", password="to_you")
->>> mdl = MassDownloader(providers=[client_orfeus, "IRIS", client_eth]) \
+>>> mdl = MassDownloader(providers=[client_orfeus, "EARTHSCOPE", client_eth]) \
     # doctest: +SKIP
 
 
@@ -510,11 +510,6 @@ Further functionality of this module is documented at a couple of other places:
 * :class:`~.restrictions.Restrictions` class
 * :class:`~.mass_downloader.MassDownloader` class
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import warnings
 
 from obspy.core.util.base import SCIPY_VERSION
@@ -525,14 +520,8 @@ from .domain import (Domain, RectangularDomain,  # NOQA
                      CircularDomain, GlobalDomain)  # NOQA
 
 
-__all__ = [native_str(i) for i in (
-    'MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
-    'CircularDomain', 'GlobalDomain')]
-
-if SCIPY_VERSION < [0, 12]:
-    msg = ('At least some parts of FDSN Mass downloader might not '
-           'work with old scipy versions <0.12.0 (installed: {})')
-    warnings.warn(msg.format(SCIPY_VERSION))
+__all__ = ['MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
+           'CircularDomain', 'GlobalDomain']
 
 
 if __name__ == '__main__':

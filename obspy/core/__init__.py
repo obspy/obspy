@@ -116,16 +116,11 @@ supported formats.
 
 .. _NumPy: http://www.numpy.org
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util.attribdict import AttribDict  # NOQA
 from obspy.core.trace import Stats, Trace  # NOQA
 from obspy.core.stream import Stream, read  # NOQA
-from obspy.scripts.runtests import run_tests  # NOQA
 
 
 if __name__ == '__main__':

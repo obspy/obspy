@@ -2,95 +2,36 @@
 """
 The cross correlation test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import ctypes as C  # NOQA
 import numpy as np
-import os
-import unittest
 import warnings
 
+import pytest
+
 from obspy import UTCDateTime, read, Trace
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+from obspy.core.util import AttribDict
 from obspy.core.util.libnames import _load_cdll
-from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (
     correlate, correlate_template, correlate_stream_template,
     correlation_detector,
     xcorr_pick_correction, xcorr_3c, xcorr_max,
-    xcorr, _xcorr_padzeros, _xcorr_slice, _find_peaks)
+    _xcorr_padzeros, _xcorr_slice, _find_peaks)
 from obspy.signal.trigger import coincidence_trigger
 
 
-class CrossCorrelationTestCase(unittest.TestCase):
+class TestCrossCorrelation:
 
     """
-    Cross corrrelation test case
+    Cross correlation test case
     """
-
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        self.path_images = os.path.join(os.path.dirname(__file__), 'images')
-        self.a = np.sin(np.linspace(0, 10, 101))
-        self.b = 5 * np.roll(self.a, 5)
-        self.c = 5 * np.roll(self.a[:81], 5)
-
-    def test_xcorr(self):
-        """
-        This tests the old, deprecated xcorr() function.
-        """
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=ObsPyDeprecationWarning)
-            # example 1 - all samples are equal
-            np.random.seed(815)  # make test reproducible
-            tr1 = np.random.randn(10000).astype(np.float32)
-            tr2 = tr1.copy()
-            shift, corr = xcorr(tr1, tr2, 100)
-            self.assertEqual(shift, 0)
-            self.assertAlmostEqual(corr, 1, 2)
-            # example 2 - all samples are different
-            tr1 = np.ones(10000, dtype=np.float32)
-            tr2 = np.zeros(10000, dtype=np.float32)
-            shift, corr = xcorr(tr1, tr2, 100)
-            self.assertEqual(shift, 0)
-            self.assertAlmostEqual(corr, 0, 2)
-            # example 3 - shift of 10 samples
-            tr1 = np.random.randn(10000).astype(np.float32)
-            tr2 = np.concatenate((np.zeros(10), tr1[0:-10]))
-            shift, corr = xcorr(tr1, tr2, 100)
-            self.assertEqual(shift, -10)
-            self.assertAlmostEqual(corr, 1, 2)
-            shift, corr = xcorr(tr2, tr1, 100)
-            self.assertEqual(shift, 10)
-            self.assertAlmostEqual(corr, 1, 2)
-            # example 4 - shift of 10 samples + small sine disturbance
-            tr1 = (np.random.randn(10000) * 100).astype(np.float32)
-            var = np.sin(np.arange(10000, dtype=np.float32) * 0.1)
-            tr2 = np.concatenate((np.zeros(10), tr1[0:-10])) * 0.9
-            tr2 += var
-            shift, corr = xcorr(tr1, tr2, 100)
-            self.assertEqual(shift, -10)
-            self.assertAlmostEqual(corr, 1, 2)
-            shift, corr = xcorr(tr2, tr1, 100)
-            self.assertEqual(shift, 10)
-            self.assertAlmostEqual(corr, 1, 2)
-
-    def test_correlate_deprecated_domain_keyword(self):
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always", category=ObsPyDeprecationWarning)
-            a = [1, 2, 3]
-            b = [1, 2]
-            correlate(a, b, 5, domain='freq')
-            correlate(a, b, 5, domain='time')
-        # on py37, scipy 1.1.0 this also catch FutureWarning from scipy
-        # internals, so we need to filter the warning messages
-        domain_warn = [x for x in w if 'keyword of correlate function'
-                       in str(x.message)]
-        self.assertEqual(len(domain_warn), 2)
+    @pytest.fixture(scope='class')
+    def state(self):
+        """Return test state."""
+        out = AttribDict()
+        out.a = np.sin(np.linspace(0, 10, 101))
+        out.b = 5 * np.roll(out.a, 5)
+        out.c = 5 * np.roll(out.a[:81], 5)
+        return out
 
     def test_correlate_normalize_true_false(self):
         a = read()[0].data[500:]
@@ -126,11 +67,11 @@ class CrossCorrelationTestCase(unittest.TestCase):
                          window_len, len(data1), len(data2),
                          C.byref(shift), C.byref(coe_p))
 
-        self.assertEqual(0, res)
-        self.assertAlmostEqual(0.0, shift.value)
-        self.assertAlmostEqual(1.0, coe_p.value)
+        assert 0 == res
+        assert round(abs(0.0-shift.value), 7) == 0
+        assert round(abs(1.0-coe_p.value), 7) == 0
 
-    def test_xcorr_vs_old_implementation(self):
+    def test_xcorr_vs_old_implementation(self, state):
         """
         Test against output of xcorr from ObsPy<1.1
         """
@@ -144,25 +85,25 @@ class CrossCorrelationTestCase(unittest.TestCase):
              0.48351386, 0.39884904, 0.31222231, 0.22458339, 0.13687123,
              0.05000401, -0.03513057, -0.11768441, -0.19685756, -0.27190599,
              -0.34214866]
-        corr_fun = correlate(self.a, self.b, shift=15)
+        corr_fun = correlate(state.a, state.b, shift=15)
         shift, corr = xcorr_max(corr_fun)
         np.testing.assert_allclose(corr_fun, x)
-        self.assertAlmostEqual(corr, 0.96516076)
-        self.assertEqual(shift, -5)
+        assert round(abs(corr-0.96516076), 7) == 0
+        assert shift == -5
 
-    def test_correlate_different_length_of_signals(self):
+    def test_correlate_different_length_of_signals(self, state):
         # Signals are aligned around the middle
-        cc = correlate(self.a, self.c, 50)
+        cc = correlate(state.a, state.c, 50)
         shift, _ = xcorr_max(cc)
-        self.assertEqual(shift, -5 - (len(self.a) - len(self.c)) // 2)
+        assert shift == -5 - (len(state.a) - len(state.c)) // 2
 
     def test_correlate(self):
         # simple test
         a, b = [0, 1], [20, 10]
         cc = correlate(a, b, 1, demean=False, normalize=False)
         shift, value = xcorr_max(cc)
-        self.assertEqual(shift, 1)
-        self.assertAlmostEqual(value, 20.)
+        assert shift == 1
+        assert round(abs(value-20.), 7) == 0
         np.testing.assert_allclose(cc, [0., 10., 20.], atol=1e-14)
         # test symetry and different length of a and b
         a, b = [0, 1, 2], [20, 10]
@@ -176,10 +117,10 @@ class CrossCorrelationTestCase(unittest.TestCase):
         shift2, _ = xcorr_max(cc2)
         shift3, _ = xcorr_max(cc3)
         shift4, _ = xcorr_max(cc4)
-        self.assertEqual(shift1, 0.5)
-        self.assertEqual(shift2, 0.5)
-        self.assertEqual(shift3, -0.5)
-        self.assertEqual(shift4, -0.5)
+        assert shift1 == 0.5
+        assert shift2 == 0.5
+        assert shift3 == -0.5
+        assert shift4 == -0.5
         np.testing.assert_allclose(cc1, cc2)
         np.testing.assert_allclose(cc3, cc4)
         np.testing.assert_allclose(cc1, cc3[::-1])
@@ -189,7 +130,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         cc2 = correlate(b, a, 2, method='direct')
         np.testing.assert_allclose(cc1, cc2[::-1])
 
-    def test_correlate_different_implementations(self):
+    def test_correlate_different_implementations(self, state):
         """
         Test correct length and different implementations against each other
         """
@@ -197,11 +138,11 @@ class CrossCorrelationTestCase(unittest.TestCase):
         xcorrs2 = []
         for xcorr_func in (_xcorr_padzeros, _xcorr_slice):
             for method in ('auto', 'fft', 'direct'):
-                x = xcorr_func(self.a, self.b, 40, method)
-                y = xcorr_func(self.a, self.b[:-1], 40, method)
-                self.assertEqual((len(self.a) - len(self.b)) % 2, 0)
-                self.assertEqual(len(x), 2 * 40 + 1)
-                self.assertEqual(len(y), 2 * 40)
+                x = xcorr_func(state.a, state.b, 40, method)
+                y = xcorr_func(state.a, state.b[:-1], 40, method)
+                assert (len(state.a) - len(state.b)) % 2 == 0
+                assert len(x) == 2 * 40 + 1
+                assert len(y) == 2 * 40
                 xcorrs1.append(x)
                 xcorrs2.append(y)
         for x_other in xcorrs1[1:]:
@@ -219,28 +160,28 @@ class CrossCorrelationTestCase(unittest.TestCase):
         cc2 = correlate(a, b, 3, method='fft')
         cc3 = correlate(a, b, None, method='fft')
         cc4 = correlate(a, b, None, method='direct')
-        self.assertEqual(len(cc1), n)
-        self.assertEqual(len(cc2), 2 + n)
-        self.assertEqual(len(cc3), n)
-        self.assertEqual(len(cc4), n)
+        assert len(cc1) == n
+        assert len(cc2) == 2 + n
+        assert len(cc3) == n
+        assert len(cc4) == n
         a, b = [1, 2, 3], [1, 2]
         n = len(a) + len(b) - 1
         cc1 = correlate(a, b, 2, method='fft')
         cc2 = correlate(a, b, 3, method='fft')
         cc3 = correlate(a, b, None, method='fft')
         cc4 = correlate(a, b, None, method='direct')
-        self.assertEqual(len(cc1), n)
-        self.assertEqual(len(cc2), 2 + n)
-        self.assertEqual(len(cc3), n)
-        self.assertEqual(len(cc4), n)
+        assert len(cc1) == n
+        assert len(cc2) == 2 + n
+        assert len(cc3) == n
+        assert len(cc4) == n
 
     def test_xcorr_max(self):
         shift, value = xcorr_max((1, 3, -5))
-        self.assertEqual(shift, 1)
-        self.assertEqual(value, -5)
+        assert shift == 1
+        assert value == -5
         shift, value = xcorr_max((3., -5.), abs_max=False)
-        self.assertEqual(shift, -0.5)
-        self.assertEqual(value, 3.)
+        assert shift == -0.5
+        assert value == 3.
 
     def test_xcorr_3c(self):
         st = read()
@@ -248,18 +189,16 @@ class CrossCorrelationTestCase(unittest.TestCase):
         for tr in st2:
             tr.data = -5 * np.roll(tr.data, 50)
         shift, value, x = xcorr_3c(st, st2, 200, full_xcorr=True)
-        self.assertEqual(shift, -50)
-        self.assertAlmostEqual(value, -0.998, 3)
+        assert shift == -50
+        assert round(abs(value--0.998), 3) == 0
 
-    def test_xcorr_pick_correction(self):
+    def test_xcorr_pick_correction(self, state, testdata):
         """
         Test cross correlation pick correction on a set of two small local
         earthquakes.
         """
-        st1 = read(os.path.join(self.path,
-                                'BW.UH1._.EHZ.D.2010.147.a.slist.gz'))
-        st2 = read(os.path.join(self.path,
-                                'BW.UH1._.EHZ.D.2010.147.b.slist.gz'))
+        st1 = read(testdata['BW.UH1._.EHZ.D.2010.147.a.slist.gz'])
+        st2 = read(testdata['BW.UH1._.EHZ.D.2010.147.b.slist.gz'])
 
         tr1 = st1.select(component="Z")[0]
         tr2 = st2.select(component="Z")[0]
@@ -269,37 +208,34 @@ class CrossCorrelationTestCase(unittest.TestCase):
         t2 = UTCDateTime("2010-05-27T16:27:30.585000Z")
 
         dt, coeff = xcorr_pick_correction(t1, tr1, t2, tr2, 0.05, 0.2, 0.1)
-        self.assertAlmostEqual(dt, -0.014459080288833711)
-        self.assertAlmostEqual(coeff, 0.91542878457939791)
+        assert round(abs(dt--0.014459080288833711), 7) == 0
+        assert round(abs(coeff-0.91542878457939791), 7) == 0
         dt, coeff = xcorr_pick_correction(t2, tr2, t1, tr1, 0.05, 0.2, 0.1)
-        self.assertAlmostEqual(dt, 0.014459080288833711)
-        self.assertAlmostEqual(coeff, 0.91542878457939791)
+        assert round(abs(dt-0.014459080288833711), 7) == 0
+        assert round(abs(coeff-0.91542878457939791), 7) == 0
         dt, coeff = xcorr_pick_correction(
             t1, tr1, t2, tr2, 0.05, 0.2, 0.1, filter="bandpass",
             filter_options={'freqmin': 1, 'freqmax': 10})
-        self.assertAlmostEqual(dt, -0.013025086360067755)
-        self.assertAlmostEqual(coeff, 0.98279277273758803)
-        self.assertEqual(tr1, tr1_copy)
-        self.assertEqual(tr2, tr2_copy)
+        assert round(abs(dt--0.013025086360067755), 7) == 0
+        assert round(abs(coeff-0.98279277273758803), 7) == 0
+        assert tr1 == tr1_copy
+        assert tr2 == tr2_copy
 
-    def test_xcorr_pick_correction_images(self):
+    def test_xcorr_pick_correction_images(self, state, image_path, testdata):
         """
         Test cross correlation pick correction on a set of two small local
         earthquakes.
         """
-        st1 = read(os.path.join(self.path,
-                                'BW.UH1._.EHZ.D.2010.147.a.slist.gz'))
-        st2 = read(os.path.join(self.path,
-                                'BW.UH1._.EHZ.D.2010.147.b.slist.gz'))
+        st1 = read(testdata['BW.UH1._.EHZ.D.2010.147.a.slist.gz'])
+        st2 = read(testdata['BW.UH1._.EHZ.D.2010.147.b.slist.gz'])
 
         tr1 = st1.select(component="Z")[0]
         tr2 = st2.select(component="Z")[0]
         t1 = UTCDateTime("2010-05-27T16:24:33.315000Z")
         t2 = UTCDateTime("2010-05-27T16:27:30.585000Z")
 
-        with ImageComparison(self.path_images, 'xcorr_pick_corr.png') as ic:
-            dt, coeff = xcorr_pick_correction(
-                t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True, filename=ic.name)
+        xcorr_pick_correction(
+            t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True, filename=image_path)
 
     def test_correlate_template_eqcorrscan(self):
         """
@@ -336,8 +272,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
         cc = correlate_template(data, template)
         np.testing.assert_allclose(cc, result, atol=1e-7)
         shift, corr = xcorr_max(cc)
-        self.assertAlmostEqual(corr, 1.0)
-        self.assertEqual(shift, 0)
+        assert round(abs(corr-1.0), 7) == 0
+        assert shift == 0
 
     def test_correlate_template_eqcorrscan_time(self):
         """
@@ -361,8 +297,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
         cc = correlate_template(data, template, method='direct')
         np.testing.assert_allclose(cc, result, atol=1e-7)
         shift, corr = xcorr_max(cc)
-        self.assertAlmostEqual(corr, 1.0)
-        self.assertEqual(shift, 0)
+        assert round(abs(corr-1.0), 7) == 0
+        assert shift == 0
 
     def test_correlate_template_different_normalizations(self):
         data = read()[0].data
@@ -373,11 +309,11 @@ class CrossCorrelationTestCase(unittest.TestCase):
         full_xcorr = ct(data, template, demean=False)
         naive_xcorr = ct(data, template, demean=False, normalize='naive')
         nonorm_xcorr = ct(data, template, demean=False, normalize=None)
-        self.assertEqual(np.argmax(full_xcorr), max_index)
-        self.assertEqual(np.argmax(naive_xcorr), max_index)
-        self.assertEqual(np.argmax(nonorm_xcorr), max_index)
-        self.assertAlmostEqual(full_xcorr[max_index], 1.0)
-        self.assertLess(naive_xcorr[max_index], full_xcorr[max_index])
+        assert np.argmax(full_xcorr) == max_index
+        assert np.argmax(naive_xcorr) == max_index
+        assert np.argmax(nonorm_xcorr) == max_index
+        assert round(abs(full_xcorr[max_index]-1.0), 7) == 0
+        assert naive_xcorr[max_index] < full_xcorr[max_index]
         np.testing.assert_allclose(nonorm_xcorr, np.correlate(data, template))
 
     def test_correlate_template_correct_alignment_of_normalization(self):
@@ -390,7 +326,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
                 for demean in (True, False):
                     xcorr = correlate_template(data[i1:], template[i2:],
                                                mode=mode, demean=demean)
-                    self.assertAlmostEqual(np.max(xcorr), 1)
+                    assert round(abs(np.max(xcorr)-1), 7) == 0
 
     def test_correlate_template_versus_correlate(self):
         data = read()[0].data
@@ -481,7 +417,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         # FMF misses the last two elements?
         np.testing.assert_allclose(cc[0:-2], result[0:-2], atol=1e-7)
         shift, corr = xcorr_max(cc)
-        self.assertEqual(shift, 0)
+        assert shift == 0
 
     def test_integer_input_equals_float_input(self):
         a = [-3, 0, 4]
@@ -532,59 +468,58 @@ class CrossCorrelationTestCase(unittest.TestCase):
         stream_orig = stream.copy()
         template_orig = template.copy()
         ccs = correlate_stream_template(stream, template)
-        self.assertEqual(len(ccs), len(stream))
-        self.assertEqual(stream[1].stats.starttime, ccs[0].stats.starttime)
-        self.assertEqual(stream_orig, stream)
-        self.assertEqual(template_orig, template)
+        assert len(ccs) == len(stream)
+        assert stream[1].stats.starttime == ccs[0].stats.starttime
+        assert stream_orig == stream
+        assert template_orig == template
         # test if traces with not matching seed ids are discarded
         ccs = correlate_stream_template(stream[:2], template[1:])
-        self.assertEqual(len(ccs), 1)
-        self.assertEqual(stream_orig, stream)
-        self.assertEqual(template_orig, template)
+        assert len(ccs) == 1
+        assert stream_orig == stream
+        assert template_orig == template
         # test template_time parameter
         ccs1 = correlate_stream_template(stream, template)
         template_time = template[0].stats.starttime + 100
         ccs2 = correlate_stream_template(stream, template,
                                          template_time=template_time)
-        self.assertEqual(len(ccs2), len(ccs1))
+        assert len(ccs2) == len(ccs1)
         delta = ccs2[0].stats.starttime - ccs1[0].stats.starttime
-        self.assertAlmostEqual(delta, 100)
+        assert round(abs(delta-100), 7) == 0
         # test if all three events found
         detections, sims = correlation_detector(stream, template, 0.2, 30)
-        self.assertEqual(len(detections), 3)
+        assert len(detections) == 3
         dtime = pick + n1 * dt + 24 * 3600
-        self.assertAlmostEqual(detections[0]['time'], dtime)
-        self.assertEqual(len(sims), 1)
-        self.assertEqual(stream_orig, stream)
-        self.assertEqual(template_orig, template)
+        assert round(abs(detections[0]['time']-dtime), 7) == 0
+        assert len(sims) == 1
+        assert stream_orig == stream
+        assert template_orig == template
         # test if xcorr stream is suitable for coincidence_trigger
         # result should be the same, return values related
         ccs = correlate_stream_template(stream, template)
         triggers = coincidence_trigger(None, 0.2, -1, ccs, 2,
                                        max_trigger_length=30, details=True)
-        self.assertEqual(len(triggers), 2)
+        assert len(triggers) == 2
         for d, t in zip(detections[1:], triggers):
-            self.assertAlmostEqual(np.mean(t['cft_peaks']), d['similarity'])
+            assert round(abs(np.mean(t['cft_peaks'])-d['similarity']), 7) == 0
         # test template_magnitudes
         detections, _ = correlation_detector(stream, template, 0.2, 30,
                                              template_magnitudes=1)
-        self.assertAlmostEqual(detections[1]['amplitude_ratio'], 100, delta=1)
-        self.assertAlmostEqual(detections[1]['magnitude'], 1 + 8 / 3,
-                               delta=0.01)
-        self.assertAlmostEqual(detections[2]['amplitude_ratio'], 2, delta=2)
+        assert abs(detections[1]['amplitude_ratio']-100) < 1
+        assert abs(detections[1]['magnitude'] - (1 + 8 / 3)) < 0.01
+        assert abs(detections[2]['amplitude_ratio']-2) < 2
         detections, _ = correlation_detector(stream, template, 0.2, 30,
                                              template_magnitudes=True)
-        self.assertAlmostEqual(detections[1]['amplitude_ratio'], 100, delta=1)
-        self.assertNotIn('magnitude', detections[1])
-        self.assertEqual(stream_orig, stream)
-        self.assertEqual(template_orig, template)
+        assert abs(detections[1]['amplitude_ratio']-100) < 1
+        assert 'magnitude' not in detections[1]
+        assert stream_orig == stream
+        assert template_orig == template
         # test template names
         detections, _ = correlation_detector(stream, template, 0.2, 30,
                                              template_names='eq')
-        self.assertEqual(detections[0]['template_name'], 'eq')
+        assert detections[0]['template_name'] == 'eq'
         detections, _ = correlation_detector(stream, template, 0.2, 30,
                                              template_names=['eq'], plot=True)
-        self.assertEqual(detections[0]['template_name'], 'eq')
+        assert detections[0]['template_name'] == 'eq'
         # test similarity parameter with additional constraints
         # test details=True
 
@@ -597,10 +532,10 @@ class CrossCorrelationTestCase(unittest.TestCase):
         detections, _ = correlation_detector(stream, template, 0.1, 30,
                                              similarity_func=simf,
                                              details=True)
-        self.assertEqual(len(detections), 2)
+        assert len(detections) == 2
         for d in detections:
-            self.assertAlmostEqual(np.mean(list(d['cc_values'].values())),
-                                   d['similarity'])
+            mean_val = np.mean(list(d['cc_values'].values()))
+            assert round(abs(mean_val - d['similarity']), 7) == 0
         # test if properties from find_peaks function are returned
         detections, sims = correlation_detector(stream, template, 0.1, 30,
                                                 threshold=0.16, details=True,
@@ -608,18 +543,18 @@ class CrossCorrelationTestCase(unittest.TestCase):
         try:
             from scipy.signal import find_peaks  # noqa
         except ImportError:
-            self.assertEqual(len(detections), 2)
-            self.assertNotIn('left_threshold', detections[0])
+            assert len(detections) == 2
+            assert 'left_threshold' not in detections[0]
         else:
-            self.assertEqual(len(detections), 1)
-            self.assertIn('left_threshold', detections[0])
+            assert len(detections) == 1
+            assert 'left_threshold' in detections[0]
         # also check the _find_peaks function
         distance = int(round(30 / sims[0].stats.delta))
         indices = _find_peaks(sims[0].data, 0.1, distance, distance)
-        self.assertEqual(len(indices), 2)
+        assert len(indices) == 2
         # test distance parameter
         detections, _ = correlation_detector(stream, template, 0.2, 500)
-        self.assertEqual(len(detections), 1)
+        assert len(detections) == 1
         # test more than one template
         # just 2 detections for first template, because second template has
         # a higher similarity for third detection
@@ -630,14 +565,14 @@ class CrossCorrelationTestCase(unittest.TestCase):
                                              plot=stream,
                                              template_times=template_times,
                                              template_magnitudes=(2, 5))
-        self.assertGreater(len(detections), 0)
-        self.assertIn('template_id', detections[0])
+        assert len(detections) > 0
+        assert 'template_id' in detections[0]
         detections0 = [d for d in detections if d['template_id'] == 0]
-        self.assertEqual(len(detections0), 2)
-        self.assertEqual(len(detections), 3)
-        self.assertAlmostEqual(detections[2]['similarity'], 1)
-        self.assertAlmostEqual(detections[2]['magnitude'], 5)
-        self.assertEqual(detections[2]['time'], templatetime2)
+        assert len(detections0) == 2
+        assert len(detections) == 3
+        assert round(abs(detections[2]['similarity']-1), 7) == 0
+        assert round(abs(detections[2]['magnitude']-5), 7) == 0
+        assert detections[2]['time'] == templatetime2
         # test if everything is correct if template2 and stream do not have
         # any ids in common
         templates = (template, template2[2:])
@@ -647,16 +582,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
                 stream[:1], templates, 0.2, 30, plot=True,
                 template_times=templatetime2, template_magnitudes=2)
         detections0 = [d for d in detections if d['template_id'] == 0]
-        self.assertEqual(len(detections0), 3)
-        self.assertEqual(len(detections), 3)
-        self.assertEqual(len(sims), 2)
-        self.assertIsInstance(sims[0], Trace)
-        self.assertIs(sims[1], None)
-
-
-def suite():
-    return unittest.makeSuite(CrossCorrelationTestCase, 'test')
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+        assert len(detections0) == 3
+        assert len(detections) == 3
+        assert len(sims) == 2
+        assert isinstance(sims[0], Trace)
+        assert sims[1] is None

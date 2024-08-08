@@ -8,17 +8,37 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
+import collections.abc
 import copy
 import warnings
 
-from .. import compatibility
+import numpy as np
 
 
-class AttribDict(compatibility.collections_abc.MutableMapping):
+def _attribdict_equal(v1, v2, depth=5):
+    """
+    Robust comparison of possibly nested AttribDict entries or AttribDicts
+    """
+    if depth == 0:
+        return False
+    elif isinstance(v1, AttribDict) and isinstance(v2, AttribDict):
+        keys = set(v1.keys()) | set(v2.keys())
+        return all(_attribdict_equal(v1.get(k), v2.get(k), depth=depth-1)
+                   for k in keys)
+    elif isinstance(v1, AttribDict) or isinstance(v2, AttribDict):
+        return False
+    elif isinstance(v1, np.ndarray) and isinstance(v2, np.ndarray):
+        return np.shape(v1) == np.shape(v2) and np.all(v1 == v2)
+    elif isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
+        return False
+    else:
+        try:
+            return v1 == v2
+        except Exception:
+            return False
+
+
+class AttribDict(collections.abc.MutableMapping):
     """
     A class which behaves like a dictionary.
 
@@ -62,8 +82,10 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
         >>> assert(attrib_dict_1 == attrib_dict_2)
         """
         # set default values directly
+        #: Calling the Subclassed dict update method
         self.__dict__.update(self.defaults)
         # use overwritable update method to set arguments
+        #: Subclassed update method
         self.update(dict(*args, **kwargs))
 
     def __repr__(self):
@@ -99,8 +121,7 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
         if key in self._types and not isinstance(value, self._types[key]):
             value = self._cast_type(key, value)
 
-        mapping_instance = isinstance(value,
-                                      compatibility.collections_abc.Mapping)
+        mapping_instance = isinstance(value, collections.abc.Mapping)
         attr_dict_instance = isinstance(value, AttribDict)
         if mapping_instance and not attr_dict_instance:
             self.__dict__[key] = AttribDict(value)
@@ -109,15 +130,6 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
 
     def __delitem__(self, name):
         del self.__dict__[name]
-
-    def __getstate__(self):
-        return self.__dict__
-
-    def __setstate__(self, adict):
-        # set default values
-        self.__dict__.update(self.defaults)
-        # update with pickle dictionary
-        self.update(adict)
 
     def __getattr__(self, name, default=None):
         """
@@ -135,11 +147,6 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
     def copy(self):
         return copy.deepcopy(self)
 
-    def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable
-        ad = self.__class__()
-        ad.update(copy.deepcopy(self.__dict__))
-        return ad
-
     def update(self, adict={}):
         for (key, value) in adict.items():
             if key in self.readonly:
@@ -150,7 +157,7 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
         """
         Return better readable string representation of AttribDict object.
 
-        :type priorized_keys: list of str, optional
+        :type priorized_keys: list[str], optional
         :param priorized_keys: Keywords of current AttribDict which will be
             shown before all other keywords. Those keywords must exists
             otherwise an exception will be raised. Defaults to empty list.
@@ -185,7 +192,7 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
         """
         typ = self._types[key]
         new_type = (
-            typ[0] if isinstance(typ, compatibility.collections_abc.Sequence)
+            typ[0] if isinstance(typ, collections.abc.Sequence)
             else typ)
         msg = ('Attribute "%s" must be of type %s, not %s. Attempting to '
                'cast %s to %s') % (key, typ, type(value), value, new_type)

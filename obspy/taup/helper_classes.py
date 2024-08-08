@@ -1,13 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Holds various helper classes to keep the file number manageable.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from collections import namedtuple
 
 import numpy as np
@@ -21,49 +15,44 @@ class TauModelError(Exception):
     pass
 
 
+#: The SlownessLayer dtype stores a single layer.
 SlownessLayer = np.dtype([
-    (native_str('top_p'), np.float_),
-    (native_str('top_depth'), np.float_),
-    (native_str('bot_p'), np.float_),
-    (native_str('bot_depth'), np.float_),
+    ('top_p', np.float64),
+    ('top_depth', np.float64),
+    ('bot_p', np.float64),
+    ('bot_depth', np.float64),
 ])
 
 
-"""
-Holds the ray parameter, time and distance increments, and optionally a
-depth, for a ray passing through some layer.
-"""
+#: Holds the ray parameter, time and distance increments, and optionally a
+#: depth, for a ray passing through some layer.
 TimeDist = np.dtype([
-    (native_str('p'), np.float_),
-    (native_str('time'), np.float_),
-    (native_str('dist'), np.float_),
-    (native_str('depth'), np.float_),
+    ('p', np.float64),
+    ('time', np.float64),
+    ('dist', np.float64),
+    ('depth', np.float64),
 ])
 
 
-"""
-Holds the ray parameter, time and distance increments, and optionally a
-depth, latitude and longitude for a ray passing through some layer.
-"""
+#: Holds the ray parameter, time and distance increments, and optionally a
+#: depth, latitude and longitude for a ray passing through some layer.
 TimeDistGeo = np.dtype([
-    (native_str('p'), np.float_),
-    (native_str('time'), np.float_),
-    (native_str('dist'), np.float_),
-    (native_str('depth'), np.float_),
-    (native_str('lat'), np.float_),
-    (native_str('lon'), np.float_)
+    ('p', np.float64),
+    ('time', np.float64),
+    ('dist', np.float64),
+    ('depth', np.float64),
+    ('lat', np.float64),
+    ('lon', np.float64)
 ])
 
 
-"""
-Tracks critical points (discontinuities or reversals in slowness gradient)
-within slowness and velocity models.
-"""
+#: Tracks critical points (discontinuities or reversals in slowness gradient)
+#: within slowness and velocity models.
 CriticalDepth = np.dtype([
-    (native_str('depth'), np.float_),
-    (native_str('vel_layer_num'), np.int_),
-    (native_str('p_layer_num'), np.int_),
-    (native_str('s_layer_num'), np.int_),
+    ('depth', np.float64),
+    ('vel_layer_num', np.int_),
+    ('p_layer_num', np.int_),
+    ('s_layer_num', np.int_),
 ])
 
 
@@ -81,7 +70,7 @@ class DepthRange:
         """
         Store all attributes for serialization in a structured array.
         """
-        arr = np.empty(3, dtype=np.float_)
+        arr = np.empty(3, dtype=np.float64)
         arr[0] = self.top_depth
         arr[1] = self.bot_depth
         arr[2] = self.ray_param
@@ -131,9 +120,11 @@ class Arrival(object):
     :ivar takeoff_angle: Angle (in degrees) at which the ray leaves the source
     :vartype takeoff_angle: float
     :ivar pierce: Points pierced by ray
-    :vartype pierce: :class:`~numpy.ndarray` (dtype = :const:`~TimeDist`)
+    :vartype pierce: :class:`~numpy.ndarray`
+        (dtype = :class:`~obspy.taup.helper_classes.TimeDist`)
     :ivar path: Path taken by ray
-    :vartype path: :class:`~numpy.ndarray` (dtype = :const:`~TimeDist`)
+    :vartype path: :class:`~numpy.ndarray`
+        (dtype = :class:`~obspy.taup.helper_classes.TimeDist`)
     """
     def __init__(self, phase, distance, time, purist_dist, ray_param,
                  ray_param_index, name, purist_name, source_depth,

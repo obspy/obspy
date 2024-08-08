@@ -8,15 +8,10 @@ Various geodetic utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import math
 import warnings
 
 import numpy as np
-from scipy.stats import circmean
 
 from obspy.core.util.misc import to_int_or_zero
 
@@ -38,13 +33,6 @@ except ImportError:
 
 WGS84_A = 6378137.0
 WGS84_F = 1 / 298.257223563
-
-
-def _isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
-    """
-    Equivalent of the :meth:`math.isclose` method compatible with python 2.7.
-    """
-    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
 def _check_latitude(latitude, variable_name='latitude'):
@@ -103,12 +91,10 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
 
         Algorithm from Geocentric Datum of Australia Technical Manual.
 
-        * http://www.icsm.gov.au/gda/
-        * http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf, pp. 15
+        * https://www.icsm.gov.au/publications
+        * https://www.icsm.gov.au/publications/gda2020-technical-manual-v16
 
         It states::
-
-            Computations on the Ellipsoid
 
             There are a number of formulae that are available to calculate
             accurate geodetic positions, azimuths and distances on the
@@ -133,7 +119,7 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
 
     b = a * (1 - f)  # semiminor axis
 
-    if _isclose(lat1, lat2) and _isclose(lon1, lon2):
+    if math.isclose(lat1, lat2) and math.isclose(lon1, lon2):
         return 0.0, 0.0, 0.0
 
     # convert latitudes and longitudes to radians:
@@ -170,7 +156,7 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
                 sin_sigma
 
             sqr_cos_alpha = 1 - sin_alpha * sin_alpha
-            if _isclose(sqr_cos_alpha, 0):
+            if math.isclose(sqr_cos_alpha, 0):
                 # Equatorial line
                 cos2sigma_m = 0
             else:
@@ -254,7 +240,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
         for converting between geographic, UTM, UPS, MGRS, and geocentric
         coordinates, for geoid calculations, and for solving geodesic problems.
         Otherwise the locally implemented Vincenty's Inverse formulae
-        (:func:`obspy.core.util.geodetics.calc_vincenty_inverse`) is used which
+        (:func:`obspy.geodetics.base.calc_vincenty_inverse`) is used which
         has known limitations for two nearly antipodal points and is ca. 4x
         slower.
     """
@@ -270,7 +256,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     else:
         try:
             values = calc_vincenty_inverse(lat1, lon1, lat2, lon2, a, f)
-            if np.alltrue(np.isnan(values)):
+            if np.all(np.isnan(values)):
                 raise StopIteration
             return values
         except StopIteration:
@@ -285,14 +271,14 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
             raise e
 
 
-def kilometers2degrees(kilometer, radius=6371):
+def kilometers2degrees(kilometer, radius=6371.0):
     """
     Convenience function to convert kilometers to degrees assuming a perfectly
     spherical Earth.
 
     :type kilometer: float
     :param kilometer: Distance in kilometers
-    :type radius: int, optional
+    :type radius: float, optional
     :param radius: Radius of the Earth used for the calculation.
     :rtype: float
     :return: Distance in degrees as a floating point number.
@@ -309,14 +295,14 @@ def kilometers2degrees(kilometer, radius=6371):
 kilometer2degrees = kilometers2degrees
 
 
-def degrees2kilometers(degrees, radius=6371):
+def degrees2kilometers(degrees, radius=6371.0):
     """
     Convenience function to convert (great circle) degrees to kilometers
     assuming a perfectly spherical Earth.
 
     :type degrees: float
     :param degrees: Distance in (great circle) degrees
-    :type radius: int, optional
+    :type radius: float, optional
     :param radius: Radius of the Earth used for the calculation.
     :rtype: float
     :return: Distance in kilometers as a floating point number.
@@ -354,8 +340,8 @@ def locations2degrees(lat1, long1, lat2, long2):
     .. rubric:: Example
 
     >>> from obspy.geodetics import locations2degrees
-    >>> locations2degrees(5, 5, 10, 10)
-    7.0397014191753815
+    >>> locations2degrees(5, 5, 10, 10) # doctest: +ELLIPSIS
+    7.03970141917538...
     """
     # broadcast explicitly here so it raises once instead of somewhere in the
     # middle if things can't be broadcast
@@ -393,6 +379,7 @@ def mean_longitude(longitudes):
     :param longitudes: Geographical longitude values ranging from -180 to 180
         in degrees.
     """
+    from scipy.stats import circmean
     mean_longitude = circmean(np.array(longitudes), low=-180, high=180)
     mean_longitude = _normalize_longitude(mean_longitude)
     return mean_longitude
@@ -482,7 +469,7 @@ def inside_geobounds(obj, minlatitude=None, maxlatitude=None,
     if maxlongitude is not None:
         if olongitude is None or olongitude > maxlongitude:
             return False
-    if all([l is not None for l in
+    if all([coord is not None for coord in
            (latitude, longitude, olatitude, olongitude)]):
         distance = locations2degrees(latitude, longitude,
                                      olatitude, olongitude)

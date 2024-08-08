@@ -1,0 +1,24 @@
+NLLOC "/dev/shm/NLL/NLL.LuGxVBGQG/.20221031.050241.grid0" "LOCATED" "Location completed."
+PUBLIC_ID None
+SIGNATURE "sekiya   obs:/dev/shm/NLL/NLL.LuGxVBGQG/NLL.LuGxVBGQG.obs   NLLoc:v7.00.13(17Jan2022)   run:17Nov2022 15h49m52"
+COMMENT ""
+GRID  271 296 17  -407.434 -453.957 -1.5  3 3 3 PROB_DENSITY
+SEARCH OCTREE nInitial 40256 nEvaluated 60000 smallestNodeSide 0.744485/0.747466/0.375000 oct_tree_integral 4.782626e+03 scatter_volume 4.689266e+03
+HYPOCENTER  x -94.378 y -81.3451 z -0.5625  OT 28.9603  ix -1 iy -1 iz -1 MAXIMUM_LIKELIHOOD
+GEOGRAPHIC  OT 2022 10 31  05 02 28.960252  Lat -32.726757 Long 116.492222 Depth -0.562500
+QUALITY  Pmax 3.62877e+19 MFmin 4.87596 MFmax 5.28563 RMS 0.817355 Nphs 14 Gap 197.042 Dist 73.3529 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio 1.77701  Npair 7  Diff 20.88
+STATISTICS  ExpectX -95.435920 Y -82.055796 Z 12.040209  CovXX 110.261 XY 8.30876 XZ 5.92278 YY 24.536 YZ -3.09884 ZZ 110.066 EllAz1  174.359 Dip1  -2.4273 Len1  9.1241 Az2  261.746 Dip2  47.0829 Len2  19.255 Len3  2.025742e+01
+STAT_GEOG  ExpectLat -32.733052 Long 116.480853 Depth 12.040209
+TRANSFORM  AZIMUTHAL_EQUIDIST RefEllipsoid WGS-84  LatOrig -32.000000  LongOrig 117.500000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 14  usedPhCt 14  assocStaCt -1  usedStaCt 7  depthPhCt -1  stdErr 0.817355  azGap 197.042  secAzGap 197.042  gtLevel -  minDist 73.3529 maxDist 274.562 medDist 217.684
+QML_OriginUncertainty  horUnc -1  minHorUnc 7.38902  maxHorUnc 15.9824  azMaxHorUnc 84.5147
+QML_ConfidenceEllipsoid  semiMajorAxisLength 20.2574  semiMinorAxisLength 9.1241  semiIntermediateAxisLength 19.255  majorAxisPlunge 42.8141  majorAxisAzimuth 86.61  majorAxisRotation 322.815
+FOCALMECH  Hyp  -32.726757 116.492222 -0.562500 Mech  0 0 0 mf  0 nObs -1
+PHASE ID    Ins Cmp   On Pha  FM   Date    HrMn   Sec     Err  ErrMag    Coda      Amp       Per       PriorWt  >   TTpred    Res       Weight    StaLoc(X  Y           Z)      SDist    SAzim  RAz  RDip RQual   Tcorr     TTerr
+NWAO         ?    Z    ? P      ? 20221031 0502   41.3602 GAU -1.00e+00 -1.00e+00 -1.00e+00 -1.00e+00    1.0000 >   12.7040   -0.3041    1.2104  -24.3880 -103.3008   -0.3800   73.3529 107.42  40.0 200.0  0     0.0000    0.6352
+NWAO         ?    ?    ? S      ? 20221031 0502   51.4602 GAU -1.00e+00 -1.00e+00 -1.00e+00 -1.00e+00    1.0000 >   22.7013   -0.2013    1.1613  -24.3880 -103.3008   -0.3800   73.3529 107.42  40.0 200.0  0     0.0000    1.1351
+KLBR         ?    Z    ? P      ? 20221031 0502   56.8602 GAU -1.00e+00 -1.00e+00 -1.00e+00 -1.00e+00    1.0000 >   27.3100    0.5900    1.0455   24.1420   45.4457   -0.3200  173.5594  43.07  40.0 200.0  0     0.0000    1.3655
+END_PHASE
+END_NLLOC
+

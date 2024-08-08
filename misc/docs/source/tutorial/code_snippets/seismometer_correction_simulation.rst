@@ -21,30 +21,14 @@ directly be attached to the waveforms and then subsequently removed using
     t1 = UTCDateTime("2010-09-3T16:30:00.000")
     t2 = UTCDateTime("2010-09-3T17:00:00.000")
     fdsn_client = Client('IRIS')
-    # Fetch waveform from IRIS FDSN web service into a ObsPy stream object
-    # and automatically attach correct response
-    st = fdsn_client.get_waveforms(network='NZ', station='BFZ', location='10',
-                                   channel='HHZ', starttime=t1, endtime=t2,
-                                   attach_response=True)
-    # define a filter band to prevent amplifying noise during the deconvolution
-    pre_filt = (0.005, 0.006, 30.0, 35.0)
-    st.remove_response(output='DISP', pre_filt=pre_filt)
-
-Alternatively an :class:`~obspy.core.inventory.inventory.Inventory` object can
-be directly passed to the
-:meth:`Stream.remove_response() <obspy.core.stream.Stream.remove_response>`:
-method:
-
-
-.. code-block:: python
-
-    from obspy import read, read_inventory
-
-    # simply use the included example waveform
-    st = read()
-    # the corresponding response is included in ObsPy as a StationXML file
-    inv = read_inventory()
-    # the routine automatically picks the correct response for each trace
+    # Fetch waveforms and reponse from IRIS FDSN web service into ObsPy
+    # stream and inventory objects
+    st = fdsn_client.get_waveforms(
+        network='NZ', station='BFZ', location='10', channel='HHZ',
+        starttime=t1, endtime=t2)
+    inv = fdsn_client.get_stations(
+        network='NZ', station='BFZ', location='10', channel='HHZ',
+        starttime=t1, endtime=t2, level='response')
     # define a filter band to prevent amplifying noise during the deconvolution
     pre_filt = (0.005, 0.006, 30.0, 35.0)
     st.remove_response(inventory=inv, output='DISP', pre_filt=pre_filt)
@@ -60,15 +44,20 @@ response spectrum:
 ..using a RESP file
 ^^^^^^^^^^^^^^^^^^^
 
-It is further possible to use evalresp_ to evaluate the instrument
-response information from a RESP file.
+..works the same as above, just read the RESP file and use the resulting
+:class:`~obspy.core.inventory.inventory.Inventory` object:
 
-.. plot:: tutorial/code_snippets/seismometer_correction_simulation_3.py
-   :include-source:
+.. code-block:: python
+
+    inv = read_inventory("/path/to/IUANMO.resp")
+    st.remove_response(inventory=inv, ...)
+
 
 ..using a Dataless/Full SEED file (or XMLSEED file)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+..again, works the same as above, just read the Dataless/Full SEED file and use
+the resulting :class:`~obspy.core.inventory.inventory.Inventory` object:
 A :class:`~obspy.io.xseed.parser.Parser` object created using a Dataless SEED
 file can also be used. For each trace the respective RESP response data is
 extracted internally then. When using
@@ -76,8 +65,13 @@ extracted internally then. When using
 :meth:`~obspy.core.trace.Trace.simulate` convenience methods the "date"
 parameter can be omitted (each trace's start time is used internally).
 
-.. include:: seismometer_correction_simulation_4.py
-   :literal:
+.. code-block:: python
+
+    from obspy import read, read_inventory
+
+    st = read("https://examples.obspy.org/BW.BGLD..EH.D.2010.037")
+    inv = read_inventory("https://examples.obspy.org/dataless.seed.BW_BGLD")
+    st.remove_response(inventory=inv, output='DISP')
 
 ----------------------
 Using a PAZ dictionary

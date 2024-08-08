@@ -7,11 +7,7 @@ handled. These three packets have more or less the same meaning in the first 8
 bytes of the payload which makes the first 24 bytes the so called extended
 header.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
+import sys
 import warnings
 
 import numpy as np
@@ -43,10 +39,10 @@ PACKET_TYPES = PACKET_TYPES_IMPLEMENTED + PACKET_TYPES_NOT_IMPLEMENTED
 #  - conversion routine (if any)
 #  - dtype after conversion
 PACKET = [
-    ("packet_type", native_str("|S2"), None, native_str("S2")),
+    ("packet_type", "|S2", None, "S2"),
     ("experiment_number", np.uint8, bcd, np.uint8),
     ("year", np.uint8, bcd, np.uint8),
-    ("unit_id", (np.uint8, 2), bcd_hex, native_str("S4")),
+    ("unit_id", (np.uint8, 2), bcd_hex, "S4"),
     ("time", (np.uint8, 6), bcd_julian_day_string_to_nanoseconds_of_year,
      np.int64),
     ("byte_count", (np.uint8, 2), bcd_16bit_int, np.uint16),
@@ -56,7 +52,7 @@ PACKET = [
     ("channel_number", np.uint8, bcd, np.uint8),
     ("number_of_samples", (np.uint8, 2), bcd_16bit_int, np.uint32),
     ("flags", np.uint8, None, np.uint8),
-    ("data_format", np.uint8, bcd_8bit_hex, native_str("S2")),
+    ("data_format", np.uint8, bcd_8bit_hex, "S2"),
     # Temporarily store the payload here.
     ("payload", (np.uint8, 1000), None, (np.uint8, 1000))]
 
@@ -70,7 +66,7 @@ EH_PAYLOAD = {
     "station_name": (36, 4, _decode_ascii),
     "stream_name": (40, 16, _decode_ascii),
     "_reserved_2": (56, 8, _decode_ascii),
-    "sampling_rate": (64, 4, int),
+    "sampling_rate": (64, 4, float),
     "trigger_type": (68, 4, _decode_ascii),
     "trigger_time": (72, 16, _parse_long_time),
     "first_sample_time": (88, 16, _parse_long_time),
@@ -92,6 +88,13 @@ EH_PAYLOAD = {
     "digital_filter_list": (878, 16, _decode_ascii),
     "position": (894, 26, _decode_ascii),
     "reftek_120": (920, 80, None)}
+
+
+# mseed steim compression is big endian
+if sys.byteorder == 'little':
+    SWAPFLAG = 1
+else:
+    SWAPFLAG = 0
 
 
 class Packet(object):
@@ -137,11 +140,7 @@ class EHPacket(Packet):
 
     def __init__(self, data):
         self._data = data
-        try:
-            payload = self._data["payload"].tobytes()
-        except AttributeError:
-            # for numpy < 1.9.0, does not work for python 3.6
-            payload = bytes(self._data["payload"])
+        payload = self._data["payload"].tobytes()
         for name, (start, length, converter) in EH_PAYLOAD.items():
             data = payload[start:start + length]
             if converter is not None:
@@ -159,12 +158,12 @@ class EHPacket(Packet):
             sta = (self.station_name.strip() +
                    self.station_name_extension.strip())
             info = ("{:04d} {:2s} {:4s} {:2d} {:4d} {:4d} {:2d} {:2s} "
-                    "{:5s} {:4d}         {!s}").format(
+                    "{:5s}  {:4s}        {!s}").format(
                         self.packet_sequence, self.type.decode(),
                         self.unit_id.decode(), self.experiment_number,
                         self.byte_count, self.event_number,
                         self.data_stream_number, self.data_format.decode(),
-                        sta, self.sampling_rate, self.time)
+                        sta, str(self.sampling_rate)[:4], self.time)
         else:
             info = []
             for key in self._headers:
@@ -216,11 +215,11 @@ class DTPacket(Packet):
 
 
 PACKET_INITIAL_UNPACK_DTYPE = np.dtype([
-    (native_str(name), dtype_initial)
+    (name, dtype_initial)
     for name, dtype_initial, converter, dtype_final in PACKET])
 
 PACKET_FINAL_DTYPE = np.dtype([
-    (native_str(name), dtype_final)
+    (name, dtype_final)
     for name, dtype_initial, converter, dtype_final in PACKET])
 
 
@@ -343,7 +342,7 @@ def _unpack_C0_C2_data_fast(packets, encoding):  # noqa
     for _npts in packets["number_of_samples"]:
         decode_steim(
             s, 960, _npts, unpacked_data[pos:], _npts, None,
-            1)
+            SWAPFLAG)
         pos += _npts
         s += offset
     return unpacked_data
@@ -381,7 +380,7 @@ def _unpack_C0_C2_data_safe(packets, encoding):  # noqa
         _npts = p["number_of_samples"]
         decode_steim(
             p["payload"][40:].ctypes.data, 960, _npts,
-            unpacked_data[pos:], _npts, None, 1)
+            unpacked_data[pos:], _npts, None, SWAPFLAG)
         pos += _npts
     return unpacked_data
 

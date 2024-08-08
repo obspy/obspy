@@ -16,28 +16,24 @@ Waveform plotting for obspy.Stream objects.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
-
-import io
-import warnings
 import functools
+import io
+import os
+import warnings
 from copy import copy
 from datetime import datetime
 
 import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.patches as patches
-from matplotlib.cm import get_cmap
 from matplotlib.dates import date2num
 from matplotlib.path import Path
+from matplotlib.pyplot import get_cmap
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import create_empty_data_chunk, MATPLOTLIB_VERSION
+from obspy.core.util import create_empty_data_chunk
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
 from obspy.imaging.util import (_set_xaxis_obspy_dates, _id_key, _timestring)
 
@@ -172,7 +168,7 @@ class WaveformPlotting(object):
         if self.type == 'dayplot':
             self.color = kwargs.get('color', ('#B2000F', '#004C12', '#847200',
                                               '#0E01FF'))
-            if isinstance(self.color, (str, native_str)):
+            if isinstance(self.color, str):
                 self.color = (self.color,)
             self.number_of_ticks = kwargs.get('number_of_ticks', None)
         else:
@@ -225,6 +221,15 @@ class WaveformPlotting(object):
         Destructor closes the figure instance if it has been created by the
         class.
         """
+        # this garbage collector quick n dirty fix causes things like st.plot()
+        # in plot directive code for images in the docs to not appear anymore,
+        # because apparently newer sphinx looks for still active Figure objects
+        # *after* running the code and ignores figures that get shown *during*
+        # running the code, so for now add more magic that prevents garbage
+        # collection of figures here, when in CI (detected by env variable set
+        # by github actions) see #3036
+        if os.environ.get('CI') == 'true':
+            return
         import matplotlib.pyplot as plt
         if self.kwargs.get('fig', None) is None and \
                 not self.kwargs.get('handle'):
@@ -380,12 +385,7 @@ class WaveformPlotting(object):
                 sharex = None
             else:
                 sharex = self.axis[0]
-            # TODO remove once minimum required matplotlib version reaches 2.0
-            # see matplotlib/matplotlib#5501
-            if MATPLOTLIB_VERSION < [2, 0]:
-                axis_facecolor_kwargs = dict(axisbg=self.background_color)
-            else:
-                axis_facecolor_kwargs = dict(facecolor=self.background_color)
+            axis_facecolor_kwargs = dict(facecolor=self.background_color)
             ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
                                       sharex=sharex, **axis_facecolor_kwargs)
             self.axis.append(ax)
@@ -447,12 +447,7 @@ class WaveformPlotting(object):
                 self.repeat = intervals
         # Create axis to plot on.
         if self.background_color:
-            # TODO remove once minimum required matplotlib version reaches 2.0
-            # see matplotlib/matplotlib#5501
-            if MATPLOTLIB_VERSION < [2, 0]:
-                axis_facecolor_kwargs = dict(axisbg=self.background_color)
-            else:
-                axis_facecolor_kwargs = dict(facecolor=self.background_color)
+            axis_facecolor_kwargs = dict(facecolor=self.background_color)
             ax = self.fig.add_subplot(1, 1, 1, **axis_facecolor_kwargs)
         else:
             ax = self.fig.add_subplot(1, 1, 1)
@@ -766,7 +761,7 @@ class WaveformPlotting(object):
             max_ = data.max(axis=1) * tr.stats.calib
             # Calculate extreme_values and put them into new array.
             if remaining_samples:
-                extreme_values = np.empty((pixel_count + 1, 2), dtype=np.float)
+                extreme_values = np.empty((pixel_count + 1, 2), dtype=float)
                 extreme_values[:-1, 0] = min_
                 extreme_values[:-1, 1] = max_
                 extreme_values[-1, 0] = \
@@ -774,7 +769,7 @@ class WaveformPlotting(object):
                 extreme_values[-1, 1] = \
                     tr.data[-remaining_samples:].max() * tr.stats.calib
             else:
-                extreme_values = np.empty((pixel_count, 2), dtype=np.float)
+                extreme_values = np.empty((pixel_count, 2), dtype=float)
                 extreme_values[:, 0] = min_
                 extreme_values[:, 1] = max_
             # Finally plot the data.
@@ -926,7 +921,7 @@ class WaveformPlotting(object):
         It will also convert all values to floats.
         """
         # Convert to native floats.
-        self.extreme_values = self.extreme_values.astype(np.float) * \
+        self.extreme_values = self.extreme_values.astype(float) * \
             self.stream[0].stats.calib
         # Make sure that the mean value is at 0
         # raises underflow warning / error for numpy 1.9
@@ -1017,24 +1012,43 @@ class WaveformPlotting(object):
         if not count:
             # Up to 15 time units and if it's a full number, show every unit.
             if time_value <= 15 and time_value % 1 == 0:
-                count = time_value
+                count = int(time_value) + 1
             # Otherwise determine whether they are divisible for numbers up to
             # 15. If a number is not divisible just show 10 units.
             else:
-                count = 10
                 for _i in range(15, 1, -1):
                     if time_value % _i == 0:
-                        count = _i
+                        count = _i + 1
                         break
+                else:
+                    # these are really weird cases with interval being
+                    # relatively large primes like "interval=17" and will
+                    # likely lead to ugly tick labels, but not much we can do,
+                    # just weird parameter choice
+                    count = 10
             # Show at least 5 ticks.
-            if count < 5:
-                count = 5
+            if count < 2:
+                msg = 'Number of x ticks ({count:s}) can not be less than two.'
+                raise ValueError(msg)
+            while count < 5:
+                count *= 2
         # Everything can be overwritten by user-specified number of ticks.
         if self.number_of_ticks:
             count = self.number_of_ticks
         # Calculate and set ticks.
         ticks = np.linspace(0.0, max_value, count)
-        ticklabels = ['%i' % _i for _i in np.linspace(0.0, time_value, count)]
+        ticklabels = []
+        for _i in np.linspace(0.0, time_value, count):
+            # it is not the responsibility of this tick labeling part to do
+            # anything fancy, if ticks are at points with endless decimals, the
+            # problem is with the selection of the ticks (e.g. weird choice of
+            # "number_of_ticks"). just avoid labeling with '.0' suffix if we
+            # indeed have an integer at hand
+            if int(_i) == _i:
+                _label = f'{_i:.0f}'
+            else:
+                _label = str(_i)
+            ticklabels.append(_label)
         self.axis[0].set_xticks(ticks)
         self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation,
                                      size=self.x_labels_size)
@@ -1050,11 +1064,11 @@ class WaveformPlotting(object):
         # is set.
         if intervals <= 5 or self.one_tick_per_line:
             tick_steps = list(range(0, intervals))
-            ticks = np.arange(intervals, 0, -1, dtype=np.float)
+            ticks = np.arange(intervals, 0, -1, dtype=float)
             ticks -= 0.5
         else:
             tick_steps = list(range(0, intervals, self.repeat))
-            ticks = np.arange(intervals, 0, -1 * self.repeat, dtype=np.float)
+            ticks = np.arange(intervals, 0, -1 * self.repeat, dtype=float)
             ticks -= 0.5
 
         # Complicated way to calculate the label of
@@ -1202,15 +1216,22 @@ class WaveformPlotting(object):
                     'coordinates and ev_coord. See documentation.'
                 raise ValueError(msg)
         # Define minimum and maximum offsets
-        if self.sect_offset_min is None:
-            self._offset_min = self._tr_offsets.min()
+        if (self.sect_offset_min is None and self.sect_offset_max is None
+                and len(self._tr_offsets) == 1):
+            # avoid flatline in case of a single trace and no custom offsets
+            # specified
+            self._offset_min = self._tr_offsets[0] * 0.8
+            self._offset_max = self._tr_offsets[0] * 1.2
         else:
-            self._offset_min = self.sect_offset_min
+            if self.sect_offset_min is None:
+                self._offset_min = self._tr_offsets.min()
+            else:
+                self._offset_min = self.sect_offset_min
+            if self.sect_offset_max is None:
+                self._offset_max = self._tr_offsets.max()
+            else:
+                self._offset_max = self.sect_offset_max
 
-        if self.sect_offset_max is None:
-            self._offset_max = self._tr_offsets.max()
-        else:
-            self._offset_max = self.sect_offset_max
         # Reduce data to indexes within offset_min/max
         mask = ((self._tr_offsets >= self._offset_min) &
                 (self._tr_offsets <= self._offset_max))
@@ -1232,10 +1253,20 @@ class WaveformPlotting(object):
         self._tr_delta = np.empty(self._tr_num)
         # TODO dynamic DATA_MAXLENGTH according to dpi
         for _i, tr in enumerate(self.stream):
-            if len(tr.data) >= self.max_npts:
+            method_ = self.plotting_method
+            if method_ is None:
+                if len(tr.data) >= self.max_npts:
+                    method_ = "fast"
+                else:
+                    method_ = "full"
+            method_ = method_.lower()
+            if method_ == 'fast':
                 tmp_data = signal.resample(tr.data, self.max_npts)
-            else:
+            elif method_ == 'full':
                 tmp_data = tr.data
+            else:
+                msg = "Invalid plot method: '%s'" % method_
+                raise ValueError(msg)
             # Initialising trace stats
             self._tr_data.append(tmp_data)
             self._tr_starttimes.append(tr.stats.starttime)
@@ -1311,13 +1342,6 @@ class WaveformPlotting(object):
         # Should be integrated by version 2.1
         # (see https://github.com/matplotlib/matplotlib/pull/6560)
         fill_kwargs = {"lw": 0}
-        # There's a strange problem with matplotlib 1.4.1 and 1.4.2.
-        # It seems to not render the filled PolyCollection
-        # objects if linewidth is set to 0 (see http://tests.obspy.org/48219/,
-        # #1502). To circumvent this, use a line color with alpha 0 (and a very
-        # small linewidth).
-        if [1, 4, 1] <= MATPLOTLIB_VERSION < [1, 4, 3]:
-            fill_kwargs = {"edgecolor": (0, 0, 0, 0), "lw": 0.01}
 
         if self.sect_orientation == 'vertical':
             self.fillfun = functools.partial(ax.fill_betweenx, **fill_kwargs)
@@ -1464,7 +1488,7 @@ class WaveformPlotting(object):
     def _remove_zoomlevel_warning_text(self):
         ax = self.fig.axes[0]
         if self._minmax_warning_text in ax.texts:
-            ax.texts.remove(self._minmax_warning_text)
+            self._minmax_warning_text.remove()
         self._minmax_warning_text = None
 
     def _draw_overlap_axvspans(self, st, ax):

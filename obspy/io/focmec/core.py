@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 FOCMEC file format support for ObsPy
@@ -9,10 +8,6 @@ FOCMEC file format support for ObsPy
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import re
 import warnings
 
@@ -175,7 +170,7 @@ def _get_polarity_count(lines):
 
 def _read_focmec_lst(lines):
     """
-    Read given data into an :class:`~obspy.core.event.Event` object.
+    Read given data into an :class:`~obspy.core.event.event.Event` object.
 
     Unfortunately, "lst" is not a well defined file format but what it outputs
     depends on input data, program parameters, program version and also
@@ -308,7 +303,7 @@ def _get_polarity_error_count_lst_block(lines):
 
 def _read_focmec_out(lines):
     """
-    Read given data into an :class:`~obspy.core.event.Event` object.
+    Read given data into an :class:`~obspy.core.event.event.Event` object.
 
     :type lines: list
     :param lines: List of decoded unicode strings with data from a FOCMEC out
@@ -353,7 +348,7 @@ def _read_focmec_out(lines):
 
 def _read_common_header(lines):
     """
-    Read given data into an :class:`~obspy.core.event.Event` object.
+    Read given data into an :class:`~obspy.core.event.event.Event` object.
 
     Parses the first few common header lines and sets creation time and some
     other basic info.
@@ -377,8 +372,3 @@ def _read_common_header(lines):
     # get rid of those common lines already parsed
     lines = lines[4:]
     return event, lines
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

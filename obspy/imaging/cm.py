@@ -199,18 +199,16 @@ Colormap defined and used in PQLX (see [McNamara2004]_).
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import glob
 import inspect
-import os
+import io
+from pathlib import Path
+from urllib.request import urlopen
 
 import numpy as np
-from matplotlib.cm import get_cmap
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import ListedColormap
+from matplotlib.pyplot import get_cmap
 
 
 def _get_cmap(file_name, lut=None, reverse=False):
@@ -220,25 +218,26 @@ def _get_cmap(file_name, lut=None, reverse=False):
 
     :type file_name: str
     :param file_name: Name of colormap to load, same as filename in
-                      `obspy/imaging/data`. The type of colormap data is
-                      determined from the extension: .npz assumes the file
-                      contains colorbar segments (segmented colormap).
-                      '*.npy' assumes the file contains a simple array of RGB
-                      values with size [ncolors, 3].
+        `obspy/imaging/data`. The type of colormap data is determined from the
+        extension: .npz assumes the file contains colorbar segments (segmented
+        colormap). '*.npy' assumes the file contains a simple array of RGB
+        values with size [ncolors, 3].
     :type lut: int
-    :param lut: Specifies the number of discrete color values in the
-                segmented colormap. Only used for segmented colormap
-                `None` to use matplotlib default value (continuous colormap).
+    :param lut: Specifies the number of discrete color values in the segmented
+        colormap. Only used for segmented colormap `None` to use matplotlib
+        default value (continuous colormap).
     :type reverse: bool
     :param reverse: Whether to return the specified colormap reverted.
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
     """
     file_name = file_name.strip()
-    name, suffix = os.path.splitext(file_name)
-    directory = os.path.dirname(os.path.abspath(
-        inspect.getfile(inspect.currentframe())))
-    directory = os.path.join(directory, "data")
-    full_path = os.path.join(directory, file_name)
+    file_path = Path(file_name)
+    name = str(file_path.parent / file_path.stem)
+    suffix = file_path.suffix
+    directory = Path(inspect.getfile(
+                                    inspect.currentframe()))
+    directory = directory.resolve().parent / "data"
+    full_path = directory / file_name
     # check if it is npz -> segmented colormap or npy -> listed colormap
     # do it like matplotlib, append "_r" to reverted versions
     if reverse:
@@ -277,12 +276,11 @@ def _get_all_cmaps():
     :rtype: dict
     """
     cmaps = {}
-    cm_file_pattern = os.path.join(
-        os.path.abspath(os.path.dirname(
-            inspect.getfile(inspect.currentframe()))),
-        "data", "*.np[yz]")
+    cm_file_pattern = Path(inspect.getfile(
+                                            inspect.currentframe()))
+    cm_file_pattern = str(cm_file_pattern.parent.resolve()/"data" / "*.np[yz]")
     for filename in glob.glob(cm_file_pattern):
-        filename = os.path.basename(filename)
+        filename = Path(filename).name
         for reverse in (True, False):
             # don't add a reversed version for PQLX colormap
             if filename == "pqlx.npz" and reverse:
@@ -300,6 +298,7 @@ obspy_sequential = _globals["viridis"]
 obspy_sequential_r = _globals["viridis_r"]
 obspy_divergent = get_cmap("RdBu_r")
 obspy_divergent_r = get_cmap("RdBu")
+#: PQLX colormap
 pqlx = _get_cmap("pqlx.npz")
 
 
@@ -431,10 +430,6 @@ def _colormap_plot_similarity(cmaps):
     :rtype: None
     """
     import matplotlib.pyplot as plt
-    from future import standard_library
-    standard_library.install_aliases()
-    import io
-    from urllib.request import urlopen
 
     url = "https://examples.obspy.org/dissimilarities.npz"
     with io.BytesIO(urlopen(url).read()) as fh, np.load(fh) as data:
@@ -614,7 +609,7 @@ def _colormap_plot_beamforming_polar(cmaps):
         ax.set_theta_zero_location("N")
         # circle through backazimuth
         for i, row in enumerate(hist):
-            ax.bar(left=(i * dw) * np.ones(num2),
+            ax.bar((i * dw) * np.ones(num2),
                    height=dh * np.ones(num2),
                    width=dw, bottom=dh * np.arange(num2),
                    color=cmap(row / hist.max()))

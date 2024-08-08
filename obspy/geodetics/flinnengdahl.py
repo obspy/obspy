@@ -1,12 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import csv
-import os
+from pathlib import Path
 
 
 class FlinnEngdahl(object):
@@ -17,21 +12,24 @@ class FlinnEngdahl(object):
     >>> fe = FlinnEngdahl()
     >>> print(fe.get_region(12, 48))
     GERMANY
+    >>> print(fe.get_number(12, 48))
+    543
     >>> print(fe.get_region_by_number(543))
     GERMANY
     """
 
-    data_directory = os.path.join(os.path.dirname(__file__), 'data')
+    data_directory = Path(__file__).parent / 'data'
 
-    names_file = os.path.join(data_directory, 'names.asc')
-    quadsindex_file = os.path.join(data_directory, 'quadsidx.asc')
+    names_file = data_directory / 'names.asc'
+    quadsindex_file = data_directory / 'quadsidx.asc'
+
     sect_files = (
-        os.path.join(data_directory, 'nesect.asc'),
-        os.path.join(data_directory, 'nwsect.asc'),
-        os.path.join(data_directory, 'sesect.asc'),
-        os.path.join(data_directory, 'swsect.asc')
+        data_directory / 'nesect.asc',
+        data_directory / 'nwsect.asc',
+        data_directory / 'sesect.asc',
+        data_directory / 'swsect.asc'
     )
-    numbers_file = os.path.join(data_directory, 'Flinn-Engdahl.csv')
+    numbers_file = data_directory / 'Flinn-Engdahl.csv'
     quads_order = ('ne', 'nw', 'se', 'sw')
 
     def __init__(self):
@@ -89,8 +87,8 @@ class FlinnEngdahl(object):
             self.fenums[quad] = fenums
 
         with open(self.numbers_file, 'rt') as csvfile:
-            fe_csv = csv.reader(csvfile, delimiter=native_str(';'),
-                                quotechar=native_str('#'),
+            fe_csv = csv.reader(csvfile, delimiter=';',
+                                quotechar='#',
                                 skipinitialspace=True)
             self.by_number = \
                 {int(row[0]): row[1] for row in fe_csv if len(row) > 1}
@@ -103,7 +101,7 @@ class FlinnEngdahl(object):
         :type longitude: int or float
         :param latitude: WGS84 latitude
         :type latitude: int or float
-        :rtype: string
+        :rtype: str
         :return: Quadrant name (ne, nw, se and sw)
         """
         if longitude >= 0 and latitude >= 0:
@@ -115,24 +113,23 @@ class FlinnEngdahl(object):
         if longitude < 0 and latitude < 0:
             return 'sw'
 
-    def get_region(self, longitude, latitude):
+    def get_number(self, longitude, latitude):
         """
-        Return region from given coordinate
+        Return region number from given coordinate
 
         >>> fe = FlinnEngdahl()
-        >>> print(fe.get_region(12, 48))
-        GERMANY
-        >>> print(fe.get_region(-60, -30))
-        NORTHEASTERN ARGENTINA
+        >>> print(fe.get_number(12, 48))
+        543
+        >>> print(fe.get_number(-60, -30))
+        133
 
         :param longitude: WGS84 longitude
         :type longitude: int or float
         :param latitude: WGS84 latitude
         :type latitude: int or float
-        :rtype: string
-        :return: Flinn Engdahl region name
+        :rtype: str
+        :return: Flinn Engdahl region number
         """
-
         if longitude < -180 or longitude > 180:
             raise ValueError
         if latitude < -90 or latitude > 90:
@@ -160,6 +157,28 @@ class FlinnEngdahl(object):
 
         fe_index = n - 1
         fe_num = my_fenums[fe_index]
+
+        return fe_num
+
+    def get_region(self, longitude, latitude):
+        """
+        Return region from given coordinate
+
+        >>> fe = FlinnEngdahl()
+        >>> print(fe.get_region(12, 48))
+        GERMANY
+        >>> print(fe.get_region(-60, -30))
+        NORTHEASTERN ARGENTINA
+
+        :param longitude: WGS84 longitude
+        :type longitude: int or float
+        :param latitude: WGS84 latitude
+        :type latitude: int or float
+        :rtype: str
+        :return: Flinn Engdahl region name
+        """
+
+        fe_num = self.get_number(longitude, latitude)
         fe_name = self.names[fe_num - 1]
 
         return fe_name
@@ -176,7 +195,7 @@ class FlinnEngdahl(object):
 
         :param number: Region ID
         :type number: int
-        :rtype: string
+        :rtype: str
         :return: Flinn Engdahl region name
         """
         return self.by_number[number]

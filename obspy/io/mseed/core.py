@@ -2,15 +2,11 @@
 """
 MSEED bindings to ObsPy core module.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import io
 import os
 import warnings
+from pathlib import Path
 from struct import pack
 
 import numpy as np
@@ -26,12 +22,12 @@ from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SelectTime, Blkt100S, Blkt1001S, clibmseed)
 
 
-def _is_mseed(filename):
+def _is_mseed(file):
     """
     Checks whether a file is Mini-SEED/full SEED or not.
 
-    :type filename: str
-    :param filename: Mini-SEED/full SEED file to be checked.
+    :type file: str or file-like object
+    :param file: Mini-SEED/full SEED file to be checked.
     :rtype: bool
     :return: ``True`` if a Mini-SEED file.
 
@@ -45,26 +41,27 @@ def _is_mseed(filename):
     Thus it cannot be used to validate a Mini-SEED or SEED file.
     """
     # Open filehandler or use an existing file like object.
-    if not hasattr(filename, 'read'):
-        file_size = os.path.getsize(filename)
-        with io.open(filename, 'rb') as fh:
+    if not hasattr(file, 'read'):
+        file_size = os.path.getsize(file)
+        with io.open(file, 'rb') as fh:
             return __is_mseed(fh, file_size=file_size)
     else:
-        initial_pos = filename.tell()
+        initial_pos = file.tell()
         try:
-            if hasattr(filename, "getbuffer"):
-                file_size = filename.getbuffer().nbytes
-            try:
-                file_size = os.fstat(filename.fileno()).st_size
-            except Exception:
-                _p = filename.tell()
-                filename.seek(0, 2)
-                file_size = filename.tell()
-                filename.seek(_p, 0)
-            return __is_mseed(filename, file_size)
+            if hasattr(file, "getbuffer"):  # BytesIO
+                file_size = file.getbuffer().nbytes
+            else:
+                try:
+                    file_size = os.fstat(file.fileno()).st_size
+                except Exception:
+                    _p = file.tell()
+                    file.seek(0, 2)
+                    file_size = file.tell()
+                    file.seek(_p, 0)
+            return __is_mseed(file, file_size)
         finally:
             # Reset pointer.
-            filename.seek(initial_pos, 0)
+            file.seek(initial_pos, 0)
 
 
 def __is_mseed(fp, file_size):  # NOQA
@@ -164,8 +161,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         read the headers.
     :type sourcename: str
     :param sourcename: Only read data with matching SEED ID (can contain
-        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z"). Defaults to
-        ``None``.
+        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z").
+        Defaults to ``None`` .
     :param reclen: If it is None, it will be automatically determined for every
         record. If it is known, just set it to the record length in bytes which
         will increase the reading speed slightly.
@@ -180,11 +177,11 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         from 0 to 100 [%]. ``calibration_type`` specifies the type of available
         calibration information blockettes:
 
-        - ``1``: Step Calibration (Blockette 300)
-        - ``2``: Sine Calibration (Blockette 310)
-        - ``3``: Pseudo-random Calibration (Blockette 320)
-        - ``4``: Generic Calibration  (Blockette 390)
-        - ``-2``: Calibration Abort (Blockette 395)
+        - ``1`` : Step Calibration (Blockette 300)
+        - ``2`` : Sine Calibration (Blockette 310)
+        - ``3`` : Pseudo-random Calibration (Blockette 320)
+        - ``4`` : Generic Calibration  (Blockette 390)
+        - ``-2`` : Calibration Abort (Blockette 395)
 
     :type header_byteorder: int or str, optional
     :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
@@ -228,6 +225,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     >>> print(len(st))
     101
     """
+    if isinstance(mseed_object, Path):
+        mseed_object = str(mseed_object)
     # Parse the headonly and reclen flags.
     if headonly is True:
         unpack_data = 0
@@ -306,7 +305,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     info = {'filesize': info['filesize']}
 
     # If it's a file name just read it.
-    if isinstance(mseed_object, (str, native_str)):
+    if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
         bfr_np = np.fromfile(mseed_object, dtype=np.int8)
     elif hasattr(mseed_object, 'read'):
@@ -362,7 +361,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
         if sourcename is not None:
-            if not isinstance(sourcename, (str, native_str)):
+            if not isinstance(sourcename, str):
                 msg = 'sourcename needs to be a string'
                 raise ValueError(msg)
             # libmseed uses underscores as separators and allows filtering
@@ -494,21 +493,6 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     clibmseed.lil_free(lil)  # NOQA
     del lil  # NOQA
     return Stream(traces=traces)
-
-
-def _np_copy_astype(data, dtype):
-    """
-    Helper function to copy data, replacing `trace.data.copy().astype(dtype)`
-
-    This is done to avoid copying data in memory twice that could happen due to
-    an API change in numpy's `astype` method (`copy` kwarg).
-    This helper workaround function can be dropped once bumping minimum numpy
-    version to >=1.7.0
-    """
-    try:
-        return data.astype(dtype, copy=True)
-    except TypeError:
-        return data.copy().astype(dtype)
 
 
 def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
@@ -799,16 +783,19 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['encoding'] = 5
             elif trace.data.dtype.type == np.int16:
                 trace_attr['encoding'] = 1
-            elif trace.data.dtype.type == np.dtype(native_str('|S1')).type:
+            elif trace.data.dtype.type == np.dtype('|S1').type:
                 trace_attr['encoding'] = 0
             # int64 data not supported; if possible downcast to int32, else
             # create error message. After bumping up to numpy 1.9.0 this check
             # can be replaced by numpy.can_cast()
+            # -- actually not sure, it even looks like can_cast() does not
+            # check individual values in arrays, so it might be better to keep
+            # the current check using iinfo().
             elif trace.data.dtype.type == np.int64:
                 # check if data can be safely downcast to int32
                 ii32 = np.iinfo(np.int32)
                 if abs(trace.max()) <= ii32.max:
-                    trace_data.append(_np_copy_astype(trace.data, np.int32))
+                    trace_data.append(trace.data.astype(np.int32, copy=True))
                     trace_attr['encoding'] = 11
                 else:
                     msg = ("int64 data only supported when writing MSEED if "
@@ -822,7 +809,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Convert data if necessary, otherwise store references in list.
         if trace_attr['encoding'] == 1:
             # INT16 needs INT32 data type
-            trace_data.append(_np_copy_astype(trace.data, np.int32))
+            trace_data.append(trace.data.astype(np.int32, copy=True))
         else:
             trace_data.append(trace.data)
 
@@ -886,7 +873,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
             size = C.sizeof(Blkt1001S)
             # Only timing quality matters here, other blockette attributes will
             # be filled by libmseed.msr_normalize_header
-            blkt_value = pack(native_str("BBBB"), trace_attr['timing_quality'],
+            blkt_value = pack("BBBB", trace_attr['timing_quality'],
                               0, 0, 0)
             blkt_ptr = C.create_string_buffer(blkt_value, len(blkt_value))
 
@@ -1011,7 +998,7 @@ class MST(object):
         bytecount = data.itemsize * data.size
 
         self.mst.contents.datasamples = clibmseed.allocate_bytes(bytecount)
-        C.memmove(self.mst.contents.datasamples, data.ctypes.get_data(),
+        C.memmove(self.mst.contents.datasamples, data.ctypes.data,
                   bytecount)
 
     def __del__(self):

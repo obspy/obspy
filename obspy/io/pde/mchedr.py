@@ -4,7 +4,7 @@ NEIC PDE mchedr (machine-readable Earthquake Data Report) read support.
 
 Only supports file format revision of February 24, 2004.
 
-.. seealso:: http://earthquake.usgs.gov/data/pde.php
+.. seealso:: https://earthquake.usgs.gov/data/comcat/catalog/us/
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Claudio Satriano
@@ -12,15 +12,11 @@ Only supports file format revision of February 24, 2004.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from datetime import timedelta
 import io
 import math
 import string as s
+from pathlib import Path
 
 import numpy as np
 
@@ -56,7 +52,7 @@ def _is_mchedr(filename):
     >>> _is_mchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
-    if not isinstance(filename, (str, native_str)):
+    if not isinstance(filename, str):
         return False
     with open(filename, 'rb') as fh:
         for line in fh.readlines():
@@ -86,7 +82,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        if not isinstance(filename, (str, native_str)):
+        if not isinstance(filename, str):
             raise TypeError('File name must be a string.')
         self.filename = filename
         self.fh = open(filename, 'rb')
@@ -1073,7 +1069,7 @@ def _read_mchedr(filename):
         ObsPy :func:`~obspy.core.event.read_events` function, call this
         instead.
 
-    :type filename: str
+    :type filename: str or :class:`~pathlib.Path`
     :param filename: mchedr file to be read.
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
@@ -1084,8 +1080,10 @@ def _read_mchedr(filename):
     >>> cat = read_events('/path/to/mchedr.dat')
     >>> print(cat)
     1 Event(s) in Catalog:
-    2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb
+    2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2  Mb
     """
+    if isinstance(filename, Path):
+        filename = str(filename)
     return Unpickler().load(filename)
 
 

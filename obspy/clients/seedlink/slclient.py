@@ -16,14 +16,9 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import logging
 import sys
-import traceback
 
+from obspy.core.util.decorator import deprecated_keywords
 from .client.seedlinkconnection import SeedLinkConnection
 from .seedlinkexception import SeedLinkException
 from .slpacket import SLPacket
@@ -59,10 +54,6 @@ USAGE = """
 <[host]:port>  Address of the SeedLink server in host:port format
                if host is omitted (i.e. ':18000'), localhost is assumed
 """
-
-
-# default logger
-logger = logging.getLogger('obspy.clients.seedlink')
 
 
 class SLClient(object):
@@ -107,16 +98,11 @@ class SLClient(object):
     PROGRAM_NAME = "SLClient v" + VERSION
     VERSION_INFO = PROGRAM_NAME + " (" + VERSION_DATE + ")"
 
-    def __init__(self, loglevel='DEBUG', timeout=None):
+    @deprecated_keywords({"loglevel": None})
+    def __init__(self, loglevel=None, timeout=None):
         """
         Creates a new instance of SLClient with the specified logging object
         """
-        numeric_level = getattr(logging, loglevel.upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % loglevel)
-        logging.basicConfig(level=numeric_level)
-        logger.setLevel(numeric_level)
-
         self.verbose = 0
         self.ppackets = False
         self.streamfile = None
@@ -225,14 +211,14 @@ class SLClient(object):
         """
         Start this SLClient.
 
-        :type packet_handler: func
+        :type packet_handler: callable
         :param packet_handler: Custom packet handler funtion to override
             `self.packet_handler` for this seedlink request. The function will
             be repeatedly called with two arguments: the current packet counter
             (`int`) and the currently served seedlink packet
-            (:class:`~obspy.clients.seedlink.SLPacket`). The function should
-            return `True` to abort the request or `False` to continue the
-            request.
+            (:class:`~obspy.clients.seedlink.slclient.SLPacket`). The
+            function should return `True` to abort the request or `False` to
+             continue the request.
         """
         if packet_handler is None:
             packet_handler = self.packet_handler
@@ -345,16 +331,12 @@ class SLClient(object):
         Main method - creates and runs an SLClient using the specified
         command line arguments
         """
-        try:
-            sl_client = SLClient()
-            rval = sl_client.parse_cmd_line_args(args)
-            if (rval != 0):
-                sys.exit(rval)
-            sl_client.initialize()
-            sl_client.run()
-        except Exception as e:
-            logger.critical(e)
-            traceback.print_exc()
+        sl_client = SLClient()
+        rval = sl_client.parse_cmd_line_args(args)
+        if (rval != 0):
+            sys.exit(rval)
+        sl_client.initialize()
+        sl_client.run()
 
 
 if __name__ == '__main__':

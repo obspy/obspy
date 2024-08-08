@@ -3,10 +3,6 @@
 SAC module helper functions and data.
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
 import sys
 import warnings
 
@@ -102,13 +98,17 @@ def _convert_enum(header, converter, accep):
 
 
 def enum_string_to_int(header):
-    """Convert enumerated string values in header dictionary to int values."""
+    """
+    Convert enumerated string values in header dictionary to int values.
+    """
     out = _convert_enum(header, converter=HD.ENUM_VALS, accep=HD.ACCEPTED_VALS)
     return out
 
 
 def enum_int_to_string(header):
-    """Convert enumerated int values in header dictionary to string values."""
+    """
+    Convert enumerated int values in header dictionary to string values.
+    """
     out = _convert_enum(header, converter=HD.ENUM_NAMES, accep=HD.ACCEPTED_INT)
     return out
 
@@ -117,18 +117,16 @@ def byteswap(*arrays):
     """
     Swapping of bytes for provided arrays.
 
-    Notes
-    -----
+    **Notes**
+
     arr.newbyteorder('S') swaps dtype interpretation, but not bytes in memory
     arr.byteswap() swaps bytes in memory, but not dtype interpretation
     arr.byteswap(True).newbyteorder('S') completely swaps both
 
-    References
-    ----------
-    https://docs.scipy.org/doc/numpy/user/basics.byteswapping.html
-
+    .. seealso::
+        https://docs.scipy.org/doc/numpy/user/basics.byteswapping.html
     """
-    return [arr.newbyteorder('S') for arr in arrays]
+    return [arr.view(arr.dtype.newbyteorder('S')) for arr in arrays]
 
 
 def is_same_byteorder(bo1, bo2):
@@ -144,7 +142,6 @@ def is_same_byteorder(bo1, bo2):
 
     :rtype: bool
     :return: True of same byte order.
-
     """
     # TODO: extend this as is_same_byteorder(*byteorders) using itertools
     be = ('b', 'big', '>')
@@ -181,16 +178,19 @@ def _clean_str(value, strip_whitespace=True):
 
 
 # TODO: do this in SACTrace?
-def sac_to_obspy_header(sacheader):
+def sac_to_obspy_header(sacheader, round_sampling_interval=True):
     """
     Make an ObsPy Stats header dictionary from a SAC header dictionary.
 
     :param sacheader: SAC header dictionary.
     :type sacheader: dict
+    :param round_sampling_interval: Whether to round sampling interval to
+        microseconds before calculating sampling rate to avoid floating point
+        accuracy issues with some SAC files (see #3408)
+    :type round_sampling_interval: bool
 
-    :rtype: :class:`~obspy.core.Stats`
+    :rtype: :class:`~obspy.core.trace.Stats`
     :return: Filled ObsPy Stats header.
-
     """
 
     # 1. get required sac header values
@@ -232,7 +232,35 @@ def sac_to_obspy_header(sacheader):
     # nothing is null
     stats = {}
     stats['npts'] = npts
-    stats['sampling_rate'] = np.float32(1.) / np.float32(delta)
+    # sampling rate can have floating point issues due to it being stored as a
+    # single precision floating point sampling interval in seconds, see #3408
+    # usually it should be ok potentially, but it seems that some SAC data
+    # sources additionally don't have the sampling interval encoded as the
+    # closest possible binary representation but rather the closest lesser
+    # binary representation (e.g. b'\x0b\xd7#=' for 0.04) when the next
+    # possible higher number would be closer to the "exact" value (here
+    # b'\n\xd7#=') which seems to be the tipping point of the floating point
+    # inaccuracy making it through our internal conversion to double precision
+    # sampling rate. here, we check if the conventional conversion and the
+    # "safer" way of rounding off (to microseconds in sample spacing) lead to a
+    # difference and warn about the fact, since the rounding approach actually
+    # could introduce buggy results for real weird unaligned sampling rates
+    sample_spacing_conventional = np.float32(delta)
+    sample_spacing_rounded_off = round(np.float64(delta), 6)
+    sampling_rate_conventional = np.float32(1.) / np.float32(delta)
+    sampling_rate_rounded_off = 1.0 / round(np.float64(delta), 6)
+    if round_sampling_interval:
+        if sampling_rate_conventional != sampling_rate_rounded_off:
+            msg = (f"Sample spacing read from SAC file "
+                   f"({sample_spacing_conventional:.9f} when rounded to "
+                   f"nanoseconds) was rounded of to microsecond precision "
+                   f"({sample_spacing_rounded_off:.9f}) to avoid floating "
+                   f"point issues when converting to sampling rate (see "
+                   f"#3408)")
+            warnings.warn(msg)
+        stats['sampling_rate'] = sampling_rate_rounded_off
+    else:
+        stats['sampling_rate'] = sampling_rate_conventional
     stats['network'] = _clean_str(knetwk)
     stats['station'] = _clean_str(kstnm)
     stats['channel'] = _clean_str(kcmpnm)
@@ -281,10 +309,11 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     Merge a primary with a secondary header, reconciling some differences.
 
     :param stats: Filled ObsPy Stats header
-    :type stats: dict or :class:`~obspy.core.Stats`
+    :type stats: dict or :class:`~obspy.core.trace.Stats`
     :param keep_sac_header: If keep_sac_header is True, old stats.sac
         header values are kept, and a minimal set of values are updated from
         the stats dictionary according to these guidelines:
+
         * npts, delta always come from stats
         * If a valid old reftime is found, the new b and e will be made
           and properly referenced to it. All other old SAC headers are simply
@@ -301,6 +330,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         * If 'kstnm', 'knetwk', 'kcmpnm', or 'khole' are not set or differ
           from Stats values 'station', 'network', 'channel', or 'location',
           they are taken from the Stats values.
+
         If keep_sac_header is False, a new SAC header is constructed from only
         information found in the Stats dictionary, with some other default
         values introduced.  It will be an iztype 9 ("ib") file, with small
@@ -309,7 +339,6 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     :type keep_sac_header: bool
     :rtype merged: dict
     :return: SAC header
-
     """
     header = {}
     oldsac = stats.get('sac', {})
@@ -411,9 +440,8 @@ def get_sac_reftime(header):
     :param header: SAC header
     :type header: dict
 
-    :rtype: :class:`~obspy.core.UTCDateTime`
+    :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :returns: SAC reference time.
-
     """
     # NOTE: epoch seconds can be got by:
     # (reftime - datetime.datetime(1970,1,1)).total_seconds()

@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
+  <Source></Source>
+  <Sender></Sender>
+  <Module></Module>
+  <ModuleURI></ModuleURI>
+  <Created>2000-01-01T00:00:00.000000Z</Created>
+  <Network code="XX">
+    <Description></Description>
+    <SelectedNumberStations>1</SelectedNumberStations>
+    <Station code="XX" startDate="2000-01-01T00:00:00.000000Z">
+      <Description></Description>
+      <Latitude unit="DEGREES">1.0</Latitude>
+      <Longitude unit="DEGREES">1.0</Longitude>
+      <Elevation unit="METERS">1.0</Elevation>
+      <Site>
+        <Name></Name>
+      </Site>
+      <CreationDate>2000-01-01T00:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>1</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="HJ1" locationCode="" startDate="2000-01-01T00:00:00.000000Z">
+        <Latitude unit="DEGREES">1.0</Latitude>
+        <Longitude unit="DEGREES">1.0</Longitude>
+        <Elevation unit="METERS">1.0</Elevation>
+        <Depth unit="METERS">0.0</Depth>
+        <Azimuth unit="DEGREES">90.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <SampleRate>200.0</SampleRate>
+        <Sensor>
+          <Type>FOG rotational sensor</Type>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1000000000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>RAD/S</Name>
+              <Description>Radians per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>COUNTS</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+          <Stage number="1">
+            <PolesZeros>
+              <InputUnits>
+                <Name>RAD/S</Name>
+                <Description>Radians per Second</Description>
+              </InputUnits>
+              <OutputUnits>
+                <Name>V</Name>
+                <Description>Volts</Description>
+              </OutputUnits>
+              <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
+              <NormalizationFactor>1.0</NormalizationFactor>
+              <NormalizationFrequency unit="HERTZ">1.0</NormalizationFrequency>
+              <Zero number="0">
+                <Real minusError="1.0" plusError="1.0">1.0</Real>
+                <Imaginary minusError="0.0" plusError="0.0">0.0</Imaginary>
+              </Zero>
+              <Pole number="0">
+                <Real minusError="1.0" plusError="1.0">1.0</Real>
+                <Imaginary minusError="0.0" plusError="0.0">0.0</Imaginary>
+              </Pole>
+            </PolesZeros>
+            <StageGain>
+              <Value>1.0</Value>
+              <Frequency>0.02</Frequency>
+            </StageGain>
+          </Stage>
+          <Stage number="2">
+            <Coefficients>
+              <InputUnits>
+                <Name>V</Name>
+                <Description>Volts</Description>
+              </InputUnits>
+              <OutputUnits>
+                <Name>COUNTS</Name>
+                <Description>Digital Counts</Description>
+              </OutputUnits>
+              <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+            </Coefficients>
+            <Decimation>
+              <InputSampleRate unit="HERTZ">200.0</InputSampleRate>
+              <Factor>1</Factor>
+              <Offset>0</Offset>
+              <Delay>0.0</Delay>
+              <Correction>0.0</Correction>
+            </Decimation>
+            <StageGain>
+              <Value>1000000000.0</Value>
+              <Frequency>0.0</Frequency>
+            </StageGain>
+          </Stage>
+        </Response>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>

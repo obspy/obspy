@@ -2,11 +2,6 @@
 """
 Defines the libmseed structures and blockettes.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 import ctypes as C  # NOQA
 import warnings
 
@@ -37,24 +32,6 @@ HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
-
-# XXX: Do we still support Python 2.4 ????
-# Figure out Py_ssize_t (PEP 353).
-#
-# Py_ssize_t is only defined for Python 2.5 and above, so it defaults to
-# ctypes.c_int for earlier versions.
-#
-# https://svn.python.org/projects/ctypes/trunk/
-#           ctypeslib/ctypeslib/contrib/pythonhdr.py
-if hasattr(C.pythonapi, 'Py_InitModule4'):
-    Py_ssize_t = C.c_int
-elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
-    Py_ssize_t = C.c_int64
-else:
-    # XXX: just hard code it for now
-    Py_ssize_t = C.c_int64
-    # raise TypeError("Cannot determine type of Py_ssize_t")
-
 # Valid control headers in ASCII numbers.
 SEED_CONTROL_HEADERS = [ord('V'), ord('A'), ord('S'), ord('T')]
 MINI_SEED_CONTROL_HEADERS = [ord('D'), ord('R'), ord('Q'), ord('M')]
@@ -72,7 +49,7 @@ VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
 
 # allowed encodings:
 # id: (name, sampletype a/i/f/d, default NumPy type, write support)
-ENCODINGS = {0: ("ASCII", "a", np.dtype(native_str("|S1")).type, True),
+ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type, True),
              1: ("INT16", "i", np.dtype(np.int16), True),
              3: ("INT32", "i", np.dtype(np.int32), True),
              4: ("FLOAT32", "f", np.dtype(np.float32), True),
@@ -134,7 +111,7 @@ SAMPLETYPE = {"|S1": "a",
               "int32": "i",
               "float32": "f",
               "float64": "d",
-              np.dtype(native_str("|S1")).type: "a",
+              np.dtype("|S1").type: "a",
               np.dtype(np.int16).type: "i",
               np.dtype(np.int32).type: "i",
               np.dtype(np.float32).type: "f",
@@ -473,7 +450,7 @@ class MsfileparamS(C.Structure):
 
 
 MsfileparamS._fields_ = [
-    ('fp', C.POINTER(Py_ssize_t)),
+    ('fp', C.POINTER(C.c_ssize_t)),
     ('filename', C.c_char * 512),
     ('rawrec', C.c_char_p),
     ('readlen', C.c_int),
@@ -681,7 +658,7 @@ __clibmseed.msr_endtime.restype = C.c_int64
 
 __clibmseed.ms_detect.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int]
 __clibmseed.ms_detect.restype = C.c_int
 
@@ -690,7 +667,7 @@ __clibmseed.msr_decode_steim2.argtypes = [
     C.c_int,
     C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_char_p, C.c_int]
 __clibmseed.msr_decode_steim2.restype = C.c_int
 
@@ -699,7 +676,7 @@ __clibmseed.msr_decode_steim1.argtypes = [
     C.c_int,
     C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int, C.c_char_p, C.c_int]
 __clibmseed.msr_decode_steim1.restype = C.c_int
 
@@ -727,7 +704,7 @@ __clibmseed.msr_parse.restype = C.c_int
 # Set the necessary arg- and restypes.
 __clibmseed.readMSEEDBuffer.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+                           flags='C_CONTIGUOUS'),
     C.c_int,
     C.POINTER(Selections),
     C.c_int8,

@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-
 def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     """
     Generate an event ID following the SeisComP3 convention. By default it

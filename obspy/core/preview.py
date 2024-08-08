@@ -8,11 +8,6 @@ Tools for creating and merging previews.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
 from copy import copy
 
 import numpy as np
@@ -20,6 +15,7 @@ import numpy as np
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.misc import ptp
 
 
 def create_preview(trace, delta=60):
@@ -71,7 +67,7 @@ def create_preview(trace, delta=60):
     # reshape matrix
     data = trace.data[start:end].reshape([number_of_slices, samples_per_slice])
     # get minimum and maximum for each row
-    diff = data.ptp(axis=1)
+    diff = ptp(data, axis=1)
     # fill masked values with -1 -> means missing data
     if isinstance(diff, np.ma.masked_array):
         diff = np.ma.filled(diff, -1)
@@ -129,7 +125,7 @@ def merge_previews(stream):
             raise Exception(msg)
         delta = value[0].stats.delta
         # Check dtype.
-        dtypes = {native_str(tr.data.dtype) for tr in value}
+        dtypes = {tr.data.dtype for tr in value}
         if len(dtypes) > 1:
             msg = 'Different dtypes for traces with id %s' % value[0].id
             raise Exception(msg)
