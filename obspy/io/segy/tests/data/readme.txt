@@ -38,7 +38,22 @@ Files from Christian Pelties
 
         planes.segy_first_trace
 
-
+Files from Eric Eckert
+----------------------------
+    => 4-byte, IBM floating point - little endian, ASCII header.
+    3 block containing a simple sin wave
+    3rd block header contains contains two extra bytes at 137536
+    to simulate the kind of corruption that frequently occurs in
+    large segy files
+    
+    corrupt_sin_wave.sgy
+    
+    => 4-byte, IBM floating point - little endian, ASCII header.
+    The non corrupt version of the corrupt.segy. Contains 3 blocks
+    with a sin wave.
+    
+    good_sin_wave.sgy
+    
 Seismic Unix files
 ==================
 
