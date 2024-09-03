@@ -543,6 +543,9 @@ class WaveformPlotting(object):
         else:
             time = event["time"]
             text = event["text"] if "text" in event else None
+            marker = event["marker"] if "marker" in event else "*"
+            marker_color = event["marker_color"] in event else "yellow"
+            marker_size = event["marker_size"] in event else 12
 
         # Nothing to do if the event is not on the plot.
         if time < self.starttime or time > self.endtime:
@@ -611,8 +614,8 @@ class WaveformPlotting(object):
                             relpos=relpos, shrinkB=7),
                         zorder=10)
         # Draw the actual point. Use a marker with a star shape.
-        ax.plot(x_pos, y_pos, "*", color="yellow",
-                markersize=12, linewidth=self.linewidth)
+        ax.plot(x_pos, y_pos, marker, color=marker_color,
+                markersize=marker_size, linewidth=self.linewidth)
 
         for pick in getattr(event, 'picks', []):
             # check that network/station/location matches
