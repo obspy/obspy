@@ -20,6 +20,7 @@ import warnings
 
 import numpy as np
 from scipy.fftpack import hilbert
+from scipy.fft import fft, fftshift
 from scipy.signal import (cheb2ord, cheby2, convolve, get_window, iirfilter,
                           remez, sosfilt)
 
@@ -446,3 +447,25 @@ def lowpass_cheby_2(data, freq, df, maxorder=12, ba=False,
     if freq_passband:
         return sosfilt(sos, data), wp * nyquist
     return sosfilt(sos, data)
+
+def taup_transform(data):
+    """
+    Perform Tau-P transform on the input data.
+
+    :type data: numpy.ndarray
+    :param data: 2D array where each row is a trace.
+    :return: Transformed data with the same shape as input.
+    """
+    if not isinstance(data, np.ndarray):
+        raise TypeError("Input data must be a numpy array.")
+    if data.ndim != 2:
+        raise ValueError("Input data must be a 2D array.")
+
+    num_traces, num_samples = data.shape
+    taup_data = np.zeros_like(data, dtype=np.complex128)
+
+    for i in range(num_traces):
+        taup_data[i, :] = fft(data[i, :])
+
+    taup_data = fftshift(taup_data, axes=0)
+    return np.abs(taup_data)
