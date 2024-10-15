@@ -33,6 +33,8 @@ Changes:
      instance while skipping service discovery, to avoid accidental changes to
      `DEFAULT_SERVICES` (see #3493)
    * make it possible to opt out of server side gzip compression (see #3469)
+   * fix exception raised when a network error occurs in Client (see #3496,
+     #3510)
  - obspy.clients.seedlink:
    * fix a bug in basic client `get_info()` which leaded to exceptions when
      querying with `level="channel"` in presence of stations with no current
