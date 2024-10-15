@@ -33,6 +33,10 @@ Changes:
      instance while skipping service discovery, to avoid accidental changes to
      `DEFAULT_SERVICES` (see #3493)
    * make it possible to opt out of server side gzip compression (see #3469)
+   * fix a regression introduced by #3306 which lead to some network errors not
+     getting raised as an FDSNException but some low-level exceptions like
+     AttributeError, which in turn caused problems in Mass Downloader (see
+     #3513)
  - obspy.clients.seedlink:
    * fix a bug in basic client `get_info()` which leaded to exceptions when
      querying with `level="channel"` in presence of stations with no current

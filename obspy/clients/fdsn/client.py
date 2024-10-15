@@ -15,13 +15,20 @@ import gzip
 import io
 import os
 import re
-from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
 from collections import OrderedDict
 from http.client import HTTPException, IncompleteRead
 from urllib.parse import urlparse
+# since python 3.10 socket.timeout is just an alias for builtin TimeoutError
+# and python docs state that it is a "deprecated alias", so that alias might
+# get removed at some point (or probably just kept forever), so be ready for it
+# here
+try:
+    from socket import timeout as socket_timeout
+except ImportError:
+    socket_timeout = TimeoutError
 
 from lxml import etree
 
@@ -1829,7 +1836,20 @@ def raise_on_error(code, data):
     :type data: :class:`io.BytesIO`
     :param data: Data returned by the server
     """
-    # get detailed server response message
+    # there can be random network issues that prevent us getting a proper HTTP
+    # response and they need to handled differently
+    if code is None:
+        if (isinstance(data, (socket_timeout, TimeoutError)) or
+                "timeout" in str(data).lower() or
+                "timed out" in str(data).lower()):
+            raise FDSNTimeoutException("Timed Out")
+        else:
+            raise FDSNException("Unknown Error (%s): %s" % (
+                (str(data.__class__.__name__), str(data))))
+
+    # get detailed server response message from a proper HTTP response to
+    # prepare raising a specific exception including the info response from the
+    # server
     if code != 200:
         # let's try to resolve all the different types that `data` can sadly
         # have..
@@ -1849,6 +1869,7 @@ def raise_on_error(code, data):
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
+
     # No data.
     if code == 204:
         raise FDSNNoDataException("No data available for request.",
@@ -1890,12 +1911,6 @@ def raise_on_error(code, data):
         raise FDSNServiceUnavailableException("Service temporarily "
                                               "unavailable",
                                               server_info)
-    elif code is None:
-        if "timeout" in str(data).lower() or "timed out" in str(data).lower():
-            raise FDSNTimeoutException("Timed Out")
-        else:
-            raise FDSNException("Unknown Error (%s): %s" % (
-                (str(data.__class__.__name__), str(data))))
     # Catch any non 200 codes.
     elif code != 200:
         raise FDSNException("Unknown HTTP code: %i" % code, server_info)
