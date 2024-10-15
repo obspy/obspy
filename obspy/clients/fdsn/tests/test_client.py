@@ -11,10 +11,12 @@ The obspy.clients.fdsn.client test suite.
 """
 import io
 import re
+import socket
 import sys
 import warnings
 from difflib import Differ
 from unittest import mock
+from urllib.error import URLError
 
 import urllib.request as urllib_request
 
@@ -29,7 +31,8 @@ from obspy.core.util.base import NamedTemporaryFile, CatchAndAssertWarnings
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
-                                       get_bulk_string, _cleanup_earthscope)
+                                       get_bulk_string, _cleanup_earthscope,
+                                       raise_on_error)
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
                                        FDSNNoDataException,
@@ -1779,3 +1782,69 @@ class TestClientNoNetwork():
             assert (
                 download_mock.call_args.kwargs.get('use_gzip', None)
                 is False)
+
+    def test_raise_on_error(self):
+        """
+        Test helper function raise on error to prevent more regression bugs
+        like introduced inadvertently with #3306 which took some while to get
+        properly fixed with multiple cases that ended up raising unexpected
+        exceptions and not proper FDSNException like expected by e.g. Mass
+        Downloader
+        """
+        server_string = 'detailed server response here.'
+        server_bytes = b'detailed server response here.'
+
+        # a) test a proper HTTP response with an error which we handle
+        #    explicitly
+        code = 204
+        msg = (f'No data available for request.\nHTTP Status code: '
+               f'{code}\nDetailed response of server:\n\n{server_string}')
+        data = io.BytesIO(server_bytes)
+        with pytest.raises(FDSNNoDataException, match=msg):
+            raise_on_error(code, data)
+        # sometimes it seems the server response comes as a StringIO for
+        # whatever reason, so we took care to handle that too
+        data = io.StringIO(server_string)
+        with pytest.raises(FDSNNoDataException, match=msg):
+            raise_on_error(code, data)
+
+        # b) test a proper HTTP response with a HTTP code we don't handle
+        #    specifically
+        code = 999
+        msg = (f'Unknown HTTP code: {code}\nDetailed response of server:'
+               f'\n\n{server_string}')
+        data = io.BytesIO(server_bytes)
+        with pytest.raises(FDSNException, match=msg):
+            raise_on_error(code, data)
+        # sometimes it seems the server response comes as a StringIO for
+        # whatever reason, so we took care to handle that too
+        data = io.StringIO(server_string)
+        with pytest.raises(FDSNException, match=msg):
+            raise_on_error(code, data)
+
+        # c) test some cases that encounter exceptions ahead of proper HTTP
+        #    responses, like random network failures like timeout errors or
+        #    address resolution errors.
+
+        #    This case is reconstructed from bug report #3496
+        code = None
+        data = URLError(
+            socket.gaierror(-3, 'Temporary failure in name resolution'))
+        msg = (r'Unknown Error \(URLError\):.*Temporary failure in name '
+               r'resolution')
+        with pytest.raises(FDSNException, match=msg):
+            raise_on_error(code, data)
+        #    This case is reconstructed from bug report #3510. Python <=3.9
+        #    this was encountering socket.timeout object, which since 3.10 is
+        #    just an alias for TimeoutError, so it depends on Python version
+        #    what we actually encounter here
+        code = None
+        try:
+            data = socket.timeout()
+        except AttributeError:
+            # if the deprecated alias socket.timeout for TimeoutError ever gets
+            # removed we can be ready for it here
+            data = TimeoutError()
+        msg = 'Timed Out'
+        with pytest.raises(FDSNException, match=msg):
+            raise_on_error(code, data)
