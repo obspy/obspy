@@ -1829,6 +1829,14 @@ def raise_on_error(code, data):
     :type data: :class:`io.BytesIO`
     :param data: Data returned by the server
     """
+    # Catch network errors
+    if code is None:
+        if "timeout" in str(data).lower() or "timed out" in str(data).lower():
+            raise FDSNTimeoutException("Timed Out")
+        else:
+            raise FDSNException("Unknown Error (%s): %s" % (
+                (str(data.__class__.__name__), str(data))))
+
     # get detailed server response message
     if code != 200:
         # let's try to resolve all the different types that `data` can sadly
@@ -1890,12 +1898,6 @@ def raise_on_error(code, data):
         raise FDSNServiceUnavailableException("Service temporarily "
                                               "unavailable",
                                               server_info)
-    elif code is None:
-        if "timeout" in str(data).lower() or "timed out" in str(data).lower():
-            raise FDSNTimeoutException("Timed Out")
-        else:
-            raise FDSNException("Unknown Error (%s): %s" % (
-                (str(data.__class__.__name__), str(data))))
     # Catch any non 200 codes.
     elif code != 200:
         raise FDSNException("Unknown HTTP code: %i" % code, server_info)
