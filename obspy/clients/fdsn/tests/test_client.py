@@ -17,6 +17,7 @@ from difflib import Differ
 from unittest import mock
 
 import urllib.request as urllib_request
+from urllib.error import URLError
 
 import lxml
 import numpy as np
@@ -1640,6 +1641,16 @@ class TestClientNoNetwork():
         """
         download_url_mock.return_value = (None, "timeout")
         with pytest.raises(FDSNTimeoutException):
+            self.client.get_stations()
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_url_error_exception(self, download_url_mock):
+        """
+        Verify that a request hitting an unknown error raises an identifiable
+        exception
+        """
+        download_url_mock.return_value = (None, URLError)
+        with pytest.raises(FDSNException):
             self.client.get_stations()
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
