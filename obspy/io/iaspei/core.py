@@ -16,7 +16,8 @@ from obspy import UTCDateTime
 from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
     QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier,
-    Pick, StationMagnitude, WaveformStreamID, Amplitude)
+    Pick, StationMagnitude, WaveformStreamID, Amplitude, Arrival)
+from obspy.core.event.header import AmplitudeUnit
 from obspy.core.util.obspy_types import ObsPyReadingError
 from .util import (
     float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status,
@@ -77,8 +78,16 @@ class ISFReader(object):
     def deserialize(self):
         if not self.lines:
             raise ObsPyReadingError()
-        line = self._get_next_line()
-        if not line.startswith('DATA_TYPE BULLETIN IMS1.0:short'):
+        header_flag = False
+        while not self._next_line_type():
+            # Skip the lines preceding the header
+            # (if the bulletin is enveloped as an AutoDRM response message)
+            # (BEGIN IMS1.0, MSG_TYPE DATA, ...)
+            line = self._get_next_line()
+            if line.upper().startswith('DATA_TYPE BULLETIN IMS1.0:SHORT'):
+                header_flag = True
+                break
+        if not header_flag:
             raise ObsPyReadingError()
         try:
             self._deserialize()
@@ -90,7 +99,7 @@ class ISFReader(object):
         line = self._get_next_line()
         catalog_description = line.strip()
         self.cat.description = catalog_description
-        if not self.lines[0].startswith('Event'):
+        if not self.lines[0].lower().startswith('event'):
             raise ObsPyReadingError()
         # get next line stops the loop eventually, raising a controlled
         # exception
@@ -152,6 +161,7 @@ class ISFReader(object):
         # read origins block
         if block_type == 'origins':
             self._read_origins()
+            self._specify_preferred_origin()
         # read publications block
         elif block_type == 'bibliography':
             self._read_bibliography()
@@ -169,13 +179,27 @@ class ISFReader(object):
 
     def _read_phases(self):
         event = self.cat[-1]
+        origin = event.preferred_origin()
+        line = self.lines[0].strip()
+        # OrigID Phase and Phase Information Comment
+        if line.startswith('(#OrigID'):
+            origin_id = ResourceIdentifier(
+                self._construct_id(['origin', line[8:].rstrip(") ").strip()]))
+            origin = origin_id.get_referred_object()
+        if origin:
+            origin_id = origin.resource_id
+        else:
+            origin_id = None
+
         while not self._next_line_type():
             line = self._get_next_line()
             if line.strip().startswith('('):
                 comment = self._parse_generic_comment(line)
-                event.picks[-1].comments.append(comment)
+                if len(event.picks):
+                    event.picks[-1].comments.append(comment)
                 continue
-            pick, amplitude, station_magnitude = self._parse_phase(line)
+            pick, amplitude, station_magnitude, arrival = self._parse_phase(
+                                                             line, origin_id)
             if (pick, amplitude, station_magnitude) == (None, None, None):
                 continue
             event.picks.append(pick)
@@ -183,6 +207,10 @@ class ISFReader(object):
                 event.amplitudes.append(amplitude)
             if station_magnitude:
                 event.station_magnitudes.append(station_magnitude)
+            if origin:
+                # The list of Arrival items is stored in the specified origin
+                if arrival:
+                    origin.arrivals.append(arrival)
             continue
 
     def _read_origins(self):
@@ -225,6 +253,23 @@ class ISFReader(object):
             event.origins.extend(origins)
             event.event_type = event_type
             event.event_type_certainty = event_type_certainty
+
+    def _specify_preferred_origin(self):
+        '''
+        Find the preferred origin in two simple cases:
+          - only one origin for an event
+          - tagged #PRIME
+        Affects: event.preferred_origin_id
+        '''
+        event = self.cat[-1]
+        event.preferred_origin_id = None
+        if len(event.origins) == 1:
+            event.preferred_origin_id = event.origins[0].resource_id.id
+            return
+        for origin in event.origins:
+            for comment in origin.comments:
+                if "#PRIME" in comment.text.upper():
+                    event.preferred_origin_id = origin.resource_id.id
 
     def _read_magnitudes(self):
         event = self.cat[-1]
@@ -276,20 +321,20 @@ class ISFReader(object):
         #                           a fixed epicenter solution)
         epicenter_fixed = fixed_flag(line[54])
         # 56-60   f5.1  semi-major axis of 90% ellipse or its estimate
-        #               (km, blank if fixed epicenter)
+        #               ([m], blank if fixed epicenter)
         _uncertainty_major_m = float_or_none(line[55:60], multiplier=1e3)
         # 62-66   f5.1  semi-minor axis of 90% ellipse or its estimate
-        #               (km, blank if fixed epicenter)
+        #               ([m], blank if fixed epicenter)
         _uncertainty_minor_m = float_or_none(line[61:66], multiplier=1e3)
         # 68-70   i3    strike (0 <= x <= 360) of error ellipse clock-wise from
         #                       North (degrees)
         _uncertainty_major_azimuth = float_or_none(line[67:70])
-        # 72-76   f5.1  depth (km)
+        # 72-76   f5.1  depth [m]
         depth = float_or_none(line[71:76], multiplier=1e3)
         # 77      a1    fixed flag (f = fixed depth station, d = depth phases,
         #                           blank if not a fixed depth)
-        epicenter_fixed = fixed_flag(line[76])
-        # 79-82   f4.1  depth error 90% (km; blank if fixed depth)
+        depth_fixed = fixed_flag(line[76])
+        # 79-82   f4.1  depth error 90% ([m]; blank if fixed depth)
         depth_error = float_or_none(line[78:82], multiplier=1e3)
         # 84-87   i4    number of defining phases
         used_phase_count = int_or_none(line[83:87])
@@ -356,7 +401,8 @@ class ISFReader(object):
             time=time, resource_id=origin_id, longitude=longitude,
             latitude=latitude, depth=depth, depth_errors=depth_error,
             origin_uncertainty=origin_uncertainty, time_fixed=time_fixed,
-            epicenter_fixed=epicenter_fixed, origin_quality=origin_quality,
+            epicenter_fixed=epicenter_fixed or depth_fixed,
+            origin_quality=origin_quality,
             comments=comments, creation_info=creation_info)
         # event init always sets an empty QuantityError, even when specifying
         # None, which is strange
@@ -481,111 +527,212 @@ class ISFReader(object):
                 return None
         return t
 
-    def _parse_phase(self, line):
-        # since we can not identify which origin a phase line corresponds to,
-        # we can not use any of the included information that would go in the
-        # Arrival object, as that would have to be attached to the appropriate
-        # origin..
-        # for now, just append all of these items as comments to the pick
+    def _parse_phase(self, line, origin_id):
+
+        # Data that we cannot interpret and assign
+        # to "Arrival", "Amplitude", "Pick" objects
+        # are still written as "Pick.comments" text.
+        # In the case that no reference to the origin is known,
+        # the origin-specific data was only stored as a comment.
+        # It's not very helpful. I recommend deleting this feature.
+        # It is currently commented out (# DD if origin_id is None: ...)
         comments = []
 
         # 1-5     a5      station code
         station_code = line[0:5].strip()
         # 7-12    f6.2    station-to-event distance (degrees)
-        comments.append(
-            'station-to-event distance (degrees): "{}"'.format(line[6:12]))
+        # Arrival.distance (float)
+        distance = float_or_none(line[6:12])
+        # DD if origin_id is None:
+        # DD     comments.append(
+        # DD     'station-to-event distance (degrees): "{}"'.format(
+        # DD                                                    line[6:12]))
         # 14-18   f5.1    event-to-station azimuth (degrees)
-        comments.append(
-            'event-to-station azimuth (degrees): "{}"'.format(line[13:18]))
+        # Arrival.azimuth (float)
+        event_azimuth = float_or_none(line[13:18])
+        # DD if origin_id is None:
+        # DD     comments.append(
+        # DD     'event-to-station azimuth (degrees): "{}"'.format(
+        # DD                                                   line[13:18]))
         # 20-27   a8      phase code
+        # Pick.phase_hint (str)
+        # Arrival.phase (str)
         phase_hint = line[19:27].strip()
         # 29-40   i2,a1,i2,a1,f6.3        arrival time (hh:mm:ss.sss)
+        # Pick.time (UTCDateTime, ATTRIBUTE_HAS_ERRORS)
         time = self._get_pick_time(line[28:40])
-        if time is None:
-            msg = ('Could not determine absolute time of pick. This phase '
-                   'line will be ignored:\n{}').format(line)
-            warnings.warn(msg)
-            return None, None, None
         # 42-46   f5.1    time residual (seconds)
-        comments.append('time residual (seconds): "{}"'.format(line[41:46]))
+        # Arrival.time_residual (float)
+        time_residual = float_or_none(line[41:46])
+        # DD if origin_id is None:
+        # DD     comments.append(
+        # DD     'time residual (seconds): "{}"'.format(line[41:46]))
         # 48-52   f5.1    observed azimuth (degrees)
-        comments.append('observed azimuth (degrees): "{}"'.format(line[47:52]))
+        # Pick.backazimuth (float, ATTRIBUTE_HAS_ERRORS)
+        backazimuth = float_or_none(line[47:52])
+        # DD if origin_id is None:
+        # DD     comments.append(
+        # DD     'observed azimuth (degrees): "{}"'.format(line[47:52]))
         # 54-58   f5.1    azimuth residual (degrees)
-        comments.append('azimuth residual (degrees): "{}"'.format(line[53:58]))
+        # Arrival.backazimuth_residual (float)
+        backazimuth_residual = float_or_none(line[53:58])
+        # DD if origin_id is None:
+        # DD     comments.append(
+        # DD     'azimuth residual (degrees): "{}"'.format(line[53:58]))
         # 60-65   f5.1    observed slowness (seconds/degree)
-        comments.append(
-            'observed slowness (seconds/degree): "{}"'.format(line[59:65]))
+        # Pick.horizontal_slowness (float, ATTRIBUTE_HAS_ERRORS)
+        horizontal_slowness = float_or_none(line[59:65])
+        # DD comments.append(
+        # DD   'observed slowness (seconds/degree): "{}"'.format(line[59:65]))
         # 67-72   f5.1    slowness residual (seconds/degree)
-        comments.append(
-            'slowness residual (seconds/degree): "{}"'.format(line[66:71]))
+        # Arrival.horizontal_slowness_residual (float)
+        horizontal_slowness_residual = float_or_none(line[66:71])
+        # DD if origin_id is None:
+        # DD     comments.append(
+        # DD     'slowness residual (seconds/degree): "{}"'.format(
+        # DD                                                   line[66:71]))
         # 74      a1      time defining flag (T or _)
-        comments.append('time defining flag (T or _): "{}"'.format(line[73]))
+        # Arrival.time_weight (float)
+        time_defining_flag = line[73]
+        time_weight = 0
+        if time_defining_flag == 'T':
+            time_weight = 1
+        # DD comments.append(
+        # DD   'time defining flag (T or _): "{}"'.format(line[73]))
         # 75      a1      azimuth defining flag (A or _)
-        comments.append(
-            'azimuth defining flag (A or _): "{}"'.format(line[74]))
+        # Arrival.backazimuth_weight (float)
+        azimuth_defining_flag = line[74]
+        backazimuth_weight = 0
+        if azimuth_defining_flag == 'A':
+            backazimuth_weight = 1
+        # DD comments.append(
+        # DD   'azimuth defining flag (A or _): "{}"'.format(line[74]))
         # 76      a1      slowness defining flag (S or _)
+        # Arrival.horizontal_slowness_weight (float)
+        slowness_defining_flag = line[75]
+        horizontal_slowness_weight = 0
+        if slowness_defining_flag == 'S':
+            horizontal_slowness_weight = 1
+        # DD comments.append(
+        # DD   'slowness defining flag (S or _): "{}"'.format(line[75]))
         comments.append(
-            'slowness defining flag (S or _): "{}"'.format(line[75]))
+            'TAS flag: "{}"'.format(line[73:76]))
         # 78-82   f5.1    signal-to-noise ratio
-        comments.append('signal-to-noise ratio: "{}"'.format(line[77:82]))
+        # Amplitude.snr (float)
+        snr = float_or_none(line[77:82])
+        # comments.append('signal-to-noise ratio: "{}"'.format(line[77:82]))
         # 84-92   f9.1    amplitude (nanometers)
-        amplitude = float_or_none(line[83:92])
+        # Amplitude.generic_amplitude (float, ATTRIBUTE_HAS_ERRORS)
+        amp = float_or_none(line[83:92])
         # 94-98   f5.2    period (seconds)
+        # Amplitude.period (float, ATTRIBUTE_HAS_ERRORS)
         period = float_or_none(line[93:98])
         # 100     a1      type of pick (a = automatic, m = manual)
+        # Pick.evaluation_mode (EvaluationMode)
         evaluation_mode = line[99]
         # 101     a1      direction of short period motion
         #                 (c = compression, d = dilatation, _= null)
+        # Pick.polarity (PickPolarity)
         polarity = POLARITY[line[100].strip().lower()]
         # 102     a1      onset quality (i = impulsive, e = emergent,
         #                                q = questionable, _ = null)
+        # Pick.onset (PickOnset)
         onset = ONSET[line[101].strip().lower()]
         # 104-108 a5      magnitude type (mb, Ms, ML, mbmle, msmle)
+        # StationMagnitude.station_magnitude_type (str)
         magnitude_type = line[103:108].strip()
         # 109     a1      min max indicator (<, >, or blank)
         min_max_indicator = line[108]
         # 110-113 f4.1    magnitude value
+        # StationMagnitude.mag (float, ATTRIBUTE_HAS_ERRORS)
         mag = float_or_none(line[109:113])
         # 115-122 a8      arrival identification
         phase_id = line[114:122].strip()
-
+        #
+        if (time is None) and (amp is None) and (mag is None):
+            msg = ('Could not determine absolute time of pick. This phase '
+                   'line will be ignored:\n{}').format(line)
+            warnings.warn(msg)
+            return None, None, None, None
         # process items
         waveform_id = WaveformStreamID(station_code=station_code)
         evaluation_mode = PICK_EVALUATION_MODE[evaluation_mode.strip().lower()]
         comments = [self._make_comment(', '.join(comments))]
-        if phase_id:
-            resource_id = self._construct_id(['pick'], add_hash=True)
-        else:
-            resource_id = self._construct_id(['pick', phase_id])
-        if mag:
-            comment = ('min max indicator (<, >, or blank): ' +
-                       min_max_indicator)
-            station_magnitude = StationMagnitude(
-                mag=mag, magnitude_type=magnitude_type,
-                resource_id=self._construct_id(['station_magnitude'],
-                                               add_hash=True),
-                comments=[self._make_comment(comment)])
-            # event init always sets an empty ResourceIdentifier, even when
-            # specifying None, which is strange
-            for key in ['origin_id', 'mag_errors']:
-                setattr(station_magnitude, key, None)
-        else:
-            station_magnitude = None
-
         # assemble
-        pick = Pick(phase_hint=phase_hint, time=time, waveform_id=waveform_id,
+        # pick
+        if phase_id:
+            pick_id = self._construct_id(['pick', phase_id])
+        else:
+            pick_id = self._construct_id(['pick'], add_hash=True)
+        pick = Pick(resource_id=pick_id,
+                    phase_hint=phase_hint, time=time, waveform_id=waveform_id,
                     evaluation_mode=evaluation_mode, comments=comments,
-                    polarity=polarity, onset=onset, resource_id=resource_id)
+                    polarity=polarity, onset=onset, backazimuth=backazimuth,
+                    horizontal_slowness=horizontal_slowness
+                    )
         # event init always sets an empty QuantityError, even when specifying
         # None, which is strange
         for key in ('time_errors', 'horizontal_slowness_errors',
                     'backazimuth_errors'):
             setattr(pick, key, None)
-        if amplitude:
-            amplitude /= 1e9  # convert from nanometers to meters
-            amplitude = Amplitude(
-                unit='m', generic_amplitude=amplitude, period=period)
-        return pick, amplitude, station_magnitude
+        # amplitude
+        if amp:
+            if phase_id:
+                amplitude_id = self._construct_id(['amplitude', phase_id])
+            else:
+                amplitude_id = self._construct_id(['amplitude'], add_hash=True)
+            # Convert from nanometers to meters
+            amp /= 1e9
+            amplitude = Amplitude(resource_id=amplitude_id, pick_id=pick_id,
+                                  unit=AmplitudeUnit.M, generic_amplitude=amp,
+                                  period=period, snr=snr
+                                  )
+        else:
+            amplitude = None
+            amplitude_id = None
+        # station_magnitude
+        if mag:
+            comment = ('min max indicator (<, >, or blank): ' +
+                       min_max_indicator)
+            if phase_id:
+                station_magnitude_id = self._construct_id(
+                        ['station_magnitude', phase_id])
+            else:
+                station_magnitude_id = self._construct_id(
+                        ['station_magnitude'], add_hash=True)
+            station_magnitude = StationMagnitude(
+                    resource_id=station_magnitude_id,
+                    amplitude_id=amplitude_id, waveform_id=waveform_id,
+                    origin_id=origin_id, mag=mag,
+                    magnitude_type=magnitude_type,
+                    comments=[self._make_comment(comment)]
+                    )
+            if origin_id is None:
+                setattr(station_magnitude, 'origin_id', None)
+            for key in ['mag_errors']:
+                setattr(station_magnitude, key, None)
+        else:
+            station_magnitude = None
+        # arrival
+        if distance or time_residual:
+            if phase_id:
+                arrival_id = self._construct_id(['arrival', phase_id])
+            else:
+                arrival_id = self._construct_id(['arrival'], add_hash=True)
+            arrival = Arrival(
+                    resource_id=arrival_id, pick_id=pick_id, phase=phase_hint,
+                    azimuth=event_azimuth, distance=distance,
+                    time_residual=time_residual,
+                    backazimuth_residual=backazimuth_residual,
+                    horizontal_slowness_residual=horizontal_slowness_residual,
+                    time_weight=time_weight,
+                    backazimuth_weight=backazimuth_weight,
+                    horizontal_slowness_weight=horizontal_slowness_weight
+                    )
+        else:
+            arrival = None
+
+        return pick, amplitude, station_magnitude, arrival
 
     def _parse_generic_comment(self, line):
         return self._make_comment(line)
@@ -676,11 +823,16 @@ def __is_ims10_bulletin(fh, **kwargs):  # NOQA
     :rtype: bool
     :return: ``True`` if ISF IMS1.0 bulletin file.
     """
-    first_line = fh.readline()
+    iline = 0
     try:
-        first_line = first_line.decode()
+        for line in fh:
+            iline += 1
+            # the header can be preceded by a max of 40 lines of text
+            if iline > 40:
+                break
+            sline = _decode_if_possible(line).rstrip()
+            if sline.upper().startswith("DATA_TYPE BULLETIN IMS1.0:SHORT"):
+                return True
     except Exception:
-        pass
-    if first_line.strip().upper() == 'DATA_TYPE BULLETIN IMS1.0:SHORT':
-        return True
+        return False
     return False

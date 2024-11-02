@@ -52,11 +52,11 @@ def type_or_none(my_string, type_, multiplier=None):
 
 
 def float_or_none(my_string, **kwargs):
-    return type_or_none(my_string, float)
+    return type_or_none(my_string, float, **kwargs)
 
 
 def int_or_none(my_string, **kwargs):
-    return type_or_none(my_string, int)
+    return type_or_none(my_string, int, **kwargs)
 
 
 def fixed_flag(my_char):
