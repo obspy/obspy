@@ -1559,11 +1559,20 @@ class PPSD(object):
                    "of PPSD.load_npz to True")
             raise ValueError(msg)
 
-    def _split_lists(self, times, psds):
+    def _split_lists(self, times, psds, num=None, fraction=0.3):
         """
+        :param fration: Fraction of one PSD time step that is considered a gap
+            in data on which the following plot will be separated.
         """
+        if np.ma.is_masked(times):
+            times = times.compressed()
+            psds = psds.compressed()
+
         t_diff_gapless = self.step * 1e9
-        gap_indices = np.argwhere(np.diff(times) - t_diff_gapless)
+        if num is not None:
+            t_diff_gapless *= num
+        gap_indices = np.argwhere(np.diff(times) - float(t_diff_gapless) >
+                                  fraction * float(t_diff_gapless))
         gap_indices = (gap_indices.flatten() + 1).tolist()
 
         if not len(gap_indices):
@@ -1753,23 +1762,32 @@ class PPSD(object):
                 colors = color
 
         times = self._times_processed
+        num = 24 * 7
+        mod_ = len(times) % num
+        if mod_:
+            times = times[:-(len(times) % num)]
 
         if temporal_restrictions:
             mask = ~self._stack_selection(**temporal_restrictions)
-            times = [x for i, x in enumerate(times) if not mask[i]]
         else:
             mask = None
+        times = np.ma.masked_array(times, mask=mask)
 
         fig, ax = plt.subplots()
 
-        for period, color in zip(periods, colors):
+        for i, (period, color) in enumerate(zip(periods, colors)):
             cur_color = color
             # extract psd values for given period
             psd_values, period_min, _, period_max = \
                 self.extract_psd_values(period)
-            if mask is not None:
-                psd_values = [x for i, x in enumerate(psd_values)
-                              if not mask[i]]
+            psd_values = np.ma.masked_array(psd_values, mask=mask)
+            if mod_:
+                psd_values = psd_values[:-mod_]
+            psd_values = psd_values.reshape((num, -1))
+            psd_values = psd_values.mean(axis=0)
+            if i == 0:
+                times = times[::num]
+                times.mask = psd_values.mask
             # if right edge of period range is less than one second we label
             # the line in Hertz
             if period_max < 1:
@@ -1779,7 +1797,7 @@ class PPSD(object):
                 label = "{:.2g}-{:.2g} [s]".format(period_min, period_max)
 
             for i, (times_, psd_values) in enumerate(
-                    self._split_lists(times, psd_values)):
+                    self._split_lists(times, psd_values, num=num)):
                 # only label first line plotted for each period
                 if i:
                     label = None
