@@ -152,7 +152,6 @@ jobs:
         with:
           miniforge-version: latest
           activate-environment: test
-          use-mamba: true
           python-version: ${{ matrix.python-version }}
 
       - uses: actions/cache@v4
@@ -165,7 +164,7 @@ jobs:
         id: cache
 
       - name: Update environment
-        run: mamba env update -n test -f ${{ env.env_file }}
+        run: conda env update -n test -f ${{ env.env_file }}
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: print package info
