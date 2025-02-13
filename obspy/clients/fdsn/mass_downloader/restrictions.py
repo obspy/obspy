@@ -233,7 +233,8 @@ class Restrictions(object):
         self.reject_channels_with_gaps = reject_channels_with_gaps
         if not 0.0 <= minimum_length <= 1.0:
             raise ValueError(
-                "'minimum_length' is a percentage and must be between 0.0 and 1.0.")
+                "'minimum_length' and must be between 0.0 and 1.0."
+            )
         self.minimum_length = minimum_length
         self.sanitize = bool(sanitize)
 
