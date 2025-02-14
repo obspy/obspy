@@ -128,7 +128,7 @@ def _is_ndk(filename):
 
     if (-90.0 <= latitude <= 90.0) and \
             (-180.0 <= longitude <= 180.0) and \
-            (0 <= depth <= 800000):
+            (-10 <= depth <= 800):
         return True
     return False
 

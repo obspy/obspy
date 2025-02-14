@@ -359,9 +359,9 @@ def _internal_write_single_cmtsolution(buf, event, **kwargs):
 
     # Attempt to get the body and surface wave magnitudes.
     mb_candidates = \
-        [_i for _i in event.magnitudes if _i.magnitude_type == "Mb"]
+        [_i for _i in event.magnitudes if _i.magnitude_type.lower() == "mb"]
     ms_candidates = \
-        [_i for _i in event.magnitudes if _i.magnitude_type == "MS"]
+        [_i for _i in event.magnitudes if _i.magnitude_type.lower() == "ms"]
 
     if not mb_candidates:
         warnings.warn("No body wave magnitude found. Will be replaced by the "
@@ -419,12 +419,12 @@ def _internal_write_single_cmtsolution(buf, event, **kwargs):
             half_duration = mt.source_time_function.duration / 2.0
         else:
             warnings.warn("Source time function has no duration. The half "
-                          "duration will be set to 1.0.")
-            half_duration = 1.0
+                          "duration will be set to 0.")
+            half_duration = 0.0
     else:
         warnings.warn("Moment tensor has no source time function. Half "
-                      "duration will be set to 1.0.")
-        half_duration = 1.0
+                      "duration will be set to 0.")
+        half_duration = 0.0
 
     # Now attempt to retrieve the event name. Otherwise just get a random one.
     event_name = None
