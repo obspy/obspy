@@ -450,22 +450,38 @@ def lowpass_cheby_2(data, freq, df, maxorder=12, ba=False,
 
 def taup_transform(data):
     """
-    Perform Tau-P transform on the input data.
-
+    Perform Tau-P transform on the input seismic data.
+    
+    The Tau-P transform is a linear slant stack method commonly used in seismic processing. It converts data from the time-space domain to the intercept time and slowness domain, which can help in filtering and enhancing wavefield characteristics.
+    
+    Reference: 
+    - Yilmaz, O. (2001). Seismic Data Analysis: Processing, Inversion, and Interpretation of Seismic Data. Society of Exploration Geophysicists.
+    
+    :param data: 2D numpy array where each row represents a seismic trace.
     :type data: numpy.ndarray
-    :param data: 2D array where each row is a trace.
     :return: Transformed data with the same shape as input.
+    :rtype: numpy.ndarray
+    :raises TypeError: If input data is not a numpy array.
+    :raises ValueError: If input data is not 2D.
+    
+    Example usage:
+    --------------
+    >>> from obspy import read
+    >>> st = read()
+    >>> data = np.array([tr.data for tr in st])  # Convert Stream to 2D array
+    >>> transformed_data = taup_transform(data)
     """
     if not isinstance(data, np.ndarray):
         raise TypeError("Input data must be a numpy array.")
     if data.ndim != 2:
         raise ValueError("Input data must be a 2D array.")
-
+    
     num_traces, num_samples = data.shape
     taup_data = np.zeros_like(data, dtype=np.complex128)
-
+    
     for i in range(num_traces):
         taup_data[i, :] = fft(data[i, :])
-
+    
     taup_data = fftshift(taup_data, axes=0)
     return np.abs(taup_data)
+
