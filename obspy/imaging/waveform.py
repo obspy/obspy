@@ -214,6 +214,7 @@ class WaveformPlotting(object):
         self.title = kwargs.get('title', self.stream[0].id)
         self.fillcolor_pos, self.fillcolor_neg = \
             kwargs.get('fillcolors', (None, None))
+        self.plottimemarks = kwargs.get('plot_time_marks', False)
 
     def __del__(self):
         """
@@ -333,6 +334,67 @@ class WaveformPlotting(object):
                     # Also return the figure to make it work the jupyter
                     # notebooks.
                     return self.fig
+
+    def __init_time_marks(self):
+        """
+        Extract TimeMarks attributes from Trace objects
+
+        TimeMarks must be a container of tuples/lists.
+        Each tuple must contain an UTCDateTime object and a matplotlib
+        plotting dictionary.
+        """
+        self._tr_timemarks = [None] * len(self.stream)
+        # Define TimeMarks with station-level allocation.
+        for _i, tr in enumerate(self.stream):
+            try:
+                # TimeMark -> tuple(UTCDateTime, {matplotlib dict})
+                self._tr_timemarks[_i] = tr.stats.timemarks
+            except AttributeError:
+                self._tr_timemarks[_i] = (None, None)
+        if len(self._tr_timemarks) == 1:
+            self._tr_timemarks = (self._tr_timemarks,)
+
+    def __draw_time_marks_normal(self,
+                                 trace_idx,
+                                 ax,
+                                 trace,
+                                 timemarks,
+                                 mode):
+        """
+        Draw on given axis the Trace time-marks.
+        The ax must belong to a 'normal' type plot.
+        """
+        if len(np.shape(timemarks)) == 1:
+            msg = ("The timemarks attribute must be a container of tuples! " +
+                   "Maybe try the syntax ((),) or [(),] to produce a tuple " +
+                   "of tuples or a list of tuples")
+            raise ValueError(msg)
+        # "_" hline , "|" vline
+
+        for (_xx, (tm, tmpl)) in enumerate(timemarks):
+            if mode == "relative":
+                # Relative UTCDateTime obj.
+                tmsec = tm + (trace.stats.starttime - self.reftime)
+                # Final relative seconds
+                tmsec = tmsec - trace.stats.starttime
+            else:
+                tmsec = (
+                    ((tm - trace.stats.starttime) / SECONDS_PER_DAY) +
+                    date2num(trace.stats.starttime.datetime))
+            # Actual plot
+            try:
+                pltdict = {'marker': '|',
+                           'color': 'teal',
+                           'markeredgewidth': 2,
+                           'markersize': 40}
+                if tmpl:
+                    pltdict.update(tmpl)
+                ax.plot(tmsec, 0.0, **pltdict)
+
+            except Exception:
+                msg = ("Something wrong with the TimeMark %d on Trace %d" %
+                       (_xx + 1, trace_idx + 1))
+                raise ValueError(msg)
 
     def plot(self, *args, **kwargs):
         """
@@ -680,7 +742,7 @@ class WaveformPlotting(object):
         # trace argument seems to actually be a list of traces..
         st = Stream(trace)
         self._draw_overlap_axvspans(st, ax)
-        for trace in st:
+        for _ii, trace in enumerate(st):
             # Check if it is a preview file and adjust accordingly.
             # XXX: Will look weird if the preview file is too small.
             if trace.stats.get('preview'):
@@ -710,6 +772,13 @@ class WaveformPlotting(object):
                             date2num(trace.stats.starttime.datetime))
             ax.plot(x_values, trace.data, color=self.color,
                     linewidth=self.linewidth, linestyle=self.linestyle)
+            #
+            if self.plottimemarks:
+                self.__draw_time_marks_normal(_ii,
+                                              ax,
+                                              trace,
+                                              trace.stats.timemarks,
+                                              self.type)
         # Write to self.ids
         trace = st[0]
         if trace.stats.get('preview'):
@@ -784,6 +853,15 @@ class WaveformPlotting(object):
             x_values = np.repeat(x_values, 2)
             y_values = extreme_values.flatten()
             ax.plot(x_values, y_values, color=self.color)
+            #
+            if self.plottimemarks:
+                # hack because trace is actually a Stream in this method
+                self.__draw_time_marks_normal(_i,
+                                              ax,
+                                              trace[0],
+                                              trace.stats.timemarks,
+                                              self.type)
+
         # remember xlim state and add callback to warn when zooming in
         self._initial_xrange = (self._time_to_xvalue(self.endtime) -
                                 self._time_to_xvalue(self.starttime))
@@ -1327,6 +1405,47 @@ class WaveformPlotting(object):
         """
         return fraction * self._tr_offsets.max()
 
+    def __draw_time_marks_section(self,
+                                  trace_idx,
+                                  ax,
+                                  off,
+                                  plotmode,
+                                  timemarks):
+        """
+        Draw on given axis the Trace time-marks.
+        The ax must belong to a 'section' type plot.
+        """
+        reftime = self.sect_reftime or min(self._tr_starttimes)
+        if len(np.shape(timemarks)) == 1:
+            msg = ("The timemarks attribute must be a container of tuples! " +
+                   "Maybe try the syntax ((),) or [(),] to produce a tuple " +
+                   "of tuples or a list of tuples")
+            raise ValueError(msg)
+        # "_" hline , "|" vline
+        for (_xx, (tm, tmpl)) in enumerate(timemarks):
+            # Actual plot
+            try:
+                if plotmode == "vertical":
+                    pltdict = {'marker': '_',
+                               'color': 'teal',
+                               'markeredgewidth': 1.5,
+                               'markersize': 20}
+                    if tmpl:
+                        pltdict.update(tmpl)
+                    ax.plot(off, tm-reftime, **pltdict)
+                elif plotmode == "horizontal":
+                    pltdict = {'marker': '|',
+                               'color': 'teal',
+                               'markeredgewidth': 1.5,
+                               'markersize': 20}
+                    if tmpl:
+                        pltdict.update(tmpl)
+                    ax.plot(tm-reftime, off,  **pltdict)
+            except Exception:
+                msg = ("Something wrong with the TimeMark %d on Trace %d" %
+                       (_xx + 1, trace_idx + 1))
+                raise ValueError(msg)
+
     def __sect_init_plot(self):
         """
         Function initialises plot all the illustration is done by
@@ -1347,6 +1466,9 @@ class WaveformPlotting(object):
         self.__sect_normalize_traces()
         # Calculate scaling factor
         self.__sect_scale_traces()
+        # Extract TimeMarks scaling factor
+        if self.plottimemarks:
+            self.__init_time_marks()
         lines = []
         # ax.plot() preferred over containers
         for _tr in range(self._tr_num):
@@ -1357,8 +1479,22 @@ class WaveformPlotting(object):
             time = self._tr_times[_tr]
             if self.sect_orientation == 'vertical':
                 lines += ax.plot(data, time)
+                if self.plottimemarks and self._tr_timemarks[_tr][0]:
+                    self.__draw_time_marks_section(_tr,
+                                                   ax,
+                                                   self._tr_offsets[_tr],
+                                                   'vertical',
+                                                   self._tr_timemarks[_tr])
+
             elif self.sect_orientation == 'horizontal':
                 lines += ax.plot(time, data)
+                if self.plottimemarks and self._tr_timemarks[_tr][0]:
+                    self.__draw_time_marks_section(_tr,
+                                                   ax,
+                                                   self._tr_offsets[_tr],
+                                                   'horizontal',
+                                                   self._tr_timemarks[_tr])
+
             else:
                 raise NotImplementedError("sect_orientiation '%s' is not "
                                           "valid." % self.sect_orientation)
