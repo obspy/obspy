@@ -1,7 +1,7 @@
 import json
 from tempfile import NamedTemporaryFile
 
-from simplemseed import FDSNSourceId
+from simplemseed import FDSNSourceId, MSeed3Record, MSeed3Header
 from obspy.io.mseed3.core import ObsPyMSEED3DataOverflowError
 
 from obspy import read, Stream, Trace
@@ -113,6 +113,56 @@ class TestMSEED3ReadingAndWriting:
             redo = read(outfile, format="MSEED3")
         self._check_bird_jsc(stream, redo)
         assert redo[0].data.dtype == np.int32
+
+    def test_write_long_sid(self, datapath):
+        net = "XX2025"
+        sta = "BIGGYBIG"
+        loc = "01234567"
+        band = "L"
+        s = "RQQ"
+        subs = "Z"
+        self._do_check_sid(datapath, net, sta, loc, band, s, subs)
+
+    def test_write_no_loc_subsource(self, datapath):
+        net = "XX2025"
+        sta = "BIGGYBIG"
+        loc = ""
+        band = "L"
+        s = "RQQ"
+        subs = ""
+        self._do_check_sid(datapath, net, sta, loc, band, s, subs)
+
+    def _do_check_sid(self, datapath, net, sta, loc, band, s, subs):
+        chanSourceId = f"FDSN:{net}_{sta}_{loc}_{band}_{s}_{subs}"
+        # create fake
+        data = np.fromfunction(
+            lambda i: (i % 99 - 49), (100,), dtype=np.int32
+        )
+        header = MSeed3Header()
+        header.starttime = "2024-01-02T15:13:55.123456Z"
+        header.sampleRatePeriod = -1 # neg is period, so 1 sps
+        identifier = FDSNSourceId.parse(chanSourceId)
+        record = MSeed3Record(header, identifier, data)
+        recordBytes = record.pack()
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            with open(outfile, 'wb') as out:
+                out.write(recordBytes)
+            st = read(outfile, format="MSEED3")
+            assert len(st) == 1
+            tr = st[0]
+            assert tr.stats.network == net
+            assert tr.stats.station == sta
+            assert tr.stats.location == loc
+            assert tr.stats.channel == f"{band}_{s}_{subs}"
+            st.write(outfile, format="MSEED3")
+            redo = read(outfile, format="MSEED3")
+            assert len(redo) == 1
+            redotr = redo[0]
+            assert redotr.stats.network == net
+            assert redotr.stats.station == sta
+            assert redotr.stats.location == loc
+            assert redotr.stats.channel == f"{band}_{s}_{subs}"
 
     def _check_bird_jsc(self, stream_a, stream_b):
         assert len(stream_a) == 6
