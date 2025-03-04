@@ -353,7 +353,7 @@ def mseed3_to_obspy_header(ms3):
 
     # store extra header values
     eh = {}
-    if len(ms3.eh) > 0:
+    if ms3.eh:
         eh = ms3.eh
     stats[MSEED_STATS_KEY] = {
         PUB_VER_KEY: h.publicationVersion,
