@@ -220,8 +220,12 @@ class TestMSEED3ReadingAndWriting:
         x = 2**55
         data = [1, 2, -3, x, -1]
         # should fail as python int list to numpy array checks values can fit
-        with pytest.raises(OverflowError):
-            np.array(data, dtype=np.int32)
+        # doesn't fail in numpy2.2 as remove
+        #with pytest.raises(OverflowError):
+            # this doesn't error
+            # np.array(data, dtype=np.int32)
+            # nor this
+            # np.array(data).astype(np.int32)
         data_i64 = np.array(data, dtype=np.int64)
 
         # numpy ndarray.astype() does not check values fitting for
