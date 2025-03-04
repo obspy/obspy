@@ -15,6 +15,7 @@ from simplemseed import (
     unpackMSeed3FixedHeader,
     FDSNSourceId,
     FIXED_HEADER_SIZE,
+    UNKNOWN_PUBLICATION_VERSION,
     readMSeed3Records,
     MSeed3Record,
     MSeed3Header,
@@ -23,7 +24,7 @@ from simplemseed import (
 import simplemseed
 
 MSEED_STATS_KEY = "mseed3"
-PUB_VER_KEY = "pubVer"
+PUB_VER_KEY = "publication_version"
 EX_HEAD_KEY = "eh"
 
 
@@ -273,12 +274,12 @@ def _write_mseed3(stream, filename, encoding=None, verbose=0, **_kwargs):
                 trace.stats["channel"],
             )
         eh = {}
+        pubVer = UNKNOWN_PUBLICATION_VERSION # default 0 means unknown publication version
+        if PUB_VER_KEY in trace.stats:
+            pubVer = int(trace.stats[PUB_VER_KEY])
+        ms3Header.publicationVersion = pubVer
         if MSEED_STATS_KEY in trace.stats:
-            ms3stats = trace.stats[MSEED_STATS_KEY]
-            if PUB_VER_KEY in ms3stats:
-                ms3Header.publicationVersion = int(ms3stats[PUB_VER_KEY])
-            if EX_HEAD_KEY in ms3stats:
-                eh = ms3stats[EX_HEAD_KEY]
+            eh = trace.stats[MSEED_STATS_KEY]
         if encoding is not None:
             encoding = _encoding_int_from_string(encoding)
             if encoding == simplemseed.seedcodec.STEIM1:
@@ -355,10 +356,8 @@ def mseed3_to_obspy_header(ms3):
     eh = {}
     if ms3.eh:
         eh = ms3.eh
-    stats[MSEED_STATS_KEY] = {
-        PUB_VER_KEY: h.publicationVersion,
-        EX_HEAD_KEY: eh,
-    }
+    stats[PUB_VER_KEY] = h.publicationVersion
+    stats[MSEED_STATS_KEY] = eh
 
     return Stats(stats)
 

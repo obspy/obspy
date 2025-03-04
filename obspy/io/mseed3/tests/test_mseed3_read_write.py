@@ -2,7 +2,11 @@ import json
 from tempfile import NamedTemporaryFile
 
 from simplemseed import FDSNSourceId, MSeed3Record, MSeed3Header
-from obspy.io.mseed3.core import ObsPyMSEED3DataOverflowError
+from obspy.io.mseed3.core import  (
+    ObsPyMSEED3DataOverflowError,
+    MSEED_STATS_KEY,
+    PUB_VER_KEY,
+)
 
 from obspy import read, Stream, Trace
 import numpy as np
@@ -30,7 +34,7 @@ class TestMSEED3ReadingAndWriting:
                 jsonrec = json.load(injson)[0]
 
             assert jsonrec["SampleRate"] == trace.stats.sampling_rate
-            assert jsonrec["PublicationVersion"] == trace.stats.mseed3.pubVer
+            assert jsonrec["PublicationVersion"] == trace.stats.get(PUB_VER_KEY)
             sid = FDSNSourceId.fromNslc(
                 trace.stats.network,
                 trace.stats.station,
@@ -39,8 +43,8 @@ class TestMSEED3ReadingAndWriting:
             )
             assert jsonrec["SID"] == str(sid)
             if "ExtraHeaders" in jsonrec:
-                assert "eh" in trace.stats.mseed3
-                assert jsonrec["ExtraHeaders"] == trace.stats.mseed3.eh
+                assert MSEED_STATS_KEY in trace.stats
+                assert jsonrec["ExtraHeaders"] == trace.stats.mseed3
             if jsonrec["DataLength"] > 0:
                 assert jsonrec["SampleCount"] == len(trace)
                 jsondata = jsonrec["Data"]
