@@ -71,12 +71,13 @@ class TestMSEED3ReadingAndWriting:
     def test_write_int32(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
         stream = read(testfile, format="MSEED3")
-        outfile = datapath / "bird_jsc_recomp_int32.ms3"
-        stream.write(outfile, format="MSEED3", encoding="INT32")
-        redo = read(outfile, format="MSEED3")
-        self._check_bird_jsc(stream, redo)
-        assert stream[0].data.dtype == np.int32
-        assert redo[0].data.dtype == np.int32
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            stream.write(outfile, format="MSEED3", encoding="INT32")
+            redo = read(outfile, format="MSEED3")
+            self._check_bird_jsc(stream, redo)
+            assert stream[0].data.dtype == np.int32
+            assert redo[0].data.dtype == np.int32
 
     def test_write_float32(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
