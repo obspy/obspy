@@ -1,12 +1,17 @@
 import json
 from tempfile import NamedTemporaryFile
 
-from simplemseed import FDSNSourceId, MSeed3Record, MSeed3Header
+from simplemseed import (
+    FDSNSourceId,
+    MSeed3Record,
+    MSeed3Header,
+    )
 from obspy.io.mseed3.core import  (
     ObsPyMSEED3DataOverflowError,
     MSEED_STATS_KEY,
     PUB_VER_KEY,
     UNKNOWN_PUBLICATION_VERSION,
+    OBSPY_FORMAT_MSEED3
 )
 
 from obspy import read, Stream, Trace
@@ -28,7 +33,7 @@ class TestMSEED3ReadingAndWriting:
                 # 0 not decompressible, can't return empty stream so???
                 continue
             jsonpath = path.parent.joinpath(path.name[:-6] + "json")
-            stream = read(path, format="MSEED3")
+            stream = read(path, format=OBSPY_FORMAT_MSEED3)
             assert len(stream) == 1
             trace = stream[0]
             with open(jsonpath, "r") as injson:
@@ -59,7 +64,7 @@ class TestMSEED3ReadingAndWriting:
         Read file test via L{obspy.core.Stream}.
         """
         testfile = datapath / "bird_jsc.ms3"
-        stream = read(testfile, format="MSEED3")
+        stream = read(testfile, format=OBSPY_FORMAT_MSEED3)
         assert len(stream) == 6
         assert stream[0].stats.network == "CO"
         assert stream[0].stats.station == "BIRD"
@@ -74,52 +79,52 @@ class TestMSEED3ReadingAndWriting:
 
     def test_write_int32(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
-        stream = read(testfile, format="MSEED3")
+        stream = read(testfile, format=OBSPY_FORMAT_MSEED3)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
-            stream.write(outfile, format="MSEED3", encoding="INT32")
-            redo = read(outfile, format="MSEED3")
+            stream.write(outfile, format=OBSPY_FORMAT_MSEED3, encoding="INT32")
+            redo = read(outfile, format=OBSPY_FORMAT_MSEED3)
             self._check_bird_jsc(stream, redo)
             assert stream[0].data.dtype == np.int32
             assert redo[0].data.dtype == np.int32
 
     def test_write_float32(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
-        stream = read(testfile, format="MSEED3")
+        stream = read(testfile, format=OBSPY_FORMAT_MSEED3)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
-            stream.write(outfile, format="MSEED3", encoding="FLOAT32")
-            redo = read(outfile, format="MSEED3")
+            stream.write(outfile, format=OBSPY_FORMAT_MSEED3, encoding="FLOAT32")
+            redo = read(outfile, format=OBSPY_FORMAT_MSEED3)
         self._check_bird_jsc(stream, redo)
         assert redo[0].data.dtype == np.float32
 
     def test_write_float64(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
-        stream = read(testfile, format="MSEED3")
+        stream = read(testfile, format=OBSPY_FORMAT_MSEED3)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
-            stream.write(outfile, format="MSEED3", encoding="FLOAT64")
-            redo = read(outfile, format="MSEED3")
+            stream.write(outfile, format=OBSPY_FORMAT_MSEED3, encoding="FLOAT64")
+            redo = read(outfile, format=OBSPY_FORMAT_MSEED3)
         self._check_bird_jsc(stream, redo)
         assert redo[0].data.dtype == np.float64
 
     def test_write_steim1(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
-        stream = read(testfile, format="MSEED3")
+        stream = read(testfile, format=OBSPY_FORMAT_MSEED3)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
-            stream.write(outfile, format="MSEED3", encoding="STEIM1")
-            redo = read(outfile, format="MSEED3")
+            stream.write(outfile, format=OBSPY_FORMAT_MSEED3, encoding="STEIM1")
+            redo = read(outfile, format=OBSPY_FORMAT_MSEED3)
         self._check_bird_jsc(stream, redo)
         assert redo[0].data.dtype == np.int32
 
     def test_write_steim2(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
-        stream = read(testfile, format="MSEED3")
+        stream = read(testfile, format=OBSPY_FORMAT_MSEED3)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
-            stream.write(outfile, format="MSEED3", encoding="STEIM2")
-            redo = read(outfile, format="MSEED3")
+            stream.write(outfile, format=OBSPY_FORMAT_MSEED3, encoding="STEIM2")
+            redo = read(outfile, format=OBSPY_FORMAT_MSEED3)
         self._check_bird_jsc(stream, redo)
         assert redo[0].data.dtype == np.int32
 
@@ -157,15 +162,15 @@ class TestMSEED3ReadingAndWriting:
             outfile = tf.name
             with open(outfile, 'wb') as out:
                 out.write(recordBytes)
-            st = read(outfile, format="MSEED3")
+            st = read(outfile, format=OBSPY_FORMAT_MSEED3)
             assert len(st) == 1
             tr = st[0]
             assert tr.stats.network == net
             assert tr.stats.station == sta
             assert tr.stats.location == loc
             assert tr.stats.channel == f"{band}_{s}_{subs}"
-            st.write(outfile, format="MSEED3")
-            redo = read(outfile, format="MSEED3")
+            st.write(outfile, format=OBSPY_FORMAT_MSEED3)
+            redo = read(outfile, format=OBSPY_FORMAT_MSEED3)
             assert len(redo) == 1
             redotr = redo[0]
             assert redotr.stats.network == net
@@ -190,7 +195,7 @@ class TestMSEED3ReadingAndWriting:
             outfile = tf.name
             with open(outfile, 'wb') as out:
                 out.write(recordBytes)
-            st = read(outfile, format="MSEED3")
+            st = read(outfile, format=OBSPY_FORMAT_MSEED3)
             assert len(st) == 1
             tr = st[0]
             assert tr.stats.network == ""
@@ -217,17 +222,17 @@ class TestMSEED3ReadingAndWriting:
         stream = Stream([tr])
         with pytest.raises(Exception):
             with NamedTemporaryFile() as tf:
-                stream.write(tf.name, format="MSEED3", encoding="STEIM1")
+                stream.write(tf.name, format=OBSPY_FORMAT_MSEED3, encoding="STEIM1")
         with pytest.raises(Exception):
             with NamedTemporaryFile() as tf:
-                stream.write(tf.name, format="MSEED3", encoding="STEIM2")
+                stream.write(tf.name, format=OBSPY_FORMAT_MSEED3, encoding="STEIM2")
 
     def test_guess_encoding(self, datapath):
         tr = Trace(np.array([1, 2, 3, -17], dtype="int64"))
         stream = Stream([tr])
         # guess output encoding
         with BytesIO() as buf:
-            stream.write(buf, format="MSEED3")
+            stream.write(buf, format=OBSPY_FORMAT_MSEED3)
             buf.seek(0)
             in_stream = read(buf)
         assert in_stream[0].data.dtype == np.int32
@@ -236,7 +241,7 @@ class TestMSEED3ReadingAndWriting:
         stream = Stream([tr])
         # guess output encoding
         with BytesIO() as buf:
-            stream.write(buf, format="MSEED3")
+            stream.write(buf, format=OBSPY_FORMAT_MSEED3)
             buf.seek(0)
             in_stream = read(buf)
         assert in_stream[0].data.dtype == np.float32
@@ -245,7 +250,7 @@ class TestMSEED3ReadingAndWriting:
         stream = Stream([tr])
         # guess output encoding
         with BytesIO() as buf:
-            stream.write(buf, format="MSEED3")
+            stream.write(buf, format=OBSPY_FORMAT_MSEED3)
             buf.seek(0)
             in_stream = read(buf)
         assert in_stream[0].data.dtype == np.float64
@@ -269,4 +274,4 @@ class TestMSEED3ReadingAndWriting:
         stream = Stream([tr])
         with pytest.raises(ObsPyMSEED3DataOverflowError):
             with NamedTemporaryFile() as tf:
-                stream.write(tf.name, format="MSEED3", encoding="INT32")
+                stream.write(tf.name, format=OBSPY_FORMAT_MSEED3, encoding="INT32")

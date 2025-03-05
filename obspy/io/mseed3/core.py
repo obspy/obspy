@@ -23,6 +23,7 @@ from simplemseed import (
 )
 import simplemseed
 
+OBSPY_FORMAT_MSEED3 = "MSEED3"
 MSEED_STATS_KEY = "mseed3"
 PUB_VER_KEY = "publication_version"
 EX_HEAD_KEY = "eh"
@@ -347,7 +348,7 @@ def mseed3_to_obspy_header(ms3):
         stats["location"] = nslc.locationCode
         stats["channel"] = nslc.channelCode
     except:
-        print(f"Oops, can't extract FDSN Sid: ${ms3.identifier}")
+        #Oops, can't extract FDSN Sid, put all in channel???
         stats["channel"] = ms3.identifier
     micros = int(round(h.nanosecond / 1000))
     stats["starttime"] = UTCDateTime(
