@@ -8,13 +8,14 @@ from obspy.core.util.misc import CatchOutput
 class TestUtilFlinnEngdahl:
 
     def test_coordinates(self, testdata):
+        flinn_engdahl = FlinnEngdahl()
         with open(testdata['flinnengdahl.csv'], 'r') as fh:
             for line in fh:
                 longitude, latitude, checked_region = line.strip().split('\t')
                 longitude = float(longitude)
                 latitude = float(latitude)
 
-                region = FlinnEngdahl().get_region(longitude, latitude)
+                region = flinn_engdahl.get_region(longitude, latitude)
                 assert region == \
                     checked_region, \
                     "(%f, %f) got %s instead of %s" % (
