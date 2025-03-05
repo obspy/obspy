@@ -275,11 +275,13 @@ def _write_mseed3(stream, filename, encoding=None, verbose=0, **_kwargs):
             )
         eh = {}
         pubVer = UNKNOWN_PUBLICATION_VERSION # default 0 means unknown publication version
-        if PUB_VER_KEY in trace.stats:
-            pubVer = int(trace.stats[PUB_VER_KEY])
-        ms3Header.publicationVersion = pubVer
         if MSEED_STATS_KEY in trace.stats:
             eh = trace.stats[MSEED_STATS_KEY]
+            try:
+                pubVer = int(eh.pop(PUB_VER_KEY, UNKNOWN_PUBLICATION_VERSION))
+                ms3Header.publicationVersion = pubVer
+            except (TypeError, ValueError):
+                pass
         if encoding is not None:
             encoding = _encoding_int_from_string(encoding)
             if encoding == simplemseed.seedcodec.STEIM1:
@@ -304,6 +306,7 @@ def _write_mseed3(stream, filename, encoding=None, verbose=0, **_kwargs):
             encodedValues = trace.data
         ms3 = MSeed3Record(ms3Header, identifier, encodedValues, eh)
         f.write(ms3.pack())
+        eh[PUB_VER_KEY]=pubVer
     # Close if we opened.
     if filename is not f:
         f.close()
@@ -356,7 +359,7 @@ def mseed3_to_obspy_header(ms3):
     eh = {}
     if ms3.eh:
         eh = ms3.eh
-    stats[PUB_VER_KEY] = h.publicationVersion
+    eh[PUB_VER_KEY] = h.publicationVersion
     stats[MSEED_STATS_KEY] = eh
 
     return Stats(stats)

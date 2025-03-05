@@ -6,6 +6,7 @@ from obspy.io.mseed3.core import  (
     ObsPyMSEED3DataOverflowError,
     MSEED_STATS_KEY,
     PUB_VER_KEY,
+    UNKNOWN_PUBLICATION_VERSION,
 )
 
 from obspy import read, Stream, Trace
@@ -34,7 +35,7 @@ class TestMSEED3ReadingAndWriting:
                 jsonrec = json.load(injson)[0]
 
             assert jsonrec["SampleRate"] == trace.stats.sampling_rate
-            assert jsonrec["PublicationVersion"] == trace.stats.get(PUB_VER_KEY)
+            assert jsonrec["PublicationVersion"] == trace.stats.mseed3.get(PUB_VER_KEY)
             sid = FDSNSourceId.fromNslc(
                 trace.stats.network,
                 trace.stats.station,
@@ -44,6 +45,7 @@ class TestMSEED3ReadingAndWriting:
             assert jsonrec["SID"] == str(sid)
             if "ExtraHeaders" in jsonrec:
                 assert MSEED_STATS_KEY in trace.stats
+                pubVer = trace.stats.mseed3.pop(PUB_VER_KEY, UNKNOWN_PUBLICATION_VERSION)
                 assert jsonrec["ExtraHeaders"] == trace.stats.mseed3
             if jsonrec["DataLength"] > 0:
                 assert jsonrec["SampleCount"] == len(trace)
@@ -67,6 +69,8 @@ class TestMSEED3ReadingAndWriting:
         # This is controlled by the stream[0].data attribute.
         assert stream[0].stats.npts == 3000
         assert stream[0].data.dtype == np.int32
+        assert stream[0].stats.mseed3[PUB_VER_KEY] == 4
+
 
     def test_write_int32(self, datapath):
         testfile = datapath / "bird_jsc.ms3"
