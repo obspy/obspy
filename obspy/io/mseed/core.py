@@ -5,6 +5,7 @@ MSEED bindings to ObsPy core module.
 import ctypes as C  # NOQA
 import io
 import os
+import traceback
 import warnings
 from pathlib import Path
 from struct import pack
@@ -140,360 +141,663 @@ def __is_mseed(fp, file_size):  # NOQA
     return False
 
 
-def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
+# def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
+#                 sourcename=None, reclen=None, details=False,
+#                 header_byteorder=None, verbose=None, **kwargs):
+#     """
+#     Reads a Mini-SEED file and returns a Stream object.
+#
+#     .. warning::
+#         This function should NOT be called directly, it registers via the
+#         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+#
+#     :param mseed_object: Filename or open file like object that contains the
+#         binary Mini-SEED data. Any object that provides a read() method will be
+#         considered to be a file like object.
+#     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+#     :param starttime: Only read data samples after or at the start time.
+#     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+#     :param endtime: Only read data samples before or at the end time.
+#     :param headonly: Determines whether or not to unpack the data or just
+#         read the headers.
+#     :type sourcename: str
+#     :param sourcename: Only read data with matching SEED ID (can contain
+#         wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z").
+#         Defaults to ``None`` .
+#     :param reclen: If it is None, it will be automatically determined for every
+#         record. If it is known, just set it to the record length in bytes which
+#         will increase the reading speed slightly.
+#     :type details: bool, optional
+#     :param details: If ``True`` read additional information: timing quality
+#         and availability of calibration information.
+#         Note, that the traces are then also split on these additional
+#         information. Thus the number of traces in a stream will change.
+#         Details are stored in the mseed stats AttribDict of each trace.
+#         ``False`` specifies for both cases, that this information is not
+#         available. ``blkt1001.timing_quality`` specifies the timing quality
+#         from 0 to 100 [%]. ``calibration_type`` specifies the type of available
+#         calibration information blockettes:
+#
+#         - ``1`` : Step Calibration (Blockette 300)
+#         - ``2`` : Sine Calibration (Blockette 310)
+#         - ``3`` : Pseudo-random Calibration (Blockette 320)
+#         - ``4`` : Generic Calibration  (Blockette 390)
+#         - ``-2`` : Calibration Abort (Blockette 395)
+#
+#     :type header_byteorder: int or str, optional
+#     :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
+#         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
+#         native byte order. Used to enforce the header byte order. Useful in
+#         some rare cases where the automatic byte order detection fails.
+#
+#     .. rubric:: Example
+#
+#     >>> from obspy import read
+#     >>> st = read("/path/to/two_channels.mseed")
+#     >>> print(st)  # doctest: +ELLIPSIS
+#     2 Trace(s) in Stream:
+#     BW.UH3..EHE | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
+#     BW.UH3..EHZ | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
+#
+#     >>> from obspy import UTCDateTime
+#     >>> st = read("/path/to/two_channels.mseed",
+#     ...           starttime=UTCDateTime("2010-06-20T00:00:01"),
+#     ...           sourcename="*.?HZ")
+#     >>> print(st)  # doctest: +ELLIPSIS
+#     1 Trace(s) in Stream:
+#     BW.UH3..EHZ | 2010-06-20T00:00:00.999999Z - ... | 200.0 Hz, 242 samples
+#
+#     Read with ``details=True`` to read more details of the file if present.
+#
+#     >>> st = read("/path/to/timingquality.mseed", details=True)
+#     >>> print(st[0].stats.mseed.blkt1001.timing_quality)
+#     55
+#
+#     ``False`` means that the necessary information could not be found in the
+#     file.
+#
+#     >>> print(st[0].stats.mseed.calibration_type)
+#     False
+#
+#     Note that each change in timing quality from record to record may trigger a
+#     new Trace object to be created so the Stream object may contain many Trace
+#     objects if ``details=True`` is used.
+#
+#     >>> print(len(st))
+#     101
+#     """
+#     if isinstance(mseed_object, Path):
+#         mseed_object = str(mseed_object)
+#     # Parse the headonly and reclen flags.
+#     if headonly is True:
+#         unpack_data = 0
+#     else:
+#         unpack_data = 1
+#     if reclen is None:
+#         reclen = -1
+#     elif reclen not in VALID_RECORD_LENGTHS:
+#         msg = 'Invalid record length. Autodetection will be used.'
+#         warnings.warn(msg)
+#         reclen = -1
+#
+#     # Determine the byte order.
+#     if header_byteorder == "=":
+#         header_byteorder = NATIVE_BYTEORDER
+#
+#     if header_byteorder is None:
+#         header_byteorder = -1
+#     elif header_byteorder in [0, "0", "<"]:
+#         header_byteorder = 0
+#     elif header_byteorder in [1, "1", ">"]:
+#         header_byteorder = 1
+#
+#     # Parse some information about the file.
+#     if header_byteorder == 0:
+#         bo = "<"
+#     elif header_byteorder > 0:
+#         bo = ">"
+#     else:
+#         bo = None
+#
+#     # Determine total size. Either its a file-like object.
+#     if hasattr(mseed_object, "tell") and hasattr(mseed_object, "seek"):
+#         cur_pos = mseed_object.tell()
+#         mseed_object.seek(0, 2)
+#         length = mseed_object.tell() - cur_pos
+#         mseed_object.seek(cur_pos, 0)
+#     # Or a file name.
+#     else:
+#         length = os.path.getsize(mseed_object)
+#
+#     if length < 128:
+#         msg = "The smallest possible mini-SEED record is made up of 128 " \
+#               "bytes. The passed buffer or file contains only %i." % length
+#         raise ObsPyMSEEDFilesizeTooSmallError(msg)
+#     elif length > 2 ** 31:
+#         msg = ("ObsPy can currently not directly read mini-SEED files that "
+#                "are larger than 2^31 bytes (2048 MiB). To still read it, "
+#                "please read the file in chunks as documented here: "
+#                "https://github.com/obspy/obspy/pull/1419"
+#                "#issuecomment-221582369")
+#         raise ObsPyMSEEDFilesizeTooLargeError(msg)
+#
+#     info = util.get_record_information(mseed_object, endian=bo)
+#
+#     # Map the encoding to a readable string value.
+#     if "encoding" not in info:
+#         # Hopefully detected by libmseed.
+#         info["encoding"] = None
+#     elif info["encoding"] in ENCODINGS:
+#         info['encoding'] = ENCODINGS[info['encoding']][0]
+#     elif info["encoding"] in UNSUPPORTED_ENCODINGS:
+#         msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
+#                "the file to the ObsPy developers so that we can add "
+#                "support for it.") % \
+#             (UNSUPPORTED_ENCODINGS[info['encoding']], info['encoding'])
+#         raise ValueError(msg)
+#     else:
+#         msg = "Encoding '%i' is not a valid MiniSEED encoding." % \
+#             info['encoding']
+#         raise ValueError(msg)
+#
+#     record_length = info["record_length"]
+#
+#     # Only keep information relevant for the whole file.
+#     info = {'filesize': info['filesize']}
+#
+#     # If it's a file name just read it.
+#     if isinstance(mseed_object, str):
+#         # Read to NumPy array which is used as a buffer.
+#         bfr_np = np.fromfile(mseed_object, dtype=np.int8)
+#     elif hasattr(mseed_object, 'read'):
+#         bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
+#
+#     # Search for data records and pass only the data part to the underlying C
+#     # routine.
+#     offset = 0
+#     # 0 to 9 are defined in a row in the ASCII charset.
+#     min_ascii = ord('0')
+#
+#     # Small function to check whether an array of ASCII values contains only
+#     # digits.
+#     def isdigit(x):
+#         return True if (x - min_ascii).max() <= 9 else False
+#
+#     while True:
+#         # This should never happen
+#         if (isdigit(bfr_np[offset:offset + 6]) is False) or \
+#                 (bfr_np[offset + 6] not in VALID_CONTROL_HEADERS):
+#             msg = 'Not a valid (Mini-)SEED file'
+#             raise Exception(msg)
+#         elif bfr_np[offset + 6] in SEED_CONTROL_HEADERS:
+#             offset += record_length
+#             continue
+#         break
+#     bfr_np = bfr_np[offset:]
+#     buflen = len(bfr_np)
+#
+#     # If no selection is given pass None to the C function.
+#     if starttime is None and endtime is None and sourcename is None:
+#         selections = None
+#     else:
+#         select_time = SelectTime()
+#         selections = Selections()
+#         selections.timewindows.contents = select_time
+#         if starttime is not None:
+#             if not isinstance(starttime, UTCDateTime):
+#                 msg = 'starttime needs to be a UTCDateTime object'
+#                 raise ValueError(msg)
+#             selections.timewindows.contents.starttime = \
+#                 util._convert_datetime_to_mstime(starttime)
+#         else:
+#             # HPTERROR results in no starttime.
+#             selections.timewindows.contents.starttime = HPTERROR
+#         if endtime is not None:
+#             if not isinstance(endtime, UTCDateTime):
+#                 msg = 'endtime needs to be a UTCDateTime object'
+#                 raise ValueError(msg)
+#             selections.timewindows.contents.endtime = \
+#                 util._convert_datetime_to_mstime(endtime)
+#         else:
+#             # HPTERROR results in no starttime.
+#             selections.timewindows.contents.endtime = HPTERROR
+#         if sourcename is not None:
+#             if not isinstance(sourcename, str):
+#                 msg = 'sourcename needs to be a string'
+#                 raise ValueError(msg)
+#             # libmseed uses underscores as separators and allows filtering
+#             # after the dataquality which is disabled here to not confuse
+#             # users. (* == all data qualities)
+#             selections.srcname = (sourcename.replace('.', '_') + '_*').\
+#                 encode('ascii', 'ignore')
+#         else:
+#             selections.srcname = b'*'
+#     all_data = []
+#
+#     # Use a callback function to allocate the memory and keep track of the
+#     # data.
+#     def allocate_data(samplecount, sampletype):
+#         # Enhanced sanity checking for libmseed 2.10 can result in the
+#         # sampletype not being set. Just return an empty array in this case.
+#         if sampletype == b"\x00":
+#             data = np.empty(0)
+#         else:
+#             data = np.empty(samplecount, dtype=DATATYPES[sampletype])
+#         all_data.append(data)
+#         return data.ctypes.data
+#     # XXX: Do this properly!
+#     # Define Python callback function for use in C function. Return a long so
+#     # it hopefully works on 32 and 64 bit systems.
+#     alloc_data = C.CFUNCTYPE(C.c_longlong, C.c_int, C.c_char)(allocate_data)
+#
+#     try:
+#         verbose = int(verbose)
+#     except Exception:
+#         verbose = 0
+#
+#     clibmseed.verbose = bool(verbose)
+#     try:
+#         lil = clibmseed.readMSEEDBuffer(
+#             bfr_np, buflen, selections, C.c_int8(unpack_data),
+#             reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
+#             alloc_data)
+#     except InternalMSEEDError as e:
+#         msg = e.args[0]
+#         if offset and offset in str(e):
+#             # Append the offset of the full SEED header if necessary. That way
+#             # the C code does not have to deal with it.
+#             if offset and "offset" in msg:
+#                 msg = ("%s\nThe file contains a %i byte dataless part at the "
+#                        "beginning. Make sure to add that to the reported "
+#                        "offset to get the actual location in the file." % (
+#                            msg, offset))
+#                 raise InternalMSEEDError(msg)
+#         else:
+#             raise
+#     finally:
+#         # Make sure to reset the verbosity.
+#         clibmseed.verbose = True
+#
+#     del selections
+#
+#     traces = []
+#     try:
+#         current_id = lil.contents
+#     # Return stream if not traces are found.
+#     except ValueError:
+#         clibmseed.lil_free(lil)
+#         del lil
+#         return Stream()
+#
+#     while True:
+#         # Init header with the essential information.
+#         header = {'network': current_id.network.strip(),
+#                   'station': current_id.station.strip(),
+#                   'location': current_id.location.strip(),
+#                   'channel': current_id.channel.strip(),
+#                   'mseed': {'dataquality': current_id.dataquality}}
+#         # Loop over segments.
+#         try:
+#             current_segment = current_id.firstSegment.contents
+#         except ValueError:
+#             break
+#         while True:
+#             header['sampling_rate'] = current_segment.samprate
+#             header['starttime'] = \
+#                 util._convert_mstime_to_datetime(current_segment.starttime)
+#             header['mseed']['number_of_records'] = current_segment.recordcnt
+#             header['mseed']['encoding'] = \
+#                 ENCODINGS[current_segment.encoding][0]
+#             header['mseed']['byteorder'] = \
+#                 "<" if current_segment.byteorder == 0 else ">"
+#             header['mseed']['record_length'] = current_segment.reclen
+#             if details:
+#                 timing_quality = current_segment.timing_quality
+#                 if timing_quality == 0xFF:  # 0xFF is mask for not known timing
+#                     timing_quality = False
+#                 header['mseed']['blkt1001'] = {}
+#                 header['mseed']['blkt1001']['timing_quality'] = timing_quality
+#                 header['mseed']['calibration_type'] = \
+#                     current_segment.calibration_type \
+#                     if current_segment.calibration_type != -1 else False
+#
+#             if headonly is False:
+#                 # The data always will be in sequential order.
+#                 data = all_data.pop(0)
+#                 header['npts'] = len(data)
+#             else:
+#                 data = np.array([])
+#                 header['npts'] = current_segment.samplecnt
+#             # Make sure to init the number of samples.
+#             # Py3k: convert to unicode
+#             header['mseed'] = dict((k, v.decode())
+#                                    if isinstance(v, bytes) else (k, v)
+#                                    for k, v in header['mseed'].items())
+#             header = dict((k, util._decode_header_field(k, v))
+#                           if isinstance(v, bytes) else (k, v)
+#                           for k, v in header.items())
+#             trace = Trace(header=header, data=data)
+#             # Append global information.
+#             for key, value in info.items():
+#                 setattr(trace.stats.mseed, key, value)
+#             traces.append(trace)
+#             # A Null pointer access results in a ValueError
+#             try:
+#                 current_segment = current_segment.next.contents
+#             except ValueError:
+#                 break
+#         try:
+#             current_id = current_id.next.contents
+#         except ValueError:
+#             break
+#
+#     clibmseed.lil_free(lil)  # NOQA
+#     del lil  # NOQA
+#     return Stream(traces=traces)
+
+from mseedlib import MS3RecordReader, MSTraceList, TimeFormat
+from obspy.core import Stats
+
+
+def _get_mseed_input_file(filename):
+    """
+    Utility function to handle different types of input (filename, file object, BytesIO)
+    and return a suitable filename for mseedlib functions.
+
+    :param filename: Input source, can be a filename, file object, or BytesIO object.
+    :type filename: str, file, or BytesIO
+    :return: Tuple of (filename to use, temp_file object if created or None)
+    """
+    temp_file = None
+    input_filename = filename
+
+    # Check if it's a file-like object without fileno() method (like BytesIO)
+    if hasattr(filename, 'read'):
+        import tempfile
+
+        # Create a temporary file
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        input_filename = temp_file.name
+
+        # Write the content to the temporary file
+        filename.seek(0)
+        temp_file.write(filename.read())
+        temp_file.seek(0)
+        temp_file.close()
+        # bubu = temp_file.fileno()
+
+
+    else:
+        input_filename = str(filename)
+
+    return input_filename
+
+
+def extract_mseed_metadata(record, stats):
+    """
+    Extract all available metadata from a mseedlib record and add it to ObsPy stats object.
+
+    :param record: mseedlib record object (MS3Record or segment from MSTraceID)
+    :param stats: ObsPy Stats object to populate
+    :return: Updated stats object
+    """
+    # Create mseed and mseed3 attribute dictionaries if they don't exist
+    if not hasattr(stats, 'mseed'):
+        stats.mseed = {}
+
+
+    # Common attributes for both MSEED2 and MSEED3
+    # 1. Basic timing information
+    # if not hasattr(stats.mseed, 'records'):
+    #     stats.mseed.records = []
+    # if hasattr(record, 'starttime'):
+        # Convert from nanoseconds to seconds for UTCDateTime
+        # start_ns = record.starttime
+        # start_sec = start_ns / 1_000_000_000
+        # stats.mseed.records.append({"startime": UTCDateTime(start_sec)})
+
+    if hasattr(record, 'samplerate'):
+        stats.sampling_rate = record.samplerate
+
+    # 2. Record info
+    if hasattr(record, 'reclen'):
+        stats.mseed['record_length'] = record.reclen
+
+    if hasattr(record, 'samplecnt'):
+        stats.npts = record.samplecnt
+
+    # 3. Sample encoding
+    if hasattr(record, 'sampletype'):
+        stats.mseed['encoding'] = record.sampletype
+
+    # 4. Byte order (usually big-endian for MSEED) TODO IT's NOT THE CASE for all files!!!
+    stats.mseed['byteorder'] = '>'  # Default to big-endian for MSEED
+
+    # 5. Data quality indicator
+    if hasattr(record, 'quality'):
+        stats.mseed['dataquality'] = record.quality
+
+    # MSEED version-specific attributes
+    if hasattr(record, 'formatversion'):
+        stats.mseed['miniseed_version'] = record.formatversion
+
+    # MSEED3-specific attributes
+    # 1. Record publishing/format attributes
+    if hasattr(record, 'pubversion'):
+        stats.mseed['dataquality'] = {1: "R", 2: "D", 3: "Q", 4: "M"}[record.pubversion]
+
+    if hasattr(record, 'formatversion') and record.formatversion >= 3:
+        # These attributes are specific to MSEED3
+        if not hasattr(stats, 'mseed3'):
+            stats.mseed3 = {}
+        stats.mseed3['publication_version'] = record.pubversion
+        # 2. Source identifier details
+        if hasattr(record, 'sourceid'):
+            stats.mseed3['source_id'] = record.sourceid
+
+        # 3. CRC values (data integrity)
+        if hasattr(record, 'crc'):
+            stats.mseed3['crc'] = record.crc
+
+        # 4. Extra headers (JSON metadata)
+        if hasattr(record, 'extra_headers') and record.extra_headers:
+            stats.mseed3['extra_headers'] = record.extra_headers
+
+        # 5. Record identifier attributes
+        if hasattr(record, 'recid'):
+            stats.mseed3['record_id'] = record.recid
+
+        # 6. Timing quality
+        if hasattr(record, 'timingquality'):
+            stats.mseed3['timing_quality'] = record.timingquality
+
+        # 7. Publication time
+        if hasattr(record, 'pubtime'):
+            pub_ns = record.pubtime
+            pub_sec = pub_ns / 1_000_000_000
+            stats.mseed3['publication_time'] = UTCDateTime(pub_sec)
+
+
+        # 8. Activity/IO/Data quality flags
+        if hasattr(record, 'flags'):
+            stats.mseed3['flags'] = record.flags
+
+    # MSEED2-specific attributes
+    if hasattr(record, 'formatversion') and record.formatversion < 3:
+        # MSEED2 specific attributes
+
+        # 1. Blockette presence
+        if hasattr(record, 'blockettecount'):
+            stats.mseed['blockette_count'] = record.blockettecount
+
+        # 2. Network/station/location/channel codes (if stored separately)
+        if hasattr(record, 'network'):
+            stats.network = record.network
+        if hasattr(record, 'station'):
+            stats.station = record.station
+        if hasattr(record, 'location'):
+            stats.location = record.location
+        if hasattr(record, 'channel'):
+            stats.channel = record.channel
+
+        # 3. Sequence number
+        if hasattr(record, 'sequence_number'):
+            stats.mseed['sequence_number'] = record.sequence_number
+
+        # 4. Activity/IO/Data quality flags
+        if hasattr(record, 'act_flags'):
+            stats.mseed['activity_flags'] = record.act_flags
+        if hasattr(record, 'io_flags'):
+            stats.mseed['io_flags'] = record.io_flags
+        if hasattr(record, 'dq_flags'):
+            stats.mseed['data_quality_flags'] = record.dq_flags
+
+    # Add any additional attributes available that we didn't explicitly handle
+    # This ensures we don't miss any metadata in future mseedlib versions
+    # for attr_name in dir(record):
+    #     # Skip private attributes, methods, and ones we've already handled
+    #     if (attr_name.startswith('_') or
+    #             attr_name in ['starttime', 'samplerate', 'reclen', 'samplecnt',
+    #                           'sampletype', 'formatversion',
+    #                           'sourceid', 'crc', 'extra_headers', 'recid',
+    #                           'timingquality', 'flags', 'blockettecount',
+    #                           'network', 'station', 'location', 'channel', 'msr',
+    #                           'sequence_number', 'act_flags', 'io_flags', 'dq_flags',
+    #                            'filename', 'datasamples'
+    #                           ]):
+    #         continue
+    #
+    #     # Add qto the appropriate attribute dict based on version
+    #     if hasattr(record, 'formatversion') and record.formatversion >= 3:
+    #         stats.mseed3[attr_name] = getattr(record, attr_name)
+    #     else:
+    #         stats.mseed[attr_name] = getattr(record, attr_name)
+
+    return stats
+
+
+def _read_mseed(filename , starttime=None, endtime=None, headonly=False,
                 sourcename=None, reclen=None, details=False,
                 header_byteorder=None, verbose=None, **kwargs):
     """
-    Reads a Mini-SEED file and returns a Stream object.
+    Reads a MSEED file and returns an ObsPy Stream object.
 
-    .. warning::
-        This function should NOT be called directly, it registers via the
-        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
-
-    :param mseed_object: Filename or open file like object that contains the
-        binary Mini-SEED data. Any object that provides a read() method will be
-        considered to be a file like object.
-    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param starttime: Only read data samples after or at the start time.
-    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param endtime: Only read data samples before or at the end time.
-    :param headonly: Determines whether or not to unpack the data or just
-        read the headers.
-    :type sourcename: str
-    :param sourcename: Only read data with matching SEED ID (can contain
-        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z").
-        Defaults to ``None`` .
-    :param reclen: If it is None, it will be automatically determined for every
-        record. If it is known, just set it to the record length in bytes which
-        will increase the reading speed slightly.
-    :type details: bool, optional
-    :param details: If ``True`` read additional information: timing quality
-        and availability of calibration information.
-        Note, that the traces are then also split on these additional
-        information. Thus the number of traces in a stream will change.
-        Details are stored in the mseed stats AttribDict of each trace.
-        ``False`` specifies for both cases, that this information is not
-        available. ``blkt1001.timing_quality`` specifies the timing quality
-        from 0 to 100 [%]. ``calibration_type`` specifies the type of available
-        calibration information blockettes:
-
-        - ``1`` : Step Calibration (Blockette 300)
-        - ``2`` : Sine Calibration (Blockette 310)
-        - ``3`` : Pseudo-random Calibration (Blockette 320)
-        - ``4`` : Generic Calibration  (Blockette 390)
-        - ``-2`` : Calibration Abort (Blockette 395)
-
-    :type header_byteorder: int or str, optional
-    :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
-        little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
-        native byte order. Used to enforce the header byte order. Useful in
-        some rare cases where the automatic byte order detection fails.
-
-    .. rubric:: Example
-
-    >>> from obspy import read
-    >>> st = read("/path/to/two_channels.mseed")
-    >>> print(st)  # doctest: +ELLIPSIS
-    2 Trace(s) in Stream:
-    BW.UH3..EHE | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
-    BW.UH3..EHZ | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
-
-    >>> from obspy import UTCDateTime
-    >>> st = read("/path/to/two_channels.mseed",
-    ...           starttime=UTCDateTime("2010-06-20T00:00:01"),
-    ...           sourcename="*.?HZ")
-    >>> print(st)  # doctest: +ELLIPSIS
-    1 Trace(s) in Stream:
-    BW.UH3..EHZ | 2010-06-20T00:00:00.999999Z - ... | 200.0 Hz, 242 samples
-
-    Read with ``details=True`` to read more details of the file if present.
-
-    >>> st = read("/path/to/timingquality.mseed", details=True)
-    >>> print(st[0].stats.mseed.blkt1001.timing_quality)
-    55
-
-    ``False`` means that the necessary information could not be found in the
-    file.
-
-    >>> print(st[0].stats.mseed.calibration_type)
-    False
-
-    Note that each change in timing quality from record to record may trigger a
-    new Trace object to be created so the Stream object may contain many Trace
-    objects if ``details=True`` is used.
-
-    >>> print(len(st))
-    101
+    :param filename: MSEED3 file to be read.
+    :type filename: str
+    :param headonly: If True, read only the headers. Default is False.
+    :type headonly: bool
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: An ObsPy Stream object containing the data.
     """
-    if isinstance(mseed_object, Path):
-        mseed_object = str(mseed_object)
-    # Parse the headonly and reclen flags.
-    if headonly is True:
-        unpack_data = 0
-    else:
-        unpack_data = 1
-    if reclen is None:
-        reclen = -1
-    elif reclen not in VALID_RECORD_LENGTHS:
-        msg = 'Invalid record length. Autodetection will be used.'
-        warnings.warn(msg)
-        reclen = -1
-
-    # Determine the byte order.
-    if header_byteorder == "=":
-        header_byteorder = NATIVE_BYTEORDER
-
-    if header_byteorder is None:
-        header_byteorder = -1
-    elif header_byteorder in [0, "0", "<"]:
-        header_byteorder = 0
-    elif header_byteorder in [1, "1", ">"]:
-        header_byteorder = 1
-
-    # Parse some information about the file.
-    if header_byteorder == 0:
-        bo = "<"
-    elif header_byteorder > 0:
-        bo = ">"
-    else:
-        bo = None
-
-    # Determine total size. Either its a file-like object.
-    if hasattr(mseed_object, "tell") and hasattr(mseed_object, "seek"):
-        cur_pos = mseed_object.tell()
-        mseed_object.seek(0, 2)
-        length = mseed_object.tell() - cur_pos
-        mseed_object.seek(cur_pos, 0)
-    # Or a file name.
-    else:
-        length = os.path.getsize(mseed_object)
-
-    if length < 128:
-        msg = "The smallest possible mini-SEED record is made up of 128 " \
-              "bytes. The passed buffer or file contains only %i." % length
-        raise ObsPyMSEEDFilesizeTooSmallError(msg)
-    elif length > 2 ** 31:
-        msg = ("ObsPy can currently not directly read mini-SEED files that "
-               "are larger than 2^31 bytes (2048 MiB). To still read it, "
-               "please read the file in chunks as documented here: "
-               "https://github.com/obspy/obspy/pull/1419"
-               "#issuecomment-221582369")
-        raise ObsPyMSEEDFilesizeTooLargeError(msg)
-
-    info = util.get_record_information(mseed_object, endian=bo)
-
-    # Map the encoding to a readable string value.
-    if "encoding" not in info:
-        # Hopefully detected by libmseed.
-        info["encoding"] = None
-    elif info["encoding"] in ENCODINGS:
-        info['encoding'] = ENCODINGS[info['encoding']][0]
-    elif info["encoding"] in UNSUPPORTED_ENCODINGS:
-        msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
-               "the file to the ObsPy developers so that we can add "
-               "support for it.") % \
-            (UNSUPPORTED_ENCODINGS[info['encoding']], info['encoding'])
-        raise ValueError(msg)
-    else:
-        msg = "Encoding '%i' is not a valid MiniSEED encoding." % \
-            info['encoding']
-        raise ValueError(msg)
-
-    record_length = info["record_length"]
-
-    # Only keep information relevant for the whole file.
-    info = {'filesize': info['filesize']}
-
-    # If it's a file name just read it.
-    if isinstance(mseed_object, str):
-        # Read to NumPy array which is used as a buffer.
-        bfr_np = np.fromfile(mseed_object, dtype=np.int8)
-    elif hasattr(mseed_object, 'read'):
-        bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
-
-    # Search for data records and pass only the data part to the underlying C
-    # routine.
-    offset = 0
-    # 0 to 9 are defined in a row in the ASCII charset.
-    min_ascii = ord('0')
-
-    # Small function to check whether an array of ASCII values contains only
-    # digits.
-    def isdigit(x):
-        return True if (x - min_ascii).max() <= 9 else False
-
-    while True:
-        # This should never happen
-        if (isdigit(bfr_np[offset:offset + 6]) is False) or \
-                (bfr_np[offset + 6] not in VALID_CONTROL_HEADERS):
-            msg = 'Not a valid (Mini-)SEED file'
-            raise Exception(msg)
-        elif bfr_np[offset + 6] in SEED_CONTROL_HEADERS:
-            offset += record_length
-            continue
-        break
-    bfr_np = bfr_np[offset:]
-    buflen = len(bfr_np)
-
-    # If no selection is given pass None to the C function.
-    if starttime is None and endtime is None and sourcename is None:
-        selections = None
-    else:
-        select_time = SelectTime()
-        selections = Selections()
-        selections.timewindows.contents = select_time
-        if starttime is not None:
-            if not isinstance(starttime, UTCDateTime):
-                msg = 'starttime needs to be a UTCDateTime object'
-                raise ValueError(msg)
-            selections.timewindows.contents.starttime = \
-                util._convert_datetime_to_mstime(starttime)
-        else:
-            # HPTERROR results in no starttime.
-            selections.timewindows.contents.starttime = HPTERROR
-        if endtime is not None:
-            if not isinstance(endtime, UTCDateTime):
-                msg = 'endtime needs to be a UTCDateTime object'
-                raise ValueError(msg)
-            selections.timewindows.contents.endtime = \
-                util._convert_datetime_to_mstime(endtime)
-        else:
-            # HPTERROR results in no starttime.
-            selections.timewindows.contents.endtime = HPTERROR
-        if sourcename is not None:
-            if not isinstance(sourcename, str):
-                msg = 'sourcename needs to be a string'
-                raise ValueError(msg)
-            # libmseed uses underscores as separators and allows filtering
-            # after the dataquality which is disabled here to not confuse
-            # users. (* == all data qualities)
-            selections.srcname = (sourcename.replace('.', '_') + '_*').\
-                encode('ascii', 'ignore')
-        else:
-            selections.srcname = b'*'
-    all_data = []
-
-    # Use a callback function to allocate the memory and keep track of the
-    # data.
-    def allocate_data(samplecount, sampletype):
-        # Enhanced sanity checking for libmseed 2.10 can result in the
-        # sampletype not being set. Just return an empty array in this case.
-        if sampletype == b"\x00":
-            data = np.empty(0)
-        else:
-            data = np.empty(samplecount, dtype=DATATYPES[sampletype])
-        all_data.append(data)
-        return data.ctypes.data
-    # XXX: Do this properly!
-    # Define Python callback function for use in C function. Return a long so
-    # it hopefully works on 32 and 64 bit systems.
-    alloc_data = C.CFUNCTYPE(C.c_longlong, C.c_int, C.c_char)(allocate_data)
-
+    # print(dir(filename))
+    # Handle different types of input
+    temp_file = None
     try:
-        verbose = int(verbose)
-    except Exception:
-        verbose = 0
+        # Get appropriate input file for mseedlib
+        input_filename = _get_mseed_input_file(filename)
 
-    clibmseed.verbose = bool(verbose)
-    try:
-        lil = clibmseed.readMSEEDBuffer(
-            bfr_np, buflen, selections, C.c_int8(unpack_data),
-            reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
-            alloc_data)
-    except InternalMSEEDError as e:
-        msg = e.args[0]
-        if offset and offset in str(e):
-            # Append the offset of the full SEED header if necessary. That way
-            # the C code does not have to deal with it.
-            if offset and "offset" in msg:
-                msg = ("%s\nThe file contains a %i byte dataless part at the "
-                       "beginning. Make sure to add that to the reported "
-                       "offset to get the actual location in the file." % (
-                           msg, offset))
-                raise InternalMSEEDError(msg)
-        else:
-            raise
-    finally:
-        # Make sure to reset the verbosity.
-        clibmseed.verbose = True
+        # Use MSTraceList to read the file
+        mstracelist = MSTraceList(input_filename, unpack_data=True, record_list=True,)
+    except Exception as e:
+        raise IOError(f"Error reading MSEED file: {str(e)}")
 
-    del selections
 
-    traces = []
-    try:
-        current_id = lil.contents
-    # Return stream if not traces are found.
-    except ValueError:
-        clibmseed.lil_free(lil)
-        del lil
-        return Stream()
+    # print("*"*50)
+    # print(filename)
+    stream = Stream()
 
-    while True:
-        # Init header with the essential information.
-        header = {'network': current_id.network.strip(),
-                  'station': current_id.station.strip(),
-                  'location': current_id.location.strip(),
-                  'channel': current_id.channel.strip(),
-                  'mseed': {'dataquality': current_id.dataquality}}
-        # Loop over segments.
-        try:
-            current_segment = current_id.firstSegment.contents
-        except ValueError:
-            break
-        while True:
-            header['sampling_rate'] = current_segment.samprate
-            header['starttime'] = \
-                util._convert_mstime_to_datetime(current_segment.starttime)
-            header['mseed']['number_of_records'] = current_segment.recordcnt
-            header['mseed']['encoding'] = \
-                ENCODINGS[current_segment.encoding][0]
-            header['mseed']['byteorder'] = \
-                "<" if current_segment.byteorder == 0 else ">"
-            header['mseed']['record_length'] = current_segment.reclen
-            if details:
-                timing_quality = current_segment.timing_quality
-                if timing_quality == 0xFF:  # 0xFF is mask for not known timing
-                    timing_quality = False
-                header['mseed']['blkt1001'] = {}
-                header['mseed']['blkt1001']['timing_quality'] = timing_quality
-                header['mseed']['calibration_type'] = \
-                    current_segment.calibration_type \
-                    if current_segment.calibration_type != -1 else False
+    # Iterate through each trace ID in the trace list
+    for traceid in mstracelist.traceids():
+        # Parse network, station, location, channel from sourceid
+        # FDSN:XX_TEST__B_S_0 format or other sourceid formats
+        sourceid = traceid.sid.decode("utf8")
 
-            if headonly is False:
-                # The data always will be in sequential order.
-                data = all_data.pop(0)
-                header['npts'] = len(data)
+        # Try to parse FDSN ID format: FDSN:NET_STA_LOC_CHAN
+        if sourceid.startswith("FDSN:"):
+            parts = sourceid[5:].split('_')
+            if len(parts) >= 4:
+                network = parts[0]
+                station = parts[1]
+                location = parts[2]
+                channel = "".join(parts[3:6]).strip()
             else:
-                data = np.array([])
-                header['npts'] = current_segment.samplecnt
-            # Make sure to init the number of samples.
-            # Py3k: convert to unicode
-            header['mseed'] = dict((k, v.decode())
-                                   if isinstance(v, bytes) else (k, v)
-                                   for k, v in header['mseed'].items())
-            header = dict((k, util._decode_header_field(k, v))
-                          if isinstance(v, bytes) else (k, v)
-                          for k, v in header.items())
-            trace = Trace(header=header, data=data)
-            # Append global information.
-            for key, value in info.items():
-                setattr(trace.stats.mseed, key, value)
-            traces.append(trace)
-            # A Null pointer access results in a ValueError
-            try:
-                current_segment = current_segment.next.contents
-            except ValueError:
-                break
-        try:
-            current_id = current_id.next.contents
-        except ValueError:
-            break
+                # Handle non-standard IDs
+                network, station, location, channel = "", "", "", sourceid
+        else:
+            # Handle other ID formats or try to parse based on underscore separators
+            parts = sourceid.split('_')
+            if len(parts) >= 4:
+                network = parts[0]
+                station = parts[1]
+                location = parts[2]
+                channel = parts[3]
+            else:
+                # Default when can't parse
+                network, station, location, channel = "", "", "", sourceid
+        # print('traceid', traceid)
+        # Process each segment for this trace ID
 
-    clibmseed.lil_free(lil)  # NOQA
-    del lil  # NOQA
-    return Stream(traces=traces)
+        for segment in traceid.segments():
+            # print(segment)
+            # Create Stats object
+            stats = Stats()
+            stats.network = network
+            stats.station = station
+            stats.location = location
+            stats.channel = channel
 
+            # Set timing information - convert from nanoseconds to UTCDateTime
+            # mseedlib uses nanoseconds since Unix epoch
+            start_ns = segment.starttime
+            start_sec = start_ns / 1_000_000_000
+            stats.starttime = UTCDateTime(start_sec)
+
+
+            # Set sampling rate
+            stats.sampling_rate = segment.samprate
+
+            i = 0
+            for rec in segment.recordlist.records():
+                stats = extract_mseed_metadata(rec.msr, stats)
+                stats.mseed["encoding"] = str(rec.msr.encoding_str()).split(" ")[0].replace("-","")
+                i += 1
+            stats.mseed["number_of_records"] = i
+            # dataquality flags have been REMOVED from the data model
+            # breakpoint()
+            # stats.mseed["dataquality"] = "R"
+            # stats.mseed["filesize"] = 8192
+
+            # If headonly, create an empty trace
+            if headonly:
+                stats.npts = segment.samplecnt if hasattr(segment, 'samplecnt') else 0
+                trace = Trace(data=np.array([]), header=stats)
+                stream.append(trace)
+                continue
+
+            # Get the data samples
+            if segment.numsamples:
+                data = np.array(segment.datasamples)
+            else:
+                # If no data samples but we know the count, create zeros
+                sample_count = segment.samplecnt if hasattr(segment, 'samplecnt') else 0
+                data = np.zeros(sample_count)
+
+            trace = Trace(data=data, header=stats)
+            trace.stats.npts = len(data)
+
+
+            stream.append(trace)
+
+    # TODO ugly way of doing, but for testing now
+    if starttime or endtime:
+        stream.trim(starttime=starttime, endtime=endtime)
+
+    for tr in stream:
+        dtype = tr.data.dtype.newbyteorder('native')
+        tr.data = np.require(tr.data, dtype=dtype)
+
+    stream.sort()
+    return stream
 
 def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                  sequence_number=None, flush=True, verbose=0, **_kwargs):
