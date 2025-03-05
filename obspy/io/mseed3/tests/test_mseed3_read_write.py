@@ -173,6 +173,32 @@ class TestMSEED3ReadingAndWriting:
             assert redotr.stats.location == loc
             assert redotr.stats.channel == f"{band}_{s}_{subs}"
 
+    def test_non_fdsn_identifier(self):
+        chanSourceId = f"ELSE:bla_bbb"
+        # create fake
+        data = np.fromfunction(
+            lambda i: (i % 99 - 49), (100,), dtype=np.int32
+        )
+        header = MSeed3Header()
+        header.starttime = "2024-01-02T15:13:55.123456Z"
+        header.sampleRatePeriod = -1 # neg is period, so 1 sps
+        with pytest.raises(Exception):
+            identifier = FDSNSourceId.parse(chanSourceId)
+        record = MSeed3Record(header, chanSourceId, data)
+        recordBytes = record.pack()
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            with open(outfile, 'wb') as out:
+                out.write(recordBytes)
+            st = read(outfile, format="MSEED3")
+            assert len(st) == 1
+            tr = st[0]
+            assert tr.stats.network == ""
+            assert tr.stats.station == ""
+            assert tr.stats.location == ""
+            assert tr.stats.channel == chanSourceId
+
+
     def _check_bird_jsc(self, stream_a, stream_b):
         assert len(stream_a) == 6
         assert len(stream_b) == 6

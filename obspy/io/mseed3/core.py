@@ -339,12 +339,16 @@ def mseed3_to_obspy_header(ms3):
     h = ms3.header
     stats["npts"] = h.numSamples
     stats["sampling_rate"] = h.sampleRate
-    sid = FDSNSourceId.parse(ms3.identifier)
-    nslc = sid.asNslc()
-    stats["network"] = nslc.networkCode
-    stats["station"] = nslc.stationCode
-    stats["location"] = nslc.locationCode
-    stats["channel"] = nslc.channelCode
+    try:
+        sid = FDSNSourceId.parse(ms3.identifier)
+        nslc = sid.asNslc()
+        stats["network"] = nslc.networkCode
+        stats["station"] = nslc.stationCode
+        stats["location"] = nslc.locationCode
+        stats["channel"] = nslc.channelCode
+    except:
+        print(f"Oops, can't extract FDSN Sid: ${ms3.identifier}")
+        stats["channel"] = ms3.identifier
     micros = int(round(h.nanosecond / 1000))
     stats["starttime"] = UTCDateTime(
         h.year,
