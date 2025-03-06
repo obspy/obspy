@@ -578,8 +578,6 @@ def extract_mseed_metadata(record, stats):
         stats.mseed['dataquality'] = record.quality
 
     # MSEED version-specific attributes
-    if hasattr(record, 'formatversion'):
-        stats.mseed['miniseed_version'] = record.formatversion
 
     # MSEED3-specific attributes
     # 1. Record publishing/format attributes
@@ -587,6 +585,9 @@ def extract_mseed_metadata(record, stats):
         stats.mseed['dataquality'] = {1: "R", 2: "D", 3: "Q", 4: "M"}[record.pubversion]
 
     if hasattr(record, 'formatversion') and record.formatversion >= 3:
+        if hasattr(record, 'formatversion'):
+            stats.mseed['miniseed_version'] = record.formatversion
+
         # These attributes are specific to MSEED3
         if not hasattr(stats, 'mseed3'):
             stats.mseed3 = {}
@@ -704,7 +705,7 @@ def _read_mseed(filename , starttime=None, endtime=None, headonly=False,
 
     # print("*"*50)
     # print(filename)
-    stream = Stream()
+    traces = []
 
     # Iterate through each trace ID in the trace list
     for traceid in mstracelist.traceids():
@@ -759,45 +760,54 @@ def _read_mseed(filename , starttime=None, endtime=None, headonly=False,
             i = 0
             for rec in segment.recordlist.records():
                 stats = extract_mseed_metadata(rec.msr, stats)
-                stats.mseed["encoding"] = str(rec.msr.encoding_str()).split(" ")[0].replace("-","")
+                # Mimic previous behaviour: (missing case 33!)
+                stats.mseed["encoding"] = ENCODINGS[rec.msr.encoding][0]
+
+                # Would be good to have the real name as stored in libmseed?
+                # stats.mseed["encodingstr"] = rec.msr.encoding_str()
                 i += 1
             stats.mseed["number_of_records"] = i
             # dataquality flags have been REMOVED from the data model
             # breakpoint()
             # stats.mseed["dataquality"] = "R"
             # stats.mseed["filesize"] = 8192
+            with open(input_filename, 'rb') as f:
+                f.seek(0, 2)
+                stats.mseed["filesize"] = (f.tell()-0)
 
             # If headonly, create an empty trace
             if headonly:
-                stats.npts = segment.samplecnt if hasattr(segment, 'samplecnt') else 0
                 trace = Trace(data=np.array([]), header=stats)
-                stream.append(trace)
+                trace.stats.npts = segment.samplecnt if hasattr(segment, 'samplecnt') else 0
+                traces.append(trace)
                 continue
 
             # Get the data samples
             if segment.numsamples:
                 data = np.array(segment.datasamples)
+
             else:
                 # If no data samples but we know the count, create zeros
                 sample_count = segment.samplecnt if hasattr(segment, 'samplecnt') else 0
                 data = np.zeros(sample_count)
 
             trace = Trace(data=data, header=stats)
+            trace.stats.mseed['byteorder'] = trace.data.dtype.byteorder
             trace.stats.npts = len(data)
 
+            # should this always be applied??
+            dtype = trace.data.dtype.newbyteorder('native')
+            trace.data = np.require(trace.data, dtype=dtype)
+            trace.stats.mseed['byteorder'] = trace.data.dtype.byteorder
 
-            stream.append(trace)
+            traces.append(trace)
 
+    stream = Stream(traces=traces)
     # TODO ugly way of doing, but for testing now
     if starttime or endtime:
         stream.trim(starttime=starttime, endtime=endtime)
 
-    for tr in stream:
-        dtype = tr.data.dtype.newbyteorder('native')
-        tr.data = np.require(tr.data, dtype=dtype)
-
-    stream.sort()
-    return stream
+    return stream.sort()
 
 def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                  sequence_number=None, flush=True, verbose=0, **_kwargs):
