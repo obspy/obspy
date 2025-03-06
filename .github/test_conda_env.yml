@@ -24,3 +24,5 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-json-report >= 1.4
+  - pip:
+      - mseedlib
