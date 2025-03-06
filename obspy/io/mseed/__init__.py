@@ -63,7 +63,7 @@ The actual data is stored as a :class:`~numpy.ndarray` in the ``data``
 attribute of each trace.
 
 >>> print(st[0].data)
-[2787 2776 2774 ..., 2850 2853 2853]
+[2787 2776 2774 ... 2850 2853 2853]
 
 
 Several key word arguments are available which can be used for example to
