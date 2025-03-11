@@ -32,6 +32,7 @@ BASE_STATS_KEYS = (
     'starttime', 'endtime', 'sampling_rate', 'delta', 'npts', 'calib')
 # complete list of all parts of a NSLC
 NSLC_KEYS = ('network', 'station', 'location', 'channel')
+NSLC_SPECIFIC_KEY = 'channel'
 # name for the FDSN Source Identifier composed of all of its parts
 SOURCE_ID_KEY = 'source_identifier'
 # complete list of all parts of a FDSN Source Identifier
@@ -169,10 +170,17 @@ class Stats(AttribDict):
                    'Identifier and NSLC codes or parts of a Source Identifier '
                    'is not allowed.')
             raise ValueError(msg)
+        if NSLC_SPECIFIC_KEY in header and \
+                any(key in header for key in SOURCE_ID_SPECIFIC_KEYS):
+            msg = ('Initializing Stats with a mix of NSLC type channel code '
+                   'and (FDSN) Source Identifier type band/source/subsource '
+                   'codes is not allowed.')
+            raise ValueError(msg)
         # if (FDSN) Source ID is provided, then use that, otherwise default to
         # good old plain NSLC style, which most users know best and probably
         # expect
-        if SOURCE_ID_KEY in header:
+        if SOURCE_ID_KEY in header or \
+                any(key in header for key in SOURCE_ID_SPECIFIC_KEYS):
             return SourceIdentifierStats(header=header)
         else:
             return NSLCStats(header=header)
