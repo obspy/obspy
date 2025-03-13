@@ -175,6 +175,17 @@ class TestTrigger():
         # self.assertAlmostEqual(stime, 31.2800006866)
         assert int(stime + 0.5) == 31
 
+    def test_ar_pick_3552(self, testdata):
+        """
+        Regression test for PR 3552
+        """
+        tr = read(testdata['arpick_pr3552.mseed'], 'MSEED')[0]
+        # no need to test any values etc, the following was crashing
+        # obspy/python/pytest with a segfault
+        ar_pick(tr.data, np.arange(len(tr)), np.arange(len(tr)),
+                tr.stats.sampling_rate, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8,
+                0.1, 0.2)
+
     def test_trigger_onset(self):
         """
         Test trigger onset function
