@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
+  <Source>http://examples.obspy.org/step_table_galperin_and_xyz.txt</Source>
+  <Module>ObsPy 1.1.0</Module>
+  <ModuleURI>https://www.obspy.org</ModuleURI>
+  <Created>2019-05-01T14:53:33.925291</Created>
+  <Network code="XX">
+    <Station code="TRC1">
+      <Latitude unit="DEGREES">1.0</Latitude>
+      <Longitude unit="DEGREES">2.0</Longitude>
+      <Elevation unit="METERS">3.0</Elevation>
+      <Site>
+        <Name>UVW Station</Name>
+      </Site>
+      <CreationDate>2016-01-02T00:00:00</CreationDate>
+      <Channel code="HHU" locationCode="">
+        <Latitude unit="DEGREES">1.0</Latitude>
+        <Longitude unit="DEGREES">2.0</Longitude>
+        <Elevation unit="METERS">3.0</Elevation>
+        <Depth unit="METERS">5.0</Depth>
+        <Azimuth unit="DEGREES">90.0</Azimuth>
+        <Dip unit="DEGREES">-35.3</Dip>
+      </Channel>
+      <Channel code="HHV" locationCode="">
+        <Latitude unit="DEGREES">1.0</Latitude>
+        <Longitude unit="DEGREES">2.0</Longitude>
+        <Elevation unit="METERS">3.0</Elevation>
+        <Depth unit="METERS">5.0</Depth>
+        <Azimuth unit="DEGREES">330.0</Azimuth>
+        <Dip unit="DEGREES">-35.3</Dip>
+      </Channel>
+      <Channel code="HHW" locationCode="">
+        <Latitude unit="DEGREES">1.0</Latitude>
+        <Longitude unit="DEGREES">2.0</Longitude>
+        <Elevation unit="METERS">3.0</Elevation>
+        <Depth unit="METERS">5.0</Depth>
+        <Azimuth unit="DEGREES">210.0</Azimuth>
+        <Dip unit="DEGREES">-35.3</Dip>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>
