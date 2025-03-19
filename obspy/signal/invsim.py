@@ -408,6 +408,8 @@ def invert_spectrum(spec, wlev):
     :param wlev: Water level to use
     """
     # Calculated water level in the scale of spec
+    if wlev is None:
+        wlev = np.inf
     swamp = waterlevel(spec, wlev)
 
     # Find length in real fft frequency domain, spec is complex
@@ -525,6 +527,8 @@ def simulate_seismometer(
         raise TypeError(msg)
 
     for d in [paz_remove, paz_simulate]:
+        if not isinstance(d, dict):
+            continue
         if d is None:
             continue
         for key in ['poles', 'zeros', 'gain']:
@@ -557,9 +561,13 @@ def simulate_seismometer(
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
     if paz_remove:
-        freq_response, freqs = paz_to_freq_resp(
-            paz_remove['poles'], paz_remove['zeros'], paz_remove['gain'],
-            delta, nfft, freq=True)
+        if isinstance(paz_remove, dict):
+            freq_response, freqs = paz_to_freq_resp(
+                paz_remove['poles'], paz_remove['zeros'], paz_remove['gain'],
+                delta, nfft, freq=True)
+        elif isinstance(paz_remove, Response):
+            freq_response, freqs = paz_remove.get_evalresp_response(
+                delta, nfft)
     if seedresp:
         freq_response, freqs = evalresp(delta, nfft, seedresp['filename'],
                                         seedresp['date'],
@@ -601,7 +609,7 @@ def simulate_seismometer(
         # detrend using least squares
         data = scipy.signal.detrend(data, type="linear")
     # correct for involved overall sensitivities
-    if paz_remove and remove_sensitivity and not seedresp:
+    if isinstance(paz_remove, dict) and remove_sensitivity and not seedresp:
         data /= paz_remove['sensitivity']
     if paz_simulate and simulate_sensitivity:
         data *= paz_simulate['sensitivity']
