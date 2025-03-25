@@ -26,6 +26,10 @@ from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
 
 
+class StatsTypeException(Exception):
+    pass
+
+
 class Stats(AttribDict):
     """
     A container for additional header information of a ObsPy
@@ -155,15 +159,25 @@ class Stats(AttribDict):
         'station': '',
         'location': '',
         'channel': '',
+        'namespace': None,
+        'band': None,
+        'source': None,
+        'subsource': None,
+        'type': 'NSLC',
     }
     # keys which need to refresh derived values
     _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
     # dict of required types for certain attrs
     _types = {
+        'type': str,
         'network': str,
         'station': str,
         'location': str,
         'channel': str,
+        'namespace': str,
+        'band': str,
+        'source': str,
+        'subsource': str,
     }
 
     def __init__(self, header={}):
@@ -174,6 +188,19 @@ class Stats(AttribDict):
     def __setitem__(self, key, value):
         """
         """
+        if key == 'type' and value not in ('NSLC', 'SID'):
+            msg = "Stats.type must be one of 'NSLC' or 'SID'"
+            raise ValueError(msg)
+        if self.type == 'NSLC':
+            if key in ('namespace', 'band', 'source', 'subsource'):
+                msg = f"Can not set '{key}' with a Stats instance of NSLC type"
+                raise StatsTypeException(msg)
+        elif self.type == 'SID':
+            if key == 'channel':
+                msg = f"Can not set '{key}' with a Stats instance of SID type"
+                raise StatsTypeException(msg)
+        else:
+            raise NotImplementedError()
         if key in self._refresh_keys:
             # ensure correct data type
             if key == 'delta':
