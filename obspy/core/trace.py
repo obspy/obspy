@@ -262,10 +262,19 @@ class Stats(AttribDict):
         """
         Return better readable string representation of Stats object.
         """
-        priorized_keys = ['network', 'station', 'location', 'channel',
-                          'starttime', 'endtime', 'sampling_rate', 'delta',
-                          'npts', 'calib']
-        return self._pretty_str(priorized_keys)
+        if self.type == 'NSLC':
+            priorized_keys = ['network', 'station', 'location', 'channel',
+                              'type', 'starttime', 'endtime', 'sampling_rate',
+                              'delta', 'npts', 'calib']
+            suppress_if_none = ['namespace', 'band', 'source', 'subsource']
+        elif self.type == 'SID':
+            priorized_keys = ['namespace', 'network', 'station', 'location',
+                              'band', 'source', 'subsource', 'type',
+                              'starttime', 'endtime', 'sampling_rate', 'delta',
+                              'npts', 'calib']
+            suppress_if_none = ['channel']
+        return self._pretty_str(priorized_keys,
+                                suppress_if_none=suppress_if_none)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
