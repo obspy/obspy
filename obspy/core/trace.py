@@ -309,10 +309,10 @@ class Stats(AttribDict):
         Convert Stats object to type 'NSLC'
         """
         self.namespace = namespace
-        self.channel = ''.join((self.band, self.source, self.subsource))
-        self.band = None
-        self.source = None
-        self.subsource = None
+        self.__dict__['channel'] = ''.join(
+            (self.band, self.source, self.subsource))
+        for key in ('namespace', 'band', 'source', 'subsource'):
+            self.__dict__[key] = None
         self.type = 'NSLC'
 
 
