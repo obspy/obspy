@@ -163,7 +163,6 @@ class Stats(AttribDict):
         'band': None,
         'source': None,
         'subsource': None,
-        'type': 'NSLC',
     }
     # keys which need to refresh derived values
     _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
@@ -183,7 +182,21 @@ class Stats(AttribDict):
     def __init__(self, header={}):
         """
         """
+        if 'channel' in header and any(key in header for key in (
+                'namespace', 'band', 'source', 'subsource')):
+            msg = ('Initializing Stats with a mix of NSLC type channel code '
+                   'and (FDSN) Source Identifier type band/source/subsource '
+                   'codes is not allowed.')
+            raise ValueError(msg)
+        if 'channel' in header:
+            self.__dict__['type'] = 'NSLC'
+        else:
+            self.__dict__['type'] = 'SID'
         super(Stats, self).__init__(header)
+        # finally need to see if we have to get rid of 'channel' set with the
+        # default '' in case we ended up with a SID type Stats
+        if self.type == 'SID':
+            self.__dict__['channel'] = None
 
     def __setitem__(self, key, value):
         """
@@ -290,6 +303,17 @@ class Stats(AttribDict):
         self.__dict__.update(state)
         # trigger refreshing
         self.__setitem__('sampling_rate', state['sampling_rate'])
+
+    def to_NSLC(self, namespace='FDSN'):
+        """
+        Convert Stats object to type 'NSLC'
+        """
+        self.namespace = namespace
+        self.channel = ''.join((self.band, self.source, self.subsource))
+        self.band = None
+        self.source = None
+        self.subsource = None
+        self.type = 'NSLC'
 
 
 @decorator
