@@ -185,15 +185,6 @@ class Stats(AttribDict):
         else:
             return NSLCStats(header=header)
 
-    def __init__(self, header={}):
-        """
-        This routine should never get entered, since on initializing
-        ``Stats()`` it will first go to ``Stats.__new__()`` which in turn
-        creates an instance of one of the subclasses and then the
-        ``__init__()`` method of that subroutine gets called instead.
-        """
-        raise NotImplementedError()
-
     def __setitem__(self, key, value):
         """
         """
