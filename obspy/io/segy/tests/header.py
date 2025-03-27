@@ -64,7 +64,20 @@ FILES = {'00001034.sgy_first_trace': {
              'endian': '>',
              'data_sample_enc': 2, 'textual_header_enc': 'ASCII',
              'sample_count': 8000, 'sample_size': 4,
-             'non_normalized_samples': []}}
+             'non_normalized_samples': []},
+         'good_sin_wave.sgy': {
+             'endian': '>',
+             'data_sample_enc': 1, 'textual_header_enc': 'ASCII',
+             'sample_count': 16666, 'sample_size': 4,
+             'non_normalized_samples': []}
+             }
+CORRUPT_SEGY_FILES={
+        'corrupt_sin_wave.sgy': {
+             'endian': '>',
+             'data_sample_enc': 1, 'textual_header_enc': 'ASCII',
+             'sample_count': 16666, 'sample_size': 4,
+             'non_normalized_samples': []},
+}
 # The expected NumPy dtypes for the various sample encodings.
 DTYPES = {1: np.float32,
           2: np.int32,
