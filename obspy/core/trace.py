@@ -204,7 +204,7 @@ class Stats(AttribDict):
                 if not isinstance(value, int):
                     value = int(value)
             # set current key
-            super(Stats, self).__setitem__(key, value)
+            super().__setitem__(key, value)
             # set derived value: delta
             try:
                 delta = 1.0 / float(self.sampling_rate)
@@ -224,16 +224,16 @@ class Stats(AttribDict):
             warnings.warn(msg, UserWarning)
         # all other keys
         if isinstance(value, dict):
-            super(Stats, self).__setitem__(key, AttribDict(value))
+            super().__setitem__(key, AttribDict(value))
         else:
-            super(Stats, self).__setitem__(key, value)
+            super().__setitem__(key, value)
 
     __setattr__ = __setitem__
 
     def __getitem__(self, key, default=None):
         """
         """
-        return super(Stats, self).__getitem__(key, default)
+        return super().__getitem__(key, default)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
@@ -346,14 +346,16 @@ class NSLCStats(Stats):
     def __new__(cls, *args, **kwargs):
         """
         """
-        # we want to call the method of Stats' parent here, so two levels up
+        # we want to call the method of Stats' parent here, since that one
+        # would just end up calling this one here, so two levels up
         return super(Stats, cls).__new__(cls)
 
     def __init__(self, header={}):
         """
         """
-        # we want to call the method of Stats' parent here, so two levels up
-        super(Stats, self).__init__(header)
+        # no custom things to do for this subclass
+        # delegate to AttribDict
+        super().__init__(header)
 
     def __setitem__(self, key, value):
         """
@@ -366,7 +368,7 @@ class NSLCStats(Stats):
                 msg = 'Component must be set with single character'
                 raise ValueError(msg)
             value = self.channel[:-1] + value
-        # defer to Stats
+        # delegate to Stats
         super().__setitem__(key, value)
 
     def __getitem__(self, key, default=None):
@@ -489,12 +491,16 @@ class SourceIdentifierStats(Stats):
     def __new__(cls, *args, **kwargs):
         """
         """
-        # we want to call the method of Stats' parent here, so two levels up
+        # we want to call the method of Stats' parent here, since that one
+        # would just end up calling this one here, so two levels up
         return super(Stats, cls).__new__(cls)
 
     def __init__(self, header={}):
         """
         """
+        # custom things to do for this subclass
+        # if initialized with a full source identifier in one piece, split it
+        # apart
         if SOURCE_ID_KEY in header:
             if any(key in header for key in SOURCE_ID_KEYS):
                 msg = ('Initializing SourceIdentifierStats with a mix of a '
@@ -505,8 +511,8 @@ class SourceIdentifierStats(Stats):
             parts = self._split_source_identifier_to_parts(source_identifier)
             for key, value in zip(SOURCE_ID_KEYS, parts):
                 header[key] = value
-        # we want to call the method of Stats' parent here, so two levels up
-        super(Stats, self).__init__(header)
+        # delegate to AttribDict
+        super().__init__(header)
 
     def __setitem__(self, key, value):
         """
@@ -517,7 +523,7 @@ class SourceIdentifierStats(Stats):
             for key, value in zip(SOURCE_ID_KEYS, parts):
                 super().__setitem__(key, value)
             return
-        # otherwise defer to Stats
+        # otherwise delegate to Stats
         super().__setitem__(key, value)
 
     def __getitem__(self, key, default=None):
