@@ -191,7 +191,9 @@ class TestCore():
 
         # 3 - little endian, 32 bit, version 6, 3 channels
         st1 = read(testdata['2005-07-23-1452-04S.CER___030'])
+        st1.sort()
         st2 = read(testdata['2005-07-23-1452-04S.CER___030.mseed'])
+        st2.sort()
         assert len(st1) == len(st2)
         assert np.allclose(st1[0].data, st2[0].data)
         assert np.allclose(st1[1].data, st2[1].data)
