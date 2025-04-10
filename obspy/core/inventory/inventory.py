@@ -515,24 +515,25 @@ class Inventory(ComparingObject):
     def get_indices(self, seed_id):
         """
         Get indices for network, station, and channel based on seed_id.
-        
+
         The seed_id can be:
         - "N" (network code only)
         - "N.S" (network and station codes)
         - "N.S.L.C" (network, station, location, and channel codes)
-        
-        Returns a tuple of indices corresponding to the parts provided in seed_id.
-        
+
+        Returns a tuple of indices corresponding to the parts provided 
+        in seed_id.
+
         >>> # Get network index only
-        >>> get_indices(inventory, "IU")  # doctest: +SKIP
+        >>> get_indices("IU")  # doctest: +SKIP
         (2,)
         >>> # Get network and station indices
-        >>> get_indices(inventory, "IU.ANMO")  # doctest: +SKIP
+        >>> get_indices("IU.ANMO")  # doctest: +SKIP
         (2, 3)
         >>> # Get network, station, and channel indices with location code
-        >>> get_indices(inventory, "IU.ANMO.00.BHZ")  # doctest: +SKIP
+        >>> get_indices("IU.ANMO.00.BHZ")  # doctest: +SKIP
         (2, 3, 5)
-        
+
         :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
         :param inventory: ObsPy Inventory object
         :type seed_id: str
@@ -541,7 +542,7 @@ class Inventory(ComparingObject):
         :return: Tuple of indices corresponding to parts in seed_id
         """
         parts = seed_id.split('.')
-        
+
         # Handle network only
         if len(parts) == 1:
             network_code = parts[0]
@@ -549,7 +550,7 @@ class Inventory(ComparingObject):
                 if network.code == network_code:
                     return (net_idx,)
             return None
-        
+
         # Handle network and station
         if len(parts) == 2:
             network_code, station_code = parts
@@ -559,7 +560,7 @@ class Inventory(ComparingObject):
                         if station.code == station_code:
                             return (net_idx, sta_idx)
             return None
-        
+
         # Handle network, station, location, and channel
         if len(parts) == 4:
             network_code, station_code, location_code, channel_code = parts
@@ -567,14 +568,15 @@ class Inventory(ComparingObject):
                 if network.code == network_code:
                     for sta_idx, station in enumerate(network.stations):
                         if station.code == station_code:
-                            for chan_idx, channel in enumerate(station.channels):
+                            for chan_idx, channel in enumerate(
+                                station.channels):
                                 if (channel.location_code == location_code and 
                                     channel.code == channel_code):
                                     return (net_idx, sta_idx, chan_idx)
             return None
 
         return None
-    
+
     def get_orientation(self, seed_id, datetime=None):
         """
         Return orientation for a given channel.
