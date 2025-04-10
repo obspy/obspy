@@ -521,7 +521,7 @@ class Inventory(ComparingObject):
         - "N.S" (network and station codes)
         - "N.S.L.C" (network, station, location, and channel codes)
 
-        Returns a tuple of indices corresponding to the parts provided 
+        Returns a tuple of indices corresponding to the parts provided
         in seed_id.
 
         >>> # Get network index only
@@ -569,9 +569,9 @@ class Inventory(ComparingObject):
                     for sta_idx, station in enumerate(network.stations):
                         if station.code == station_code:
                             for chan_idx, channel in enumerate(
-                                station.channels):
-                                if (channel.location_code == location_code and 
-                                    channel.code == channel_code):
+                                    station.channels):
+                                if (channel.location_code == location_code and
+                                        channel.code == channel_code):
                                     return (net_idx, sta_idx, chan_idx)
             return None
 
