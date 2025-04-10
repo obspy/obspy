@@ -9,6 +9,8 @@ Changes:
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
      (see #3261)
+   * inventory: add get_indices helper function to retrieve network, station,
+     and channel index values via seed_id
    * read(): better support for reading from file-like objects in many plugins
      (see #3346)
    * allow to specify Trace and Stream filter frequencies as arguments
