@@ -69,4 +69,4 @@ Please see details on how to contribute to the project [here](CONTRIBUTING.md).
 
 ### Impact
 
-<img src='https://github.com/obspy/obspy/assets/1842780/9fb7c987-b1cd-4ce5-b079-c6eda6c0f8e6'>
+<img src='https://github.com/user-attachments/assets/bde02dde-8644-4bcf-8f66-481edf108293'>
