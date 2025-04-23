@@ -1,0 +1,47 @@
+import obspy
+import importlib
+from lxml import etree
+from obspy.io.stationxml.core import _tag2obj, _attr2obj, _tags2obj
+import obspy.io.sitexml.core 
+import obspy.io.sitexml.util
+from obspy.io.sitexml.core import (SERASite, SiteDescription, SiteCharacterizationParameters, EC8, LiteratureSource, SERASiteOwner)
+from obspy.io.sitexml.util import (TopographySchemaA, TopographySchemaB, EC8Class, _sitexml_check_enum)
+from obspy.io.sitexml.sitexml import (validate_stationxml, _read_sitexml, _read_literature_source, _read_reference,
+                                       _read_site_description, _read_file_resource, _read_value, _read_value_with_uncertainty, 
+                                       _read_site_characterization)
+
+NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
+#READABLE_VERSIONS = ("1.0", "1.1", "1.2")
+
+def _ns(tagname):
+        return "{%s}%s" % (NAMESPACE, tagname)
+
+#importlib.reload(obspy.io.sitexml.util)
+#importlib.reload(obspy.io.sitexml.core)
+#importlib.reload(obspy.io.sitexml.sitexml)
+"""
+site=SERASite("ARG")
+site.site_description=SiteDescription(23.44, 45.33)
+
+site.site_description.topologyA = "T1"
+
+site.site_description.ec8="A"
+site.site_description.ec8.file_resource="http://some/uri"
+site.site_description.ec8.literature_source="Some title"
+e=EC8("B")
+"""
+xml_file = "./test_site.xml"
+validate_stationxml(xml_file)
+xmldoc = etree.parse(xml_file)
+so_ele = xmldoc.find(_ns("siteOwner"))
+sd_ele = xmldoc.find(_ns("siteDescription"))
+sc_ele = xmldoc.find(_ns("siteCharacterizationParameters"))
+ana = sc_ele.find(_ns("Analysis"))
+
+sera_site = _read_sitexml(xml_file)
+so = sera_site.site_owner
+print(so)
+sd = sera_site.site_description
+print(sd)
+sc = sera_site.site_characterization_parameters
+print(sc)

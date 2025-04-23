@@ -1,0 +1,618 @@
+<?xml version="1.0"?>
+<!-- edited with XMLSpy v2020 rel. 2 (x64) (http://www.altova.com) by cornou (ISTERRE) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="https://quake.ethz.ch/quakeml/QuakeML2.0" 
+targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualified" 
+attributeFormDefault="unqualified" version="1.2">
+	<xs:annotation>
+		<xs:documentation>
+			This .xml file has been created to exchange information on site charactterization information. The content of the .kml file is based on QuakeML description and fulfills required information by the European Geotechnical Database (EGD) and by EU-SERA.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:element name="SERA_quakeml">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="schemaVersion" type="xs:decimal">
+					<xs:annotation>
+						<xs:documentation>The SiteXML schema version of this document.</xs:documentation>
+						<xs:documentation><example>1.2</example></xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<!--   ************** SITE OWNER *************************     -->
+				<xs:element name="siteOwner">
+					<xs:annotation>
+						<xs:documentation>siteOwner is not defined in QuakeML 2.0 draft</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="codeName" type="xs:string"/>
+							<xs:element name="fullName" type="xs:string"/>
+							<xs:element name="contact">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="person">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="firstname" type="xs:string"/>
+													<xs:element name="lastname" type="xs:string"/>
+													<xs:element name="mbox" type="xs:string"/>
+													<xs:element name="homepage" type="xs:anyURI"/>
+												</xs:sequence>
+												<xs:attribute name="personID" type="xs:string"/>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="affiliation">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="institution">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="identifier">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="resourceID" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="name" type="xs:string"/>
+																<xs:element name="mbox" type="xs:string"/>
+																<xs:element name="phone" type="xs:string"/>
+																<xs:element name="homepage" type="xs:anyURI"/>
+																<xs:element name="postalAddress">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="streetAddress" type="xs:string"/>
+																			<xs:element name="locality" type="xs:string"/>
+																			<xs:element name="postalCode" type="xs:string"/>
+																			<xs:element name="country">
+																				<xs:complexType>
+																					<xs:sequence>
+																						<xs:element name="code" type="xs:string"/>
+																						<xs:element name="country" type="xs:string"/>
+																					</xs:sequence>
+																				</xs:complexType>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="department" type="xs:string"/>
+													<xs:element name="function" type="xs:string"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="publicID" type="xs:string"/>
+					</xs:complexType>
+				</xs:element>
+				<!--   ************** SITE CONDITION INDICATORS **********     -->
+				<xs:element name="siteCharacterizationParameters">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Analysis">
+								<xs:complexType mixed="true">
+									<xs:sequence>
+										<!--   ************** RESONANCE FREQUENCY  **********     -->
+										<xs:element name="resonanceFrequency" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:double" minOccurs="0" maxOccurs="1"/>
+													<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="resonanceFrequencyQindex1" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:double"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="resonanceFrequencyMethod" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+										<xs:element name="resonanceFrequencyReference" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="literatureSource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="title" type="xs:string"/>
+																<xs:element name="firstAuthor" type="xs:string"/>
+																<xs:element name="secondaryAuthors" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+																<xs:element name="year" type="xs:int"/>
+																<xs:element name="booktitle" type="xs:string"/>
+																<xs:element name="language">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="code" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="DOI" type="xs:string"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="FileResource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="description" type="xs:string"/>
+																<xs:element name="url" type="xs:anyURI" minOccurs="0" maxOccurs="unbounded"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<!--   ************** VS30   **********     -->
+										<xs:element name="velocityS30" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:double" minOccurs="0" maxOccurs="1"/>
+													<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="velocityS30Qindex1" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:double"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="velocityS30Method" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+										<xs:element name="velocityS30MethodCombIndex" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="velocityS30ManualIndex" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="velocityS30Reference" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="literatureSource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="title" type="xs:string"/>
+																<xs:element name="firstAuthor" type="xs:string"/>
+																<xs:element name="secondaryAuthors" type="xs:string"/>
+																<xs:element name="year" type="xs:string"/>
+																<xs:element name="booktitle" type="xs:string"/>
+																<xs:element name="language">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="code" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="DOI" type="xs:string"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="FileResource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="description" type="xs:string"/>
+																<xs:element name="url" type="xs:anyURI" minOccurs="0" maxOccurs="unbounded"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<!--  **************** OTHER PARAMETERS REQUESTED BY EGD ******* -->
+										<xs:element name="velocityProfileCount" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:int"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="sptLogsCount" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:int"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="cptLogsCount" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:int"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="boreholeLogsCount" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:int"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="publicID" type="xs:string"/>
+								</xs:complexType>
+							</xs:element>
+							<!-- **************** VELOCITY PROFILE *********************** -->
+							<xs:element name="VelocityProfile" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:choice minOccurs="0" maxOccurs="unbounded">
+											<xs:element name="layerCount" minOccurs="0" maxOccurs="1">
+												<xs:complexType>
+													<xs:sequence>
+														<xs:element name="value" type="xs:int"/>
+													</xs:sequence>
+												</xs:complexType>
+											</xs:element>
+											<xs:element name="velocityProfileData">
+												<xs:complexType>
+													<xs:sequence>
+														<xs:choice minOccurs="0" maxOccurs="unbounded">
+															<xs:element name="density" minOccurs="0" maxOccurs="1">
+																<xs:complexType>
+																	<xs:sequence>
+																		<xs:element name="value" type="xs:double" minOccurs="1" maxOccurs="1"/>
+																		<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																	</xs:sequence>
+																</xs:complexType>
+															</xs:element>
+															<xs:element name="velocityP" minOccurs="0" maxOccurs="1">
+																<xs:complexType>
+																	<xs:sequence>
+																		<xs:element name="value" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																		<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																	</xs:sequence>
+																</xs:complexType>
+															</xs:element>
+															<xs:element name="velocityS" minOccurs="0" maxOccurs="1">
+																<xs:complexType>
+																	<xs:sequence>
+																		<xs:element name="value" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																		<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																	</xs:sequence>
+																</xs:complexType>
+															</xs:element>
+															<xs:element name="layerThickness" minOccurs="0" maxOccurs="1">
+																<xs:complexType>
+																	<xs:sequence>
+																		<xs:element name="layerTopDepth" minOccurs="0" maxOccurs="1">
+																			<xs:complexType>
+																				<xs:sequence>
+																					<xs:element name="value" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																					<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																				</xs:sequence>
+																			</xs:complexType>
+																		</xs:element>
+																		<xs:element name="layerBottomDepth" minOccurs="0" maxOccurs="1">
+																			<xs:complexType>
+																				<xs:sequence>
+																					<xs:element name="value" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																					<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+																				</xs:sequence>
+																			</xs:complexType>
+																		</xs:element>
+																	</xs:sequence>
+																</xs:complexType>
+															</xs:element>
+														</xs:choice>
+													</xs:sequence>
+												</xs:complexType>
+											</xs:element>
+										</xs:choice>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="velocityProfileQindex1" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="value" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="velocityProfileReference" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="literatureSource">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="title" type="xs:string"/>
+													<xs:element name="firstAuthor" type="xs:string"/>
+													<xs:element name="secondaryAuthors" type="xs:string"/>
+													<xs:element name="year" type="xs:string"/>
+													<xs:element name="booktitle" type="xs:string"/>
+													<xs:element name="language">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="code" type="xs:string"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="DOI" type="xs:string"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="FileResource">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="description" type="xs:string"/>
+													<xs:element name="url" type="xs:anyURI" minOccurs="0" maxOccurs="unbounded"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="publicID" type="xs:string"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="siteDescription">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="latitude" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="value" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="longitude" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="value" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="altitude" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="value" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="minDistanceFromStation" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="value" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="maxDistanceFromStation" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="value" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="siteMorphology">
+								<xs:complexType>
+									<xs:sequence>
+										<!-- ***************** EC8 CLASS **************************    -->
+										<xs:element name="siteClassEC8" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="siteClassEC8Qindex1" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:double"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="siteClassEC8Reference" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="literatureSource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="title" type="xs:string"/>
+																<xs:element name="firstAuthor" type="xs:string"/>
+																<xs:element name="secondaryAuthors" type="xs:string"/>
+																<xs:element name="year" type="xs:string"/>
+																<xs:element name="booktitle" type="xs:string"/>
+																<xs:element name="language">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="code" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="DOI" type="xs:string"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="FileResource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="description" type="xs:string"/>
+																<xs:element name="url" type="xs:anyURI"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<!-- ***************** SEISMOLOGICAL BEDROCK DEPTH **************************    -->
+										<xs:element name="bedrockDepth" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:int" minOccurs="0" maxOccurs="1"/>
+													<xs:element name="uncertainty" type="xs:int" minOccurs="0" maxOccurs="1"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="bedrockDepthQindex1" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:double"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="bedrockDepthReference" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="literatureSource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="title" type="xs:string"/>
+																<xs:element name="firstAuthor" type="xs:string"/>
+																<xs:element name="secondaryAuthors" type="xs:string"/>
+																<xs:element name="year" type="xs:string"/>
+																<xs:element name="booktitle" type="xs:string"/>
+																<xs:element name="language">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="code" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="DOI" type="xs:string"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="FileResource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="description" type="xs:string"/>
+																<xs:element name="url" type="xs:anyURI"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<!-- ***************** ENGINEERING  BEDROCK DEPTH **************************    -->
+										<xs:element name="h800" minOccurs="0" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>This is not included in the 2.0 draft</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:int" minOccurs="0" maxOccurs="1"/>
+													<xs:element name="uncertainty" type="xs:int" minOccurs="0" maxOccurs="1"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="h800Qindex1" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:double"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="h800Reference" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="literatureSource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="title" type="xs:string"/>
+																<xs:element name="firstAuthor" type="xs:string"/>
+																<xs:element name="secondaryAuthors" type="xs:string"/>
+																<xs:element name="year" type="xs:string"/>
+																<xs:element name="booktitle" type="xs:string"/>
+																<xs:element name="language">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="code" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="DOI" type="xs:string"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="FileResource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="description" type="xs:string"/>
+																<xs:element name="url" type="xs:anyURI" minOccurs="0" maxOccurs="unbounded"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<!-- ***************** GEOLOGY **************************    -->
+										<xs:element name="geologicalUnit" minOccurs="0" maxOccurs="1">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="255"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="geologicalUnitQindex1" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="value" type="xs:double"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="geologicalMapScale" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="geologicalUnitOGE" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="geologicalUnitReference" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="literatureSource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="title" type="xs:string"/>
+																<xs:element name="firstAuthor" type="xs:string"/>
+																<xs:element name="secondaryAuthors" type="xs:string"/>
+																<xs:element name="year" type="xs:string"/>
+																<xs:element name="booktitle" type="xs:string"/>
+																<xs:element name="language">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="code" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="DOI" type="xs:string"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="FileResource">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="description" type="xs:string"/>
+																<xs:element name="url" type="xs:anyURI" minOccurs="0" maxOccurs="unbounded"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="morphology" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>This in not included in 2.0 draft</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="siteTopology">
+								<xs:annotation>
+									<xs:documentation>or respective code, eg B2</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="schemeA" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>This is not included in 2.0</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="schemeB" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="OverallQindex" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="value" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
