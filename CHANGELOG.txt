@@ -1,3 +1,10 @@
+maintenance_1.4.x
+=================
+
+Changes:
+ - General:
+   * add support for numpy v2.0 (see #3461)
+
 1.4.1 (doi: 10.5281/zenodo.11093256)
 ====================================
 
