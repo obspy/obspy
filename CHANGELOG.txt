@@ -1,5 +1,5 @@
-maintenance_1.4.x
-=================
+1.4.2rc1
+========
 
 Changes:
  - General:
