@@ -98,7 +98,7 @@ jobs:
 
   publish_test:
     name: publish tag to testpypi
-    if: github.event_name == 'push' && github.ref_type == 'tag'
+    if: github.event_name == 'push'
     needs: merge_artifacts
     runs-on: ubuntu-latest
     steps:
@@ -109,6 +109,7 @@ jobs:
 
       - uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
+          verbose: true
           user: __token__
           password: ${{ secrets.TESTPYPI }}
           repository_url: https://test.pypi.org/legacy/
