@@ -116,7 +116,7 @@ jobs:
 
   publish:
     name: publish release
-    if: github.event_name == 'release'
+    #if: github.event_name == 'push' && github.ref_type == 'tag'
     needs: merge_artifacts
     runs-on: ubuntu-latest
     steps:
