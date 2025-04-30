@@ -349,8 +349,7 @@ def _write_slist(stream, filename, custom_fmt=None,
             else:
                 data = trace.data
             data = data.reshape((-1, 6))
-            np.savetxt(fh, data, delimiter=b'\t',
-                       fmt=fmt.encode('ascii', 'strict'))
+            np.savetxt(fh, data, delimiter='\t', fmt=fmt)
             if rest:
                 fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
                          '\n').encode('ascii', 'strict'))

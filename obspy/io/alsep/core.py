@@ -26,6 +26,7 @@ def _is_pse(filename):
     :return: ``True`` if an ALSEP PSE tape file.
     """
     header = np.fromfile(filename, dtype='u1', count=16)
+    header = np.require(header, dtype=np.int64)
     # File has less than 16 characters
     if len(header) != 16:
         return False
@@ -48,6 +49,7 @@ def _is_wtn(filename):
     :return: ``True`` if an ALSEP WTN tape file.
     """
     header = np.fromfile(filename, dtype='u1', count=16)
+    header = np.require(header, dtype=np.int64)
     # File has less than 16 characters
     if len(header) != 16:
         return False
@@ -76,6 +78,7 @@ def _is_wth(filename):
     :return: ``True`` if an ALSEP WTH tape file.
     """
     header = np.fromfile(filename, dtype='u1', count=16)
+    header = np.require(header, dtype=np.int64)
     # File has less than 16 characters
     if len(header) != 16:
         return False

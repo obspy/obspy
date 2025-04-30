@@ -26,9 +26,9 @@ class TestArray():
         self.ts1 = np.empty((1000, 7))
         self.ts2 = np.empty((1000, 7))
         self.ts3 = np.empty((1000, 7))
-        self.ts1.fill(np.NaN)
-        self.ts2.fill(np.NaN)
-        self.ts3.fill(np.NaN)
+        self.ts1.fill(np.nan)
+        self.ts2.fill(np.nan)
+        self.ts3.fill(np.nan)
         self.sigmau = 0.0001
         self.Vp = 1.93
         self.Vs = 0.326

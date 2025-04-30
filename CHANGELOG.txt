@@ -1,3 +1,17 @@
+1.4.2rc2
+========
+
+Changes:
+ - General:
+   * add support for numpy v2.0 (see #3461)
+ - obspy.core:
+   * util: removed old and outdated 'CatchWarnings' context manager in favor of
+     the better 'CatchAndAssertWarnings' context manager (see #3452)
+ - obspy.clients.fdsn
+   * make sure to use a copy of `DEFAULT_SERVICES` when initializing a client
+     instance while skipping service discovery, to avoid accidental changes to
+     `DEFAULT_SERVICES` (see #3493)
+
 1.4.1 (doi: 10.5281/zenodo.11093256)
 ====================================
 

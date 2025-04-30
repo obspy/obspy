@@ -995,6 +995,12 @@ class UTCDateTime(object):
             msg = ("unsupported operand type(s) for +: 'UTCDateTime' and "
                    "'UTCDateTime'")
             raise TypeError(msg)
+        # need to make sure we don't get e.g. np.float32 singl precision input
+        # or worse, because then numpy is in charge of the calculations and
+        # numpy 2.0 is not automatically upcasting to avoid precision loss
+        # which means we can't keep full precision when converting input
+        # seconds to nanoseconds
+        value = float(value)
         return UTCDateTime(ns=self._ns + int(round(value * 1e9)))
 
     def __sub__(self, value):

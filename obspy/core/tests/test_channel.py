@@ -14,7 +14,7 @@ from matplotlib import rcParams
 
 from obspy import read_inventory
 from obspy.core.inventory import Channel, Equipment
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 
 
 @pytest.mark.usefixtures('ignore_numpy_errors')
@@ -27,7 +27,7 @@ class TestChannel:
         Tests the response plot.
         """
         cha = read_inventory()[0][0][0]
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             rcParams['savefig.dpi'] = 72
             cha.plot(0.005, outfile=image_path)
 

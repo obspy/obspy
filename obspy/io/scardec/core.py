@@ -450,5 +450,4 @@ def _internal_write_single_scardec(buf, event, **kwargs):  # @UnusedVariable
     times = np.arange(0, nsamples) * stf['dt']['value'] + t_offset
     samples = stf['moment_rate']['value'] * scalmom
 
-    np.savetxt(buf, np.asarray([times, samples]).T,
-               fmt=' %16.9E %16.9E'.encode('ascii', 'strict'))
+    np.savetxt(buf, np.asarray([times, samples]).T, fmt=' %16.9E %16.9E')

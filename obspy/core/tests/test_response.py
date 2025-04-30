@@ -21,10 +21,9 @@ from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
     _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage, Response,
     ResponseListResponseStage, ResponseListElement, InstrumentSensitivity)
-from obspy.core.util import CatchAndAssertWarnings
+from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
-from obspy.core.util.testing import WarningsCapture
 from obspy.signal.invsim import evalresp
 from obspy.io.xseed import Parser
 
@@ -114,7 +113,7 @@ class TestResponse:
         Tests the response plot.
         """
         resp = read_inventory()[0][0][0].response
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                       outfile=image_path)
 
@@ -123,7 +122,7 @@ class TestResponse:
         Tests the response plot in degrees.
         """
         resp = read_inventory()[0][0][0].response
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                       plot_degrees=True, outfile=image_path)
 
@@ -175,7 +174,7 @@ class TestResponse:
         t_samp = 1.0 / sampling_rate
         nfft = 100
 
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             cpx_response, freq = inv[0][0][0].response.get_evalresp_response(
                 t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
                 end_stage=None)

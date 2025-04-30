@@ -28,7 +28,8 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, _generic_reader)
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
-from obspy.core.util.misc import get_window_times, buffered_load_entry_point
+from obspy.core.util.misc import (
+    get_window_times, buffered_load_entry_point, ptp)
 from obspy.core.util.obspy_types import ObsPyException
 
 
@@ -3330,13 +3331,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 raise ValueError(msg)
             if 'starttime' not in header and time_tol > 0:
                 times = [tr.stats.starttime for tr in traces]
-                if np.ptp(times) <= time_tol:
+                if ptp(times) <= time_tol:
                     # use high median as starttime
                     header['starttime'] = sorted(times)[len(times) // 2]
             header['stack'] = AttribDict(group=groupid, count=len(traces),
                                          type=stack_type)
             npts_all = [len(tr) for tr in traces]
-            npts_dif = np.ptp(npts_all)
+            npts_dif = ptp(npts_all)
             npts = min(npts_all)
             if npts_dif > npts_tol:
                 msg = ('Difference of number of points of the traces is higher'
@@ -3384,7 +3385,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             sampling_rate = float(items[6])
             npts = int(items[8])
             tr = Trace()
-            tr.data = np.ones(npts, dtype=np.float_)
+            tr.data = np.ones(npts, dtype=np.float64)
             tr.stats.station = sta
             tr.stats.network = net
             tr.stats.location = loc

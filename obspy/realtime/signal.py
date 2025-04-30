@@ -29,7 +29,7 @@ from obspy.core.trace import Trace, UTCDateTime
 from obspy.realtime.rtmemory import RtMemory
 
 
-_PI = math.pi
+_PI = np.float64(math.pi)
 _TWO_PI = 2.0 * math.pi
 _MIN_FLOAT_VAL = 1.0e-20
 
@@ -120,10 +120,10 @@ def integrate(trace, rtmemory_list=None):
         rtmemory.initialize(sample.dtype, memory_size_input,
                             memory_size_output, 0, 0)
 
-    sum_ = rtmemory.output[0]
+    sum_ = np.float64(rtmemory.output[0])
 
     for i in range(np.size(sample)):
-        sum_ += sample[i] * delta_time
+        sum_ += np.float64(sample[i]) * delta_time
         sample[i] = sum_
 
     rtmemory.output[0] = sum_

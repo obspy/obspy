@@ -20,7 +20,7 @@ from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
 from obspy.core.util import CARTOPY_VERSION
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 
 
 @pytest.mark.usefixtures('ignore_numpy_errors')
@@ -118,7 +118,7 @@ class TestNetwork:
         """
         net = read_inventory()[0]
         t = UTCDateTime(2008, 7, 1)
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             net.plot_response(0.002, output="DISP", channel="B*E",
                               time=t, outfile=image_path)
 

@@ -11,7 +11,7 @@ import pytest
 from obspy import read_inventory, Trace
 from obspy.core.inventory.util import Equipment
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.io.sac import attach_paz, attach_resp
 
 
@@ -235,7 +235,7 @@ class TestSACPZ:
 
         sio = io.StringIO()
         # ignore a warning because there is an additional unity PAZ stage
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             inv.write(sio, format='SACPZ')
         sio.seek(0)
         lines = sio.readlines()
