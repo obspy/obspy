@@ -32,7 +32,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         build: [cp38, cp39, cp310, cp311, cp312]
         exclude-flag:
-          - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+            - true
+          # - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
         exclude:
           - build: cp38
             exclude-flag: true
@@ -41,6 +42,12 @@ jobs:
           - build: cp310
             exclude-flag: true
           - build: cp311
+            exclude-flag: true
+          - build: cp312
+            os: windows-latest
+            exclude-flag: true
+          - build: cp312
+            os: macos-latest
             exclude-flag: true
     steps:
       - uses: actions/checkout@v4
@@ -98,7 +105,7 @@ jobs:
 
   publish_test:
     name: publish tag to testpypi
-    if: github.event_name == 'push'
+    # if: github.event_name == 'push' && github.ref_type == 'tag'
     needs: merge_artifacts
     runs-on: ubuntu-latest
     steps:
@@ -116,7 +123,7 @@ jobs:
 
   publish:
     name: publish release
-    #if: github.event_name == 'push' && github.ref_type == 'tag'
+    if: github.event_name == 'release'
     needs: merge_artifacts
     runs-on: ubuntu-latest
     steps:
