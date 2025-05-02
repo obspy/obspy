@@ -19,8 +19,6 @@ Changes:
    * window 'slepian' was removed in Trace/Stream.taper() as it was removed
      from scipy with version 1.6, add new window 'dpss' that scipy promotes as
      replacement but might need other parameters passed in (see #3331)
-   * util: removed old and outdated 'CatchWarnings' context manager in favor of
-     the better 'CatchAndAssertWarnings' context manager (see #3452)
  - obspy.clients.filesystem:
    * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
    * tsindex: leap second handling was deactivated as it is not needed with
@@ -29,9 +27,6 @@ Changes:
    * Natural Resources Canada (NRCAN) added to list of known clients
    * A FDSNNoServiceException is now raised instead of a ValueError when
      querying a webservice not present in Client.services  (see #3483)
-   * make sure to use a copy of `DEFAULT_SERVICES` when initializing a client
-     instance while skipping service discovery, to avoid accidental changes to
-     `DEFAULT_SERVICES` (see #3493)
    * make it possible to opt out of server side gzip compression (see #3469)
    * fix a regression introduced by #3306 which lead to some network errors not
      getting raised as an FDSNException but some low-level exceptions like
@@ -75,6 +70,20 @@ Changes:
    * add support for Chebyshev I/II, elliptic and Bessel filters alongside
      the default Butterworth filters (see #3294)
    * fix potential out of bounds array access in AR picker (see #1801)
+
+1.4.2 (doi: 10.5281/zenodo.15309143)
+====================================
+
+Changes:
+ - General:
+   * add support for numpy v2.0 (see #3461)
+ - obspy.core:
+   * util: removed old and outdated 'CatchWarnings' context manager in favor of
+     the better 'CatchAndAssertWarnings' context manager (see #3452)
+ - obspy.clients.fdsn
+   * make sure to use a copy of `DEFAULT_SERVICES` when initializing a client
+     instance while skipping service discovery, to avoid accidental changes to
+     `DEFAULT_SERVICES` (see #3493)
 
 1.4.1 (doi: 10.5281/zenodo.11093256)
 ====================================
