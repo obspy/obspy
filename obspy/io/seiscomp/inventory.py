@@ -22,6 +22,7 @@ import numpy as np
 from scipy.signal import tf2zpk
 
 import obspy
+from obspy.core.util import AttribDict
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
@@ -37,7 +38,8 @@ from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
+SCHEMA_VERSION = "0.11"
+READABLE_VERSIONS = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
 SCHEMA_NAMESPACE_BASE = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
 
 
@@ -92,7 +94,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
     root = etree.parse(path_or_file_object).getroot()
 
     # Code can be used for version 0.6 to 0.13 (Seiscomp 6.x)
-    for version in SCHEMA_VERSION:
+    for version in READABLE_VERSIONS:
         namespace = _get_schema_namespace(version)
         if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
             break
@@ -267,10 +269,23 @@ def _read_station(instrumentation_register, sta_element, _ns):
                                datum=True)
     elevation = _read_floattype(sta_element, _ns("elevation"), Distance,
                                 unit=True)
+
+    public_id = sta_element.get("publicID")
+    extra_tag = AttribDict()
+    if public_id:
+        extra_tag.publicID = AttribDict({
+                'value': public_id,
+                'namespace': sta_element.nsmap[None],
+                'type': 'attribute',
+            }
+        )
+
     station = obspy.core.inventory.Station(code=sta_element.get("code"),
                                            latitude=latitude,
                                            longitude=longitude,
                                            elevation=elevation)
+    if extra_tag:
+        station.extra = extra_tag
     station.site = _read_site(sta_element, _ns)
 
     # There is no relevant info in the base node
