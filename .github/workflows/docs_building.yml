@@ -31,6 +31,11 @@ jobs:
           python-version: '3.12'
           activate-environment: obspydoc
           environment-file: .github/docs_conda_env.yml
+      - name: print package info
+        shell: bash -l {0}
+        run: |
+          conda info -a
+          conda list
       - name: install obspy
         shell: bash -l {0}
         run: |
