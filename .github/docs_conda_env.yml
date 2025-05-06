@@ -17,9 +17,8 @@ dependencies:
   # docs
   - cartopy>=0.20
   - pip
-  - pip:
-    - pybtex
-    - m2r2 >= 0.3.2  # latest version which is not yet included in conda-forge
+  - pybtex
+  - m2r2 >= 0.3.2
   - sphinx>=4.2.0
   - sphinx_rtd_theme
   # deps used in tutorial but not working anymore
