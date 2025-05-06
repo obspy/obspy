@@ -103,6 +103,7 @@ class PlotDirective(Directive):
     optional_arguments = 2
     final_argument_whitespace = False
     option_spec = {
+        'target': directives.unchanged,
         'alt': directives.unchanged,
         'height': directives.length_or_unitless,
         'width': directives.length_or_percentage_or_unitless,
@@ -757,6 +758,13 @@ def run(arguments, content, options, state_machine, state, lineno):
             srcset = None
             template = TEMPLATE
 
+        #  hide source link and additional formats if image is linked
+        html_show_formats = config.plot_html_show_formats and len(images)
+        if 'target' in options:
+            src_name = None
+            html_show_formats = False
+            opts.append(f':target: {options["target"]}')
+
         result = jinja2.Template(config.plot_template or template).render(
             default_fmt=default_fmt,
             build_dir=build_dir_link,
@@ -766,7 +774,7 @@ def run(arguments, content, options, state_machine, state, lineno):
             srcset=srcset,
             images=images,
             source_code=source_code,
-            html_show_formats=config.plot_html_show_formats and len(images),
+            html_show_formats=html_show_formats,
             caption=caption)
         total_lines.extend(result.split("\n"))
         total_lines.extend("\n")
