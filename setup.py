@@ -44,7 +44,7 @@ from setuptools import Extension, find_packages, setup
 # The minimum python version which can be used to run ObsPy
 # XXX when dropping Python 3.9, get rid of socket.timeout and just use
 # TimeoutError, e.g. in fdsn/client.py
-MIN_PYTHON_VERSION = (3, 8)
+MIN_PYTHON_VERSION = (3, 11)
 
 # Fail fast if the user is on an unsupported version of python.
 if sys.version_info < MIN_PYTHON_VERSION:
@@ -89,9 +89,9 @@ EXTERNAL_LIBMSEED = False
 # clients.filesystem.db. We suppress warnings in that module and also see
 # pytest.ini for some rules to ignore related warnings
 INSTALL_REQUIRES = [
-    'numpy>=1.20',
-    'scipy>=1.7',
-    'matplotlib>=3.3',
+    'numpy>=1.25',
+    'scipy>=1.10',
+    'matplotlib>=3.7',
     'lxml',
     'setuptools',
     'sqlalchemy>=1.4',
@@ -813,11 +813,9 @@ def setupPackage():
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.8',
-            'Programming Language :: Python :: 3.9',
-            'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
             'Programming Language :: Python :: 3.12',
+            'Programming Language :: Python :: 3.13',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
