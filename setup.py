@@ -91,7 +91,7 @@ EXTERNAL_LIBMSEED = False
 INSTALL_REQUIRES = [
     'numpy>=1.25',
     'scipy>=1.10',
-    'matplotlib>=3.6',
+    'matplotlib>=3.7',
     'lxml',
     'setuptools',
     'sqlalchemy>=1.4',
