@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: setup conda
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -31,20 +32,30 @@ jobs:
           python-version: '3.9'
           activate-environment: obspydoc
           environment-file: .github/docs_conda_env.yml
+
       - name: install obspy
         shell: bash -l {0}
         run: |
           python -m pip install .
+
+      - name: print package info
+        shell: bash -l {0}
+        run: |
+          conda info -a
+          conda list
+
       - name: build doc
         shell: bash -l {0}
         run: |
           cd misc/docs
           make html
+
       - name: compress with tar
         shell: bash -l {0}
         run: |
           cd misc/docs/build/html/
           tar cfJ obspydoc.tar.xz *
+
       - uses: actions/upload-artifact@v4
         with:
           name: obspydoc
