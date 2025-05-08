@@ -10,7 +10,9 @@ from obspy.io.sitexml.sitexml import (validate_stationxml, _read_sitexml, _read_
                                        _read_site_characterization)
 
 xml_file = "./test_site.xml"
-validate_stationxml(xml_file)
+xml_file = "./SiteOGPC_SERA_v1.2.xml"
+
+#validate_stationxml(xml_file)
 xmldoc = etree.parse(xml_file)
 
 sera_site = _read_sitexml(xml_file)

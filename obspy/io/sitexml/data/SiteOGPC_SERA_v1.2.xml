@@ -6,6 +6,7 @@ for permanent seismological station. The content of the .kml file is based on Qu
 information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 <SERA_quakeml xmlns="http://www.orfeus-eu.org/xml/site/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     schemaVersion="1.2" xsi:schemaLocation="http://www.orfeus-eu.org/xml/site/1 http://www.orfeus-eu.org/xml/site/1/QuakeML-SERA-1.2.xsd">
+	<schemaVersion>1.2</schemaVersion>
 	<siteOwner publicID="quakeml:isterre.fr/siteOwner/001">
 		<codeName>ISTERRE</codeName>
 		<fullName>Institut des Sciences de la Terre</fullName>

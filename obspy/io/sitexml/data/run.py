@@ -30,8 +30,9 @@ site.site_description.ec8.file_resource="http://some/uri"
 site.site_description.ec8.literature_source="Some title"
 e=EC8("B")
 """
-xml_file = "./test_site.xml"
-validate_stationxml(xml_file)
+#xml_file = "./test_site.xml"
+xml_file = "./SiteOGPC_SERA_v1.2.xml"
+#validate_stationxml(xml_file)
 xmldoc = etree.parse(xml_file)
 so_ele = xmldoc.find(_ns("siteOwner"))
 sd_ele = xmldoc.find(_ns("siteDescription"))
@@ -45,3 +46,6 @@ sd = sera_site.site_description
 print(sd)
 sc = sera_site.site_characterization_parameters
 print(sc)
+sc.velocity_profile
+sc.velocity_profile.quality_index
+sc.velocity_profile.velocity_profile_data

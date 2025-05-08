@@ -21,7 +21,7 @@ from obspy.io.stationxml.core import _tag2obj, _attr2obj, _tags2obj
 from obspy.core.inventory.util import ExternalReference
 from obspy.io.sitexml.core import (SERASite, SiteDescription, SiteCharacterizationParameters, SERASiteOwner, 
                                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, VelocityS30, 
-                                   VelocityProfile, VelocityProfileData, VelocityProfileLayer, 
+                                   VelocityProfile, VelocityProfileData, VelocityProfileLayer, ValueWithUncertainty,
                                    LiteratureSource)
 
 # Define some constants for writing SiteXML files.
@@ -331,27 +331,32 @@ def _read_site_characterization(site_char_element):
     - velocityProfileReference
     """
     
+    # Create an empty site_characterization object
+    #
+    publicID = _attr2obj(site_char_element, "publicID", str)
+    site_char_obj = SiteCharacterizationParameters(publicID = publicID)
+    
+    ### Read Analysis element. Store values in site_char_obj.
+    #
     analysis_element = site_char_element.find(_ns("Analysis"))
-    velocity_profile_element = site_char_element.find(_ns("VelocityProfile"))
+    if analysis_element is not None:
+        _read_analysis(analysis_element, site_char_obj)
+    
+    _read_velocity_profile(site_char_element, site_char_obj)
 
+    """
     # If both analysis and velocityProfile elements are missing 
     # return with an empty site_characterization object
     if analysis_element is None and velocity_profile_element is None:
         return None
-    else:
-        publicID = _attr2obj(site_char_element, "publicID", str)
-        site_char_obj = SiteCharacterizationParameters(publicID = publicID)
-        
-    ### Read Analysis element
-    #
-    if analysis_element is not None:
-        _read_analysis(analysis_element, site_char_obj)
     
-    ### Read Velocity Profile
+    ### Read Velocity Profile. Store values in site_char_obj.
     #
     if velocity_profile_element is not None:
         _read_velocity_profile(site_char_element, site_char_obj)
-
+    """
+    # This could be empty if no Analysis or VP data is present in SiteXML
+    # Maybe return None in this case
     return site_char_obj
 
 def _read_analysis(analysis_element, site_char_obj):
@@ -421,20 +426,83 @@ def _read_velocity_profile(site_char_element, site_char_obj):
     :param site_characterization_obj: The SiteCharacterizationParameters object to store the values read from the <VelocityProfile> element. 
                                       It should be pre-initialized by the calling function.
     """
-    if site_char_obj.velocity_profile_count is not None \
-        and site_char_obj.velocity_profile_count > 0:
-        vp_qindex = _read_value(site_char_element, "velocityProfileQindex1", float)
-        [vp_literature_source, vp_file_resource] = \
+
+    vp_element_list=site_char_element.findall(_ns("VelocityProfile"))
+    vp_qindex = _read_value(site_char_element, "velocityProfileQindex1", float)
+    [vp_literature_source, vp_file_resource] = \
             _read_reference(site_char_element, "velocityProfileReference")
-        
-        site_char_obj.velocity_profile = \
+
+    # At least one VelocityProfile or a velocityProfileReference 
+    # should be present in SiteXML in order to create the VelocityProfile object
+    if len(vp_element_list) == 0 \
+            and vp_literature_source is None \
+            and vp_file_resource is None:
+        return None
+
+    site_char_obj.velocity_profile = \
             VelocityProfile(velocity_profile_data = [],    # We will fill this later
                             quality_index = vp_qindex,
                             literature_source = vp_literature_source,
                             file_resource = vp_file_resource)
 
-        # read one or more methods 
+    if site_char_obj.velocity_profile_count is None \
+        or site_char_obj.velocity_profile_count != len(vp_element_list):
+            warnings.warn("Number of Velocity Profiles in SiteXML " \
+                    "doesn't much the <velocityProfileCount> value", UserWarning)
+        
+    for vp_element in vp_element_list:
+        layer_count = _read_value(vp_element, "layerCount", int)
+        vp_data_element = vp_element.find(_ns("velocityProfileData"))
+        if vp_data_element is not None:
+            vp_data = VelocityProfileData(layer_count = layer_count,
+                                          velocity_profile_layer = [])
+        _read_velocity_profile_data(vp_data_element, vp_data, vp_element_list.index(vp_element))
+        site_char_obj.velocity_profile.velocity_profile_data.append(vp_data)
+    
     return None
+
+def _read_velocity_profile_data(vp_data_element, vp_data, vp_no):
+
+    layer_count = vp_data.layer_count
+    density_list = vp_data_element.findall(_ns("density"))
+    velocityP_list = vp_data_element.findall(_ns("velocityP"))
+    velocityS_list = vp_data_element.findall(_ns("velocityS"))
+    layerThickness_list = vp_data_element.findall(_ns("layerThickness"))
+    if not all([x == layer_count for x in (len(density_list), len(velocityP_list), 
+                                           len(velocityS_list), len(layerThickness_list))]):
+         warnings.warn("layerCount value of Velocity Profile '%s' doesn't much " \
+                    "the number of child elements" % vp_no, UserWarning)
+         return
+    
+    print(layer_count, ", ", layerThickness_list)
+
+    for layer in range(0, layer_count):
+        vp_data.velocity_profile_layer.append(VelocityProfileLayer())
+
+        density_value = _tag2obj(density_list[layer], _ns("value"), float)
+        density_uncertainty = _tag2obj(density_list[layer], _ns("uncertainty"), float)
+        vp_data.velocity_profile_layer[layer].density = ValueWithUncertainty(density_value, density_uncertainty)
+
+        velocityP_value = _tag2obj(velocityP_list[layer], _ns("value"), float)
+        velocityP_uncertainty = _tag2obj(velocityP_list[layer], _ns("uncertainty"), float)
+        vp_data.velocity_profile_layer[layer].velocityP = ValueWithUncertainty(velocityP_value, velocityP_uncertainty)
+
+        velocityS_value = _tag2obj(velocityS_list[layer], _ns("value"), float)
+        velocityS_uncertainty = _tag2obj(velocityS_list[layer], _ns("uncertainty"), float)
+        vp_data.velocity_profile_layer[layer].velocityS = ValueWithUncertainty(velocityS_value, velocityS_uncertainty)
+
+        [layer_top_depth_value, layer_top_depth_uncer] = \
+            _read_value_with_uncertainty(layerThickness_list[layer], 
+                                         _ns("layerTopDepth"), float)
+        print(layer_top_depth_value, layer_top_depth_uncer)
+        vp_data.velocity_profile_layer[layer].layer_top_depth = \
+            ValueWithUncertainty(layer_top_depth_value, layer_top_depth_uncer)
+
+        [layer_bottom_depth_value, layer_bottom_depth_value] = \
+            _read_value_with_uncertainty(layerThickness_list[layer],
+                                         _ns("layerBottomDepth"), float)
+        vp_data.velocity_profile_layer[layer].layer_bottom_depth = \
+            ValueWithUncertainty(layer_bottom_depth_value, layer_bottom_depth_value)
 
 def _read_reference(parent, tag):
     reference_element = parent.find(_ns(tag))
@@ -508,6 +576,7 @@ def _read_value_with_uncertainty(parent, tag, type):
     """
     element = parent.find(_ns(tag))
     if element is None:
+        print(parent)
         return None, None
 
     value = _tag2obj(element, _ns("value"), type)

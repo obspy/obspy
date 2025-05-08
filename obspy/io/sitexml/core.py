@@ -542,13 +542,15 @@ class VelocityS30(SiteIndicator):
             file_resource=file_resource)
 
 #class ValueWithUncertainty():
-
+"""
 class VelocityProfile(SiteIndicator):
-    def __init__(self, velocity_profile_data=None, quality_index=None, literature_source=None, file_resource=None):
-        """
+    def __init__(self, velocity_profile_data=None, quality_index=None, 
+                 literature_source=None, file_resource=None):
+        
         :type velocity_profile_data: :class:`~obspy.io.sitexml.core.VelocityProfileData`
         :param velocity_profile_data: List of Velocity Profiles.
-        """
+        
+        self.velocity_profile_data = velocity_profile_data
         super(VelocityProfile, self).__init__(
                 name="VP", value=velocity_profile_data, quality_index=quality_index, 
                 literature_source=literature_source, file_resource=file_resource)
@@ -568,6 +570,34 @@ class VelocityProfile(SiteIndicator):
         if any([not isinstance(x, VelocityProfileData) for x in vp_data]):
             msg = "velocity_profile_data can only contain VelocityProfileData objects."
             raise ValueError(msg)
+        self._velocity_profile_data = vp_data
+"""
+class VelocityProfile(SiteIndicator):
+    def __init__(self, velocity_profile_data=None, quality_index=None, 
+                 literature_source=None, file_resource=None):
+        self.velocity_profile_data = velocity_profile_data  # triggers setter/validation
+        super().__init__(
+            name="VP", value=self.velocity_profile_data,
+            quality_index=quality_index,
+            literature_source=literature_source,
+            file_resource=file_resource)
+
+    @property
+    def velocity_profile_data(self):
+        return self._velocity_profile_data
+
+    @velocity_profile_data.setter
+    def velocity_profile_data(self, value):
+        if value is None:
+            self._velocity_profile_data = []
+            return
+        if not hasattr(value, "__iter__"):
+            raise ValueError("velocity_profile_data must be iterable (e.g., a list).")
+        vp_data = list(value)  # ensure we evaluate any generator
+        if any(not isinstance(x, VelocityProfileData) for x in vp_data):
+            raise ValueError(
+                f"velocity_profile_data must contain only VelocityProfileData instances. Got: {[type(x) for x in vp_data]}"
+            )
         self._velocity_profile_data = vp_data
 
 class VelocityProfileData(ComparingObject):
@@ -612,12 +642,13 @@ class VelocityProfileData(ComparingObject):
 class VelocityProfileLayer(ComparingObject):
     # parameters here are values with uncertainties
     # This could be modeled with a list of [name, value, uncertainty] where name is one of density, velocityS, etc.
-    def __init__(self, density, velocityP, velocityS, layer_top_depth, layer_bottom_depth):
+    def __init__(self, density=None, velocityP=None, velocityS=None, 
+                 layer_top_depth=None, layer_bottom_depth=None):
         self.density = density
         self.velocityP = velocityP
         self.velocityS = velocityS
-        self.layerTopDepth = layer_top_depth
-        self.layerBottomDepth = layer_bottom_depth
+        self.layer_top_depth = layer_top_depth
+        self.layer_bottom_depth = layer_bottom_depth
 
     @property
     def density(self):
