@@ -16,7 +16,8 @@ from obspy.core.util.base import ComparingObject
 #from obspy.core.event import ResourceIdentifier
 from obspy.io.sitexml.util import (TopographySchemaA, TopographySchemaB, EC8Class, 
                                    ResonanceFrequencyMethod, VelocityS30Method,
-                                    _sitexml_check_type, _sitexml_check_enum, _pretty_str)
+                                    _sitexml_check_type, _sitexml_check_enum, _pretty_str,
+                                    _wrapped_property)
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, ExternalReference)
 
 class SERASite(ComparingObject):
@@ -423,7 +424,8 @@ class SiteIndicator(ComparingObject):
                "\tLiterature source: {lit_source},\n"
                "\tFile resource: {fresource},\n")
         ret = ret.format(
-            name=self.name, value=self.value, 
+            name=self.name, 
+            value=self.value if self.name != "VP" else "None",
             uncertainty=self.uncertainty,
             methods = self.methods,     # iterate over methods for printing
             qindex = self.quality_index,
@@ -541,40 +543,16 @@ class VelocityS30(SiteIndicator):
             quality_index=quality_index, literature_source=literature_source, 
             file_resource=file_resource)
 
-#class ValueWithUncertainty():
+"""
+class VelocityProfile(SiteIndicator): 
 """
 class VelocityProfile(SiteIndicator):
     def __init__(self, velocity_profile_data=None, quality_index=None, 
                  literature_source=None, file_resource=None):
-        
+        """
         :type velocity_profile_data: :class:`~obspy.io.sitexml.core.VelocityProfileData`
         :param velocity_profile_data: List of Velocity Profiles.
-        
-        self.velocity_profile_data = velocity_profile_data
-        super(VelocityProfile, self).__init__(
-                name="VP", value=velocity_profile_data, quality_index=quality_index, 
-                literature_source=literature_source, file_resource=file_resource)
-        
-    @property
-    def velocity_profile_data(self):
-        return self._velocity_profile_data
-
-    @velocity_profile_data.setter
-    def velocity_profile_data(self, value):
-        if not hasattr(value, "__iter__"):
-            msg = "velocity_profile_data needs to be an iterable, e.g. a list."
-            raise ValueError(msg)
-        # make sure to unwind actual iterators, or the just might get exhausted
-        # at some point
-        vp_data = [data for data in value]
-        if any([not isinstance(x, VelocityProfileData) for x in vp_data]):
-            msg = "velocity_profile_data can only contain VelocityProfileData objects."
-            raise ValueError(msg)
-        self._velocity_profile_data = vp_data
-"""
-class VelocityProfile(SiteIndicator):
-    def __init__(self, velocity_profile_data=None, quality_index=None, 
-                 literature_source=None, file_resource=None):
+        """
         self.velocity_profile_data = velocity_profile_data  # triggers setter/validation
         super().__init__(
             name="VP", value=self.velocity_profile_data,
@@ -582,6 +560,14 @@ class VelocityProfile(SiteIndicator):
             literature_source=literature_source,
             file_resource=file_resource)
 
+    def __str__(self):
+        output=[]
+        output.append(super().__str__())
+        for i in range(0, len(self.velocity_profile_data)):
+            output.append("\nVelocity Profile # " + str(i) + "\n")
+            output.append(self.velocity_profile_data[i].__str__())
+        return "\n".join(output) 
+    
     @property
     def velocity_profile_data(self):
         return self._velocity_profile_data
@@ -601,7 +587,8 @@ class VelocityProfile(SiteIndicator):
         self._velocity_profile_data = vp_data
 
 class VelocityProfileData(ComparingObject):
-    def __init__(self, layer_count, velocity_profile_layer):
+    def __init__(self, layer_count, density=None, velocityP=None, velocityS=None, 
+                 top_depth=None, bottom_depth=None):
         """
         :type layer_count: int
         :param layer_count: Number of layers in velocity profile.
@@ -609,8 +596,74 @@ class VelocityProfileData(ComparingObject):
         :param vp_layer_data: List of Velocity Profiles.
         """
         self.layer_count = layer_count
-        self.velocity_profile_layer = velocity_profile_layer or []
-    
+        self.density = density or []
+        self.velocityP = velocityP or []
+        self.velocityS = velocityS or []
+        self.top_depth = top_depth or []
+        self.bottom_depth = bottom_depth or []
+        
+    def __str__(self):
+        def format_vwu(obj):
+            if obj is None or obj.value is None:
+                return "N/A"
+            if obj.uncertainty is not None:
+                return f"{obj.value:.2f} ± {obj.uncertainty:.2f}"
+            else:
+                return f"{obj.value:.2f}"
+
+        headers = ["Layer", "Density", "Velocity P", "Velocity S", "Top Depth", "Bottom Depth"]
+        rows = []
+        for i in range(self.layer_count):
+            row = [
+                str(i + 1),
+                format_vwu(self.density[i]) if i < len(self.density) else "N/A",
+                format_vwu(self.velocityP[i]) if i < len(self.velocityP) else "N/A",
+                format_vwu(self.velocityS[i]) if i < len(self.velocityS) else "N/A",
+                format_vwu(self.top_depth[i]) if i < len(self.top_depth) else "N/A",
+                format_vwu(self.bottom_depth[i]) if i < len(self.bottom_depth) else "N/A"
+            ]
+            rows.append(row)
+
+        # Calculate column widths for formatting
+        col_widths = [
+            max(len(str(item)) for item in [header] + [row[i] for row in rows])
+            for i, header in enumerate(headers)
+        ]
+
+        def format_row(row):
+            return " | ".join(f"{cell:<{col_widths[i]}}" for i, cell in enumerate(row))
+
+        lines = [
+            format_row(headers),
+            "-+-".join("-" * width for width in col_widths),
+        ] + [format_row(row) for row in rows]
+
+        return "\n".join(lines)
+
+    def _validate_list_of_vwu(self, name, value):
+        """
+        Validates and standardizes a list of ValueWithUncertainty objects.
+        Converts numbers to ValueWithUncertainty, keeps None, raises on bad types.
+        """
+        if value is None:
+            return []
+
+        if not hasattr(value, "__iter__") or isinstance(value, (str, bytes)):
+            raise ValueError(f"{name} must be an iterable (e.g., a list of floats or ValueWithUncertainty).")
+
+        validated = []
+        for i, item in enumerate(value):
+            if item is None:
+                validated.append(None)
+            elif isinstance(item, ValueWithUncertainty):
+                validated.append(item)
+            elif isinstance(item, (int, float)):
+                validated.append(ValueWithUncertainty(item))
+            else:
+                raise TypeError(f"{name}[{i}] is not a valid type (expected float, ValueWithUncertainty, or None): {item}")
+        
+        return validated
+
     @property
     def layer_count(self):
         return self._layer_count
@@ -620,58 +673,43 @@ class VelocityProfileData(ComparingObject):
         if value is not None and value > 0:
             self._layer_count = value
         else:
-            self._layer_count = len(self.velocity_profile_data) # is that correct?
-
-    @property
-    def velocity_profile_layer(self):
-        return self._velocity_profile_layer
-
-    @velocity_profile_layer.setter
-    def velocity_profile_layer(self, value):
-        if not hasattr(value, "__iter__"):
-            msg = "velocity_profile_layer needs to be an iterable, e.g. a list."
-            raise ValueError(msg)
-        # make sure to unwind actual iterators, or the just might get exhausted
-        # at some point
-        layer_data = [data for data in value]
-        if any([not isinstance(x, VelocityProfileLayer) for x in layer_data]):
-            msg = "velocity_profile_layer can only contain VelocityProfileLayer objects."
-            raise ValueError(msg)
-        self._velocity_profile_layer = layer_data
-
-class VelocityProfileLayer(ComparingObject):
-    # parameters here are values with uncertainties
-    # This could be modeled with a list of [name, value, uncertainty] where name is one of density, velocityS, etc.
-    def __init__(self, density=None, velocityP=None, velocityS=None, 
-                 layer_top_depth=None, layer_bottom_depth=None):
-        self.density = density
-        self.velocityP = velocityP
-        self.velocityS = velocityS
-        self.layer_top_depth = layer_top_depth
-        self.layer_bottom_depth = layer_bottom_depth
+            raise ValueError("layer_count must be a positive value.")
 
     @property
     def density(self):
         return self._density
-
     @density.setter
     def density(self, value):
-        if isinstance(value, ValueWithUncertainty):
-            self._density = value
-        else:
-            self._density = ValueWithUncertainty(value)
+        self._density = self._validate_list_of_vwu("density", value)
 
     @property
     def velocityP(self):
         return self._velocityP
-
     @velocityP.setter
     def velocityP(self, value):
-        if isinstance(value, ValueWithUncertainty):
-            self._velocityP = value
-        else:
-            self._velocityP = ValueWithUncertainty(value)
+        self._velocityP = self._validate_list_of_vwu("velocityP", value)
 
+    @property
+    def velocityS(self):
+        return self._velocityS
+    @velocityS.setter
+    def velocityS(self, value):
+        self._velocityS = self._validate_list_of_vwu("velocityS", value)
+
+    @property
+    def top_depth(self):
+        return self._top_depth
+    @top_depth.setter
+    def velocityS(self, value):
+        self._top_depth = self._validate_list_of_vwu("top_depth", value)
+
+    @property
+    def bottom_depth(self):
+        return self._bottom_depth
+    @bottom_depth.setter
+    def velocityS(self, value):
+        self._bottom_depth = self._validate_list_of_vwu("bottom_depth", value)
+ 
 class ValueWithUncertainty():
     def __init__(self, value, uncertainty=None):
         self.value = value

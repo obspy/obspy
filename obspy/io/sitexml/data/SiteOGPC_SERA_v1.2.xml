@@ -132,7 +132,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 				</velocityP>
 				<velocityS>
 					<value>118.08</value>
-					<uncertainty></uncertainty>
+					<uncertainty>2</uncertainty>
 				</velocityS>
 				<layerThickness>
 					<layerTopDepth>

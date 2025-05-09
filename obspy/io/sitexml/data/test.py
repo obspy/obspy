@@ -24,6 +24,10 @@ sc = sera_site.site_characterization_parameters
 print(sc)
 print(sd.ec8)
 print(sc.velocity_s30)
+print(sc.velocity_profile)
+#for i in range(0, len(sc.velocity_profile.velocity_profile_data)):
+#    print("Velocity Profile ## i ##")
+#    print(sc.velocity_profile.velocity_profile_data[i])
 
 
 """

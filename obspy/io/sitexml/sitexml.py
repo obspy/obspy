@@ -21,7 +21,7 @@ from obspy.io.stationxml.core import _tag2obj, _attr2obj, _tags2obj
 from obspy.core.inventory.util import ExternalReference
 from obspy.io.sitexml.core import (SERASite, SiteDescription, SiteCharacterizationParameters, SERASiteOwner, 
                                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, VelocityS30, 
-                                   VelocityProfile, VelocityProfileData, VelocityProfileLayer, ValueWithUncertainty,
+                                   VelocityProfile, VelocityProfileData, ValueWithUncertainty,
                                    LiteratureSource)
 
 # Define some constants for writing SiteXML files.
@@ -454,9 +454,11 @@ def _read_velocity_profile(site_char_element, site_char_obj):
         layer_count = _read_value(vp_element, "layerCount", int)
         vp_data_element = vp_element.find(_ns("velocityProfileData"))
         if vp_data_element is not None:
-            vp_data = VelocityProfileData(layer_count = layer_count,
-                                          velocity_profile_layer = [])
-        _read_velocity_profile_data(vp_data_element, vp_data, vp_element_list.index(vp_element))
+            vp_data = VelocityProfileData(layer_count=layer_count,
+                                          density=[], velocityP=[], velocityS=[],
+                                          top_depth=[], bottom_depth=[])
+        _read_velocity_profile_data(vp_data_element, 
+                                    vp_data, vp_element_list.index(vp_element))
         site_char_obj.velocity_profile.velocity_profile_data.append(vp_data)
     
     return None
@@ -468,41 +470,41 @@ def _read_velocity_profile_data(vp_data_element, vp_data, vp_no):
     velocityP_list = vp_data_element.findall(_ns("velocityP"))
     velocityS_list = vp_data_element.findall(_ns("velocityS"))
     layerThickness_list = vp_data_element.findall(_ns("layerThickness"))
+    
     if not all([x == layer_count for x in (len(density_list), len(velocityP_list), 
                                            len(velocityS_list), len(layerThickness_list))]):
-         warnings.warn("layerCount value of Velocity Profile '%s' doesn't much " \
-                    "the number of child elements" % vp_no, UserWarning)
+         warnings.warn("layerCount value '%s' of Velocity Profile '%s' doesn't much " 
+                    "the number of child elements: " 
+                    "density: '%s', velocityP: '%s', velocityS: '%s', layerThickness: '%s'" 
+                    % (layer_count, vp_no, len(density_list), len(velocityP_list), 
+                    len(velocityS_list), len(layerThickness_list)), UserWarning)
          return
-    
-    print(layer_count, ", ", layerThickness_list)
 
     for layer in range(0, layer_count):
-        vp_data.velocity_profile_layer.append(VelocityProfileLayer())
+        #vp_data.velocity_profile_layer.append(VelocityProfileLayer())
 
         density_value = _tag2obj(density_list[layer], _ns("value"), float)
         density_uncertainty = _tag2obj(density_list[layer], _ns("uncertainty"), float)
-        vp_data.velocity_profile_layer[layer].density = ValueWithUncertainty(density_value, density_uncertainty)
+        vp_data.density.append(ValueWithUncertainty(density_value, density_uncertainty))
 
         velocityP_value = _tag2obj(velocityP_list[layer], _ns("value"), float)
         velocityP_uncertainty = _tag2obj(velocityP_list[layer], _ns("uncertainty"), float)
-        vp_data.velocity_profile_layer[layer].velocityP = ValueWithUncertainty(velocityP_value, velocityP_uncertainty)
+        vp_data.velocityP.append(ValueWithUncertainty(velocityP_value, velocityP_uncertainty))
 
         velocityS_value = _tag2obj(velocityS_list[layer], _ns("value"), float)
         velocityS_uncertainty = _tag2obj(velocityS_list[layer], _ns("uncertainty"), float)
-        vp_data.velocity_profile_layer[layer].velocityS = ValueWithUncertainty(velocityS_value, velocityS_uncertainty)
+        vp_data.velocityS.append(ValueWithUncertainty(velocityS_value, velocityS_uncertainty))
 
-        [layer_top_depth_value, layer_top_depth_uncer] = \
+        [top_depth_value, top_depth_uncer] = \
             _read_value_with_uncertainty(layerThickness_list[layer], 
-                                         _ns("layerTopDepth"), float)
-        print(layer_top_depth_value, layer_top_depth_uncer)
-        vp_data.velocity_profile_layer[layer].layer_top_depth = \
-            ValueWithUncertainty(layer_top_depth_value, layer_top_depth_uncer)
+                                         "layerTopDepth", float)
+        vp_data.top_depth.append(ValueWithUncertainty(top_depth_value, top_depth_uncer))
 
-        [layer_bottom_depth_value, layer_bottom_depth_value] = \
+        [bottom_depth_value, bottom_depth_uncer] = \
             _read_value_with_uncertainty(layerThickness_list[layer],
-                                         _ns("layerBottomDepth"), float)
-        vp_data.velocity_profile_layer[layer].layer_bottom_depth = \
-            ValueWithUncertainty(layer_bottom_depth_value, layer_bottom_depth_value)
+                                         "layerBottomDepth", float)
+        #print(top_depth_value, bottom_depth_value)
+        vp_data.bottom_depth.append(ValueWithUncertainty(bottom_depth_value, bottom_depth_uncer))
 
 def _read_reference(parent, tag):
     reference_element = parent.find(_ns(tag))
